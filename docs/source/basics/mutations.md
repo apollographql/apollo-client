@@ -278,7 +278,7 @@ The `mutate` function will actually execute your mutation using the network inte
 
 To learn more about how mutations work, be sure to check out the [mutations usage documentation](mutations.html).
 
-The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-options) accepts, so to make sure to read through the documentation for that to know what you can pass into the `mutate` function.
+The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
 
 The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`](#graphql-mutation-options) _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`](#graphql-mutation-options).
 

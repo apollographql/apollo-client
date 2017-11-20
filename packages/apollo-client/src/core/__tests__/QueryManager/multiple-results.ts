@@ -202,6 +202,7 @@ describe('mutiple results', () => {
         // errors should never be passed since they are ignored
         expect(result.errors).toBeUndefined();
         count++;
+
         if (count === 1) {
           expect(result.data).toEqual(initialData);
           // this should fire the `next` event without this error
@@ -214,9 +215,9 @@ describe('mutiple results', () => {
           expect(result.errors).toBeUndefined();
           // make sure the count doesn't go up by accident
           setTimeout(() => {
-            if (count === 3) throw new Error('error was not ignored');
+            if (count === 3) done.fail(new Error('error was not ignored'));
             done();
-          });
+          }, 10);
         }
       },
       error: e => {
@@ -269,30 +270,34 @@ describe('mutiple results', () => {
     let count = 0;
     observable.subscribe({
       next: result => {
-        // errors should never be passed since they are ignored
-        count++;
-        if (count === 1) {
-          expect(result.errors).toBeUndefined();
-          // this should fire the next event again
-          link.simulateResult({
-            result: { errors: [new Error('defer failed')] },
-          });
-        }
-        if (count === 2) {
-          expect(result.errors).toBeDefined();
-          link.simulateResult({ result: { data: laterData } });
-        }
-        if (count === 3) {
-          expect(result.errors).toBeUndefined();
-          // make sure the count doesn't go up by accident
-          setTimeout(() => {
-            if (count === 4) throw new Error('error was not ignored');
-            done();
-          });
+        try {
+          // errors should never be passed since they are ignored
+          count++;
+          if (count === 1) {
+            expect(result.errors).toBeUndefined();
+            // this should fire the next event again
+            link.simulateResult({
+              result: { errors: [new Error('defer failed')] },
+            });
+          }
+          if (count === 2) {
+            expect(result.errors).toBeDefined();
+            link.simulateResult({ result: { data: laterData } });
+          }
+          if (count === 3) {
+            expect(result.errors).toBeUndefined();
+            // make sure the count doesn't go up by accident
+            setTimeout(() => {
+              if (count === 4) done.fail(new Error('error was not ignored'));
+              done();
+            });
+          }
+        } catch (e) {
+          done.fail(e);
         }
       },
       error: e => {
-        console.error(e);
+        done.fail(e);
       },
     });
 

@@ -121,7 +121,7 @@ const query = gql`
 `;
 ```
 
-For more information about using fragments, checkout the [guide](./fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
+For more information about using fragments, checkout the [guide](../features/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
 
 <h2 id="connecting-data">Requesting data</h2>
 

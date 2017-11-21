@@ -384,6 +384,24 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * Exposes the cache's complete state, in a serializable format for later restoration.
+   */
+  public extract(optimistic?: boolean): TCacheShape {
+    return this.initProxy().extract(optimistic);
+  }
+
+  /**
+   * Replaces existing state in the cache (if any) with the values expressed by
+   * `serializedState`.
+   *
+   * Called when hydrating a cache (server side rendering, or offline storage),
+   * and also (potentially) during hot reloads.
+   */
+  public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
+    return this.initProxy().restore(serializedState);
+  }
+
+  /**
    * Initializes a data proxy for this client instance if one does not already
    * exist and returns either a previously initialized proxy instance or the
    * newly initialized instance.

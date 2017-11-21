@@ -257,7 +257,7 @@ export function writeSelectionSetToStore({
           fragment.typeCondition.name.value,
           fakeContext,
         );
-        if (fakeContext.returnPartialData) {
+        if (!isProduction() && fakeContext.returnPartialData) {
           console.error('WARNING: heuristic fragment matching going on!');
         }
       }

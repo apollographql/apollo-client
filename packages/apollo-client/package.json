@@ -83,7 +83,7 @@
     "rxjs": "5.5.2",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
-    "typescript": "2.4.2",
+    "typescript": "2.6.1",
     "uglify-js": "3.1.10",
     "webpack": "3.7.1",
     "webpack-bundle-analyzer": "2.9.1"

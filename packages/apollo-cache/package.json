@@ -54,7 +54,7 @@
     "rollup-plugin-node-resolve": "3.0.0",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
-    "typescript": "2.5.2",
+    "typescript": "2.6.1",
     "uglifyjs": "2.4.11"
   },
   "jest": {

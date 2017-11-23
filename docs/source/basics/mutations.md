@@ -55,7 +55,7 @@ const submitRepository = gql`
 const NewEntryWithData = graphql(submitRepository)(NewEntry);
 ```
 
-The component created above will recieve a prop called `mutate` which is a function that returns a promise of the mutation result.
+The component created above will receive a prop called `mutate` which is a function that returns a promise of the mutation result.
 
 <h2 id="calling-mutations">Calling mutations</h2>
 

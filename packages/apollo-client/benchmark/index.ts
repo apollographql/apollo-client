@@ -16,7 +16,7 @@ import { ApolloClient, ApolloQueryResult } from '../src/index';
 
 import { times, cloneDeep } from 'lodash';
 
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { Operation, ApolloLink, FetchResult, Observable } from 'apollo-link';
 
@@ -142,8 +142,15 @@ const createReservations = (count: number) => {
 };
 
 group(end => {
+  const link = mockSingleLink({
+    request: { query: simpleQuery } as Operation,
+    result: simpleResult,
+  });
+
+  const cache = new InMemoryCache();
+
   benchmark('constructing an instance', done => {
-    new ApolloClient({ link: mockSingleLink(), cache: new InMemoryCache() });
+    new ApolloClient({ link, cache });
     done();
   });
   end();
@@ -190,8 +197,8 @@ group(end => {
   // the `meanTimes` structure can be used.
   const meanTimes: { [subscriberCount: string]: number } = {};
 
-  times(50, countR => {
-    const count = countR * 5;
+  times(7, countR => {
+    const count = 5 * Math.pow(2, countR);
     benchmark(
       {
         name: `write data and deliver update to ${count} subscribers`,
@@ -236,8 +243,8 @@ group(end => {
   end();
 });
 
-times(25, (countR: number) => {
-  const count = (countR + 1) * 10;
+times(7, (countR: number) => {
+  const count = 5 * Math.pow(2, countR);
   const query = gql`
     query($id: String) {
       author(id: $id) {
@@ -290,46 +297,39 @@ times(25, (countR: number) => {
     });
 
     // insert a bunch of stuff into the cache
-    const promises = times(count, index => {
-      return client
-        .query({
-          query,
-          variables: { id: index },
-        })
-        .then(_ => {
-          return Promise.resolve({});
-        });
+    times(count, index => {
+      return client.cache.writeQuery({
+        query,
+        variables: { id: index },
+        data: (mockedResponses[index].result as any).data as any,
+      });
     });
 
-    const myBenchmark = benchmark;
-    // const myAfterEach = afterEach;
-    Promise.all(promises).then(() => {
-      myBenchmark(
-        {
-          name: `read single item from cache with ${count} items in cache`,
-          count,
-        },
-        done => {
-          const randomIndex = Math.floor(Math.random() * count);
-          client
-            .query({
-              query,
-              variables: { id: randomIndex },
-            })
-            .then(_ => {
-              done();
-            });
-        },
-      );
+    benchmark(
+      {
+        name: `read single item from cache with ${count} items in cache`,
+        count,
+      },
+      done => {
+        const randomIndex = Math.floor(Math.random() * count);
+        client
+          .query({
+            query,
+            variables: { id: randomIndex },
+          })
+          .then(_ => {
+            done();
+          });
+      },
+    );
 
-      end();
-    });
+    end();
   });
 });
 
 // Measure the amount of time it takes to read a bunch of
 // objects from the cache.
-times(50, index => {
+times(7, index => {
   group(end => {
     const query = gql`
       query($id: String) {
@@ -342,7 +342,7 @@ times(50, index => {
       }
     `;
     const houseId = '12';
-    const reservationCount = index + 1;
+    const reservationCount = 5 * Math.pow(2, index);
     const reservations = createReservations(reservationCount);
 
     const variables = { id: houseId };
@@ -365,32 +365,28 @@ times(50, index => {
       }),
     });
 
-    const myBenchmark = benchmark;
-    client
-      .query({
-        query,
-        variables,
-      })
-      .then(() => {
-        myBenchmark(
-          `read result with ${
-            reservationCount
-          } items associated with the result`,
-          done => {
-            client
-              .query({
-                query,
-                variables,
-                fetchPolicy: 'cache-only',
-              })
-              .then(() => {
-                done();
-              });
-          },
-        );
+    client.cache.writeQuery({
+      query,
+      variables,
+      data: result.data,
+    });
 
-        end();
-      });
+    benchmark(
+      `read result with ${reservationCount} items associated with the result`,
+      done => {
+        client
+          .query({
+            query,
+            variables,
+            fetchPolicy: 'cache-only',
+          })
+          .then(() => {
+            done();
+          });
+      },
+    );
+
+    end();
   });
 });
 
@@ -398,9 +394,9 @@ times(50, index => {
 //
 // This test allows us to differentiate between the fixed cost of .query() and the fixed cost
 // of actually reading from the store.
-times(50, index => {
+times(7, index => {
   group(end => {
-    const reservationCount = index + 1;
+    const reservationCount = 5 * Math.pow(2, index);
 
     // Prime the cache.
     const query = gql`
@@ -416,48 +412,36 @@ times(50, index => {
     const variables = { id: '7' };
     const reservations = createReservations(reservationCount);
     const result = {
-      data: {
-        house: { reservations },
-      },
+      house: { reservations },
     };
-    const client = new ApolloClient({
-      link: mockSingleLink({
-        request: ({ query, variables } as any) as Operation,
-        result,
-      }),
-      cache: new InMemoryCache({
-        dataIdFromObject,
-        addTypename: false,
-      }),
+    const cache = new InMemoryCache({
+      dataIdFromObject,
+      addTypename: false,
     });
 
-    const myBenchmark = benchmark;
+    cache.write({
+      dataId: 'ROOT_QUERY',
+      query,
+      variables,
+      result,
+    });
 
     // We only keep track of the results so that V8 doesn't decide to just throw
     // away our cache read code.
-    const results: any[] = [];
-    client
-      .query({
-        query,
-        variables,
-      })
-      .then(() => {
-        myBenchmark(
-          `diff query against store with ${reservationCount} items`,
-          done => {
-            results.push(
-              client.queryManager.dataStore.getCache().diff({
-                query,
-                variables,
-                optimistic: false,
-              }),
-            );
-            done();
-          },
-        );
+    let results: any = null;
+    benchmark(
+      `diff query against store with ${reservationCount} items`,
+      done => {
+        results = cache.diff({
+          query,
+          variables,
+          optimistic: false,
+        });
+        done();
+      },
+    );
 
-        end();
-      });
+    end();
   });
 });
 

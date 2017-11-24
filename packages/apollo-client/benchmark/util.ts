@@ -165,6 +165,7 @@ export function runBenchmarks() {
       .on('cycle', (event: any) => {
         log('Mean time in ms: ', event.target.stats.mean * 1000);
         log(String(event.target));
+        log('');
       })
       .run({ async: false });
   });

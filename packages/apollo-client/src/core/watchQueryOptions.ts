@@ -58,7 +58,7 @@ export interface ModifiableWatchQueryOptions {
   errorPolicy?: ErrorPolicy;
 
   /**
-   * Wether or not to fetch results
+   * Whether or not to fetch results
    */
   fetchResults?: boolean;
 

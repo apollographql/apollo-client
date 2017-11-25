@@ -22,24 +22,29 @@ export function collectAndReportBenchmarks() {
   Promise.all(groupPromises)
     .then(() => {
       log('Running benchmarks.');
-      return new Promise<{ [name: string]: number }>(resolve => {
-        const retMap: { [name: string]: number } = {};
+      return new Promise<{ [name: string]: { mean: number; moe: number } }>(
+        resolve => {
+          const retMap: { [name: string]: { mean: number; moe: number } } = {};
 
-        bsuite
-          .on('error', (error: any) => {
-            log('Error: ', error);
-          })
-          .on('cycle', (event: any) => {
-            retMap[event.target.name] = event.target.stats.mean * 1000;
-            log('Mean time in ms: ', event.target.stats.mean * 1000);
-            log(String(event.target));
-            log('');
-          })
-          .on('complete', (_: any) => {
-            resolve(retMap);
-          })
-          .run({ async: false, minSamples: 50 });
-      });
+          bsuite
+            .on('error', (error: any) => {
+              log('Error: ', error);
+            })
+            .on('cycle', (event: any) => {
+              retMap[event.target.name] = {
+                mean: event.target.stats.mean * 1000,
+                moe: event.target.stats.moe * 1000,
+              };
+              log('Mean time in ms: ', event.target.stats.mean * 1000);
+              log(String(event.target));
+              log('');
+            })
+            .on('complete', (_: any) => {
+              resolve(retMap);
+            })
+            .run({ async: false });
+        },
+      );
     })
     .then(res => {
       let message = '';
@@ -52,23 +57,22 @@ export function collectAndReportBenchmarks() {
             pass = false;
           }
         } else {
-          if (res[element] > thresholds[element]) {
-            console.error(
-              `Performance drop detected for benchmark: "${element}", ${
-                res[element]
-              } > ${thresholds[element]}`,
-            );
+          if (res[element].mean - res[element].moe > thresholds[element]) {
+            const perfDropMessage = `Performance drop detected for benchmark: "${
+              element
+            }", ${res[element].mean} - ${res[element].moe} > ${
+              thresholds[element]
+            }`;
+            console.error(perfDropMessage);
             if (message === '') {
-              message = `Performance drop detected for benchmark: "${
-                element
-              }", ${res[element]} > ${thresholds[element]}`;
+              message = perfDropMessage;
               pass = false;
             }
           } else {
             console.log(
               `No performance drop detected for benchmark: "${element}", ${
-                res[element]
-              } <= ${thresholds[element]}`,
+                res[element].mean
+              } - ${res[element].moe} <= ${thresholds[element]}`,
             );
           }
         }

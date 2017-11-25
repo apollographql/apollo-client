@@ -38,7 +38,7 @@ export function collectAndReportBenchmarks() {
           .on('complete', (_: any) => {
             resolve(retMap);
           })
-          .run({ async: false });
+          .run({ async: false, minSamples: 50 });
       });
     })
     .then(res => {

@@ -18,9 +18,17 @@ import { times, cloneDeep } from 'lodash';
 
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
-import { Operation, ApolloLink, FetchResult, Observable } from 'apollo-link';
+import {
+  Operation,
+  ApolloLink,
+  FetchResult,
+  Observable,
+  empty,
+} from 'apollo-link';
 
 import { print } from 'graphql/language/printer';
+
+import { collectAndReportBenchmarks } from './github-reporter';
 
 interface MockedResponse {
   request: Operation;
@@ -331,6 +339,14 @@ times(7, (countR: number) => {
 // objects from the cache.
 times(7, index => {
   group(end => {
+    const client = new ApolloClient({
+      link: empty(),
+      cache: new InMemoryCache({
+        dataIdFromObject,
+        addTypename: false,
+      }),
+    });
+
     const query = gql`
       query($id: String) {
         house(id: $id) {
@@ -346,29 +362,15 @@ times(7, index => {
     const reservations = createReservations(reservationCount);
 
     const variables = { id: houseId };
-    const result = {
+
+    client.cache.writeQuery({
+      query,
+      variables,
       data: {
         house: {
           reservations,
         },
       },
-    };
-
-    const client = new ApolloClient({
-      link: mockSingleLink({
-        request: ({ query, variables } as any) as Operation,
-        result,
-      }),
-      cache: new InMemoryCache({
-        dataIdFromObject,
-        addTypename: false,
-      }),
-    });
-
-    client.cache.writeQuery({
-      query,
-      variables,
-      data: result.data,
     });
 
     benchmark(
@@ -414,6 +416,7 @@ times(7, index => {
     const result = {
       house: { reservations },
     };
+
     const cache = new InMemoryCache({
       dataIdFromObject,
       addTypename: false,
@@ -445,4 +448,8 @@ times(7, index => {
   });
 });
 
-runBenchmarks();
+if (process.env.DANGER_GITHUB_API_TOKEN) {
+  collectAndReportBenchmarks();
+} else {
+  runBenchmarks();
+}

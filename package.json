@@ -7,6 +7,7 @@
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",
+    "benchmark": "cd packages/apollo-client && npm run benchmark",
     "prelint": "npm run lint-fix",
     "lint": "lerna run -- lint",
     "lint-fix":

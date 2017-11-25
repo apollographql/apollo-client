@@ -19,6 +19,9 @@ script:
     # make sure files don't get too large
   - npm run filesize
 
+   # check benchmarks for performance drops
+  - npm run benchmark
+
 # Allow Travis tests to run in containers.
 sudo: false
 

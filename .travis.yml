@@ -22,8 +22,8 @@ script:
    # check benchmarks for performance drops
   - npm run benchmark
 
-# Allow Travis tests to run in containers.
-sudo: false
+# Don't allow Travis tests to run in containers, since with that benchmark results can vary a lot.
+sudo: true
 
 notifications:
   email: false

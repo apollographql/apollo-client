@@ -825,6 +825,10 @@ export class QueryManager<TStore> {
     // watched. If there is an existing query in flight when the store is reset,
     // the promise for it will be rejected and its results will not be written to the
     // store.
+    return dataStoreReset.then(() => this.reFetchObservableQueries());
+  }
+
+  public reFetchObservableQueries(): Promise<ApolloQueryResult<any>[]> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     this.queries.forEach(({ observableQuery }, queryId) => {
       if (!observableQuery) return;
@@ -841,7 +845,7 @@ export class QueryManager<TStore> {
 
     this.broadcastQueries();
 
-    return dataStoreReset.then(() => Promise.all(observableQueryPromises));
+    return Promise.all(observableQueryPromises);
   }
 
   public startQuery<T>(

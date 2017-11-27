@@ -3,6 +3,7 @@
 
 ### vNEXT
 - Ensure that heuristics warnings do not fire in production
+- Expose a method to refetch all observed queries without resetting the store [PR#2625](https://github.com/apollographql/apollo-client/pull/2625)
 
 ### 2.0.3
 - Revert returning `data` directly in subscriptions, now returns `data` and `errors`

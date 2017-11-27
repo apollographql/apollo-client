@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Ensure that heuristics warnings do not fire in production
 
 ### 2.0.3
 - Revert returning `data` directly in subscriptions, now returns `data` and `errors`

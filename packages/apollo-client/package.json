@@ -64,7 +64,7 @@
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.11.6",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "21.1.7",
+    "@types/jest": "21.1.8",
     "@types/lodash": "4.14.85",
     "@types/node": "8.0.53",
     "apollo-cache-inmemory": "^1.1.1",
@@ -86,7 +86,8 @@
     "typescript": "2.4.2",
     "uglify-js": "3.1.10",
     "webpack": "3.7.1",
-    "webpack-bundle-analyzer": "2.9.1"
+    "webpack-bundle-analyzer": "2.9.1",
+    "github": "12.0.5"
   },
   "optionalDependencies": {
     "@types/async": "2.0.45"

@@ -825,10 +825,16 @@ export class QueryManager<TStore> {
     // watched. If there is an existing query in flight when the store is reset,
     // the promise for it will be rejected and its results will not be written to the
     // store.
-    return dataStoreReset.then(() => this.reFetchObservableQueries());
+    const observableQueryPromises: Promise<
+      ApolloQueryResult<any>
+    >[] = this.getObservableQueryPromises();
+
+    this.broadcastQueries();
+
+    return dataStoreReset.then(() => Promise.all(observableQueryPromises));
   }
 
-  public reFetchObservableQueries(): Promise<ApolloQueryResult<any>[]> {
+  private getObservableQueryPromises(): Promise<ApolloQueryResult<any>>[] {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     this.queries.forEach(({ observableQuery }, queryId) => {
       if (!observableQuery) return;
@@ -842,6 +848,14 @@ export class QueryManager<TStore> {
       this.setQuery(queryId, () => ({ newData: null }));
       this.invalidate(true, queryId);
     });
+
+    return observableQueryPromises;
+  }
+
+  public reFetchObservableQueries(): Promise<ApolloQueryResult<any>[]> {
+    const observableQueryPromises: Promise<
+      ApolloQueryResult<any>
+    >[] = this.getObservableQueryPromises();
 
     this.broadcastQueries();
 

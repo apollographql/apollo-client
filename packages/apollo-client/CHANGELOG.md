@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Expose the cache methods `restore` and `extract` directly on ApolloClient  [PR#2615](https://github.com/apollographql/apollo-client/pull/2615)
 
 ### 2.0.3
 - Revert returning `data` directly in subscriptions, now returns `data` and `errors`

@@ -134,6 +134,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.query = this.query.bind(this);
     this.mutate = this.mutate.bind(this);
     this.resetStore = this.resetStore.bind(this);
+    this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
@@ -384,6 +385,25 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * Refetches all of your active queries.
+   *
+   * `reFetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
+   *
+   * It is important to remember that `reFetchObservableQueries()` *will* refetch any active
+   * queries. This means that any components that might be mounted will execute
+   * their queries again using your network interface. If you do not want to
+   * re-execute any queries then you should make sure to stop watching any
+   * active queries.
+   */
+  public reFetchObservableQueries():
+    | Promise<ApolloQueryResult<any>[]>
+    | Promise<null> {
+    return this.queryManager
+      ? this.queryManager.reFetchObservableQueries()
+      : Promise.resolve(null);
+   }
+  
+  /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
   public extract(optimistic?: boolean): TCacheShape {
@@ -399,6 +419,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
+
   }
 
   /**

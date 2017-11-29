@@ -2,8 +2,7 @@
 environment:
   matrix:
     # node.js
-    - nodejs_version: "5"
-    - nodejs_version: "4"
+    - nodejs_version: "8"
 
 # Install scripts. (runs after repo cloning)
 install:
@@ -12,16 +11,12 @@ install:
   # remove unused modules from node_modules directory
   - npm prune
   # install modules
-  - npm install
+  - npm run bootstrap
 
 # Post-install test scripts.
 test_script:
   # run tests
   - npm test
-
-# artifacts:
-#   - path: ./junit/xunit.xml
-#   - path: ./xunit.xml
 
 # nothing to compile in this project
 build: off

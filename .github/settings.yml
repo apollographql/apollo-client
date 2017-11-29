@@ -1,0 +1,75 @@
+repository:
+  # See https://developer.github.com/v3/repos/#edit for all available settings.
+
+  homepage: http://dev.apollodata.com/
+  private: false
+  has_issues: true
+  has_wiki: false
+  has_downloads: true
+  has_projects: false
+
+# Labels: define labels for Issues and Pull Requests
+labels:
+  # statuses to signal contributor / maintainers action
+  - name: help-wanted
+    color: 159818
+  - name: discussion
+    color: e99695
+  - name: question
+    color: cc317c
+  - name: waiting-response
+    color: fbca04
+  - name: reproduction-needed
+    color: fbca04
+
+  # type of the issue / PR
+  - name: bug
+    color: fc2929
+  - name: docs
+    color: c2e0c6
+  - name: feature
+    color: 5319e7
+  - name: dependencies
+    color: ededed
+  - name: idea
+    color: fbca04
+  - name: perf
+    color: 1d76db
+  - name: tooling
+    color: c5def5
+  - name: refactor
+    color: bfdadc
+  - name: usability
+    color: d4c5f9
+  - name: good-first-issue
+    color: bfdadc
+
+  # status of the issue / PR
+  - name: duplicate
+    color: d4c5f9
+  - name: can't-reproduce
+    color: bfd4f2
+  - name: confirmed
+    color: d93f0b
+  - name: in-progress
+    color: ededed
+  - name: revisit
+    color: ededed
+  - name: no-recent-activity
+    color: ededed
+  
+  # priority
+  - name: high-priority
+    color: b60205
+  - name: medium-priority
+    color: e99695
+  - name: low-priority
+    color: fef2c0
+  - name: pull-requests-encouraged
+    color: 0e8a16
+  
+  # tech specific
+  - name: typescript
+    color: 1d76db
+
+  

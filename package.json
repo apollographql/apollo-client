@@ -1,85 +1,85 @@
 {
-  "name": "apollo-client",
-  "version": "0.5.21",
-  "description": "A simple yet functional GraphQL client.",
-  "main": "./lib/src/index.js",
-  "typings": "./lib/src/index.d.ts",
-  "scripts": {
-    "dev": "./scripts/dev.sh",
-    "deploy": "rm -rf ./lib && npm run compile && ./scripts/deploy.sh",
-    "pretest": "npm run compile",
-    "test": "npm run testonly --",
-    "posttest": "npm run lint",
-    "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=44",
-    "compile": "tsc",
-    "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/src/index.js -o=./dist/index.js && npm run minify:browser",
-    "minify:browser": "uglifyjs --compress --mangle --screw-ie8 -o=./dist/index.min.js -- ./dist/index.js",
-    "watch": "tsc -w",
-    "prepublish": "npm run compile",
-    "lint": "grunt tslint",
-    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
-    "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
-    "testonly": "mocha --reporter spec --full-trace lib/test/tests.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "apollostack/apollo-client"
-  },
-  "keywords": [
-    "ecmascript",
-    "es2015",
-    "jsnext",
-    "javascript",
-    "relay",
-    "npm",
-    "react"
-  ],
-  "author": "Sashko Stubailo <sashko@stubailo.com>",
+  "private": true,
   "license": "MIT",
-  "dependencies": {
-    "graphql-anywhere": "^1.0.0",
-    "graphql-tag": "^1.1.1",
-    "lodash": "^4.17.2",
-    "redux": "^3.3.1",
-    "symbol-observable": "^1.0.2",
-    "whatwg-fetch": "^2.0.0"
+  "scripts": {
+    "bootstrap": "npm i && lerna bootstrap",
+    "postinstall": "lerna bootstrap",
+    "postbootstrap": "npm run build",
+    "build": "lerna run -- build",
+    "test": "lerna run -- test",
+    "benchmark": "cd packages/apollo-client && npm run benchmark",
+    "prelint": "npm run lint-fix",
+    "lint": "lerna run -- lint",
+    "lint-fix":
+      "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+    "lint-staged": "lint-staged",
+    "filesize": "lerna run -- filesize && bundlesize",
+    "type-check": "lerna run -- type-check",
+    "coverage": "lerna run -- coverage",
+    "coverage:upload": "codecov",
+    "danger": "danger run --verbose",
+    "deploy":
+      "lerna publish -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy"
   },
+  "bundlesize": [
+    {
+      "name": "apollo-cache",
+      "path": "./packages/apollo-cache/lib/bundle.min.js",
+      "maxSize": "1 kB"
+    },
+    {
+      "name": "apollo-cache-inmemory",
+      "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
+      "maxSize": "6.2 kB"
+    },
+    {
+      "name": "apollo-client",
+      "path": "./packages/apollo-client/lib/bundle.min.js",
+      "maxSize": "11.6 kB"
+    },
+    {
+      "name": "apollo-client-preset",
+      "path": "./packages/apollo-client-preset/lib/bundle.min.js",
+      "maxSize": "30 kB"
+    },
+    {
+      "name": "apollo-utilities",
+      "path": "./packages/apollo-utilities/lib/bundle.min.js",
+      "maxSize": "4.75 kB"
+    },
+    {
+      "name": "graphql-anywhere",
+      "path": "./packages/graphql-anywhere/lib/bundle.min.js",
+      "maxSize": "1.7 kB"
+    }
+  ],
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    }
+  },
+  "lint-staged": {
+    "*.ts*": [
+      "prettier --trailing-comma all --single-quote --write",
+      "git add"
+    ],
+    "*.js*": [
+      "prettier --trailing-comma all --single-quote --write",
+      "git add"
+    ],
+    "*.json*": ["prettier --write", "git add"]
+  },
+  "pre-commit": "lint-staged",
+  "dependencies": {},
   "devDependencies": {
-    "@types/chai-as-promised": "0.0.28",
-    "@types/mocha": "^2.2.31",
-    "browserify": "^13.0.0",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
-    "colors": "^1.1.2",
-    "es6-promise": "^4.0.4",
-    "fetch-mock": "^5.5.0",
-    "grunt": "1.0.1",
-    "grunt-tslint": "4.0.0",
-    "gzip-size": "^3.0.0",
-    "isomorphic-fetch": "^2.2.1",
-    "istanbul": "^0.4.5",
-    "lodash": "^4.17.1",
-    "minimist": "^1.2.0",
-    "mocha": "^3.0.0",
-    "pretty-bytes": "^4.0.0",
-    "remap-istanbul": "^0.8.0",
-    "request": "^2.75.0",
-    "rxjs": "^5.0.0-beta.11",
-    "sinon": "^1.17.4",
-    "source-map-support": "^0.4.0",
-    "tslint": "4.1.1",
-    "typescript": "2.1.4",
-    "uglify-js": "^2.6.2"
-  },
-  "optionalDependencies": {
-    "@types/async": "^2.0.31",
-    "@types/chai": "^3.4.32",
-    "@types/isomorphic-fetch": "0.0.30",
-    "@types/lodash": "^4.14.34",
-    "@types/node": "^6.0.38",
-    "@types/promises-a-plus": "0.0.26",
-    "@types/redux": "^3.5.29",
-    "@types/sinon": "^1.16.29",
-    "typed-graphql": "1.0.2"
+    "bundlesize": "0.15.3",
+    "codecov": "3.0.0",
+    "danger": "1.2.0",
+    "lerna": "2.5.1",
+    "lint-staged": "5.0.0",
+    "pre-commit": "1.2.2",
+    "prettier": "1.8.2",
+    "ts-jest": "20.0.14",
+    "typescript": "2.5.2"
   }
 }

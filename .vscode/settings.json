@@ -1,10 +1,9 @@
 // Place your settings in this file to overwrite default and user settings.
 {
   "editor.tabSize": 2,
-  "editor.rulers": [100],
+  "editor.rulers": [140],
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "editor.wrappingColumn": 100,
   "files.exclude": {
     "**/.git": true,
     "**/.DS_Store": true,

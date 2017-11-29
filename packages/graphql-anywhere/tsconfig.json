@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "rootDir": "src",
+    "outDir": "lib",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["es6", "dom", "es2017.object"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/__tests__/*.ts"]
+}

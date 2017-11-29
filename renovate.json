@@ -1,0 +1,22 @@
+{
+  "pinVersions": true,
+  "semanticCommits": true,
+  "depTypes": [{ "depType": "dependencies", "pinVersions": false }],
+  "timezone": "America/Los_Angeles",
+  "schedule": [
+    "after 10pm and before 5am on every weekday"
+  ],
+  "rebaseStalePrs": true,
+  "prCreation": "not-pending",
+  "automerge": "minor",
+  "labels": [
+    "tooling",
+    "dependencies"
+  ],
+  "assignees": [
+    "@jbaxleyiii"
+  ],
+  "reviewers": [
+    "@jbaxleyiii"
+  ]
+}

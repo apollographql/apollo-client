@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["es6", "dom"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "removeComments": true,
+    "sourceMap": true,
+    "declaration": true,
+    "rootDir": "./src",
+    "outDir": "lib",
+    "noImplicitAny": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/__tests__/*.ts"]
+}

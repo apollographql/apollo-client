@@ -28,12 +28,28 @@ node_modules
 
 # don't commit compiled files
 lib
+benchmark_lib
 test-lib
 dist
 npm
+!flow-typed/npm
 
 # webstorm
 .idea/
 
 # alm editor
 .alm
+
+# yarn
+yarn.lock
+
+# npm
+package-lock.json
+
+# docs
+db.json
+docs.json
+*.log
+docs/public/*
+!docs/public/_redirects
+.idea/

@@ -1,25 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "es2015",
     "moduleResolution": "node",
-    "sourceMap": true,
     "declaration": true,
-    "rootDir": ".",
-    "outDir": "lib",
     "noLib": true,
-    "allowSyntheticDefaultImports": true,
-    "removeComments": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
-  },
-  "files": [
-    "node_modules/typescript/lib/lib.es2015.d.ts",
-    "node_modules/typescript/lib/lib.dom.d.ts",
-    "typings.d.ts",
-    "fetch-mock.typings.d.ts",
-    "src/index.ts",
-    "test/tests.ts"
-   ]
+    "allowSyntheticDefaultImports": true
+  }
 }

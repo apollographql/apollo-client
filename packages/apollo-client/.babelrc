@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    "transform-es2015-modules-commonjs"
+  ],
+  "ignore": [
+    "lib/**/*.d.ts",
+    "lib/bundles/**",
+    "node_modules/**"
+  ]
+}

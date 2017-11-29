@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib",
+    "noLib": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "strictNullChecks": true,
+    "noUnusedParameters": true
+  },
+  "files": [
+    "node_modules/typescript/lib/lib.es2015.d.ts",
+    "node_modules/typescript/lib/lib.dom.d.ts",
+    "src/index.ts"
+  ]
+}

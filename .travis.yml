@@ -1,18 +1,29 @@
 language: node_js
 node_js:
-  - "6"
-  - "4"
+  - "8"
 
 install:
-  - npm install -g coveralls
+  - npm run bootstrap
   - npm prune
-  - npm install
 
 script:
-  - npm test
+  - npm run danger
+
+    # using jest --coverage also runs the tests so this will cut down CI time
   - npm run coverage
-  - coveralls < ./coverage/lcov.info || true # ignore coveralls error
+
+    # run coverage and file size checks
+    # this is timing out?
+  - npm run coverage:upload || true #ignore failures
+
+    # make sure files don't get too large
   - npm run filesize
 
-# Allow Travis tests to run in containers.
-sudo: false
+   # check benchmarks for performance drops
+  - npm run benchmark
+
+# Don't allow Travis tests to run in containers, since with that benchmark results can vary a lot.
+sudo: true
+
+notifications:
+  email: false

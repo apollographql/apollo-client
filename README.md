@@ -1,44 +1,111 @@
-# Apollo client
+# [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-[![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
-[![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
+
+Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
+
+To get started with the React integration, go to our [**React Apollo documentation website**](https://www.apollographql.com/docs/react/).
+
+Apollo Client also has view layer integrations for [all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework). For the best experience, make sure to use the view integration layer for your frontend framework of choice.
 
 Apollo Client can be used in any JavaScript frontend where you want to use data from a GraphQL server. It's:
 
 1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
 2. **Universally compatible**, so that Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
-2. **Simple to get started with**, you can start loading data right away and learn about advanced features later.
-3. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
-4. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
-4. **Small and flexible**, so you don't get stuff you don't need. The core is under 40kb compressed.
-5. **Community driven**, Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
+3. **Simple to get started with**, so you can start loading data right away and learn about advanced features later.
+4. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
+5. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
+6. **Small and flexible**, so you don't get stuff you don't need. The core is under 25kb compressed.
+7. **Community driven**, because Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
 
-Get started on the [home page](http://dev.apollodata.com/), which has great examples for a variety of frameworks.
+Get started on the [home page](http://apollographql.com/client), which has great examples for a variety of frameworks.
 
-## Installing
+## Installation
 
-```txt
-npm install apollo-client
+```bash
+# installing the preset package
+npm install apollo-client-preset graphql-tag graphql --save
+# installing each piece independently
+npm install apollo-client apollo-cache-inmemory apollo-link-http graphql-tag graphql ---save
 ```
 
-To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3.
+To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3+.
 
-### Learn how to use Apollo Client with your favorite framework
+Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) for a great GraphQL developer experience!
 
-- [React](http://dev.apollodata.com/react/)
-- [Angular 2](http://dev.apollodata.com/angular2/)
+## Usage
+
+You get started by constructing an instance of the core class [`ApolloClient`][]. If you load `ApolloClient` from the [`apollo-client-preset`][] package, it will be configured with a few reasonable defaults such as our standard in-memory cache and a link to a GraphQL API at `/graphql`.
+
+```js
+import ApolloClient from 'apollo-client-preset';
+
+const client = new ApolloClient();
+```
+
+
+To point `ApolloClient` at a different URL, just create your own `HttpLink` instance, like so, replacing `https://graphql.example.com` with your GraphQL API's URL:
+
+```js
+import { ApolloClient } from 'apollo-client';
+import { HttpLink } from 'apollo-link-http';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+
+const client = new ApolloClient({
+  link: new HttpLink({ uri: 'https://graphql.example.com' }),
+  cache: new InMemoryCache()
+});
+```
+
+Most of the time you'll hook up your client to a frontend integration. But if you'd like to directly execute a query with your client, you may now call the `client.query` method like this:
+
+```js
+import gql from 'graphql-tag';
+
+client.query({
+  query: gql`
+    query TodoApp {
+      todos {
+        id
+        text
+        completed
+      }
+    }
+  `,
+})
+  .then(data => console.log(data))
+  .catch(error => console.error(error));
+```
+
+Now your client will be primed with some data in its cache. You can continue to make queries, or you can get your `client` instance to perform all sorts of advanced tasks on your GraphQL data. Such as [reactively watching queries with `watchQuery`][], [changing data on your server with `mutate`][], or [reading a fragment from your local cache with `readFragment`][].
+
+To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the [**`apollo-client` API reference**][].
+
+[`ApolloClient`]: http://apollographql.com/docs/react
+[`apollo-client-preset`]: https://www.npmjs.com/package/apollo-client-preset
+[reactively watching queries with `watchQuery`]: http://apollographql.com/docs/react/reference/index.html#ApolloClient\.watchQuery
+[changing data on your server with `mutate`]: http://apollographql.com/docs/react/basics/mutations
+[reading a fragment from your local cache with `readFragment`]: https://www.apollographql.com/docs/react/basics/caching.html#readfragment
+[**`apollo-client` API reference**]: http://apollographql.com/docs/react/reference/index.html
+
+## Learn how to use Apollo Client with your favorite framework
+
+- [React](http://apollographql.com/docs/react/)
+- [Angular](http://apollographql.com/docs/angular/)
 - [Vue](https://github.com/Akryum/vue-apollo)
+- [Ember](https://github.com/bgentry/ember-apollo-client)
 - [Polymer](https://github.com/aruntk/polymer-apollo)
-- [Meteor](http://dev.apollodata.com/core/meteor.html)
-- [Vanilla JS](http://dev.apollodata.com/core/)
+- [Meteor](http://apollographql.com/docs/react/recipes/meteor.html)
+- [Blaze](http://github.com/Swydo/blaze-apollo)
+- [Vanilla JS](http://apollographql.com/docs/react/reference)
+- [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
 ---
 
-### Contributing
+## Contributing
 
-[![Build status](https://travis-ci.org/apollostack/apollo-client.svg?branch=master)](https://travis-ci.org/apollostack/apollo-client)
+[![Build status](https://travis-ci.org/apollographql/apollo-client.svg?branch=master)](https://travis-ci.org/apollographql/apollo-client)
 [![Build status](https://ci.appveyor.com/api/projects/status/ajdf70delshw2ire/branch/master?svg=true)](https://ci.appveyor.com/project/stubailo/apollo-client/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/apollostack/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollostack/apollo-client?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-client?branch=master)
 
 [Read the Apollo Contributor Guidelines.](CONTRIBUTING.md)
 
@@ -51,12 +118,6 @@ npm test
 ```
 
 This project uses TypeScript for static typing and TSLint for linting. You can get both of these built into your editor with no configuration by opening this project in [Visual Studio Code](https://code.visualstudio.com/), an open source IDE which is available for free on all platforms.
-
-#### Useful tools
-
-Should be moved into some kind of CONTRIBUTING.md soon...
-
-- [AST explorer](https://astexplorer.net/): you can use this to see what the GraphQL query AST looks like for different queries
 
 #### Important discussions
 

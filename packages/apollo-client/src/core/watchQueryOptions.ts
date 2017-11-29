@@ -58,7 +58,7 @@ export interface ModifiableWatchQueryOptions {
   errorPolicy?: ErrorPolicy;
 
   /**
-   * Wether or not to fetch results
+   * Whether or not to fetch results
    */
   fetchResults?: boolean;
 
@@ -195,6 +195,11 @@ export interface MutationOptions<T = { [key: string]: any }>
    * package, that contains a single mutation inside of it.
    */
   mutation: DocumentNode;
+
+  /**
+   * Context to be passed to link execution chain
+   */
+  context?: any;
 }
 
 // Add a level of indirection for `typedoc`.

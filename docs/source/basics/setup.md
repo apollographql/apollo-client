@@ -13,7 +13,7 @@ To get started with Apollo and React, you will need to install a few packages fr
 npm install apollo-client-preset react-apollo graphql-tag graphql --save
 
 # installing each piece independently
-npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag graphql ---save
+npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag graphql --save
 ```
 
 > Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.
@@ -121,7 +121,7 @@ const query = gql`
 `;
 ```
 
-For more information about using fragments, checkout the [guide](./fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
+For more information about using fragments, checkout the [guide](../features/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
 
 <h2 id="connecting-data">Requesting data</h2>
 
@@ -300,7 +300,7 @@ Lets go through all of the properties that may live on your `config` object.
 
 `config.options` is an object or a function that allows you to define the specific behavior your component should use in handling your GraphQL data.
 
-The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](./basics/queries.html#graphql-query-options) and [mutations](./basics/mutations.html#graphql-mutation-options).
+The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](./queries.html#graphql-query-options) and [mutations](./mutations.html#graphql-mutation-options).
 
 You can define `config.options` as a plain object, or you can compute your options from a function that takes the component’s props as an argument.
 

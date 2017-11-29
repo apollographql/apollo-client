@@ -19,8 +19,11 @@ script:
     # make sure files don't get too large
   - npm run filesize
 
-# Allow Travis tests to run in containers.
-sudo: false
+   # check benchmarks for performance drops
+  - npm run benchmark
+
+# Don't allow Travis tests to run in containers, since with that benchmark results can vary a lot.
+sudo: true
 
 notifications:
   email: false

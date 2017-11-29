@@ -7,6 +7,7 @@
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",
+    "benchmark": "cd packages/apollo-client && npm run benchmark",
     "prelint": "npm run lint-fix",
     "lint": "lerna run -- lint",
     "lint-fix":
@@ -75,9 +76,9 @@
     "codecov": "3.0.0",
     "danger": "1.2.0",
     "lerna": "2.5.1",
-    "lint-staged": "4.2.3",
+    "lint-staged": "5.0.0",
     "pre-commit": "1.2.2",
-    "prettier": "1.7.0",
+    "prettier": "1.8.2",
     "ts-jest": "20.0.14",
     "typescript": "2.5.2"
   }

@@ -1,6 +1,19 @@
+
 # Change log
 
 ### vNEXT
+- Ensure that heuristics warnings do not fire in production
+
+### 2.0.3
+- Revert returning `data` directly in subscriptions, now returns `data` and `errors`
+- Include passed context in the context for mutations
+- Remove locked dep on apollo-link and apollo-link-dedup
+- Fix bug where setting options didn't adjust pollInterval correctly [PR#2573](https://github.com/apollographql/apollo-client/pull/2573)
+- Fix issue where write(Fragment|Query) didn't rerender store [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
+- Remove uneeded code causing equality failures [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
+- Potentially fix missing data when rerendering from cache bug in RA [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
+- Preserve referential equality when calling currentResult if possible
+- Include `null` in types of cache reading results [PR#2572](https://github.com/apollographql/apollo-client/pull/2572)
 
 ### 2.0.2
 - Fixed mutation result error checking for empty array

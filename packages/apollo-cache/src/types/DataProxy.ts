@@ -1,4 +1,4 @@
-import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import { DocumentNode } from "graphql"; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 
 export namespace DataProxy {
   export interface Query {
@@ -76,8 +76,8 @@ export interface DataProxy {
    */
   readQuery<QueryType>(
     options: DataProxy.Query,
-    optimistic?: boolean,
-  ): QueryType;
+    optimistic?: boolean
+  ): QueryType | null;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there are more then
@@ -86,7 +86,7 @@ export interface DataProxy {
    */
   readFragment<FragmentType>(
     options: DataProxy.Fragment,
-    optimistic?: boolean,
+    optimistic?: boolean
   ): FragmentType | null;
 
   /**

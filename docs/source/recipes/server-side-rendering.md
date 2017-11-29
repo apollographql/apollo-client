@@ -229,8 +229,6 @@ One solution to this problem is to use an Apollo Link to fetch data using a loca
 import { ApolloLink, Observable, RequestHandler } from 'apollo-link';
 import { execute } from 'graphql';
 
-const context = {};
-
 const createServerLink = schema => new ApolloLink(operation => new Observable(observer => {
   const { query, variables, operationName } = operation;
   const context = {}; // Replace this with your server's GraphQL context

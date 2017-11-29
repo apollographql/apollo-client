@@ -137,7 +137,10 @@ The first argument is the id of the data you want to read from the cache. That i
 ```js
 const client = new ApolloClient({
   ...,
-  dataIdFromObject: object => object.id,
+  cache: new InMemoryCache({
+    ...,
+    dataIdFromObject: object => object.id,
+  }),
 });
 ```
 

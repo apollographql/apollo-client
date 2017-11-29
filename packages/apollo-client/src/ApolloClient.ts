@@ -73,7 +73,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public defaultOptions: DefaultOptions = {};
 
   private devToolsHookCb: Function;
-  private proxy: DataProxy | undefined;
+  private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
 
   /**
@@ -384,14 +384,32 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * Exposes the cache's complete state, in a serializable format for later restoration.
+   */
+  public extract(optimistic?: boolean): TCacheShape {
+    return this.initProxy().extract(optimistic);
+  }
+
+  /**
+   * Replaces existing state in the cache (if any) with the values expressed by
+   * `serializedState`.
+   *
+   * Called when hydrating a cache (server side rendering, or offline storage),
+   * and also (potentially) during hot reloads.
+   */
+  public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
+    return this.initProxy().restore(serializedState);
+  }
+
+  /**
    * Initializes a data proxy for this client instance if one does not already
    * exist and returns either a previously initialized proxy instance or the
    * newly initialized instance.
    */
-  private initProxy(): DataProxy {
+  private initProxy(): ApolloCache<TCacheShape> {
     if (!this.proxy) {
       this.initQueryManager();
-      this.proxy = this.cache as DataProxy;
+      this.proxy = this.cache;
     }
     return this.proxy;
   }

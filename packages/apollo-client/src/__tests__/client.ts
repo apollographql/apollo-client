@@ -409,6 +409,135 @@ describe('client', () => {
     });
   });
 
+  it('store can be rehydrated from the server using the shadow method', () => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const link = mockSingleLink({
+      request: { query },
+      result: { data },
+    });
+
+    const initialState: any = {
+      data: {
+        'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
+          name: 'Luke Skywalker',
+        },
+        'ROOT_QUERY.allPeople({"first":1})': {
+          people: [
+            {
+              type: 'id',
+              generated: true,
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
+            },
+          ],
+        },
+        ROOT_QUERY: {
+          'allPeople({"first":1})': {
+            type: 'id',
+            id: 'ROOT_QUERY.allPeople({"first":1})',
+            generated: true,
+          },
+        },
+        optimistic: [],
+      },
+    };
+
+    const finalState = assign({}, initialState, {});
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }).restore(
+        initialState.data,
+      ),
+    });
+
+    return client.query({ query }).then(result => {
+      expect(result.data).toEqual(data);
+      expect(finalState.data).toEqual(client.extract());
+    });
+  });
+
+  it('stores shadow of restore returns the same result as accessing the method directly on the cache', () => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const link = mockSingleLink({
+      request: { query },
+      result: { data },
+    });
+
+    const initialState: any = {
+      data: {
+        'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
+          name: 'Luke Skywalker',
+        },
+        'ROOT_QUERY.allPeople({"first":1})': {
+          people: [
+            {
+              type: 'id',
+              generated: true,
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
+            },
+          ],
+        },
+        ROOT_QUERY: {
+          'allPeople({"first":1})': {
+            type: 'id',
+            id: 'ROOT_QUERY.allPeople({"first":1})',
+            generated: true,
+          },
+        },
+        optimistic: [],
+      },
+    };
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }).restore(
+        initialState.data,
+      ),
+    });
+
+    expect(client.restore(initialState.data)).toEqual(
+      client.cache.restore(initialState.data),
+    );
+  });
+
   it('should return errors correctly for a single query', () => {
     const query = gql`
       query people {

@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Expose the cache methods `restore` and `extract` directly on ApolloClient  [PR#2615](https://github.com/apollographql/apollo-client/pull/2615)
 - Ensure that heuristics warnings do not fire in production
 
 ### 2.0.3

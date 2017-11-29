@@ -43,7 +43,7 @@
     "apollo-utilities": "^1.0.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.11.6",
+    "@types/graphql": "0.11.7",
     "@types/jest": "21.1.8",
     "browserify": "14.5.0",
     "graphql": "0.11.7",

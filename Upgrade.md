@@ -167,7 +167,7 @@ const client = new ApolloClient({ cache: new InMemoryCache() });
 
 // do some data loading things using getDataFromTree
 
-const state = client.cache.extract();
+const state = client.extract();
 ```
 
 

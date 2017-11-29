@@ -18,7 +18,7 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  window.__APOLLO_STATE__ = client.cache.extract();
+  window.__APOLLO_STATE__ = client.extract();
 </script>
 ```
 
@@ -192,7 +192,7 @@ const client = new ApolloClient(....);
 getDataFromTree(app).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(app);
-  const initialState = client.cache.extract();
+  const initialState = client.extract();
 
   const html = <Html content={content} state={initialState} />;
 
@@ -221,7 +221,39 @@ function Html({ content, state }) {
 
 <h3 id="local-queries">Avoiding the network for local queries</h3>
 
-If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work. One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request.
+If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work.
+
+One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could create a different link instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
+
+```js
+import { ApolloLink, Observable, RequestHandler } from 'apollo-link';
+import { execute } from 'graphql';
+
+const createServerLink = schema => new ApolloLink(operation => new Observable(observer => {
+  const { query, variables, operationName } = operation;
+  const context = {}; // Replace this with your server's GraphQL context
+
+  execute(schema, query, null, context, variables, operationName)
+    .then(res => {
+      observer.next(res);
+      observer.complete();
+    })
+    .catch(err => {
+      observer.error(err);
+    });
+
+  return () => {};
+}));
+
+// ...
+
+const client = new ApolloClient({
+  ssrMode: true,
+  // Instead of "createHttpLink" use your custom link factory here
+  link: createServerLink(schema),
+  cache: new InMemoryCache(),
+});
+```
 
 <h3 id="skip-for-ssr">Skipping queries for SSR</h3>
 
@@ -245,7 +277,7 @@ const client = new ApolloClient(....);
 
 // during request
 renderToStringWithData(app).then((content) => {
-  const initialState = client.cache.extract();
+  const initialState = client.extract();
   const html = <Html content={content} state={initialState} />;
 
   res.status(200);

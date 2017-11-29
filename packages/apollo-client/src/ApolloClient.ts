@@ -73,7 +73,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public defaultOptions: DefaultOptions = {};
 
   private devToolsHookCb: Function;
-  private proxy: DataProxy | undefined;
+  private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
 
   /**

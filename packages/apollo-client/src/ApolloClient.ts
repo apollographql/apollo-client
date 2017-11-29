@@ -406,10 +406,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * exist and returns either a previously initialized proxy instance or the
    * newly initialized instance.
    */
-  private initProxy(): DataProxy {
+  private initProxy(): ApolloCache<TCacheShape> {
     if (!this.proxy) {
       this.initQueryManager();
-      this.proxy = this.cache as DataProxy;
+      this.proxy = this.cache;
     }
     return this.proxy;
   }

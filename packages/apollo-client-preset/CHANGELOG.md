@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.0.4
+- Apollo Client 2.1.0
+
 ### 1.0.3
 - Apollo Client 2.0.3
 - improved rollup builds

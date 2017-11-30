@@ -2193,6 +2193,19 @@ describe('client', () => {
     client.resetStore();
   });
 
+  it('has a reFetchObservableQueries method which calls QueryManager', done => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+    client.queryManager = {
+      reFetchObservableQueries: () => {
+        done();
+      },
+    } as QueryManager;
+    client.reFetchObservableQueries();
+  });
+
   it('should enable dev tools logging', () => {
     const query = gql`
       query people {

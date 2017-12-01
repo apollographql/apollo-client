@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.1.2
+- Ensure that heuristics warnings do not fire in production [#2611](https://github.com/apollographql/apollo-client/pull/2611)
+
 ### 1.1.1
 - Change some access modifiers "private" to "protected" to allow code reuse by InMemoryCache subclasses. 
 - improved rollup builds

@@ -170,7 +170,7 @@ Another alternative for network interface is GraphQL over WebSocket, using [`sub
 
 You can the create WebSocket as full-transport, and pass all GraphQL operations over the WebSocket (`Query`, `Mutation` and `Subscription`), or use a hybrid network interface and execute `Query` and `Mutation` over HTTP, and only `Subscription` over the WebSocket.
 
-For more information about using WebSocket's with Apollo Link, check out the [indepth guide](/docs/link/links/ws.html)
+For more information about using WebSockets with Apollo Link, check out the [indepth guide](/docs/link/links/ws.html)
 
 
 <h3 id="query-batching">Query Batching</h3>

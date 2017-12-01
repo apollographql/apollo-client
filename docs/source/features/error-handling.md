@@ -11,7 +11,7 @@ Any application, from simple to complex, can have its fair share of errors. It i
 - UI Errors: errors that occur in your component code
 - Apollo Client Errors: internal errors within the core or corresponding libraries
 
-<h3 id="policies" title="Error policies">Error policies</h3>
+<h2 id="policies" title="Error policies">Error policies</h2>
 
 Much like `fetchPolicy`, `errorPolicy` allows you to control how GraphQL Errors from the server are sent to your UI code. By default, the error policy treats any GraphQL Errors as network errors and ends the request chain. It doesn't save any data in the cache, and renders your UI withe the `error` prop to be an ApolloError. By changing this policy per request, you can adjust how GraphQL Errors are managed in the cache and your UI. The possible options for `errorPolicy` are:
 - `none`: This is the default policy to match how Apollo Client 1.0 worked. Any GraphQL Errors are treated the same as network errors and any data is ignored from the response.
@@ -29,7 +29,7 @@ const withDataAndErrors = graphql(MY_MIXED_QUERY, {
 Any errors reported will come under an `errors` prop along side the data returned from the cache or server.
 
 
-<h3 id="network" title="Network errors">Network Errors</h3>
+<h2 id="network" title="Network errors">Network Errors</h2>
 When using Apollo Link, the ability to handle network errors is way more powerful. The best way to do this is to use the `apollo-link-error` to catch and handle server errors, network errors, and GraphQL errors. 
 
 #### Usage

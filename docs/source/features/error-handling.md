@@ -3,7 +3,6 @@ title: Error Handling
 description: Handling errors with Apollo
 ---
 
-<h2 id="error-types">Managing errors</h2>
 Any application, from simple to complex, can have its fair share of errors. It is important to handle these errors and when possible, report these errors back to your users for information. Using GraphQL brings a new set of possible errors from the actual GraphQL response itself. With that in mind, here are a few different types of errors:
 
 - GraphQL Errors: errors in the GraphQL results that can appear alongside successful data
@@ -13,6 +12,7 @@ Any application, from simple to complex, can have its fair share of errors. It i
 - Apollo Client Errors: internal errors within the core or corresponding libraries
 
 <h3 id="policies" title="Error policies">Error policies</h3>
+
 Much like `fetchPolicy`, `errorPolicy` allows you to control how GraphQL Errors from the server are sent to your UI code. By default, the error policy treats any GraphQL Errors as network errors and ends the request chain. It doesn't save any data in the cache, and renders your UI withe the `error` prop to be an ApolloError. By changing this policy per request, you can adjust how GraphQL Errors are managed in the cache and your UI. The possible options for `errorPolicy` are:
 - `none`: This is the default policy to match how Apollo Client 1.0 worked. Any GraphQL Errors are treated the same as network errors and any data is ignored from the response.
 - `ignore`: Ignore allows you to read any data that is returned alongside GraphQL Errors, but doesn't save the errors or report them to your UI.

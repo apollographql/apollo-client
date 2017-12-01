@@ -7,9 +7,10 @@ import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
+let message: string = null as never;
+
 disableFragmentWarnings();
 export function withError(func: Function, regex: RegExp) {
-  let message: string = null as never;
   const oldError = console.error;
 
   console.error = (m: string) => (message = m);

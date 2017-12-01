@@ -45,26 +45,30 @@ The `InMemoryCache` constructor takes an optional config object with properties 
 The `InMemoryCache` normalizes your data before saving it to the store by splitting the result into individual objects, creating a unique identifier for each object, and storing those objects in a flattened data structure. By default, `InMemoryCache` will attempt to use the commonly found primary keys of `id` and `_id` for the unique identifier if they exist along with `__typename` on an object.
 
 If `id` and `_id` are not specified, or if `__typename` is not specified, `InMemoryCache` will fall back to the path to the object in the query, such as `ROOT_QUERY.allPeople.0` for the first record returned on the `allPeople` root query.
+That would make data for given type scoped for `allPeople` query and other queries would have to fetch their own separate objects.
 
-This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `InMemoryCache` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions.
+This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `InMemoryCache` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions so it could be referenced by any query.
 
 For example, if you wanted to key off of the `key` field for all of your data, you could configure `dataIdFromObject` like so:
 
 ```js
 const cache = new InMemoryCache({
-  dataIdFromObject: object => object.key
+  dataIdFromObject: object => object.key || null
 });
 ```
+Note that Apollo Client doesn't add the type name to the cache key when you specify a custom `dataIdFromObject`, so if your IDs are not unique across all objects, you might want to include the `__typename` in your `dataIdFromObject`.
 
-This also allows you to use different unique identifiers for different data types by keying off of the `__typename` property attached to every object typed by GraphQL.  For example:
+You can use different unique identifiers for different data types by keying off of the `__typename` property attached to every object typed by GraphQL.  For example:
 
 ```js
+import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory';
+
 const cache = new InMemoryCache({
   dataIdFromObject: object => {
     switch (object.__typename) {
       case 'foo': return object.key; // use `key` as the primary key
-      case 'bar': return object.blah; // use `blah` as the primary key
-      default: return object.id || object._id; // fall back to `id` and `_id` for all other types
+      case 'bar': return `bar:${object.blah}`; // use `bar` prefix and `blah` as the primary key
+      default: return defaultDataIdFromObject(object); // fall back to default handling
     }
   }
 });

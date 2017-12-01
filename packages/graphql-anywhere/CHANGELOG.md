@@ -2,6 +2,9 @@
 
 ## vNEXT
 
+### 4.0.2
+- package dependency updates
+
 ### 4.0.1
 - Improved rollup builds
 

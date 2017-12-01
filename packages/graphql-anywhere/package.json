@@ -4,7 +4,7 @@
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
-  "jsnext:main": "/lib/index.js",
+  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "scripts": {
     "coverage": "jest --coverage",

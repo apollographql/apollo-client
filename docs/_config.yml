@@ -3,7 +3,7 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Apollo Client Guide
+title: Apollo Client
 propertytitle: Using GraphQL with Apollo Client
 subtitle: React Guide
 description: A guide to using the Apollo GraphQL Client with React.

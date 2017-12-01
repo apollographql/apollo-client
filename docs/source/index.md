@@ -3,7 +3,6 @@ title: Introduction
 description: What is Apollo Client and what does it do?
 ---
 
-<h2 title="Why">Write queries, not code</h2>
 [Apollo](https://www.nasa.gov/mission_pages/apollo/missions/index.html) Client is the ultra-flexible, community driven GraphQL client for React, JavaScript, and native platforms. It is designed from the ground up to make it easy to build UI components that fetch data with GraphQL. To get the most value out of Apollo Client, you should use it with one of its view layer integrations. To get started with the React integration, go to [setup](./basics/setup.html).
 
 Apollo Client also has view layer integrations for [all the popular frontend frameworks](./basics/integrations.html). For the best experience, make sure to use the view integration layer for your frontend framework of choice.
@@ -21,6 +20,7 @@ Apollo Client can be used in any JavaScript frontend where you want to describe 
 These docs will help you to go from getting started with Apollo to becoming an expert!
 
 <h2 title="Getting started" id="starting">Getting Started</h2>
+
 The docs for Apollo Client are mainly written using the [React integration](./basics/setup.html), but most of the examples work no matter where you use Apollo. The docs are broken into four distinct sections to make it easy to find your way around:
 
 1. **Basics**, which outline the why and how of using Apollo Client to build your application.

@@ -30,11 +30,11 @@ The docs for Apollo Client are mainly written using the [React integration](./ba
 
 Getting started is as simple as installing a few libraries from [npm](https://npmjs.org)! The [setup](./basics/setup.html) is a good place to start your adventure with Apollo!
 
-<h3 id="Compatibility">Compatible tools</h3>
+<h2 id="Compatibility">Compatible tools</h2>
 
 We want you to love working with Apollo Client, so we work extra hard to make sure it works with the client or server tools you're already using! The maintainers and contributors focus on solving the hard problems around GraphQL caching, request management, and UI updating, and we want that to be available to anyone regardless of their technical requirements and preferences for other parts of the app.
 
-<h3 id="react-toolbox" title="Perfect for React">The React toolbox</h3>
+<h2 id="react-toolbox" title="Perfect for React">The React toolbox</h2>
 
 Apollo is lovingly designed to work nicely with all of the tools used by today's React developers. Here are some in particular:
 
@@ -45,11 +45,11 @@ Apollo is lovingly designed to work nicely with all of the tools used by today's
 
 If you have a favorite React tool, and something in Apollo makes it difficult to integrate, please open an issue and let's work together to make it work nicely and add it to the list!
 
-<h3 id="graphql-servers">GraphQL servers</h3>
+<h2 id="graphql-servers">GraphQL servers</h2>
 
 We believe that using GraphQL should be easy and fun. One of the ways Apollo is designed for this is that if you can write your query in GraphiQL, it'll work with Apollo Client! Because it doesn't assume anything beyond the official GraphQL specification, Apollo works with every GraphQL server implementation, for *every* language. It doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo can handle it. You can find a list of GraphQL server implementations on [graphql.org](http://graphql.org/code/#server-libraries).
 
-<h3 id="other-platforms" title="Other JS + native platforms">Other JavaScript + native platforms</h3>
+<h2 id="other-platforms" title="Other JS + native platforms">Other JavaScript + native platforms</h2>
 
 This documentation site is written with examples using React, but Apollo has an implementation for every client platform:
 

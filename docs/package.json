@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "hexo": {
-    "version": "3.3.9"
+    "version": "3.4.2"
   },
   "dependencies": {
     "hexo": "3.4.2",
@@ -20,8 +20,7 @@
     "typescript": "^2.5.3"
   },
   "scripts": {
-    "types":
-      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
     "build": "npm run types && hexo generate",
     "start": "hexo serve"
   }

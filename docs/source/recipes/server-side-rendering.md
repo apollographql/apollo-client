@@ -192,7 +192,7 @@ const client = new ApolloClient(....);
 getDataFromTree(app).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(app);
-  const initialState = client.extract();
+  const initialState = client.cache.extract();
 
   const html = <Html content={content} state={initialState} />;
 

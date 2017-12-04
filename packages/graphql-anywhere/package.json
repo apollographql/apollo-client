@@ -11,7 +11,7 @@
     "test": "jest",
     "build": "tsc",
     "postbuild": "npm run bundle",
-    "bundle": "rollup -c rollup.config.js",
+    "bundle": "rollup -c rollup.config.js && rollup -c rollup.async.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",

@@ -10,8 +10,6 @@ import {
   getMainDefinition,
   getFragmentDefinitions,
   createFragmentMap,
-  FragmentMap,
-  DirectiveInfo,
   shouldInclude,
   getDirectiveInfoFromField,
   isField,
@@ -20,45 +18,14 @@ import {
   argumentsObjectFromField,
 } from 'apollo-utilities';
 
-export type Resolver = (
-  fieldName: string,
-  rootValue: any,
-  args: any,
-  context: any,
-  info: ExecInfo,
-) => any;
-
-export type VariableMap = { [name: string]: any };
-
-export type ResultMapper = (
-  values: { [fieldName: string]: any },
-  rootValue: any,
-) => any;
-export type FragmentMatcher = (
-  rootValue: any,
-  typeCondition: string,
-  context: any,
-) => boolean;
-
-export type ExecContext = {
-  fragmentMap: FragmentMap;
-  contextValue: any;
-  variableValues: VariableMap;
-  resultMapper: ResultMapper;
-  resolver: Resolver;
-  fragmentMatcher: FragmentMatcher;
-};
-
-export type ExecInfo = {
-  isLeaf: boolean;
-  resultKey: string;
-  directives: DirectiveInfo;
-};
-
-export type ExecOptions = {
-  resultMapper?: ResultMapper;
-  fragmentMatcher?: FragmentMatcher;
-};
+import {
+  merge,
+  Resolver,
+  VariableMap,
+  ExecContext,
+  ExecInfo,
+  ExecOptions,
+} from './graphql';
 
 /* Based on graphql function from graphql-js:
  *
@@ -84,7 +51,7 @@ export function graphql(
   contextValue?: any,
   variableValues?: VariableMap,
   execOptions: ExecOptions = {},
-) {
+): Promise<null | Object> {
   const mainDefinition = getMainDefinition(document);
 
   const fragments = getFragmentDefinitions(document);
@@ -111,7 +78,7 @@ export function graphql(
   );
 }
 
-function executeSelectionSet(
+async function executeSelectionSet(
   selectionSet: SelectionSetNode,
   rootValue: any,
   execContext: ExecContext,
@@ -120,14 +87,14 @@ function executeSelectionSet(
 
   const result = {};
 
-  selectionSet.selections.forEach(selection => {
+  const execute = async selection => {
     if (!shouldInclude(selection, variables)) {
       // Skip this entirely
       return;
     }
 
     if (isField(selection)) {
-      const fieldResult = executeField(selection, rootValue, execContext);
+      const fieldResult = await executeField(selection, rootValue, execContext);
 
       const resultFieldKey = resultKeyNameFromField(selection);
 
@@ -138,33 +105,37 @@ function executeSelectionSet(
           merge(result[resultFieldKey], fieldResult);
         }
       }
+
+      return;
+    }
+
+    let fragment: InlineFragmentNode | FragmentDefinitionNode;
+
+    if (isInlineFragment(selection)) {
+      fragment = selection;
     } else {
-      let fragment: InlineFragmentNode | FragmentDefinitionNode;
+      // This is a named fragment
+      fragment = fragmentMap[selection.name.value];
 
-      if (isInlineFragment(selection)) {
-        fragment = selection;
-      } else {
-        // This is a named fragment
-        fragment = fragmentMap[selection.name.value];
-
-        if (!fragment) {
-          throw new Error(`No fragment named ${selection.name.value}`);
-        }
-      }
-
-      const typeCondition = fragment.typeCondition.name.value;
-
-      if (execContext.fragmentMatcher(rootValue, typeCondition, contextValue)) {
-        const fragmentResult = executeSelectionSet(
-          fragment.selectionSet,
-          rootValue,
-          execContext,
-        );
-
-        merge(result, fragmentResult);
+      if (!fragment) {
+        throw new Error(`No fragment named ${selection.name.value}`);
       }
     }
-  });
+
+    const typeCondition = fragment.typeCondition.name.value;
+
+    if (execContext.fragmentMatcher(rootValue, typeCondition, contextValue)) {
+      const fragmentResult = await executeSelectionSet(
+        fragment.selectionSet,
+        rootValue,
+        execContext,
+      );
+
+      merge(result, fragmentResult);
+    }
+  };
+
+  await Promise.all(selectionSet.selections.map(execute));
 
   if (execContext.resultMapper) {
     return execContext.resultMapper(result, rootValue);
@@ -173,11 +144,11 @@ function executeSelectionSet(
   return result;
 }
 
-function executeField(
+async function executeField(
   field: FieldNode,
   rootValue: any,
   execContext: ExecContext,
-): any {
+): Promise<null | Object> {
   const { variableValues: variables, contextValue, resolver } = execContext;
 
   const fieldName = field.name.value;
@@ -189,7 +160,7 @@ function executeField(
     directives: getDirectiveInfoFromField(field, variables),
   };
 
-  const result = resolver(fieldName, rootValue, args, contextValue, info);
+  const result = await resolver(fieldName, rootValue, args, contextValue, info);
 
   // Handle all scalar types here
   if (!field.selectionSet) {
@@ -212,39 +183,20 @@ function executeField(
 }
 
 function executeSubSelectedArray(field, result, execContext) {
-  return result.map(item => {
-    // null value in array
-    if (item === null) {
-      return null;
-    }
+  return Promise.all(
+    result.map(item => {
+      // null value in array
+      if (item === null) {
+        return null;
+      }
 
-    // This is a nested array, recurse
-    if (Array.isArray(item)) {
-      return executeSubSelectedArray(field, item, execContext);
-    }
+      // This is a nested array, recurse
+      if (Array.isArray(item)) {
+        return executeSubSelectedArray(field, item, execContext);
+      }
 
-    // This is an object, run the selection set on it
-    return executeSelectionSet(field.selectionSet, item, execContext);
-  });
-}
-
-export function merge(dest, src) {
-  if (src === null || typeof src !== 'object') {
-    // These types just override whatever was in dest
-    return src;
-  }
-
-  // Merge sub-objects
-  Object.keys(dest).forEach(destKey => {
-    if (src.hasOwnProperty(destKey)) {
-      merge(dest[destKey], src[destKey]);
-    }
-  });
-
-  // Add props only on src
-  Object.keys(src).forEach(srcKey => {
-    if (!dest.hasOwnProperty(srcKey)) {
-      dest[srcKey] = src[srcKey];
-    }
-  });
+      // This is an object, run the selection set on it
+      return executeSelectionSet(field.selectionSet, item, execContext);
+    }),
+  );
 }

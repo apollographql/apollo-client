@@ -4,6 +4,7 @@ import { thresholds } from './thresholds';
 
 export function collectAndReportBenchmarks() {
   const github = eval('new require("github")()') as GithubAPI;
+  const commitSHA = process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT || '';
 
   github.authenticate({
     type: 'oauth',
@@ -13,7 +14,7 @@ export function collectAndReportBenchmarks() {
   github.repos.createStatus({
     owner: 'apollographql',
     repo: 'apollo-client',
-    sha: process.env.TRAVIS_COMMIT || '',
+    sha: commitSHA,
     context: 'Benchmark',
     description: 'Evaluation is in progress!',
     state: 'pending',
@@ -89,7 +90,7 @@ export function collectAndReportBenchmarks() {
         .createStatus({
           owner: 'apollographql',
           repo: 'apollo-client',
-          sha: process.env.TRAVIS_COMMIT || '',
+          sha: commitSHA,
           context: 'Benchmark',
           description: message,
           state: pass ? 'success' : 'error',

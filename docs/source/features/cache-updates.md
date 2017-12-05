@@ -435,7 +435,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 const cache = new InMemoryCache({
   cacheResolvers: {
     Query: {
-      book: (_, args) => toIdValue(client.dataIdFromObject({ __typename: 'Book', id: args.id })),
+      book: (_, args) => toIdValue(cache.config.dataIdFromObject({ __typename: 'Book', id: args.id })),
     },
   },
 });
@@ -471,7 +471,7 @@ It is also possible to return a list of IDs:
 cacheResolvers: {
   Query: {
     books: (_, args) => args.ids.map(id =>
-      toIdValue(dataIdFromObject({ __typename: 'Book', id: id }))),
+      toIdValue(cache.config.dataIdFromObject({ __typename: 'Book', id: id }))),
   },
 },
 ```

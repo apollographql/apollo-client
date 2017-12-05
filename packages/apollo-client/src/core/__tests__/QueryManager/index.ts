@@ -3327,6 +3327,428 @@ describe('QueryManager', () => {
         });
     });
   });
+  describe('refetching observed queries', () => {
+    it('returns a promise resolving when all queries have been refetched', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const dataChanged = {
+        author: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const query2 = gql`
+        query {
+          author2 {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data2 = {
+        author2: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const data2Changed = {
+        author2: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const queryManager = createQueryManager({
+        link: mockSingleLink(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data2 },
+          },
+          {
+            request: { query },
+            result: { data: dataChanged },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data2Changed },
+          },
+        ),
+      });
+
+      const observable = queryManager.watchQuery<any>({ query });
+      const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+      return Promise.all([
+        observableToPromise({ observable }, result =>
+          expect(result.data).toEqual(data),
+        ),
+        observableToPromise({ observable: observable2 }, result =>
+          expect(result.data).toEqual(data2),
+        ),
+      ]).then(() => {
+        observable.subscribe({ next: () => null });
+        observable2.subscribe({ next: () => null });
+
+        return queryManager.reFetchObservableQueries().then(() => {
+          const result = queryManager.getCurrentQueryResult(observable);
+          expect(result.partial).toBe(false);
+          expect(result.data).toEqual(dataChanged);
+
+          const result2 = queryManager.getCurrentQueryResult(observable2);
+          expect(result2.partial).toBe(false);
+          expect(result2.data).toEqual(data2Changed);
+        });
+      });
+    });
+
+    it('should only refetch once when we refetch observable queries', () => {
+      let queryManager: QueryManager;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const data2 = {
+        author: {
+          firstName: 'Johnny',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const link: ApolloLink = new ApolloLink(
+        op =>
+          new Observable(observer => {
+            timesFired += 1;
+            if (timesFired > 1) {
+              observer.next({ data: data2 });
+            } else {
+              observer.next({ data });
+            }
+            observer.complete();
+            return;
+          }),
+      );
+      queryManager = createQueryManager({ link });
+      const observable = queryManager.watchQuery<any>({ query });
+
+      // wait just to make sure the observable doesn't fire again
+      return observableToPromise(
+        { observable, wait: 0 },
+        result => {
+          expect(result.data).toEqual(data);
+          expect(timesFired).toBe(1);
+          // refetch the observed queries after data has returned
+          queryManager.reFetchObservableQueries();
+        },
+        result => {
+          // only refetch once and make sure data has changed
+          expect(result.data).toEqual(data2);
+          expect(timesFired).toBe(2);
+        },
+      ).catch(e => {
+        done.fail(e);
+      });
+    });
+
+    it('should not refetch toredown queries', done => {
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const link: ApolloLink = ApolloLink.from([
+        () =>
+          new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            return;
+          }),
+      ]);
+
+      queryManager = createQueryManager({ link });
+      observable = queryManager.watchQuery({ query });
+
+      observableToPromise({ observable, wait: 0 }, result =>
+        expect(result.data).toEqual(data),
+      ).then(() => {
+        expect(timesFired).toBe(1);
+
+        // at this point the observable query has been toredown
+        // because observableToPromise unsubscribe before resolving
+        queryManager.reFetchObservableQueries();
+
+        setTimeout(() => {
+          expect(timesFired).toBe(1);
+
+          done();
+        }, 50);
+      });
+    });
+
+    it('should not error on queries that are already in the store', () => {
+      let queryManager: QueryManager;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const link = ApolloLink.from([
+        () =>
+          new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            return;
+          }),
+      ]);
+      queryManager = createQueryManager({ link });
+      const observable = queryManager.watchQuery<any>({
+        query,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      // wait to make sure store reset happened
+      return observableToPromise(
+        { observable, wait: 20 },
+        result => {
+          expect(result.data).toEqual(data);
+          expect(timesFired).toBe(1);
+          setTimeout(
+            queryManager.reFetchObservableQueries.bind(queryManager),
+            10,
+          );
+        },
+        result => {
+          expect(result.data).toEqual(data);
+          expect(timesFired).toBe(2);
+        },
+      );
+    });
+
+    it('should NOT throw an error on an inflight fetch query if the observable queries are refetched', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = mockQueryManager({
+        request: { query },
+        result: { data },
+        delay: 100,
+      });
+      queryManager
+        .fetchQuery('made up id', { query })
+        .then(() => {
+          done();
+        })
+        .catch(error => {
+          done.fail(new Error('Should not return an error'));
+        });
+      queryManager.reFetchObservableQueries();
+    });
+
+    it('should call refetch on a mocked Observable if the observed queries are refetched', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const queryManager = mockQueryManager();
+
+      const mockObservableQuery: ObservableQuery<any> = ({
+        refetch(_: any): Promise<ExecutionResult> {
+          done();
+          return null as never;
+        },
+        options: {
+          query: query,
+        },
+        scheduler: queryManager.scheduler,
+        resetLastResults: jest.fn(() => {}),
+      } as any) as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.reFetchObservableQueries();
+    });
+
+    it('should not call refetch on a cache-only Observable if the observed queries are refetched', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({});
+      const options = assign({}) as WatchQueryOptions;
+      options.fetchPolicy = 'cache-only';
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = ({
+        refetch(_: any): Promise<ExecutionResult> {
+          refetchCount++;
+          return null as never;
+        },
+        options,
+        queryManager: queryManager,
+
+        resetLastResults: jest.fn(() => {}),
+      } as any) as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.reFetchObservableQueries();
+      setTimeout(() => {
+        expect(refetchCount).toEqual(0);
+        done();
+      }, 50);
+    });
+
+    it('should not call refetch on a standby Observable if the observed queries are refetched', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({});
+      const options = assign({}) as WatchQueryOptions;
+      options.fetchPolicy = 'standby';
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = ({
+        refetch(_: any): Promise<ExecutionResult> {
+          refetchCount++;
+          return null as never;
+        },
+        options,
+        queryManager: queryManager,
+
+        resetLastResults: jest.fn(() => {}),
+      } as any) as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.reFetchObservableQueries();
+      setTimeout(() => {
+        expect(refetchCount).toEqual(0);
+        done();
+      }, 50);
+    });
+
+    it('should NOT throw an error on an inflight query() if the observed queries are refetched', done => {
+      let queryManager: QueryManager;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const link = new ApolloLink(
+        () =>
+          new Observable(observer => {
+            // refetch observed queries as soon as we hear about the query
+            queryManager.reFetchObservableQueries();
+            observer.next({ data });
+            return;
+          }),
+      );
+
+      queryManager = createQueryManager({ link });
+      queryManager
+        .query<any>({ query })
+        .then(() => {
+          done();
+        })
+        .catch(e => {
+          done.fail(
+            new Error(
+              'query() should not throw error when refetching observed queriest',
+            ),
+          );
+        });
+    });
+  });
   describe('loading state', () => {
     it('should be passed as false if we are not watching a query', () => {
       const query = gql`

@@ -73,7 +73,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public defaultOptions: DefaultOptions = {};
 
   private devToolsHookCb: Function;
-  private proxy: DataProxy | undefined;
+  private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
 
   /**
@@ -134,6 +134,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.query = this.query.bind(this);
     this.mutate = this.mutate.bind(this);
     this.resetStore = this.resetStore.bind(this);
+    this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
@@ -384,14 +385,52 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * Refetches all of your active queries.
+   *
+   * `reFetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
+   *
+   * It is important to remember that `reFetchObservableQueries()` *will* refetch any active
+   * queries. This means that any components that might be mounted will execute
+   * their queries again using your network interface. If you do not want to
+   * re-execute any queries then you should make sure to stop watching any
+   * active queries.
+   */
+  public reFetchObservableQueries():
+    | Promise<ApolloQueryResult<any>[]>
+    | Promise<null> {
+    return this.queryManager
+      ? this.queryManager.reFetchObservableQueries()
+      : Promise.resolve(null);
+   }
+  
+  /**
+   * Exposes the cache's complete state, in a serializable format for later restoration.
+   */
+  public extract(optimistic?: boolean): TCacheShape {
+    return this.initProxy().extract(optimistic);
+  }
+
+  /**
+   * Replaces existing state in the cache (if any) with the values expressed by
+   * `serializedState`.
+   *
+   * Called when hydrating a cache (server side rendering, or offline storage),
+   * and also (potentially) during hot reloads.
+   */
+  public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
+    return this.initProxy().restore(serializedState);
+
+  }
+
+  /**
    * Initializes a data proxy for this client instance if one does not already
    * exist and returns either a previously initialized proxy instance or the
    * newly initialized instance.
    */
-  private initProxy(): DataProxy {
+  private initProxy(): ApolloCache<TCacheShape> {
     if (!this.proxy) {
       this.initQueryManager();
-      this.proxy = this.cache as DataProxy;
+      this.proxy = this.cache;
     }
     return this.proxy;
   }

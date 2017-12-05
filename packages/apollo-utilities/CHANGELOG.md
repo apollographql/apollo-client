@@ -3,6 +3,9 @@
 
 ### vNext
 
+### 1.0.3
+- package dependency updates
+
 ### 1.0.2
 - improved rollup builds
 

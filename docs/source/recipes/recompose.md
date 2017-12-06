@@ -172,4 +172,4 @@ const enhancedComponent = compose(
 
 You can use similar DRY approach with recompose's help for many other usecases like keeping state above graphql HOC to be used in it's options function to change variables/pollingInterval etc.
 
-Also you can add sideffects to mutate functions. Normaly if you need to add sideffect to it, you would manage it in HOC's `options->props` part by doing something like `{ mutate: () => mutate().then(sideEffectHandler) }`. But that is not very reusable. Using recompose's `withProps()` you can compose same prop manipulation in any count of components.
+Normaly if you need to add sideffect to mutate function, you would manage it in HOC's `options->props` part by doing something like `{ mutate: () => mutate().then(sideEffectHandler) }`. But that is not very reusable. Using recompose's `withProps()` you can compose same prop manipulation in any count of components.

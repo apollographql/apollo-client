@@ -142,7 +142,8 @@ const withAutoPicking = lifecycle({
     if (pickerValue) {
       return;
     }
-    // when Apollo query is resolved from cache, it already have networkStatus 7 at mount time
+    // when Apollo query is resolved from cache,
+    // it already have networkStatus 7 at mount time
     if (data.networkStatus === 7 && !data.error) {
       const match = findOption(data.options);
       if (match) {
@@ -167,6 +168,72 @@ const enhancedComponent = compose(
   withAutoPicking,
 )(Component);
 ```
+
+## Controlling pollInterval
+Let's borrow some example from Meteor's Galaxy UI panel migrations implementation.
+
+We’re not usually running any migrations, so a nice, slow polling interval like 30 seconds seemed reasonable. But in the rare case where a migration is running, I wanted to be able to see much faster updates on its progress.
+
+The key to this is knowing that the `options` parameter to react-apollo’s main graphql function can itself be a function that depends on its incoming React props. (The `options` parameter describes the options for the query itself, as opposed to React-specific details like what property name to use for data.) We can then use recompose's `withState()` to set the poll interval from a prop passed in to the graphql component, and use the `componentWillReceiveProps` React lifecycle event (added via the recompose lifecycle helper) to look at the fetched GraphQL data and adjust if necessary.
+
+```
+import { graphql } from "react-apollo";
+import gql from "graphql-tag";
+import { compose, withState, lifecycle } from "recompose";
+
+const DEFAULT_INTERVAL = 30 * 1000;
+const ACTIVE_INTERVAL = 500;
+
+const withData = compose(
+  // Pass down two props to the nested component: `pollInterval`,
+  // which defaults to our normal slow poll, and `setPollInterval`,
+  // which lets the nested components modify `pollInterval`.
+  withState("pollInterval", "setPollInterval", DEFAULT_INTERVAL),
+  graphql(
+    gql`
+      query getMigrationStatus {
+        activeMigration {
+          name
+          version
+          progress
+        }
+      }
+    `,
+    {
+      // If you think it's clear enough, you can abbreviate this as:
+      //   options: ({pollInterval}) => ({pollInterval}),
+      options: props => {
+        return {
+          pollInterval: props.pollInterval
+        };
+      }
+    }
+  ),
+  lifecycle({
+    componentWillReceiveProps({
+      data: { loading, activeMigration },
+      pollInterval,
+      setPollInterval
+    }) {
+      if (loading) {
+        return;
+      }
+      if (activeMigration && pollInterval !== ACTIVE_INTERVAL) {
+        setPollInterval(ACTIVE_INTERVAL);
+      } else if (
+        !activeMigration &&
+        pollInterval !== DEFAULT_INTERVAL
+      ) {
+        setPollInterval(DEFAULT_INTERVAL);
+      }
+    }
+  })
+);
+const MigrationPanelWithData = withData(MigrationPanel);
+```
+Note that we check the current value of `pollInterval` before changing it, because by default in React, nested components will get re-rendered any time we change state, even if you change it to the same value. You can deal with this using `componentShouldUpdate` or `React.PureComponent`, but in this case it’s straightforward just to only set the state when it’s actually changing.
+
+Using this pattern successfully requires at least version 2.0.3 of apollo-client, as earlier versions had a bug related to changing pollInterval.
 
 ## Other usecases
 

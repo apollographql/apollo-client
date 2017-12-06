@@ -174,7 +174,7 @@ The Apollo Client constructor takes a small number of options, of which two are 
 
 - `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more infomation about creating links, read the [docs](/docs/link).
 - `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more infomation read the [cache docs](./caching.html).
-- `ssrMode`: When using the client for [server side rendering](../recipes/server-side-rendernig.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
+- `ssrMode`: When using the client for [server side rendering](../recipes/server-side-rendering.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
 - `ssrForceFetchDelay`: determines the time interval before Apollo Client force fetchs queries after a server side render.
 - `connectToDevTools`: This argument allows the [Apollo Client Devtools](../features/developer-tooling.html) to connect to your application's Apollo Client. You can set this to be `true` to use the tools in production (they are on by default in dev mode).
 - `queryDeduplication`: If set to false, this argument will force a query to still be sent to the server even if a query with identical parameters (query, variables, operationName) is already in flight.

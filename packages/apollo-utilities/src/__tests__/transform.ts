@@ -409,7 +409,6 @@ describe('query transforms', () => {
     `;
 
     const modifiedQuery = addTypenameToDocument(testQuery);
-    console.log(modifiedQuery);
     expect(print(expectedQuery)).toBe(print(modifiedQuery));
   });
 

@@ -3,7 +3,7 @@ import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 export class ObjectCache implements NormalizedCache {
   constructor(private data: NormalizedCacheObject = {}) {}
   public toObject(): NormalizedCacheObject {
-    return { ...this.data };
+    return this.data;
   }
   public get(dataId: string): StoreObject {
     return this.data[dataId];

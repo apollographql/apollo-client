@@ -66,7 +66,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public extract(optimistic: boolean = false): NormalizedCacheObject {
     if (optimistic && this.optimistic.length > 0) {
       const patches = this.optimistic.map(opt => opt.data);
-      return Object.assign({ ...this.data.toObject() }, ...patches);
+      return Object.assign({}, this.data.toObject(), ...patches);
     }
 
     return this.data.toObject();

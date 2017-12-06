@@ -80,7 +80,7 @@
     "lint-staged": "6.0.0",
     "lodash": "4.17.4",
     "rollup": "0.52.1",
-    "rxjs": "5.5.3",
+    "rxjs": "5.5.5",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
     "typescript": "2.4.2",

@@ -381,6 +381,54 @@ describe('graphql anywhere', () => {
     });
   });
 
+  it('can handle resolvers that return promises', async () => {
+    const resolver = async (fieldName, root, args, context, info) => {
+      return (await root)[info.resultKey];
+    };
+
+    const input = {
+      arrayWithSomePromises: [
+        Promise.resolve({ name: 'object in promise' }),
+        { name: 'plain object' },
+        {
+          name: 'nested object',
+          description: Promise.resolve([
+            Promise.resolve({ crazy: 'nesting' }),
+            Promise.resolve({ crazy: 'plain' }),
+          ]),
+        },
+      ],
+    };
+
+    const query = gql`
+      {
+        arrayWithSomePromises {
+          name
+          description {
+            ...dfrag
+          }
+        }
+      }
+
+      fragment dfrag on X {
+        crazy
+      }
+    `;
+
+    const result = await graphql(resolver, query, input, null, null);
+
+    expect(result).toEqual({
+      arrayWithSomePromises: [
+        { name: 'object in promise' },
+        { name: 'plain object' },
+        {
+          name: 'nested object',
+          description: [{ crazy: 'nesting' }, { crazy: 'plain' }],
+        },
+      ],
+    });
+  });
+
   it('readme example', () => {
     // I don't need all this stuff!
     const gitHubAPIResponse = {

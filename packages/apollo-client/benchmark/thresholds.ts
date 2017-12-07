@@ -5,7 +5,7 @@ export const thresholds: { [name: string]: number } = {
 
   'write data and receive update from the cache': 1.6,
   'write data and deliver update to 5 subscribers': 2.5,
-  'write data and deliver update to 10 subscribers': 2.9,
+  'write data and deliver update to 10 subscribers': 3.0,
   'write data and deliver update to 20 subscribers': 3.9,
   'write data and deliver update to 40 subscribers': 6.8,
   'write data and deliver update to 80 subscribers': 13.1,

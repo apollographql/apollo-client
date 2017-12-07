@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "hexo": {
-    "version": "3.4.2"
+    "version": "3.4.3"
   },
   "dependencies": {
-    "hexo": "3.4.2",
+    "hexo": "3.4.3",
     "hexo-generator-archive": "^0.1.2",
     "hexo-generator-category": "^0.1.2",
     "hexo-generator-index": "^0.2.0",
@@ -20,7 +20,8 @@
     "typescript": "^2.5.3"
   },
   "scripts": {
-    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "types":
+      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
     "build": "npm run types && hexo generate",
     "start": "hexo serve"
   }

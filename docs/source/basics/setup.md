@@ -279,7 +279,7 @@ The `graphql()` function will only be able to provide access to your GraphQL dat
 
 [`ApolloClient`]: #ApolloClient
 
-The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](#queries), a [mutation](#mutations), or a [subscription](#subscriptions). Go to the appropriate API documentation for more information about the functionality and available options for each type.
+The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](./queries.html), a [mutation](./mutations.html), or a [subscription](../features/subscriptions.html). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
 Before we look into the specific behaviors of each operation, let us look at the `config` object.
 

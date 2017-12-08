@@ -8,19 +8,23 @@ export const globals = {
   'graphql-anywhere': 'graphqlAnywhere',
 };
 
-export default name => ({
-  input: 'lib/index.js',
-  output: {
-    file: 'lib/bundle.umd.js',
-    format: 'umd',
-  },
-  name,
-  exports: 'named',
-  sourcemap: true,
-  external: Object.keys(globals),
-  onwarn,
-  globals,
-});
+export default (name, override = {}) =>
+  Object.assign(
+    {
+      input: 'lib/index.js',
+      output: {
+        file: 'lib/bundle.umd.js',
+        format: 'umd',
+      },
+      name,
+      exports: 'named',
+      sourcemap: true,
+      external: Object.keys(globals),
+      onwarn,
+      globals,
+    },
+    override,
+  );
 
 function onwarn(message) {
   const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];

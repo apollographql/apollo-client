@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.0.1",
+  "version": "4.1.0-alpha.0",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -11,7 +11,7 @@
     "test": "jest",
     "build": "tsc",
     "postbuild": "npm run bundle",
-    "bundle": "rollup -c rollup.config.js",
+    "bundle": "rollup -c rollup.config.js && rollup -c rollup.async.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",

@@ -87,7 +87,7 @@
     "uglify-js": "3.2.1",
     "webpack": "3.10.0",
     "webpack-bundle-analyzer": "2.9.1",
-    "github": "12.1.0"
+    "github": "13.0.1"
   },
   "optionalDependencies": {
     "@types/async": "2.0.45"

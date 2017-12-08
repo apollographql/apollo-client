@@ -1191,4 +1191,23 @@ export class QueryManager<TStore> {
       this.setQuery(fetchMoreForQueryId, () => ({ invalidated }));
     }
   }
+
+  private buildOperationForLink(
+    document: DocumentNode,
+    variables: any,
+    extraContext: any,
+  ) {
+    const cache = this.dataStore.getCache();
+    return {
+      query: cache.transformForLink
+        ? cache.transformForLink(document)
+        : document,
+      variables,
+      operationName: getOperationName(document) || undefined,
+      context: {
+        ...extraContext,
+        cache,
+      },
+    };
+  }
 }

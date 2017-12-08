@@ -257,7 +257,7 @@ export function writeSelectionSetToStore({
           fragment.typeCondition.name.value,
           fakeContext,
         );
-        if (fakeContext.returnPartialData) {
+        if (!isProduction() && fakeContext.returnPartialData) {
           console.error('WARNING: heuristic fragment matching going on!');
         }
       }
@@ -427,7 +427,9 @@ function writeFieldToStore({
       ) {
         throw new Error(
           `Store error: the application attempted to write an object with no provided id` +
-            ` but the store already contains an id of ${escapedId.id} for this object. The selectionSet` +
+            ` but the store already contains an id of ${
+              escapedId.id
+            } for this object. The selectionSet` +
             ` that was trying to be written is:\n` +
             print(field),
         );

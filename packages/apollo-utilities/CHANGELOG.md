@@ -1,5 +1,14 @@
 # Change log
 
+
+### vNext
+
+### 1.0.3
+- package dependency updates
+
+### 1.0.2
+- improved rollup builds
+
 ### 1.0.1
 - Added config to remove selection set of directive matches test
 

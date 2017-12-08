@@ -1,6 +1,17 @@
 # Change log
 
 ## vNEXT
+
+### 4.1.0-alpha.0
+- add support for async resolution via `import { graphql } from 'graphql-anywhere/lib/async'` as an experimental way to do async resolvers
+
+### 4.0.2
+- package dependency updates
+
+### 4.0.1
+- Improved rollup builds
+
+### 4.0.0
 - Replace core utils with apollo-utilities
 - Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
 

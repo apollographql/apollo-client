@@ -38,33 +38,37 @@ The `InMemoryCache` constructor takes an optional config object with properties 
 - addTypename: A boolean to determine whether to add __typename to the document (default: `true`)
 - dataIdFromObject: A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in the [Normalization](#normalization) section.
 - fragmentMatcher: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](../recipes/fragment-matching.html).
-- cacheResolves: A map of custom ways to resolve data from other parts of the cache.
+- cacheResolvers: A map of custom ways to resolve data from other parts of the cache.
 
 <h3 id="normalization">Normalization</h3>
 
 The `InMemoryCache` normalizes your data before saving it to the store by splitting the result into individual objects, creating a unique identifier for each object, and storing those objects in a flattened data structure. By default, `InMemoryCache` will attempt to use the commonly found primary keys of `id` and `_id` for the unique identifier if they exist along with `__typename` on an object.
 
 If `id` and `_id` are not specified, or if `__typename` is not specified, `InMemoryCache` will fall back to the path to the object in the query, such as `ROOT_QUERY.allPeople.0` for the first record returned on the `allPeople` root query.
+That would make data for given type scoped for `allPeople` query and other queries would have to fetch their own separate objects.
 
-This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `InMemoryCache` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions.
+This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `InMemoryCache` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions so it could be referenced by any query.
 
 For example, if you wanted to key off of the `key` field for all of your data, you could configure `dataIdFromObject` like so:
 
 ```js
 const cache = new InMemoryCache({
-  dataIdFromObject: object => object.key
+  dataIdFromObject: object => object.key || null
 });
 ```
+Note that Apollo Client doesn't add the type name to the cache key when you specify a custom `dataIdFromObject`, so if your IDs are not unique across all objects, you might want to include the `__typename` in your `dataIdFromObject`.
 
-This also allows you to use different unique identifiers for different data types by keying off of the `__typename` property attached to every object typed by GraphQL.  For example:
+You can use different unique identifiers for different data types by keying off of the `__typename` property attached to every object typed by GraphQL.  For example:
 
 ```js
+import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory';
+
 const cache = new InMemoryCache({
   dataIdFromObject: object => {
     switch (object.__typename) {
       case 'foo': return object.key; // use `key` as the primary key
-      case 'bar': return object.blah; // use `blah` as the primary key
-      default: return object.id || object._id; // fall back to `id` and `_id` for all other types
+      case 'bar': return `bar:${object.blah}`; // use `bar` prefix and `blah` as the primary key
+      default: return defaultDataIdFromObject(object); // fall back to default handling
     }
   }
 });
@@ -137,7 +141,10 @@ The first argument is the id of the data you want to read from the cache. That i
 ```js
 const client = new ApolloClient({
   ...,
-  dataIdFromObject: object => object.id,
+  cache: new InMemoryCache({
+    ...,
+    dataIdFromObject: object => object.id,
+  }),
 });
 ```
 

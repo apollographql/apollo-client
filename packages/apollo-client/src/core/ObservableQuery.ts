@@ -174,11 +174,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       };
     }
 
-    const { data, partial } = this.queryManager.getCurrentQueryResult(
-      this,
-      false,
-      // isEqual(this.variables, this.lastVariables)
-    );
+    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
 
     const queryLoading =
       !queryStoreValue ||

@@ -83,16 +83,18 @@ import { ApolloClient } from 'apollo-client';
 import { toIdValue } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-imemory';
 
-const client = new ApolloClient({
-  link: // your link,
-  cache: new InMemoryCache({
-    cacheResolvers: {
-      Query: {
-        oneSeries: (_, { id }) => toIdValue(dataIdFromObject({ __typename: 'Series', id })),
-      },
+const cache = new InMemoryCache({
+  cacheResolvers: {
+    Query: {
+      oneSeries: (_, { id }) => toIdValue(cache.config.dataIdFromObject({ __typename: 'Series', id })),
     },
-    dataIdFromObject,
-  })
+  },
+  dataIdFromObject,
+})
+
+const client = new ApolloClient({
+  link, // your link,
+  cache,
 })
 ```
 

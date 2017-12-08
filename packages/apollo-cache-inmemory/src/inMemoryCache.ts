@@ -18,7 +18,6 @@ import { writeResultToStore } from './writeToStore';
 import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
 import { defaultNormalizedCacheFactory } from './objectCache';
 import { record } from './recordingCache';
-
 const defaultConfig: ApolloReducerConfig = {
   fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
@@ -39,9 +38,9 @@ export function defaultDataIdFromObject(result: any): string | null {
 }
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: NormalizedCache;
-  private config: ApolloReducerConfig;
-  private optimistic: OptimisticStoreItem[] = [];
+  protected data: NormalizedCache;
+  protected config: ApolloReducerConfig;
+  protected optimistic: OptimisticStoreItem[] = [];
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
 
@@ -67,7 +66,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public extract(optimistic: boolean = false): NormalizedCacheObject {
     if (optimistic && this.optimistic.length > 0) {
       const patches = this.optimistic.map(opt => opt.data);
-      return Object.assign(this.data.toObject(), ...patches);
+      return Object.assign({}, this.data.toObject(), ...patches);
     }
 
     return this.data.toObject();
@@ -241,7 +240,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  private broadcastWatches() {
+  protected broadcastWatches() {
     // Skip this when silenced (like inside a transaction)
     if (this.silenceBroadcast) return;
 

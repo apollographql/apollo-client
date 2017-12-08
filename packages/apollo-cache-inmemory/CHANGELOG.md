@@ -1,6 +1,17 @@
 # Change log
 
 ### vNEXT
+- Change access modifier for data from "private" to "protected", to allow InMemoryCache subclasses to access it.
+
+### 1.1.3
+- improves performance of in memory cache
+
+### 1.1.2
+- Ensure that heuristics warnings do not fire in production [#2611](https://github.com/apollographql/apollo-client/pull/2611)
+
+### 1.1.1
+- Change some access modifiers "private" to "protected" to allow code reuse by InMemoryCache subclasses.
+- improved rollup builds
 
 ### 1.1.0
 - improve errors for id mismatch when writing to the store

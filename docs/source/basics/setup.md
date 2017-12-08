@@ -121,7 +121,7 @@ const query = gql`
 `;
 ```
 
-For more information about using fragments, checkout the [guide](./fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
+For more information about using fragments, checkout the [guide](../features/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
 
 <h2 id="connecting-data">Requesting data</h2>
 
@@ -173,10 +173,10 @@ At this point you are ready to start building something with Apollo! Checkout th
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.
 
 - `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more infomation about creating links, read the [docs](/docs/link).
-- `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more infomation read the [cache docs](./basics/cache.html).
-- `ssrMode`: When using the client for [server side rendering](./recipes/server-side-rendernig.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
+- `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more infomation read the [cache docs](./caching.html).
+- `ssrMode`: When using the client for [server side rendering](../recipes/server-side-rendering.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
 - `ssrForceFetchDelay`: determines the time interval before Apollo Client force fetchs queries after a server side render.
-- `connectToDevTools`: This argument allows the [Apollo Client Devtools](./features/devtools.html) to connect to your application's Apollo Client. You can set this to be `true` to use the tools in production (they are on by default in dev mode).
+- `connectToDevTools`: This argument allows the [Apollo Client Devtools](../features/developer-tooling.html) to connect to your application's Apollo Client. You can set this to be `true` to use the tools in production (they are on by default in dev mode).
 - `queryDeduplication`: If set to false, this argument will force a query to still be sent to the server even if a query with identical parameters (query, variables, operationName) is already in flight.
 - `defaultOptions`: If you want to set application wide defaults for the options supplied to `watchQuery`, `query`, or `mutate`, you can pass them as a `defaultOptions` object. An example object looks like this:
 
@@ -206,7 +206,7 @@ React-Apollo includes a component for providing a client instance to a React com
 import { ApolloProvider } from 'react-apollo';
 ```
 
-Makes the GraphQL client available to any of your components enhanced by the `graphql()` function. The `<ApolloProvider/>` component works the same as the [`react-redux` `<Provider/>` component][]. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`](#graphql) function, or the [`withApollo`](#withApollo) function. You may also provide your Redux store using the `<ApolloProvider/>` component in addition to providing your GraphQL client.
+Makes the GraphQL client available to any of your components enhanced by the `graphql()` function. The `<ApolloProvider/>` component works the same as the [`react-redux` `<Provider/>` component][]. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`](#graphql) function, or the [`withApollo`](#withApollo) function.
 
 If you do not add this component to the root of your React tree then your components enhanced with Apollo capabilities will not be able to function.
 
@@ -279,7 +279,7 @@ The `graphql()` function will only be able to provide access to your GraphQL dat
 
 [`ApolloClient`]: #ApolloClient
 
-The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](#queries), a [mutation](#mutations), or a [subscription](#subscriptions). Go to the appropriate API documentation for more information about the functionality and available options for each type.
+The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](./queries.html), a [mutation](./mutations.html), or a [subscription](../features/subscriptions.html). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
 Before we look into the specific behaviors of each operation, let us look at the `config` object.
 
@@ -300,7 +300,7 @@ Lets go through all of the properties that may live on your `config` object.
 
 `config.options` is an object or a function that allows you to define the specific behavior your component should use in handling your GraphQL data.
 
-The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](./basics/queries.html#graphql-query-options) and [mutations](./basics/mutations.html#graphql-mutation-options).
+The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](./queries.html#graphql-query-options) and [mutations](./mutations.html#graphql-mutation-options).
 
 You can define `config.options` as a plain object, or you can compute your options from a function that takes the component’s props as an argument.
 

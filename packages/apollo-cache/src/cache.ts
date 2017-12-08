@@ -9,7 +9,7 @@ export abstract class ApolloCache<TCache, TSerializedCache = TCache>
   implements DataProxy {
   // required to implement
   // core API
-  public abstract read<T>(query: Cache.ReadOptions): T;
+  public abstract read<T>(query: Cache.ReadOptions): T | null;
   public abstract write(write: Cache.WriteOptions): void;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
@@ -61,7 +61,7 @@ export abstract class ApolloCache<TCache, TSerializedCache = TCache>
   public readQuery<QueryType>(
     options: DataProxy.Query,
     optimistic: boolean = false,
-  ): QueryType {
+  ): QueryType | null {
     return this.read({
       query: options.query,
       variables: options.variables,

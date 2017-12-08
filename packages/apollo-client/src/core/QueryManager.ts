@@ -877,12 +877,6 @@ export class QueryManager<TStore> {
       options.variables,
     );
 
-    const request: GraphQLRequest = {
-      query: transformedDoc,
-      variables,
-      operationName: getOperationName(transformedDoc) || undefined,
-    };
-
     let sub: Subscription;
     let observers: Observer<any>[] = [];
 
@@ -913,13 +907,10 @@ export class QueryManager<TStore> {
           },
         };
 
-        let newRequest = {
-          ...request,
-          query: cache.transformForLink
-            ? cache.transformForLink(request.query)
-            : request.query,
-        };
-        sub = execute(this.link, newRequest).subscribe(handler);
+        // TODO: Should subscriptions also accept a `context` option to pass
+        // through to links?
+        const operation = this.buildOperationForLink(transformedDoc, variables);
+        sub = execute(this.link, operation).subscribe(handler);
       }
 
       return () => {
@@ -1177,7 +1168,7 @@ export class QueryManager<TStore> {
   private buildOperationForLink(
     document: DocumentNode,
     variables: any,
-    extraContext: any,
+    extraContext?: any,
   ) {
     const cache = this.dataStore.getCache();
     return {

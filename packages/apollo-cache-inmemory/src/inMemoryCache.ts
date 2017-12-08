@@ -38,7 +38,7 @@ export function defaultDataIdFromObject(result: any): string | null {
 }
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: NormalizedCache;
+  protected data: NormalizedCache;
   protected config: ApolloReducerConfig;
   protected optimistic: OptimisticStoreItem[] = [];
   private watches: Cache.WatchOptions[] = [];

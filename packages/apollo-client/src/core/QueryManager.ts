@@ -365,9 +365,7 @@ export class QueryManager<TStore> {
       const networkResult = this.fetchRequest({
         requestId,
         queryId,
-        document: cache.transformForLink
-          ? cache.transformForLink(query)
-          : query,
+        document: query,
         options,
         fetchMoreForQueryId,
       }).catch(error => {
@@ -1042,23 +1040,18 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none' } = options;
-    const request = {
-      query: document,
-      variables,
-      operationName: getOperationName(document) || undefined,
-      context: context || {},
-    };
-
-    request.context.forceFetch = !this.queryDeduplication;
-
-    // add the cache to the context to links can do things with it
-    request.context.cache = this.dataStore.getCache();
+    const operation = this.buildOperationForLink(document, variables, {
+      ...context,
+      // TODO: Should this be included for all entry points via
+      // buildOperationForLink?
+      forceFetch: !this.queryDeduplication,
+    });
 
     let resultFromStore: any;
     let errorsFromStore: any;
     const retPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
-      const subscription = execute(this.deduplicator, request).subscribe({
+      const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);

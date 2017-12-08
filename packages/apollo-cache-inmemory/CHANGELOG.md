@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Change access modifier for data from "private" to "protected", to allow InMemoryCache subclasses to access it.
 
 ### 1.1.3
 - improves performance of in memory cache

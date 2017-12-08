@@ -47,10 +47,7 @@ sidebar_categories:
     - recipes/babel
     - recipes/webpack
     - recipes/meteor
-    # - recipes/client-side-data
-    # - recipes/using-with-rest
-    # - recipes/offline
-    # - recipes/custom-fetching
+    - recipes/recompose
   Reference:
     - reference/index
 
@@ -61,6 +58,7 @@ content_root: docs/source
 social_links:
   github: 'https://github.com/apollographql'
   twitter: '@apollographql'
+  slackInvitePage: 'https://www.apollodata.com/#slack'
 
 typescript_api_box:
   data_file: docs.json

@@ -173,7 +173,7 @@ export default routes;
 
 ```
 
-You can check out the [GitHunt app's `src/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/src/server.js) for a complete working example.
+You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/ui/server.js) for a complete working example.
 
 Next we'll see what that rendering code actually does.
 

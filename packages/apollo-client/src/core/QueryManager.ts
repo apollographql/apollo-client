@@ -1,4 +1,4 @@
-import { execute, ApolloLink, GraphQLRequest, FetchResult } from 'apollo-link';
+import { execute, ApolloLink, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
@@ -180,11 +180,10 @@ export class QueryManager<TStore> {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
 
-      const operation = this.buildOperationForLink(
-        mutation,
-        variables,
-        context,
-      );
+      const operation = this.buildOperationForLink(mutation, variables, {
+        ...context,
+        optimisticResponse,
+      });
       execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
           if (result.errors && errorPolicy === 'none') {

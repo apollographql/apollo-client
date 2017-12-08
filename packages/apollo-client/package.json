@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -50,10 +50,10 @@
   "license": "MIT",
   "dependencies": {
     "@types/zen-observable": "^0.5.3",
-    "apollo-cache": "^1.0.1",
+    "apollo-cache": "^1.0.2",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "^1.0.0",
-    "apollo-utilities": "^1.0.2",
+    "apollo-utilities": "^1.0.3",
     "symbol-observable": "^1.0.2",
     "zen-observable": "^0.6.0"
   },
@@ -67,12 +67,13 @@
     "@types/jest": "21.1.8",
     "@types/lodash": "4.14.88",
     "@types/node": "8.0.57",
-    "apollo-cache-inmemory": "^1.1.1",
+    "apollo-cache-inmemory": "^1.1.4",
     "benchmark": "2.1.4",
     "browserify": "14.5.0",
     "bundlesize": "0.15.3",
     "danger": "1.1.0",
     "flow-bin": "0.60.1",
+    "github": "12.1.0",
     "graphql": "0.11.7",
     "graphql-tag": "2.6.0",
     "isomorphic-fetch": "2.2.1",
@@ -86,8 +87,7 @@
     "typescript": "2.4.2",
     "uglify-js": "3.2.1",
     "webpack": "3.10.0",
-    "webpack-bundle-analyzer": "2.9.1",
-    "github": "12.1.0"
+    "webpack-bundle-analyzer": "2.9.1"
   },
   "optionalDependencies": {
     "@types/async": "2.0.45"

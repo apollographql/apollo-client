@@ -1,6 +1,9 @@
 
 ### vNext
 
+### 1.0.3
+- depenedency updates
+
 ### 1.0.2
 - package depenedency updates
 

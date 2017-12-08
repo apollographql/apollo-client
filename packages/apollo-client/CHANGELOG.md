@@ -3,6 +3,9 @@
 
 ### vNEXT
 
+### 2.1.1
+- fix eslint usage by fixing jsnext:main path
+
 ### 2.1.0
 - Expose the cache methods `restore` and `extract` directly on ApolloClient  [PR#2615](https://github.com/apollographql/apollo-client/pull/2615)
 - Expose a method to refetch all observed queries without resetting the store [PR#2625](https://github.com/apollographql/apollo-client/pull/2625)

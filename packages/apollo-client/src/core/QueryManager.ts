@@ -139,14 +139,7 @@ export class QueryManager<TStore> {
         getDefaultValues(getMutationDefinition(mutation)),
         variables,
       ));
-
     const mutationString = print(mutation);
-    const request = {
-      query: mutation,
-      variables,
-      operationName: getOperationName(mutation) || undefined,
-      context,
-    } as GraphQLRequest;
 
     this.setQuery(mutationId, () => ({ document: mutation }));
 
@@ -186,17 +179,13 @@ export class QueryManager<TStore> {
     return new Promise((resolve, reject) => {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
-      let newRequest = {
-        context: {},
-        ...request,
-        query: cache.transformForLink
-          ? cache.transformForLink(request.query)
-          : request.query,
-      };
 
-      (newRequest as any).context.cache = this.dataStore.getCache();
-
-      execute(this.link, newRequest).subscribe({
+      const operation = this.buildOperationForLink(
+        mutation,
+        variables,
+        context,
+      );
+      execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
           if (result.errors && errorPolicy === 'none') {
             error = new ApolloError({

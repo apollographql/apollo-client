@@ -2,7 +2,7 @@
 # Change log
 
 ### vNEXT
-- include `optimisticResponse` in the context passed to apollo-link for mutations [PR#????]
+- include `optimisticResponse` in the context passed to apollo-link for mutations [PR#2704](https://github.com/apollographql/apollo-client/pull/2704)
 
 ### 2.1.1
 - fix eslint usage by fixing jsnext:main path

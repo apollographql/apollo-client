@@ -244,4 +244,26 @@ cache: new Cache().restore(window.__APOLLO_STATE__)
 
 If you would like to learn more about server side rendering, please check our our more in depth guide [here](../recipes/server-side-rendering.html).
 
+<h3 id="persistence">Cache persistence</h3>
+
+If you would like to persist and rehydrate your Apollo Cache from a storage provider like `AsyncStorage` or `localStorage`, you can use [`apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist). `apollo-cache-persist` works with all Apollo caches, including `InMemoryCache` & `Hermes`, and a variety of different [storage providers](https://github.com/apollographql/apollo-cache-persist#storage-providers).
+
+To get started, simply pass your Apollo Cache and a storage provider to `persistCache`. By default, the contents of your Apollo Cache will be immediately restored asynchronously, and persisted upon every write to the cache with a short configurable debounce interval.
+
+```js
+import { AsyncStorage } from 'react-native';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { persistCache } from 'apollo-cache-persist';
+
+const cache = new InMemoryCache();
+
+persistCache({
+  cache,
+  storage: AsyncStorage,
+});
+
+// Continue setting up Apollo as usual.
+```
+
+For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).
 

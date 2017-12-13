@@ -134,7 +134,7 @@ Note that, in general, you don't need to use the results from the mutation callb
 
 <h2 id="multiple-mutations">Multiple mutations</h2>
 
-If you need more than one mutation on a component, you make a graphql container for each:
+If you need more than one mutation on a component, you can make a graphql container for each:
 
 ```js
 const ComponentWithMutations =
@@ -157,6 +157,28 @@ const ComponentWithMutations = compose(
 ```
 
 This does the exact same thing as the previous snippet, but with a nicer syntax that flattens things out.
+
+If you need to run multiple mutations in one query you can do that like so:
+```
+const replaceUser = gql`
+  mutation replaceUser($userToAdd: User!, $userToRemove: User! ) {
+    submitNewUser(newUser: $userToAdd){
+      userId
+    }
+    deleteUser(userToRemove: $userToRemove){
+      userId
+    }
+  }
+`;
+
+const ReplaceCurrentUser = graphql(replaceUser, {
+  props: ({ mutate, userToAdd, userToRemove }) => {
+    // do stuff
+    return mutate({ variables: { userToAdd, userToRemove } })
+  },
+})(Component);
+```
+These mutations will be run in series, so the first one is guaranteed to succeed before the second one will start. This is useful if you have multiple mutations that need to be run at the same time and that are dependant on each other. You can use [mutation batching](./network-layer.html#MutationBatching) if the order doesn't matter and your server supports batching.
 
 <h2 id="optimistic-ui">Optimistic UI</h2>
 

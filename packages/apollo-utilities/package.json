@@ -41,7 +41,7 @@
   "devDependencies": {
     "@types/graphql": "0.11.7",
     "@types/jest": "21.1.8",
-    "@types/lodash": "4.14.88",
+    "@types/lodash": "4.14.89",
     "@types/node": "8.5.1",
     "browserify": "14.5.0",
     "flow-bin": "0.61.0",

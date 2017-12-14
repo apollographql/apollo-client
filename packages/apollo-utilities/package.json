@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -37,6 +37,10 @@
     "minify:browser":
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
+  },
+  "dependencies": {
+    "@types/lodash-es": "^4.17.0",
+    "lodash-es": "^4.17.4"
   },
   "devDependencies": {
     "@types/graphql": "0.11.7",

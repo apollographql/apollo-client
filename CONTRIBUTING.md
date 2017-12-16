@@ -12,7 +12,7 @@ Here are some ways to contribute to the project, from easiest to most difficult:
 * [Improving the documentation](#improving-the-documentation)
 * [Responding to issues](#responding-to-issues)
 * [Small bug fixes](#small-bug-fixes)
-* [Suggesting features](#feature-requests)
+* [Suggesting features](#suggesting-features)
 * [Big pull requests](#big-prs)
 
 ## Issues

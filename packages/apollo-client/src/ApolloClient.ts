@@ -227,14 +227,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initQueryManager();
 
+    if (this.defaultOptions.query) {
+      options = { ...this.defaultOptions.query, ...options };
+    }
+
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error(
         'cache-and-network fetchPolicy can only be used with watchQuery',
       );
-    }
-
-    if (this.defaultOptions.query) {
-      options = { ...this.defaultOptions.query, ...options };
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
@@ -401,8 +401,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     return this.queryManager
       ? this.queryManager.reFetchObservableQueries()
       : Promise.resolve(null);
-   }
-  
+  }
+
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
@@ -419,7 +419,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
-
   }
 
   /**

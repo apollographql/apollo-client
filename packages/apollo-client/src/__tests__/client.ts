@@ -71,9 +71,11 @@ describe('client', () => {
     });
 
     expect(() => {
-      client.query(gql`{
+      client.query(gql`
+        {
           a
-        }` as any);
+        }
+      ` as any);
     }).toThrowError(
       'query option is required. You must specify your GraphQL document in the query option.',
     );
@@ -1630,7 +1632,22 @@ describe('client', () => {
       });
       expect(() => {
         client.query({ query, fetchPolicy: 'cache-and-network' });
+      }).toThrowError(/cache-and-network fetchPolicy/);
+    });
+
+    it('errors when being used on query with defaultOptions', () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          query: {
+            fetchPolicy: 'cache-and-network',
+          },
+        },
       });
+      expect(() => {
+        client.query({ query });
+      }).toThrowError(/cache-and-network fetchPolicy/);
     });
 
     it('fetches from cache first, then network', done => {

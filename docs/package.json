@@ -14,7 +14,7 @@
     "hexo-renderer-ejs": "^0.3.0",
     "hexo-renderer-less": "^0.2.0",
     "hexo-renderer-marked": "^0.3.0",
-    "hexo-server": "^0.2.0",
+    "hexo-server": "^0.3.0",
     "hexo-typescript-api-box": "^0.9.1",
     "typedoc": "^0.9.0",
     "typescript": "^2.5.3"

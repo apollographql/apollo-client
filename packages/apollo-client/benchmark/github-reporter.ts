@@ -58,10 +58,10 @@ export function collectAndReportBenchmarks() {
             pass = false;
           }
         } else {
-          if (res[element].mean - res[element].moe > thresholds[element]) {
+          if (res[element].mean - (res[element].moe * 3) > thresholds[element]) {
             const perfDropMessage = `Performance drop detected for benchmark: "${
               element
-            }", ${res[element].mean} - ${res[element].moe} > ${
+            }", ${res[element].mean} - ${res[element].moe * 3} > ${
               thresholds[element]
             }`;
             console.error(perfDropMessage);
@@ -73,7 +73,7 @@ export function collectAndReportBenchmarks() {
             console.log(
               `No performance drop detected for benchmark: "${element}", ${
                 res[element].mean
-              } - ${res[element].moe} <= ${thresholds[element]}`,
+              } - ${res[element].moe * 3} <= ${thresholds[element]}`,
             );
           }
         }

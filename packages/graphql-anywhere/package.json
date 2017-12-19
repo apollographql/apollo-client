@@ -48,7 +48,7 @@
     "@types/react": "16.0.31",
     "@types/react-dom": "16.0.3",
     "browserify": "14.5.0",
-    "graphql": "0.11.7",
+    "graphql": "0.12.3",
     "graphql-tag": "2.6.1",
     "jest": "20.0.4",
     "react": "15.6.2",

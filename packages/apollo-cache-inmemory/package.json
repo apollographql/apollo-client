@@ -44,7 +44,7 @@
     "graphql-anywhere": "^4.0.1"
   },
   "peerDependencies": {
-    "graphql": "0.11.7"
+    "graphql": "0.11.7 || ^0.12.0"
   },
   "devDependencies": {
     "@types/graphql": "0.11.7",

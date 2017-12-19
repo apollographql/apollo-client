@@ -47,7 +47,7 @@
     "@types/jest": "21.1.8",
     "browserify": "14.5.0",
     "graphql": "0.11.7",
-    "graphql-tag": "2.6.0",
+    "graphql-tag": "2.6.1",
     "jest": "20.0.4",
     "rimraf": "2.6.2",
     "rollup": "0.52.2",

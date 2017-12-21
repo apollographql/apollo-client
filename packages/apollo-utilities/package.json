@@ -50,7 +50,7 @@
     "jest": "20.0.4",
     "lodash": "4.17.4",
     "rimraf": "2.6.2",
-    "rollup": "0.52.2",
+    "rollup": "0.52.3",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
     "typescript": "2.5.2",

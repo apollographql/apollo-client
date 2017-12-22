@@ -2,7 +2,6 @@ import { DocumentNode } from 'graphql';
 import { FragmentMatcher } from 'graphql-anywhere';
 import { Transaction } from 'apollo-cache';
 import { IdValue, StoreValue } from 'apollo-utilities';
-import { NormalizedCacheObject, NormalizedCache } from './types';
 
 export type IdGetter = (value: Object) => string | null | undefined;
 

@@ -69,6 +69,8 @@ export type ApolloReducerConfig = {
   addTypename?: boolean;
   cacheResolvers?: CacheResolverMap;
   storeFactory?: NormalizedCacheFactory;
+  logger?: Function;
+  loggerEnabled?: boolean;
 };
 
 export type ReadStoreContext = {

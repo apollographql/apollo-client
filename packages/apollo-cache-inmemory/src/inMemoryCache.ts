@@ -23,6 +23,8 @@ const defaultConfig: ApolloReducerConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   storeFactory: defaultNormalizedCacheFactory,
+  logger: console.log,
+  loggerEnabled: true,
 };
 
 export function defaultDataIdFromObject(result: any): string | null {
@@ -56,6 +58,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.config.cacheResolvers = (this.config as any).customResolvers;
     this.addTypename = this.config.addTypename ? true : false;
     this.data = this.config.storeFactory();
+    this.logger = this.config.logger;
+    this.loggerEnabled = this.config.loggerEnabled;
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -77,11 +81,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return null;
     }
 
-    return readQueryFromStore({
-      store: this.config.storeFactory(this.extract(query.optimistic)),
+    const paramsToLog = {
       query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
+    };
+
+    this.logger('APOLLO_CACHE READ', paramsToLog);
+
+    return readQueryFromStore({
+      store: this.config.storeFactory(this.extract(query.optimistic)),
+      ...paramsToLog,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
       previousResult: query.previousResult,
       config: this.config,
@@ -89,10 +99,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public write(write: Cache.WriteOptions): void {
-    writeResultToStore({
+    const paramsToLog = {
       dataId: write.dataId,
       result: write.result,
       variables: write.variables,
+    };
+
+    this.logger('APOLLO_CACHE WRITE', paramsToLog);
+
+    writeResultToStore({
+      ...paramsToLog,
       document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,

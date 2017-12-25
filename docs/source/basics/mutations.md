@@ -277,7 +277,7 @@ client.mutate({
   variables: {
     text,
   },
-  update: (proxy, { data: { createTodo } }) => {
+  update: (proxy, { mutationResultData: { createTodo } }) => {
     // Read the data from our cache for this query.
     const data = proxy.readQuery({ query: TodoAppQuery });
 

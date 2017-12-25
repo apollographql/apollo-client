@@ -4,7 +4,8 @@ import { thresholds } from './thresholds';
 
 export function collectAndReportBenchmarks() {
   const github = eval('new require("github")()') as GithubAPI;
-  const commitSHA = process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT || '';
+  const commitSHA =
+    process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT || '';
 
   github.authenticate({
     type: 'oauth',
@@ -58,12 +59,10 @@ export function collectAndReportBenchmarks() {
             pass = false;
           }
         } else {
-          if (res[element].mean - (res[element].moe * 3) > thresholds[element]) {
-            const perfDropMessage = `Performance drop detected for benchmark: "${
-              element
-            }", ${res[element].mean} - ${res[element].moe * 3} > ${
-              thresholds[element]
-            }`;
+          if (res[element].mean - res[element].moe * 3 > thresholds[element]) {
+            const perfDropMessage = `Performance drop detected for benchmark: "${element}", ${
+              res[element].mean
+            } - ${res[element].moe * 3} > ${thresholds[element]}`;
             console.error(perfDropMessage);
             if (message === '') {
               message = perfDropMessage;

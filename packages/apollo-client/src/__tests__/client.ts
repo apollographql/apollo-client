@@ -71,9 +71,11 @@ describe('client', () => {
     });
 
     expect(() => {
-      client.query(gql`{
+      client.query(gql`
+        {
           a
-        }` as any);
+        }
+      ` as any);
     }).toThrowError(
       'query option is required. You must specify your GraphQL document in the query option.',
     );

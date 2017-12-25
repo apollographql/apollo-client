@@ -43,6 +43,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected data: NormalizedCache;
   protected config: ApolloReducerConfig;
   protected optimistic: OptimisticStoreItem[] = [];
+  protected logger: Function;
+  private loggerEnabled: boolean;
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
 

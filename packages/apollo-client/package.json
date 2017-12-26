@@ -90,7 +90,7 @@
     "webpack-bundle-analyzer": "2.9.1"
   },
   "optionalDependencies": {
-    "@types/async": "2.0.45"
+    "@types/async": "2.0.46"
   },
   "jest": {
     "transform": {

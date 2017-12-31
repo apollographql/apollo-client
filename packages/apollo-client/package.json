@@ -49,7 +49,6 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/zen-observable": "^0.5.3",
     "apollo-cache": "^1.0.2",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "^1.0.0",
@@ -67,6 +66,7 @@
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.91",
     "@types/node": "8.5.2",
+    "@types/zen-observable": "^0.5.3",
     "apollo-cache-inmemory": "^1.1.4",
     "benchmark": "2.1.4",
     "browserify": "14.5.0",

@@ -2207,6 +2207,35 @@ describe('client', () => {
     expect(onResetStore).toHaveBeenCalled();
   });
 
+  it('resetStore waits until all onResetStore callbacks are called', async () => {
+    const delay = time => new Promise(r => setTimeout(r, time));
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    let count = 0;
+    const onResetStoreOne = jest.fn(async () => {
+      expect(count).toEqual(0);
+      await delay(10).then(() => count++);
+      expect(count).toEqual(1);
+    });
+
+    const onResetStoreTwo = jest.fn(async () => {
+      expect(count).toEqual(0);
+      await delay(11).then(() => count++);
+      expect(count).toEqual(2);
+    });
+
+    client.onResetStore(onResetStoreOne);
+    client.onResetStore(onResetStoreTwo);
+
+    expect(count).toEqual(0);
+    await client.resetStore();
+    expect(count).toEqual(2);
+  });
+
   it('has a reFetchObservableQueries method which calls QueryManager', done => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),

@@ -75,6 +75,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private devToolsHookCb: Function;
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
+  private resetStoreCallbacks: Array<Promise<any>> = [];
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -206,10 +207,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = {
-        ...options,
-        fetchPolicy: 'cache-first',
-      } as WatchQueryOptions;
+      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
     }
 
     return this.queryManager.watchQuery<T>(options);
@@ -239,10 +237,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = {
-        ...options,
-        fetchPolicy: 'cache-first',
-      } as WatchQueryOptions;
+      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
     }
 
     return this.queryManager.query<T>(options);
@@ -379,9 +374,21 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * active queries.
    */
   public resetStore(): Promise<ApolloQueryResult<any>[]> | Promise<null> {
-    return this.queryManager
-      ? this.queryManager.resetStore()
-      : Promise.resolve(null);
+    return Promise.resolve()
+      .then(() => {
+        this.queryManager
+          ? this.queryManager.resetStore()
+          : Promise.resolve(null);
+      })
+      .then(() => Promise.all(this.resetStoreCallbacks));
+  }
+
+  /**
+   * Allows for callbacks on resetStore
+   */
+
+  public onResetStore(cb: () => Promise<any>): null {
+    this.resetStoreCallbacks.push(cb);
   }
 
   /**
@@ -401,8 +408,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     return this.queryManager
       ? this.queryManager.reFetchObservableQueries()
       : Promise.resolve(null);
-   }
-  
+  }
+
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
@@ -419,7 +426,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
-
   }
 
   /**

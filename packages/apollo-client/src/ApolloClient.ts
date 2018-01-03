@@ -75,7 +75,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private devToolsHookCb: Function;
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
-  private resetStoreCallbacks: Array<Promise<any>> = [];
+  private resetStoreCallbacks: Array<() => Promise<any>> = [];
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -387,7 +387,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * Allows for callbacks on resetStore
    */
 
-  public onResetStore(cb: () => Promise<any>): null {
+  public onResetStore(cb: () => Promise<any>): void {
     this.resetStoreCallbacks.push(cb);
   }
 

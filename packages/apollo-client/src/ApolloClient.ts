@@ -380,7 +380,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           ? this.queryManager.resetStore()
           : Promise.resolve(null);
       })
-      .then(() => Promise.all(this.resetStoreCallbacks));
+      .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())));
   }
 
   /**

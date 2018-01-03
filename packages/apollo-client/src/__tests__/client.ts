@@ -2193,6 +2193,20 @@ describe('client', () => {
     client.resetStore();
   });
 
+  it('has an onResetStore method which takes a callback to be called after resetStore', async () => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    const onResetStore = jest.fn();
+    client.onResetStore(onResetStore);
+
+    await client.resetStore();
+
+    expect(onResetStore).toHaveBeenCalled();
+  });
+
   it('has a reFetchObservableQueries method which calls QueryManager', done => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),

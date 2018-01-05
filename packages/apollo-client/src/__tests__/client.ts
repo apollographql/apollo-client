@@ -2207,6 +2207,21 @@ describe('client', () => {
     expect(onResetStore).toHaveBeenCalled();
   });
 
+  fit('onResetStore returns a method that unsubscribes the callback', async () => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    const onResetStore = jest.fn();
+    const unsubscribe = client.onResetStore(onResetStore);
+
+    unsubscribe();
+
+    await client.resetStore();
+    expect(onResetStore).not.toHaveBeenCalled();
+  });
+
   it('resetStore waits until all onResetStore callbacks are called', async () => {
     const delay = time => new Promise(r => setTimeout(r, time));
 

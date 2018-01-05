@@ -1,6 +1,6 @@
 {
   "name": "apollo-client-preset",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -35,8 +35,8 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache-inmemory": "^1.1.4",
-    "apollo-client": "^2.0.4",
+    "apollo-cache-inmemory": "^1.1.5",
+    "apollo-client": "^2.1.0",
     "apollo-link": "^1.0.6",
     "apollo-link-http": "^1.3.1",
     "graphql-tag": "^2.4.2"

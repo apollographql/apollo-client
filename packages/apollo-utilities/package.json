@@ -51,7 +51,7 @@
     "lodash": "4.17.4",
     "rimraf": "2.6.2",
     "rollup": "0.53.3",
-    "ts-jest": "20.0.14",
+    "ts-jest": "22.0.0",
     "tslint": "5.8.0",
     "typescript": "2.5.2",
     "uglifyjs": "2.4.11"

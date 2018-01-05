@@ -106,7 +106,8 @@ class Profile extends React.Component {
           Loading...
         </p>
       );
-    } else if (currentUser) {
+    }
+    if (currentUser) {
       return (
         <span>
           <p className="navbar-text navbar-right">

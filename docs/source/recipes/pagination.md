@@ -104,6 +104,8 @@ const Feed = ({ vote, loading, currentUser, feed, loadMoreEntries }) => {
 
 The above approach works great for limit/offset pagination. One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.
 
+Note that in order for the UI component to receive an updated `loading` prop after `loadMoreEntries` is called, you must set `notifyOnNetworkStatusChange` to `true` in your higher order component's options.
+
 <h2 id="cursor-pages">Cursor-based</h2>
 
 In cursor-based pagination, a "cursor" is used to keep track of where in the data set the next items should be fetched from. Sometimes the cursor can be quite simple and just refer to the ID of the last object fetched, but in some cases — for example lists sorted according to some criteria — the cursor needs to encode the sorting criteria in addition to the ID of the last object fetched.

@@ -98,8 +98,8 @@ app.use((req, res) => {
 
   const context = {};
 
-  // The client-side app will instead use <BrowserRouter>
-  const app = (
+  // The client-side App will instead use <BrowserRouter>
+  const App = (
     <ApolloProvider client={client}>
       <StaticRouter location={req.url} context={context}>
         <Layout />
@@ -111,7 +111,7 @@ app.use((req, res) => {
 });
 
 app.listen(basePort, () => console.log( // eslint-disable-line no-console
-  `App Server is now running on http://localhost:${basePort}`
+  `app Server is now running on http://localhost:${basePort}`
 ));
 ```
 
@@ -189,9 +189,9 @@ import { getDataFromTree } from "react-apollo"
 const client = new ApolloClient(....);
 
 // during request (see above)
-getDataFromTree(app).then(() => {
+getDataFromTree(App).then(() => {
   // We are ready to render for real
-  const content = ReactDOM.renderToString(app);
+  const content = ReactDOM.renderToString(App);
   const initialState = client.extract();
 
   const html = <Html content={content} state={initialState} />;
@@ -260,7 +260,7 @@ import { renderToStringWithData } from "react-apollo"
 const client = new ApolloClient(....);
 
 // during request
-renderToStringWithData(app).then((content) => {
+renderToStringWithData(App).then((content) => {
   const initialState = client.extract();
   const html = <Html content={content} state={initialState} />;
 

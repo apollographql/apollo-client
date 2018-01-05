@@ -475,3 +475,65 @@ cacheResolvers: {
   },
 },
 ```
+
+<h2 id="reset-store">Resetting the store</h2>
+
+Sometimes, you may want to reset the store entirely, such as [when a user logs out](../recipes/authentication.html#login-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
+
+```js
+export default withApollo(graphql(PROFILE_QUERY, {
+  props: ({ data: { loading, currentUser }, client }) => ({
+    loading,
+    currentUser,
+    resetOnLogout: async () => client.resetStore(),
+  }),
+})(Profile));
+```
+
+To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
+
+In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
+
+```js
+import { ApolloClient } from 'apollo-client';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { withClientState } from 'apollo-link-state';
+
+import { resolvers, defaults } from './resolvers';
+
+const cache = new InMemoryCache();
+const stateLink = withClientState({ cache, resolvers, defaults });
+
+const client = new ApolloClient({
+  cache,
+  link: stateLink,
+});
+
+client.onResetStore(stateLink.writeDefaults);
+```
+
+You can also call `client.onResetStore` from your React components. This can be useful if you would like to force your UI to rerender after the store has been reset.
+
+If you would like to unsubscribe your callbacks from resetStore, use the return value of `client.onResetStore` for your unsubscribe function.
+
+```js
+import { withApollo } from "react-apollo";
+
+export class Foo extends Component {
+  constructor(props) {
+    super(props);
+    this.unsubscribe = props.client.onResetStore(
+      () => this.setState({ reset: false }
+    );
+    this.state = { reset: false };
+  }
+  componentDidUnmount() {
+    this.unsubscribe();
+  }
+  render() {
+    return this.state.reset ? <div /> : <span />
+  }
+}
+
+export default withApollo(Foo);
+```

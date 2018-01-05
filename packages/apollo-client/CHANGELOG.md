@@ -4,6 +4,7 @@
 ### vNEXT
 - include `optimisticResponse` in the context passed to apollo-link for mutations [PR#2704](https://github.com/apollographql/apollo-client/pull/2704)
 - Add cache.writeData to base cache type & DataProxy [PR#2818](https://github.com/apollographql/apollo-client/pull/2818)
+- add `onResetStore` method to the client to register callbacks after `client.resetStore` is called [PR#2812](https://github.com/apollographql/apollo-client/pull/2812)
 
 ### 2.1.1
 - fix eslint usage by fixing jsnext:main path

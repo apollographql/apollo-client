@@ -17,6 +17,7 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClient.writeQuery %}
 {% tsapibox ApolloClient.writeFragment %}
 {% tsapibox ApolloClient.resetStore %}
+{% tsapibox ApolloClient.onResetStore %}
 
 <h2 id="ObservableQuery">ObservableQuery</h2>
 

@@ -511,3 +511,29 @@ const client = new ApolloClient({
 
 client.onResetStore(stateLink.writeDefaults);
 ```
+
+You can also call `client.onResetStore` from your React components. This can be useful if you would like to force your UI to rerender after the store has been reset.
+
+If you would like to unsubscribe your callbacks from resetStore, use the return value of `client.onResetStore` for your unsubscribe function.
+
+```js
+import { withApollo } from "react-apollo";
+
+export class Foo extends Component {
+  constructor(props) {
+    super(props);
+    this.unsubscribe = props.client.onResetStore(
+      () => this.setState({ reset: false }
+    );
+    this.state = { reset: false };
+  }
+  componentDidUnmount() {
+    this.unsubscribe();
+  }
+  render() {
+    return this.state.reset ? <div /> : <span />
+  }
+}
+
+export default withApollo(Foo);
+```

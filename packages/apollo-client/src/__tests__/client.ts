@@ -2207,7 +2207,7 @@ describe('client', () => {
     expect(onResetStore).toHaveBeenCalled();
   });
 
-  fit('onResetStore returns a method that unsubscribes the callback', async () => {
+  it('onResetStore returns a method that unsubscribes the callback', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),

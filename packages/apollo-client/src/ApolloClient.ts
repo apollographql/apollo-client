@@ -225,14 +225,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initQueryManager();
 
+    if (this.defaultOptions.query) {
+      options = { ...this.defaultOptions.query, ...options };
+    }
+
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error(
         'cache-and-network fetchPolicy can only be used with watchQuery',
       );
-    }
-
-    if (this.defaultOptions.query) {
-      options = { ...this.defaultOptions.query, ...options };
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...

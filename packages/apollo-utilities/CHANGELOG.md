@@ -3,6 +3,9 @@
 
 ### vNext
 
+### 1.0.5
+- package dependency updates
+
 ### 1.0.4
 - package dependency updates
 

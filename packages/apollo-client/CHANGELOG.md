@@ -2,6 +2,8 @@
 # Change log
 
 ### vNEXT
+
+### 2.2.0
 - include `optimisticResponse` in the context passed to apollo-link for mutations [PR#2704](https://github.com/apollographql/apollo-client/pull/2704)
 - Add cache.writeData to base cache type & DataProxy [PR#2818](https://github.com/apollographql/apollo-client/pull/2818)
 - Error when invalid `cache-and-network` is provided as `query.fetchPolicy` within `defaultOptions`

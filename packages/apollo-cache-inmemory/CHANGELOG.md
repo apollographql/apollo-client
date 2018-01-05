@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.1.5
+- Update to latest apollo-cache base [#2818](https://github.com/apollographql/apollo-client/pull/2818)
+
 ### 1.1.4
 - Change access modifier for data from "private" to "protected", to allow InMemoryCache subclasses to access it.
 

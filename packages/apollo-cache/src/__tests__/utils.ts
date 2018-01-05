@@ -1,4 +1,5 @@
-import { queryFromPojo, fragmentFromPojo} from '../utils'
+import { print } from 'graphql/language/printer';
+import { queryFromPojo, fragmentFromPojo } from '../utils';
 
 describe('writing data with no query', () => {
   describe('converts a JavaScript object to a query correctly', () => {
@@ -72,3 +73,4 @@ describe('writing data with no query', () => {
       ).toMatchSnapshot();
     });
   });
+});

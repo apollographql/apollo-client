@@ -3,6 +3,7 @@
 
 ### vNEXT
 - include `optimisticResponse` in the context passed to apollo-link for mutations [PR#2704](https://github.com/apollographql/apollo-client/pull/2704)
+- Error when invalid `cache-and-network` is provided as `query.fetchPolicy` within `defaultOptions`
 - add `onResetStore` method to the client to register callbacks after `client.resetStore` is called [PR#2812](https://github.com/apollographql/apollo-client/pull/2812)
 
 ### 2.1.1

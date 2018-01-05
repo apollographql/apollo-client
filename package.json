@@ -74,7 +74,7 @@
   "devDependencies": {
     "bundlesize": "0.15.3",
     "codecov": "3.0.0",
-    "danger": "1.2.0",
+    "danger": "3.0.0",
     "lerna": "2.5.1",
     "lint-staged": "6.0.0",
     "pre-commit": "1.2.2",

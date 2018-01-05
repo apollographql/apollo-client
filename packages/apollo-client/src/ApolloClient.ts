@@ -75,6 +75,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private devToolsHookCb: Function;
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
+  private resetStoreCallbacks: Array<() => Promise<any>> = [];
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -206,10 +207,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = {
-        ...options,
-        fetchPolicy: 'cache-first',
-      } as WatchQueryOptions;
+      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
     }
 
     return this.queryManager.watchQuery<T>(options);
@@ -227,22 +225,19 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initQueryManager();
 
+    if (this.defaultOptions.query) {
+      options = { ...this.defaultOptions.query, ...options };
+    }
+
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error(
         'cache-and-network fetchPolicy can only be used with watchQuery',
       );
     }
 
-    if (this.defaultOptions.query) {
-      options = { ...this.defaultOptions.query, ...options };
-    }
-
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = {
-        ...options,
-        fetchPolicy: 'cache-first',
-      } as WatchQueryOptions;
+      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
     }
 
     return this.queryManager.query<T>(options);
@@ -328,6 +323,22 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     return result;
   }
 
+  /**
+   * Sugar for writeQuery & writeFragment
+   * This method will construct a query from the data object passed in.
+   * If no id is supplied, writeData will write the data to the root.
+   * If an id is supplied, writeData will write a fragment to the object
+   * specified by the id in the store.
+   *
+   * Since you aren't passing in a query to check the shape of the data,
+   * you must pass in an object that conforms to the shape of valid GraphQL data.
+   */
+  public writeData(options: DataProxy.WriteDataOptions): void {
+    const result = this.initProxy().writeData(options);
+    this.queryManager.broadcastQueries();
+    return result;
+  }
+
   public __actionHookForDevTools(cb: () => any) {
     this.devToolsHookCb = cb;
   }
@@ -379,9 +390,25 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * active queries.
    */
   public resetStore(): Promise<ApolloQueryResult<any>[]> | Promise<null> {
-    return this.queryManager
-      ? this.queryManager.resetStore()
-      : Promise.resolve(null);
+    return Promise.resolve()
+      .then(() => {
+        this.queryManager
+          ? this.queryManager.resetStore()
+          : Promise.resolve(null);
+      })
+      .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())));
+  }
+
+  /**
+   * Allows callbacks to be registered that are executed with the store is reset.
+   * onResetStore returns an unsubscribe function for removing your registered callbacks.
+   */
+
+  public onResetStore(cb: () => Promise<any>): () => void {
+    this.resetStoreCallbacks.push(cb);
+    return () => {
+      this.resetStoreCallbacks = this.resetStoreCallbacks.filter(c => c !== cb);
+    };
   }
 
   /**
@@ -401,8 +428,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     return this.queryManager
       ? this.queryManager.reFetchObservableQueries()
       : Promise.resolve(null);
-   }
-  
+  }
+
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
@@ -419,7 +446,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
-
   }
 
   /**

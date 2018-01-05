@@ -25,7 +25,7 @@
     {
       "name": "apollo-cache",
       "path": "./packages/apollo-cache/lib/bundle.min.js",
-      "maxSize": "1 kB"
+      "maxSize": "1.2 kB"
     },
     {
       "name": "apollo-cache-inmemory",

@@ -112,7 +112,10 @@ export class QueryManager<TStore> {
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
 
-    this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
+    this.scheduler = new QueryScheduler({
+      queryManager: this,
+      ssrMode,
+    });
   }
 
   public mutate<T>({
@@ -213,7 +216,9 @@ export class QueryManager<TStore> {
           });
           this.broadcastQueries();
 
-          this.setQuery(mutationId, () => ({ document: undefined }));
+          this.setQuery(mutationId, () => ({
+            document: undefined,
+          }));
           reject(
             new ApolloError({
               networkError: err,
@@ -254,7 +259,9 @@ export class QueryManager<TStore> {
               fetchPolicy: 'network-only',
             });
           });
-          this.setQuery(mutationId, () => ({ document: undefined }));
+          this.setQuery(mutationId, () => ({
+            document: undefined,
+          }));
           if (errorPolicy === 'ignore' && storeResult && storeResult.errors) {
             delete storeResult.errors;
           }
@@ -267,8 +274,7 @@ export class QueryManager<TStore> {
   public fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
-    fetchType?: FetchType,
-    // This allows us to track if this is a query spawned by a `fetchMore`
+    fetchType?: FetchType, // This allows us to track if this is a query spawned by a `fetchMore`
     // call for another query. We need this data to compute the `fetchMore`
     // network status for the query this is fetching for.
     fetchMoreForQueryId?: string,
@@ -276,8 +282,8 @@ export class QueryManager<TStore> {
     const {
       variables = {},
       metadata = null,
-      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
-    } = options;
+      fetchPolicy = 'cache-first',
+    } = options; // cache-first is the default fetch policy.
     const cache = this.dataStore.getCache();
 
     const query = cache.transformDocument(options.query);
@@ -390,7 +396,9 @@ export class QueryManager<TStore> {
 
     // If we have no query to send to the server, we should return the result
     // found within the store.
-    return Promise.resolve<ExecutionResult>({ data: storeResult });
+    return Promise.resolve<ExecutionResult>({
+      data: storeResult,
+    });
   }
 
   // Returns a query listener that will update the given observer based on the
@@ -564,8 +572,7 @@ export class QueryManager<TStore> {
               lastResult &&
               resultFromStore &&
               lastResult.networkStatus === resultFromStore.networkStatus &&
-              lastResult.stale === resultFromStore.stale &&
-              // We can do a strict equality check here because we include a `previousResult`
+              lastResult.stale === resultFromStore.stale && // We can do a strict equality check here because we include a `previousResult`
               // with `readQueryFromStore`. So if the results are the same they will be
               // referentially equal.
               lastResult.data === resultFromStore.data
@@ -586,7 +593,11 @@ export class QueryManager<TStore> {
         } catch (error) {
           previouslyHadError = true;
           if (observer.error)
-            observer.error(new ApolloError({ networkError: error }));
+            observer.error(
+              new ApolloError({
+                networkError: error,
+              }),
+            );
           return;
         }
       }
@@ -725,7 +736,10 @@ export class QueryManager<TStore> {
       optimistic: true,
       previousResult,
       callback: (newData: ApolloQueryResult<any>) => {
-        this.setQuery(queryId, () => ({ invalidated: true, newData }));
+        this.setQuery(queryId, () => ({
+          invalidated: true,
+          newData,
+        }));
       },
     });
   }
@@ -809,7 +823,7 @@ export class QueryManager<TStore> {
     return reset;
   }
 
-  public resetStore(): Promise<ApolloQueryResult<any[]>> {
+  public resetStore(): Promise<ApolloQueryResult<any>[]> {
     // Similarly, we have to have to refetch each of the queries currently being
     // observed. We refetch instead of error'ing on these since the assumption is that
     // resetting the store doesn't eliminate the need for the queries currently being
@@ -940,7 +954,10 @@ export class QueryManager<TStore> {
     const { newData } = this.getQuery(observableQuery.queryId);
     // XXX test this
     if (newData) {
-      return maybeDeepFreeze({ data: newData.result, partial: false });
+      return maybeDeepFreeze({
+        data: newData.result,
+        partial: false,
+      });
     } else {
       try {
         // the query is brand new, so we read from the store to see if anything is there
@@ -980,11 +997,7 @@ export class QueryManager<TStore> {
 
     const { data } = this.getCurrentQueryResult(observableQuery);
 
-    return {
-      previousResult: data,
-      variables,
-      document: query,
-    };
+    return { previousResult: data, variables, document: query };
   }
 
   public broadcastQueries() {
@@ -1175,10 +1188,7 @@ export class QueryManager<TStore> {
         : document,
       variables,
       operationName: getOperationName(document) || undefined,
-      context: {
-        ...extraContext,
-        cache,
-      },
+      context: { ...extraContext, cache },
     };
   }
 }

@@ -69,7 +69,7 @@
     "@types/node": "8.5.8",
     "apollo-cache-inmemory": "^1.1.5",
     "benchmark": "2.1.4",
-    "browserify": "15.0.0",
+    "browserify": "15.1.0",
     "bundlesize": "0.15.3",
     "danger": "1.1.0",
     "flow-bin": "0.63.1",

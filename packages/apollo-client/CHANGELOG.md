@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Fix typo in error message for invalid argument being passed to @skip or @include directives [PR#2865](https://github.com/apollographql/apollo-client/pull/2865)
 
 ### 2.2.0
 - include `optimisticResponse` in the context passed to apollo-link for mutations [PR#2704](https://github.com/apollographql/apollo-client/pull/2704)

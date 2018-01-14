@@ -71,7 +71,7 @@ export function shouldInclude(
         throw new Error(
           `Argument for the @${
             directiveName
-          } directive must be a variable or a bool ean value.`,
+          } directive must be a variable or a boolean value.`,
         );
       } else {
         evaledValue = variables[(ifValue as VariableNode).name.value];

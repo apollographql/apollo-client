@@ -15,6 +15,8 @@ import {
   NameNode,
 } from 'graphql';
 
+import * as stringify from 'json-stable-stringify';
+
 export interface IdValue {
   type: 'id';
   id: string;
@@ -198,7 +200,7 @@ export function getStoreKeyName(
   }
 
   if (args) {
-    const stringifiedArgs: string = JSON.stringify(args);
+    const stringifiedArgs: string = stringify(args);
 
     return `${fieldName}(${stringifiedArgs})`;
   }

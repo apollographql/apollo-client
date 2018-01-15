@@ -532,6 +532,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     if (observer.next && this.lastResult) observer.next(this.lastResult);
     if (observer.error && this.lastError) observer.error(this.lastError);
 
+    if (this.options.fetchPolicy !== 'cache-only') {
+      this.resetLastResults()
+    }
+
     // setup the query if it hasn't been done before
     if (this.observers.length === 1) this.setUpQuery();
 

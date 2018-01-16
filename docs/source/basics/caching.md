@@ -228,11 +228,11 @@ Here are some common situations where you would need to access the cache directl
 
 <h3 id="server">Server side rendering</h3>
 
-First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache.
+First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache. (The `.replace()` is necessary to prevent script injection attacks)
 
 ```js
 `<script>
-  window.__APOLLO_STATE__=${JSON.stringify(cache.extract())}
+  window.__APOLLO_STATE__=${JSON.stringify(cache.extract()).replace(/</g, '\\u003c')}
 </script>`
 ```
 

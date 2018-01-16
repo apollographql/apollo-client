@@ -44,11 +44,11 @@
   },
   "devDependencies": {
     "@types/graphql": "0.11.8",
-    "@types/jest": "21.1.10",
+    "@types/jest": "22.0.1",
     "browserify": "15.2.0",
     "graphql": "0.12.3",
     "graphql-tag": "2.6.1",
-    "jest": "20.0.4",
+    "jest": "22.1.1",
     "rimraf": "2.6.2",
     "rollup": "0.54.0",
     "rollup-plugin-node-resolve": "3.0.2",

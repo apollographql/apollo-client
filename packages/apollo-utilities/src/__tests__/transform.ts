@@ -305,6 +305,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
     `;
     const expectedQueryStr = print(expectedQuery);
@@ -351,6 +352,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
     `;
     const expectedQueryStr = print(expectedQuery);
@@ -377,10 +379,37 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
     `);
     const modifiedQuery = addTypenameToDocument(testQuery);
     expect(print(expectedQuery)).toBe(print(getQueryDefinition(modifiedQuery)));
+  });
+
+  it('should add __typename to the root query to allow IntrospectionMatcher validate fragments on root query', () => {
+    const testQuery = gql`
+      query withRootFragment {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on RootQueryType {
+        field
+      }
+    `;
+    const expectedQuery = gql`
+      query withRootFragment {
+        ...fragmentSpread
+        __typename
+      }
+
+      fragment fragmentSpread on RootQueryType {
+        field
+        __typename
+      }
+    `;
+
+    const modifiedQuery = addTypenameToDocument(testQuery);
+    expect(print(expectedQuery)).toBe(print(modifiedQuery));
   });
 
   it('should modify all definitions in a document', () => {
@@ -410,6 +439,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
 
       fragment friendFields on User {
@@ -439,6 +469,7 @@ describe('query transforms', () => {
           lastName
           __typename
         }
+        __typename
       }
     `);
 
@@ -534,6 +565,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
     `);
     const modifiedQuery = addTypenameToDocument(testQuery);

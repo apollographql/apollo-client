@@ -81,7 +81,7 @@ By adding a [custom resolver](../features/cache-updates.html#cacheRedirect) for 
 ```javascript
 import { ApolloClient } from 'apollo-client';
 import { toIdValue } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-imemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const cache = new InMemoryCache({
   cacheResolvers: {

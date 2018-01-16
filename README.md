@@ -114,6 +114,7 @@ Running tests locally:
 ```
 # nvm use node
 npm install
+npm run build
 npm test
 ```
 

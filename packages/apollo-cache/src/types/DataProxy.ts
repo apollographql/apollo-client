@@ -1,4 +1,4 @@
-import { DocumentNode } from "graphql"; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 
 export namespace DataProxy {
   export interface Query {
@@ -58,6 +58,16 @@ export namespace DataProxy {
     data: any;
   }
 
+  export interface WriteDataOptions {
+    /**
+     * The data you will be writing to the store.
+     * It also takes an optional id property.
+     * The id is used to write a fragment to an existing object in the store.
+     */
+    data: any;
+    id?: string;
+  }
+
   export type DiffResult<T> = {
     result?: T;
     complete?: boolean;
@@ -76,7 +86,7 @@ export interface DataProxy {
    */
   readQuery<QueryType>(
     options: DataProxy.Query,
-    optimistic?: boolean
+    optimistic?: boolean,
   ): QueryType | null;
 
   /**
@@ -86,7 +96,7 @@ export interface DataProxy {
    */
   readFragment<FragmentType>(
     options: DataProxy.Fragment,
-    optimistic?: boolean
+    optimistic?: boolean,
   ): FragmentType | null;
 
   /**
@@ -100,4 +110,12 @@ export interface DataProxy {
    * provided to select the correct fragment.
    */
   writeFragment(options: DataProxy.WriteFragmentOptions): void;
+
+  /**
+   * Sugar for writeQuery & writeFragment.
+   * Writes data to the store without passing in a query.
+   * If you supply an id, the data will be written as a fragment to an existing object.
+   * Otherwise, the data is written to the root of the store.
+   */
+  writeData(options: DataProxy.WriteDataOptions): void;
 }

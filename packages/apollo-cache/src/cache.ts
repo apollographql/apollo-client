@@ -2,6 +2,7 @@ import { DocumentNode } from 'graphql';
 import { getFragmentQueryDocument } from 'apollo-utilities';
 
 import { DataProxy, Cache } from './types';
+import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -98,5 +99,39 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       variables: options.variables,
       query: getFragmentQueryDocument(options.fragment, options.fragmentName),
     });
+  }
+
+  public writeData({ id, data }: Cache.WriteDataOptions): void {
+    if (id) {
+      let typenameResult = null;
+      // Since we can't use fragments without having a typename in the store,
+      // we need to make sure we have one.
+      // To avoid overwriting an existing typename, we need to read it out first
+      // and generate a fake one if none exists.
+      try {
+        typenameResult = this.read({
+          rootId: id,
+          optimistic: false,
+          query: justTypenameQuery,
+        });
+      } catch (e) {
+        // Do nothing, since an error just means no typename exists
+      }
+
+      // tslint:disable-next-line
+      const __typename =
+        (typenameResult && typenameResult.__typename) || '__ClientData';
+
+      // Add a type here to satisfy the inmemory cache
+      const dataToWrite = { __typename, ...data };
+
+      this.writeFragment({
+        id,
+        fragment: fragmentFromPojo(dataToWrite, __typename),
+        data: dataToWrite,
+      });
+    } else {
+      this.writeQuery({ query: queryFromPojo(data), data });
+    }
   }
 }

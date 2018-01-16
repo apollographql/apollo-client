@@ -2,6 +2,9 @@
 
 ## vNEXT
 
+### 4.1.1
+- package dependency updates
+
 ### 4.1.0
 - add support for async resolution via `import { graphql } from 'graphql-anywhere/lib/async'` as an experimental way to do async resolvers
 

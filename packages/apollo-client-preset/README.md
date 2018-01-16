@@ -1,5 +1,5 @@
 # Example
-> Use `create-react-app` then `yarn add apollo-client-preset` and replace below code for `index.js`
+> Use `create-react-app` then `yarn add apollo-client-preset react-apollo graphql` and replace below code for `index.js`
 ```js
 import * as React from 'react'
 import { render } from 'react-dom'

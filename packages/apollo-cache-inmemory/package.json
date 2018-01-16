@@ -50,7 +50,7 @@
     "@types/graphql": "0.11.8",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.92",
-    "browserify": "15.1.0",
+    "browserify": "15.2.0",
     "graphql": "0.12.3",
     "graphql-tag": "2.6.1",
     "jest": "20.0.4",

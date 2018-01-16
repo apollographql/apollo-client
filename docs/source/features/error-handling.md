@@ -26,7 +26,7 @@ const withDataAndErrors = graphql(MY_MIXED_QUERY, {
   }
 });
 ```
-Any errors reported will come under an `errors` prop along side the data returned from the cache or server.
+Any errors reported will come under an `error` prop along side the data returned from the cache or server.
 
 
 <h2 id="network" title="Network errors">Network Errors</h2>

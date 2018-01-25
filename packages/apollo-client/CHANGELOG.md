@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Added the graphQLResultHasError in QueryManager.ts to check not only if result.errors is null, but also empty.
 
 ### 2.2.0
 - include `optimisticResponse` in the context passed to apollo-link for mutations [PR#2704](https://github.com/apollographql/apollo-client/pull/2704)

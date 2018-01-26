@@ -7,7 +7,6 @@ import {
   group,
   benchmark,
   afterEach,
-  runBenchmarks,
   DescriptionObject,
   dataIdFromObject,
 } from './util';
@@ -150,6 +149,15 @@ const createReservations = (count: number) => {
 };
 
 group(end => {
+  benchmark('baseline', done => {
+    let arr = Array.from({ length: 100 }, () => Math.random());
+    arr.sort();
+    done();
+  });
+  end();
+});
+
+group(end => {
   const link = mockSingleLink({
     request: { query: simpleQuery } as Operation,
     result: simpleResult,
@@ -262,7 +270,6 @@ times(7, (countR: number) => {
       }
     }
   `;
-  const originalVariables = { id: 1 };
   const originalResult = {
     data: {
       author: {
@@ -274,26 +281,8 @@ times(7, (countR: number) => {
   };
 
   group(end => {
-    // construct a set of mocked responses that each
-    // returns an author with a different id (but the
-    // same name) so we can populate the cache.
-    const mockedResponses: MockedResponse[] = [];
-    times(count, index => {
-      const result = cloneDeep(originalResult);
-      result.data.author.id = index;
-
-      const variables = cloneDeep(originalVariables);
-      variables.id = index;
-
-      mockedResponses.push({
-        // what am I doing here
-        request: ({ query, variables } as any) as Operation,
-        result,
-      });
-    });
-
     const client = new ApolloClient({
-      link: mockSingleLink(...mockedResponses),
+      link: empty(),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
@@ -306,10 +295,13 @@ times(7, (countR: number) => {
 
     // insert a bunch of stuff into the cache
     times(count, index => {
+      const result = cloneDeep(originalResult);
+      result.data.author.id = index;
+
       return client.cache.writeQuery({
         query,
         variables: { id: index },
-        data: (mockedResponses[index].result as any).data as any,
+        data: result.data as any,
       });
     });
 
@@ -324,6 +316,7 @@ times(7, (countR: number) => {
           .query({
             query,
             variables: { id: randomIndex },
+            fetchPolicy: 'cache-only',
           })
           .then(_ => {
             done();
@@ -449,7 +442,7 @@ times(7, index => {
 });
 
 if (process.env.DANGER_GITHUB_API_TOKEN) {
-  collectAndReportBenchmarks();
+  collectAndReportBenchmarks(true);
 } else {
-  runBenchmarks();
+  collectAndReportBenchmarks(false);
 }

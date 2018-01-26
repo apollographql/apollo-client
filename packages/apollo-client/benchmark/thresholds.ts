@@ -24,7 +24,7 @@ export const thresholds: { [name: string]: number } = {
   'read result with 10 items associated with the result': 0.7 / 0.062,
   'read result with 20 items associated with the result': 0.7 / 0.062,
   'read result with 40 items associated with the result': 1.8 / 0.062,
-  'read result with 80 items associated with the result': 1.9 / 0.062,
+  'read result with 80 items associated with the result': 1.2 / 0.062,
   'read result with 160 items associated with the result': 1.2 / 0.062,
   'read result with 320 items associated with the result': 1.9 / 0.062,
 

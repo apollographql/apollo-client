@@ -78,7 +78,7 @@ export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
               console.log(
                 `No performance drop detected for benchmark: "${element}", ${
                   res[element].mean
-                } = ${normalizedMean} / ${res['baseline'].mean} <= ${
+                } / ${res['baseline'].mean} = ${normalizedMean} <= ${
                   thresholds[element]
                 }`,
               );

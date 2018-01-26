@@ -18,7 +18,7 @@ export const thresholds: { [name: string]: number } = {
   'read single item from cache with 40 items in cache': 0.6 / 0.062,
   'read single item from cache with 80 items in cache': 0.6 / 0.062,
   'read single item from cache with 160 items in cache': 0.6 / 0.062,
-  'read single item from cache with 320 items in cache': 1.6 / 0.062,
+  'read single item from cache with 320 items in cache': 0.6 / 0.062,
 
   'read result with 5 items associated with the result': 0.7 / 0.062,
   'read result with 10 items associated with the result': 0.7 / 0.062,

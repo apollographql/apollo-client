@@ -12,7 +12,7 @@ import * as Benchmark from 'benchmark';
 // be benchmarked. The `benchmark` function is similar to the `it` function within mocha;
 // it allows you to define a particular block of code to be benchmarked.
 
-Benchmark.options.maxTime = 7.5;
+Benchmark.options.maxTime = 10;
 export const bsuite = new Benchmark.Suite();
 export type DoneFunction = () => void;
 

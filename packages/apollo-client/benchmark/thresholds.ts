@@ -1,16 +1,16 @@
 export const thresholds: { [name: string]: number } = {
-  'constructing an instance': 0.015 / 0.062,
+  'constructing an instance': 0.1,
 
-  'fetching a query result from mocked server': 1.1 / 0.062,
+  'fetching a query result from mocked server': 14,
 
-  'write data and receive update from the cache': 1.2 / 0.062,
-  'write data and deliver update to 5 subscribers': 1.7 / 0.062,
-  'write data and deliver update to 10 subscribers': 2.2 / 0.062,
-  'write data and deliver update to 20 subscribers': 3.4 / 0.062,
-  'write data and deliver update to 40 subscribers': 6.1 / 0.062,
-  'write data and deliver update to 80 subscribers': 11 / 0.062,
-  'write data and deliver update to 160 subscribers': 19 / 0.062,
-  'write data and deliver update to 320 subscribers': 38 / 0.062,
+  'write data and receive update from the cache': 14,
+  'write data and deliver update to 5 subscribers': 20,
+  'write data and deliver update to 10 subscribers': 25,
+  'write data and deliver update to 20 subscribers': 35,
+  'write data and deliver update to 40 subscribers': 62,
+  'write data and deliver update to 80 subscribers': 90,
+  'write data and deliver update to 160 subscribers': 165,
+  'write data and deliver update to 320 subscribers': 330,
 
   'read single item from cache with 5 items in cache': 0.65 / 0.062,
   'read single item from cache with 10 items in cache': 0.65 / 0.062,

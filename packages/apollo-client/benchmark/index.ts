@@ -213,8 +213,8 @@ group(end => {
   // the `meanTimes` structure can be used.
   const meanTimes: { [subscriberCount: string]: number } = {};
 
-  times(7, countR => {
-    const count = 5 * Math.pow(2, countR);
+  times(4, countR => {
+    const count = 5 * Math.pow(4, countR);
     benchmark(
       {
         name: `write data and deliver update to ${count} subscribers`,
@@ -259,8 +259,8 @@ group(end => {
   end();
 });
 
-times(7, (countR: number) => {
-  const count = 5 * Math.pow(2, countR);
+times(4, (countR: number) => {
+  const count = 5 * Math.pow(4, countR);
   const query = gql`
     query($id: String) {
       author(id: $id) {
@@ -330,7 +330,7 @@ times(7, (countR: number) => {
 
 // Measure the amount of time it takes to read a bunch of
 // objects from the cache.
-times(7, index => {
+times(4, index => {
   group(end => {
     const client = new ApolloClient({
       link: empty(),
@@ -351,7 +351,7 @@ times(7, index => {
       }
     `;
     const houseId = '12';
-    const reservationCount = 5 * Math.pow(2, index);
+    const reservationCount = 5 * Math.pow(4, index);
     const reservations = createReservations(reservationCount);
 
     const variables = { id: houseId };
@@ -389,9 +389,9 @@ times(7, index => {
 //
 // This test allows us to differentiate between the fixed cost of .query() and the fixed cost
 // of actually reading from the store.
-times(7, index => {
+times(4, index => {
   group(end => {
-    const reservationCount = 5 * Math.pow(2, index);
+    const reservationCount = 5 * Math.pow(4, index);
 
     // Prime the cache.
     const query = gql`

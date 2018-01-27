@@ -17,13 +17,7 @@ import { times, cloneDeep } from 'lodash';
 
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
-import {
-  Operation,
-  ApolloLink,
-  FetchResult,
-  Observable,
-  empty,
-} from 'apollo-link';
+import { Operation, ApolloLink, FetchResult, Observable } from 'apollo-link';
 
 import { print } from 'graphql/language/printer';
 
@@ -281,16 +275,13 @@ times(4, (countR: number) => {
   };
 
   group(end => {
-    const client = new ApolloClient({
-      link: empty(),
-      cache: new InMemoryCache({
-        dataIdFromObject: (obj: any) => {
-          if (obj.id && obj.__typename) {
-            return obj.__typename + obj.id;
-          }
-          return null;
-        },
-      }),
+    const cache = new InMemoryCache({
+      dataIdFromObject: (obj: any) => {
+        if (obj.id && obj.__typename) {
+          return obj.__typename + obj.id;
+        }
+        return null;
+      },
     });
 
     // insert a bunch of stuff into the cache
@@ -298,7 +289,7 @@ times(4, (countR: number) => {
       const result = cloneDeep(originalResult);
       result.data.author.id = index;
 
-      return client.cache.writeQuery({
+      return cache.writeQuery({
         query,
         variables: { id: index },
         data: result.data as any,
@@ -312,15 +303,11 @@ times(4, (countR: number) => {
       },
       done => {
         const randomIndex = Math.floor(Math.random() * count);
-        client
-          .query({
-            query,
-            variables: { id: randomIndex },
-            fetchPolicy: 'cache-only',
-          })
-          .then(_ => {
-            done();
-          });
+        cache.readQuery({
+          query,
+          variables: { id: randomIndex },
+        });
+        done();
       },
     );
 
@@ -332,12 +319,9 @@ times(4, (countR: number) => {
 // objects from the cache.
 times(4, index => {
   group(end => {
-    const client = new ApolloClient({
-      link: empty(),
-      cache: new InMemoryCache({
-        dataIdFromObject,
-        addTypename: false,
-      }),
+    const cache = new InMemoryCache({
+      dataIdFromObject,
+      addTypename: false,
     });
 
     const query = gql`
@@ -356,7 +340,7 @@ times(4, index => {
 
     const variables = { id: houseId };
 
-    client.cache.writeQuery({
+    cache.writeQuery({
       query,
       variables,
       data: {
@@ -369,15 +353,11 @@ times(4, index => {
     benchmark(
       `read result with ${reservationCount} items associated with the result`,
       done => {
-        client
-          .query({
-            query,
-            variables,
-            fetchPolicy: 'cache-only',
-          })
-          .then(() => {
-            done();
-          });
+        cache.readQuery({
+          query,
+          variables,
+        });
+        done();
       },
     );
 

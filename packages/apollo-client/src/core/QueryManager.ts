@@ -820,14 +820,19 @@ export class QueryManager<TStore> {
     return dataStoreReset.then(() => Promise.all(observableQueryPromises));
   }
 
-  private getObservableQueryPromises(): Promise<ApolloQueryResult<any>>[] {
+  private getObservableQueryPromises(
+    includeStandby?: boolean,
+  ): Promise<ApolloQueryResult<any>>[] {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     this.queries.forEach(({ observableQuery }, queryId) => {
       if (!observableQuery) return;
       const fetchPolicy = observableQuery.options.fetchPolicy;
 
       observableQuery.resetLastResults();
-      if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
+      if (
+        fetchPolicy !== 'cache-only' &&
+        (includeStandby || fetchPolicy !== 'standby')
+      ) {
         observableQueryPromises.push(observableQuery.refetch());
       }
 
@@ -838,10 +843,12 @@ export class QueryManager<TStore> {
     return observableQueryPromises;
   }
 
-  public reFetchObservableQueries(): Promise<ApolloQueryResult<any>[]> {
+  public reFetchObservableQueries(
+    includeStandby?: boolean,
+  ): Promise<ApolloQueryResult<any>[]> {
     const observableQueryPromises: Promise<
       ApolloQueryResult<any>
-    >[] = this.getObservableQueryPromises();
+    >[] = this.getObservableQueryPromises(includeStandby);
 
     this.broadcastQueries();
 

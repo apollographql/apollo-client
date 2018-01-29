@@ -43,7 +43,7 @@
     "@types/graphql": "0.12.1",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.93",
+    "@types/lodash": "4.14.97",
     "@types/node": "8.5.9",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.3",

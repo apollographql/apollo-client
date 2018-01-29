@@ -46,6 +46,22 @@ const link = onError(({ graphQLErrors, networkError }) => {
 
   if (networkError) console.log(`[Network error]: ${networkError}`);
 });
+
+const client = new ApolloClient({
+  link: errorLink.concat(new HttpLink({
+    uri: 'url/to/graphql',
+    // ... HttpLink options
+  })),
+  /* Or like this
+  link: ApolloLink.from([
+    errorLink,
+    new HttpLink({
+      // ...
+    }),
+    // ...
+  ]),
+  */
+})
 ```
 
 #### Options

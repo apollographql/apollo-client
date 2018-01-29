@@ -4,9 +4,10 @@ import { getFragmentQueryDocument } from 'apollo-utilities';
 import { DataProxy, Cache } from './types';
 import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
 
-export type Transaction<T> = (c: ApolloCache<T>) => void;
+export type Transaction<T, U = T> = (c: ApolloCache<T, U>) => void;
 
-export abstract class ApolloCache<TSerialized> implements DataProxy {
+export abstract class ApolloCache<TCache, TSerializedCache = TCache>
+  implements DataProxy {
   // required to implement
   // core API
   public abstract read<T>(query: Cache.ReadOptions): T | null;
@@ -25,23 +26,21 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * and also (potentially) during hot reloads.
    */
   public abstract restore(
-    serializedState: TSerialized,
-  ): ApolloCache<TSerialized>;
+    serializedState: TSerializedCache,
+  ): ApolloCache<TCache, TSerializedCache>;
 
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
-  public abstract extract(optimistic?: boolean): TSerialized;
+  public abstract extract(optimistic?: boolean): TSerializedCache;
 
   // optimistic API
   public abstract removeOptimistic(id: string): void;
 
   // transactional API
-  public abstract performTransaction(
-    transaction: Transaction<TSerialized>,
-  ): void;
+  public abstract performTransaction(transaction: Transaction<TCache>): void;
   public abstract recordOptimisticTransaction(
-    transaction: Transaction<TSerialized>,
+    transaction: Transaction<TCache>,
     id: string,
   ): void;
 

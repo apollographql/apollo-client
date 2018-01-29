@@ -38,6 +38,10 @@
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
+  "dependencies": {
+    "@types/lodash-es": "^4.17.0",
+    "lodash-es": "^4.17.4"
+  },
   "devDependencies": {
     "@types/graphql": "0.12.3",
     "@types/jest": "21.1.10",

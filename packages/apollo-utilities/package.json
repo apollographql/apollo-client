@@ -39,7 +39,7 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.1",
+    "@types/graphql": "0.12.3",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.97",
     "@types/node": "8.5.9",

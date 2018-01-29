@@ -47,7 +47,7 @@
     "graphql": "0.11.7 || ^0.12.0"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.1",
+    "@types/graphql": "0.12.3",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.97",
     "browserify": "15.2.0",

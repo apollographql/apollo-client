@@ -2,6 +2,8 @@
 # Change log
 
 ### vNEXT
+
+### 2.2.1
 - Allow optional parameter to include queries in standby mode when refetching observed queries [PR#2804](https://github.com/apollographql/apollo-client/pull/2804)
 
 ### 2.2.0

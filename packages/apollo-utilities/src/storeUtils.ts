@@ -164,6 +164,8 @@ export type Directives = {
   };
 };
 
+const KNOWN_DIRECTIVES: string[] = ['connection', 'include', 'skip'];
+
 export function getStoreKeyName(
   fieldName: string,
   args?: Object,
@@ -197,13 +199,25 @@ export function getStoreKeyName(
     }
   }
 
+  let completeFieldName: string = fieldName;
+
   if (args) {
     const stringifiedArgs: string = JSON.stringify(args);
-
-    return `${fieldName}(${stringifiedArgs})`;
+    completeFieldName += `(${stringifiedArgs})`;
   }
 
-  return fieldName;
+  if (directives) {
+    Object.keys(directives).forEach(key => {
+      if (KNOWN_DIRECTIVES.indexOf(key) !== -1) return;
+      if (directives[key] && Object.keys(directives[key]).length) {
+        completeFieldName += `@${key}(${JSON.stringify(directives[key])})`;
+      } else {
+        completeFieldName += `@${key}`;
+      }
+    });
+  }
+
+  return completeFieldName;
 }
 
 export function argumentsObjectFromField(

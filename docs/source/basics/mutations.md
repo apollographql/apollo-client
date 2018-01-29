@@ -279,13 +279,13 @@ client.mutate({
   },
   update: (proxy, { data: { createTodo } }) => {
     // Read the data from our cache for this query.
-    const data = proxy.readQuery({ query: TodoAppQuery });
+    const queryData = proxy.readQuery({ query: TodoAppQuery });
 
     // Add our todo from the mutation to the end.
-    data.todos.push(createTodo);
+    queryData.todos.push(createTodo);
 
     // Write our data back to the cache.
-    proxy.writeQuery({ query: TodoAppQuery, data });
+    proxy.writeQuery({ query: TodoAppQuery, queryData });
   },
 });
 ```

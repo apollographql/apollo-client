@@ -180,8 +180,7 @@ const withData = graphql(COMMENT_QUERY, {
     }),
     props: props => {
         return {
-            // I believe the below line is missing: `data: props.Comment`, since you need to attach query result to component props. Unsure if `props.Comment` is correct, please verify.
-            data: props.Comment,
+           ...props,
             subscribeToNewComments: params => {
                 return props.comments.subscribeToMore({
                     document: COMMENTS_SUBSCRIPTION,

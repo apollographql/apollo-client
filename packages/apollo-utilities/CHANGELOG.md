@@ -6,9 +6,6 @@
 ### 1.1.1
 - Fix typo in error message for invalid argument being passed to @skip or @include directives [PR#2867](https://github.com/apollographql/apollo-client/pull/2867)
 
-### 1.1.0
-- update `getStoreKeyName` to support custom directives
-
 ### 1.0.5
 - package dependency updates
 

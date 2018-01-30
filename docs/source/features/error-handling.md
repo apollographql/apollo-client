@@ -30,7 +30,8 @@ Any errors reported will come under an `error` prop along side the data returned
 
 
 <h2 id="network" title="Network errors">Network Errors</h2>
-When using Apollo Link, the ability to handle network errors is way more powerful. The best way to do this is to use the `apollo-link-error` to catch and handle server errors, network errors, and GraphQL errors. 
+
+When using Apollo Link, the ability to handle network errors is way more powerful. The best way to do this is to use the `apollo-link-error` to catch and handle server errors, network errors, and GraphQL errors. If you would like to combine with other links, see [composing links](https://www.apollographql.com/docs/link/composition.html).
 
 #### Usage
 ```js
@@ -46,22 +47,6 @@ const link = onError(({ graphQLErrors, networkError }) => {
 
   if (networkError) console.log(`[Network error]: ${networkError}`);
 });
-
-const client = new ApolloClient({
-  link: errorLink.concat(new HttpLink({
-    uri: 'url/to/graphql',
-    // ... HttpLink options
-  })),
-  /* Or like this
-  link: ApolloLink.from([
-    errorLink,
-    new HttpLink({
-      // ...
-    }),
-    // ...
-  ]),
-  */
-})
 ```
 
 #### Options

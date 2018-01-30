@@ -2,7 +2,7 @@
 
 ### vNEXT
 
-### 1.1.6
+### 1.1.6 (UNPUBLISHED)
 - update to latest apollo-utilities
 
 ### 1.1.5

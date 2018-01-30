@@ -1,29 +1,31 @@
 language: node_js
 node_js:
   - "8"
-
+matrix:
+  include:
+    - sudo: false
+      env: MODE=TEST
+    - sudo: true
+      env: MODE=BENCHMARK
 install:
   - npm run bootstrap
   - npm prune
 
 script:
-  - npm run danger
+  - if [ "$MODE" = "TEST" ]; then npm run danger; fi
 
     # using jest --coverage also runs the tests so this will cut down CI time
-  - npm run coverage
+  - if [ "$MODE" = "TEST" ]; then npm run coverage; fi
 
     # run coverage and file size checks
     # this is timing out?
-  - npm run coverage:upload || true #ignore failures
+  - if [ "$MODE" = "TEST" ]; then npm run coverage:upload || true; fi #ignore failures
 
     # make sure files don't get too large
-  - npm run filesize
+  - if [ "$MODE" = "TEST" ]; then npm run filesize; fi
 
    # check benchmarks for performance drops
-  - npm run benchmark
-
-# Don't allow Travis tests to run in containers, since with that benchmark results can vary a lot.
-sudo: true
+  - if [ "$MODE" = "BENCHMARK" ]; then npm run benchmark; fi
 
 notifications:
   email: false

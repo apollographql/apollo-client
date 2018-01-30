@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.1.6
+- update to latest apollo-utilities
+
 ### 1.1.5
 - Update to latest apollo-cache base [#2818](https://github.com/apollographql/apollo-client/pull/2818)
 

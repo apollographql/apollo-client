@@ -42,7 +42,7 @@
   "devDependencies": {
     "@types/graphql": "0.12.3",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "21.1.10",
+    "@types/jest": "22.1.1",
     "@types/lodash": "4.14.97",
     "@types/node": "8.5.9",
     "@types/react": "16.0.34",
@@ -50,7 +50,7 @@
     "browserify": "15.2.0",
     "graphql": "0.12.3",
     "graphql-tag": "2.6.1",
-    "jest": "20.0.4",
+    "jest": "22.1.4",
     "react": "15.6.2",
     "react-dom": "15.6.2",
     "rollup": "0.55.1",

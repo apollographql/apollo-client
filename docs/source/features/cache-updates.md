@@ -129,7 +129,7 @@ mutate({
 
 <h3 id="directAccess">`update`</h3>
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](http://dev.apollodata.com/react/api-mutations.html#graphql-mutation-options-update).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](https://www.apollographql.com/docs/react/basics/mutations.html#graphql-mutation-options-update).
 
 ```javascript
 import CommentAppQuery from '../queries/CommentAppQuery';

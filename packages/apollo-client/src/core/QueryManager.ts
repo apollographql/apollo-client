@@ -123,11 +123,18 @@ export class QueryManager<TStore> {
     refetchQueries = [],
     update: updateWithProxyFn,
     errorPolicy = 'none',
+    fetchPolicy,
     context = {},
   }: MutationOptions): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(
         'mutation option is required. You must specify your GraphQL document in the mutation option.',
+      );
+    }
+
+    if (fetchPolicy && fetchPolicy !== 'no-cache') {
+      throw new Error(
+        "fetchPolicy for mutations currently only supports the 'no-cache' policy",
       );
     }
 
@@ -195,14 +202,16 @@ export class QueryManager<TStore> {
 
           this.mutationStore.markMutationResult(mutationId);
 
-          this.dataStore.markMutationResult({
-            mutationId,
-            result,
-            document: mutation,
-            variables: variables || {},
-            updateQueries: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
-          });
+          if (fetchPolicy !== 'no-cache') {
+            this.dataStore.markMutationResult({
+              mutationId,
+              result,
+              document: mutation,
+              variables: variables || {},
+              updateQueries: generateUpdateQueriesInfo(),
+              update: updateWithProxyFn,
+            });
+          }
           storeResult = result as FetchResult<T>;
         },
         error: (err: Error) => {
@@ -283,12 +292,17 @@ export class QueryManager<TStore> {
     const query = cache.transformDocument(options.query);
 
     let storeResult: any;
-    let needToFetch: boolean = fetchPolicy === 'network-only';
+    let needToFetch: boolean =
+      fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only') {
+    if (
+      fetchType !== FetchType.refetch &&
+      fetchPolicy !== 'network-only' &&
+      fetchPolicy !== 'no-cache'
+    ) {
       const { complete, result } = this.dataStore.getCache().diff({
         query,
         variables,
@@ -1025,7 +1039,7 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
-    const { variables, context, errorPolicy = 'none' } = options;
+    const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
     const operation = this.buildOperationForLink(document, variables, {
       ...context,
       // TODO: Should this be included for all entry points via
@@ -1042,17 +1056,19 @@ export class QueryManager<TStore> {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
-            try {
-              this.dataStore.markQueryResult(
-                result,
-                document,
-                variables,
-                fetchMoreForQueryId,
-                errorPolicy === 'ignore',
-              );
-            } catch (e) {
-              reject(e);
-              return;
+            if (fetchPolicy !== 'no-cache') {
+              try {
+                this.dataStore.markQueryResult(
+                  result,
+                  document,
+                  variables,
+                  fetchMoreForQueryId,
+                  errorPolicy === 'ignore',
+                );
+              } catch (e) {
+                reject(e);
+                return;
+              }
             }
 
             this.queryStore.markQueryResult(

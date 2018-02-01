@@ -70,7 +70,7 @@
     "apollo-cache-inmemory": "^1.1.6",
     "benchmark": "2.1.4",
     "browserify": "15.2.0",
-    "bundlesize": "0.15.3",
+    "bundlesize": "0.16.0",
     "danger": "1.1.0",
     "flow-bin": "0.64.0",
     "github": "12.1.0",

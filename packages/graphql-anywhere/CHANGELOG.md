@@ -2,6 +2,9 @@
 
 ## vNEXT
 
+### 4.1.2
+- update to latest apollo-utilities
+
 ### 4.1.1
 - package dependency updates
 

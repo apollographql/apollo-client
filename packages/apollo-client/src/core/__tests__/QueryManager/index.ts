@@ -3707,6 +3707,41 @@ describe('QueryManager', () => {
       }, 50);
     });
 
+    it('should refetch on a standby Observable if the observed queries are refetched and the includeStandby parameter is set to true', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({});
+      const options = assign({}) as WatchQueryOptions;
+      options.fetchPolicy = 'standby';
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = ({
+        refetch(_: any): Promise<ExecutionResult> {
+          refetchCount++;
+          return null as never;
+        },
+        options,
+        queryManager: queryManager,
+
+        resetLastResults: jest.fn(() => {}),
+      } as any) as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      const includeStandBy = true;
+      queryManager.reFetchObservableQueries(includeStandBy);
+      setTimeout(() => {
+        expect(refetchCount).toEqual(1);
+        done();
+      }, 50);
+    });
+
     it('should NOT throw an error on an inflight query() if the observed queries are refetched', done => {
       let queryManager: QueryManager;
       const query = gql`

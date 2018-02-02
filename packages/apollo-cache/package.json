@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -40,17 +40,17 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-utilities": "^1.0.4"
+    "apollo-utilities": "^1.0.5"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.1",
+    "@types/graphql": "0.12.3",
     "@types/jest": "21.1.10",
     "browserify": "15.2.0",
     "graphql": "0.12.3",
     "graphql-tag": "2.6.1",
     "jest": "20.0.4",
     "rimraf": "2.6.2",
-    "rollup": "0.55.0",
+    "rollup": "0.55.1",
     "rollup-plugin-node-resolve": "3.0.2",
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",

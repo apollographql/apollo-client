@@ -165,6 +165,38 @@ describe('reading from the store', () => {
     });
   });
 
+  it('runs a basic query with custom directives', () => {
+    const query = gql`
+      query {
+        id
+        firstName @include(if: true)
+        lastName @upperCase
+        birthDate @dateFormat(format: "DD-MM-YYYY")
+      }
+    `;
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: {
+        id: 'abcd',
+        firstName: 'James',
+        'lastName@upperCase': 'BOND',
+        'birthDate@dateFormat({"format":"DD-MM-YYYY"})': '20-05-1940',
+      },
+    });
+
+    const result = readQueryFromStore({
+      store,
+      query,
+    });
+
+    expect(result).toEqual({
+      id: 'abcd',
+      firstName: 'James',
+      lastName: 'BOND',
+      birthDate: '20-05-1940',
+    });
+  });
+
   it('runs a basic query with default values for arguments', () => {
     const query = gql`
       query someBigQuery(

@@ -164,7 +164,14 @@ export type Directives = {
   };
 };
 
-const KNOWN_DIRECTIVES: string[] = ['connection', 'include', 'skip'];
+const KNOWN_DIRECTIVES: string[] = [
+  'connection',
+  'include',
+  'skip',
+  'client',
+  'rest',
+  'export',
+];
 
 export function getStoreKeyName(
   fieldName: string,

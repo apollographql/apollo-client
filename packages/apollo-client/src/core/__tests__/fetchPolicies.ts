@@ -240,7 +240,7 @@ describe('no-cache', () => {
       }),
     );
   });
-  it('saves data to the cache on success', () => {
+  it('does not save the data to the cache on success', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;

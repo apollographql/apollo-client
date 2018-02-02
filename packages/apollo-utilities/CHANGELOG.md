@@ -2,6 +2,8 @@
 
 
 ### vNext
+
+### 1.1.2
 - Add client, rest, and export directives to list of known directives [PR#2949](https://github.com/apollographql/apollo-client/pull/2949)
 
 ### 1.1.1

@@ -2,6 +2,9 @@
 # Change log
 
 ### vNEXT
+
+### 2.2.2
+- Fixed potential race condition in mutations
 - Add new fetchPolicy called 'no-cache' to bypass reading from or saving to the cache when making a query
 
 ### 2.2.1

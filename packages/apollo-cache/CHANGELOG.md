@@ -1,6 +1,9 @@
 
 ### vNext
 
+### 1.1.2
+- depenedency updates
+
 ### 1.1.1
 - depenedency updates
 

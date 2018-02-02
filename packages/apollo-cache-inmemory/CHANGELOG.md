@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.1.7
+- update to latest apollo-utilities to support directives in cache
+
 ### 1.1.6 (unpublished)
 - update to latest apollo-utilities
 

@@ -109,15 +109,13 @@ export interface IdValueWithPreviousResult extends IdValue {
 
 export type IntrospectionResultData = {
   __schema: {
-    types: [
-      {
-        kind: string;
+    types: {
+      kind: string;
+      name: string;
+      possibleTypes: {
         name: string;
-        possibleTypes: {
-          name: string;
-        }[];
-      }
-    ];
+      }[];
+    }[];
   };
 };
 

@@ -1063,7 +1063,7 @@ export class QueryManager<TStore> {
                   document,
                   variables,
                   fetchMoreForQueryId,
-                  errorPolicy === 'ignore',
+                  errorPolicy === 'ignore' || errorPolicy === 'all',
                 );
               } catch (e) {
                 reject(e);

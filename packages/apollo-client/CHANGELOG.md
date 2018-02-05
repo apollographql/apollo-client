@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Provide data when errorPolicy is set "all"
 
 ### 2.2.2
 - Fixed potential race condition in mutations

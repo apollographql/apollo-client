@@ -1388,7 +1388,7 @@ describe('ObservableQuery', () => {
     it('returns errors with data if errorPolicy is all', () => {
       const queryManager = mockQueryManager({
         request: { query, variables },
-        result: { errors: [error] },
+        result: { data: dataOne, errors: [error] },
       });
 
       const observable = queryManager.watchQuery({
@@ -1398,7 +1398,7 @@ describe('ObservableQuery', () => {
       });
 
       return observable.result().then(result => {
-        expect(result.data).toBeUndefined();
+        expect(result.data).toEqual(dataOne);
         expect(result.errors).toEqual([error]);
         const currentResult = observable.currentResult();
         expect(currentResult.loading).toBe(false);

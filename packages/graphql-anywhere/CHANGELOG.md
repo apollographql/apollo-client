@@ -1,6 +1,7 @@
 # Change log
 
 ## vNEXT
+- support null literal
 
 ### 4.1.3
 - update to latest apollo-utilities

@@ -8,6 +8,7 @@ import {
   ObjectValueNode,
   ListValueNode,
   EnumValueNode,
+  NullValueNode,
   VariableNode,
   InlineFragmentNode,
   ValueNode,
@@ -84,6 +85,10 @@ function isEnumValue(value: ValueNode): value is EnumValueNode {
   return value.kind === 'EnumValue';
 }
 
+function isNullValue(value: ValueNode): value is NullValueNode {
+  return value.kind === 'NullValue';
+}
+
 export function valueToObjectRepresentation(
   argObj: any,
   name: NameNode,
@@ -116,6 +121,8 @@ export function valueToObjectRepresentation(
     });
   } else if (isEnumValue(value)) {
     argObj[name.value] = (value as EnumValueNode).value;
+  } else if (isNullValue(value)) {
+    argObj[name.value] = null;
   } else {
     throw new Error(`The inline argument "${name.value}" of kind "${
       (value as any).kind

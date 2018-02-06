@@ -103,7 +103,12 @@ export function propType(doc) {
   return createChainableTypeChecker((props, propName) => {
     const prop = props[propName];
     try {
-      if (!doc.loading) {
+      console.log({
+        doc,
+        prop,
+        propName,
+      });
+      if (!prop.loading) {
         check(doc, prop);
       }
       return null;

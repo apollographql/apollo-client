@@ -25,7 +25,7 @@ To get started using Apollo with React, we need to create an `ApolloClient` and 
 
 <h3 id="creating-client">Creating a client</h3>
 
-To get started, create an [`ApolloClient`](#constructor) instance and point it at your GraphQL server:
+To get started, create an [`ApolloClient`](#ApolloClient) instance and point it at your GraphQL server:
 
 ```js
 import { ApolloClient } from 'apollo-client';

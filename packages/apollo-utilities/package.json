@@ -42,7 +42,7 @@
     "@types/graphql": "0.12.3",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.97",
-    "@types/node": "8.5.9",
+    "@types/node": "8.9.0",
     "browserify": "15.2.0",
     "flow-bin": "0.64.0",
     "graphql": "0.12.3",

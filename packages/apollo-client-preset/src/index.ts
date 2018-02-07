@@ -28,49 +28,51 @@ export default class DefaultClient<
   constructor(config: PresetConfig) {
     const cache = new InMemoryCache();
 
-    const stateLink = config.clientState
-      ? withClientState({ ...config.clientState, cache })
-      : false;
+    if (config) {
+      const stateLink = config.clientState
+        ? withClientState({ ...config.clientState, cache })
+        : false;
 
-    const errorLink = config.onError
-      ? onError(config.onError)
-      : onError(({ graphQLErrors, networkError }) => {
-          if (graphQLErrors)
-            graphQLErrors.map(({ message, locations, path }) =>
-              console.log(
-                `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
-              ),
-            );
-          if (networkError) console.log(`[Network error]: ${networkError}`);
-        });
-
-    const requestHandler = config.request
-      ? new ApolloLink((operation, forward) => {
-          const { ...request } = operation;
-
-          return new Observable(observer => {
-            let handle: any;
-            Promise.resolve(request)
-              .then(req => config.request(req))
-              .then(() => {
-                handle = forward(operation).subscribe({
-                  next: observer.next.bind(observer),
-                  error: observer.error.bind(observer),
-                  complete: observer.complete.bind(observer),
-                });
-              })
-              .catch(observer.error.bind(observer));
-
-            return () => {
-              if (handle) handle.unsubscribe;
-            };
+      const errorLink = config.onError
+        ? onError(config.onError)
+        : onError(({ graphQLErrors, networkError }) => {
+            if (graphQLErrors)
+              graphQLErrors.map(({ message, locations, path }) =>
+                console.log(
+                  `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+                ),
+              );
+            if (networkError) console.log(`[Network error]: ${networkError}`);
           });
-        })
-      : false;
+
+      const requestHandler = config.request
+        ? new ApolloLink((operation, forward) => {
+            const { ...request } = operation;
+
+            return new Observable(observer => {
+              let handle: any;
+              Promise.resolve(request)
+                .then(req => config.request(req))
+                .then(() => {
+                  handle = forward(operation).subscribe({
+                    next: observer.next.bind(observer),
+                    error: observer.error.bind(observer),
+                    complete: observer.complete.bind(observer),
+                  });
+                })
+                .catch(observer.error.bind(observer));
+
+              return () => {
+                if (handle) handle.unsubscribe;
+              };
+            });
+          })
+        : false;
+    }
 
     const httpLink = new HttpLink({
-      uri: config.uri || '/graphql',
-      fetchOptions: config.fetchOptions || {},
+      uri: (config && config.uri) || '/graphql',
+      fetchOptions: (config && config.fetchOptions) || {},
       credentials: 'same-origin',
     });
 

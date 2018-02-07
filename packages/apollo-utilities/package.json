@@ -46,7 +46,7 @@
     "browserify": "15.2.0",
     "flow-bin": "0.64.0",
     "graphql": "0.12.3",
-    "graphql-tag": "2.6.1",
+    "graphql-tag": "2.7.3",
     "jest": "20.0.4",
     "lodash": "4.17.4",
     "rimraf": "2.6.2",

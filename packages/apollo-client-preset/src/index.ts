@@ -3,12 +3,10 @@ export * from 'apollo-client';
 export * from 'apollo-link';
 export * from 'apollo-cache-inmemory';
 
-import { Operation, ApolloLink } from 'apollo-link';
+import { Operation, ApolloLink, Observable } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
-import { ErrorLink } from 'apollo-link-error';
 import { withClientState, ClientStateConfig } from 'apollo-link-state';
-import { setContext, ContextSetter } from 'apollo-link-context';
-import { onError } from 'apollo-link-error';
+import { onError, ErrorLink } from 'apollo-link-error';
 import { InMemoryCache, NormalizedCache } from 'apollo-cache-inmemory';
 
 import gql from 'graphql-tag';
@@ -17,12 +15,11 @@ import ApolloClient, { ApolloClientOptions } from 'apollo-client';
 export { gql, InMemoryCache, HttpLink };
 
 export interface PresetConfig {
-  request?: (operation: Operation) => any;
+  request?: (operation: Operation) => Promise<void>;
   uri?: string;
   fetchOptions?: HttpLink.Options;
   clientState?: ClientStateConfig;
-  errorHandler?: ErrorLink.ErrorHandler;
-  context?: ContextSetter;
+  onError?: ErrorLink.ErrorHandler;
 }
 
 export default class DefaultClient<
@@ -31,28 +28,45 @@ export default class DefaultClient<
   constructor(config: PresetConfig) {
     const cache = new InMemoryCache();
 
-    const forwardLink = new ApolloLink((operation, forward) =>
-      forward(operation),
-    );
-
     const stateLink = config.clientState
       ? withClientState({ ...config.clientState, cache })
-      : forwardLink;
+      : false;
 
-    const contextLink = config.context
-      ? setContext(config.context)
-      : forwardLink;
+    const errorLink = config.onError
+      ? onError(config.onError)
+      : onError(({ graphQLErrors, networkError }) => {
+          if (graphQLErrors)
+            graphQLErrors.map(({ message, locations, path }) =>
+              console.log(
+                `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+              ),
+            );
+          if (networkError) console.log(`[Network error]: ${networkError}`);
+        });
 
-    const errorLink = config.errorHandler
-      ? onError(config.errorHandler)
-      : forwardLink;
+    const requestHandler = config.request
+      ? new ApolloLink((operation, forward) => {
+          const { ...request } = operation;
 
-    const requestHandler = new ApolloLink((operation, forward) => {
-      if (config.request) {
-        config.request(operation);
-      }
-      return forward(operation);
-    });
+          return new Observable(observer => {
+            let handle: any;
+            Promise.resolve(request)
+              .then(req => config.request(req))
+              .then(() => {
+                handle = forward(operation).subscribe({
+                  next: observer.next.bind(observer),
+                  error: observer.error.bind(observer),
+                  complete: observer.complete.bind(observer),
+                });
+              })
+              .catch(observer.error.bind(observer));
+
+            return () => {
+              if (handle) handle.unsubscribe;
+            };
+          });
+        })
+      : false;
 
     const httpLink = new HttpLink({
       uri: config.uri || '/graphql',
@@ -60,15 +74,13 @@ export default class DefaultClient<
       credentials: 'same-origin',
     });
 
-    super({
-      cache,
-      link: ApolloLink.from([
-        errorLink,
-        requestHandler,
-        contextLink,
-        stateLink,
-        httpLink,
-      ]),
-    } as ApolloClientOptions<TCache>);
+    const link = ApolloLink.from([
+      errorLink,
+      requestHandler,
+      stateLink,
+      httpLink,
+    ].filter(x => !!x) as ApolloLink[]);
+
+    super({ cache, link } as ApolloClientOptions<TCache>);
   }
 }

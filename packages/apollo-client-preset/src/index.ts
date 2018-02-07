@@ -7,7 +7,9 @@ import { Operation, ApolloLink, Observable } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
 import { withClientState, ClientStateConfig } from 'apollo-link-state';
 import { onError, ErrorLink } from 'apollo-link-error';
+
 import { InMemoryCache, NormalizedCache } from 'apollo-cache-inmemory';
+import { ApolloCache } from 'apollo-cache';
 
 import gql from 'graphql-tag';
 import ApolloClient, { ApolloClientOptions } from 'apollo-client';
@@ -26,14 +28,15 @@ export default class DefaultClient<
   TCache = NormalizedCache
 > extends ApolloClient<TCache> {
   constructor(config: PresetConfig) {
-    const cache = new InMemoryCache();
+    const cache: ApolloCache<TCache> = new InMemoryCache();
 
-    if (config) {
-      const stateLink = config.clientState
+    const stateLink =
+      config && config.clientState
         ? withClientState({ ...config.clientState, cache })
         : false;
 
-      const errorLink = config.onError
+    const errorLink =
+      config && config.onError
         ? onError(config.onError)
         : onError(({ graphQLErrors, networkError }) => {
             if (graphQLErrors)
@@ -45,7 +48,8 @@ export default class DefaultClient<
             if (networkError) console.log(`[Network error]: ${networkError}`);
           });
 
-      const requestHandler = config.request
+    const requestHandler =
+      config && config.request
         ? new ApolloLink((operation, forward) => {
             const { ...request } = operation;
 
@@ -68,7 +72,6 @@ export default class DefaultClient<
             });
           })
         : false;
-    }
 
     const httpLink = new HttpLink({
       uri: (config && config.uri) || '/graphql',

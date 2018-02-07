@@ -40,7 +40,7 @@ const client = new ApolloClient({
 });
 ```
 
-The client takes a variety of [options](#constructor), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/link):
+The client takes a variety of [options](#ApolloClient), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/link):
 
 ```js
 import { ApolloClient } from 'apollo-client';

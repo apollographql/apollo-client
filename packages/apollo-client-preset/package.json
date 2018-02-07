@@ -46,6 +46,7 @@
   "devDependencies": {
     "@types/graphql": "0.12.3",
     "@types/jest": "21.1.10",
+    "apollo-cache": "^1.1.2",
     "browserify": "15.2.0",
     "graphql": "0.12.3",
     "jest": "20.0.4",

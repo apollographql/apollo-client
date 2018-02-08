@@ -16,6 +16,7 @@ import {
   getOperationDefinitionOrDie,
   getFragmentDefinitions,
   createFragmentMap,
+  FragmentMap,
 } from './getFromAST';
 
 const TYPENAME_FIELD: FieldNode = {
@@ -25,6 +26,27 @@ const TYPENAME_FIELD: FieldNode = {
     value: '__typename',
   },
 };
+
+function isNotEmpty(
+  op: OperationDefinitionNode | FragmentDefinitionNode,
+  fragments: FragmentMap,
+): Boolean {
+  // keep selections that are still valid
+  return (
+    op.selectionSet.selections.filter(
+      selectionSet =>
+        // anything that doesn't match the compound filter is okay
+        !// not an empty array
+        (
+          selectionSet &&
+          // look into fragments to verify they should stay
+          selectionSet.kind === 'FragmentSpread' &&
+          // see if the fragment in the map is valid (recursively)
+          !isNotEmpty(fragments[selectionSet.name.value], fragments)
+        ),
+    ).length > 0
+  );
+}
 
 function addTypenameToSelectionSet(
   selectionSet: SelectionSetNode,
@@ -130,25 +152,7 @@ export function removeDirectivesFromDocument(
   });
   const operation = getOperationDefinitionOrDie(docClone);
   const fragments = createFragmentMap(getFragmentDefinitions(docClone));
-
-  const isNotEmpty = (
-    op: OperationDefinitionNode | FragmentDefinitionNode,
-  ): Boolean =>
-    // keep selections that are still valid
-    op.selectionSet.selections.filter(
-      selectionSet =>
-        // anything that doesn't match the compound filter is okay
-        !// not an empty array
-        (
-          selectionSet &&
-          // look into fragments to verify they should stay
-          selectionSet.kind === 'FragmentSpread' &&
-          // see if the fragment in the map is valid (recursively)
-          !isNotEmpty(fragments[selectionSet.name.value])
-        ),
-    ).length > 0;
-
-  return isNotEmpty(operation) ? docClone : null;
+  return isNotEmpty(operation, fragments) ? docClone : null;
 }
 
 const added = new Map();
@@ -296,23 +300,5 @@ export function getDirectivesFromDocument(
 
   const operation = getOperationDefinitionOrDie(docClone);
   const fragments = createFragmentMap(getFragmentDefinitions(docClone));
-
-  const isNotEmpty = (
-    op: OperationDefinitionNode | FragmentDefinitionNode,
-  ): Boolean =>
-    // keep selections that are still valid
-    op.selectionSet.selections.filter(
-      selectionSet =>
-        // anything that doesn't match the compound filter is okay
-        !// not an empty array
-        (
-          selectionSet &&
-          // look into fragments to verify they should stay
-          selectionSet.kind === 'FragmentSpread' &&
-          // see if the fragment in the map is valid (recursively)
-          !isNotEmpty(fragments[selectionSet.name.value])
-        ),
-    ).length > 0;
-
-  return isNotEmpty(operation) ? docClone : null;
+  return isNotEmpty(operation, fragments) ? docClone : null;
 }

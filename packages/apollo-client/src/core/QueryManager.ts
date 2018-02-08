@@ -292,6 +292,7 @@ export class QueryManager<TStore> {
     const query = cache.transformDocument(options.query);
 
     let storeResult: any;
+    let storeComplete: any;
     let needToFetch: boolean =
       fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
 
@@ -313,6 +314,7 @@ export class QueryManager<TStore> {
       // If we're in here, only fetch if we have missing fields
       needToFetch = !complete || fetchPolicy === 'cache-and-network';
       storeResult = result;
+      storeComplete = complete;
     }
 
     let shouldFetch =
@@ -404,6 +406,19 @@ export class QueryManager<TStore> {
 
     // If we have no query to send to the server, we should return the result
     // found within the store.
+
+    // Possibly notify observers that a result is coming from cache
+    if (storeComplete) {
+      this.invalidate(true, queryId, fetchMoreForQueryId);
+      this.setQuery(queryId, () => ({
+        newData: {
+          result: storeResult,
+          complete: storeComplete,
+        },
+      }));
+      this.broadcastQueries();
+    }
+
     return Promise.resolve<ExecutionResult>({ data: storeResult });
   }
 

@@ -691,6 +691,10 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 3) {
           expect(result.loading).toBe(false);
           expect(result.data).toEqual(dataTwo);
+          observable.setVariables(variables);
+        } else if (handleCount === 4) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual(dataOne);
           done();
         }
       });

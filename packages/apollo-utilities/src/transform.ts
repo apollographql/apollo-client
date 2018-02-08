@@ -1,5 +1,6 @@
 import {
   DocumentNode,
+  SelectionNode,
   SelectionSetNode,
   DefinitionNode,
   OperationDefinitionNode,
@@ -198,17 +199,30 @@ export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   return docClone;
 }
 
-function hasDirectivesInSelectionSet(directives, selectionSet) {
-  if (!selectionSet.selections) {
+export type GetDirectiveConfig = {
+  name?: string;
+  test?: (directive: DirectiveNode) => boolean;
+};
+
+function hasDirectivesInSelectionSet(
+  directives: GetDirectiveConfig[],
+  selectionSet: SelectionSetNode,
+  nestedCheck = true,
+): boolean {
+  if (!(selectionSet && selectionSet.selections)) {
     return false;
   }
   const matchedSelections = selectionSet.selections.filter(selection => {
-    return hasDirectivesInAnyNestedSelection(directives, selection);
+    return hasDirectivesInSelection(directives, selection, nestedCheck);
   });
   return matchedSelections.length > 0;
 }
 
-function hasDirectivesInSelection(directives, selection) {
+function hasDirectivesInSelection(
+  directives: GetDirectiveConfig[],
+  selection: SelectionNode,
+  nestedCheck = true,
+): boolean {
   if (selection.kind !== 'Field' || !(selection as FieldNode)) {
     return true;
   }
@@ -223,27 +237,33 @@ function hasDirectivesInSelection(directives, selection) {
       return false;
     });
   });
-  return matchedDirectives.length > 0;
-}
-
-function hasDirectivesInAnyNestedSelection(directives, selection) {
   return (
-    hasDirectivesInSelection(directives, selection) ||
-    (selection.selectionSet &&
-      hasDirectivesInSelectionSet(directives, selection.selectionSet))
+    matchedDirectives.length > 0 ||
+    (nestedCheck &&
+      hasDirectivesInSelectionSet(
+        directives,
+        selection.selectionSet,
+        nestedCheck,
+      ))
   );
 }
 
-function getDirectivesFromSelectionSet(directives, selectionSet) {
+function getDirectivesFromSelectionSet(
+  directives: GetDirectiveConfig[],
+  selectionSet: SelectionSetNode,
+) {
   selectionSet.selections = selectionSet.selections
     .filter(selection => {
-      return hasDirectivesInAnyNestedSelection(directives, selection);
+      return hasDirectivesInSelection(directives, selection, true);
     })
     .map(selection => {
-      if (hasDirectivesInSelection(directives, selection)) {
+      if (hasDirectivesInSelection(directives, selection, false)) {
         return selection;
       }
-      if (selection.selectionSet) {
+      if (
+        (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
+        selection.selectionSet
+      ) {
         selection.selectionSet = getDirectivesFromSelectionSet(
           directives,
           selection.selectionSet,
@@ -254,11 +274,18 @@ function getDirectivesFromSelectionSet(directives, selectionSet) {
   return selectionSet;
 }
 
-export function getDirectivesFromDocument(directives, doc) {
+export function getDirectivesFromDocument(
+  directives: GetDirectiveConfig[],
+  doc: DocumentNode,
+): DocumentNode | null {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
   docClone.definitions = docClone.definitions.map(definition => {
-    if (definition.selectionSet) {
+    if (
+      (definition.kind === 'OperationDefinition' ||
+        definition.kind === 'FragmentDefinition') &&
+      definition.selectionSet
+    ) {
       definition.selectionSet = getDirectivesFromSelectionSet(
         directives,
         definition.selectionSet,

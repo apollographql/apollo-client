@@ -20,9 +20,10 @@
     "typescript": "^2.5.3"
   },
   "scripts": {
-    "types":
-      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
     "build": "npm run types && hexo generate",
-    "start": "hexo serve"
+    "start": "hexo serve",
+    "clean": "hexo clean",
+    "test": "npm run clean; npm run build"
   }
 }

@@ -3,7 +3,7 @@
 
 ### vNEXT
 
-### 2.2.1
+### 2.2.3
 - dependency updates
 - Provide data when errorPolicy is set "all"
 

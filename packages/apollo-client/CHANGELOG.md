@@ -2,6 +2,9 @@
 # Change log
 
 ### vNEXT
+
+### 2.2.1
+- dependency updates
 - Provide data when errorPolicy is set "all"
 
 ### 2.2.2

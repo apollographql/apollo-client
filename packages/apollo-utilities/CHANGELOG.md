@@ -2,6 +2,9 @@
 
 
 ### vNext
+
+### 1.1.3
+- dependency updates
 - Added getDirectivesFromDocument utility function
 [PR#2974](https://github.com/apollographql/apollo-client/pull/2974)
 

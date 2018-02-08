@@ -1,6 +1,9 @@
 # Change log
 
 ### vNEXT
+
+### 1.1.8
+- dependency updates
 - Fix IntrospectionResultData type definition [#2959](https://github.com/apollographql/apollo-client/issues/2959)
 
 ### 1.1.7

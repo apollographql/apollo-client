@@ -48,6 +48,18 @@ function isNotEmpty(
   );
 }
 
+function getDirectiveMatcher(
+  directives: RemoveDirectiveConfig[] | GetDirectiveConfig[],
+) {
+  return function directiveMatcher(directive: DirectiveNode): Boolean {
+    return directives.some(dir => {
+      if (dir.name && dir.name === directive.name.value) return true;
+      if (dir.test && dir.test(directive)) return true;
+      return false;
+    });
+  };
+}
+
 function addTypenameToSelectionSet(
   selectionSet: SelectionSetNode,
   isRoot = false,
@@ -108,14 +120,10 @@ function removeDirectivesFromSelectionSet(
         !selection.directives
       )
         return selection;
-
+      const directiveMatcher = getDirectiveMatcher(directives);
       let remove: boolean;
       selection.directives = selection.directives.filter(directive => {
-        const shouldKeep = !directives.some((dir: RemoveDirectiveConfig) => {
-          if (dir.name && dir.name === directive.name.value) return true;
-          if (dir.test && dir.test(directive)) return true;
-          return false;
-        });
+        const shouldKeep = !directiveMatcher(directive);
 
         if (!remove && !shouldKeep && agressiveRemove) remove = true;
 
@@ -234,13 +242,8 @@ function hasDirectivesInSelection(
   if (!selection.directives) {
     return false;
   }
-  const matchedDirectives = selection.directives.filter(directive => {
-    return directives.some(dir => {
-      if (dir.name && dir.name === directive.name.value) return true;
-      if (dir.test && dir.test(directive)) return true;
-      return false;
-    });
-  });
+  const directiveMatcher = getDirectiveMatcher(directives);
+  const matchedDirectives = selection.directives.filter(directiveMatcher);
   return (
     matchedDirectives.length > 0 ||
     (nestedCheck &&

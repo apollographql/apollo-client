@@ -882,4 +882,37 @@ describe('getDirectivesFromDocument', () => {
     const doc = getDirectivesFromDocument([{ name: 'client' }], query);
     expect(print(doc)).toBe(print(expected));
   });
+
+  it('should get mutation with client fields', () => {
+    const query = gql`
+      mutation {
+        login @client
+      }
+    `;
+
+    const expected = gql`
+      mutation {
+        login @client
+      }
+    `;
+    const doc = getDirectivesFromDocument([{ name: 'client' }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it('should get mutation fields of client only', () => {
+    const query = gql`
+      mutation {
+        login @client
+        updateUser
+      }
+    `;
+
+    const expected = gql`
+      mutation {
+        login @client
+      }
+    `;
+    const doc = getDirectivesFromDocument([{ name: 'client' }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
 });

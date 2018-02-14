@@ -348,13 +348,12 @@ describe('Link interactions', () => {
           cacheResolvers: {
             Query: {
               book: (_, { id }, context) => {
-                console.log(context);
                 expect(context.getCacheKey).toBeDefined();
                 const cacheKey = context.getCacheKey({
                   id,
                   __typename: 'Book',
                 });
-                expect(cacheKey).toEqual(`Book:${id}`);
+                expect(cacheKey.id).toEqual(`Book:${id}`);
                 return cacheKey;
               },
             },
@@ -368,7 +367,11 @@ describe('Link interactions', () => {
     return queryManager
       .query({ query: shouldHitCacheResolver })
       .then(({ data }) => {
-        expect({ ...data }).toEqual(bookData);
+        expect({
+          ...data,
+        }).toMatchObject({
+          book: { title: 'Woo', __typename: 'Book' },
+        });
       });
   });
 });

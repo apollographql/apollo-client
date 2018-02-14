@@ -38,9 +38,9 @@
       "maxSize": "11.8 kB"
     },
     {
-      "name": "apollo-client-preset",
-      "path": "./packages/apollo-client-preset/lib/bundle.min.js",
-      "maxSize": "31 kB"
+      "name": "apollo-boost",
+      "path": "./packages/apollo-boost/lib/bundle.min.js",
+      "maxSize": "33 kB"
     },
     {
       "name": "apollo-utilities",

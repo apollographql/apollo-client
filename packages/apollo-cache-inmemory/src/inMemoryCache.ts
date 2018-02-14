@@ -51,9 +51,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   constructor(config: ApolloReducerConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
+
     // backwards compat
-    if ((this.config as any).customResolvers)
-      this.config.cacheResolvers = (this.config as any).customResolvers;
+    if ((this.config as any).customResolvers) {
+      console.warn(
+        'customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version.',
+      );
+      this.config.cacheRedirects = (this.config as any).customResolvers;
+    }
+
+    if ((this.config as any).cacheResolvers)
+      console.warn(
+        'cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.',
+      );
+    this.config.cacheRedirects = (this.config as any).cacheResolvers;
+
     this.addTypename = this.config.addTypename;
     this.data = this.config.storeFactory();
   }

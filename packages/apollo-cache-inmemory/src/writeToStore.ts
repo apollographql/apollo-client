@@ -250,7 +250,7 @@ export function writeSelectionSetToStore({
           store: new ObjectCache({ self: result }),
           returnPartialData: false,
           hasMissingField: false,
-          cacheResolvers: {},
+          cacheRedirects: {},
         };
         matches = context.fragmentMatcherFunction(
           idValue,

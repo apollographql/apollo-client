@@ -338,6 +338,7 @@ describe('Link interactions', () => {
     const link = new ApolloLink((operation, forward) => {
       const { getCacheKey } = operation.getContext();
       expect(getCacheKey).toBeDefined();
+      expect(getCacheKey({ id: 1, __typename: 'Book' })).toEqual('Book:1');
       return Observable.of({ data: bookData });
     });
 

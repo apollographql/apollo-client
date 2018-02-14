@@ -1,6 +1,9 @@
 # Change log
 
 ## vNEXT
+
+### 4.1.4
+- dependency updates
 - support null literal
 - stop running the check function for a proptype check if the data is still loading
 

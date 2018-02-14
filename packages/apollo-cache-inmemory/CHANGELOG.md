@@ -1,6 +1,11 @@
 # Change log
 
 ### vNEXT
+- Added `getCacheKey` function to cacheResolver context [#2998](https://github.com/apollographql/apollo-client/pull/2998)
+- Changed `cacheResolvers` to `cacheRedirects`, added deprecation warning [#3001](https://github.com/apollographql/apollo-client/pull/3001)
+
+### 1.1.8
+- dependency updates
 - Fix IntrospectionResultData type definition [#2959](https://github.com/apollographql/apollo-client/issues/2959)
 
 ### 1.1.7

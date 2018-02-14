@@ -71,7 +71,7 @@ export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
               }`;
               console.error(perfDropMessage);
               if (message === '') {
-                message = perfDropMessage;
+                message = `Performance drop detected for benchmark: "${element}"`;
                 pass = false;
               }
             } else {

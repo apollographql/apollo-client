@@ -212,6 +212,7 @@ const myNewTodo = {
   id: '6',
   text: 'Start using Apollo Client.',
   completed: false,
+  __typename: 'Todo',
 };
 
 client.writeQuery({

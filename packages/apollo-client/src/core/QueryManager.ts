@@ -13,6 +13,7 @@ import {
   isProduction,
   maybeDeepFreeze,
   hasDirectives,
+  toIdValue,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -1193,6 +1194,7 @@ export class QueryManager<TStore> {
     extraContext?: any,
   ) {
     const cache = this.dataStore.getCache();
+
     return {
       query: cache.transformForLink
         ? cache.transformForLink(document)
@@ -1202,6 +1204,16 @@ export class QueryManager<TStore> {
       context: {
         ...extraContext,
         cache,
+        // getting an entry's cache key is useful for cacheResolvers & state-link
+        getCacheKey: (obj: { __typename: string; id: string | number }) => {
+          if ((cache as any).config) {
+            return toIdValue((cache as any).config.dataIdFromObject(obj));
+          } else {
+            throw new Error(
+              'To use context.getCacheKey, you need to use a cache that has a configurable dataIdFromObject, like apollo-cache-inmemory.',
+            );
+          }
+        },
       },
     };
   }

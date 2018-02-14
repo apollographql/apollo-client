@@ -165,7 +165,7 @@ export function diffQueryAgainstStore<T>({
     // Global settings
     store,
     returnPartialData,
-    dataIdFromObject: config.dataIdFromObject,
+    dataIdFromObject: (config && config.dataIdFromObject) || null,
     cacheResolvers: (config && config.cacheResolvers) || {},
     // Flag set during execution
     hasMissingField: false,

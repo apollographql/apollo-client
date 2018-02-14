@@ -347,9 +347,13 @@ describe('Link interactions', () => {
         new InMemoryCache({
           cacheResolvers: {
             Query: {
-              book: (_, { id }, { getCacheKey }) => {
-                expect(getCacheKey).toBeDefined();
-                const cacheKey = getCacheKey({ id, __typename: 'Book' });
+              book: (_, { id }, context) => {
+                console.log(context);
+                expect(context.getCacheKey).toBeDefined();
+                const cacheKey = context.getCacheKey({
+                  id,
+                  __typename: 'Book',
+                });
                 expect(cacheKey).toEqual(`Book:${id}`);
                 return cacheKey;
               },
@@ -361,8 +365,10 @@ describe('Link interactions', () => {
 
     await queryManager.query({ query });
 
-    return queryManager.query({ query }).then(({ data }) => {
-      expect({ ...data }).toEqual(bookData);
-    });
+    return queryManager
+      .query({ query: shouldHitCacheResolver })
+      .then(({ data }) => {
+        expect({ ...data }).toEqual(bookData);
+      });
   });
 });

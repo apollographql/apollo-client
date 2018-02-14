@@ -1,12 +1,11 @@
 {
-  "name": "apollo-client-preset",
-  "version": "1.0.8",
-  "description": "Core abstract of Caching layer for Apollo Client",
-  "author": "James Baxley <james@meteor.com>",
+  "name": "apollo-boost",
+  "version": "0.1.0",
+  "description": "The easiest way to get started with Apollo Client",
+  "author": "Peggy Rayzis <peggy@apollographql.com>",
   "contributors": [
-    "James Baxley <james@meteor.com>",
-    "Jonas Helfer <jonas@helfer.email>",
-    "Sashko Stubailo <sashko@stubailo.com>"
+    "James Baxley <james@apollographql.com>",
+    "Sashko Stubailo <sashko@apollographql.com>"
   ],
   "license": "MIT",
   "main": "./lib/index.js",

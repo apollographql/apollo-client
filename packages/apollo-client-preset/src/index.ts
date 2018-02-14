@@ -12,6 +12,7 @@ import {
   InMemoryCache,
   NormalizedCache,
   NormalizedCacheObject,
+  CacheResolverMap,
 } from 'apollo-cache-inmemory';
 import { ApolloCache } from 'apollo-cache';
 
@@ -26,13 +27,16 @@ export interface PresetConfig {
   fetchOptions?: HttpLink.Options;
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;
+  cacheRedirects?: CacheResolverMap;
 }
 
 export default class DefaultClient<
   TCache = NormalizedCache
 > extends ApolloClient<TCache> {
   constructor(config: PresetConfig) {
-    const cache: ApolloCache<NormalizedCacheObject> = new InMemoryCache();
+    const cache: ApolloCache<NormalizedCacheObject> = cacheRedirects
+      ? new InMemoryCache({ cacheRedirects })
+      : new InMemoryCache();
 
     const stateLink =
       config && config.clientState

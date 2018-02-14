@@ -54,6 +54,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // backwards compat
     if ((this.config as any).customResolvers)
       this.config.cacheResolvers = (this.config as any).customResolvers;
+
+    if ((this.config as any).cacheRedirects)
+      this.config.cacheResolvers = (this.config as any).cacheRedirects;
+
     this.addTypename = this.config.addTypename;
     this.data = this.config.storeFactory();
   }

@@ -2203,7 +2203,7 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
     client.queryManager = {
-      resetStore: () => {
+      clearStore: () => {
         done();
       },
     } as QueryManager;

@@ -2,6 +2,7 @@
 
 ## vNEXT
 - support null literal
+- stop running the check function for a proptype check if the data is still loading
 
 ### 4.1.3
 - update to latest apollo-utilities

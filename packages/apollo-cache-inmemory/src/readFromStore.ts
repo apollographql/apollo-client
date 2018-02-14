@@ -8,6 +8,7 @@ import {
   getQueryDefinition,
   isJsonValue,
   isIdValue,
+  toIdValue,
   getStoreKeyName,
 } from 'apollo-utilities';
 import { Cache } from 'apollo-cache';
@@ -83,7 +84,10 @@ const readStoreResolver: Resolver = (
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];
         if (resolver) {
-          fieldValue = resolver(obj, args);
+          fieldValue = resolver(obj, args, {
+            getCacheKey: (obj: { __typename: string; id: string | number }) =>
+              toIdValue(context.dataIdFromObject(obj)),
+          });
         }
       }
     }
@@ -161,6 +165,7 @@ export function diffQueryAgainstStore<T>({
     // Global settings
     store,
     returnPartialData,
+    dataIdFromObject: (config && config.dataIdFromObject) || null,
     cacheResolvers: (config && config.cacheResolvers) || {},
     // Flag set during execution
     hasMissingField: false,

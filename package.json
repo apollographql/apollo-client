@@ -35,7 +35,7 @@
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.min.js",
-      "maxSize": "11.7 kB"
+      "maxSize": "11.8 kB"
     },
     {
       "name": "apollo-client-preset",

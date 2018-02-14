@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.0.9
+- Apollo Client 2.2.3
+
 ### 1.0.8
 - Apollo Client 2.2.2
 

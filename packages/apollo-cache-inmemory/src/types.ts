@@ -76,6 +76,7 @@ export type ReadStoreContext = {
   returnPartialData: boolean;
   hasMissingField: boolean;
   cacheResolvers: CacheResolverMap;
+  dataIdFromObject?: IdGetter;
 };
 
 export interface FragmentMatcherInterface {
@@ -122,6 +123,7 @@ export type IntrospectionResultData = {
 export type CacheResolver = (
   rootValue: any,
   args: { [argName: string]: any },
+  context: any,
 ) => any;
 
 export type CacheResolverMap = {

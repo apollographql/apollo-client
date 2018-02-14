@@ -25,9 +25,10 @@ export interface PresetConfig {
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
   constructor(config: PresetConfig) {
-    const cache = config.cacheRedirects
-      ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
-      : new InMemoryCache();
+    const cache =
+      config && config.cacheRedirects
+        ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
+        : new InMemoryCache();
 
     const stateLink =
       config && config.clientState

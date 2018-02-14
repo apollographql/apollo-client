@@ -10,7 +10,7 @@ import { onError, ErrorLink } from 'apollo-link-error';
 
 import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
-import ApolloClient, { ApolloClientOptions } from 'apollo-client';
+import ApolloClient from 'apollo-client';
 
 export { gql, InMemoryCache, HttpLink };
 
@@ -85,6 +85,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       httpLink,
     ].filter(x => !!x) as ApolloLink[]);
 
-    super({ cache, link } as ApolloClientOptions<TCache>);
+    // super hacky, we will fix the types eventually
+    super({ cache, link } as any);
   }
 }

@@ -16,7 +16,7 @@ Next, create your client. Once you create your client, hook it up to your app by
 ```js
 import React from 'react';
 import { render } from 'react-dom';
-import { ApolloClient } from 'apollo-boost';
+import ApolloClient from 'apollo-boost';
 import { ApolloProvider } from 'react-apollo';
 
 const client = new ApolloClient();
@@ -90,7 +90,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
 That's it! Here's an example of all those options in action:
 
 ```js
-import { ApolloClient } from 'apollo-boost';
+import ApolloClient from 'apollo-boost';
 
 const client = new ApolloClient({
   uri: 'https://nx9zvp49q7.lp.gql.zone/graphql',

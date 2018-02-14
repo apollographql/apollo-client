@@ -8,14 +8,7 @@ import { HttpLink } from 'apollo-link-http';
 import { withClientState, ClientStateConfig } from 'apollo-link-state';
 import { onError, ErrorLink } from 'apollo-link-error';
 
-import {
-  InMemoryCache,
-  NormalizedCache,
-  NormalizedCacheObject,
-  CacheResolverMap,
-} from 'apollo-cache-inmemory';
-import { ApolloCache } from 'apollo-cache';
-
+import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import ApolloClient, { ApolloClientOptions } from 'apollo-client';
 
@@ -30,12 +23,10 @@ export interface PresetConfig {
   cacheRedirects?: CacheResolverMap;
 }
 
-export default class DefaultClient<
-  TCache = NormalizedCache
-> extends ApolloClient<TCache> {
+export default class DefaultClient<TCache> extends ApolloClient<TCache> {
   constructor(config: PresetConfig) {
-    const cache: ApolloCache<NormalizedCacheObject> = cacheRedirects
-      ? new InMemoryCache({ cacheRedirects })
+    const cache = config.cacheRedirects
+      ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
       : new InMemoryCache();
 
     const stateLink =

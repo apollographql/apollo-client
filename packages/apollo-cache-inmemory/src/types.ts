@@ -67,7 +67,7 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
-  cacheResolvers?: CacheResolverMap;
+  cacheRedirects?: CacheResolverMap;
   storeFactory?: NormalizedCacheFactory;
 };
 
@@ -75,7 +75,7 @@ export type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
-  cacheResolvers: CacheResolverMap;
+  cacheRedirects: CacheResolverMap;
   dataIdFromObject?: IdGetter;
 };
 

@@ -1,6 +1,11 @@
 # Change log
 
-### vNEXT
+### 0.1.0
+- DEPRECATED: `apollo-client-preset`
+- Changed to `apollo-boost` [#2965](https://github.com/apollographql/apollo-client/pull/2965)
+
+### 1.0.9 (last `apollo-client-preset` version)
+- Apollo Client 2.2.3
 
 ### 1.0.8
 - Apollo Client 2.2.2

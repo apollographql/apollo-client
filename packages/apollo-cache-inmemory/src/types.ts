@@ -67,7 +67,7 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
-  cacheResolvers?: CacheResolverMap;
+  cacheRedirects?: CacheResolverMap;
   storeFactory?: NormalizedCacheFactory;
 };
 
@@ -75,7 +75,8 @@ export type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
-  cacheResolvers: CacheResolverMap;
+  cacheRedirects: CacheResolverMap;
+  dataIdFromObject?: IdGetter;
 };
 
 export interface FragmentMatcherInterface {
@@ -122,6 +123,7 @@ export type IntrospectionResultData = {
 export type CacheResolver = (
   rootValue: any,
   args: { [argName: string]: any },
+  context: any,
 ) => any;
 
 export type CacheResolverMap = {

@@ -310,4 +310,69 @@ describe('Link interactions', () => {
     // fire off first result
     mockLink.simulateResult({ result: { data: initialData } });
   });
+  it('includes getCacheKey function on the context for cache resolvers', async () => {
+    const query = gql`
+      {
+        books {
+          id
+          title
+        }
+      }
+    `;
+
+    const shouldHitCacheResolver = gql`
+      {
+        book(id: 1) {
+          title
+        }
+      }
+    `;
+
+    const bookData = {
+      books: [
+        { id: 1, title: 'Woo', __typename: 'Book' },
+        { id: 2, title: 'Foo', __typename: 'Book' },
+      ],
+    };
+
+    const link = new ApolloLink((operation, forward) => {
+      const { getCacheKey } = operation.getContext();
+      expect(getCacheKey).toBeDefined();
+      expect(getCacheKey({ id: 1, __typename: 'Book' })).toEqual('Book:1');
+      return Observable.of({ data: bookData });
+    });
+
+    const queryManager = new QueryManager({
+      link,
+      store: new DataStore(
+        new InMemoryCache({
+          cacheResolvers: {
+            Query: {
+              book: (_, { id }, context) => {
+                expect(context.getCacheKey).toBeDefined();
+                const cacheKey = context.getCacheKey({
+                  id,
+                  __typename: 'Book',
+                });
+                expect(cacheKey.id).toEqual(`Book:${id}`);
+                return cacheKey;
+              },
+            },
+          },
+        }),
+      ),
+    });
+
+    await queryManager.query({ query });
+
+    return queryManager
+      .query({ query: shouldHitCacheResolver })
+      .then(({ data }) => {
+        expect({
+          ...data,
+        }).toMatchObject({
+          book: { title: 'Woo', __typename: 'Book' },
+        });
+      });
+  });
 });

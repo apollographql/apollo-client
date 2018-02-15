@@ -3,7 +3,7 @@ title: Why Apollo?
 description: Why choose Apollo Client to manage your data?
 ---
 
-Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've came to the right place. Through practical examples inspired by our [example app](https://codesandbox.io/s/nwz1jo7y1m), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
+Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've came to the right place. Through practical examples inspired by our [example app Pupstagram](https://codesandbox.io/s/r5qp83z0yq), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
 
 <h2 title="declarative-data">Declarative data fetching</h2>
 
@@ -30,7 +30,7 @@ You'll find that when you switch to Apollo Client, you'll be able to delete a lo
 
 <h2 title="caching">Zero-config caching</h2>
 
-One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Just by setting up Apollo Client, you get an intelligent cache out of the box with no additional configuration required. From the home page of the Pupstagram example app, click one of the dogs to see its detail page. Then, go back to the home page. You'll notice that the images on the home page load instantaneously, thanks to the Apollo cache.
+One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Just by setting up Apollo Client, you get an intelligent cache out of the box with no additional configuration required. From the home page of the [Pupstagram example app](https://codesandbox.io/s/r5qp83z0yq), click one of the dogs to see its detail page. Then, go back to the home page. You'll notice that the images on the home page load instantaneously, thanks to the Apollo cache.
 
 ```js
 import ApolloClient from 'apollo-boost';
@@ -100,11 +100,21 @@ Thousands of developers have told us that Apollo Client excels at managing remot
 
 Managing all your data with Apollo Client allows you to take advantage of GraphQL as a unified interface to all of your data. This enables you to inspect both your local and remote schemas in Apollo DevTools through GraphiQL.
 
-// TODO: insert screenshot here
+```js
+const GET_DOG = gql`
+  query getDogByBreed($breed: String!) {
+    dog(breed: $breed) {
+      images {
+        url
+        id
+        isLiked @client
+      }
+    }
+  }
+`;
+```
 
-With `apollo-link-state`, you can add client-side only fields to your remote data seamlessly and query them from your components. In this example, we're adding the client-only field `isLiked` to our server data via a mutation. Then, we can query this field alongside our server data and get back the aggregated result. Your components are made up of local and remote data, now your queries can be too!
-
-// show link state example
+With `apollo-link-state`, you can add client-side only fields to your remote data seamlessly and query them from your components. In this example, we're querying the client-only field `isLiked` alongside our server data. Your components are made up of local and remote data, now your queries can be too!
 
 <h2 title="ecosystem">Vibrant ecosystem</h2>
 

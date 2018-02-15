@@ -6,15 +6,13 @@ import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
 disableFragmentWarnings();
 
 describe('Cache', () => {
-  function createCache(
-    {
-      initialState,
-      config,
-    }: {
-      initialState?: any;
-      config?: ApolloReducerConfig;
-    } = {},
-  ): ApolloCache<NormalizedCache> {
+  function createCache({
+    initialState,
+    config,
+  }: {
+    initialState?: any;
+    config?: ApolloReducerConfig;
+  } = {}): ApolloCache<NormalizedCache> {
     return new InMemoryCache(
       config || { addTypename: false },
       // XXX this is the old format. The tests need to be updated but since it is mapped down
@@ -752,6 +750,26 @@ describe('Cache', () => {
         },
       });
     });
+    it('will write arrays to the store', () => {
+      const proxy = createCache();
+
+      proxy.writeQuery({
+        data: {
+          a: [],
+        },
+        query: gql`
+          query {
+            a
+          }
+        `,
+      });
+
+      expect((proxy as InMemoryCache).extract()).toEqual({
+        ROOT_QUERY: {
+          a: [],
+        },
+      });
+    });
   });
 
   describe('writeFragment', () => {
@@ -1099,6 +1117,32 @@ describe('Cache', () => {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
+        },
+      });
+    });
+
+    it('will write arrays to the store', () => {
+      const proxy = createCache({
+        config: { addTypename: true },
+      });
+
+      proxy.writeFragment({
+        data: {
+          a: [],
+          __typename: 'Foo',
+        },
+        id: 'foo',
+        fragment: gql`
+          fragment foo on Foo {
+            a
+          }
+        `,
+      });
+
+      expect((proxy as InMemoryCache).extract()).toEqual({
+        foo: {
+          __typename: 'Foo',
+          a: [],
         },
       });
     });

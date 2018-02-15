@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`config writes defaults to the cache correctly 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "likedPhotos": Object {
+      "json": Array [],
+      "type": "json",
+    },
+  },
+}
+`;
+
+exports[`config writes defaults to the cache correctly 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "likedPhotos": Object {
+      "json": Array [],
+      "type": "json",
+    },
+  },
+}
+`;
+
+exports[`config writes defaults to the cache correctly 3`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "likedPhotos": Object {
+      "json": Array [],
+      "type": "json",
+    },
+    "woo": Object {
+      "json": Array [],
+      "type": "json",
+    },
+  },
+}
+`;
+
+exports[`config writes defaults to the cache correctly 4`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "foo": Object {
+      "json": Array [],
+      "type": "json",
+    },
+    "likedPhotos": Object {
+      "json": Array [],
+      "type": "json",
+    },
+    "woo": Object {
+      "json": Array [],
+      "type": "json",
+    },
+  },
+}
+`;
+
+exports[`config writes defaults to the cache correctly 5`] = `
+Object {
+  "Boo:1": Object {
+    "boo": Object {
+      "json": Array [],
+      "type": "json",
+    },
+  },
+  "ROOT_QUERY": Object {
+    "foo": Object {
+      "json": Array [],
+      "type": "json",
+    },
+    "likedPhotos": Object {
+      "json": Array [],
+      "type": "json",
+    },
+    "woo": Object {
+      "json": Array [],
+      "type": "json",
+    },
+  },
+}
+`;

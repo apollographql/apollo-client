@@ -9,7 +9,7 @@ Want to get started with Apollo Client? This page will guide you through your fi
 - [CodeSandbox](https://codesandbox.io/s/r5qp83z0yq) for our example app, Pupstagram
 - Apollo Boost, our new zero-config way to start using Apollo
 
-<h2 title="query">Your first query</h2>
+<h2 id="query">Your first query</h2>
 
 First, install `apollo-boost`, `graphql` & `react-apollo@beta`.
 
@@ -70,7 +70,7 @@ const App = () => (
 
 Time to celebrate! 🎉 You just made your first Query component. The Query component binds your GraphQL query to your UI so Apollo Client can take care of fetching your data, tracking loading & error states, and updating your UI via the `data` prop. Why don't you try experimenting with creating more Query components by forking our example app, [Pupstagram](https://codesandbox.io/s/r5qp83z0yq)?
 
-<h2 title="boost">What's in Apollo Boost</h2>
+<h2 id="boost">What's in Apollo Boost</h2>
 
 Apollo Boost includes some packages that we think are essential to developing with Apollo Client. Here's what's in the box:
 - `apollo-client`: Where all the magic happens
@@ -82,7 +82,7 @@ Apollo Boost includes some packages that we think are essential to developing wi
 
 The awesome thing about Apollo Boost is that you don't have to set any of this up yourself! Just specify a few options if you'd like to use these features and we'll take care of the rest.
 
-<h2 title="options">Apollo Boost options</h2>
+<h2 id="options">Apollo Boost options</h2>
 
 Here are the options you can pass to the `ApolloClient` exported from `apollo-boost`. None of them are required.
 - uri: A string representing your GraphQL server endpoint. Defaults to `/graphql`

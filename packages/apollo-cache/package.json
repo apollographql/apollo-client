@@ -47,7 +47,7 @@
     "graphql-tag": "2.6.1",
     "jest": "20.0.4",
     "rimraf": "2.6.2",
-    "rollup": "0.55.5",
+    "rollup": "0.56.0",
     "rollup-plugin-node-resolve": "3.0.2",
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",

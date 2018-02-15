@@ -19,6 +19,7 @@ sidebar_categories:
   null:
     - index
     - why-apollo
+    - quick-start
     - basics/integrations
     - 2.0-migration
   Basics:

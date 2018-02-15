@@ -1,11 +1,17 @@
-# apollo-boost 🚀
-The fastest, easiest way to get started with Apollo Client!
+---
+title: Quick Start
+description: The easiest way to get started with Apollo Client
+---
 
-Apollo Boost is a zero-config way to start using Apollo Client. It includes some sensible defaults, such as our recommended `InMemoryCache` and `HttpLink`, which come configured for you with our recommended settings.
+Want to get started with Apollo Client? This page will guide you through your first GraphQL query with Apollo in less than ten minutes. For this example, we're going to be using:
 
-## Quick start
+- [Launchpad](https://launchpad.graphql.com/nx9zvp49q7) for our GraphQL server
+- [CodeSandbox](https://codesandbox.io/s/r5qp83z0yq) for our example app, Pupstagram
+- Apollo Boost, our new zero-config way to start using Apollo
 
-First, install `apollo-boost`. If you don't have `graphql` & `react-apollo@beta` already in your project, please install those too.
+<h2 id="query">Your first query</h2>
+
+First, install `apollo-boost`, `graphql` & `react-apollo@beta`.
 
 ```shell
 npm i apollo-boost graphql react-apollo@beta -S
@@ -38,11 +44,12 @@ import React from 'react';
 import { gql } from 'apollo-boost';
 import { Query } from 'react-apollo';
 
-const GET_MOVIES = gql`
+const GET_DOG = gql`
   query {
-    movie(id: 1) {
+    dog(breed: "bulldog") {
       id
-      title
+      breed
+      displayImage
     }
   }
 `
@@ -54,16 +61,16 @@ const App = () => (
       if (error) return <div>Error :(</div>;
 
       return (
-        <Movie title={data.movie.title} />
+        <Dog url={data.dog.displayImage} breed={data.dog.breed} />
       )
     }}
   </Query>
 )
 ```
 
-Time to celebrate! 🎉 You just made your first Query component. The Query component binds your GraphQL query to your UI so Apollo Client can take care of fetching your data, tracking loading & error states, and updating your UI via the `data` prop.
+Time to celebrate! 🎉 You just made your first Query component. The Query component binds your GraphQL query to your UI so Apollo Client can take care of fetching your data, tracking loading & error states, and updating your UI via the `data` prop. Why don't you try experimenting with creating more Query components by forking our example app, [Pupstagram](https://codesandbox.io/s/r5qp83z0yq)?
 
-## What's in Apollo Boost
+<h2 id="boost">What's in Apollo Boost</h2>
 
 Apollo Boost includes some packages that we think are essential to developing with Apollo Client. Here's what's in the box:
 - `apollo-client`: Where all the magic happens
@@ -75,7 +82,7 @@ Apollo Boost includes some packages that we think are essential to developing wi
 
 The awesome thing about Apollo Boost is that you don't have to set any of this up yourself! Just specify a few options if you'd like to use these features and we'll take care of the rest.
 
-### Apollo Boost options
+<h2 id="options">Apollo Boost options</h2>
 
 Here are the options you can pass to the `ApolloClient` exported from `apollo-boost`. None of them are required.
 - uri: A string representing your GraphQL server endpoint. Defaults to `/graphql`
@@ -129,10 +136,9 @@ const client = new ApolloClient({
   },
   cacheRedirects: {
     Query: {
-      movie: (_, { id }, { getCacheKey }) =>
-        getCacheKey({ __typename: 'Movie', id });
+      dog: (_, { id }, { getCacheKey }) =>
+        getCacheKey({ __typename: 'Dog', id });
     }
   }
 });
 ```
-

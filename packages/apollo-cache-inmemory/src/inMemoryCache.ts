@@ -60,11 +60,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.config.cacheRedirects = (this.config as any).customResolvers;
     }
 
-    if ((this.config as any).cacheResolvers)
+    if ((this.config as any).cacheResolvers) {
       console.warn(
         'cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.',
       );
-    this.config.cacheRedirects = (this.config as any).cacheResolvers;
+      this.config.cacheRedirects = (this.config as any).cacheResolvers;
+    }
 
     this.addTypename = this.config.addTypename;
     this.data = this.config.storeFactory();

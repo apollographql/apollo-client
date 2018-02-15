@@ -121,12 +121,12 @@ With `apollo-link-state`, you can add client-side only fields to your remote dat
 Apollo Client is easy to get started with, but extensible for when you need to build out more advanced features. If you need custom functionality that isn't covered with `apollo-boost`, such as app-specific middleware or cache persistence, you can create your own client by plugging in an Apollo cache and chaining together your network stack with Apollo Link.
 
 This flexibility makes it simple to create your dream client by building extensions on top of Apollo. We're always really impressed by what our contributors have built on top of Apollo - check out some of their packages:
-- [Apollo Link community links](docs/link/links/community.html): Pluggable links created by the community
+- [Apollo Link community links](/docs/link/links/community.html): Pluggable links created by the community
 - [apollo-cache-persist](https://dev-blog.apollodata.com/announcing-apollo-cache-persist-cb05aec16325): Simple persistence for your Apollo cache ([@jamesreggio](https://github.com/jamesreggio))
 - [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
 - [AppSync by AWS](https://dev-blog.apollodata.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
 
-When you choose Apollo to manage your data, you also gain the support of our amazing community. There are over 5000 developers on our [Apollo Slack](https://www.apollographql.com/#slack) channel for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://dev-blog.apollodata.com/, updated weekly.
+When you choose Apollo to manage your data, you also gain the support of our amazing community. There are over 5000 developers on our [Apollo Slack](https://www.apollographql.com/#slack) channel for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://dev-blog.apollodata.com/), updated weekly.
 
 <h2 id="case-studies">Case studies</h2>
 

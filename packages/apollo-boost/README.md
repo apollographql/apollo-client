@@ -61,7 +61,7 @@ const App = () => (
 )
 ```
 
-Time to celebrate! 🎉 You just made your first Query component. The Query component binds your GraphQL query to your UI so Apollo Client can care of fetching your data, tracking loading & error states, and updating your UI via the `data` prop.
+Time to celebrate! 🎉 You just made your first Query component. The Query component binds your GraphQL query to your UI so Apollo Client can take care of fetching your data, tracking loading & error states, and updating your UI via the `data` prop.
 
 ## What's in Apollo Boost
 

@@ -3,6 +3,8 @@ title: Why Apollo?
 description: Why choose Apollo Client to manage your data?
 ---
 
+Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've came to the right place. Through practical examples inspired by our [example app](https://codesandbox.io/s/nwz1jo7y1m), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
+
 <h2 title="declarative-data">Declarative data fetching</h2>
 
 With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated in a single Query component. This encapsulation makes composing your Query components with your presentational components a breeze! Let's see what this looks like in practice with React Apollo:
@@ -28,18 +30,81 @@ You'll find that when you switch to Apollo Client, you'll be able to delete a lo
 
 <h2 title="caching">Zero-config caching</h2>
 
-One of the bene
+One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Just by setting up Apollo Client, you get an intelligent cache out of the box with no additional configuration required. From the home page of the Pupstagram example app, click one of the dogs to see its detail page. Then, go back to the home page. You'll notice that the images on the home page load instantaneously, thanks to the Apollo cache.
 
-- Out of the box, Apollo Client normalizes and caches your data for you
-- We've spent two years determining the best way to cache a graph, since you can have multiple paths leading to the same data, normalization is essential
-- No need to write selectors, your GraphQL queries are your selectors
-- Show transition from movie list --> movie detail page. Features that are normally complicated to execute are trivial to build with Apollo
+```js
+import ApolloClient from 'apollo-boost';
+
+// the Apollo cache is set up automatically
+const client = new ApolloClient();
+```
+
+Caching a graph is no easy task, but we've spent two years focused on solving it. Since you can have multiple paths leading to the same data, normalization is essential for keeping your data consistent across multiple components. Let's look at some practical examples:
+
+```js
+const GET_ALL_DOGS = gql`
+  query {
+    dogs {
+      id
+      breed
+      displayImage
+    }
+  }
+`;
+
+const UPDATE_DISPLAY_IMAGE = gql`
+  mutation updateDisplayImage($id: String!, $displayImage: String!) {
+    updateDisplayImage(id: $id, displayImage: $displayImage) {
+      id
+      displayImage
+    }
+  }
+`;
+```
+
+The query, `GET_ALL_DOGS`, fetches a list of dogs and their `displayImage`. The mutation, `UPDATE_DISPLAY_IMAGE`, updates a single dog's `displayImage`. If we update the `displayImage` on a specific dog, we also need that item on the list of all dogs to reflect the new data. Apollo Client splits out each object in a GraphQL result with a `__typename` and an `id` property into its own entry in the Apollo cache. This guarantees that returning a value from a mutation with an id will automatically update any queries that fetch the object with the same id. It also ensures that two queries which return the same data will always be in sync.
+
+Features that are normally complicated to execute are trivial to build with the Apollo cache. Let's go back to our `GET_ALL_DOGS` query from the previous example that displays a list of dogs. What if we want to transition to a detail page for a specific dog? Since we've already fetched information on each dog, we don't want to refetch the same information from our server. With cache redirects, the Apollo cache lets us connect the dots between two queries so we don't have to fetch information that we know is already available.
+
+Here's what our query for one dog looks like:
+
+```js
+const GET_DOG = gql`
+  query {
+    dog(id: "abc") {
+      id
+      breed
+      displayImage
+    }
+  }
+`;
+```
+
+Here's our cache redirect, which we can set up easily by specifying a map on the `cacheRedirects` property of the `apollo-boost` client. The cache redirect returns a key that the query can use to look up the data in the cache.
+
+```js
+import ApolloClient from 'apollo-boost';
+
+const client = new ApolloClient({
+  cacheRedirects: {
+    Query: {
+      dog: (_, { id }, { getCacheKey }) => getCacheKey({ id, __typename: 'Dog' })
+    }
+  }
+})
+```
 
 <h2 title="combine-data">Combine local & remote data</h2>
 
-- GraphQL as a unified interface to all your data
-- With schema stitching, you can stitch together all of your GraphQL microservices, but you can also stitch together your local and remote data (show example of both local and remote schemas in dev tools)
-- Show preview of apollo-link-state; components have multiple data sources (both local and remote); now you can request them together in one query
+Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? This is where `apollo-link-state` comes in, our solution for local state management that allows you to use your Apollo cache as the single source of truth for data in your application.
+
+Managing all your data with Apollo Client allows you to take advantage of GraphQL as a unified interface to all of your data. This enables you to inspect both your local and remote schemas in Apollo DevTools through GraphiQL.
+
+// TODO: insert screenshot here
+
+With `apollo-link-state`, you can add client-side only fields to your remote data seamlessly and query them from your components. In this example, we're adding the client-only field `isLiked` to our server data via a mutation. Then, we can query this field alongside our server data and get back the aggregated result. Your components are made up of local and remote data, now your queries can be too!
+
+// show link state example
 
 <h2 title="ecosystem">Vibrant ecosystem</h2>
 
@@ -51,13 +116,7 @@ This flexibility makes it simple to create your dream client by building extensi
 - [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
 - [AppSync by AWS](https://dev-blog.apollodata.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
 
-When you choose Apollo to manage your data, you also gain the support of our amazing community. There are over 5000 developers on our Apollo Slack channel who can help you get acclimated to the Apollo ecosystem. You can also read articles on best practices and our announcements on the Apollo blog, updated weekly.
-
-
-- Apollo Client is easy to set up, but extensible for when you need to build out more advanced features
-- Showcase community links, extensions that our community members have built
-- Blog updated weekly with best practices, supportive community on Slack to help you get acclimated to the Apollo ecosystem
-- Focus on developer experience with rich ecosystem of tools (devtools, launchpad, etc)
+When you choose Apollo to manage your data, you also gain the support of our amazing community. There are over 5000 developers on our [Apollo Slack](https://www.apollographql.com/#slack) channel for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://dev-blog.apollodata.com/, updated weekly.
 
 <h2 title="case-studies">Case studies</h2>
 

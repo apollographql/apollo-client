@@ -240,7 +240,8 @@ describe('no-cache', () => {
       }),
     );
   });
-  it('does not save the data to the cache on success', () => {
+
+  it('saves the data to the cache on success to broadcast the results data', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -259,7 +260,7 @@ describe('no-cache', () => {
       client.query({ query }).then(actualResult => {
         expect(actualResult.data).toEqual(result);
         // the second query couldn't read anything from the cache
-        expect(called).toBe(4);
+        expect(called).toBe(2);
       }),
     );
   });

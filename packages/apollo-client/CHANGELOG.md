@@ -3,6 +3,8 @@
 
 ### vNEXT
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
+- Removed the no-cache constrain around the dataStore update that avoid the listeners to receive
+the request result data [PR#3026](https://github.com/apollographql/apollo-client/pull/3026)
 
 ### 2.2.3
 - dependency updates

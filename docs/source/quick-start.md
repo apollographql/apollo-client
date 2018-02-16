@@ -55,7 +55,7 @@ const GET_DOG = gql`
 `
 
 const App = () => (
-  <Query query={query}>
+  <Query query={GET_DOG}>
     {({ loading, error, data }) => {
       if (loading) return <div>Loading...</div>;
       if (error) return <div>Error :(</div>;

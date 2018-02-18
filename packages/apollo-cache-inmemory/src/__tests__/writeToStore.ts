@@ -221,6 +221,38 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes a query with custom directives', () => {
+    const query = gql`
+      query {
+        id
+        firstName @include(if: true)
+        lastName @upperCase
+        birthDate @dateFormat(format: "DD-MM-YYYY")
+      }
+    `;
+
+    const result: any = {
+      id: 'abcd',
+      firstName: 'James',
+      lastName: 'BOND',
+      birthDate: '20-05-1940',
+    };
+
+    const normalized = writeQueryToStore({
+      result,
+      query,
+    });
+
+    expect(normalized.toObject()).toEqual({
+      ROOT_QUERY: {
+        id: 'abcd',
+        firstName: 'James',
+        'lastName@upperCase': 'BOND',
+        'birthDate@dateFormat({"format":"DD-MM-YYYY"})': '20-05-1940',
+      },
+    });
+  });
+
   it('properly normalizes a nested object with an ID', () => {
     const query = gql`
       {

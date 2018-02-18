@@ -124,11 +124,18 @@ export class QueryManager<TStore> {
     refetchQueries = [],
     update: updateWithProxyFn,
     errorPolicy = 'none',
+    fetchPolicy,
     context = {},
   }: MutationOptions): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(
         'mutation option is required. You must specify your GraphQL document in the mutation option.',
+      );
+    }
+
+    if (fetchPolicy && fetchPolicy !== 'no-cache') {
+      throw new Error(
+        "fetchPolicy for mutations currently only supports the 'no-cache' policy",
       );
     }
 
@@ -196,14 +203,16 @@ export class QueryManager<TStore> {
 
           this.mutationStore.markMutationResult(mutationId);
 
-          this.dataStore.markMutationResult({
-            mutationId,
-            result,
-            document: mutation,
-            variables: variables || {},
-            updateQueries: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
-          });
+          if (fetchPolicy !== 'no-cache') {
+            this.dataStore.markMutationResult({
+              mutationId,
+              result,
+              document: mutation,
+              variables: variables || {},
+              updateQueries: generateUpdateQueriesInfo(),
+              update: updateWithProxyFn,
+            });
+          }
           storeResult = result as FetchResult<T>;
         },
         error: (err: Error) => {
@@ -288,12 +297,17 @@ export class QueryManager<TStore> {
     const query = cache.transformDocument(options.query);
 
     let storeResult: any;
-    let needToFetch: boolean = fetchPolicy === 'network-only';
+    let needToFetch: boolean =
+      fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only') {
+    if (
+      fetchType !== FetchType.refetch &&
+      fetchPolicy !== 'network-only' &&
+      fetchPolicy !== 'no-cache'
+    ) {
       const { complete, result } = this.dataStore.getCache().diff({
         query,
         variables,
@@ -825,14 +839,19 @@ export class QueryManager<TStore> {
     return dataStoreReset.then(() => Promise.all(observableQueryPromises));
   }
 
-  private getObservableQueryPromises(): Promise<ApolloQueryResult<any>>[] {
+  private getObservableQueryPromises(
+    includeStandby?: boolean,
+  ): Promise<ApolloQueryResult<any>>[] {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     this.queries.forEach(({ observableQuery }, queryId) => {
       if (!observableQuery) return;
       const fetchPolicy = observableQuery.options.fetchPolicy;
 
       observableQuery.resetLastResults();
-      if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
+      if (
+        fetchPolicy !== 'cache-only' &&
+        (includeStandby || fetchPolicy !== 'standby')
+      ) {
         observableQueryPromises.push(observableQuery.refetch());
       }
 
@@ -843,10 +862,12 @@ export class QueryManager<TStore> {
     return observableQueryPromises;
   }
 
-  public reFetchObservableQueries(): Promise<ApolloQueryResult<any>[]> {
+  public reFetchObservableQueries(
+    includeStandby?: boolean,
+  ): Promise<ApolloQueryResult<any>[]> {
     const observableQueryPromises: Promise<
       ApolloQueryResult<any>
-    >[] = this.getObservableQueryPromises();
+    >[] = this.getObservableQueryPromises(includeStandby);
 
     this.broadcastQueries();
 
@@ -1023,7 +1044,7 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
-    const { variables, context, errorPolicy = 'none' } = options;
+    const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
     const operation = this.buildOperationForLink(document, variables, {
       ...context,
       // TODO: Should this be included for all entry points via
@@ -1040,17 +1061,19 @@ export class QueryManager<TStore> {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
-            try {
-              this.dataStore.markQueryResult(
-                result,
-                document,
-                variables,
-                fetchMoreForQueryId,
-                errorPolicy === 'ignore',
-              );
-            } catch (e) {
-              reject(e);
-              return;
+            if (fetchPolicy !== 'no-cache') {
+              try {
+                this.dataStore.markQueryResult(
+                  result,
+                  document,
+                  variables,
+                  fetchMoreForQueryId,
+                  errorPolicy === 'ignore' || errorPolicy === 'all',
+                );
+              } catch (e) {
+                reject(e);
+                return;
+              }
             }
 
             this.queryStore.markQueryResult(
@@ -1175,6 +1198,7 @@ export class QueryManager<TStore> {
     extraContext?: any,
   ) {
     const cache = this.dataStore.getCache();
+
     return {
       query: cache.transformForLink
         ? cache.transformForLink(document)
@@ -1184,6 +1208,17 @@ export class QueryManager<TStore> {
       context: {
         ...extraContext,
         cache,
+        // getting an entry's cache key is useful for cacheResolvers & state-link
+        getCacheKey: (obj: { __typename: string; id: string | number }) => {
+          if ((cache as any).config) {
+            // on the link, we just want the id string, not the full id value from toIdValue
+            return (cache as any).config.dataIdFromObject(obj);
+          } else {
+            throw new Error(
+              'To use context.getCacheKey, you need to use a cache that has a configurable dataIdFromObject, like apollo-cache-inmemory.',
+            );
+          }
+        },
       },
     };
   }

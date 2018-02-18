@@ -421,12 +421,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
+   * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
-  public reFetchObservableQueries():
-    | Promise<ApolloQueryResult<any>[]>
-    | Promise<null> {
+  public reFetchObservableQueries(
+    includeStandby?: boolean,
+  ): Promise<ApolloQueryResult<any>[]> | Promise<null> {
     return this.queryManager
-      ? this.queryManager.reFetchObservableQueries()
+      ? this.queryManager.reFetchObservableQueries(includeStandby)
       : Promise.resolve(null);
   }
 

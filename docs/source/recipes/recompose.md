@@ -108,7 +108,7 @@ const enhancedComponent = compose(
 
 The above works well if we just want something to happen at component mount time.
 
-Lets define another more advanced usecase, for example I am using `react-select` to let user pick an option from the results of a query. I want to always display the react-select, which has its own loading state indicator. The, I want to automatically select predefined option after query finish fetching.
+Lets define another more advanced usecase, for example I am using `react-select` to let user pick an option from the results of a query. I want to always display the react-select, which has its own loading state indicator. Then, I want to automatically select the predefined option after the query finishes fetching.
 
 There is one special thing we need to handle if we want to fetch for every component instance with the default fetchPolicy, we need to be aware that the query can skip loading state when data is already in the cache. That would mean we need to handle `networkStatus === 7` on mount.
 

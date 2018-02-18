@@ -2,7 +2,20 @@
 
 
 ### vNext
+
+### 1.1.3
+- dependency updates
+- Added getDirectivesFromDocument utility function
+[PR#2974](https://github.com/apollographql/apollo-client/pull/2974)
+
+### 1.1.2
+- Add client, rest, and export directives to list of known directives [PR#2949](https://github.com/apollographql/apollo-client/pull/2949)
+
+### 1.1.1
 - Fix typo in error message for invalid argument being passed to @skip or @include directives [PR#2867](https://github.com/apollographql/apollo-client/pull/2867)
+
+### 1.1.0
+- update `getStoreKeyName` to support custom directives
 
 ### 1.0.5
 - package dependency updates

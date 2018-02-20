@@ -22,13 +22,13 @@ import { ApolloProvider } from 'react-apollo';
 // Pass your GraphQL endpoint to uri
 const client = new ApolloClient({ uri: 'https://nx9zvp49q7.lp.gql.zone/graphql' });
 
-const ApolloApp = () => (
+const ApolloApp = AppComponent => (
   <ApolloProvider client={client}>
-    <App />
+    <AppComponent />
   </ApolloProvider>
 );
 
-render(ApolloApp, document.getElementById('root'));
+render(ApolloApp(APP), document.getElementById('root'));
 ```
 
 Awesome! Your ApolloClient is now connected to your app. Let's create our `<App />` component and make our first query:

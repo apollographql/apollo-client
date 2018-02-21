@@ -50,13 +50,11 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     const requestHandler =
       config && config.request
-        ? new ApolloLink((operation, forward) => {
-            const { ...request } = operation;
-
-            return new Observable(observer => {
+        ? new ApolloLink((operation, forward) =>
+            new Observable(observer => {
               let handle: any;
-              Promise.resolve(request)
-                .then(req => config.request(req))
+              Promise.resolve(operation)
+                .then(oper => config.request(oper))
                 .then(() => {
                   handle = forward(operation).subscribe({
                     next: observer.next.bind(observer),
@@ -69,8 +67,8 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
               return () => {
                 if (handle) handle.unsubscribe;
               };
-            });
-          })
+            })
+          )
         : false;
 
     const httpLink = new HttpLink({

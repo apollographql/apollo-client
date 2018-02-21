@@ -2,6 +2,7 @@
 
 ### vNext
 - Map coverage to original source
+- fix request parameter type
 
 ### 0.1.0
 - DEPRECATED: `apollo-client-preset`

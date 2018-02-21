@@ -28,7 +28,7 @@ const ApolloApp = AppComponent => (
   </ApolloProvider>
 );
 
-render(ApolloApp(APP), document.getElementById('root'));
+render(ApolloApp(App), document.getElementById('root'));
 ```
 
 Awesome! Your ApolloClient is now connected to your app. Let's create our `<App />` component and make our first query:

@@ -1039,7 +1039,7 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
-    const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
+    const { variables, context, errorPolicy = 'none' } = options;
     const operation = this.buildOperationForLink(document, variables, {
       ...context,
       // TODO: Should this be included for all entry points via
@@ -1056,19 +1056,17 @@ export class QueryManager<TStore> {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
-            if (fetchPolicy !== 'no-cache') {
-              try {
-                this.dataStore.markQueryResult(
-                  result,
-                  document,
-                  variables,
-                  fetchMoreForQueryId,
-                  errorPolicy === 'ignore' || errorPolicy === 'all',
-                );
-              } catch (e) {
-                reject(e);
-                return;
-              }
+            try {
+              this.dataStore.markQueryResult(
+                result,
+                document,
+                variables,
+                fetchMoreForQueryId,
+                errorPolicy === 'ignore' || errorPolicy === 'all',
+              );
+            } catch (e) {
+              reject(e);
+              return;
             }
 
             this.queryStore.markQueryResult(

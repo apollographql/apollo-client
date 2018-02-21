@@ -530,7 +530,14 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     // Deliver initial result
     if (observer.next && this.lastResult) observer.next(this.lastResult);
-    if (observer.error && this.lastError) observer.error(this.lastError);
+
+    // Deliver `lastError` if `fetchPolicy` is not `standby`
+    if (
+      observer.error &&
+      this.lastError &&
+      this.options.fetchPolicy !== 'standby'
+    )
+      observer.error(this.lastError);
 
     // setup the query if it hasn't been done before
     if (this.observers.length === 1) this.setUpQuery();

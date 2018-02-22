@@ -180,6 +180,7 @@ const withData = graphql(COMMENT_QUERY, {
     }),
     props: props => {
         return {
+           ...props,
             subscribeToNewComments: params => {
                 return props.comments.subscribeToMore({
                     document: COMMENTS_SUBSCRIPTION,

@@ -2,23 +2,26 @@ import GithubAPI from 'github';
 import { bsuite, groupPromises, log } from './util';
 import { thresholds } from './thresholds';
 
-export function collectAndReportBenchmarks() {
+export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
   const github = eval('new require("github")()') as GithubAPI;
-  const commitSHA = process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT || '';
+  const commitSHA =
+    process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT || '';
 
-  github.authenticate({
-    type: 'oauth',
-    token: process.env.DANGER_GITHUB_API_TOKEN || '',
-  });
+  if (uploadToGithub) {
+    github.authenticate({
+      type: 'oauth',
+      token: process.env.DANGER_GITHUB_API_TOKEN || '',
+    });
 
-  github.repos.createStatus({
-    owner: 'apollographql',
-    repo: 'apollo-client',
-    sha: commitSHA,
-    context: 'Benchmark',
-    description: 'Evaluation is in progress!',
-    state: 'pending',
-  });
+    github.repos.createStatus({
+      owner: 'apollographql',
+      repo: 'apollo-client',
+      sha: commitSHA,
+      context: 'Benchmark',
+      description: 'Evaluation is in progress!',
+      state: 'pending',
+    });
+  }
 
   Promise.all(groupPromises)
     .then(() => {
@@ -51,30 +54,35 @@ export function collectAndReportBenchmarks() {
       let message = '';
       let pass = false;
       Object.keys(res).forEach(element => {
-        if (!thresholds[element]) {
-          console.error(`Threshold not defined for "${element}"`);
-          if (message === '') {
-            message = `Threshold not defined for "${element}"`;
-            pass = false;
-          }
-        } else {
-          if (res[element].mean - (res[element].moe * 3) > thresholds[element]) {
-            const perfDropMessage = `Performance drop detected for benchmark: "${
-              element
-            }", ${res[element].mean} - ${res[element].moe * 3} > ${
-              thresholds[element]
-            }`;
-            console.error(perfDropMessage);
+        if (element != 'baseline') {
+          if (!thresholds[element]) {
+            console.error(`Threshold not defined for "${element}"`);
             if (message === '') {
-              message = perfDropMessage;
+              message = `Threshold not defined for "${element}"`;
               pass = false;
             }
           } else {
-            console.log(
-              `No performance drop detected for benchmark: "${element}", ${
+            const normalizedMean = res[element].mean / res['baseline'].mean;
+            if (normalizedMean > thresholds[element]) {
+              const perfDropMessage = `Performance drop detected for benchmark: "${element}", ${
                 res[element].mean
-              } - ${res[element].moe * 3} <= ${thresholds[element]}`,
-            );
+              } / ${res['baseline'].mean} = ${normalizedMean} > ${
+                thresholds[element]
+              }`;
+              console.error(perfDropMessage);
+              if (message === '') {
+                message = `Performance drop detected for benchmark: "${element}"`;
+                pass = false;
+              }
+            } else {
+              console.log(
+                `No performance drop detected for benchmark: "${element}", ${
+                  res[element].mean
+                } / ${res['baseline'].mean} = ${normalizedMean} <= ${
+                  thresholds[element]
+                }`,
+              );
+            }
           }
         }
       });
@@ -86,17 +94,21 @@ export function collectAndReportBenchmarks() {
 
       console.log('Reporting benchmarks to GitHub status...');
 
-      return github.repos
-        .createStatus({
-          owner: 'apollographql',
-          repo: 'apollo-client',
-          sha: commitSHA,
-          context: 'Benchmark',
-          description: message,
-          state: pass ? 'success' : 'error',
-        })
-        .then(() => {
-          console.log('Published benchmark results to GitHub status');
-        });
+      if (uploadToGithub) {
+        return github.repos
+          .createStatus({
+            owner: 'apollographql',
+            repo: 'apollo-client',
+            sha: commitSHA,
+            context: 'Benchmark',
+            description: message,
+            state: pass ? 'success' : 'error',
+          })
+          .then(() => {
+            console.log('Published benchmark results to GitHub status');
+          });
+      } else {
+        return;
+      }
     });
 }

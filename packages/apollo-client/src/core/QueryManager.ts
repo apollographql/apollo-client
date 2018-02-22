@@ -956,7 +956,10 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
+  public getCurrentQueryResult<T>(
+    observableQuery: ObservableQuery<T>,
+    optimistic: boolean = true,
+  ) {
     const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
@@ -970,7 +973,7 @@ export class QueryManager<TStore> {
           query,
           variables,
           previousResult: lastResult ? lastResult.data : undefined,
-          optimistic: true,
+          optimistic,
         });
 
         return maybeDeepFreeze({ data, partial: false });
@@ -1000,7 +1003,7 @@ export class QueryManager<TStore> {
 
     const { variables, query } = observableQuery.options;
 
-    const { data } = this.getCurrentQueryResult(observableQuery);
+    const { data } = this.getCurrentQueryResult(observableQuery, false);
 
     return {
       previousResult: data,

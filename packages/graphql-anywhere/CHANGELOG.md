@@ -1,6 +1,7 @@
 # Change log
 
 ## vNEXT
+- Map coverage to original source
 
 ### 4.1.4
 - dependency updates

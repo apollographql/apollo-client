@@ -6,7 +6,8 @@
   "contributors": [
     "James Baxley <james@meteor.com>",
     "Jonas Helfer <jonas@helfer.email>",
-    "Sashko Stubailo <sashko@stubailo.com>"
+    "Sashko Stubailo <sashko@stubailo.com>",
+    "James Burgess <jamesmillerburgess@gmail.com>"
   ],
   "license": "MIT",
   "main": "./lib/bundle.umd.js",
@@ -32,8 +33,10 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf lib/* && rimraf coverage/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
   "devDependencies": {
@@ -59,11 +62,7 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"],
+    "mapCoverage": true
   }
 }

@@ -1,5 +1,6 @@
 
 ### vNext
+- Map coverage to original source
 
 ### 1.1.3
 - dependency updates

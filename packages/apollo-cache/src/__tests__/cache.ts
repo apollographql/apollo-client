@@ -112,6 +112,11 @@ describe('abstract cache', () => {
       test.writeData({ id: 1 });
       expect(test.read).toBeCalled();
       expect(test.writeFragment).toBeCalled();
+
+      // Edge case for falsey id
+      test.writeData({ id: 0 });
+      expect(test.read).toHaveBeenCalledTimes(2);
+      expect(test.writeFragment).toHaveBeenCalledTimes(2);
     });
 
     it('suppresses read errors', () => {

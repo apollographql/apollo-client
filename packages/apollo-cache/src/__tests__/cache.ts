@@ -5,6 +5,20 @@ import { ApolloCache as Cache } from '../cache';
 class TestCache extends Cache {}
 
 describe('abstract cache', () => {
+  describe('transformDocument', () => {
+    it('returns the document', () => {
+      const test = new TestCache();
+      expect(test.transformDocument('a')).toBe('a');
+    });
+  });
+
+  describe('transformForLink', () => {
+    it('returns the document', () => {
+      const test = new TestCache();
+      expect(test.transformForLink('a')).toBe('a');
+    });
+  });
+
   describe('readQuery', () => {
     it('runs the read method', () => {
       const test = new TestCache();
@@ -109,6 +123,22 @@ describe('abstract cache', () => {
 
       expect(() => test.writeData({ id: 1 })).not.toThrow();
       expect(test.writeFragment).toBeCalled();
+    });
+
+    it('reads __typename from typenameResult or defaults to __ClientData', () => {
+      const test = new TestCache();
+      test.read = () => ({ __typename: 'a' });
+      let res;
+      test.writeFragment = obj =>
+        (res = obj.fragment.definitions[0].typeCondition.name.value);
+
+      test.writeData({ id: 1 });
+      expect(res).toBe('a');
+
+      test.read = () => ({});
+
+      test.writeData({ id: 1 });
+      expect(res).toBe('__ClientData');
     });
   });
 });

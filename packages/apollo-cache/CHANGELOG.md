@@ -1,5 +1,6 @@
 
 ### vNext
+- Improve code coverage
 
 ### 1.1.3
 - dependency updates

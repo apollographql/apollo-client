@@ -47,7 +47,6 @@
     "react"
   ],
   "author": "Sashko Stubailo <sashko@stubailo.com>",
-  "contributors": ["James Burgess <jamesmillerburgess@gmail.com>"],
   "license": "MIT",
   "dependencies": {
     "@types/zen-observable": "^0.5.3",

@@ -6,7 +6,8 @@
   "contributors": [
     "James Baxley <james@meteor.com>",
     "Jonas Helfer <jonas@helfer.email>",
-    "Sashko Stubailo <sashko@stubailo.com>"
+    "Sashko Stubailo <sashko@stubailo.com>",
+    "James Burgess <jamesmillerburgess@gmail.com>"
   ],
   "license": "MIT",
   "main": "./lib/bundle.umd.js",

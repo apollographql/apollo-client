@@ -12,14 +12,18 @@
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
     "test": "jest",
-    "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
-    "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
+    "benchmark":
+      "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
+    "benchmark:inspect":
+      "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run build && npm run build:browser",
     "type-check": "flow check",
     "build": "tsc",
     "build:benchmark": "tsc -p tsconfig.benchmark.json",
-    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link --i apollo-link-dedup && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link --i apollo-link-dedup && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "watch": "tsc -w",
     "bundle": "rollup -c rollup.config.js",
     "postbuild": "npm run bundle",
@@ -93,14 +97,8 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "setupFiles": [
-      "<rootDir>/scripts/tests.js"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"],
+    "setupFiles": ["<rootDir>/scripts/tests.js"],
+    "mapCoverage": true
   }
 }

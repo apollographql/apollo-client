@@ -19,13 +19,15 @@ function deepFreeze(o: any) {
 }
 
 export function maybeDeepFreeze(obj: any) {
-  // Polyfilled Symbols potentially cause infinite / very deep recursion while deep freezing
-  // which is known to crash IE11 (https://github.com/apollographql/apollo-client/issues/3043).
-  const symbolIsPolyfilled =
-    typeof Symbol === 'function' && typeof Symbol('') === 'string';
+  if (isDevelopment() || isTest()) {
+    // Polyfilled Symbols potentially cause infinite / very deep recursion while deep freezing
+    // which is known to crash IE11 (https://github.com/apollographql/apollo-client/issues/3043).
+    const symbolIsPolyfilled =
+      typeof Symbol === 'function' && typeof Symbol('') === 'string';
 
-  if ((isDevelopment() || isTest()) && !symbolIsPolyfilled) {
-    return deepFreeze(obj);
+    if (!symbolIsPolyfilled) {
+      return deepFreeze(obj);
+    }
   }
   return obj;
 }

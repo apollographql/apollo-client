@@ -4,6 +4,7 @@
     "moduleResolution": "node",
     "declaration": true,
     "noLib": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "removeComments": false
   }
 }

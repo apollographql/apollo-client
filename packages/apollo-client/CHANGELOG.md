@@ -5,6 +5,7 @@
 - Map coverage to original source
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
 - Fix Memory Leak in Query Manager [PR#3119](https://github.com/apollographql/apollo-client/pull/3119)
+- onResetStore callbacks occur before `broadcastQueries`[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
 
 ### 2.2.3
 - dependency updates

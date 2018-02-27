@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Map coverage to original source
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
 
 ### 2.2.3

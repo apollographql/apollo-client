@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- Map coverage to original source
 - Fixed bug with cacheRedirects not getting attached [#3016](https://github.com/apollographql/apollo-client/pull/3016)
 
 ### 1.1.9

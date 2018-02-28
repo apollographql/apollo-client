@@ -30,11 +30,9 @@ The docs for Apollo Client are mainly written using the [React integration](./ba
 
 Getting started is as simple as installing a few libraries from [npm](https://npmjs.org)! The [setup](./basics/setup.html) is a good place to start your adventure with Apollo!
 
-<h2 id="Compatibility">Compatible tools</h2>
+<h2 id="react-toolbox" title="Perfect for React">The React toolbox</h2>
 
 We want you to love working with Apollo Client, so we work extra hard to make sure it works with the client or server tools you're already using! The maintainers and contributors focus on solving the hard problems around GraphQL caching, request management, and UI updating, and we want that to be available to anyone regardless of their technical requirements and preferences for other parts of the app.
-
-<h2 id="react-toolbox" title="Perfect for React">The React toolbox</h2>
 
 Apollo is lovingly designed to work nicely with all of the tools used by today's React developers. Here are some in particular:
 

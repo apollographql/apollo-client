@@ -23,18 +23,17 @@ sidebar_categories:
     - why-apollo
     - quick-start
     - integrations
-    - 2.0-migration
   Essentials:
     - essentials/setup
     - essentials/queries
     - essentials/mutations
-    - essentials/subscriptions
     - essentials/hoc
   Advanced:
     - advanced/boost-migration
     - advanced/network-layer
     - advanced/caching
     - advanced/update-store
+    - advanced/subscriptions
     - advanced/fragments
   Features:
     - features/error-handling
@@ -50,6 +49,7 @@ sidebar_categories:
     - recipes/authentication
     - recipes/prefetching
     - recipes/fragment-matching
+    - recipes/2.0-migration
     - recipes/babel
     - recipes/webpack
     - recipes/meteor

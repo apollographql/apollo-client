@@ -22,22 +22,25 @@ sidebar_categories:
     - index
     - why-apollo
     - quick-start
-    - basics/integrations
+    - integrations
     - 2.0-migration
-  Basics:
-    - basics/setup
-    - basics/queries
-    - basics/mutations
-    - basics/network-layer
-    - basics/caching
+  Essentials:
+    - essentials/setup
+    - essentials/queries
+    - essentials/mutations
+    - essentials/subscriptions
+    - essentials/hoc
+  Advanced:
+    - advanced/boost-migration
+    - advanced/network-layer
+    - advanced/caching
+    - advanced/update-store
+    - advanced/fragments
   Features:
     - features/error-handling
-    - features/caching
     - features/optimistic-ui
-    - features/cache-updates
-    - features/fragments
+    - features/server-side-rendering
     - features/developer-tooling
-    - features/subscriptions
     - features/react-native
     - features/static-typing
   Recipes:
@@ -46,11 +49,10 @@ sidebar_categories:
     - recipes/pagination
     - recipes/authentication
     - recipes/prefetching
-    - recipes/server-side-rendering
     - recipes/fragment-matching
     - recipes/babel
     - recipes/webpack
     - recipes/meteor
     - recipes/recompose
-  Reference:
-    - reference/index
+  API:
+    - api/apollo-client

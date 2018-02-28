@@ -2,6 +2,7 @@
 
 ### vNext
 - Map coverage to original source
+- Allow instantiating the client with `headers` and `credentials`.
 
 ### 0.1.0
 - DEPRECATED: `apollo-client-preset`

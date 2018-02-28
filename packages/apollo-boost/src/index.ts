@@ -17,6 +17,8 @@ export { gql, InMemoryCache, HttpLink };
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;
   uri?: string;
+  credentials?: string;
+  headers?: any;
   fetchOptions?: HttpLink.Options;
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;
@@ -76,7 +78,8 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
     const httpLink = new HttpLink({
       uri: (config && config.uri) || '/graphql',
       fetchOptions: (config && config.fetchOptions) || {},
-      credentials: 'same-origin',
+      credentials: (config && config.credentials) || 'same-origin',
+      headers: (config && config.headers) || {},
     });
 
     const link = ApolloLink.from([

@@ -264,7 +264,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe(options: SubscriptionOptions): Observable<any> {
+  public subscribe<T=any>(options: SubscriptionOptions): Observable<T> {
     this.initQueryManager();
 
     return this.queryManager.startGraphQLSubscription(options);

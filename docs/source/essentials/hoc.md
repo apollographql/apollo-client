@@ -1,0 +1,3 @@
+---
+title: Higher order components
+---

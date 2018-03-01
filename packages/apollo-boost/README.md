@@ -48,7 +48,7 @@ const GET_MOVIES = gql`
 `
 
 const App = () => (
-  <Query query={query}>
+  <Query query={GET_MOVIES}>
     {({ loading, error, data }) => {
       if (loading) return <div>Loading...</div>;
       if (error) return <div>Error :(</div>;

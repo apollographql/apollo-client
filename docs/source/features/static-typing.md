@@ -243,7 +243,7 @@ export default () =>
 
 One of the most powerful feature of the React integration is the `props` function which allows you to reshape the result data from an operation into a new shape of props for the wrapped component. GraphQL is awesome at allowing you to only request the data you want from the server. The client still often needs to reshape or do client side calculations based on these results. The return value can even differ depending on the state of the operation (i.e loading, error, recieved data), so informing our type system of choice of these possible values is really important to make sure our components won't have runtime errors.
 
-The `graphql` wrapper from `react-apollo` supports manually declaring the shape of your result props. It is implmented in Flow like this:
+The `graphql` wrapper from `react-apollo` supports manually declaring the shape of your result props. It is implemented in Flow like this:
 
 ```javascript
 // @flow
@@ -385,7 +385,7 @@ const withCharacter: OperationComponent<Response, InputProps> = graphql(HERO_QUE
   })
 });
 
-// flow will infer this type 
+// flow will infer this type
 export default class Character extends Component {
   render(){
     const { loading, hero, error } = this.props.data;

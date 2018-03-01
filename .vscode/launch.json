@@ -3,17 +3,16 @@
   "configurations": [
     {
       "name": "Test",
+      "request": "launch",
       "type": "node",
-      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "program":
+        "${workspaceRoot}/packages/apollo-client/node_modules/jest/bin/jest.js",
+      "internalConsoleOptions": "openOnSessionStart",
       "stopOnEntry": false,
-      "args": [
-        "--no-timeouts",
-        "lib/test/tests.js"
-      ],
-      "cwd": "${workspaceRoot}",
-      "runtimeExecutable": null,
+      "args": ["-i"],
+      "cwd": "${workspaceRoot}/packages/apollo-client",
       "sourceMaps": true,
-      "outDir": "${workspaceRoot}/lib"
+      "outFiles": ["${workspaceRoot}/lib/**/*"]
     }
   ]
 }

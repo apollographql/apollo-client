@@ -1373,6 +1373,67 @@ describe('QueryManager', () => {
       });
   });
 
+  it('supports no-cache fetchPolicy query', () => {
+    const nonCachedQuery = gql`
+      query nonCachedQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      luke: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const queryManager = mockQueryManager({
+      request: { query: nonCachedQuery },
+      result: { data: data1 },
+    });
+
+    return queryManager
+      .query<any>({
+        query: nonCachedQuery,
+        fetchPolicy: 'no-cache',
+      })
+      .then(result => {
+        expect(result.data['luke'].name).toBe('Luke Skywalker');
+      });
+  });
+
+  it('supports no-cache fetchPolicy watchQuery', () => {
+    const nonCachedQuery = gql`
+      query nonCachedQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      luke: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const queryManager = mockQueryManager({
+      request: { query: nonCachedQuery },
+      result: { data: data1 },
+    });
+
+    return queryManager
+      .watchQuery<any>({
+        query: nonCachedQuery,
+        fetchPolicy: 'no-cache',
+      })
+      .result()
+      .then(result => {
+        expect(result.data['luke'].name).toBe('Luke Skywalker');
+      });
+  });
+
   it('runs a mutation', () => {
     return assertMutationRoundtrip({
       mutation: gql`

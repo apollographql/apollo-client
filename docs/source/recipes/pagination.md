@@ -21,7 +21,6 @@ Offset-based pagination — also called numbered pages — is a very common patt
 Here is an example with numbered pages taken from [GitHunt](https://github.com/apollographql/GitHunt-React):
 
 ```js
-
 const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
     currentUser {
@@ -65,10 +64,10 @@ const FeedWithData = graphql(FEED_QUERY, {
             offset: feed.length,
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
-            if (!fetchMoreResult) { return previousResult; }
+            if (!fetchMoreResult.data) { return previousResult; }
             return Object.assign({}, previousResult, {
               // Append the new feed results to the old one
-              feed: [...previousResult.feed, ...fetchMoreResult.feed],
+              feed: [...previousResult.feed, ...fetchMoreResult.data.feed],
             });
           },
         });

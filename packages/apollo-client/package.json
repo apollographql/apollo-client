@@ -87,7 +87,7 @@
     "typescript": "2.4.2",
     "uglify-js": "3.3.11",
     "webpack": "3.10.0",
-    "webpack-bundle-analyzer": "2.10.0"
+    "webpack-bundle-analyzer": "2.11.1"
   },
   "optionalDependencies": {
     "@types/async": "2.0.47"

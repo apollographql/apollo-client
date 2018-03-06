@@ -286,13 +286,14 @@ function getDirectivesFromSelectionSet(
 export function getDirectivesFromDocument(
   directives: GetDirectiveConfig[],
   doc: DocumentNode,
+  includeAllFragments = false,
 ): DocumentNode | null {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
   docClone.definitions = docClone.definitions.map(definition => {
     if (
       (definition.kind === 'OperationDefinition' ||
-        definition.kind === 'FragmentDefinition') &&
+        (definition.kind === 'FragmentDefinition' && !includeAllFragments)) &&
       definition.selectionSet
     ) {
       definition.selectionSet = getDirectivesFromSelectionSet(

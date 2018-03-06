@@ -833,7 +833,6 @@ export class QueryManager<TStore> {
 
     // begin removing data from the store
     const reset = this.dataStore.reset();
-    //this.broadcastQueries();
     return reset;
   }
 

@@ -4,6 +4,7 @@
 ### vNEXT
 - Map coverage to original source
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
+- Added `this.options.fetchPolicy !== 'standby'` as additional checker if should send an observer.error [PR#3052](https://github.com/apollographql/apollo-client/pull/3052)
 
 ### 2.2.3
 - dependency updates

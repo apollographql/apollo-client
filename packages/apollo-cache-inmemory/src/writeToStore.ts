@@ -4,10 +4,10 @@ import {
   DocumentNode,
   InlineFragmentNode,
   OperationDefinitionNode,
-  FragmentDefinitionNode,
-} from 'graphql';
-import { print } from 'graphql/language/printer';
-import { FragmentMatcher } from 'graphql-anywhere';
+  FragmentDefinitionNode
+} from "graphql";
+import { print } from "graphql/language/printer";
+import { FragmentMatcher } from "graphql-anywhere";
 
 import {
   assign,
@@ -24,29 +24,29 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   storeKeyNameFromField,
-  getQueryDefinition,
-} from 'apollo-utilities';
+  getQueryDefinition
+} from "apollo-utilities";
 
-import { defaultNormalizedCacheFactory, ObjectCache } from './objectCache';
+import { defaultNormalizedCacheFactory, ObjectCache } from "./objectCache";
 
 import {
   IdGetter,
   NormalizedCache,
   NormalizedCacheFactory,
   ReadStoreContext,
-  StoreObject,
-} from './types';
+  StoreObject
+} from "./types";
 
 export class WriteError extends Error {
-  public type = 'WriteError';
+  public type = "WriteError";
 }
 
 export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
   // XXX A bit hacky maybe ...
   const enhancedError = new WriteError(
-    `Error writing result to store for query:\n ${print(document)}`,
+    `Error writing result to store for query:\n ${print(document)}`
   );
-  enhancedError.message += '\n' + error.message;
+  enhancedError.message += "\n" + error.message;
   enhancedError.stack = error.stack;
   return enhancedError;
 }
@@ -79,7 +79,7 @@ export function writeQueryToStore({
   variables,
   dataIdFromObject,
   fragmentMap = {} as FragmentMap,
-  fragmentMatcherFunction,
+  fragmentMatcherFunction
 }: {
   result: Object;
   query: DocumentNode;
@@ -96,7 +96,7 @@ export function writeQueryToStore({
 
   try {
     return writeSelectionSetToStore({
-      dataId: 'ROOT_QUERY',
+      dataId: "ROOT_QUERY",
       result,
       selectionSet: queryDefinition.selectionSet,
       context: {
@@ -106,8 +106,8 @@ export function writeQueryToStore({
         variables,
         dataIdFromObject,
         fragmentMap,
-        fragmentMatcherFunction,
-      },
+        fragmentMatcherFunction
+      }
     });
   } catch (e) {
     throw enhanceErrorWithDocument(e, query);
@@ -132,7 +132,7 @@ export function writeResultToStore({
   store = storeFactory(),
   variables,
   dataIdFromObject,
-  fragmentMatcherFunction,
+  fragmentMatcherFunction
 }: {
   dataId: string;
   result: any;
@@ -162,8 +162,8 @@ export function writeResultToStore({
         variables,
         dataIdFromObject,
         fragmentMap,
-        fragmentMatcherFunction,
-      },
+        fragmentMatcherFunction
+      }
     });
   } catch (e) {
     throw enhanceErrorWithDocument(e, document);
@@ -174,7 +174,7 @@ export function writeSelectionSetToStore({
   result,
   dataId,
   selectionSet,
-  context,
+  context
 }: {
   dataId: string;
   result: any;
@@ -191,12 +191,12 @@ export function writeSelectionSetToStore({
       const value: any = result[resultFieldKey];
 
       if (included) {
-        if (typeof value !== 'undefined') {
+        if (typeof value !== "undefined") {
           writeFieldToStore({
             dataId,
             value,
             field: selection,
-            context,
+            context
           });
         } else {
           // if this is a defered field we don't need to throw / wanr
@@ -204,7 +204,7 @@ export function writeSelectionSetToStore({
             selection.directives &&
             selection.directives.length &&
             selection.directives.some(
-              directive => directive.name && directive.name.value === 'defer',
+              directive => directive.name && directive.name.value === "defer"
             );
 
           if (!isDefered && context.fragmentMatcherFunction) {
@@ -216,8 +216,8 @@ export function writeSelectionSetToStore({
                 `Missing field ${resultFieldKey} in ${JSON.stringify(
                   result,
                   null,
-                  2,
-                ).substring(0, 100)}`,
+                  2
+                ).substring(0, 100)}`
               );
             }
           }
@@ -243,22 +243,22 @@ export function writeSelectionSetToStore({
         // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
         // Right now we have to pretend that we're passing in an idValue and that there's a store
         // on the context.
-        const idValue: IdValue = { type: 'id', id: 'self', generated: false };
+        const idValue: IdValue = { type: "id", id: "self", generated: false };
         const fakeContext: ReadStoreContext = {
           // NOTE: fakeContext always uses ObjectCache
           // since this is only to ensure the return value of 'matches'
           store: new ObjectCache({ self: result }),
           returnPartialData: false,
           hasMissingField: false,
-          cacheRedirects: {},
+          cacheRedirects: {}
         };
         matches = context.fragmentMatcherFunction(
           idValue,
           fragment.typeCondition.name.value,
-          fakeContext,
+          fakeContext
         );
         if (!isProduction() && fakeContext.returnPartialData) {
-          console.error('WARNING: heuristic fragment matching going on!');
+          console.error("WARNING: heuristic fragment matching going on!");
         }
       }
 
@@ -267,7 +267,7 @@ export function writeSelectionSetToStore({
           result,
           selectionSet: fragment.selectionSet,
           dataId,
-          context,
+          context
         });
       }
     }
@@ -279,13 +279,13 @@ export function writeSelectionSetToStore({
 // Checks if the id given is an id that was generated by Apollo
 // rather than by dataIdFromObject.
 function isGeneratedId(id: string): boolean {
-  return id[0] === '$';
+  return id[0] === "$";
 }
 
 function mergeWithGenerated(
   generatedKey: string,
   realKey: string,
-  cache: NormalizedCache,
+  cache: NormalizedCache
 ) {
   const generated = cache.get(generatedKey);
   const real = cache.get(realKey);
@@ -304,7 +304,7 @@ function mergeWithGenerated(
 function isDataProcessed(
   dataId: string,
   field: FieldNode | SelectionSetNode,
-  processedData?: { [x: string]: (FieldNode | SelectionSetNode)[] },
+  processedData?: { [x: string]: (FieldNode | SelectionSetNode)[] }
 ): boolean {
   if (!processedData) {
     return false;
@@ -327,7 +327,7 @@ function writeFieldToStore({
   field,
   value,
   dataId,
-  context,
+  context
 }: {
   field: FieldNode;
   value: any;
@@ -343,15 +343,15 @@ function writeFieldToStore({
   // specifies if we need to merge existing keys in the store
   let shouldMerge = false;
   // If we merge, this will be the generatedKey
-  let generatedKey: string = '';
+  let generatedKey: string = "";
 
   // If this is a scalar value...
   if (!field.selectionSet || value === null) {
     storeValue =
-      value != null && typeof value === 'object'
+      value != null && typeof value === "object"
         ? // If the scalar value is a JSON blob, we have to "escape" it so it can’t pretend to be
           // an id.
-          { type: 'json', json: value }
+          { type: "json", json: value }
         : // Otherwise, just store the scalar directly in the store.
           value;
   } else if (Array.isArray(value)) {
@@ -361,7 +361,7 @@ function writeFieldToStore({
       value,
       generatedId,
       field.selectionSet,
-      context,
+      context
     );
   } else {
     // It's an object
@@ -371,7 +371,7 @@ function writeFieldToStore({
     // We only prepend the '$' if the valueDataId isn't already a generated
     // id.
     if (!isGeneratedId(valueDataId)) {
-      valueDataId = '$' + valueDataId;
+      valueDataId = "$" + valueDataId;
     }
 
     if (dataIdFromObject) {
@@ -383,7 +383,7 @@ function writeFieldToStore({
       // ids when managing overwrites.
       if (semanticId && isGeneratedId(semanticId)) {
         throw new Error(
-          'IDs returned by dataIdFromObject cannot begin with the "$" character.',
+          'IDs returned by dataIdFromObject cannot begin with the "$" character.'
         );
       }
 
@@ -398,16 +398,16 @@ function writeFieldToStore({
         dataId: valueDataId,
         result: value,
         selectionSet: field.selectionSet,
-        context,
+        context
       });
     }
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
     // This allows us to distinguish IDs from normal scalars.
     storeValue = {
-      type: 'id',
+      type: "id",
       id: valueDataId,
-      generated,
+      generated
     };
 
     // check if there was a generated id at the location where we're
@@ -431,7 +431,7 @@ function writeFieldToStore({
               escapedId.id
             } for this object. The selectionSet` +
             ` that was trying to be written is:\n` +
-            print(field),
+            print(field)
         );
       }
 
@@ -444,7 +444,7 @@ function writeFieldToStore({
 
   const newStoreObj = {
     ...store.get(dataId),
-    [storeFieldName]: storeValue,
+    [storeFieldName]: storeValue
   } as StoreObject;
 
   if (shouldMerge) {
@@ -461,7 +461,7 @@ function processArrayValue(
   value: any[],
   generatedId: string,
   selectionSet: SelectionSetNode,
-  context: WriteContext,
+  context: WriteContext
 ): any[] {
   return value.map((item: any, index: any) => {
     if (item === null) {
@@ -490,14 +490,14 @@ function processArrayValue(
         dataId: itemDataId,
         result: item,
         selectionSet,
-        context,
+        context
       });
     }
 
     const idStoreValue: IdValue = {
-      type: 'id',
+      type: "id",
       id: itemDataId,
-      generated,
+      generated
     };
 
     return idStoreValue;

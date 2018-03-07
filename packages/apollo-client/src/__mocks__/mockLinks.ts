@@ -2,11 +2,11 @@ import {
   Operation,
   ApolloLink,
   FetchResult,
-  Observable,
+  Observable
   // Observer,
-} from 'apollo-link';
+} from "apollo-link";
 
-import { print } from 'graphql/language/printer';
+import { print } from "graphql/language/printer";
 
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
@@ -17,7 +17,7 @@ export function mockSingleLink(
 }
 
 export function mockObservableLink(
-  mockedSubscription: MockedSubscription,
+  mockedSubscription: MockedSubscription
 ): MockSubscriptionLink {
   return new MockSubscriptionLink(mockedSubscription);
 }
@@ -65,15 +65,15 @@ export class MockLink extends ApolloLink {
     if (!responses || responses.length === 0) {
       throw new Error(
         `No more mocked responses for the query: ${print(
-          operation.query,
-        )}, variables: ${JSON.stringify(operation.variables)}`,
+          operation.query
+        )}, variables: ${JSON.stringify(operation.variables)}`
       );
     }
 
     const { result, error, delay } = responses.shift()!;
     if (!result && !error) {
       throw new Error(
-        `Mocked response should contain either result or error: ${key}`,
+        `Mocked response should contain either result or error: ${key}`
       );
     }
 
@@ -111,7 +111,7 @@ export class MockSubscriptionLink extends ApolloLink {
       return {
         unsubscribe: () => {
           this.unsubscribers.forEach(x => x());
-        },
+        }
       };
     });
   }
@@ -119,7 +119,7 @@ export class MockSubscriptionLink extends ApolloLink {
   public simulateResult(result: MockedSubscriptionResult) {
     setTimeout(() => {
       const { observer } = this;
-      if (!observer) throw new Error('subscription torn down');
+      if (!observer) throw new Error("subscription torn down");
       if (result.result && observer.next) observer.next(result.result);
       if (result.error && observer.error) observer.error(result.error);
     }, result.delay || 0);
@@ -139,6 +139,6 @@ function requestToKey(request: Operation): string {
 
   return JSON.stringify({
     variables: request.variables || {},
-    query: queryString,
+    query: queryString
   });
 }

@@ -43,7 +43,7 @@ For a small bug fix change (less than 20 lines of code changed), feel free to op
 
 ### Suggesting features
 
-Most of the features in Apollo came from suggestions by you, the community! We welcome any ideas about how to make Apollo  better for your use case. Unless there is overwhelming demand for a feature, it might not get implemented immediately, but please include as much information as possible that will help people have a discussion about your proposal:
+Most of the features in Apollo came from suggestions by you, the community! We welcome any ideas about how to make Apollo better for your use case. Unless there is overwhelming demand for a feature, it might not get implemented immediately, but please include as much information as possible that will help people have a discussion about your proposal:
 
 1. **Use case:** What are you trying to accomplish, in specific terms? Often, there might already be a good way to do what you need and a new feature is unnecessary, but it’s hard to know without information about the specific use case.
 2. **Could this be a plugin?** In many cases, a feature might be too niche to be included in the core of a library, and is better implemented as a companion package. If there isn’t a way to extend the library to do what you want, could we add additional plugin APIs? It’s important to make the case for why a feature should be part of the core functionality of the library.
@@ -57,8 +57,8 @@ Once there is a consensus on the need for a new feature, proceed as listed below
 
 This includes:
 
-- Big bug fixes
-- New features
+* Big bug fixes
+* New features
 
 For significant changes to a repository, it’s important to settle on a design before starting on the implementation. This way, we can make sure that major improvements get the care and attention they deserve. Since big changes can be risky and might not always get merged, it’s good to reduce the amount of possible wasted effort by agreeing on an implementation design/plan first.
 

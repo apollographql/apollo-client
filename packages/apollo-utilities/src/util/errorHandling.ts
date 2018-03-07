@@ -1,4 +1,4 @@
-import { ExecutionResult } from 'graphql';
+import { ExecutionResult } from "graphql";
 
 export function tryFunctionOrLogError(f: Function) {
   try {

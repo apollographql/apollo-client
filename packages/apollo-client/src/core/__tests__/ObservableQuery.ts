@@ -1,25 +1,25 @@
-import gql from 'graphql-tag';
-import { ApolloLink, Observable } from 'apollo-link';
+import gql from "graphql-tag";
+import { ApolloLink, Observable } from "apollo-link";
 import {
   InMemoryCache,
-  IntrospectionFragmentMatcher,
-} from 'apollo-cache-inmemory';
+  IntrospectionFragmentMatcher
+} from "apollo-cache-inmemory";
 
-import mockQueryManager from '../../__mocks__/mockQueryManager';
-import mockWatchQuery from '../../__mocks__/mockWatchQuery';
-import { mockSingleLink } from '../../__mocks__/mockLinks';
+import mockQueryManager from "../../__mocks__/mockQueryManager";
+import mockWatchQuery from "../../__mocks__/mockWatchQuery";
+import { mockSingleLink } from "../../__mocks__/mockLinks";
 
-import { ObservableQuery, ApolloCurrentResult } from '../ObservableQuery';
-import { NetworkStatus } from '../networkStatus';
-import { ApolloQueryResult } from '../types';
-import { QueryManager } from '../QueryManager';
-import { DataStore } from '../../data/store';
-import ApolloClient from '../../';
+import { ObservableQuery, ApolloCurrentResult } from "../ObservableQuery";
+import { NetworkStatus } from "../networkStatus";
+import { ApolloQueryResult } from "../types";
+import { QueryManager } from "../QueryManager";
+import { DataStore } from "../../data/store";
+import ApolloClient from "../../";
 
-import wrap from '../../util/wrap';
-import subscribeAndCount from '../../util/subscribeAndCount';
+import wrap from "../../util/wrap";
+import subscribeAndCount from "../../util/subscribeAndCount";
 
-describe('ObservableQuery', () => {
+describe("ObservableQuery", () => {
   // Standard data for all these tests
   const query = gql`
     query query($id: ID!) {
@@ -32,52 +32,52 @@ describe('ObservableQuery', () => {
   const differentVariables = { id: 2 };
   const dataOne = {
     people_one: {
-      name: 'Luke Skywalker',
-    },
+      name: "Luke Skywalker"
+    }
   };
   const dataTwo = {
     people_one: {
-      name: 'Leia Skywalker',
-    },
+      name: "Leia Skywalker"
+    }
   };
 
   const error = {
-    name: 'people_one',
-    message: 'is offline.',
+    name: "people_one",
+    message: "is offline."
   };
 
   const createQueryManager = ({ link }: { link?: ApolloLink }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false }))
     });
   };
 
-  describe('setOptions', () => {
-    describe('to change pollInterval', () => {
+  describe("setOptions", () => {
+    describe("to change pollInterval", () => {
       beforeEach(() => jest.useFakeTimers());
       afterEach(() => jest.useRealTimers());
 
-      it('starts polling if goes from 0 -> something', done => {
+      it("starts polling if goes from 0 -> something", done => {
         const manager = mockQueryManager(
           {
             request: { query, variables },
-            result: { data: dataOne },
+            result: { data: dataOne }
           },
           {
             request: { query, variables },
-            result: { data: dataTwo },
+            result: { data: dataTwo }
           },
           {
             request: { query, variables },
-            result: { data: dataTwo },
-          },
+            result: { data: dataTwo }
+          }
         );
 
         const observable = manager.watchQuery({
           query,
           variables,
-          notifyOnNetworkStatusChange: false,
+          notifyOnNetworkStatusChange: false
         });
         subscribeAndCount(done, observable, (handleCount, result) => {
           if (handleCount === 1) {
@@ -94,26 +94,26 @@ describe('ObservableQuery', () => {
         jest.runTimersToTime(1);
       });
 
-      it('stops polling if goes from something -> 0', done => {
+      it("stops polling if goes from something -> 0", done => {
         const manager = mockQueryManager(
           {
             request: { query, variables },
-            result: { data: dataOne },
+            result: { data: dataOne }
           },
           {
             request: { query, variables },
-            result: { data: dataTwo },
+            result: { data: dataTwo }
           },
           {
             request: { query, variables },
-            result: { data: dataTwo },
-          },
+            result: { data: dataTwo }
+          }
         );
 
         const observable = manager.watchQuery({
           query,
           variables,
-          pollInterval: 10,
+          pollInterval: 10
         });
         subscribeAndCount(done, observable, (handleCount, result) => {
           if (handleCount === 1) {
@@ -123,7 +123,7 @@ describe('ObservableQuery', () => {
             jest.runTimersToTime(5);
             done();
           } else if (handleCount === 2) {
-            done.fail(new Error('Should not get more than one result'));
+            done.fail(new Error("Should not get more than one result"));
           }
         });
 
@@ -131,27 +131,27 @@ describe('ObservableQuery', () => {
         jest.runTimersToTime(1);
       });
 
-      it('can change from x>0 to y>0', done => {
+      it("can change from x>0 to y>0", done => {
         const manager = mockQueryManager(
           {
             request: { query, variables },
-            result: { data: dataOne },
+            result: { data: dataOne }
           },
           {
             request: { query, variables },
-            result: { data: dataTwo },
+            result: { data: dataTwo }
           },
           {
             request: { query, variables },
-            result: { data: dataTwo },
-          },
+            result: { data: dataTwo }
+          }
         );
 
         const observable = manager.watchQuery({
           query,
           variables,
           pollInterval: 100,
-          notifyOnNetworkStatusChange: false,
+          notifyOnNetworkStatusChange: false
         });
         subscribeAndCount(done, observable, (handleCount, result) => {
           if (handleCount === 1) {
@@ -180,7 +180,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not break refetch', done => {
+    it("does not break refetch", done => {
       // This query and variables are copied from react-apollo
       const queryWithVars = gql`
         query people($first: Int) {
@@ -192,27 +192,27 @@ describe('ObservableQuery', () => {
         }
       `;
 
-      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
       const variables1 = { first: 0 };
 
-      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+      const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
       const variables2 = { first: 1 };
 
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: {
             query: queryWithVars,
-            variables: variables1,
+            variables: variables1
           },
-          result: { data },
+          result: { data }
         },
         {
           request: {
             query: queryWithVars,
-            variables: variables2,
+            variables: variables2
           },
-          result: { data: data2 },
-        },
+          result: { data: data2 }
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -229,7 +229,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('rerenders when refetch is called', done => {
+    it("rerenders when refetch is called", done => {
       // This query and variables are copied from react-apollo
       const query = gql`
         query people($first: Int) {
@@ -241,26 +241,26 @@ describe('ObservableQuery', () => {
         }
       `;
 
-      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
       const variables = { first: 0 };
 
-      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+      const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
 
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: {
             query,
-            variables,
+            variables
           },
-          result: { data },
+          result: { data }
         },
         {
           request: {
             query,
-            variables,
+            variables
           },
-          result: { data: data2 },
-        },
+          result: { data: data2 }
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -274,7 +274,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('rerenders with new variables then shows correct data for previous variables', done => {
+    it("rerenders with new variables then shows correct data for previous variables", done => {
       // This query and variables are copied from react-apollo
       const query = gql`
         query people($first: Int) {
@@ -286,27 +286,27 @@ describe('ObservableQuery', () => {
         }
       `;
 
-      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
       const variables = { first: 0 };
 
-      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+      const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
       const variables2 = { first: 1 };
 
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: {
             query,
-            variables,
+            variables
           },
-          result: { data },
+          result: { data }
         },
         {
           request: {
             query,
-            variables: variables2,
+            variables: variables2
           },
-          result: { data: data2 },
-        },
+          result: { data: data2 }
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -330,20 +330,20 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('if query is refetched, and an error is returned, no other observer callbacks will be called', done => {
+    it("if query is refetched, and an error is returned, no other observer callbacks will be called", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { errors: [error] },
+          result: { errors: [error] }
         },
         {
           request: { query, variables },
-          result: { data: dataOne },
-        },
+          result: { data: dataOne }
+        }
       );
 
       let handleCount = 0;
@@ -362,26 +362,26 @@ describe('ObservableQuery', () => {
           expect(handleCount).toBe(2);
           observable.refetch();
           setTimeout(done, 25);
-        },
+        }
       });
     });
 
-    it('does a network request if fetchPolicy becomes networkOnly', done => {
+    it("does a network request if fetchPolicy becomes networkOnly", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(dataOne);
-          observable.setOptions({ fetchPolicy: 'network-only' });
+          observable.setOptions({ fetchPolicy: "network-only" });
         } else if (handleCount === 2) {
           expect(result.data).toEqual(dataTwo);
           done();
@@ -389,7 +389,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', done => {
+    it("does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only", done => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -402,9 +402,9 @@ describe('ObservableQuery', () => {
       `;
       const data = {
         author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
+          firstName: "John",
+          lastName: "Smith"
+        }
       };
 
       let timesFired = 0;
@@ -416,7 +416,7 @@ describe('ObservableQuery', () => {
             observer.complete();
             return;
           });
-        },
+        }
       ]);
       queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({ query: testQuery });
@@ -428,7 +428,7 @@ describe('ObservableQuery', () => {
             expect(timesFired).toBe(1);
 
             setTimeout(() => {
-              observable.setOptions({ fetchPolicy: 'cache-only' });
+              observable.setOptions({ fetchPolicy: "cache-only" });
               queryManager.resetStore();
             }, 0);
           } else if (handleCount === 2) {
@@ -436,7 +436,7 @@ describe('ObservableQuery', () => {
             expect(timesFired).toBe(1);
 
             setTimeout(() => {
-              observable.setOptions({ fetchPolicy: 'cache-first' });
+              observable.setOptions({ fetchPolicy: "cache-first" });
             }, 0);
           } else if (handleCount === 3) {
             expect(result.data).toEqual(data);
@@ -450,7 +450,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if fetchPolicy changes from cache-only', done => {
+    it("does a network request if fetchPolicy changes from cache-only", done => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -463,9 +463,9 @@ describe('ObservableQuery', () => {
       `;
       const data = {
         author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
+          firstName: "John",
+          lastName: "Smith"
+        }
       };
 
       let timesFired = 0;
@@ -477,13 +477,13 @@ describe('ObservableQuery', () => {
             observer.complete();
             return;
           });
-        },
+        }
       ]);
       queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({
         query: testQuery,
-        fetchPolicy: 'cache-only',
-        notifyOnNetworkStatusChange: false,
+        fetchPolicy: "cache-only",
+        notifyOnNetworkStatusChange: false
       });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -492,7 +492,7 @@ describe('ObservableQuery', () => {
           expect(timesFired).toBe(0);
 
           setTimeout(() => {
-            observable.setOptions({ fetchPolicy: 'cache-first' });
+            observable.setOptions({ fetchPolicy: "cache-first" });
           }, 0);
         } else if (handleCount === 3) {
           expect(result.data).toEqual(data);
@@ -503,7 +503,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('can set queries to standby and will not fetch when doing so', done => {
+    it("can set queries to standby and will not fetch when doing so", done => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -516,9 +516,9 @@ describe('ObservableQuery', () => {
       `;
       const data = {
         author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
+          firstName: "John",
+          lastName: "Smith"
+        }
       };
 
       let timesFired = 0;
@@ -530,13 +530,13 @@ describe('ObservableQuery', () => {
             observer.complete();
             return;
           });
-        },
+        }
       ]);
       queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({
         query: testQuery,
-        fetchPolicy: 'cache-first',
-        notifyOnNetworkStatusChange: false,
+        fetchPolicy: "cache-first",
+        notifyOnNetworkStatusChange: false
       });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -545,7 +545,7 @@ describe('ObservableQuery', () => {
           expect(timesFired).toBe(1);
 
           setTimeout(() => {
-            observable.setOptions({ fetchPolicy: 'standby' });
+            observable.setOptions({ fetchPolicy: "standby" });
           }, 0);
           setTimeout(() => {
             // make sure the query didn't get fired again.
@@ -553,12 +553,12 @@ describe('ObservableQuery', () => {
             done();
           }, 20);
         } else if (handleCount === 2) {
-          throw new Error('Handle should not be triggered on standby query');
+          throw new Error("Handle should not be triggered on standby query");
         }
       });
     });
 
-    it('will not fetch when setting a cache-only query to standby', done => {
+    it("will not fetch when setting a cache-only query to standby", done => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -571,9 +571,9 @@ describe('ObservableQuery', () => {
       `;
       const data = {
         author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
+          firstName: "John",
+          lastName: "Smith"
+        }
       };
 
       let timesFired = 0;
@@ -585,15 +585,15 @@ describe('ObservableQuery', () => {
             observer.complete();
             return;
           });
-        },
+        }
       ]);
       queryManager = createQueryManager({ link });
 
       queryManager.query({ query: testQuery }).then(() => {
         observable = queryManager.watchQuery({
           query: testQuery,
-          fetchPolicy: 'cache-first',
-          notifyOnNetworkStatusChange: false,
+          fetchPolicy: "cache-first",
+          notifyOnNetworkStatusChange: false
         });
 
         subscribeAndCount(done, observable, (handleCount, result) => {
@@ -601,7 +601,7 @@ describe('ObservableQuery', () => {
             expect(result.data).toEqual(data);
             expect(timesFired).toBe(1);
             setTimeout(() => {
-              observable.setOptions({ fetchPolicy: 'standby' });
+              observable.setOptions({ fetchPolicy: "standby" });
             }, 0);
             setTimeout(() => {
               // make sure the query didn't get fired again.
@@ -609,21 +609,21 @@ describe('ObservableQuery', () => {
               done();
             }, 20);
           } else if (handleCount === 2) {
-            throw new Error('Handle should not be triggered on standby query');
+            throw new Error("Handle should not be triggered on standby query");
           }
         });
       });
     });
-    it('returns a promise which eventually returns data', done => {
+    it("returns a promise which eventually returns data", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       subscribeAndCount(done, observable, handleCount => {
@@ -631,7 +631,7 @@ describe('ObservableQuery', () => {
           return;
         }
         observable
-          .setOptions({ fetchPolicy: 'cache-and-network', fetchResults: true })
+          .setOptions({ fetchPolicy: "cache-and-network", fetchResults: true })
           .then(res => {
             // returns dataOne from cache
             expect(res.data).toEqual(dataOne);
@@ -639,46 +639,46 @@ describe('ObservableQuery', () => {
           });
       });
     });
-    it('can bypass looking up results if passed to options', done => {
+    it("can bypass looking up results if passed to options", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       let errored = false;
       subscribeAndCount(done, observable, handleCount => {
         if (handleCount === 1) {
           observable
-            .setOptions({ fetchResults: false, fetchPolicy: 'standby' })
+            .setOptions({ fetchResults: false, fetchPolicy: "standby" })
             .then(res => {
               expect(res).toBeUndefined();
               setTimeout(() => !errored && done(), 5);
             });
         } else if (handleCount > 1) {
           errored = true;
-          throw new Error('Handle should not be called twice');
+          throw new Error("Handle should not be called twice");
         }
       });
     });
   });
 
-  describe('setVariables', () => {
-    it('reruns query if the variables change', done => {
+  describe("setVariables", () => {
+    it("reruns query if the variables change", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -696,17 +696,17 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does invalidate the currentResult data if the variables change', done => {
+    it("does invalidate the currentResult data if the variables change", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
           result: { data: dataTwo },
-          delay: 25,
-        },
+          delay: 25
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -726,7 +726,7 @@ describe('ObservableQuery', () => {
         }
       });
     });
-    it('does invalidate the currentResult data if the variables change', done => {
+    it("does invalidate the currentResult data if the variables change", done => {
       // Standard data for all these tests
       const query = gql`
         query UsersQuery($page: Int) {
@@ -745,31 +745,31 @@ describe('ObservableQuery', () => {
         users: [
           {
             id: 1,
-            name: 'James',
-            posts: [{ title: 'GraphQL Summit' }, { title: 'Awesome' }],
-          },
-        ],
+            name: "James",
+            posts: [{ title: "GraphQL Summit" }, { title: "Awesome" }]
+          }
+        ]
       };
       const dataTwo = {
         users: [
           {
             id: 1,
-            name: 'James',
-            posts: [{ title: 'Old post' }],
-          },
-        ],
+            name: "James",
+            posts: [{ title: "Old post" }]
+          }
+        ]
       };
 
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
           result: { data: dataTwo },
-          delay: 25,
-        },
+          delay: 25
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -789,7 +789,7 @@ describe('ObservableQuery', () => {
         }
       });
     });
-    it('does invalidate the currentResult data if the variables change', done => {
+    it("does invalidate the currentResult data if the variables change", done => {
       // Standard data for all these tests
       const query = gql`
         query UsersQuery($page: Int) {
@@ -808,31 +808,31 @@ describe('ObservableQuery', () => {
         users: [
           {
             id: 1,
-            name: 'James',
-            posts: [{ title: 'GraphQL Summit' }, { title: 'Awesome' }],
-          },
-        ],
+            name: "James",
+            posts: [{ title: "GraphQL Summit" }, { title: "Awesome" }]
+          }
+        ]
       };
       const dataTwo = {
         users: [
           {
             id: 1,
-            name: 'James',
-            posts: [{ title: 'Old post' }],
-          },
-        ],
+            name: "James",
+            posts: [{ title: "Old post" }]
+          }
+        ]
       };
 
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
           result: { data: dataTwo },
-          delay: 25,
-        },
+          delay: 25
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -853,22 +853,22 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not invalidate the currentResult errors if the variables change', done => {
+    it("does not invalidate the currentResult errors if the variables change", done => {
       const queryManager = mockQueryManager(
         {
           request: { query, variables },
-          result: { errors: [error] },
+          result: { errors: [error] }
         },
         {
           request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       const observable = queryManager.watchQuery({
         query,
         variables,
-        errorPolicy: 'all',
+        errorPolicy: "all"
       });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -888,16 +888,16 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('returns results that are frozen in development mode', done => {
+    it("returns results that are frozen in development mode", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
       const nop = () => {
         return 1;
@@ -907,11 +907,11 @@ describe('ObservableQuery', () => {
       observable.setVariables(differentVariables).then(result2 => {
         expect(result2.data).toEqual(dataTwo);
         try {
-          (result2.data as any).stuff = 'awful';
+          (result2.data as any).stuff = "awful";
           done.fail(
             new Error(
-              'results from setVariables should be frozen in development mode',
-            ),
+              "results from setVariables should be frozen in development mode"
+            )
           );
         } catch (e) {
           done();
@@ -921,7 +921,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not perform a query when unsubscribed if variables change', () => {
+    it("does not perform a query when unsubscribed if variables change", () => {
       // Note: no responses, will throw if a query is made
       const queryManager = mockQueryManager();
       const observable = queryManager.watchQuery({ query, variables });
@@ -929,16 +929,16 @@ describe('ObservableQuery', () => {
       return observable.setVariables(differentVariables);
     });
 
-    it('sets networkStatus to `setVariables` when fetching', done => {
+    it("sets networkStatus to `setVariables` when fetching", done => {
       const mockedResponses = [
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       ];
 
       const queryManager = mockQueryManager(...mockedResponses);
@@ -946,7 +946,7 @@ describe('ObservableQuery', () => {
       const observable = queryManager.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
-        notifyOnNetworkStatusChange: true,
+        notifyOnNetworkStatusChange: true
       });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -967,16 +967,16 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('sets networkStatus to `setVariables` when calling refetch with new variables', done => {
+    it("sets networkStatus to `setVariables` when calling refetch with new variables", done => {
       const mockedResponses = [
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       ];
 
       const queryManager = mockQueryManager(...mockedResponses);
@@ -984,7 +984,7 @@ describe('ObservableQuery', () => {
       const observable = queryManager.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
-        notifyOnNetworkStatusChange: true,
+        notifyOnNetworkStatusChange: true
       });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -1005,16 +1005,16 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('reruns observer callback if the variables change but data does not', done => {
+    it("reruns observer callback if the variables change but data does not", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
-          result: { data: dataOne },
-        },
+          result: { data: dataOne }
+        }
       );
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -1031,23 +1031,23 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not rerun observer callback if the variables change but new data is in store', done => {
+    it("does not rerun observer callback if the variables change but new data is in store", done => {
       const manager = mockQueryManager(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables: differentVariables },
-          result: { data: dataOne },
-        },
+          result: { data: dataOne }
+        }
       );
 
       manager.query({ query, variables: differentVariables }).then(() => {
         const observable: ObservableQuery<any> = manager.watchQuery({
           query,
           variables,
-          notifyOnNetworkStatusChange: false,
+          notifyOnNetworkStatusChange: false
         });
 
         let errored = false;
@@ -1059,22 +1059,22 @@ describe('ObservableQuery', () => {
             // Nothing should happen, so we'll wait a moment to check that
             setTimeout(() => !errored && done(), 10);
           } else if (handleCount === 2) {
-            throw new Error('Observable callback should not fire twice');
+            throw new Error("Observable callback should not fire twice");
           }
         });
       });
     });
 
-    it('does not rerun query if variables do not change', done => {
+    it("does not rerun query if variables do not change", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       let errored = false;
@@ -1087,21 +1087,21 @@ describe('ObservableQuery', () => {
           setTimeout(() => !errored && done(), 10);
         } else if (handleCount === 2) {
           errored = true;
-          throw new Error('Observable callback should not fire twice');
+          throw new Error("Observable callback should not fire twice");
         }
       });
     });
 
-    it('does not rerun query if set to not refetch', done => {
+    it("does not rerun query if set to not refetch", done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       let errored = false;
@@ -1114,12 +1114,12 @@ describe('ObservableQuery', () => {
           setTimeout(() => !errored && done(), 10);
         } else if (handleCount === 2) {
           errored = true;
-          throw new Error('Observable callback should not fire twice');
+          throw new Error("Observable callback should not fire twice");
         }
       });
     });
 
-    it('handles variables changing while a query is in-flight', done => {
+    it("handles variables changing while a query is in-flight", done => {
       // The expected behavior is that the original variables are forgotten
       // and the query stays in loading state until the result for the new variables
       // has returned.
@@ -1127,13 +1127,13 @@ describe('ObservableQuery', () => {
         {
           request: { query, variables },
           result: { data: dataOne },
-          delay: 20,
+          delay: 20
         },
         {
           request: { query, variables: differentVariables },
           result: { data: dataTwo },
-          delay: 20,
-        },
+          delay: 20
+        }
       );
 
       setTimeout(() => observable.setVariables(differentVariables), 10);
@@ -1149,8 +1149,8 @@ describe('ObservableQuery', () => {
     });
   });
 
-  describe('currentResult', () => {
-    it('returns the same value as observableQuery.next got', done => {
+  describe("currentResult", () => {
+    it("returns the same value as observableQuery.next got", done => {
       const queryWithFragment = gql`
         fragment CatInfo on Cat {
           isTabby
@@ -1188,44 +1188,44 @@ describe('ObservableQuery', () => {
       const petData = [
         {
           id: 1,
-          name: 'Phoenix',
+          name: "Phoenix",
           age: 6,
           isTabby: true,
-          __typename: 'Cat',
+          __typename: "Cat"
         },
         {
           id: 2,
-          name: 'Tempe',
+          name: "Tempe",
           age: 3,
           isTabby: false,
-          __typename: 'Cat',
+          __typename: "Cat"
         },
         {
           id: 3,
-          name: 'Robin',
+          name: "Robin",
           age: 10,
           hasBrindleCoat: true,
-          __typename: 'Dog',
-        },
+          __typename: "Dog"
+        }
       ];
 
       const dataOneWithTypename = {
-        pets: petData.slice(0, 2),
+        pets: petData.slice(0, 2)
       };
 
       const dataTwoWithTypename = {
-        pets: petData.slice(0, 3),
+        pets: petData.slice(0, 3)
       };
 
       const ni = mockSingleLink(
         {
           request: { query: queryWithFragment, variables },
-          result: { data: dataOneWithTypename },
+          result: { data: dataOneWithTypename }
         },
         {
           request: { query: queryWithFragment, variables },
-          result: { data: dataTwoWithTypename },
-        },
+          result: { data: dataTwoWithTypename }
+        }
       );
 
       const client = new ApolloClient({
@@ -1236,21 +1236,21 @@ describe('ObservableQuery', () => {
               __schema: {
                 types: [
                   {
-                    kind: 'UNION',
-                    name: 'Creature',
-                    possibleTypes: [{ name: 'Pet' }],
-                  },
-                ],
-              },
-            },
-          }),
-        }),
+                    kind: "UNION",
+                    name: "Creature",
+                    possibleTypes: [{ name: "Pet" }]
+                  }
+                ]
+              }
+            }
+          })
+        })
       });
 
       const observable = client.watchQuery({
         query: queryWithFragment,
         variables,
-        notifyOnNetworkStatusChange: true,
+        notifyOnNetworkStatusChange: true
       });
 
       subscribeAndCount(done, observable, (count, result) => {
@@ -1260,7 +1260,7 @@ describe('ObservableQuery', () => {
             data,
             loading,
             networkStatus,
-            stale: false,
+            stale: false
           });
         } catch (e) {
           done.fail(e);
@@ -1273,16 +1273,16 @@ describe('ObservableQuery', () => {
           setTimeout(done, 5);
         }
         if (count > 3) {
-          done.fail(new Error('Observable.next called too many times'));
+          done.fail(new Error("Observable.next called too many times"));
         }
       });
     });
 
-    it('returns the current query status immediately', done => {
+    it("returns the current query status immediately", done => {
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
-        delay: 100,
+        delay: 100
       });
 
       subscribeAndCount(done, observable, () => {
@@ -1290,7 +1290,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
-          partial: false,
+          partial: false
         });
         done();
       });
@@ -1299,7 +1299,7 @@ describe('ObservableQuery', () => {
         loading: true,
         data: {},
         networkStatus: 1,
-        partial: true,
+        partial: true
       });
       setTimeout(
         wrap(done, () => {
@@ -1307,17 +1307,17 @@ describe('ObservableQuery', () => {
             loading: true,
             data: {},
             networkStatus: 1,
-            partial: true,
+            partial: true
           });
         }),
-        0,
+        0
       );
     });
 
-    it('returns results from the store immediately', () => {
+    it("returns results from the store immediately", () => {
       const queryManager = mockQueryManager({
         request: { query, variables },
-        result: { data: dataOne },
+        result: { data: dataOne }
       });
 
       return queryManager.query({ query, variables }).then((result: any) => {
@@ -1325,30 +1325,30 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
-          stale: false,
+          stale: false
         });
         const observable = queryManager.watchQuery({
           query,
-          variables,
+          variables
         });
         expect(observable.currentResult()).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: 7,
-          partial: false,
+          partial: false
         });
       });
     });
 
-    it('returns errors from the store immediately', done => {
+    it("returns errors from the store immediately", done => {
       const queryManager = mockQueryManager({
         request: { query, variables },
-        result: { errors: [error] },
+        result: { errors: [error] }
       });
 
       const observable = queryManager.watchQuery({
         query,
-        variables,
+        variables
       });
 
       observable.subscribe({
@@ -1359,19 +1359,19 @@ describe('ObservableQuery', () => {
           expect(currentResult.loading).toBe(false);
           expect(currentResult.error!.graphQLErrors).toEqual([error]);
           done();
-        },
+        }
       });
     });
 
-    it('returns referentially equal errors', () => {
+    it("returns referentially equal errors", () => {
       const queryManager = mockQueryManager({
         request: { query, variables },
-        result: { errors: [error] },
+        result: { errors: [error] }
       });
 
       const observable = queryManager.watchQuery({
         query,
-        variables,
+        variables
       });
 
       return observable.result().catch((theError: any) => {
@@ -1385,16 +1385,16 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('returns errors with data if errorPolicy is all', () => {
+    it("returns errors with data if errorPolicy is all", () => {
       const queryManager = mockQueryManager({
         request: { query, variables },
-        result: { data: dataOne, errors: [error] },
+        result: { data: dataOne, errors: [error] }
       });
 
       const observable = queryManager.watchQuery({
         query,
         variables,
-        errorPolicy: 'all',
+        errorPolicy: "all"
       });
 
       return observable.result().then(result => {
@@ -1407,16 +1407,16 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('ignores errors with data if errorPolicy is ignore', () => {
+    it("ignores errors with data if errorPolicy is ignore", () => {
       const queryManager = mockQueryManager({
         request: { query, variables },
-        result: { errors: [error], data: dataOne },
+        result: { errors: [error], data: dataOne }
       });
 
       const observable = queryManager.watchQuery({
         query,
         variables,
-        errorPolicy: 'ignore',
+        errorPolicy: "ignore"
       });
 
       return observable.result().then(result => {
@@ -1429,29 +1429,29 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('returns loading even if full data is available when using network-only fetchPolicy', done => {
+    it("returns loading even if full data is available when using network-only fetchPolicy", done => {
       const queryManager = mockQueryManager(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       queryManager.query({ query, variables }).then(() => {
         const observable = queryManager.watchQuery({
           query,
           variables,
-          fetchPolicy: 'network-only',
+          fetchPolicy: "network-only"
         });
         expect(observable.currentResult()).toEqual({
           data: dataOne,
           loading: true,
           networkStatus: 1,
-          partial: false,
+          partial: false
         });
 
         subscribeAndCount(done, observable, (handleCount, subResult) => {
@@ -1460,7 +1460,7 @@ describe('ObservableQuery', () => {
             data,
             loading,
             networkStatus,
-            stale: false,
+            stale: false
           });
 
           if (handleCount === 2) {
@@ -1468,7 +1468,7 @@ describe('ObservableQuery', () => {
               data: dataTwo,
               loading: false,
               networkStatus: 7,
-              stale: false,
+              stale: false
             });
             done();
           }
@@ -1476,7 +1476,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    describe('mutations', () => {
+    describe("mutations", () => {
       const mutation = gql`
         mutation setName {
           name
@@ -1484,36 +1484,36 @@ describe('ObservableQuery', () => {
       `;
 
       const mutationData = {
-        name: 'Leia Skywalker',
+        name: "Leia Skywalker"
       };
 
       const optimisticResponse = {
-        name: 'Leia Skywalker (optimistic)',
+        name: "Leia Skywalker (optimistic)"
       };
 
       const updateQueries = {
         query: (_: any, { mutationResult }: any) => {
           return {
-            people_one: { name: mutationResult.data.name },
+            people_one: { name: mutationResult.data.name }
           };
-        },
+        }
       };
 
-      it('returns optimistic mutation results from the store', done => {
+      it("returns optimistic mutation results from the store", done => {
         const queryManager = mockQueryManager(
           {
             request: { query, variables },
-            result: { data: dataOne },
+            result: { data: dataOne }
           },
           {
             request: { query: mutation },
-            result: { data: mutationData },
-          },
+            result: { data: mutationData }
+          }
         );
 
         const observable = queryManager.watchQuery({
           query,
-          variables,
+          variables
         });
 
         subscribeAndCount(done, observable, (count, result) => {
@@ -1522,7 +1522,7 @@ describe('ObservableQuery', () => {
             data,
             loading,
             networkStatus,
-            stale: false,
+            stale: false
           });
 
           if (count === 1) {
@@ -1530,12 +1530,12 @@ describe('ObservableQuery', () => {
               data: dataOne,
               loading: false,
               networkStatus: 7,
-              stale: false,
+              stale: false
             });
             queryManager.mutate({
               mutation,
               optimisticResponse,
-              updateQueries,
+              updateQueries
             });
           } else if (count === 2) {
             expect(result.data.people_one).toEqual(optimisticResponse);
@@ -1548,17 +1548,17 @@ describe('ObservableQuery', () => {
     });
   });
 
-  describe('stopPolling', () => {
-    it('does not restart polling after stopping and resubscribing', done => {
+  describe("stopPolling", () => {
+    it("does not restart polling after stopping and resubscribing", done => {
       const observable = mockWatchQuery(
         {
           request: { query, variables },
-          result: { data: dataOne },
+          result: { data: dataOne }
         },
         {
           request: { query, variables },
-          result: { data: dataTwo },
-        },
+          result: { data: dataTwo }
+        }
       );
 
       observable.startPolling(50);
@@ -1583,7 +1583,7 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 2) {
           // oops! we are polling for data, this should not happen.
           startedPolling = true;
-          done.fail(new Error('should not start polling, already stopped'));
+          done.fail(new Error("should not start polling, already stopped"));
         }
       });
     });

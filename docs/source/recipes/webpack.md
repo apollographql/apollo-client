@@ -65,7 +65,6 @@ export default graphql(currentUserQuery)(Profile)
 
 You can use and include fragments in .graphql files and have webpack include those dependencies for you, similar to how you would use fragments and queries with the gql tag in plain JS.
 
-
 ```graphql
 #import "./UserInfoFragment.graphql"
 

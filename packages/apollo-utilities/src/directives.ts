@@ -7,10 +7,10 @@ import {
   VariableNode,
   BooleanValueNode,
   DirectiveNode,
-  DocumentNode,
-} from 'graphql';
+  DocumentNode
+} from "graphql";
 
-import { argumentsObjectFromField } from './storeUtils';
+import { argumentsObjectFromField } from "./storeUtils";
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
@@ -18,14 +18,14 @@ export type DirectiveInfo = {
 
 export function getDirectiveInfoFromField(
   field: FieldNode,
-  variables: Object,
+  variables: Object
 ): DirectiveInfo {
   if (field.directives && field.directives.length) {
     const directiveObj: DirectiveInfo = {};
     field.directives.forEach((directive: DirectiveNode) => {
       directiveObj[directive.name.value] = argumentsObjectFromField(
         directive,
-        variables,
+        variables
       );
     });
     return directiveObj;
@@ -35,7 +35,7 @@ export function getDirectiveInfoFromField(
 
 export function shouldInclude(
   selection: SelectionNode,
-  variables: { [name: string]: any } = {},
+  variables: { [name: string]: any } = {}
 ): boolean {
   if (!selection.directives) {
     return true;
@@ -44,7 +44,7 @@ export function shouldInclude(
   let res: boolean = true;
   selection.directives.forEach(directive => {
     // TODO should move this validation to GraphQL validation once that's implemented.
-    if (directive.name.value !== 'skip' && directive.name.value !== 'include') {
+    if (directive.name.value !== "skip" && directive.name.value !== "include") {
       // Just don't worry about directives we don't understand
       return;
     }
@@ -54,30 +54,28 @@ export function shouldInclude(
     const directiveName = directive.name.value;
     if (directiveArguments.length !== 1) {
       throw new Error(
-        `Incorrect number of arguments for the @${directiveName} directive.`,
+        `Incorrect number of arguments for the @${directiveName} directive.`
       );
     }
 
     const ifArgument = directiveArguments[0];
-    if (!ifArgument.name || ifArgument.name.value !== 'if') {
+    if (!ifArgument.name || ifArgument.name.value !== "if") {
       throw new Error(`Invalid argument for the @${directiveName} directive.`);
     }
 
     const ifValue = directiveArguments[0].value;
     let evaledValue: boolean = false;
-    if (!ifValue || ifValue.kind !== 'BooleanValue') {
+    if (!ifValue || ifValue.kind !== "BooleanValue") {
       // means it has to be a variable value if this is a valid @skip or @include directive
-      if (ifValue.kind !== 'Variable') {
+      if (ifValue.kind !== "Variable") {
         throw new Error(
-          `Argument for the @${
-            directiveName
-          } directive must be a variable or a boolean value.`,
+          `Argument for the @${directiveName} directive must be a variable or a boolean value.`
         );
       } else {
         evaledValue = variables[(ifValue as VariableNode).name.value];
         if (evaledValue === undefined) {
           throw new Error(
-            `Invalid variable referenced in @${directiveName} directive.`,
+            `Invalid variable referenced in @${directiveName} directive.`
           );
         }
       }
@@ -85,7 +83,7 @@ export function shouldInclude(
       evaledValue = (ifValue as BooleanValueNode).value;
     }
 
-    if (directiveName === 'skip') {
+    if (directiveName === "skip") {
       evaledValue = !evaledValue;
     }
 
@@ -107,9 +105,9 @@ export function flattenSelections(selection: SelectionNode): SelectionNode[] {
   return [selection].concat(
     (selection as FieldNode).selectionSet.selections
       .map(selectionNode =>
-        [selectionNode].concat(flattenSelections(selectionNode)),
+        [selectionNode].concat(flattenSelections(selectionNode))
       )
-      .reduce((selections, selected) => selections.concat(selected), []),
+      .reduce((selections, selected) => selections.concat(selected), [])
   );
 }
 
@@ -122,7 +120,7 @@ export function getDirectiveNames(doc: DocumentNode) {
   const directives = doc.definitions
     .filter(
       (definition: OperationDefinitionNode) =>
-        definition.selectionSet && definition.selectionSet.selections,
+        definition.selectionSet && definition.selectionSet.selections
     )
     // operation => [[Selection]]
     .map(x => flattenSelections(x as any))
@@ -131,7 +129,7 @@ export function getDirectiveNames(doc: DocumentNode) {
     // [Selection] => [Selection with Directives]
     .filter(
       (selection: SelectionNode) =>
-        selection.directives && selection.directives.length > 0,
+        selection.directives && selection.directives.length > 0
     )
     // [Selection with Directives] => [[Directives]]
     .map((selection: SelectionNode) => selection.directives)
@@ -146,6 +144,6 @@ export function getDirectiveNames(doc: DocumentNode) {
 
 export function hasDirectives(names: string[], doc: DocumentNode) {
   return getDirectiveNames(doc).some(
-    (name: string) => names.indexOf(name) > -1,
+    (name: string) => names.indexOf(name) > -1
   );
 }

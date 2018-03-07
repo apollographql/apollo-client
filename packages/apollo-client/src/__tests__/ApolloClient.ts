@@ -1,37 +1,37 @@
-import gql from 'graphql-tag';
-import { ApolloLink, Observable } from 'apollo-link';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import gql from "graphql-tag";
+import { ApolloLink, Observable } from "apollo-link";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
-import { withWarning } from '../util/wrap';
+import { withWarning } from "../util/wrap";
 
-import ApolloClient from '../';
+import ApolloClient from "../";
 
-describe('ApolloClient', () => {
-  describe('constructor', () => {
-    it('will throw an error if link is not passed in', () => {
+describe("ApolloClient", () => {
+  describe("constructor", () => {
+    it("will throw an error if link is not passed in", () => {
       expect(() => {
         const client = new ApolloClient({ cache: new InMemoryCache() });
       }).toThrowErrorMatchingSnapshot();
     });
 
-    it('will throw an error if cache is not passed in', () => {
+    it("will throw an error if cache is not passed in", () => {
       expect(() => {
         const client = new ApolloClient({ link: new ApolloLink.empty() });
       }).toThrowErrorMatchingSnapshot();
     });
   });
 
-  describe('readQuery', () => {
-    it('will read some data from the store', () => {
+  describe("readQuery", () => {
+    it("will read some data from the store", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
           ROOT_QUERY: {
             a: 1,
             b: 2,
-            c: 3,
-          },
-        }),
+            c: 3
+          }
+        })
       });
 
       expect(
@@ -40,8 +40,8 @@ describe('ApolloClient', () => {
             {
               a
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ a: 1 });
       expect(
         client.readQuery({
@@ -50,8 +50,8 @@ describe('ApolloClient', () => {
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ b: 2, c: 3 });
       expect(
         client.readQuery({
@@ -61,12 +61,12 @@ describe('ApolloClient', () => {
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ a: 1, b: 2, c: 3 });
     });
 
-    it('will read some deeply nested data from the store', () => {
+    it("will read some deeply nested data from the store", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
@@ -75,29 +75,29 @@ describe('ApolloClient', () => {
             b: 2,
             c: 3,
             d: {
-              type: 'id',
-              id: 'foo',
-              generated: false,
-            },
+              type: "id",
+              id: "foo",
+              generated: false
+            }
           },
           foo: {
-            __typename: 'Foo',
+            __typename: "Foo",
             e: 4,
             f: 5,
             g: 6,
             h: {
-              type: 'id',
-              id: 'bar',
-              generated: false,
-            },
+              type: "id",
+              id: "bar",
+              generated: false
+            }
           },
           bar: {
-            __typename: 'Bar',
+            __typename: "Bar",
             i: 7,
             j: 8,
-            k: 9,
-          },
-        }),
+            k: 9
+          }
+        })
       });
 
       expect(
@@ -109,9 +109,9 @@ describe('ApolloClient', () => {
                 e
               }
             }
-          `,
-        }),
-      ).toEqual({ a: 1, d: { e: 4, __typename: 'Foo' } });
+          `
+        })
+      ).toEqual({ a: 1, d: { e: 4, __typename: "Foo" } });
       expect(
         client.readQuery({
           query: gql`
@@ -124,11 +124,11 @@ describe('ApolloClient', () => {
                 }
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
         a: 1,
-        d: { __typename: 'Foo', e: 4, h: { i: 7, __typename: 'Bar' } },
+        d: { __typename: "Foo", e: 4, h: { i: 7, __typename: "Bar" } }
       });
       expect(
         client.readQuery({
@@ -148,31 +148,31 @@ describe('ApolloClient', () => {
                 }
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
         a: 1,
         b: 2,
         c: 3,
         d: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
-          h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
-        },
+          h: { __typename: "Bar", i: 7, j: 8, k: 9 }
+        }
       });
     });
 
-    it('will read some data from the store with variables', () => {
+    it("will read some data from the store with variables", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
           ROOT_QUERY: {
             'field({"literal":true,"value":42})': 1,
-            'field({"literal":false,"value":42})': 2,
-          },
-        }),
+            'field({"literal":false,"value":42})': 2
+          }
+        })
       });
 
       expect(
@@ -185,22 +185,22 @@ describe('ApolloClient', () => {
           `,
           variables: {
             literal: false,
-            value: 42,
-          },
-        }),
+            value: 42
+          }
+        })
       ).toEqual({ a: 1, b: 2 });
     });
   });
 
-  it('will read some data from the store with default values', () => {
+  it("will read some data from the store with default values", () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache().restore({
         ROOT_QUERY: {
           'field({"literal":true,"value":-1})': 1,
-          'field({"literal":false,"value":42})': 2,
-        },
-      }),
+          'field({"literal":false,"value":42})': 2
+        }
+      })
     });
 
     expect(
@@ -212,9 +212,9 @@ describe('ApolloClient', () => {
         `,
         variables: {
           literal: false,
-          value: 42,
-        },
-      }),
+          value: 42
+        }
+      })
     ).toEqual({ a: 2 });
 
     expect(
@@ -225,56 +225,56 @@ describe('ApolloClient', () => {
           }
         `,
         variables: {
-          literal: true,
-        },
-      }),
+          literal: true
+        }
+      })
     ).toEqual({ a: 1 });
   });
 
-  describe('readFragment', () => {
-    it('will throw an error when there is no fragment', () => {
+  describe("readFragment", () => {
+    it("will throw an error when there is no fragment", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       expect(() => {
         client.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             query {
               a
               b
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
       );
       expect(() => {
         client.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             schema {
               query: Query
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will throw an error when there is more than one fragment but no fragment name', () => {
+    it("will throw an error when there is more than one fragment but no fragment name", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       expect(() => {
         client.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -283,14 +283,14 @@ describe('ApolloClient', () => {
             fragment b on B {
               b
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
       expect(() => {
         client.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -303,51 +303,51 @@ describe('ApolloClient', () => {
             fragment c on C {
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will read some deeply nested data from the store at any id', () => {
+    it("will read some deeply nested data from the store at any id", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
           ROOT_QUERY: {
-            __typename: 'Foo',
+            __typename: "Foo",
             a: 1,
             b: 2,
             c: 3,
             d: {
-              type: 'id',
-              id: 'foo',
-              generated: false,
-            },
+              type: "id",
+              id: "foo",
+              generated: false
+            }
           },
           foo: {
-            __typename: 'Foo',
+            __typename: "Foo",
             e: 4,
             f: 5,
             g: 6,
             h: {
-              type: 'id',
-              id: 'bar',
-              generated: false,
-            },
+              type: "id",
+              id: "bar",
+              generated: false
+            }
           },
           bar: {
-            __typename: 'Bar',
+            __typename: "Bar",
             i: 7,
             j: 8,
-            k: 9,
-          },
-        }),
+            k: 9
+          }
+        })
       });
 
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -355,12 +355,12 @@ describe('ApolloClient', () => {
                 i
               }
             }
-          `,
-        }),
-      ).toEqual({ __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } });
+          `
+        })
+      ).toEqual({ __typename: "Foo", e: 4, h: { __typename: "Bar", i: 7 } });
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -372,40 +372,40 @@ describe('ApolloClient', () => {
                 k
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
-        __typename: 'Foo',
+        __typename: "Foo",
         e: 4,
         f: 5,
         g: 6,
-        h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
+        h: { __typename: "Bar", i: 7, j: 8, k: 9 }
       });
       expect(
         client.readFragment({
-          id: 'bar',
+          id: "bar",
           fragment: gql`
             fragment fragmentBar on Bar {
               i
             }
-          `,
-        }),
-      ).toEqual({ __typename: 'Bar', i: 7 });
+          `
+        })
+      ).toEqual({ __typename: "Bar", i: 7 });
       expect(
         client.readFragment({
-          id: 'bar',
+          id: "bar",
           fragment: gql`
             fragment fragmentBar on Bar {
               i
               j
               k
             }
-          `,
-        }),
-      ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
+          `
+        })
+      ).toEqual({ __typename: "Bar", i: 7, j: 8, k: 9 });
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -424,18 +424,18 @@ describe('ApolloClient', () => {
               k
             }
           `,
-          fragmentName: 'fragmentFoo',
-        }),
+          fragmentName: "fragmentFoo"
+        })
       ).toEqual({
-        __typename: 'Foo',
+        __typename: "Foo",
         e: 4,
         f: 5,
         g: 6,
-        h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
+        h: { __typename: "Bar", i: 7, j: 8, k: 9 }
       });
       expect(
         client.readFragment({
-          id: 'bar',
+          id: "bar",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -454,26 +454,26 @@ describe('ApolloClient', () => {
               k
             }
           `,
-          fragmentName: 'fragmentBar',
-        }),
-      ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
+          fragmentName: "fragmentBar"
+        })
+      ).toEqual({ __typename: "Bar", i: 7, j: 8, k: 9 });
     });
 
-    it('will read some data from the store with variables', () => {
+    it("will read some data from the store with variables", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
           foo: {
-            __typename: 'Foo',
+            __typename: "Foo",
             'field({"literal":true,"value":42})': 1,
-            'field({"literal":false,"value":42})': 2,
-          },
-        }),
+            'field({"literal":false,"value":42})': 2
+          }
+        })
       });
 
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment foo on Foo {
               a: field(literal: true, value: 42)
@@ -482,74 +482,74 @@ describe('ApolloClient', () => {
           `,
           variables: {
             literal: false,
-            value: 42,
-          },
-        }),
-      ).toEqual({ __typename: 'Foo', a: 1, b: 2 });
+            value: 42
+          }
+        })
+      ).toEqual({ __typename: "Foo", a: 1, b: 2 });
     });
 
-    it('will return null when an id that can’t be found is provided', () => {
+    it("will return null when an id that can’t be found is provided", () => {
       const client1 = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
       const client2 = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
-          bar: { __typename: 'Foo', a: 1, b: 2, c: 3 },
-        }),
+          bar: { __typename: "Foo", a: 1, b: 2, c: 3 }
+        })
       });
       const client3 = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
-          foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
-        }),
+          foo: { __typename: "Foo", a: 1, b: 2, c: 3 }
+        })
       });
 
       expect(
         client1.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fooFragment on Foo {
               a
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toBe(null);
       expect(
         client2.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fooFragment on Foo {
               a
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toBe(null);
       expect(
         client3.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fooFragment on Foo {
               a
               b
               c
             }
-          `,
-        }),
-      ).toEqual({ __typename: 'Foo', a: 1, b: 2, c: 3 });
+          `
+        })
+      ).toEqual({ __typename: "Foo", a: 1, b: 2, c: 3 });
     });
   });
 
-  describe('writeQuery', () => {
-    it('will write some data to the store', () => {
+  describe("writeQuery", () => {
+    it("will write some data to the store", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
@@ -558,13 +558,13 @@ describe('ApolloClient', () => {
           {
             a
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
-          a: 1,
-        },
+          a: 1
+        }
       });
 
       client.writeQuery({
@@ -574,15 +574,15 @@ describe('ApolloClient', () => {
             b
             c
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
-          c: 3,
-        },
+          c: 3
+        }
       });
 
       client.writeQuery({
@@ -593,26 +593,26 @@ describe('ApolloClient', () => {
             b
             c
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 4,
           b: 5,
-          c: 6,
-        },
+          c: 6
+        }
       });
     });
 
-    it('will write some deeply nested data to the store', () => {
+    it("will write some deeply nested data to the store", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
-        data: { a: 1, d: { __typename: 'D', e: 4 } },
+        data: { a: 1, d: { __typename: "D", e: 4 } },
         query: gql`
           {
             a
@@ -620,26 +620,26 @@ describe('ApolloClient', () => {
               e
             }
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d': {
-          __typename: 'D',
-          e: 4,
-        },
+        "$ROOT_QUERY.d": {
+          __typename: "D",
+          e: 4
+        }
       });
 
       client.writeQuery({
-        data: { a: 1, d: { __typename: 'D', h: { __typename: 'H', i: 7 } } },
+        data: { a: 1, d: { __typename: "D", h: { __typename: "H", i: 7 } } },
         query: gql`
           {
             a
@@ -649,31 +649,31 @@ describe('ApolloClient', () => {
               }
             }
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d': {
-          __typename: 'D',
+        "$ROOT_QUERY.d": {
+          __typename: "D",
           e: 4,
           h: {
-            type: 'id',
-            id: '$ROOT_QUERY.d.h',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d.h",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d.h': {
-          __typename: 'H',
-          i: 7,
-        },
+        "$ROOT_QUERY.d.h": {
+          __typename: "H",
+          i: 7
+        }
       });
 
       client.writeQuery({
@@ -682,17 +682,17 @@ describe('ApolloClient', () => {
           b: 2,
           c: 3,
           d: {
-            __typename: 'D',
+            __typename: "D",
             e: 4,
             f: 5,
             g: 6,
             h: {
-              __typename: 'H',
+              __typename: "H",
               i: 7,
               j: 8,
-              k: 9,
-            },
-          },
+              k: 9
+            }
+          }
         },
         query: gql`
           {
@@ -710,7 +710,7 @@ describe('ApolloClient', () => {
               }
             }
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -719,41 +719,41 @@ describe('ApolloClient', () => {
           b: 2,
           c: 3,
           d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d': {
-          __typename: 'D',
+        "$ROOT_QUERY.d": {
+          __typename: "D",
           e: 4,
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: '$ROOT_QUERY.d.h',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d.h",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d.h': {
-          __typename: 'H',
+        "$ROOT_QUERY.d.h": {
+          __typename: "H",
           i: 7,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
     });
 
-    it('will write some data to the store with variables', () => {
+    it("will write some data to the store with variables", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
         data: {
           a: 1,
-          b: 2,
+          b: 2
         },
         query: gql`
           query($literal: Boolean, $value: Int) {
@@ -763,27 +763,27 @@ describe('ApolloClient', () => {
         `,
         variables: {
           literal: false,
-          value: 42,
-        },
+          value: 42
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 1,
-          'field({"literal":false,"value":42})': 2,
-        },
+          'field({"literal":false,"value":42})': 2
+        }
       });
     });
 
-    it('will write some data to the store with default values for variables', () => {
+    it("will write some data to the store with default values for variables", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
         data: {
-          a: 2,
+          a: 2
         },
         query: gql`
           query($literal: Boolean, $value: Int = -1) {
@@ -792,13 +792,13 @@ describe('ApolloClient', () => {
         `,
         variables: {
           literal: true,
-          value: 42,
-        },
+          value: 42
+        }
       });
 
       client.writeQuery({
         data: {
-          a: 1,
+          a: 1
         },
         query: gql`
           query($literal: Boolean, $value: Int = -1) {
@@ -806,22 +806,22 @@ describe('ApolloClient', () => {
           }
         `,
         variables: {
-          literal: false,
-        },
+          literal: false
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 2,
-          'field({"literal":false,"value":-1})': 1,
-        },
+          'field({"literal":false,"value":-1})': 1
+        }
       });
     });
 
-    it('should warn when the data provided does not match the query shape', () => {
+    it("should warn when the data provided does not match the query shape", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       return withWarning(() => {
@@ -829,11 +829,11 @@ describe('ApolloClient', () => {
           data: {
             todos: [
               {
-                id: '1',
-                name: 'Todo 1',
-                __typename: 'Todo',
-              },
-            ],
+                id: "1",
+                name: "Todo 1",
+                __typename: "Todo"
+              }
+            ]
           },
           query: gql`
             query {
@@ -843,59 +843,59 @@ describe('ApolloClient', () => {
                 description
               }
             }
-          `,
+          `
         });
       }, /Missing field description/);
     });
   });
 
-  describe('writeFragment', () => {
-    it('will throw an error when there is no fragment', () => {
+  describe("writeFragment", () => {
+    it("will throw an error when there is no fragment", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       expect(() => {
         client.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             query {
               a
               b
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
       );
       expect(() => {
         client.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             schema {
               query: Query
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will throw an error when there is more than one fragment but no fragment name', () => {
+    it("will throw an error when there is more than one fragment but no fragment name", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       expect(() => {
         client.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -904,15 +904,15 @@ describe('ApolloClient', () => {
             fragment b on B {
               b
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
       expect(() => {
         client.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -925,26 +925,26 @@ describe('ApolloClient', () => {
             fragment c on C {
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will write some deeply nested data into the store at any id', () => {
+    it("will write some deeply nested data into the store at any id", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({ dataIdFromObject: (o: any) => o.id }),
+        cache: new InMemoryCache({ dataIdFromObject: (o: any) => o.id })
       });
 
       client.writeFragment({
         data: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
-          h: { __typename: 'Bar', id: 'bar', i: 7 },
+          h: { __typename: "Bar", id: "bar", i: 7 }
         },
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment fragmentFoo on Foo {
             e
@@ -952,33 +952,33 @@ describe('ApolloClient', () => {
               i
             }
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
-          __typename: 'Bar',
-          i: 7,
-        },
+          __typename: "Bar",
+          i: 7
+        }
       });
 
       client.writeFragment({
         data: {
-          __typename: 'Foo',
+          __typename: "Foo",
           f: 5,
           g: 6,
-          h: { __typename: 'Bar', id: 'bar', j: 8, k: 9 },
+          h: { __typename: "Bar", id: "bar", j: 8, k: 9 }
         },
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment fragmentFoo on Foo {
             f
@@ -988,99 +988,99 @@ describe('ApolloClient', () => {
               k
             }
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           i: 7,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
 
       client.writeFragment({
-        data: { __typename: 'Bar', i: 10 },
-        id: 'bar',
+        data: { __typename: "Bar", i: 10 },
+        id: "bar",
         fragment: gql`
           fragment fragmentBar on Bar {
             i
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           i: 10,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
 
       client.writeFragment({
-        data: { __typename: 'Bar', j: 11, k: 12 },
-        id: 'bar',
+        data: { __typename: "Bar", j: 11, k: 12 },
+        id: "bar",
         fragment: gql`
           fragment fragmentBar on Bar {
             j
             k
           }
-        `,
+        `
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           i: 10,
           j: 11,
-          k: 12,
-        },
+          k: 12
+        }
       });
 
       client.writeFragment({
         data: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
-          h: { __typename: 'Bar', id: 'bar', i: 7, j: 8, k: 9 },
+          h: { __typename: "Bar", id: "bar", i: 7, j: 8, k: 9 }
         },
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment fooFragment on Foo {
             e
@@ -1099,32 +1099,32 @@ describe('ApolloClient', () => {
             k
           }
         `,
-        fragmentName: 'fooFragment',
+        fragmentName: "fooFragment"
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           i: 7,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
 
       client.writeFragment({
-        data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
-        id: 'bar',
+        data: { __typename: "Bar", i: 10, j: 11, k: 12 },
+        id: "bar",
         fragment: gql`
           fragment fooFragment on Foo {
             e
@@ -1143,43 +1143,43 @@ describe('ApolloClient', () => {
             k
           }
         `,
-        fragmentName: 'barFragment',
+        fragmentName: "barFragment"
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           i: 10,
           j: 11,
-          k: 12,
-        },
+          k: 12
+        }
       });
     });
 
-    it('will write some data to the store with variables', () => {
+    it("will write some data to the store with variables", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeFragment({
         data: {
-          __typename: 'Foo',
+          __typename: "Foo",
           a: 1,
-          b: 2,
+          b: 2
         },
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment foo on Foo {
             a: field(literal: true, value: 42)
@@ -1188,40 +1188,40 @@ describe('ApolloClient', () => {
         `,
         variables: {
           literal: false,
-          value: 42,
-        },
+          value: 42
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           'field({"literal":true,"value":42})': 1,
-          'field({"literal":false,"value":42})': 2,
-        },
+          'field({"literal":false,"value":42})': 2
+        }
       });
     });
 
-    it('should warn when the data provided does not match the fragment shape', () => {
+    it("should warn when the data provided does not match the fragment shape", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       return withWarning(() => {
         client.writeFragment({
-          data: { __typename: 'Bar', i: 10 },
-          id: 'bar',
+          data: { __typename: "Bar", i: 10 },
+          id: "bar",
           fragment: gql`
             fragment fragmentBar on Bar {
               i
               e
             }
-          `,
+          `
         });
       }, /Missing field e/);
     });
 
-    it('will correctly call the next observable after a change', done => {
+    it("will correctly call the next observable after a change", done => {
       const query = gql`
         query nestedData {
           people {
@@ -1236,12 +1236,12 @@ describe('ApolloClient', () => {
       const data = {
         people: {
           id: 1,
-          __typename: 'Person',
+          __typename: "Person",
           friends: [
-            { id: 1, type: 'best', __typename: 'Friend' },
-            { id: 2, type: 'bad', __typename: 'Friend' },
-          ],
-        },
+            { id: 1, type: "best", __typename: "Friend" },
+            { id: 2, type: "bad", __typename: "Friend" }
+          ]
+        }
       };
       const link = new ApolloLink(() => {
         return Observable.of({ data });
@@ -1255,8 +1255,8 @@ describe('ApolloClient', () => {
             }
             return null;
           },
-          addTypename: true,
-        }),
+          addTypename: true
+        })
       });
 
       let count = 0;
@@ -1268,7 +1268,7 @@ describe('ApolloClient', () => {
             expect(result.data).toEqual(data);
             expect(observable.currentResult().data).toEqual(data);
             const bestFriends = result.data.people.friends.filter(
-              x => x.type === 'best',
+              x => x.type === "best"
             );
             // this should re call next
             client.writeFragment({
@@ -1282,29 +1282,29 @@ describe('ApolloClient', () => {
               `,
               data: {
                 friends: bestFriends,
-                __typename: 'Person',
-              },
+                __typename: "Person"
+              }
             });
 
             setTimeout(() => {
               if (count === 1)
-                done.fail(new Error('fragment did not recall observable'));
+                done.fail(new Error("fragment did not recall observable"));
             }, 50);
           }
 
           if (count === 2) {
             expect(result.data.people.friends).toEqual([
-              data.people.friends[0],
+              data.people.friends[0]
             ]);
             done();
           }
-        },
+        }
       });
     });
   });
 
-  describe('writeData', () => {
-    it('lets you write to the cache by passing in data', () => {
+  describe("writeData", () => {
+    it("lets you write to the cache by passing in data", () => {
       const query = gql`
         {
           field
@@ -1313,7 +1313,7 @@ describe('ApolloClient', () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
+        link: ApolloLink.empty()
       });
 
       client.writeData({ data: { field: 1 } });
@@ -1323,7 +1323,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('lets you write to an existing object in the cache using an ID', () => {
+    it("lets you write to an existing object in the cache using an ID", () => {
       const query = gql`
         {
           obj {
@@ -1334,17 +1334,17 @@ describe('ApolloClient', () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
+        link: ApolloLink.empty()
       });
 
       client.writeQuery({
         query,
         data: {
-          obj: { field: 1, id: 'uniqueId', __typename: 'Object' },
-        },
+          obj: { field: 1, id: "uniqueId", __typename: "Object" }
+        }
       });
 
-      client.writeData({ id: 'Object:uniqueId', data: { field: 2 } });
+      client.writeData({ id: "Object:uniqueId", data: { field: 2 } });
 
       return client.query({ query }).then(({ data }: any) => {
         expect(data.obj.field).toEqual(2);
@@ -1365,30 +1365,30 @@ describe('ApolloClient', () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
+        link: ApolloLink.empty()
       });
 
       client.writeQuery({
         query,
         data: {
           obj: {
-            field: { field2: 1, __typename: 'Field' },
-            id: 'uniqueId',
-            __typename: 'Object',
-          },
-        },
+            field: { field2: 1, __typename: "Field" },
+            id: "uniqueId",
+            __typename: "Object"
+          }
+        }
       });
 
       client.writeData({
-        id: 'Object:uniqueId',
-        data: { field: { field2: 2, __typename: 'Field' } },
+        id: "Object:uniqueId",
+        data: { field: { field2: 2, __typename: "Field" } }
       });
 
       return client
         .query({ query })
         .then(({ data }: any) => {
-          expect(data.obj.__typename).toEqual('Object');
-          expect(data.obj.field.__typename).toEqual('Field');
+          expect(data.obj.__typename).toEqual("Object");
+          expect(data.obj.field.__typename).toEqual("Field");
         })
         .catch(e => console.log(e));
     });
@@ -1411,12 +1411,12 @@ describe('ApolloClient', () => {
 
       // Let's swap out console.warn to suppress this one message
 
-      const suppressString = '__typename';
+      const suppressString = "__typename";
       const originalWarn = console.warn;
       console.warn = (...args: any[]) => {
         if (
           args.find(element => {
-            if (typeof element === 'string') {
+            if (typeof element === "string") {
               return element.indexOf(suppressString) !== -1;
             }
             return false;
@@ -1430,7 +1430,7 @@ describe('ApolloClient', () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
+        link: ApolloLink.empty()
       });
 
       client.writeQuery({
@@ -1439,62 +1439,62 @@ describe('ApolloClient', () => {
           obj: {
             field: {
               field2: 1,
-              __typename: 'Field',
+              __typename: "Field"
             },
-            id: 'uniqueId',
-          },
-        },
+            id: "uniqueId"
+          }
+        }
       });
 
       client.writeData({
-        id: '$ROOT_QUERY.obj',
+        id: "$ROOT_QUERY.obj",
         data: {
           field: {
             field2: 2,
-            __typename: 'Field',
-          },
-        },
+            __typename: "Field"
+          }
+        }
       });
 
       return client
         .query({ query })
         .then(({ data }: any) => {
           console.warn = originalWarn;
-          expect(data.obj.__typename).toEqual('__ClientData');
-          expect(data.obj.field.__typename).toEqual('Field');
+          expect(data.obj.__typename).toEqual("__ClientData");
+          expect(data.obj.field.__typename).toEqual("Field");
         })
         .catch(e => console.log(e));
     });
   });
 
-  describe('write then read', () => {
-    it('will write data locally which will then be read back', () => {
+  describe("write then read", () => {
+    it("will write data locally which will then be read back", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
           foo: {
-            __typename: 'Foo',
+            __typename: "Foo",
             a: 1,
             b: 2,
             c: 3,
             bar: {
-              type: 'id',
-              id: '$foo.bar',
-              generated: true,
-            },
+              type: "id",
+              id: "$foo.bar",
+              generated: true
+            }
           },
-          '$foo.bar': {
-            __typename: 'Bar',
+          "$foo.bar": {
+            __typename: "Bar",
             d: 4,
             e: 5,
-            f: 6,
-          },
-        }),
+            f: 6
+          }
+        })
       });
 
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment x on Foo {
               a
@@ -1506,29 +1506,29 @@ describe('ApolloClient', () => {
                 f
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
-        __typename: 'Foo',
+        __typename: "Foo",
         a: 1,
         b: 2,
         c: 3,
-        bar: { d: 4, e: 5, f: 6, __typename: 'Bar' },
+        bar: { d: 4, e: 5, f: 6, __typename: "Bar" }
       });
 
       client.writeFragment({
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment x on Foo {
             a
           }
         `,
-        data: { __typename: 'Foo', a: 7 },
+        data: { __typename: "Foo", a: 7 }
       });
 
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment x on Foo {
               a
@@ -1540,18 +1540,18 @@ describe('ApolloClient', () => {
                 f
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
-        __typename: 'Foo',
+        __typename: "Foo",
         a: 7,
         b: 2,
         c: 3,
-        bar: { __typename: 'Bar', d: 4, e: 5, f: 6 },
+        bar: { __typename: "Bar", d: 4, e: 5, f: 6 }
       });
 
       client.writeFragment({
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment x on Foo {
             bar {
@@ -1559,12 +1559,12 @@ describe('ApolloClient', () => {
             }
           }
         `,
-        data: { __typename: 'Foo', bar: { __typename: 'Bar', d: 8 } },
+        data: { __typename: "Foo", bar: { __typename: "Bar", d: 8 } }
       });
 
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment x on Foo {
               a
@@ -1576,29 +1576,29 @@ describe('ApolloClient', () => {
                 f
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
-        __typename: 'Foo',
+        __typename: "Foo",
         a: 7,
         b: 2,
         c: 3,
-        bar: { __typename: 'Bar', d: 8, e: 5, f: 6 },
+        bar: { __typename: "Bar", d: 8, e: 5, f: 6 }
       });
 
       client.writeFragment({
-        id: '$foo.bar',
+        id: "$foo.bar",
         fragment: gql`
           fragment y on Bar {
             e
           }
         `,
-        data: { __typename: 'Bar', e: 9 },
+        data: { __typename: "Bar", e: 9 }
       });
 
       expect(
         client.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment x on Foo {
               a
@@ -1610,43 +1610,43 @@ describe('ApolloClient', () => {
                 f
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
-        __typename: 'Foo',
+        __typename: "Foo",
         a: 7,
         b: 2,
         c: 3,
-        bar: { __typename: 'Bar', d: 8, e: 9, f: 6 },
+        bar: { __typename: "Bar", d: 8, e: 9, f: 6 }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           a: 7,
           b: 2,
           c: 3,
           bar: {
-            type: 'id',
-            id: '$foo.bar',
-            generated: true,
-          },
+            type: "id",
+            id: "$foo.bar",
+            generated: true
+          }
         },
-        '$foo.bar': {
-          __typename: 'Bar',
+        "$foo.bar": {
+          __typename: "Bar",
           d: 8,
           e: 9,
-          f: 6,
-        },
+          f: 6
+        }
       });
     });
 
-    it('will write data to a specific id', () => {
+    it("will write data to a specific id", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
-          dataIdFromObject: (o: any) => o.key,
-        }),
+          dataIdFromObject: (o: any) => o.key
+        })
       });
 
       client.writeQuery({
@@ -1669,12 +1669,12 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            __typename: 'foo',
+            __typename: "foo",
             c: 3,
             d: 4,
-            bar: { key: 'foobar', __typename: 'bar', e: 5, f: 6 },
-          },
-        },
+            bar: { key: "foobar", __typename: "bar", e: 5, f: 6 }
+          }
+        }
       });
 
       expect(
@@ -1693,17 +1693,17 @@ describe('ApolloClient', () => {
                 }
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
         a: 1,
         b: 2,
         foo: {
-          __typename: 'foo',
+          __typename: "foo",
           c: 3,
           d: 4,
-          bar: { __typename: 'bar', key: 'foobar', e: 5, f: 6 },
-        },
+          bar: { __typename: "bar", key: "foobar", e: 5, f: 6 }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -1711,36 +1711,36 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
+        "$ROOT_QUERY.foo": {
+          __typename: "foo",
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: 'foobar',
-            generated: false,
-          },
+            type: "id",
+            id: "foobar",
+            generated: false
+          }
         },
         foobar: {
-          key: 'foobar',
-          __typename: 'bar',
+          key: "foobar",
+          __typename: "bar",
           e: 5,
-          f: 6,
-        },
+          f: 6
+        }
       });
     });
 
-    it('will not use a default id getter if __typename is not present', () => {
+    it("will not use a default id getter if __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
-          addTypename: false,
-        }),
+          addTypename: false
+        })
       });
 
       client.writeQuery({
@@ -1762,8 +1762,8 @@ describe('ApolloClient', () => {
         data: {
           a: 1,
           b: 2,
-          foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } },
-        },
+          foo: { c: 3, d: 4, bar: { id: "foobar", e: 5, f: 6 } }
+        }
       });
 
       client.writeQuery({
@@ -1785,8 +1785,8 @@ describe('ApolloClient', () => {
         data: {
           g: 8,
           h: 9,
-          bar: { i: 10, j: 11, foo: { _id: 'barfoo', k: 12, l: 13 } },
-        },
+          bar: { i: 10, j: 11, foo: { _id: "barfoo", k: 12, l: 13 } }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -1796,51 +1796,51 @@ describe('ApolloClient', () => {
           g: 8,
           h: 9,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+            type: "id",
+            id: "$ROOT_QUERY.bar",
+            generated: true
           },
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
+        "$ROOT_QUERY.foo": {
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo.bar",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.bar': {
+        "$ROOT_QUERY.bar": {
           i: 10,
           j: 11,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.bar.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo.bar': {
-          id: 'foobar',
+        "$ROOT_QUERY.foo.bar": {
+          id: "foobar",
           e: 5,
-          f: 6,
+          f: 6
         },
-        '$ROOT_QUERY.bar.foo': {
-          _id: 'barfoo',
+        "$ROOT_QUERY.bar.foo": {
+          _id: "barfoo",
           k: 12,
-          l: 13,
-        },
+          l: 13
+        }
       });
     });
 
-    it('will not use a default id getter if id and _id are not present', () => {
+    it("will not use a default id getter if id and _id are not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
@@ -1862,12 +1862,12 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            __typename: 'foo',
+            __typename: "foo",
             c: 3,
             d: 4,
-            bar: { __typename: 'bar', e: 5, f: 6 },
-          },
-        },
+            bar: { __typename: "bar", e: 5, f: 6 }
+          }
+        }
       });
 
       client.writeQuery({
@@ -1889,12 +1889,12 @@ describe('ApolloClient', () => {
           g: 8,
           h: 9,
           bar: {
-            __typename: 'bar',
+            __typename: "bar",
             i: 10,
             j: 11,
-            foo: { __typename: 'foo', k: 12, l: 13 },
-          },
-        },
+            foo: { __typename: "foo", k: 12, l: 13 }
+          }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -1904,53 +1904,53 @@ describe('ApolloClient', () => {
           g: 8,
           h: 9,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+            type: "id",
+            id: "$ROOT_QUERY.bar",
+            generated: true
           },
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
+        "$ROOT_QUERY.foo": {
+          __typename: "foo",
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo.bar",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.bar': {
-          __typename: 'bar',
+        "$ROOT_QUERY.bar": {
+          __typename: "bar",
           i: 10,
           j: 11,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.bar.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo.bar': {
-          __typename: 'bar',
+        "$ROOT_QUERY.foo.bar": {
+          __typename: "bar",
           e: 5,
-          f: 6,
+          f: 6
         },
-        '$ROOT_QUERY.bar.foo': {
-          __typename: 'foo',
+        "$ROOT_QUERY.bar.foo": {
+          __typename: "foo",
           k: 12,
-          l: 13,
-        },
+          l: 13
+        }
       });
     });
 
-    it('will use a default id getter if __typename and id are present', () => {
+    it("will use a default id getter if __typename and id are present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
@@ -1973,12 +1973,12 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            __typename: 'foo',
+            __typename: "foo",
             c: 3,
             d: 4,
-            bar: { __typename: 'bar', id: 'foobar', e: 5, f: 6 },
-          },
-        },
+            bar: { __typename: "bar", id: "foobar", e: 5, f: 6 }
+          }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -1986,34 +1986,34 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
+        "$ROOT_QUERY.foo": {
+          __typename: "foo",
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar:foobar",
+            generated: false
+          }
         },
-        'bar:foobar': {
-          id: 'foobar',
-          __typename: 'bar',
+        "bar:foobar": {
+          id: "foobar",
+          __typename: "bar",
           e: 5,
-          f: 6,
-        },
+          f: 6
+        }
       });
     });
 
-    it('will use a default id getter if __typename and _id are present', () => {
+    it("will use a default id getter if __typename and _id are present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
@@ -2036,12 +2036,12 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            __typename: 'foo',
+            __typename: "foo",
             c: 3,
             d: 4,
-            bar: { __typename: 'bar', _id: 'foobar', e: 5, f: 6 },
-          },
-        },
+            bar: { __typename: "bar", _id: "foobar", e: 5, f: 6 }
+          }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -2049,36 +2049,36 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
+        "$ROOT_QUERY.foo": {
+          __typename: "foo",
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar:foobar",
+            generated: false
+          }
         },
-        'bar:foobar': {
-          __typename: 'bar',
-          _id: 'foobar',
+        "bar:foobar": {
+          __typename: "bar",
+          _id: "foobar",
           e: 5,
-          f: 6,
-        },
+          f: 6
+        }
       });
     });
 
-    it('will not use a default id getter if id is present and __typename is not present', () => {
+    it("will not use a default id getter if id is present and __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
-          addTypename: false,
-        }),
+          addTypename: false
+        })
       });
 
       client.writeQuery({
@@ -2100,8 +2100,8 @@ describe('ApolloClient', () => {
         data: {
           a: 1,
           b: 2,
-          foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } },
-        },
+          foo: { c: 3, d: 4, bar: { id: "foobar", e: 5, f: 6 } }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -2109,34 +2109,34 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
+        "$ROOT_QUERY.foo": {
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo.bar",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo.bar': {
-          id: 'foobar',
+        "$ROOT_QUERY.foo.bar": {
+          id: "foobar",
           e: 5,
-          f: 6,
-        },
+          f: 6
+        }
       });
     });
 
-    it('will not use a default id getter if _id is present but __typename is not present', () => {
+    it("will not use a default id getter if _id is present but __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
-          addTypename: false,
-        }),
+          addTypename: false
+        })
       });
 
       client.writeQuery({
@@ -2158,8 +2158,8 @@ describe('ApolloClient', () => {
         data: {
           a: 1,
           b: 2,
-          foo: { c: 3, d: 4, bar: { _id: 'foobar', e: 5, f: 6 } },
-        },
+          foo: { c: 3, d: 4, bar: { _id: "foobar", e: 5, f: 6 } }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -2167,34 +2167,34 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
+        "$ROOT_QUERY.foo": {
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo.bar",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo.bar': {
-          _id: 'foobar',
+        "$ROOT_QUERY.foo.bar": {
+          _id: "foobar",
           e: 5,
-          f: 6,
-        },
+          f: 6
+        }
       });
     });
 
-    it('will not use a default id getter if either _id or id is present when __typename is not also present', () => {
+    it("will not use a default id getter if either _id or id is present when __typename is not also present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
-          addTypename: false,
-        }),
+          addTypename: false
+        })
       });
 
       client.writeQuery({
@@ -2219,9 +2219,9 @@ describe('ApolloClient', () => {
           foo: {
             c: 3,
             d: 4,
-            bar: { __typename: 'bar', id: 'foobar', e: 5, f: 6 },
-          },
-        },
+            bar: { __typename: "bar", id: "foobar", e: 5, f: 6 }
+          }
+        }
       });
 
       client.writeQuery({
@@ -2243,8 +2243,8 @@ describe('ApolloClient', () => {
         data: {
           g: 8,
           h: 9,
-          bar: { i: 10, j: 11, foo: { _id: 'barfoo', k: 12, l: 13 } },
-        },
+          bar: { i: 10, j: 11, foo: { _id: "barfoo", k: 12, l: 13 } }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -2254,51 +2254,51 @@ describe('ApolloClient', () => {
           g: 8,
           h: 9,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+            type: "id",
+            id: "$ROOT_QUERY.bar",
+            generated: true
           },
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
+        "$ROOT_QUERY.foo": {
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar:foobar",
+            generated: false
+          }
         },
-        '$ROOT_QUERY.bar': {
+        "$ROOT_QUERY.bar": {
           i: 10,
           j: 11,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.bar.foo",
+            generated: true
+          }
         },
-        'bar:foobar': {
-          id: 'foobar',
+        "bar:foobar": {
+          id: "foobar",
           e: 5,
-          f: 6,
+          f: 6
         },
-        '$ROOT_QUERY.bar.foo': {
-          _id: 'barfoo',
+        "$ROOT_QUERY.bar.foo": {
+          _id: "barfoo",
           k: 12,
-          l: 13,
-        },
+          l: 13
+        }
       });
     });
 
-    it('will use a default id getter if one is not specified and __typename is present along with either _id or id', () => {
+    it("will use a default id getter if one is not specified and __typename is present along with either _id or id", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
 
       client.writeQuery({
@@ -2321,12 +2321,12 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            __typename: 'foo',
+            __typename: "foo",
             c: 3,
             d: 4,
-            bar: { __typename: 'bar', id: 'foobar', e: 5, f: 6 },
-          },
-        },
+            bar: { __typename: "bar", id: "foobar", e: 5, f: 6 }
+          }
+        }
       });
 
       client.writeQuery({
@@ -2349,12 +2349,12 @@ describe('ApolloClient', () => {
           g: 8,
           h: 9,
           bar: {
-            __typename: 'bar',
+            __typename: "bar",
             i: 10,
             j: 11,
-            foo: { __typename: 'foo', _id: 'barfoo', k: 12, l: 13 },
-          },
-        },
+            foo: { __typename: "foo", _id: "barfoo", k: 12, l: 13 }
+          }
+        }
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
@@ -2364,48 +2364,48 @@ describe('ApolloClient', () => {
           g: 8,
           h: 9,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+            type: "id",
+            id: "$ROOT_QUERY.bar",
+            generated: true
           },
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.foo",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
+        "$ROOT_QUERY.foo": {
+          __typename: "foo",
           c: 3,
           d: 4,
           bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar:foobar",
+            generated: false
+          }
         },
-        '$ROOT_QUERY.bar': {
-          __typename: 'bar',
+        "$ROOT_QUERY.bar": {
+          __typename: "bar",
           i: 10,
           j: 11,
           foo: {
-            type: 'id',
-            id: 'foo:barfoo',
-            generated: false,
-          },
+            type: "id",
+            id: "foo:barfoo",
+            generated: false
+          }
         },
-        'bar:foobar': {
-          __typename: 'bar',
-          id: 'foobar',
+        "bar:foobar": {
+          __typename: "bar",
+          id: "foobar",
           e: 5,
-          f: 6,
+          f: 6
         },
-        'foo:barfoo': {
-          __typename: 'foo',
-          _id: 'barfoo',
+        "foo:barfoo": {
+          __typename: "foo",
+          _id: "barfoo",
           k: 12,
-          l: 13,
-        },
+          l: 13
+        }
       });
     });
   });

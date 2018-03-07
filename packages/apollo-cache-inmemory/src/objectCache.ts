@@ -1,4 +1,4 @@
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
+import { NormalizedCache, NormalizedCacheObject, StoreObject } from "./types";
 
 export class ObjectCache implements NormalizedCache {
   constructor(private data: NormalizedCacheObject = {}) {}
@@ -23,7 +23,7 @@ export class ObjectCache implements NormalizedCache {
 }
 
 export function defaultNormalizedCacheFactory(
-  seed?: NormalizedCacheObject,
+  seed?: NormalizedCacheObject
 ): NormalizedCache {
   return new ObjectCache(seed);
 }

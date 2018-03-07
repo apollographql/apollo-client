@@ -1,2 +1,2 @@
-export * from './DataProxy';
-export * from './Cache';
+export * from "./DataProxy";
+export * from "./Cache";

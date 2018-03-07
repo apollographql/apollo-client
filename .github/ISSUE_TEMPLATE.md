@@ -9,16 +9,19 @@
 -->
 
 **Intended outcome:**
+
 <!--
 What you were trying to accomplish when the bug occurred, and as much code as possible related to the source of the problem.
 -->
 
 **Actual outcome:**
+
 <!--
 A description of what actually happened, including a screenshot or copy-paste of any related error messages, logs, or other output that might be related. Places to look for information include your browser console, server console, and network logs. Please avoid non-specific phrases like “didn’t work” or “broke”.
 -->
 
 **How to reproduce the issue:**
+
 <!--
 If possible, please create a reproduction using https://github.com/apollographql/react-apollo-error-template and link to it here. If you prefer an in-browser way to create reproduction, try https://codesandbox.io/s/7361K9q6w
 
@@ -26,7 +29,8 @@ Instructions for how the issue can be reproduced by a maintainer or contributor.
 -->
 
 **Version**
-- apollo-client@<version number>
+
+* apollo-client@<version number>
 
 <!--**Issue Labels**
 

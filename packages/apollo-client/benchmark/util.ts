@@ -1,4 +1,4 @@
-import * as Benchmark from 'benchmark';
+import * as Benchmark from "benchmark";
 
 // This file implements utilities around benchmark.js that make it
 // easier to use for our benchmarking needs.
@@ -26,15 +26,15 @@ export type Description = DescriptionObject | string;
 export type CycleFunction = (doneFn: DoneFunction) => void;
 export type BenchmarkFunction = (
   description: Description,
-  cycleFn: CycleFunction,
+  cycleFn: CycleFunction
 ) => void;
 export type GroupFunction = (done: DoneFunction) => void;
 export type AfterEachCallbackFunction = (
   descr: Description,
-  event: any,
+  event: any
 ) => void;
 export type AfterEachFunction = (
-  afterEachFnArg: AfterEachCallbackFunction,
+  afterEachFnArg: AfterEachCallbackFunction
 ) => void;
 export type AfterAllCallbackFunction = () => void;
 export type AfterAllFunction = (afterAllFn: AfterAllCallbackFunction) => void;
@@ -53,7 +53,7 @@ export function log(logString: string, ...args: any[]) {
 // the benchmarks.
 export const dataIdFromObject = (object: any) => {
   if (object.__typename && object.id) {
-    return object.__typename + '__' + object.id;
+    return object.__typename + "__" + object.id;
   }
   return null;
 };
@@ -70,7 +70,7 @@ function currentScope() {
   return {
     benchmark,
     afterEach,
-    afterAll,
+    afterAll
   };
 }
 
@@ -106,11 +106,11 @@ export const group = (groupFn: GroupFunction) => {
 
   scope.benchmark = (
     description: string | Description,
-    benchmarkFn: CycleFunction,
+    benchmarkFn: CycleFunction
   ) => {
     const name =
       (description as DescriptionObject).name || (description as string);
-    log('Adding benchmark: ', name);
+    log("Adding benchmark: ", name);
 
     // const scopes: Object[] = [];
     let cycleCount = 0;
@@ -132,9 +132,9 @@ export const group = (groupFn: GroupFunction) => {
               afterEachFn(description, event);
             }
             resolve();
-          },
+          }
         });
-      }),
+      })
     );
   };
 
@@ -152,21 +152,21 @@ export const group = (groupFn: GroupFunction) => {
       setScope(scope);
       groupFn(groupDone);
       setScope(oldScope);
-    }),
+    })
   );
 };
 
 export function runBenchmarks() {
   Promise.all(groupPromises).then(() => {
-    log('Running benchmarks.');
+    log("Running benchmarks.");
     bsuite
-      .on('error', (error: any) => {
-        log('Error: ', error);
+      .on("error", (error: any) => {
+        log("Error: ", error);
       })
-      .on('cycle', (event: any) => {
-        log('Mean time in ms: ', event.target.stats.mean * 1000);
+      .on("cycle", (event: any) => {
+        log("Mean time in ms: ", event.target.stats.mean * 1000);
         log(String(event.target));
-        log('');
+        log("");
       })
       .run({ async: false });
   });

@@ -1,6 +1,6 @@
-import { ObservableQuery } from '../../src/core/ObservableQuery';
-import { ApolloQueryResult } from '../../src/core/types';
-import { Subscription } from '../../src/util/Observable';
+import { ObservableQuery } from "../../src/core/ObservableQuery";
+import { ApolloQueryResult } from "../../src/core/types";
+import { Subscription } from "../../src/util/Observable";
 
 /**
  *
@@ -81,13 +81,13 @@ export function observableToPromiseAndSubscription(
         } else {
           reject(error);
         }
-      },
+      }
     });
   });
 
   return {
     promise,
-    subscription,
+    subscription
   };
 }
 

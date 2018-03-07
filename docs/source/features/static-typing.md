@@ -229,14 +229,16 @@ export const link = createHttpLink({
 
 export const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link,
+  link
 });
 
-export default () =>
+export default () => (
   <ApolloProvider client={client}>
-    // $ExpectError property `episode`. Property not found in. See: src/Character.js:43
+    // $ExpectError property `episode`. Property not found in. See:
+    src/Character.js:43
     <Character />
-  </ApolloProvider>;
+  </ApolloProvider>
+);
 ```
 
 <h2 id="props">Props</h2>
@@ -355,7 +357,11 @@ Since we have typed the response shape, the props shape, and the shape of what w
 ```javascript
 // @flow
 
-export const withCharacter: OperationComponent<Response, InputProps, Props> = graphql(HERO_QUERY, {
+export const withCharacter: OperationComponent<
+  Response,
+  InputProps,
+  Props
+> = graphql(HERO_QUERY, {
   options: ({ episode }) => ({
     variables: { episode }
   }),
@@ -442,8 +448,6 @@ export const withCharacter = graphql<Response, InputProps, Prop>(HERO_QUERY, {
 <h2 id="more-info">More information</h2>
 
 For more information regarding using Flow or TypeScript with Apollo, check out the following articles:
-- [A stronger (typed) React Apollo](https://dev-blog.apollodata.com/a-stronger-typed-react-apollo-c43bd52be0d8)
-- [Getting started with TypeScript and React Apollo](https://dev-blog.apollodata.com/getting-started-with-typescript-and-apollo-a9aa2c7dcf87)
 
-
-
+* [A stronger (typed) React Apollo](https://dev-blog.apollodata.com/a-stronger-typed-react-apollo-c43bd52be0d8)
+* [Getting started with TypeScript and React Apollo](https://dev-blog.apollodata.com/getting-started-with-typescript-and-apollo-a9aa2c7dcf87)

@@ -5,23 +5,23 @@
  */
 
 // externals
-import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult } from 'graphql';
-import { ApolloLink, Operation, Observable } from 'apollo-link';
-import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
+import gql from "graphql-tag";
+import { DocumentNode, ExecutionResult } from "graphql";
+import { ApolloLink, Operation, Observable } from "apollo-link";
+import { InMemoryCache, ApolloReducerConfig } from "apollo-cache-inmemory";
 
-import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
+import { MockSubscriptionLink } from "../../../__mocks__/mockLinks";
 
 // core
-import { ApolloQueryResult } from '../../types';
-import { NetworkStatus } from '../../networkStatus';
-import { ObservableQuery } from '../../ObservableQuery';
-import { WatchQueryOptions } from '../../watchQueryOptions';
-import { QueryManager } from '../../QueryManager';
-import { DataStore } from '../../../data/store';
+import { ApolloQueryResult } from "../../types";
+import { NetworkStatus } from "../../networkStatus";
+import { ObservableQuery } from "../../ObservableQuery";
+import { WatchQueryOptions } from "../../watchQueryOptions";
+import { QueryManager } from "../../QueryManager";
+import { DataStore } from "../../../data/store";
 
-describe('Live queries', () => {
-  it('handles mutliple results for live queries', done => {
+describe("Live queries", () => {
+  it("handles mutliple results for live queries", done => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -35,26 +35,26 @@ describe('Live queries', () => {
 
     const initialData = {
       people_one: {
-        name: 'Luke Skywalker',
-        friends: [{ name: 'Leia Skywalker' }],
-      },
+        name: "Luke Skywalker",
+        friends: [{ name: "Leia Skywalker" }]
+      }
     };
 
     const laterData = {
       people_one: {
-        name: 'Luke Skywalker',
-        friends: [{ name: 'Leia Skywalker' }, { name: 'R2D2' }],
-      },
+        name: "Luke Skywalker",
+        friends: [{ name: "Leia Skywalker" }, { name: "R2D2" }]
+      }
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
-      link,
+      link
     });
 
     const observable = queryManager.watchQuery<any>({
       query,
-      variables: {},
+      variables: {}
     });
 
     let count = 0;
@@ -74,7 +74,7 @@ describe('Live queries', () => {
       },
       error: e => {
         console.error(e);
-      },
+      }
     });
 
     setTimeout(() => {
@@ -85,7 +85,7 @@ describe('Live queries', () => {
 
   // watchQuery => Observable => subscribe => data1 => unsubscribe =>
   //    watchQuery => Observable => subscribe => data2
-  it('handles unsubscribing and resubscribing with live queries', done => {
+  it("handles unsubscribing and resubscribing with live queries", done => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -99,30 +99,30 @@ describe('Live queries', () => {
 
     const initialData = {
       people_one: {
-        name: 'Luke Skywalker',
-        friends: [{ name: 'Leia Skywalker' }],
-      },
+        name: "Luke Skywalker",
+        friends: [{ name: "Leia Skywalker" }]
+      }
     };
 
     const laterData = {
       people_one: {
-        name: 'Luke Skywalker',
-        friends: [{ name: 'Leia Skywalker' }, { name: 'R2D2' }],
-      },
+        name: "Luke Skywalker",
+        friends: [{ name: "Leia Skywalker" }, { name: "R2D2" }]
+      }
     };
 
     let count = 0;
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
-      link,
+      link
     });
 
     const round2 = () => {
       // watchQuery => Observable
       const observable = queryManager.watchQuery<any>({
         query,
-        variables: {},
+        variables: {}
       });
 
       // Observable => subscribe
@@ -141,7 +141,7 @@ describe('Live queries', () => {
     // watchQuery => Observable
     const observable = queryManager.watchQuery<any>({
       query,
-      variables: {},
+      variables: {}
     });
 
     // Observable => subscribe
@@ -164,7 +164,7 @@ describe('Live queries', () => {
   // watchQuery => Observable => subscribe => setupNetwork => data1 =>
   //    unsubscribe => cleanup => watchQuery => Observable => subscribe =>
   //      setupNetwork => data2 => cleanup
-  it('calls the correct cleanup for links with live queries', done => {
+  it("calls the correct cleanup for links with live queries", done => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -178,16 +178,16 @@ describe('Live queries', () => {
 
     const initialData = {
       people_one: {
-        name: 'Luke Skywalker',
-        friends: [{ name: 'Leia Skywalker' }],
-      },
+        name: "Luke Skywalker",
+        friends: [{ name: "Leia Skywalker" }]
+      }
     };
 
     const laterData = {
       people_one: {
-        name: 'Luke Skywalker',
-        friends: [{ name: 'Leia Skywalker' }, { name: 'R2D2' }],
-      },
+        name: "Luke Skywalker",
+        friends: [{ name: "Leia Skywalker" }, { name: "R2D2" }]
+      }
     };
 
     let count = 0;
@@ -199,14 +199,14 @@ describe('Live queries', () => {
 
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
-      link,
+      link
     });
 
     const round2 = () => {
       // watchQuery => Observable
       const observable = queryManager.watchQuery<any>({
         query,
-        variables: {},
+        variables: {}
       });
 
       // Observable => subscribe
@@ -228,7 +228,7 @@ describe('Live queries', () => {
     // watchQuery => Observable
     const observable = queryManager.watchQuery<any>({
       query,
-      variables: {},
+      variables: {}
     });
 
     // Observable => subscribe

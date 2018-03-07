@@ -1,8 +1,8 @@
-import { DocumentNode } from 'graphql';
-import { getFragmentQueryDocument } from 'apollo-utilities';
+import { DocumentNode } from "graphql";
+import { getFragmentQueryDocument } from "apollo-utilities";
 
-import { DataProxy, Cache } from './types';
-import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
+import { DataProxy, Cache } from "./types";
+import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from "./utils";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -25,7 +25,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * and also (potentially) during hot reloads.
    */
   public abstract restore(
-    serializedState: TSerialized,
+    serializedState: TSerialized
   ): ApolloCache<TSerialized>;
 
   /**
@@ -38,11 +38,11 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   // transactional API
   public abstract performTransaction(
-    transaction: Transaction<TSerialized>,
+    transaction: Transaction<TSerialized>
   ): void;
   public abstract recordOptimisticTransaction(
     transaction: Transaction<TSerialized>,
-    id: string,
+    id: string
   ): void;
 
   // optional API
@@ -62,33 +62,33 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    */
   public readQuery<QueryType>(
     options: DataProxy.Query,
-    optimistic: boolean = false,
+    optimistic: boolean = false
   ): QueryType | null {
     return this.read({
       query: options.query,
       variables: options.variables,
-      optimistic,
+      optimistic
     });
   }
 
   public readFragment<FragmentType>(
     options: DataProxy.Fragment,
-    optimistic: boolean = false,
+    optimistic: boolean = false
   ): FragmentType | null {
     return this.read({
       query: getFragmentQueryDocument(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
-      optimistic,
+      optimistic
     });
   }
 
   public writeQuery(options: Cache.WriteQueryOptions): void {
     this.write({
-      dataId: 'ROOT_QUERY',
+      dataId: "ROOT_QUERY",
       result: options.data,
       query: options.query,
-      variables: options.variables,
+      variables: options.variables
     });
   }
 
@@ -97,7 +97,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       dataId: options.id,
       result: options.data,
       variables: options.variables,
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: getFragmentQueryDocument(options.fragment, options.fragmentName)
     });
   }
 
@@ -112,7 +112,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         typenameResult = this.read({
           rootId: id,
           optimistic: false,
-          query: justTypenameQuery,
+          query: justTypenameQuery
         });
       } catch (e) {
         // Do nothing, since an error just means no typename exists
@@ -120,7 +120,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
       // tslint:disable-next-line
       const __typename =
-        (typenameResult && typenameResult.__typename) || '__ClientData';
+        (typenameResult && typenameResult.__typename) || "__ClientData";
 
       // Add a type here to satisfy the inmemory cache
       const dataToWrite = { __typename, ...data };
@@ -128,7 +128,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       this.writeFragment({
         id,
         fragment: fragmentFromPojo(dataToWrite, __typename),
-        data: dataToWrite,
+        data: dataToWrite
       });
     } else {
       this.writeQuery({ query: queryFromPojo(data), data });

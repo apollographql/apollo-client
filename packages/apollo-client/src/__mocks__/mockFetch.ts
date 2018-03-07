@@ -1,4 +1,4 @@
-import 'whatwg-fetch';
+import "whatwg-fetch";
 
 // This is an implementation of a mocked window.fetch implementation similar in
 // structure to the MockedNetworkInterface.
@@ -19,7 +19,7 @@ export interface MockedFetchResponse {
 
 export function createMockedIResponse(
   result: Object,
-  options?: any,
+  options?: any
 ): MockedIResponse {
   const status = (options && options.status) || 200;
   const statusText = (options && options.statusText) || undefined;
@@ -30,7 +30,7 @@ export function createMockedIResponse(
     statusText,
     json() {
       return Promise.resolve<Object>(result);
-    },
+    }
   };
 }
 
@@ -62,7 +62,7 @@ export class MockFetch {
     const responses = this.mockedResponsesByKey[key];
     if (!responses || responses.length === 0) {
       throw new Error(
-        `No more mocked fetch responses for the params ${url} and ${opts}`,
+        `No more mocked fetch responses for the params ${url} and ${opts}`
       );
     }
 
@@ -82,7 +82,7 @@ export class MockFetch {
   public fetchParamsToKey(url: string, opts: RequestInit): string {
     return JSON.stringify({
       url,
-      opts: sortByKey(opts),
+      opts: sortByKey(opts)
     });
   }
 
@@ -102,13 +102,13 @@ function sortByKey(obj: any): Object {
         Object.assign(
           {
             [key]:
-              Object.prototype.toString.call(obj[key]).slice(8, -1) === 'Object'
+              Object.prototype.toString.call(obj[key]).slice(8, -1) === "Object"
                 ? sortByKey(obj[key])
-                : obj[key],
+                : obj[key]
           },
-          ret,
+          ret
         ),
-      {},
+      {}
     );
 }
 

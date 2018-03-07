@@ -8,7 +8,7 @@ export function cloneDeep<T>(value: T): T {
   }
   // If the value is an object, go through all of the object’s properties and add them to a new
   // object.
-  if (value !== null && typeof value === 'object') {
+  if (value !== null && typeof value === "object") {
     const nextValue: any = {};
     for (const key in value) {
       if (value.hasOwnProperty(key)) {

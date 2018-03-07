@@ -38,27 +38,27 @@ We want you to love working with Apollo Client, so we work extra hard to make su
 
 Apollo is lovingly designed to work nicely with all of the tools used by today's React developers. Here are some in particular:
 
-- **React Native and Expo**: Apollo works out of the box in React Native. It's even preinstalled in [Expo Snack](https://sketch.expo.io/H1QdWZUjg), so you can build a React Native + Apollo app right in your browser.
-- **React Router**: Apollo Client is completely router-independent, which means you can use it with any version of [React Router](https://github.com/ReactTraining/react-router) or any other routing library for React. It's even easy to set up [server-side rendering](./recipes/server-side-rendering.html).
-- **Recompose**: With [Recompose](https://github.com/acdlite/recompose), React-Apollo's Higher Order Component can be combined with a variety of other utilities to add behaviors to your components. [Read how to use it for loading state and variables](https://dev-blog.apollodata.com/simplify-your-react-components-with-apollo-and-recompose-8b9e302dea51#.z7tbkf8er) and also [mutations](https://medium.com/front-end-developers/how-i-write-mutations-in-apollo-w-recompose-1c0ab06ef4ea#.iobufopba) and to [combine with the Redux container](https://medium.com/welikegraphql/use-of-recompose-in-universal-react-apollo-example-3d1f89bc945b#.dtxnibu0w).
-- **Next.js**: You can use Apollo with the lightweight Next.js framework for universal rendered React apps. Just check out [this article](https://dev-blog.apollodata.com/whats-next-js-for-apollo-e4dfe835d070) for the details, or download the [official example](https://github.com/zeit/next.js/tree/master/examples/with-apollo).
+* **React Native and Expo**: Apollo works out of the box in React Native. It's even preinstalled in [Expo Snack](https://sketch.expo.io/H1QdWZUjg), so you can build a React Native + Apollo app right in your browser.
+* **React Router**: Apollo Client is completely router-independent, which means you can use it with any version of [React Router](https://github.com/ReactTraining/react-router) or any other routing library for React. It's even easy to set up [server-side rendering](./recipes/server-side-rendering.html).
+* **Recompose**: With [Recompose](https://github.com/acdlite/recompose), React-Apollo's Higher Order Component can be combined with a variety of other utilities to add behaviors to your components. [Read how to use it for loading state and variables](https://dev-blog.apollodata.com/simplify-your-react-components-with-apollo-and-recompose-8b9e302dea51#.z7tbkf8er) and also [mutations](https://medium.com/front-end-developers/how-i-write-mutations-in-apollo-w-recompose-1c0ab06ef4ea#.iobufopba) and to [combine with the Redux container](https://medium.com/welikegraphql/use-of-recompose-in-universal-react-apollo-example-3d1f89bc945b#.dtxnibu0w).
+* **Next.js**: You can use Apollo with the lightweight Next.js framework for universal rendered React apps. Just check out [this article](https://dev-blog.apollodata.com/whats-next-js-for-apollo-e4dfe835d070) for the details, or download the [official example](https://github.com/zeit/next.js/tree/master/examples/with-apollo).
 
 If you have a favorite React tool, and something in Apollo makes it difficult to integrate, please open an issue and let's work together to make it work nicely and add it to the list!
 
 <h2 id="graphql-servers">GraphQL servers</h2>
 
-We believe that using GraphQL should be easy and fun. One of the ways Apollo is designed for this is that if you can write your query in [GraphiQL](https://github.com/graphql/graphiql), it'll work with Apollo Client! Because it doesn't assume anything beyond the official GraphQL specification, Apollo works with every GraphQL server implementation, for *every* language. It doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo can handle it. You can find a list of GraphQL server implementations on [graphql.org](http://graphql.org/code/#server-libraries).
+We believe that using GraphQL should be easy and fun. One of the ways Apollo is designed for this is that if you can write your query in [GraphiQL](https://github.com/graphql/graphiql), it'll work with Apollo Client! Because it doesn't assume anything beyond the official GraphQL specification, Apollo works with every GraphQL server implementation, for _every_ language. It doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo can handle it. You can find a list of GraphQL server implementations on [graphql.org](http://graphql.org/code/#server-libraries).
 
 <h2 id="other-platforms" title="Other JS + native platforms">Other JavaScript + native platforms</h2>
 
 This documentation site is written with examples using React, but Apollo has an implementation for every client platform:
 
-- JavaScript
-  - [Angular](/docs/angular)
-  - [Vue](./basics/integrations.html#vue)
-  - [Meteor](./recipes/meteor.html)
-  - [Ember](./basics/integrations.html#ember)
-  - [Polymer](./basics/integrations.html#polymer)
-- Native mobile
-  - [Native iOS with Swift](/docs/ios)
-  - [Native Android with Java](https://github.com/apollographql/apollo-android)
+* JavaScript
+  * [Angular](/docs/angular)
+  * [Vue](./basics/integrations.html#vue)
+  * [Meteor](./recipes/meteor.html)
+  * [Ember](./basics/integrations.html#ember)
+  * [Polymer](./basics/integrations.html#polymer)
+* Native mobile
+  * [Native iOS with Swift](/docs/ios)
+  * [Native Android with Java](https://github.com/apollographql/apollo-android)

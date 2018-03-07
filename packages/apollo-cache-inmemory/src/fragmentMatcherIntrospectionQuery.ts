@@ -1,97 +1,97 @@
 const query: any = {
-  kind: 'Document',
+  kind: "Document",
   definitions: [
     {
-      kind: 'OperationDefinition',
-      operation: 'query',
+      kind: "OperationDefinition",
+      operation: "query",
       name: null,
       variableDefinitions: null,
       directives: [],
       selectionSet: {
-        kind: 'SelectionSet',
+        kind: "SelectionSet",
         selections: [
           {
-            kind: 'Field',
+            kind: "Field",
             alias: null,
             name: {
-              kind: 'Name',
-              value: '__schema',
+              kind: "Name",
+              value: "__schema"
             },
             arguments: [],
             directives: [],
             selectionSet: {
-              kind: 'SelectionSet',
+              kind: "SelectionSet",
               selections: [
                 {
-                  kind: 'Field',
+                  kind: "Field",
                   alias: null,
                   name: {
-                    kind: 'Name',
-                    value: 'types',
+                    kind: "Name",
+                    value: "types"
                   },
                   arguments: [],
                   directives: [],
                   selectionSet: {
-                    kind: 'SelectionSet',
+                    kind: "SelectionSet",
                     selections: [
                       {
-                        kind: 'Field',
+                        kind: "Field",
                         alias: null,
                         name: {
-                          kind: 'Name',
-                          value: 'kind',
+                          kind: "Name",
+                          value: "kind"
                         },
                         arguments: [],
                         directives: [],
-                        selectionSet: null,
+                        selectionSet: null
                       },
                       {
-                        kind: 'Field',
+                        kind: "Field",
                         alias: null,
                         name: {
-                          kind: 'Name',
-                          value: 'name',
+                          kind: "Name",
+                          value: "name"
                         },
                         arguments: [],
                         directives: [],
-                        selectionSet: null,
+                        selectionSet: null
                       },
                       {
-                        kind: 'Field',
+                        kind: "Field",
                         alias: null,
                         name: {
-                          kind: 'Name',
-                          value: 'possibleTypes',
+                          kind: "Name",
+                          value: "possibleTypes"
                         },
                         arguments: [],
                         directives: [],
                         selectionSet: {
-                          kind: 'SelectionSet',
+                          kind: "SelectionSet",
                           selections: [
                             {
-                              kind: 'Field',
+                              kind: "Field",
                               alias: null,
                               name: {
-                                kind: 'Name',
-                                value: 'name',
+                                kind: "Name",
+                                value: "name"
                               },
                               arguments: [],
                               directives: [],
-                              selectionSet: null,
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
+                              selectionSet: null
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
 };
 
 export default query;

@@ -1,11 +1,11 @@
-export { print as printAST } from 'graphql/language/printer';
+export { print as printAST } from "graphql/language/printer";
 
 export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
-  ApolloCurrentResult,
-} from './core/ObservableQuery';
+  ApolloCurrentResult
+} from "./core/ObservableQuery";
 export {
   WatchQueryOptions,
   MutationOptions,
@@ -14,14 +14,14 @@ export {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  MutationUpdaterFn,
-} from './core/watchQueryOptions';
-export { NetworkStatus } from './core/networkStatus';
-export * from './core/types';
+  MutationUpdaterFn
+} from "./core/watchQueryOptions";
+export { NetworkStatus } from "./core/networkStatus";
+export * from "./core/types";
 
-export { ApolloError } from './errors/ApolloError';
+export { ApolloError } from "./errors/ApolloError";
 
-import ApolloClient, { ApolloClientOptions } from './ApolloClient';
+import ApolloClient, { ApolloClientOptions } from "./ApolloClient";
 
 export { ApolloClientOptions };
 

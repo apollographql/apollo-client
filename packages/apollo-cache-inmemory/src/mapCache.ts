@@ -1,4 +1,4 @@
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
+import { NormalizedCache, NormalizedCacheObject, StoreObject } from "./types";
 
 /**
  * A Map-based implementation of the NormalizedCache.
@@ -31,13 +31,13 @@ export class MapCache implements NormalizedCache {
   public replace(newData: NormalizedCacheObject): void {
     this.cache.clear();
     Object.entries(newData).forEach(([dataId, value]) =>
-      this.cache.set(dataId, value),
+      this.cache.set(dataId, value)
     );
   }
 }
 
 export function mapNormalizedCacheFactory(
-  seed?: NormalizedCacheObject,
+  seed?: NormalizedCacheObject
 ): NormalizedCache {
   return new MapCache(seed);
 }

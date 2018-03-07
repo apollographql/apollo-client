@@ -1,19 +1,19 @@
-import gql from 'graphql-tag';
-import { ApolloLink, Operation } from 'apollo-link';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import gql from "graphql-tag";
+import { ApolloLink, Operation } from "apollo-link";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
-import { DocumentNode, OperationDefinitionNode } from 'graphql';
+import { DocumentNode, OperationDefinitionNode } from "graphql";
 
-import { mockSingleLink, mockObservableLink } from '../__mocks__/mockLinks';
+import { mockSingleLink, mockObservableLink } from "../__mocks__/mockLinks";
 
-import ApolloClient from '../';
+import ApolloClient from "../";
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
-    .filter(x => x.kind === 'OperationDefinition')
-    .some((x: OperationDefinitionNode) => x.operation === 'subscription');
+    .filter(x => x.kind === "OperationDefinition")
+    .some((x: OperationDefinitionNode) => x.operation === "subscription");
 
-describe('subscribeToMore', () => {
+describe("subscribeToMore", () => {
   const query = gql`
     query aQuery {
       entry {
@@ -24,16 +24,16 @@ describe('subscribeToMore', () => {
   const result = {
     data: {
       entry: {
-        value: 1,
-      },
-    },
+        value: 1
+      }
+    }
   };
 
   const req1 = { request: { query }, result };
 
-  const results = ['Dahivat Pandya', 'Amanda Liu'].map(name => ({
+  const results = ["Dahivat Pandya", "Amanda Liu"].map(name => ({
     result: { data: { name } },
-    delay: 10,
+    delay: 10
   }));
 
   const sub1 = {
@@ -42,13 +42,13 @@ describe('subscribeToMore', () => {
         subscription newValues {
           name
         }
-      `,
-    },
+      `
+    }
   };
 
   const results2 = [
-    { result: { data: { name: 'Amanda Liu' } }, delay: 10 },
-    { error: new Error('You cant touch this'), delay: 10 },
+    { result: { data: { name: "Amanda Liu" } }, delay: 10 },
+    { error: new Error("You cant touch this"), delay: 10 }
   ];
 
   const sub2 = {
@@ -57,13 +57,13 @@ describe('subscribeToMore', () => {
         subscription newValues {
           name
         }
-      `,
-    },
+      `
+    }
   };
 
   const results3 = [
-    { error: new Error('You cant touch this'), delay: 10 },
-    { result: { data: { name: 'Amanda Liu' } }, delay: 10 },
+    { error: new Error("You cant touch this"), delay: 10 },
+    { result: { data: { name: "Amanda Liu" } }, delay: 10 }
   ];
 
   const sub3 = {
@@ -72,11 +72,11 @@ describe('subscribeToMore', () => {
         subscription newValues {
           name
         }
-      `,
-    },
+      `
+    }
   };
 
-  it('triggers new result from subscription data', done => {
+  it("triggers new result from subscription data", done => {
     let latestResult: any = null;
     const wSLink = mockObservableLink(sub1);
     const httpLink = mockSingleLink(req1);
@@ -86,7 +86,7 @@ describe('subscribeToMore', () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
-      link,
+      link
     });
 
     const obsHandle = client.watchQuery({ query });
@@ -95,7 +95,7 @@ describe('subscribeToMore', () => {
       next(queryResult) {
         latestResult = queryResult;
         counter++;
-      },
+      }
     });
 
     obsHandle.subscribeToMore({
@@ -106,17 +106,17 @@ describe('subscribeToMore', () => {
       `,
       updateQuery: (_, { subscriptionData }) => {
         return { entry: { value: subscriptionData.data.name } };
-      },
+      }
     });
 
     setTimeout(() => {
       sub.unsubscribe();
       expect(counter).toBe(3);
       expect(latestResult).toEqual({
-        data: { entry: { value: 'Amanda Liu' } },
+        data: { entry: { value: "Amanda Liu" } },
         loading: false,
         networkStatus: 7,
-        stale: false,
+        stale: false
       });
       done();
     }, 50);
@@ -126,7 +126,7 @@ describe('subscribeToMore', () => {
     }
   });
 
-  it('calls error callback on error', done => {
+  it("calls error callback on error", done => {
     let latestResult: any = null;
     const wSLink = mockObservableLink(sub2);
     const httpLink = mockSingleLink(req1);
@@ -137,17 +137,17 @@ describe('subscribeToMore', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const obsHandle = client.watchQuery({
-      query,
+      query
     });
     const sub = obsHandle.subscribe({
       next(queryResult) {
         latestResult = queryResult;
         counter++;
-      },
+      }
     });
 
     let errorCount = 0;
@@ -163,16 +163,16 @@ describe('subscribeToMore', () => {
       },
       onError: () => {
         errorCount += 1;
-      },
+      }
     });
 
     setTimeout(() => {
       sub.unsubscribe();
       expect(latestResult).toEqual({
-        data: { entry: { value: 'Amanda Liu' } },
+        data: { entry: { value: "Amanda Liu" } },
         loading: false,
         networkStatus: 7,
-        stale: false,
+        stale: false
       });
       expect(counter).toBe(2);
       expect(errorCount).toBe(1);
@@ -184,7 +184,7 @@ describe('subscribeToMore', () => {
     }
   });
 
-  it('prints unhandled subscription errors to the console', done => {
+  it("prints unhandled subscription errors to the console", done => {
     let latestResult: any = null;
 
     const wSLink = mockObservableLink(sub3);
@@ -196,17 +196,17 @@ describe('subscribeToMore', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const obsHandle = client.watchQuery({
-      query,
+      query
     });
     const sub = obsHandle.subscribe({
       next(queryResult) {
         latestResult = queryResult;
         counter++;
-      },
+      }
     });
 
     let errorCount = 0;
@@ -222,8 +222,8 @@ describe('subscribeToMore', () => {
         }
       `,
       updateQuery: () => {
-        throw new Error('should not be called because of initial error');
-      },
+        throw new Error("should not be called because of initial error");
+      }
     });
 
     setTimeout(() => {
@@ -232,7 +232,7 @@ describe('subscribeToMore', () => {
         data: { entry: { value: 1 } },
         loading: false,
         networkStatus: 7,
-        stale: false,
+        stale: false
       });
       expect(counter).toBe(1);
       expect(errorCount).toBe(1);

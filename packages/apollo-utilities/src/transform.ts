@@ -6,30 +6,30 @@ import {
   OperationDefinitionNode,
   FieldNode,
   DirectiveNode,
-  FragmentDefinitionNode,
-} from 'graphql';
+  FragmentDefinitionNode
+} from "graphql";
 
-import { cloneDeep } from './util/cloneDeep';
+import { cloneDeep } from "./util/cloneDeep";
 
 import {
   checkDocument,
   getOperationDefinitionOrDie,
   getFragmentDefinitions,
   createFragmentMap,
-  FragmentMap,
-} from './getFromAST';
+  FragmentMap
+} from "./getFromAST";
 
 const TYPENAME_FIELD: FieldNode = {
-  kind: 'Field',
+  kind: "Field",
   name: {
-    kind: 'Name',
-    value: '__typename',
-  },
+    kind: "Name",
+    value: "__typename"
+  }
 };
 
 function isNotEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
-  fragments: FragmentMap,
+  fragments: FragmentMap
 ): Boolean {
   // keep selections that are still valid
   return (
@@ -40,16 +40,16 @@ function isNotEmpty(
         (
           selectionSet &&
           // look into fragments to verify they should stay
-          selectionSet.kind === 'FragmentSpread' &&
+          selectionSet.kind === "FragmentSpread" &&
           // see if the fragment in the map is valid (recursively)
           !isNotEmpty(fragments[selectionSet.name.value], fragments)
-        ),
+        )
     ).length > 0
   );
 }
 
 function getDirectiveMatcher(
-  directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
+  directives: (RemoveDirectiveConfig | GetDirectiveConfig)[]
 ) {
   return function directiveMatcher(directive: DirectiveNode): Boolean {
     return directives.some(
@@ -57,21 +57,21 @@ function getDirectiveMatcher(
         if (dir.name && dir.name === directive.name.value) return true;
         if (dir.test && dir.test(directive)) return true;
         return false;
-      },
+      }
     );
   };
 }
 
 function addTypenameToSelectionSet(
   selectionSet: SelectionSetNode,
-  isRoot = false,
+  isRoot = false
 ) {
   if (selectionSet.selections) {
     if (!isRoot) {
       const alreadyHasThisField = selectionSet.selections.some(selection => {
         return (
-          selection.kind === 'Field' &&
-          (selection as FieldNode).name.value === '__typename'
+          selection.kind === "Field" &&
+          (selection as FieldNode).name.value === "__typename"
         );
       });
 
@@ -82,14 +82,14 @@ function addTypenameToSelectionSet(
 
     selectionSet.selections.forEach(selection => {
       // Must not add __typename if we're inside an introspection query
-      if (selection.kind === 'Field') {
+      if (selection.kind === "Field") {
         if (
-          selection.name.value.lastIndexOf('__', 0) !== 0 &&
+          selection.name.value.lastIndexOf("__", 0) !== 0 &&
           selection.selectionSet
         ) {
           addTypenameToSelectionSet(selection.selectionSet);
         }
-      } else if (selection.kind === 'InlineFragment') {
+      } else if (selection.kind === "InlineFragment") {
         if (selection.selectionSet) {
           addTypenameToSelectionSet(selection.selectionSet);
         }
@@ -106,18 +106,18 @@ export type RemoveDirectiveConfig = {
 
 function removeDirectivesFromSelectionSet(
   directives: RemoveDirectiveConfig[],
-  selectionSet: SelectionSetNode,
+  selectionSet: SelectionSetNode
 ): SelectionSetNode {
   if (!selectionSet.selections) return selectionSet;
   // if any of the directives are set to remove this selectionSet, remove it
   const agressiveRemove = directives.some(
-    (dir: RemoveDirectiveConfig) => dir.remove,
+    (dir: RemoveDirectiveConfig) => dir.remove
   );
 
   selectionSet.selections = selectionSet.selections
     .map(selection => {
       if (
-        selection.kind !== 'Field' ||
+        selection.kind !== "Field" ||
         !(selection as FieldNode) ||
         !selection.directives
       )
@@ -138,7 +138,7 @@ function removeDirectivesFromSelectionSet(
 
   selectionSet.selections.forEach(selection => {
     if (
-      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
+      (selection.kind === "Field" || selection.kind === "InlineFragment") &&
       selection.selectionSet
     ) {
       removeDirectivesFromSelectionSet(directives, selection.selectionSet);
@@ -150,14 +150,14 @@ function removeDirectivesFromSelectionSet(
 
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
-  doc: DocumentNode,
+  doc: DocumentNode
 ): DocumentNode | null {
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
     removeDirectivesFromSelectionSet(
       directives,
-      (definition as OperationDefinitionNode).selectionSet,
+      (definition as OperationDefinitionNode).selectionSet
     );
   });
   const operation = getOperationDefinitionOrDie(docClone);
@@ -174,10 +174,10 @@ export function addTypenameToDocument(doc: DocumentNode) {
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
-    const isRoot = definition.kind === 'OperationDefinition';
+    const isRoot = definition.kind === "OperationDefinition";
     addTypenameToSelectionSet(
       (definition as OperationDefinitionNode).selectionSet,
-      isRoot,
+      isRoot
     );
   });
 
@@ -187,21 +187,21 @@ export function addTypenameToDocument(doc: DocumentNode) {
 
 const connectionRemoveConfig = {
   test: (directive: DirectiveNode) => {
-    const willRemove = directive.name.value === 'connection';
+    const willRemove = directive.name.value === "connection";
     if (willRemove) {
       if (
         !directive.arguments ||
-        !directive.arguments.some(arg => arg.name.value === 'key')
+        !directive.arguments.some(arg => arg.name.value === "key")
       ) {
         console.warn(
-          'Removing an @connection directive even though it does not have a key. ' +
-            'You may want to use the key parameter to specify a store key.',
+          "Removing an @connection directive even though it does not have a key. " +
+            "You may want to use the key parameter to specify a store key."
         );
       }
     }
 
     return willRemove;
-  },
+  }
 };
 const removed = new Map();
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
@@ -221,7 +221,7 @@ export type GetDirectiveConfig = {
 function hasDirectivesInSelectionSet(
   directives: GetDirectiveConfig[],
   selectionSet: SelectionSetNode,
-  nestedCheck = true,
+  nestedCheck = true
 ): boolean {
   if (!(selectionSet && selectionSet.selections)) {
     return false;
@@ -235,9 +235,9 @@ function hasDirectivesInSelectionSet(
 function hasDirectivesInSelection(
   directives: GetDirectiveConfig[],
   selection: SelectionNode,
-  nestedCheck = true,
+  nestedCheck = true
 ): boolean {
-  if (selection.kind !== 'Field' || !(selection as FieldNode)) {
+  if (selection.kind !== "Field" || !(selection as FieldNode)) {
     return true;
   }
 
@@ -252,14 +252,14 @@ function hasDirectivesInSelection(
       hasDirectivesInSelectionSet(
         directives,
         selection.selectionSet,
-        nestedCheck,
+        nestedCheck
       ))
   );
 }
 
 function getDirectivesFromSelectionSet(
   directives: GetDirectiveConfig[],
-  selectionSet: SelectionSetNode,
+  selectionSet: SelectionSetNode
 ) {
   selectionSet.selections = selectionSet.selections
     .filter(selection => {
@@ -270,12 +270,12 @@ function getDirectivesFromSelectionSet(
         return selection;
       }
       if (
-        (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
+        (selection.kind === "Field" || selection.kind === "InlineFragment") &&
         selection.selectionSet
       ) {
         selection.selectionSet = getDirectivesFromSelectionSet(
           directives,
-          selection.selectionSet,
+          selection.selectionSet
         );
       }
       return selection;
@@ -285,19 +285,19 @@ function getDirectivesFromSelectionSet(
 
 export function getDirectivesFromDocument(
   directives: GetDirectiveConfig[],
-  doc: DocumentNode,
+  doc: DocumentNode
 ): DocumentNode | null {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
   docClone.definitions = docClone.definitions.map(definition => {
     if (
-      (definition.kind === 'OperationDefinition' ||
-        definition.kind === 'FragmentDefinition') &&
+      (definition.kind === "OperationDefinition" ||
+        definition.kind === "FragmentDefinition") &&
       definition.selectionSet
     ) {
       definition.selectionSet = getDirectivesFromSelectionSet(
         directives,
-        definition.selectionSet,
+        definition.selectionSet
       );
     }
     return definition;

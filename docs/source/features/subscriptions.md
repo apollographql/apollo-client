@@ -68,7 +68,7 @@ npm install --save apollo-link-ws
 Then, initialize a GraphQL subscriptions transport link:
 
 ```js
-import { WebSocketLink } from 'apollo-link-ws';
+import { WebSocketLink } from "apollo-link-ws";
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,
@@ -78,16 +78,15 @@ const wsLink = new WebSocketLink({
 });
 ```
 
-
 ```js
-import { split } from 'apollo-link';
-import { HttpLink } from 'apollo-link-http';
-import { WebSocketLink } from 'apollo-link-ws';
-import { getMainDefinition } from 'apollo-utilities';
+import { split } from "apollo-link";
+import { HttpLink } from "apollo-link-http";
+import { WebSocketLink } from "apollo-link-ws";
+import { getMainDefinition } from "apollo-utilities";
 
 // Create an http link:
 const httpLink = new HttpLink({
-  uri: 'http://localhost:3000/graphql'
+  uri: "http://localhost:3000/graphql"
 });
 
 // Create a WebSocket link:
@@ -104,12 +103,11 @@ const link = split(
   // split based on operation type
   ({ query }) => {
     const { kind, operation } = getMainDefinition(query);
-    return kind === 'OperationDefinition' && operation === 'subscription';
+    return kind === "OperationDefinition" && operation === "subscription";
   },
   wsLink,
-  httpLink,
+  httpLink
 );
-
 ```
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
@@ -128,28 +126,28 @@ With `subscribeToMore`, you can easily do the latter.
 Here is a regular query:
 
 ```js
-import { CommentsPage } from './comments-page.js';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { CommentsPage } from "./comments-page.js";
+import { graphql } from "react-apollo";
+import gql from "graphql-tag";
 
 const COMMENT_QUERY = gql`
-    query Comment($repoName: String!) {
-      entry(repoFullName: $repoName) {
-        comments {
-          id
-          content
-        }
+  query Comment($repoName: String!) {
+    entry(repoFullName: $repoName) {
+      comments {
+        id
+        content
       }
     }
+  }
 `;
 
 const withData = graphql(COMMENT_QUERY, {
-    name: 'comments',
-    options: ({ params }) => ({
-        variables: {
-            repoName: `${params.org}/${params.repoName}`
-        },
-    })
+  name: "comments",
+  options: ({ params }) => ({
+    variables: {
+      repoName: `${params.org}/${params.repoName}`
+    }
+  })
 });
 
 export const CommentsPageWithData = withData(CommentsPage);
@@ -163,47 +161,47 @@ Note that the `updateQuery` callback must return an object of the same shape as 
 
 ```js
 const COMMENTS_SUBSCRIPTION = gql`
-    subscription onCommentAdded($repoFullName: String!){
-      commentAdded(repoFullName: $repoFullName){
-        id
-        content
-      }
+  subscription onCommentAdded($repoFullName: String!) {
+    commentAdded(repoFullName: $repoFullName) {
+      id
+      content
     }
+  }
 `;
 
 const withData = graphql(COMMENT_QUERY, {
-    name: 'comments',
-    options: ({ params }) => ({
-        variables: {
-            repoName: `${params.org}/${params.repoName}`
-        },
-    }),
-    props: props => {
-        return {
-           ...props,
-            subscribeToNewComments: params => {
-                return props.comments.subscribeToMore({
-                    document: COMMENTS_SUBSCRIPTION,
-                    variables: {
-                        repoName: params.repoFullName,
-                    },
-                    updateQuery: (prev, {subscriptionData}) => {
-                        if (!subscriptionData.data) {
-                            return prev;
-                        }
-
-                        const newFeedItem = subscriptionData.data.commentAdded;
-
-                        return Object.assign({}, prev, {
-                            entry: {
-                                comments: [newFeedItem, ...prev.entry.comments]
-                            }
-                        });
-                    }
-                });
+  name: "comments",
+  options: ({ params }) => ({
+    variables: {
+      repoName: `${params.org}/${params.repoName}`
+    }
+  }),
+  props: props => {
+    return {
+      ...props,
+      subscribeToNewComments: params => {
+        return props.comments.subscribeToMore({
+          document: COMMENTS_SUBSCRIPTION,
+          variables: {
+            repoName: params.repoFullName
+          },
+          updateQuery: (prev, { subscriptionData }) => {
+            if (!subscriptionData.data) {
+              return prev;
             }
-        };
-    },
+
+            const newFeedItem = subscriptionData.data.commentAdded;
+
+            return Object.assign({}, prev, {
+              entry: {
+                comments: [newFeedItem, ...prev.entry.comments]
+              }
+            });
+          }
+        });
+      }
+    };
+  }
 });
 ```
 
@@ -211,11 +209,11 @@ and start the actual subscription by calling the `subscribeToNewComments` functi
 
 ```js
 export class CommentsPage extends Component {
-    componentDidMount() {
-        this.props.subscribeToNewComments({
-            repoFullName: this.props.repoFullName,
-        });
-    }
+  componentDidMount() {
+    this.props.subscribeToNewComments({
+      repoFullName: this.props.repoFullName
+    });
+  }
 }
 ```
 

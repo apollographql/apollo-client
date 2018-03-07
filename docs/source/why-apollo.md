@@ -13,13 +13,13 @@ With Apollo's declarative approach to data fetching, all of the logic for retrie
 const Feed = () => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {
-      if (error) return <Error />
+      if (error) return <Error />;
       if (loading || !data) return <Fetching />;
 
-      return <DogList dogs={data.dogs} />
+      return <DogList dogs={data.dogs} />;
     }}
   </Query>
-)
+);
 ```
 
 Here we're using a Query component to fetch some dogs from our GraphQL server and display them in a list. The Query component uses the render prop API (with a function as a child) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
@@ -33,7 +33,7 @@ You'll find that when you switch to Apollo Client, you'll be able to delete a lo
 One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Just by setting up Apollo Client, you get an intelligent cache out of the box with no additional configuration required. From the home page of the [Pupstagram example app](https://codesandbox.io/s/r5qp83z0yq), click one of the dogs to see its detail page. Then, go back to the home page. You'll notice that the images on the home page load instantaneously, thanks to the Apollo cache.
 
 ```js
-import ApolloClient from 'apollo-boost';
+import ApolloClient from "apollo-boost";
 
 // the Apollo cache is set up automatically
 const client = new ApolloClient();
@@ -83,15 +83,16 @@ const GET_DOG = gql`
 Here's our cache redirect, which we can set up easily by specifying a map on the `cacheRedirects` property of the `apollo-boost` client. The cache redirect returns a key that the query can use to look up the data in the cache.
 
 ```js
-import ApolloClient from 'apollo-boost';
+import ApolloClient from "apollo-boost";
 
 const client = new ApolloClient({
   cacheRedirects: {
     Query: {
-      dog: (_, { id }, { getCacheKey }) => getCacheKey({ id, __typename: 'Dog' })
+      dog: (_, { id }, { getCacheKey }) =>
+        getCacheKey({ id, __typename: "Dog" })
     }
   }
-})
+});
 ```
 
 <h2 id="combine-data">Combine local & remote data</h2>
@@ -121,10 +122,11 @@ With `apollo-link-state`, you can add client-side only fields to your remote dat
 Apollo Client is easy to get started with, but extensible for when you need to build out more advanced features. If you need custom functionality that isn't covered with `apollo-boost`, such as app-specific middleware or cache persistence, you can create your own client by plugging in an Apollo cache and chaining together your network stack with Apollo Link.
 
 This flexibility makes it simple to create your dream client by building extensions on top of Apollo. We're always really impressed by what our contributors have built on top of Apollo - check out some of their packages:
-- [Apollo Link community links](/docs/link/links/community.html): Pluggable links created by the community
-- [apollo-cache-persist](https://dev-blog.apollodata.com/announcing-apollo-cache-persist-cb05aec16325): Simple persistence for your Apollo cache ([@jamesreggio](https://github.com/jamesreggio))
-- [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
-- [AppSync by AWS](https://dev-blog.apollodata.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
+
+* [Apollo Link community links](/docs/link/links/community.html): Pluggable links created by the community
+* [apollo-cache-persist](https://dev-blog.apollodata.com/announcing-apollo-cache-persist-cb05aec16325): Simple persistence for your Apollo cache ([@jamesreggio](https://github.com/jamesreggio))
+* [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
+* [AppSync by AWS](https://dev-blog.apollodata.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
 
 When you choose Apollo to manage your data, you also gain the support of our amazing community. There are over 5000 developers on our [Apollo Slack](https://www.apollographql.com/#slack) channel for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://dev-blog.apollodata.com/), updated weekly.
 
@@ -132,10 +134,10 @@ When you choose Apollo to manage your data, you also gain the support of our ama
 
 Companies ranging from enterprises to startups trust Apollo Client to power their most critical web & native applications. If you'd like to learn more about how transitioning to GraphQL and Apollo simplified their engineers' workflows and improved their products, check out these case studies:
 
-- [The New York Times](https://open.nytimes.com/the-new-york-times-now-on-apollo-b9a78a5038c): Learn how The New York Times switched from Relay to Apollo & implemented features in their app such as SSR and persisted queries
-- [Express](https://dev-blog.apollodata.com/changing-the-architecture-of-express-com-23c950d43323): Easy-to-use pagination with Apollo helped improve the Express eCommerce team's key product pages
-- [Major League Soccer](https://dev-blog.apollodata.com/reducing-our-redux-code-with-react-apollo-5091b9de9c2a): MLS' switch from Redux to Apollo for state management enabled them to delete nearly all of their Redux code
-- [Expo](https://dev-blog.apollodata.com/using-graphql-apollo-at-expo-4c1f21f0f115): Developing their React Native app with Apollo allowed the Expo engineers to focus on improving their product instead of writing data fetching logic
-- [KLM](https://youtu.be/T2njjXHdKqw): Learn how the KLM team scaled their Angular app with GraphQL and Apollo
+* [The New York Times](https://open.nytimes.com/the-new-york-times-now-on-apollo-b9a78a5038c): Learn how The New York Times switched from Relay to Apollo & implemented features in their app such as SSR and persisted queries
+* [Express](https://dev-blog.apollodata.com/changing-the-architecture-of-express-com-23c950d43323): Easy-to-use pagination with Apollo helped improve the Express eCommerce team's key product pages
+* [Major League Soccer](https://dev-blog.apollodata.com/reducing-our-redux-code-with-react-apollo-5091b9de9c2a): MLS' switch from Redux to Apollo for state management enabled them to delete nearly all of their Redux code
+* [Expo](https://dev-blog.apollodata.com/using-graphql-apollo-at-expo-4c1f21f0f115): Developing their React Native app with Apollo allowed the Expo engineers to focus on improving their product instead of writing data fetching logic
+* [KLM](https://youtu.be/T2njjXHdKqw): Learn how the KLM team scaled their Angular app with GraphQL and Apollo
 
 If your company is using Apollo Client in production, we'd love to feature a case study on our blog! Please get in touch via Slack so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send in a PR.

@@ -1,13 +1,13 @@
-const path = require('path');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
+const path = require("path");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
   .BundleAnalyzerPlugin;
 
 module.exports = {
   context: __dirname,
-  entry: './src/index.js',
+  entry: "./src/index.js",
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js"
   },
-  plugins: [new BundleAnalyzerPlugin()],
+  plugins: [new BundleAnalyzerPlugin()]
 };

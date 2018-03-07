@@ -1,9 +1,9 @@
-import { print } from 'graphql/language/printer';
-import { queryFromPojo, fragmentFromPojo } from '../utils';
+import { print } from "graphql/language/printer";
+import { queryFromPojo, fragmentFromPojo } from "../utils";
 
-describe('writing data with no query', () => {
-  describe('converts a JavaScript object to a query correctly', () => {
-    it('basic', () => {
+describe("writing data with no query", () => {
+  describe("converts a JavaScript object to a query correctly", () => {
+    it("basic", () => {
       expect(
         print(
           queryFromPojo({
@@ -12,13 +12,13 @@ describe('writing data with no query', () => {
             bool2: false,
             undef: undefined,
             nullField: null,
-            str: 'string',
-          }),
-        ),
+            str: "string"
+          })
+        )
       ).toMatchSnapshot();
     });
 
-    it('nested', () => {
+    it("nested", () => {
       expect(
         print(
           queryFromPojo({
@@ -28,14 +28,14 @@ describe('writing data with no query', () => {
               bool2: false,
               undef: undefined,
               nullField: null,
-              str: 'string',
-            },
-          }),
-        ),
+              str: "string"
+            }
+          })
+        )
       ).toMatchSnapshot();
     });
 
-    it('arrays', () => {
+    it("arrays", () => {
       expect(
         print(
           queryFromPojo({
@@ -46,15 +46,15 @@ describe('writing data with no query', () => {
                 bool2: false,
                 undef: undefined,
                 nullField: null,
-                str: 'string',
-              },
-            ],
-          }),
-        ),
+                str: "string"
+              }
+            ]
+          })
+        )
       ).toMatchSnapshot();
     });
 
-    it('fragments', () => {
+    it("fragments", () => {
       expect(
         print(
           fragmentFromPojo({
@@ -65,11 +65,11 @@ describe('writing data with no query', () => {
                 bool2: false,
                 undef: undefined,
                 nullField: null,
-                str: 'string',
-              },
-            ],
-          }),
-        ),
+                str: "string"
+              }
+            ]
+          })
+        )
       ).toMatchSnapshot();
     });
   });

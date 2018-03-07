@@ -15,7 +15,6 @@ The main way to get GraphQL data into your UI components with Apollo is to use a
 Here's what this looks like in the code:
 
 ```js
-
 const updateComment = gql`
   mutation updateComment($commentId: ID!, $commentContent: String!) {
     updateComment(commentId: $commentId, commentContent: $commentContent) {
@@ -32,16 +31,16 @@ const CommentPageWithData = graphql(updateComment, {
       return mutate({
         variables: { commentId, commentContent },
         optimisticResponse: {
-          __typename: 'Mutation',
+          __typename: "Mutation",
           updateComment: {
             id: commentId,
-            __typename: 'Comment',
-            content: commentContent,
-          },
-        },
+            __typename: "Comment",
+            content: commentContent
+          }
+        }
       });
-    },
-  }),
+    }
+  })
 })(CommentPage);
 ```
 
@@ -56,15 +55,18 @@ In that case we need to specify how to integrate the new data into existing quer
 Here is a concrete example from GitHunt, which inserts a comment into an existing list of comments.
 
 ```js
-import React from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import React from "react";
+import { graphql } from "react-apollo";
+import gql from "graphql-tag";
 
-import CommentAppQuery from '../queries/CommentAppQuery';
+import CommentAppQuery from "../queries/CommentAppQuery";
 
 const SUBMIT_COMMENT_MUTATION = gql`
   mutation submitComment($repoFullName: String!, $commentContent: String!) {
-    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+    submitComment(
+      repoFullName: $repoFullName
+      commentContent: $commentContent
+    ) {
       postedBy {
         login
         html_url
@@ -82,13 +84,13 @@ const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
         return mutate({
           variables: { repoFullName, commentContent },
           optimisticResponse: {
-            __typename: 'Mutation',
+            __typename: "Mutation",
             submitComment: {
-              __typename: 'Comment',
+              __typename: "Comment",
               postedBy: ownProps.currentUser,
-              createdAt: +new Date,
-              content: commentContent,
-            },
+              createdAt: +new Date(),
+              content: commentContent
+            }
           },
           update: (proxy, { data: { submitComment } }) => {
             // Read the data from our cache for this query.
@@ -97,10 +99,10 @@ const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
             data.comments.push(submitComment);
             // Write our data back to the cache.
             proxy.writeQuery({ query: CommentAppQuery, data });
-          },
+          }
         });
-      },
+      }
     };
-  },
+  }
 })(CommentsPage);
 ```

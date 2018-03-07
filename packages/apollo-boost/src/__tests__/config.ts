@@ -1,12 +1,12 @@
-import ApolloClient, { gql } from '../';
+import ApolloClient, { gql } from "../";
 
 global.fetch = jest.fn(() =>
-  Promise.resolve({ json: () => Promise.resolve({}) }),
+  Promise.resolve({ json: () => Promise.resolve({}) })
 );
 
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 
-describe('config', () => {
+describe("config", () => {
   const query = gql`
     {
       foo @client
@@ -15,29 +15,29 @@ describe('config', () => {
 
   const resolvers = {
     Query: {
-      foo: () => 'woo',
-    },
+      foo: () => "woo"
+    }
   };
 
-  it('allows you to pass in a request handler', () => {
+  it("allows you to pass in a request handler", () => {
     let requestCalled;
 
     const client = new ApolloClient({
       request: () => {
         requestCalled = true;
       },
-      clientState: { resolvers },
+      clientState: { resolvers }
     });
 
     return client
-      .query({ query, fetchPolicy: 'network-only' })
+      .query({ query, fetchPolicy: "network-only" })
       .then(({ data }) => {
-        expect(data).toEqual({ foo: 'woo' });
+        expect(data).toEqual({ foo: "woo" });
         expect(requestCalled).toEqual(true);
       });
   });
 
-  it('allows you to pass in an async request handler', () => {
+  it("allows you to pass in an async request handler", () => {
     let requestCalled;
 
     const client = new ApolloClient({
@@ -46,22 +46,22 @@ describe('config', () => {
           requestCalled = true;
         });
       },
-      clientState: { resolvers },
+      clientState: { resolvers }
     });
 
     return client
-      .query({ query, fetchPolicy: 'network-only' })
+      .query({ query, fetchPolicy: "network-only" })
       .then(({ data }) => {
-        expect(data).toEqual({ foo: 'woo' });
+        expect(data).toEqual({ foo: "woo" });
         expect(requestCalled).toEqual(true);
       });
   });
 
-  it('allows you to pass in cacheRedirects', () => {
-    const cacheRedirects = { Query: { foo: () => 'woo' } };
+  it("allows you to pass in cacheRedirects", () => {
+    const cacheRedirects = { Query: { foo: () => "woo" } };
 
     const client = new ApolloClient({
-      cacheRedirects,
+      cacheRedirects
     });
 
     expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);

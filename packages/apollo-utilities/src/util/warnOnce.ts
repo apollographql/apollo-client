@@ -1,4 +1,4 @@
-import { isProduction, isTest } from './environment';
+import { isProduction, isTest } from "./environment";
 
 const haveWarned = Object.create({});
 
@@ -10,7 +10,7 @@ const haveWarned = Object.create({});
  * @param msg The warning message
  * @param type warn or error (will call console.warn or console.error)
  */
-export function warnOnceInDevelopment(msg: string, type = 'warn') {
+export function warnOnceInDevelopment(msg: string, type = "warn") {
   if (isProduction()) {
     return;
   }
@@ -19,7 +19,7 @@ export function warnOnceInDevelopment(msg: string, type = 'warn') {
       haveWarned[msg] = true;
     }
     switch (type) {
-      case 'error':
+      case "error":
         console.error(msg);
         break;
       default:

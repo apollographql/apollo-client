@@ -1,1 +1,1 @@
-import ApolloClient from '../../lib/src';
+import ApolloClient from "../../lib/src";

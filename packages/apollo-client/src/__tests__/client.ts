@@ -1,31 +1,31 @@
-import { cloneDeep, assign } from 'lodash';
-import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
-import gql from 'graphql-tag';
-import { print } from 'graphql/language/printer';
-import { ApolloLink, Observable } from 'apollo-link';
+import { cloneDeep, assign } from "lodash";
+import { GraphQLError, ExecutionResult, DocumentNode } from "graphql";
+import gql from "graphql-tag";
+import { print } from "graphql/language/printer";
+import { ApolloLink, Observable } from "apollo-link";
 import {
   InMemoryCache,
   IntrospectionFragmentMatcher,
-  FragmentMatcherInterface,
-} from 'apollo-cache-inmemory';
+  FragmentMatcherInterface
+} from "apollo-cache-inmemory";
 
-import { QueryManager } from '../core/QueryManager';
-import { WatchQueryOptions } from '../core/watchQueryOptions';
+import { QueryManager } from "../core/QueryManager";
+import { WatchQueryOptions } from "../core/watchQueryOptions";
 
-import { ApolloError } from '../errors/ApolloError';
+import { ApolloError } from "../errors/ApolloError";
 
-import ApolloClient, { printAST } from '..';
+import ApolloClient, { printAST } from "..";
 
-import subscribeAndCount from '../util/subscribeAndCount';
-import { withWarning } from '../util/wrap';
+import subscribeAndCount from "../util/subscribeAndCount";
+import { withWarning } from "../util/wrap";
 
-import { mockSingleLink } from '../__mocks__/mockLinks';
+import { mockSingleLink } from "../__mocks__/mockLinks";
 
-describe('client', () => {
-  it('creates query manager lazily', () => {
+describe("client", () => {
+  it("creates query manager lazily", () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     expect(client.queryManager).toBeUndefined();
@@ -36,14 +36,14 @@ describe('client', () => {
     expect(client.cache).toBeDefined();
   });
 
-  it('can be loaded via require', () => {
+  it("can be loaded via require", () => {
     /* tslint:disable */
-    const ApolloClientRequire = require('../').default;
+    const ApolloClientRequire = require("../").default;
     /* tslint:enable */
 
     const client = new ApolloClientRequire({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     expect(client.queryManager).toBeUndefined();
@@ -54,11 +54,11 @@ describe('client', () => {
     expect(client.cache).toBeDefined();
   });
 
-  it('can allow passing in a link', () => {
+  it("can allow passing in a link", () => {
     const link = ApolloLink.empty();
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     expect(client.link).toBeInstanceOf(ApolloLink);
@@ -67,7 +67,7 @@ describe('client', () => {
   it('should throw an error if query option is missing or not wrapped with a "gql" tag', () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     expect(() => {
@@ -77,17 +77,17 @@ describe('client', () => {
         }
       ` as any);
     }).toThrowError(
-      'query option is required. You must specify your GraphQL document in the query option.',
+      "query option is required. You must specify your GraphQL document in the query option."
     );
     expect(() => {
-      client.query({ query: '{ a }' } as any);
+      client.query({ query: "{ a }" } as any);
     }).toThrowError('You must wrap the query string in a "gql" tag.');
   });
 
-  it('should throw an error if mutation option is missing', () => {
+  it("should throw an error if mutation option is missing", () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     expect(() => {
@@ -96,14 +96,14 @@ describe('client', () => {
           {
             a
           }
-        `,
+        `
       } as any);
     }).toThrowError(
-      'mutation option is required. You must specify your GraphQL document in the mutation option.',
+      "mutation option is required. You must specify your GraphQL document in the mutation option."
     );
   });
 
-  it('should allow for a single query to take place', () => {
+  it("should allow for a single query to take place", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -120,18 +120,18 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-            __typename: 'Person',
-          },
+            name: "Luke Skywalker",
+            __typename: "Person"
+          }
         ],
-        __typename: 'People',
-      },
+        __typename: "People"
+      }
     };
 
     return clientRoundtrip(query, { data });
   });
 
-  it('should allow a single query with an apollo-link enabled network interface', done => {
+  it("should allow a single query with an apollo-link enabled network interface", done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -148,12 +148,12 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-            __typename: 'Person',
-          },
+            name: "Luke Skywalker",
+            __typename: "Person"
+          }
         ],
-        __typename: 'People',
-      },
+        __typename: "People"
+      }
     };
 
     const variables = { first: 1 };
@@ -162,7 +162,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     client.query({ query, variables }).then(actualResult => {
@@ -171,7 +171,7 @@ describe('client', () => {
     });
   });
 
-  it('should allow for a single query with complex default variables to take place', () => {
+  it("should allow for a single query with complex default variables to take place", () => {
     const query = gql`
       query stuff(
         $test: Input = { key1: ["value", "value2"], key2: { key3: 4 } }
@@ -188,27 +188,27 @@ describe('client', () => {
       allStuff: {
         people: [
           {
-            name: 'Luke Skywalker',
+            name: "Luke Skywalker"
           },
           {
-            name: 'Jabba The Hutt',
-          },
-        ],
-      },
+            name: "Jabba The Hutt"
+          }
+        ]
+      }
     };
 
     const variables = {
-      test: { key1: ['value', 'value2'], key2: { key3: 4 } },
+      test: { key1: ["value", "value2"], key2: { key3: 4 } }
     };
 
     const link = mockSingleLink({
       request: { query, variables },
-      result: { data: result },
+      result: { data: result }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
@@ -222,7 +222,7 @@ describe('client', () => {
     return Promise.all([basic, withDefault]);
   });
 
-  it('should allow for a single query with default values that get overridden with variables', () => {
+  it("should allow for a single query with default values that get overridden with variables", () => {
     const query = gql`
       query people($first: Int = 1) {
         allPeople(first: $first) {
@@ -240,39 +240,39 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const overriddenResult = {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
+            name: "Luke Skywalker"
           },
           {
-            name: 'Jabba The Hutt',
-          },
-        ],
-      },
+            name: "Jabba The Hutt"
+          }
+        ]
+      }
     };
 
     const link = mockSingleLink(
       {
         request: { query, variables },
-        result: { data: result },
+        result: { data: result }
       },
       {
         request: { query, variables: override },
-        result: { data: overriddenResult },
-      },
+        result: { data: overriddenResult }
+      }
     );
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
@@ -292,7 +292,7 @@ describe('client', () => {
     return Promise.all([basic, withDefault, withOverride]);
   });
 
-  it('should allow fragments on root query', () => {
+  it("should allow fragments on root query", () => {
     // The fragment should be used after the selected fields for the query.
     // Otherwise, the results aren't merged.
     // see: https://github.com/apollographql/apollo-client/issues/1479
@@ -316,10 +316,10 @@ describe('client', () => {
 
     const data = {
       records: [
-        { id: 1, name: 'One', __typename: 'Record' },
-        { id: 2, name: 'Two', __typename: 'Record' },
+        { id: 1, name: "One", __typename: "Record" },
+        { id: 2, name: "Two", __typename: "Record" }
       ],
-      __typename: 'Query',
+      __typename: "Query"
     };
 
     const ifm = new IntrospectionFragmentMatcher({
@@ -327,23 +327,23 @@ describe('client', () => {
         __schema: {
           types: [
             {
-              kind: 'UNION',
-              name: 'Query',
+              kind: "UNION",
+              name: "Query",
               possibleTypes: [
                 {
-                  name: 'Record',
-                },
-              ],
-            },
-          ],
-        },
-      },
+                  name: "Record"
+                }
+              ]
+            }
+          ]
+        }
+      }
     });
 
     return clientRoundtrip(query, { data }, null, ifm);
   });
 
-  it('store can be rehydrated from the server', () => {
+  it("store can be rehydrated from the server", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -358,40 +358,40 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data },
+      result: { data }
     });
 
     const initialState: any = {
       data: {
         'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
-          name: 'Luke Skywalker',
+          name: "Luke Skywalker"
         },
         'ROOT_QUERY.allPeople({"first":1})': {
           people: [
             {
-              type: 'id',
+              type: "id",
               generated: true,
-              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-            },
-          ],
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0'
+            }
+          ]
         },
         ROOT_QUERY: {
           'allPeople({"first":1})': {
-            type: 'id',
+            type: "id",
             id: 'ROOT_QUERY.allPeople({"first":1})',
-            generated: true,
-          },
+            generated: true
+          }
         },
-        optimistic: [],
-      },
+        optimistic: []
+      }
     };
 
     const finalState = assign({}, initialState, {});
@@ -399,19 +399,19 @@ describe('client', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data,
-      ),
+        initialState.data
+      )
     });
 
     return client.query({ query }).then(result => {
       expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(
-        (client.cache as InMemoryCache).extract(),
+        (client.cache as InMemoryCache).extract()
       );
     });
   });
 
-  it('store can be rehydrated from the server using the shadow method', () => {
+  it("store can be rehydrated from the server using the shadow method", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -426,40 +426,40 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data },
+      result: { data }
     });
 
     const initialState: any = {
       data: {
         'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
-          name: 'Luke Skywalker',
+          name: "Luke Skywalker"
         },
         'ROOT_QUERY.allPeople({"first":1})': {
           people: [
             {
-              type: 'id',
+              type: "id",
               generated: true,
-              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-            },
-          ],
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0'
+            }
+          ]
         },
         ROOT_QUERY: {
           'allPeople({"first":1})': {
-            type: 'id',
+            type: "id",
             id: 'ROOT_QUERY.allPeople({"first":1})',
-            generated: true,
-          },
+            generated: true
+          }
         },
-        optimistic: [],
-      },
+        optimistic: []
+      }
     };
 
     const finalState = assign({}, initialState, {});
@@ -467,8 +467,8 @@ describe('client', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data,
-      ),
+        initialState.data
+      )
     });
 
     return client.query({ query }).then(result => {
@@ -477,7 +477,7 @@ describe('client', () => {
     });
   });
 
-  it('stores shadow of restore returns the same result as accessing the method directly on the cache', () => {
+  it("stores shadow of restore returns the same result as accessing the method directly on the cache", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -492,55 +492,55 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data },
+      result: { data }
     });
 
     const initialState: any = {
       data: {
         'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
-          name: 'Luke Skywalker',
+          name: "Luke Skywalker"
         },
         'ROOT_QUERY.allPeople({"first":1})': {
           people: [
             {
-              type: 'id',
+              type: "id",
               generated: true,
-              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-            },
-          ],
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0'
+            }
+          ]
         },
         ROOT_QUERY: {
           'allPeople({"first":1})': {
-            type: 'id',
+            type: "id",
             id: 'ROOT_QUERY.allPeople({"first":1})',
-            generated: true,
-          },
+            generated: true
+          }
         },
-        optimistic: [],
-      },
+        optimistic: []
+      }
     };
 
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data,
-      ),
+        initialState.data
+      )
     });
 
     expect(client.restore(initialState.data)).toEqual(
-      client.cache.restore(initialState.data),
+      client.cache.restore(initialState.data)
     );
   });
 
-  it('should return errors correctly for a single query', () => {
+  it("should return errors correctly for a single query", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -553,19 +553,19 @@ describe('client', () => {
 
     const errors: GraphQLError[] = [
       {
-        name: 'test',
-        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
-      },
+        name: "test",
+        message: "Syntax Error GraphQL request (8:9) Expected Name, found EOF"
+      }
     ];
 
     const link = mockSingleLink({
       request: { query },
-      result: { errors },
+      result: { errors }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client.query({ query }).catch((error: ApolloError) => {
@@ -573,7 +573,7 @@ describe('client', () => {
     });
   });
 
-  it('should return GraphQL errors correctly for a single query with an apollo-link enabled network interface', done => {
+  it("should return GraphQL errors correctly for a single query with an apollo-link enabled network interface", done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -588,17 +588,17 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const errors: GraphQLError[] = [
       {
-        name: 'test',
-        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
-      },
+        name: "test",
+        message: "Syntax Error GraphQL request (8:9) Expected Name, found EOF"
+      }
     ];
 
     const link = ApolloLink.from([
@@ -606,12 +606,12 @@ describe('client', () => {
         return new Observable(observer => {
           observer.next({ data, errors });
         });
-      },
+      }
     ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     client.query({ query }).catch((error: ApolloError) => {
@@ -620,7 +620,7 @@ describe('client', () => {
     });
   });
 
-  it('should pass a network error correctly on a query using an observable network interface with a warning', done => {
+  it("should pass a network error correctly on a query using an observable network interface with a warning", done => {
     withWarning(() => {
       const query = gql`
         query people {
@@ -632,19 +632,19 @@ describe('client', () => {
         }
       `;
 
-      const networkError = new Error('Some kind of network error.');
+      const networkError = new Error("Some kind of network error.");
 
       const link = ApolloLink.from([
         () => {
           return new Observable(_ => {
             throw networkError;
           });
-        },
+        }
       ]);
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       client.query({ query }).catch((error: ApolloError) => {
@@ -655,7 +655,7 @@ describe('client', () => {
     }, /deprecated/);
   });
 
-  it('should pass a network error correctly on a query with apollo-link network interface', done => {
+  it("should pass a network error correctly on a query with apollo-link network interface", done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -666,19 +666,19 @@ describe('client', () => {
       }
     `;
 
-    const networkError = new Error('Some kind of network error.');
+    const networkError = new Error("Some kind of network error.");
 
     const link = ApolloLink.from([
       () => {
         return new Observable(_ => {
           throw networkError;
         });
-      },
+      }
     ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     client.query({ query }).catch((error: ApolloError) => {
@@ -688,7 +688,7 @@ describe('client', () => {
     });
   });
 
-  it('should not warn when receiving multiple results from apollo-link network interface', () => {
+  it("should not warn when receiving multiple results from apollo-link network interface", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -703,17 +703,17 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const link = ApolloLink.from([() => Observable.of({ data }, { data })]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client.query({ query }).then((result: ExecutionResult) => {
@@ -721,23 +721,23 @@ describe('client', () => {
     });
   });
 
-  xit('should surface errors in observer.next as uncaught', done => {
-    const expectedError = new Error('this error should not reach the store');
-    const listeners = process.listeners('uncaughtException');
+  xit("should surface errors in observer.next as uncaught", done => {
+    const expectedError = new Error("this error should not reach the store");
+    const listeners = process.listeners("uncaughtException");
     const oldHandler = listeners[listeners.length - 1];
     const handleUncaught = (e: Error) => {
       console.log(e);
-      process.removeListener('uncaughtException', handleUncaught);
-      if (typeof oldHandler === 'function')
-        process.addListener('uncaughtException', oldHandler);
+      process.removeListener("uncaughtException", handleUncaught);
+      if (typeof oldHandler === "function")
+        process.addListener("uncaughtException", oldHandler);
       if (e === expectedError) {
         done();
       } else {
         done.fail(e);
       }
     };
-    process.removeListener('uncaughtException', oldHandler);
-    process.addListener('uncaughtException', handleUncaught);
+    process.removeListener("uncaughtException", oldHandler);
+    process.addListener("uncaughtException", handleUncaught);
 
     const query = gql`
       query people {
@@ -753,20 +753,20 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data },
+      result: { data }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const handle = client.watchQuery({ query });
@@ -774,25 +774,25 @@ describe('client', () => {
     handle.subscribe({
       next() {
         throw expectedError;
-      },
+      }
     });
   });
 
-  xit('should surfaces errors in observer.error as uncaught', done => {
-    const expectedError = new Error('this error should not reach the store');
-    const listeners = process.listeners('uncaughtException');
+  xit("should surfaces errors in observer.error as uncaught", done => {
+    const expectedError = new Error("this error should not reach the store");
+    const listeners = process.listeners("uncaughtException");
     const oldHandler = listeners[listeners.length - 1];
     const handleUncaught = (e: Error) => {
-      process.removeListener('uncaughtException', handleUncaught);
-      process.addListener('uncaughtException', oldHandler);
+      process.removeListener("uncaughtException", handleUncaught);
+      process.addListener("uncaughtException", oldHandler);
       if (e === expectedError) {
         done();
       } else {
         done.fail(e);
       }
     };
-    process.removeListener('uncaughtException', oldHandler);
-    process.addListener('uncaughtException', handleUncaught);
+    process.removeListener("uncaughtException", oldHandler);
+    process.addListener("uncaughtException", handleUncaught);
 
     const query = gql`
       query people {
@@ -806,26 +806,26 @@ describe('client', () => {
 
     const link = mockSingleLink({
       request: { query },
-      result: {},
+      result: {}
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const handle = client.watchQuery({ query });
     handle.subscribe({
       next() {
-        done.fail(new Error('did not expect next to be called'));
+        done.fail(new Error("did not expect next to be called"));
       },
       error() {
         throw expectedError;
-      },
+      }
     });
   });
 
-  it('should allow for subscribing to a request', done => {
+  it("should allow for subscribing to a request", done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -840,20 +840,20 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data },
+      result: { data }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const handle = client.watchQuery({ query });
@@ -862,11 +862,11 @@ describe('client', () => {
       next(result) {
         expect(result.data).toEqual(data);
         done();
-      },
+      }
     });
   });
 
-  it('should be able to transform queries', () => {
+  it("should be able to transform queries", () => {
     const query = gql`
       query {
         author {
@@ -887,32 +887,32 @@ describe('client', () => {
 
     const result = {
       author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
     const transformedResult = {
       author: {
-        firstName: 'John',
-        lastName: 'Smith',
-        __typename: 'Author',
-      },
+        firstName: "John",
+        lastName: "Smith",
+        __typename: "Author"
+      }
     };
 
     const link = mockSingleLink(
       {
         request: { query },
-        result: { data: result },
+        result: { data: result }
       },
       {
         request: { query: transformedQuery },
-        result: { data: transformedResult },
-      },
+        result: { data: transformedResult }
+      }
     );
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: true }),
+      cache: new InMemoryCache({ addTypename: true })
     });
 
     return client.query({ query }).then(actualResult => {
@@ -920,7 +920,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to transform queries on network-only fetches', () => {
+  it("should be able to transform queries on network-only fetches", () => {
     const query = gql`
       query {
         author {
@@ -940,41 +940,41 @@ describe('client', () => {
     `;
     const result = {
       author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
     const transformedResult = {
       author: {
-        firstName: 'John',
-        lastName: 'Smith',
-        __typename: 'Author',
-      },
+        firstName: "John",
+        lastName: "Smith",
+        __typename: "Author"
+      }
     };
     const link = mockSingleLink(
       {
         request: { query },
-        result: { data: result },
+        result: { data: result }
       },
       {
         request: { query: transformedQuery },
-        result: { data: transformedResult },
-      },
+        result: { data: transformedResult }
+      }
     );
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: true }),
+      cache: new InMemoryCache({ addTypename: true })
     });
 
     return client
-      .query({ fetchPolicy: 'network-only', query })
+      .query({ fetchPolicy: "network-only", query })
       .then(actualResult => {
         expect(actualResult.data).toEqual(transformedResult);
       });
   });
 
-  it('should handle named fragments on mutations', () => {
+  it("should handle named fragments on mutations", () => {
     const mutation = gql`
       mutation {
         starAuthor(id: 12) {
@@ -993,19 +993,19 @@ describe('client', () => {
     const result = {
       starAuthor: {
         author: {
-          __typename: 'Author',
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      },
+          __typename: "Author",
+          firstName: "John",
+          lastName: "Smith"
+        }
+      }
     };
     const link = mockSingleLink({
       request: { query: mutation },
-      result: { data: result },
+      result: { data: result }
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client.mutate({ mutation }).then(actualResult => {
@@ -1013,7 +1013,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle named fragments on network-only queries', () => {
+  it("should be able to handle named fragments on network-only queries", () => {
     const query = gql`
       fragment authorDetails on Author {
         firstName
@@ -1029,30 +1029,30 @@ describe('client', () => {
     `;
     const result = {
       author: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        __typename: "Author",
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data: result },
+      result: { data: result }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client
-      .query({ fetchPolicy: 'network-only', query })
+      .query({ fetchPolicy: "network-only", query })
       .then(actualResult => {
         expect(actualResult.data).toEqual(result);
       });
   });
 
-  it('should be able to handle named fragments with multiple fragments', () => {
+  it("should be able to handle named fragments with multiple fragments", () => {
     const query = gql`
       query {
         author {
@@ -1073,20 +1073,20 @@ describe('client', () => {
     `;
     const result = {
       author: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
-        address: '1337 10th St.',
-      },
+        __typename: "Author",
+        firstName: "John",
+        lastName: "Smith",
+        address: "1337 10th St."
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data: result },
+      result: { data: result }
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1094,7 +1094,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle named fragments', () => {
+  it("should be able to handle named fragments", () => {
     const query = gql`
       query {
         author {
@@ -1110,19 +1110,19 @@ describe('client', () => {
     `;
     const result = {
       author: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        __typename: "Author",
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data: result },
+      result: { data: result }
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1130,7 +1130,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle inlined fragments on an Interface type', () => {
+  it("should be able to handle inlined fragments on an Interface type", () => {
     const query = gql`
       query items {
         items {
@@ -1151,21 +1151,21 @@ describe('client', () => {
     const result = {
       items: [
         {
-          __typename: 'ColorItem',
-          id: '27tlpoPeXm6odAxj3paGQP',
-          color: 'red',
+          __typename: "ColorItem",
+          id: "27tlpoPeXm6odAxj3paGQP",
+          color: "red"
         },
         {
-          __typename: 'MonochromeItem',
-          id: '1t3iFLsHBm4c4RjOMdMgOO',
-        },
-      ],
+          __typename: "MonochromeItem",
+          id: "1t3iFLsHBm4c4RjOMdMgOO"
+        }
+      ]
     };
 
     const fancyFragmentMatcher = (
       idValue: any, // TODO types, please.
       typeCondition: string,
-      context: any,
+      context: any
     ): boolean => {
       const obj = context.store.get(idValue.id);
 
@@ -1174,7 +1174,7 @@ describe('client', () => {
       }
 
       const implementingTypesMap: { [key: string]: string[] } = {
-        Item: ['ColorItem', 'MonochromeItem'],
+        Item: ["ColorItem", "MonochromeItem"]
       };
 
       if (obj.__typename === typeCondition) {
@@ -1191,20 +1191,20 @@ describe('client', () => {
 
     const link = mockSingleLink({
       request: { query },
-      result: { data: result },
+      result: { data: result }
     });
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
-        fragmentMatcher: { match: fancyFragmentMatcher },
-      }),
+        fragmentMatcher: { match: fancyFragmentMatcher }
+      })
     });
     return client.query({ query }).then((actualResult: any) => {
       expect(actualResult.data).toEqual(result);
     });
   });
 
-  it('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', () => {
+  it("should be able to handle inlined fragments on an Interface type with introspection fragment matcher", () => {
     const query = gql`
       query items {
         items {
@@ -1225,20 +1225,20 @@ describe('client', () => {
     const result = {
       items: [
         {
-          __typename: 'ColorItem',
-          id: '27tlpoPeXm6odAxj3paGQP',
-          color: 'red',
+          __typename: "ColorItem",
+          id: "27tlpoPeXm6odAxj3paGQP",
+          color: "red"
         },
         {
-          __typename: 'MonochromeItem',
-          id: '1t3iFLsHBm4c4RjOMdMgOO',
-        },
-      ],
+          __typename: "MonochromeItem",
+          id: "1t3iFLsHBm4c4RjOMdMgOO"
+        }
+      ]
     };
 
     const link = mockSingleLink({
       request: { query },
-      result: { data: result },
+      result: { data: result }
     });
 
     const ifm = new IntrospectionFragmentMatcher({
@@ -1246,25 +1246,25 @@ describe('client', () => {
         __schema: {
           types: [
             {
-              kind: 'UNION',
-              name: 'Item',
+              kind: "UNION",
+              name: "Item",
               possibleTypes: [
                 {
-                  name: 'ColorItem',
+                  name: "ColorItem"
                 },
                 {
-                  name: 'MonochromeItem',
-                },
-              ],
-            },
-          ],
-        },
-      },
+                  name: "MonochromeItem"
+                }
+              ]
+            }
+          ]
+        }
+      }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm })
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1272,7 +1272,7 @@ describe('client', () => {
     });
   });
 
-  it('should call updateQueries and update after mutation on query with inlined fragments on an Interface type', done => {
+  it("should call updateQueries and update after mutation on query with inlined fragments on an Interface type", done => {
     const query = gql`
       query items {
         items {
@@ -1293,15 +1293,15 @@ describe('client', () => {
     const result = {
       items: [
         {
-          __typename: 'ColorItem',
-          id: '27tlpoPeXm6odAxj3paGQP',
-          color: 'red',
+          __typename: "ColorItem",
+          id: "27tlpoPeXm6odAxj3paGQP",
+          color: "red"
         },
         {
-          __typename: 'MonochromeItem',
-          id: '1t3iFLsHBm4c4RjOMdMgOO',
-        },
-      ],
+          __typename: "MonochromeItem",
+          id: "1t3iFLsHBm4c4RjOMdMgOO"
+        }
+      ]
     };
 
     const mutation = gql`
@@ -1310,18 +1310,18 @@ describe('client', () => {
       }
     `;
     const mutationResult = {
-      fortuneCookie: 'The waiter spit in your food',
+      fortuneCookie: "The waiter spit in your food"
     };
 
     const link = mockSingleLink(
       {
         request: { query },
-        result: { data: result },
+        result: { data: result }
       },
       {
         request: { query: mutation },
-        result: { data: mutationResult },
-      },
+        result: { data: mutationResult }
+      }
     );
 
     const ifm = new IntrospectionFragmentMatcher({
@@ -1329,25 +1329,25 @@ describe('client', () => {
         __schema: {
           types: [
             {
-              kind: 'UNION',
-              name: 'Item',
+              kind: "UNION",
+              name: "Item",
               possibleTypes: [
                 {
-                  name: 'ColorItem',
+                  name: "ColorItem"
                 },
                 {
-                  name: 'MonochromeItem',
-                },
-              ],
-            },
-          ],
-        },
-      },
+                  name: "MonochromeItem"
+                }
+              ]
+            }
+          ]
+        }
+      }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm })
     });
 
     const queryUpdaterSpy = jest.fn();
@@ -1356,7 +1356,7 @@ describe('client', () => {
       return prev;
     };
     const updateQueries = {
-      items: queryUpdater,
+      items: queryUpdater
     };
 
     const updateSpy = jest.fn();
@@ -1379,28 +1379,28 @@ describe('client', () => {
       },
       error(err) {
         done.fail(err);
-      },
+      }
     });
   });
 
-  it('should send operationName along with the query to the server', () => {
+  it("should send operationName along with the query to the server", () => {
     const query = gql`
       query myQueryName {
         fortuneCookie
       }
     `;
     const data = {
-      fortuneCookie: 'The waiter spit in your food',
+      fortuneCookie: "The waiter spit in your food"
     };
     const link = ApolloLink.from([
       request => {
-        expect(request.operationName).toBe('myQueryName');
+        expect(request.operationName).toBe("myQueryName");
         return Observable.of({ data });
-      },
+      }
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1408,24 +1408,24 @@ describe('client', () => {
     });
   });
 
-  it('should send operationName along with the mutation to the server', () => {
+  it("should send operationName along with the mutation to the server", () => {
     const mutation = gql`
       mutation myMutationName {
         fortuneCookie
       }
     `;
     const data = {
-      fortuneCookie: 'The waiter spit in your food',
+      fortuneCookie: "The waiter spit in your food"
     };
     const link = ApolloLink.from([
       request => {
-        expect(request.operationName).toBe('myMutationName');
+        expect(request.operationName).toBe("myMutationName");
         return Observable.of({ data });
-      },
+      }
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     return client.mutate({ mutation }).then(actualResult => {
@@ -1433,7 +1433,7 @@ describe('client', () => {
     });
   });
 
-  it('does not deduplicate queries if option is set to false', () => {
+  it("does not deduplicate queries if option is set to false", () => {
     const queryDoc = gql`
       query {
         author {
@@ -1443,13 +1443,13 @@ describe('client', () => {
     `;
     const data = {
       author: {
-        name: 'Jonas',
-      },
+        name: "Jonas"
+      }
     };
     const data2 = {
       author: {
-        name: 'Dhaivat',
-      },
+        name: "Dhaivat"
+      }
     };
 
     // we have two responses for identical queries, but only the first should be requested.
@@ -1458,18 +1458,18 @@ describe('client', () => {
       {
         request: { query: queryDoc },
         result: { data },
-        delay: 10,
+        delay: 10
       },
       {
         request: { query: queryDoc },
-        result: { data: data2 },
-      },
+        result: { data: data2 }
+      }
     );
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
 
-      queryDeduplication: false,
+      queryDeduplication: false
     });
 
     const q1 = client.query({ query: queryDoc });
@@ -1482,7 +1482,7 @@ describe('client', () => {
     });
   });
 
-  it('deduplicates queries by default', () => {
+  it("deduplicates queries by default", () => {
     const queryDoc = gql`
       query {
         author {
@@ -1492,13 +1492,13 @@ describe('client', () => {
     `;
     const data = {
       author: {
-        name: 'Jonas',
-      },
+        name: "Jonas"
+      }
     };
     const data2 = {
       author: {
-        name: 'Dhaivat',
-      },
+        name: "Dhaivat"
+      }
     };
 
     // we have two responses for identical queries, but only the first should be requested.
@@ -1507,16 +1507,16 @@ describe('client', () => {
       {
         request: { query: queryDoc },
         result: { data },
-        delay: 10,
+        delay: 10
       },
       {
         request: { query: queryDoc },
-        result: { data: data2 },
-      },
+        result: { data: data2 }
+      }
     );
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const q1 = client.query({ query: queryDoc });
@@ -1528,27 +1528,27 @@ describe('client', () => {
     });
   });
 
-  describe('deprecated options', () => {
+  describe("deprecated options", () => {
     const query = gql`
       query people {
         name
       }
     `;
 
-    it('errors when returnPartialData is used on query', () => {
+    it("errors when returnPartialData is used on query", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
       expect(() => {
         client.query({ query, returnPartialData: true } as WatchQueryOptions);
       }).toThrowError(/returnPartialData/);
     });
 
-    it('errors when returnPartialData is used on watchQuery', () => {
+    it("errors when returnPartialData is used on watchQuery", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
       expect(() => {
         client.query({ query, returnPartialData: true } as WatchQueryOptions);
@@ -1556,7 +1556,7 @@ describe('client', () => {
     });
   });
 
-  describe('accepts dataIdFromObject option', () => {
+  describe("accepts dataIdFromObject option", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -1572,17 +1572,17 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            id: '1',
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            id: "1",
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
-    it('for internal store', () => {
+    it("for internal store", () => {
       const link = mockSingleLink({
         request: { query },
-        result: { data },
+        result: { data }
       });
 
       const client = new ApolloClient({
@@ -1590,21 +1590,21 @@ describe('client', () => {
 
         cache: new InMemoryCache({
           dataIdFromObject: (obj: { id: any }) => obj.id,
-          addTypename: false,
-        }),
+          addTypename: false
+        })
       });
 
       return client.query({ query }).then(result => {
         expect(result.data).toEqual(data);
-        expect((client.cache as InMemoryCache).extract()['1']).toEqual({
-          id: '1',
-          name: 'Luke Skywalker',
+        expect((client.cache as InMemoryCache).extract()["1"]).toEqual({
+          id: "1",
+          name: "Luke Skywalker"
         });
       });
     });
   });
 
-  describe('cache-and-network fetchPolicy', () => {
+  describe("cache-and-network fetchPolicy", () => {
     const query = gql`
       query number {
         myNumber {
@@ -1615,57 +1615,57 @@ describe('client', () => {
 
     const initialData = {
       myNumber: {
-        n: 1,
-      },
+        n: 1
+      }
     };
     const networkFetch = {
       myNumber: {
-        n: 2,
-      },
+        n: 2
+      }
     };
 
     // Test that cache-and-network can only be used on watchQuery, not query.
-    it('errors when being used on query', () => {
+    it("errors when being used on query", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
       expect(() => {
-        client.query({ query, fetchPolicy: 'cache-and-network' });
+        client.query({ query, fetchPolicy: "cache-and-network" });
       }).toThrowError(/cache-and-network fetchPolicy/);
     });
 
-    it('errors when being used on query with defaultOptions', () => {
+    it("errors when being used on query with defaultOptions", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
         defaultOptions: {
           query: {
-            fetchPolicy: 'cache-and-network',
-          },
-        },
+            fetchPolicy: "cache-and-network"
+          }
+        }
       });
       expect(() => {
         client.query({ query });
       }).toThrowError(/cache-and-network fetchPolicy/);
     });
 
-    it('fetches from cache first, then network', done => {
+    it("fetches from cache first, then network", done => {
       const link = mockSingleLink({
         request: { query },
-        result: { data: networkFetch },
+        result: { data: networkFetch }
       });
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       client.writeQuery({ query, data: initialData });
 
       const obs = client.watchQuery({
         query,
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: "cache-and-network"
       });
 
       subscribeAndCount(done, obs, (handleCount, result) => {
@@ -1678,19 +1678,19 @@ describe('client', () => {
       });
     });
 
-    it('does not fail if cache entry is not present', done => {
+    it("does not fail if cache entry is not present", done => {
       const link = mockSingleLink({
         request: { query },
-        result: { data: networkFetch },
+        result: { data: networkFetch }
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       const obs = client.watchQuery({
         query,
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: "cache-and-network"
       });
 
       subscribeAndCount(done, obs, (handleCount, result) => {
@@ -1705,16 +1705,16 @@ describe('client', () => {
       });
     });
 
-    it('fails if network request fails', done => {
+    it("fails if network request fails", done => {
       const link = mockSingleLink(); // no queries = no replies.
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       const obs = client.watchQuery({
         query,
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: "cache-and-network"
       });
 
       let count = 0;
@@ -1728,30 +1728,30 @@ describe('client', () => {
           expect(e.message).toMatch(/No more mocked responses/);
           expect(count).toBe(1); // make sure next was called.
           setTimeout(done, 100);
-        },
+        }
       });
     });
 
-    it('fetches from cache first, then network and does not have an unhandled error', done => {
+    it("fetches from cache first, then network and does not have an unhandled error", done => {
       const link = mockSingleLink({
         request: { query },
-        result: { errors: [{ message: 'network failure' }] },
+        result: { errors: [{ message: "network failure" }] }
       });
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       client.writeQuery({ query, data: initialData });
 
       const obs = client.watchQuery({
         query,
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: "cache-and-network"
       });
       let shouldFail = true;
-      process.once('unhandledRejection', rejection => {
-        if (shouldFail) done.fail('promise had an unhandledRejection');
+      process.once("unhandledRejection", rejection => {
+        if (shouldFail) done.fail("promise had an unhandledRejection");
       });
       let count = 0;
       obs.subscribe({
@@ -1767,19 +1767,19 @@ describe('client', () => {
             shouldFail = false;
             done();
           }, 0);
-        },
+        }
       });
     });
   });
 
-  describe('standby queries', () => {
+  describe("standby queries", () => {
     // XXX queries can only be set to standby by setOptions. This is simply out of caution,
     // not some fundamental reason. We just want to make sure they're not used in unanticipated ways.
     // If there's a good use-case, the error and test could be removed.
-    it('cannot be started with watchQuery or query', () => {
+    it("cannot be started with watchQuery or query", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache()
       });
       expect(() =>
         client.watchQuery({
@@ -1788,36 +1788,36 @@ describe('client', () => {
               abc
             }
           `,
-          fetchPolicy: 'standby',
-        }),
+          fetchPolicy: "standby"
+        })
       ).toThrowError(
-        'client.watchQuery cannot be called with fetchPolicy set to "standby"',
+        'client.watchQuery cannot be called with fetchPolicy set to "standby"'
       );
     });
 
-    it('are not watching the store or notifying on updates', done => {
+    it("are not watching the store or notifying on updates", done => {
       const query = gql`
         {
           test
         }
       `;
-      const data = { test: 'ok' };
-      const data2 = { test: 'not ok' };
+      const data = { test: "ok" };
+      const data2 = { test: "not ok" };
 
       const link = mockSingleLink({
         request: { query },
-        result: { data },
+        result: { data }
       });
 
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+      const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
 
       let handleCalled = false;
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
+          obs.setOptions({ fetchPolicy: "standby" }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
           });
@@ -1830,39 +1830,39 @@ describe('client', () => {
         if (handleCount === 2) {
           handleCalled = true;
           done.fail(
-            new Error('Handle should never be called on standby query'),
+            new Error("Handle should never be called on standby query")
           );
         }
       });
     });
 
-    it('return the current result when coming out of standby', done => {
+    it("return the current result when coming out of standby", done => {
       const query = gql`
         {
           test
         }
       `;
-      const data = { test: 'ok' };
-      const data2 = { test: 'not ok' };
+      const data = { test: "ok" };
+      const data2 = { test: "not ok" };
 
       const link = mockSingleLink({
         request: { query },
-        result: { data },
+        result: { data }
       });
 
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+      const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
 
       let handleCalled = false;
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
+          obs.setOptions({ fetchPolicy: "standby" }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
             setTimeout(() => {
-              obs.setOptions({ fetchPolicy: 'cache-first' });
+              obs.setOptions({ fetchPolicy: "cache-first" });
             }, 10);
           });
         }
@@ -1875,7 +1875,7 @@ describe('client', () => {
     });
   });
 
-  describe('network-only fetchPolicy', () => {
+  describe("network-only fetchPolicy", () => {
     const query = gql`
       query number {
         myNumber {
@@ -1886,13 +1886,13 @@ describe('client', () => {
 
     const firstFetch = {
       myNumber: {
-        n: 1,
-      },
+        n: 1
+      }
     };
     const secondFetch = {
       myNumber: {
-        n: 2,
-      },
+        n: 2
+      }
     };
 
     let link: any;
@@ -1900,22 +1900,22 @@ describe('client', () => {
       link = mockSingleLink(
         {
           request: { query },
-          result: { data: firstFetch },
+          result: { data: firstFetch }
         },
         {
           request: { query },
-          result: { data: secondFetch },
-        },
+          result: { data: secondFetch }
+        }
       );
       //
     });
 
     afterAll(() => jest.useRealTimers());
 
-    it('forces the query to rerun', () => {
+    it("forces the query to rerun", () => {
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       // Run a query first to initialize the store
@@ -1923,21 +1923,21 @@ describe('client', () => {
         client
           .query({ query })
           // then query for real
-          .then(() => client.query({ query, fetchPolicy: 'network-only' }))
+          .then(() => client.query({ query, fetchPolicy: "network-only" }))
           .then(result => {
             expect(result.data).toEqual({ myNumber: { n: 2 } });
           })
       );
     });
 
-    it('can be disabled with ssrMode', () => {
+    it("can be disabled with ssrMode", () => {
       const client = new ApolloClient({
         link,
         ssrMode: true,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
-      const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
+      const options: WatchQueryOptions = { query, fetchPolicy: "network-only" };
 
       // Run a query first to initialize the store
       return (
@@ -1951,18 +1951,18 @@ describe('client', () => {
             // Test that options weren't mutated, issue #339
             expect(options).toEqual({
               query,
-              fetchPolicy: 'network-only',
+              fetchPolicy: "network-only"
             });
           })
       );
     });
 
-    it('can temporarily be disabled with ssrForceFetchDelay', () => {
+    it("can temporarily be disabled with ssrForceFetchDelay", () => {
       jest.useFakeTimers();
       const client = new ApolloClient({
         link,
         ssrForceFetchDelay: 100,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       // Run a query first to initialize the store
@@ -1970,14 +1970,14 @@ describe('client', () => {
         .query({ query })
         // then query for real
         .then(() => {
-          const promise = client.query({ query, fetchPolicy: 'network-only' });
+          const promise = client.query({ query, fetchPolicy: "network-only" });
           jest.runTimersToTime(0);
           return promise;
         })
         .then(result => {
           expect(result.data).toEqual({ myNumber: { n: 1 } });
           jest.runTimersToTime(100);
-          const promise = client.query({ query, fetchPolicy: 'network-only' });
+          const promise = client.query({ query, fetchPolicy: "network-only" });
           jest.runTimersToTime(0);
           return promise;
         })
@@ -1989,7 +1989,7 @@ describe('client', () => {
     });
   });
 
-  it('should expose a method called printAST that is prints graphql queries', () => {
+  it("should expose a method called printAST that is prints graphql queries", () => {
     const query = gql`
       query {
         fortuneCookie
@@ -1999,7 +1999,7 @@ describe('client', () => {
     expect(printAST(query)).toBe(print(query));
   });
 
-  it('should pass a network error correctly on a mutation', done => {
+  it("should pass a network error correctly on a mutation", done => {
     const mutation = gql`
       mutation {
         person {
@@ -2010,24 +2010,24 @@ describe('client', () => {
     `;
     const data = {
       person: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
-    const networkError = new Error('Some kind of network error.');
+    const networkError = new Error("Some kind of network error.");
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
         result: { data },
-        error: networkError,
+        error: networkError
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     client
       .mutate({ mutation })
       .then(_ => {
-        done.fail(new Error('Returned a result when it should not have.'));
+        done.fail(new Error("Returned a result when it should not have."));
       })
       .catch((error: ApolloError) => {
         expect(error.networkError).toBeDefined();
@@ -2036,7 +2036,7 @@ describe('client', () => {
       });
   });
 
-  it('should pass a GraphQL error correctly on a mutation', done => {
+  it("should pass a GraphQL error correctly on a mutation", done => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2049,22 +2049,22 @@ describe('client', () => {
     `;
     const data = {
       person: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
-    const errors = [new Error('Some kind of GraphQL error.')];
+    const errors = [new Error("Some kind of GraphQL error.")];
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
-        result: { data, errors },
+        result: { data, errors }
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
     client
       .mutate({ mutation })
       .then(_ => {
-        done.fail(new Error('Returned a result when it should not have.'));
+        done.fail(new Error("Returned a result when it should not have."));
       })
       .catch((error: ApolloError) => {
         expect(error.graphQLErrors).toBeDefined();
@@ -2073,7 +2073,7 @@ describe('client', () => {
         done();
       });
   });
-  it('should allow errors to be returned from a mutation', done => {
+  it("should allow errors to be returned from a mutation", done => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2086,20 +2086,20 @@ describe('client', () => {
     `;
     const data = {
       person: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
-    const errors = [new Error('Some kind of GraphQL error.')];
+    const errors = [new Error("Some kind of GraphQL error.")];
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
-        result: { data, errors },
+        result: { data, errors }
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
     client
-      .mutate({ mutation, errorPolicy: 'all' })
+      .mutate({ mutation, errorPolicy: "all" })
       .then(result => {
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toBe(1);
@@ -2111,7 +2111,7 @@ describe('client', () => {
         throw error;
       });
   });
-  it('should strip errors on a mutation if ignored', done => {
+  it("should strip errors on a mutation if ignored", done => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2124,20 +2124,20 @@ describe('client', () => {
     `;
     const data = {
       person: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
+        firstName: "John",
+        lastName: "Smith"
+      }
     };
-    const errors = [new Error('Some kind of GraphQL error.')];
+    const errors = [new Error("Some kind of GraphQL error.")];
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
-        result: { data, errors },
+        result: { data, errors }
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
     client
-      .mutate({ mutation, errorPolicy: 'ignore' })
+      .mutate({ mutation, errorPolicy: "ignore" })
       .then(result => {
         expect(result.errors).toBeUndefined();
         expect(result.data).toEqual(data);
@@ -2148,7 +2148,7 @@ describe('client', () => {
       });
   });
 
-  it('should rollback optimistic after mutation got a GraphQL error', done => {
+  it("should rollback optimistic after mutation got a GraphQL error", done => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2162,34 +2162,34 @@ describe('client', () => {
     const data = {
       newPerson: {
         person: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      },
+          firstName: "John",
+          lastName: "Smith"
+        }
+      }
     };
-    const errors = [new Error('Some kind of GraphQL error.')];
+    const errors = [new Error("Some kind of GraphQL error.")];
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
-        result: { data, errors },
+        result: { data, errors }
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
     const mutatePromise = client.mutate({
       mutation,
       optimisticResponse: {
         newPerson: {
           person: {
-            firstName: 'John*',
-            lastName: 'Smith*',
-          },
-        },
-      },
+            firstName: "John*",
+            lastName: "Smith*"
+          }
+        }
+      }
     });
     expect((client.cache as any).optimistic.length).toBe(1);
     mutatePromise
       .then(_ => {
-        done.fail(new Error('Returned a result when it should not have.'));
+        done.fail(new Error("Returned a result when it should not have."));
       })
       .catch((_: ApolloError) => {
         expect((client.cache as any).optimistic.length).toBe(0);
@@ -2197,23 +2197,23 @@ describe('client', () => {
       });
   });
 
-  it('has a resetStore method which calls QueryManager', done => {
+  it("has a resetStore method which calls QueryManager", done => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
     client.queryManager = {
       resetStore: () => {
         done();
-      },
+      }
     } as QueryManager;
     client.resetStore();
   });
 
-  it('has an onResetStore method which takes a callback to be called after resetStore', async () => {
+  it("has an onResetStore method which takes a callback to be called after resetStore", async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     const onResetStore = jest.fn();
@@ -2224,10 +2224,10 @@ describe('client', () => {
     expect(onResetStore).toHaveBeenCalled();
   });
 
-  it('onResetStore returns a method that unsubscribes the callback', async () => {
+  it("onResetStore returns a method that unsubscribes the callback", async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     const onResetStore = jest.fn();
@@ -2239,12 +2239,12 @@ describe('client', () => {
     expect(onResetStore).not.toHaveBeenCalled();
   });
 
-  it('resetStore waits until all onResetStore callbacks are called', async () => {
+  it("resetStore waits until all onResetStore callbacks are called", async () => {
     const delay = time => new Promise(r => setTimeout(r, time));
 
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     let count = 0;
@@ -2268,20 +2268,20 @@ describe('client', () => {
     expect(count).toEqual(2);
   });
 
-  it('has a reFetchObservableQueries method which calls QueryManager', done => {
+  it("has a reFetchObservableQueries method which calls QueryManager", done => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
     client.queryManager = {
       reFetchObservableQueries: () => {
         done();
-      },
+      }
     } as QueryManager;
     client.reFetchObservableQueries();
   });
 
-  it('should enable dev tools logging', () => {
+  it("should enable dev tools logging", () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -2296,21 +2296,21 @@ describe('client', () => {
       allPeople: {
         people: [
           {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
+            name: "Luke Skywalker"
+          }
+        ]
+      }
     };
 
-    it('with self-made store', () => {
+    it("with self-made store", () => {
       const link = mockSingleLink({
         request: { query: cloneDeep(query) },
-        result: { data },
+        result: { data }
       });
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false })
       });
 
       const log: any[] = [];
@@ -2320,23 +2320,23 @@ describe('client', () => {
 
       return client.query({ query }).then(() => {
         expect(log.length).toBe(2);
-        expect(log[1].state.queries['0'].loading).toBe(false);
+        expect(log[1].state.queries["0"].loading).toBe(false);
       });
     });
   });
 
-  it('should propagate errors from network interface to observers', done => {
+  it("should propagate errors from network interface to observers", done => {
     const link = ApolloLink.from([
       () =>
         new Observable(x => {
-          x.error(new Error('Uh oh!'));
+          x.error(new Error("Uh oh!"));
           return;
-        }),
+        })
     ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     const handle = client.watchQuery({
@@ -2346,18 +2346,18 @@ describe('client', () => {
           b
           c
         }
-      `,
+      `
     });
 
     handle.subscribe({
       error(error) {
-        expect(error.message).toBe('Network error: Uh oh!');
+        expect(error.message).toBe("Network error: Uh oh!");
         done();
-      },
+      }
     });
   });
 
-  it('should throw a GraphQL error', () => {
+  it("should throw a GraphQL error", () => {
     const query = gql`
       query {
         posts {
@@ -2368,27 +2368,27 @@ describe('client', () => {
     `;
     const errors: GraphQLError[] = [
       {
-        name: 'test',
-        message: 'Cannot query field "foo" on type "Post".',
-      },
+        name: "test",
+        message: 'Cannot query field "foo" on type "Post".'
+      }
     ];
     const link = mockSingleLink({
       request: { query },
-      result: { errors },
+      result: { errors }
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     return client.query({ query }).catch(err => {
       expect(err.message).toBe(
-        'GraphQL error: Cannot query field "foo" on type "Post".',
+        'GraphQL error: Cannot query field "foo" on type "Post".'
       );
     });
   });
 
-  it('should warn if server returns wrong data', () => {
+  it("should warn if server returns wrong data", () => {
     const query = gql`
       query {
         todos {
@@ -2403,30 +2403,30 @@ describe('client', () => {
       data: {
         todos: [
           {
-            id: '1',
-            name: 'Todo 1',
+            id: "1",
+            name: "Todo 1",
             price: 100,
-            __typename: 'Todo',
-          },
-        ],
-      },
+            __typename: "Todo"
+          }
+        ]
+      }
     };
     const link = mockSingleLink({
       request: { query },
-      result,
+      result
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     return withWarning(
       () => client.query({ query }),
-      /Missing field description/,
+      /Missing field description/
     );
   });
 
-  it('runs a query with the connection directive and writes it to the store key defined in the directive', () => {
+  it("runs a query with the connection directive and writes it to the store key defined in the directive", () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2447,20 +2447,20 @@ describe('client', () => {
     const result = {
       books: [
         {
-          name: 'abcd',
-          __typename: 'Book',
-        },
-      ],
+          name: "abcd",
+          __typename: "Book"
+        }
+      ]
     };
 
     const link = mockSingleLink({
       request: { query: transformedQuery },
-      result: { data: result },
+      result: { data: result }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     return client.query({ query }).then(actualResult => {
@@ -2468,7 +2468,7 @@ describe('client', () => {
     });
   });
 
-  it('should remove the connection directive before the link is sent', () => {
+  it("should remove the connection directive before the link is sent", () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection {
@@ -2489,20 +2489,20 @@ describe('client', () => {
     const result = {
       books: [
         {
-          name: 'abcd',
-          __typename: 'Book',
-        },
-      ],
+          name: "abcd",
+          __typename: "Book"
+        }
+      ]
     };
 
     const link = mockSingleLink({
       request: { query: transformedQuery },
-      result: { data: result },
+      result: { data: result }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     return client.query({ query }).then(actualResult => {
@@ -2511,8 +2511,8 @@ describe('client', () => {
   });
 });
 
-describe('@connect', () => {
-  it('should run a query with the connection directive and write the result to the store key defined in the directive', () => {
+describe("@connect", () => {
+  it("should run a query with the connection directive and write the result to the store key defined in the directive", () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2533,40 +2533,40 @@ describe('@connect', () => {
     const result = {
       books: [
         {
-          name: 'abcd',
-          __typename: 'Book',
-        },
-      ],
+          name: "abcd",
+          __typename: "Book"
+        }
+      ]
     };
 
     const link = mockSingleLink({
       request: { query: transformedQuery },
-      result: { data: result },
+      result: { data: result }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     return client.query({ query }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toEqual({
-        'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
+        "ROOT_QUERY.abc.0": { name: "abcd", __typename: "Book" },
         ROOT_QUERY: {
           abc: [
             {
               generated: true,
-              id: 'ROOT_QUERY.abc.0',
-              type: 'id',
-            },
-          ],
-        },
+              id: "ROOT_QUERY.abc.0",
+              type: "id"
+            }
+          ]
+        }
       });
     });
   });
 
-  it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
+  it("should run a query with the connection directive and filter arguments and write the result to the correct store key", () => {
     const query = gql`
       query books($order: string) {
         books(skip: 0, limit: 2, order: $order)
@@ -2587,45 +2587,45 @@ describe('@connect', () => {
     const result = {
       books: [
         {
-          name: 'abcd',
-          __typename: 'Book',
-        },
-      ],
+          name: "abcd",
+          __typename: "Book"
+        }
+      ]
     };
 
-    const variables = { order: 'popularity' };
+    const variables = { order: "popularity" };
 
     const link = mockSingleLink({
       request: { query: transformedQuery, variables },
-      result: { data: result },
+      result: { data: result }
     });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache()
     });
 
     return client.query({ query, variables }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toEqual({
         'ROOT_QUERY.abc({"order":"popularity"}).0': {
-          name: 'abcd',
-          __typename: 'Book',
+          name: "abcd",
+          __typename: "Book"
         },
         ROOT_QUERY: {
           'abc({"order":"popularity"})': [
             {
               generated: true,
               id: 'ROOT_QUERY.abc({"order":"popularity"}).0',
-              type: 'id',
-            },
-          ],
-        },
+              type: "id"
+            }
+          ]
+        }
       });
     });
   });
 
-  describe('default settings', () => {
+  describe("default settings", () => {
     const query = gql`
       query number {
         myNumber {
@@ -2636,32 +2636,32 @@ describe('@connect', () => {
 
     const initialData = {
       myNumber: {
-        n: 1,
-      },
+        n: 1
+      }
     };
     const networkFetch = {
       myNumber: {
-        n: 2,
-      },
+        n: 2
+      }
     };
-    it('allows setting default options for watchQuery', done => {
+    it("allows setting default options for watchQuery", done => {
       const link = mockSingleLink({
         request: { query },
-        result: { data: networkFetch },
+        result: { data: networkFetch }
       });
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
         defaultOptions: {
           watchQuery: {
-            fetchPolicy: 'cache-and-network',
-          },
-        },
+            fetchPolicy: "cache-and-network"
+          }
+        }
       });
 
       client.writeQuery({
         query,
-        data: initialData,
+        data: initialData
       });
 
       const obs = client.watchQuery({ query });
@@ -2675,25 +2675,25 @@ describe('@connect', () => {
         }
       });
     });
-    it('allows setting default options for query', () => {
-      const errors = [{ message: 'failure', name: 'failure' }];
+    it("allows setting default options for query", () => {
+      const errors = [{ message: "failure", name: "failure" }];
       const link = mockSingleLink({
         request: { query },
-        result: { errors },
+        result: { errors }
       });
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
         defaultOptions: {
-          query: { errorPolicy: 'all' },
-        },
+          query: { errorPolicy: "all" }
+        }
       });
 
       return client.query({ query }).then(result => {
         expect(result.errors).toEqual(errors);
       });
     });
-    it('allows setting default options for mutation', () => {
+    it("allows setting default options for mutation", () => {
       const mutation = gql`
         mutation upVote($id: ID!) {
           upvote(id: $id) {
@@ -2703,20 +2703,20 @@ describe('@connect', () => {
       `;
 
       const data = {
-        upvote: { success: true },
+        upvote: { success: true }
       };
 
       const link = mockSingleLink({
         request: { query: mutation, variables: { id: 1 } },
-        result: { data },
+        result: { data }
       });
 
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
         defaultOptions: {
-          mutate: { variables: { id: 1 } },
-        },
+          mutate: { variables: { id: 1 } }
+        }
       });
 
       return client.mutate({ mutation }).then(result => {
@@ -2730,11 +2730,11 @@ function clientRoundtrip(
   query: DocumentNode,
   data: ExecutionResult,
   variables?: any,
-  fragmentMatcher?: FragmentMatcherInterface,
+  fragmentMatcher?: FragmentMatcherInterface
 ) {
   const link = mockSingleLink({
     request: { query: cloneDeep(query) },
-    result: data,
+    result: data
   });
 
   const config = {};
@@ -2742,7 +2742,7 @@ function clientRoundtrip(
 
   const client = new ApolloClient({
     link,
-    cache: new InMemoryCache(config),
+    cache: new InMemoryCache(config)
   });
 
   return client.query({ query, variables }).then(result => {

@@ -1,10 +1,10 @@
-import { DocumentNode, ExecutionResult } from 'graphql';
-import { FetchResult } from 'apollo-link';
-import { DataProxy } from 'apollo-cache';
+import { DocumentNode, ExecutionResult } from "graphql";
+import { FetchResult } from "apollo-link";
+import { DataProxy } from "apollo-cache";
 
-import { MutationQueryReducersMap } from './types';
+import { MutationQueryReducersMap } from "./types";
 
-import { PureQueryOptions } from './types';
+import { PureQueryOptions } from "./types";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -17,12 +17,12 @@ import { PureQueryOptions } from './types';
  */
 
 export type FetchPolicy =
-  | 'cache-first'
-  | 'cache-and-network'
-  | 'network-only'
-  | 'cache-only'
-  | 'no-cache'
-  | 'standby';
+  | "cache-first"
+  | "cache-and-network"
+  | "network-only"
+  | "cache-only"
+  | "no-cache"
+  | "standby";
 
 /**
  * errorPolicy determines the level of events for errors in the execution result. The options are:
@@ -31,7 +31,7 @@ export type FetchPolicy =
  * - all: errors are treated like data and will notify observables
  */
 
-export type ErrorPolicy = 'none' | 'ignore' | 'all';
+export type ErrorPolicy = "none" | "ignore" | "all";
 
 /**
  * We can change these options to an ObservableQuery
@@ -103,7 +103,7 @@ export type UpdateQueryFn = (
   options: {
     subscriptionData: { data: any };
     variables?: { [key: string]: any };
-  },
+  }
 ) => Object;
 
 export type SubscribeToMoreOptions = {
@@ -212,5 +212,5 @@ export interface MutationOptions<T = { [key: string]: any }>
 // Add a level of indirection for `typedoc`.
 export type MutationUpdaterFn<T = { [key: string]: any }> = (
   proxy: DataProxy,
-  mutationResult: FetchResult<T>,
+  mutationResult: FetchResult<T>
 ) => void;

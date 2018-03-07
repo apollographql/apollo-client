@@ -1,6 +1,6 @@
-import { print } from 'graphql/language/printer';
-import gql from 'graphql-tag';
-import { FragmentDefinitionNode, OperationDefinitionNode } from 'graphql';
+import { print } from "graphql/language/printer";
+import gql from "graphql-tag";
+import { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
 
 import {
   checkDocument,
@@ -10,11 +10,11 @@ import {
   createFragmentMap,
   FragmentMap,
   getDefaultValues,
-  getOperationName,
-} from '../getFromAST';
+  getOperationName
+} from "../getFromAST";
 
-describe('AST utility functions', () => {
-  it('should correctly check a document for correctness', () => {
+describe("AST utility functions", () => {
+  it("should correctly check a document for correctness", () => {
     const multipleQueries = gql`
       query {
         author {
@@ -50,7 +50,7 @@ describe('AST utility functions', () => {
     }).not.toThrow();
   });
 
-  it('should get fragment definitions from a document containing a single fragment', () => {
+  it("should get fragment definitions from a document containing a single fragment", () => {
     const singleFragmentDefinition = gql`
       query {
         author {
@@ -70,14 +70,14 @@ describe('AST utility functions', () => {
       }
     `;
     const expectedResult: FragmentDefinitionNode[] = [
-      expectedDoc.definitions[0] as FragmentDefinitionNode,
+      expectedDoc.definitions[0] as FragmentDefinitionNode
     ];
     const actualResult = getFragmentDefinitions(singleFragmentDefinition);
     expect(actualResult.length).toEqual(expectedResult.length);
     expect(print(actualResult[0])).toBe(print(expectedResult[0]));
   });
 
-  it('should get fragment definitions from a document containing a multiple fragments', () => {
+  it("should get fragment definitions from a document containing a multiple fragments", () => {
     const multipleFragmentDefinitions = gql`
       query {
         author {
@@ -107,13 +107,13 @@ describe('AST utility functions', () => {
     `;
     const expectedResult: FragmentDefinitionNode[] = [
       expectedDoc.definitions[0] as FragmentDefinitionNode,
-      expectedDoc.definitions[1] as FragmentDefinitionNode,
+      expectedDoc.definitions[1] as FragmentDefinitionNode
     ];
     const actualResult = getFragmentDefinitions(multipleFragmentDefinitions);
     expect(actualResult.map(print)).toEqual(expectedResult.map(print));
   });
 
-  it('should get the correct query definition out of a query containing multiple fragments', () => {
+  it("should get the correct query definition out of a query containing multiple fragments", () => {
     const queryWithFragments = gql`
       fragment authorDetails on Author {
         firstName
@@ -146,7 +146,7 @@ describe('AST utility functions', () => {
     expect(print(actualResult)).toEqual(print(expectedResult));
   });
 
-  it('should throw if we try to get the query definition of a document with no query', () => {
+  it("should throw if we try to get the query definition of a document with no query", () => {
     const mutationWithFragments = gql`
       fragment authorDetails on Author {
         firstName
@@ -164,7 +164,7 @@ describe('AST utility functions', () => {
     }).toThrow();
   });
 
-  it('should get the correct mutation definition out of a mutation with multiple fragments', () => {
+  it("should get the correct mutation definition out of a mutation with multiple fragments", () => {
     const mutationWithFragments = gql`
       mutation {
         createAuthor(firstName: "John", lastName: "Smith") {
@@ -190,7 +190,7 @@ describe('AST utility functions', () => {
     expect(print(actualResult)).toEqual(print(expectedResult));
   });
 
-  it('should create the fragment map correctly', () => {
+  it("should create the fragment map correctly", () => {
     const fragments = getFragmentDefinitions(gql`
       fragment authorDetails on Author {
         firstName
@@ -204,36 +204,36 @@ describe('AST utility functions', () => {
     const fragmentMap = createFragmentMap(fragments);
     const expectedTable: FragmentMap = {
       authorDetails: fragments[0],
-      moreAuthorDetails: fragments[1],
+      moreAuthorDetails: fragments[1]
     };
     expect(fragmentMap).toEqual(expectedTable);
   });
 
-  it('should return an empty fragment map if passed undefined argument', () => {
+  it("should return an empty fragment map if passed undefined argument", () => {
     expect(createFragmentMap(undefined)).toEqual({});
   });
 
-  it('should get the operation name out of a query', () => {
+  it("should get the operation name out of a query", () => {
     const query = gql`
       query nameOfQuery {
         fortuneCookie
       }
     `;
     const operationName = getOperationName(query);
-    expect(operationName).toEqual('nameOfQuery');
+    expect(operationName).toEqual("nameOfQuery");
   });
 
-  it('should get the operation name out of a mutation', () => {
+  it("should get the operation name out of a mutation", () => {
     const query = gql`
       mutation nameOfMutation {
         fortuneCookie
       }
     `;
     const operationName = getOperationName(query);
-    expect(operationName).toEqual('nameOfMutation');
+    expect(operationName).toEqual("nameOfMutation");
   });
 
-  it('should return null if the query does not have an operation name', () => {
+  it("should return null if the query does not have an operation name", () => {
     const query = gql`
       {
         fortuneCookie
@@ -243,7 +243,7 @@ describe('AST utility functions', () => {
     expect(operationName).toEqual(null);
   });
 
-  it('should throw if type definitions found in document', () => {
+  it("should throw if type definitions found in document", () => {
     const queryWithTypeDefination = gql`
       fragment authorDetails on Author {
         firstName
@@ -263,12 +263,12 @@ describe('AST utility functions', () => {
     expect(() => {
       getQueryDefinition(queryWithTypeDefination);
     }).toThrowError(
-      'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"',
+      'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"'
     );
   });
 
-  describe('getDefaultValues', () => {
-    it('will create an empty variable object if no default values are provided', () => {
+  describe("getDefaultValues", () => {
+    it("will create an empty variable object if no default values are provided", () => {
       const basicQuery = gql`
         query people($first: Int, $second: String) {
           allPeople(first: $first) {
@@ -282,7 +282,7 @@ describe('AST utility functions', () => {
       expect(getDefaultValues(getQueryDefinition(basicQuery))).toEqual({});
     });
 
-    it('will create a variable object based on the definition node with default values', () => {
+    it("will create a variable object based on the definition node with default values", () => {
       const basicQuery = gql`
         query people($first: Int = 1, $second: String!) {
           allPeople(first: $first) {
@@ -306,10 +306,10 @@ describe('AST utility functions', () => {
       `;
 
       expect(getDefaultValues(getQueryDefinition(basicQuery))).toEqual({
-        first: 1,
+        first: 1
       });
       expect(getDefaultValues(getMutationDefinition(complexMutation))).toEqual({
-        test: { key1: ['value', 'value2'], key2: { key3: 4 } },
+        test: { key1: ["value", "value2"], key2: { key3: 4 } }
       });
     });
   });

@@ -25,18 +25,18 @@ const Component = props => {
 Recompose has a utility function `branch()` which let us compose different HoC's based on the results of a test function. We can combine it with another Recompose method, `renderComponent()`. So we can say "If we are loading, render `LoadingPlaceholder` instead of our default component", like so:
 
 ```js
-import { propType } from 'graphql-anywhere'
+import { propType } from "graphql-anywhere";
 
-const renderWhileLoading = (component, propName = 'data') =>
+const renderWhileLoading = (component, propName = "data") =>
   branch(
     props => props[propName] && props[propName].loading,
-    renderComponent(component),
+    renderComponent(component)
   );
 
-const Component = props => (<div>Our component for {props.user.name}</div>)
+const Component = props => <div>Our component for {props.user.name}</div>;
 Component.propTypes = {
-  user: propType(getUser).isRequired, // autogenerating proptypes, as we expect them to be always there (yeah, if no error)
-}
+  user: propType(getUser).isRequired // autogenerating proptypes, as we expect them to be always there (yeah, if no error)
+};
 
 const enhancedComponent = compose(
   graphql(getUser, { name: "user" }),
@@ -58,24 +58,24 @@ Similar to loading state above, we might want to display a different component i
 const renderForError = (component, propName = "data") =>
   branch(
     props => props[propName] && props[propName].error,
-    renderComponent(component),
+    renderComponent(component)
   );
 
-const ErrorComponent = props =>(
+const ErrorComponent = props => (
   <span>
     Something went wrong, you can try to
     <button onClick={props.refetch}>refetch</button>
   </span>
-)
+);
 
 const setRefetchProp = (propName = "data") =>
-  withProps(props => ({refetch: props[propName] && props[propName].data}))
+  withProps(props => ({ refetch: props[propName] && props[propName].data }));
 
 const enhancedComponent = compose(
   graphql(getUser, { name: "user" }),
   renderWhileLoading(LoadingPlaceholder, "user"),
   setRefetchProp("user"),
-  renderForError(ErrorComponent, "user"),
+  renderForError(ErrorComponent, "user")
 )(Component);
 
 export default enhancedComponent;
@@ -94,15 +94,15 @@ But it is just a stateless component, it has no lifecycle hooks. If we need extr
 const execAtMount = lifecycle({
   componentWillMount() {
     executeSomething();
-  },
-})
+  }
+});
 
 const enhancedComponent = compose(
   graphql(getUser, { name: "user" }),
   renderWhileLoading(LoadingPlaceholder, "user"),
   setRefetchProp("user"),
   renderForError(ErrorComponent, "user"),
-  execAtMount,
+  execAtMount
 )(Component);
 ```
 
@@ -120,7 +120,10 @@ const withPickerValue = withState("pickerValue", "setPickerValue", null);
 
 // find matching option
 const findOption = (options, ourLabel) =>
-  lodashFind(options, option => option.label.toLowerCase() === ourLabel.toLowerCase());
+  lodashFind(
+    options,
+    option => option.label.toLowerCase() === ourLabel.toLowerCase()
+  );
 
 const withAutoPicking = lifecycle({
   componentWillReceiveProps(nextProps) {
@@ -129,8 +132,11 @@ const withAutoPicking = lifecycle({
       return;
     }
     // networkStatus change from 1 to 7 - initial load finished successfully
-    if (this.props.data.networkStatus === 1 && nextProps.data.networkStatus === 7) {
-      const match = findOption(nextProps.data.options)
+    if (
+      this.props.data.networkStatus === 1 &&
+      nextProps.data.networkStatus === 7
+    ) {
+      const match = findOption(nextProps.data.options);
       if (match) {
         nextProps.setPickerValue(match);
       }
@@ -149,13 +155,13 @@ const withAutoPicking = lifecycle({
         setPickerValue(match);
       }
     }
-  },
+  }
 });
 
 const Component = props => (
   <Select
     loading={props.data.loading}
-    value={props.pickerValue && props.pickerValue.value || null}
+    value={(props.pickerValue && props.pickerValue.value) || null}
     onChange={props.setPickerValue}
     options={props.data.options || undefined}
   />
@@ -164,7 +170,7 @@ const Component = props => (
 const enhancedComponent = compose(
   graphql(getOptions),
   withPickerValue,
-  withAutoPicking,
+  withAutoPicking
 )(Component);
 ```
 
@@ -222,10 +228,7 @@ const withData = compose(
       }
       if (activeMigration && pollInterval !== ACTIVE_INTERVAL) {
         setPollInterval(ACTIVE_INTERVAL);
-      } else if (
-        !activeMigration &&
-        pollInterval !== DEFAULT_INTERVAL
-      ) {
+      } else if (!activeMigration && pollInterval !== DEFAULT_INTERVAL) {
         setPollInterval(DEFAULT_INTERVAL);
       }
     }

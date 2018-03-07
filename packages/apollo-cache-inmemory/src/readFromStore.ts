@@ -1,4 +1,4 @@
-import graphqlAnywhere, { Resolver, ExecInfo } from 'graphql-anywhere';
+import graphqlAnywhere, { Resolver, ExecInfo } from "graphql-anywhere";
 
 import {
   IdValue,
@@ -9,16 +9,16 @@ import {
   isJsonValue,
   isIdValue,
   toIdValue,
-  getStoreKeyName,
-} from 'apollo-utilities';
-import { Cache } from 'apollo-cache';
+  getStoreKeyName
+} from "apollo-utilities";
+import { Cache } from "apollo-cache";
 
 import {
   ReadQueryOptions,
   IdValueWithPreviousResult,
   ReadStoreContext,
-  DiffQueryAgainstStoreOptions,
-} from './types';
+  DiffQueryAgainstStoreOptions
+} from "./types";
 
 /**
  * The key which the cache id for a given value is stored in the result object. This key is private
@@ -28,7 +28,7 @@ import {
  *
  * @private
  */
-export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
+export const ID_KEY = typeof Symbol !== "undefined" ? Symbol("id") : "@@id";
 
 /**
  * Resolves the result of a query solely from the store (i.e. never hits the server).
@@ -46,13 +46,13 @@ export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
  * will be returned to preserve referential equality.
  */
 export function readQueryFromStore<QueryType>(
-  options: ReadQueryOptions,
+  options: ReadQueryOptions
 ): QueryType {
   const optsPatch = { returnPartialData: false };
 
   return diffQueryAgainstStore<QueryType>({
     ...options,
-    ...optsPatch,
+    ...optsPatch
   }).result;
 }
 
@@ -61,7 +61,7 @@ const readStoreResolver: Resolver = (
   idValue: IdValueWithPreviousResult,
   args: any,
   context: ReadStoreContext,
-  { resultKey, directives }: ExecInfo,
+  { resultKey, directives }: ExecInfo
 ) => {
   assertIdValue(idValue);
 
@@ -70,13 +70,13 @@ const readStoreResolver: Resolver = (
   const storeKeyName = getStoreKeyName(fieldName, args, directives);
   let fieldValue = (obj || {})[storeKeyName];
 
-  if (typeof fieldValue === 'undefined') {
+  if (typeof fieldValue === "undefined") {
     if (
       context.cacheRedirects &&
       obj &&
-      (obj.__typename || objId === 'ROOT_QUERY')
+      (obj.__typename || objId === "ROOT_QUERY")
     ) {
-      const typename = obj.__typename || 'Query';
+      const typename = obj.__typename || "Query";
 
       // Look for the type in the custom resolver map
       const type = context.cacheRedirects[typename];
@@ -86,21 +86,21 @@ const readStoreResolver: Resolver = (
         if (resolver) {
           fieldValue = resolver(obj, args, {
             getCacheKey: (obj: { __typename: string; id: string | number }) =>
-              toIdValue(context.dataIdFromObject(obj)),
+              toIdValue(context.dataIdFromObject(obj))
           });
         }
       }
     }
   }
 
-  if (typeof fieldValue === 'undefined') {
+  if (typeof fieldValue === "undefined") {
     if (!context.returnPartialData) {
       throw new Error(
         `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(
           obj,
           null,
-          2,
-        )}.`,
+          2
+        )}.`
       );
     }
 
@@ -131,7 +131,7 @@ const readStoreResolver: Resolver = (
   if (idValue.previousResult) {
     fieldValue = addPreviousResultToIdValues(
       fieldValue,
-      idValue.previousResult[resultKey],
+      idValue.previousResult[resultKey]
     );
   }
 
@@ -152,9 +152,9 @@ export function diffQueryAgainstStore<T>({
   variables,
   previousResult,
   returnPartialData = true,
-  rootId = 'ROOT_QUERY',
+  rootId = "ROOT_QUERY",
   fragmentMatcherFunction,
-  config,
+  config
 }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
   // Throw the right validation error by trying to find a query in the document
   const queryDefinition = getQueryDefinition(query);
@@ -168,13 +168,13 @@ export function diffQueryAgainstStore<T>({
     dataIdFromObject: (config && config.dataIdFromObject) || null,
     cacheRedirects: (config && config.cacheRedirects) || {},
     // Flag set during execution
-    hasMissingField: false,
+    hasMissingField: false
   };
 
   const rootIdValue = {
-    type: 'id',
+    type: "id",
     id: rootId,
-    previousResult,
+    previousResult
   };
 
   const result = graphqlAnywhere(
@@ -185,13 +185,13 @@ export function diffQueryAgainstStore<T>({
     variables,
     {
       fragmentMatcher: fragmentMatcherFunction,
-      resultMapper,
-    },
+      resultMapper
+    }
   );
 
   return {
     result,
-    complete: !context.hasMissingField,
+    complete: !context.hasMissingField
   };
 }
 
@@ -223,7 +223,7 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
   if (isIdValue(value)) {
     return {
       ...value,
-      previousResult,
+      previousResult
     };
   } else if (Array.isArray(value)) {
     const idToPreviousResult: Map<string, any> = new Map();
@@ -279,7 +279,7 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
       // Confirm that we have the same keys in both the current result and the previous result.
       Object.keys(idValue.previousResult).reduce(
         (sameKeys, key) => sameKeys && currentResultKeys.indexOf(key) > -1,
-        true,
+        true
       ) &&
       // Perform a shallow comparison of the result fields with the previous result. If all of
       // the shallow fields are referentially equal to the fields of the previous result we can
@@ -289,8 +289,8 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
       currentResultKeys.every(key =>
         areNestedArrayItemsStrictlyEqual(
           resultFields[key],
-          idValue.previousResult[key],
-        ),
+          idValue.previousResult[key]
+        )
       );
 
     if (sameAsPreviousResult) {
@@ -304,7 +304,7 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
     enumerable: false,
     configurable: false,
     writable: false,
-    value: idValue.id,
+    value: idValue.id
   });
 
   return resultFields;
@@ -320,7 +320,7 @@ type NestedArray<T> = T | Array<T | Array<T | Array<T>>>;
  */
 function areNestedArrayItemsStrictlyEqual(
   a: NestedArray<any>,
-  b: NestedArray<any>,
+  b: NestedArray<any>
 ): boolean {
   // If `a` and `b` are referentially equal, return true.
   if (a === b) {

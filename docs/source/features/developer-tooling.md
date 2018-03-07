@@ -11,11 +11,11 @@ The [Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-cl
 
 The devtools appear as an "Apollo" tab in your Chrome inspector, along side the "Elements" and "Console" tabs. There are currently 3 main features of the devtools:
 
- * GraphiQL: Send queries to your server through the Apollo network interface, or query the Apollo cache to see what data is loaded.
- * Normalized store inspector: Visualize your GraphQL store the way Apollo Client sees it, and search by field names or values.
- * Watched query inspector: View active queries and variables, and locate the associated UI components.
+* GraphiQL: Send queries to your server through the Apollo network interface, or query the Apollo cache to see what data is loaded.
+* Normalized store inspector: Visualize your GraphQL store the way Apollo Client sees it, and search by field names or values.
+* Watched query inspector: View active queries and variables, and locate the associated UI components.
 
- ![GraphiQL Console](../assets/devtools/apollo-client-devtools/apollo-devtools-graphiql.png)
+![GraphiQL Console](../assets/devtools/apollo-client-devtools/apollo-devtools-graphiql.png)
 
 Make requests against either your app’s GraphQL server or the Apollo Client cache through the Chrome developer console. This version of GraphiQL leverages your app’s network interface, so there’s no configuration necessary — it automatically passes along the proper HTTP headers, etc. the same way your Apollo Client app does.
 
@@ -30,16 +30,15 @@ View the queries being actively watched on any given page. See when they're load
 <h3 id="installation">Installation</h3>
 
 You can install the extension via the [Chrome Webstore](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm).
-If you want to install a local version of the extension instead, skip ahead to the __Developing__ section.
+If you want to install a local version of the extension instead, skip ahead to the **Developing** section.
 
 <h3 id="configuration">Configuration</h3>
 
-While your app is in dev mode, the devtools will appear as an "Apollo" tab in your chrome inspector. To enable the devtools in your app even in production, pass `connectToDevTools: true` to the ApolloClient constructor in your app.  Pass `connectToDevTools: false` if want to manually disable this functionality.
+While your app is in dev mode, the devtools will appear as an "Apollo" tab in your chrome inspector. To enable the devtools in your app even in production, pass `connectToDevTools: true` to the ApolloClient constructor in your app. Pass `connectToDevTools: false` if want to manually disable this functionality.
 
 The "Apollo" tab will appear in the Chrome console if a global `window.__APOLLO_CLIENT__` object exists in your app. Apollo Client adds this hook to the window automatically unless `process.env.NODE_ENV === 'production'`. If you would like to use the devtools in production, just manually attach your Apollo Client instance to `window.__APOLLO_CLIENT__` or pass `connectToDevTools: true` to the constructor.
 
 Find more information about contributing and debugging on the [Apollo Client DevTools GitHub page](https://github.com/apollographql/apollo-client-devtools).
-
 
 <h2 id="codegen">Apollo Codegen</h2>
 
@@ -116,14 +115,14 @@ When using `apollo-codegen` with Typescript or Flow, make sure to add the `__typ
 
 If you're using a client like `apollo-client` that does this automatically for your GraphQL operations, pass in the -`-addTypename` option to `apollo-codegen` to make sure the generated Typescript and Flow types have the `__typename` field as well. This is required to ensure proper type generation support for `GraphQLUnionType` and `GraphQLInterfaceType` fields.
 
-**Why is the __typename field required?**
+**Why is the \_\_typename field required?**
 
 Using the type information from the GraphQL schema, we can infer the possible types for fields. However, in the case of a `GraphQLUnionType` or `GraphQLInterfaceType`, there are multiple types that are possible for that field. This is best modeled using a disjoint union with the `__typename`
 as the discriminant.
 
 For example, given a schema:
-```graphql
 
+```graphql
 interface Character {
   name: String!
 }
@@ -135,7 +134,6 @@ type Human implements Character {
 type Droid implements Character {
   primaryFunction: String
 }
-
 ```
 
 Whenever a field of type `Character` is encountered, it could be either a Human or Droid. Human and Droid objects
@@ -163,16 +161,19 @@ Apollo Codegen will generate a union type for Character.
 
 ```javascript
 export type CharactersQuery = {
-  characters: Array<{
-    __typename: 'Human',
-    name: string,
-    homePlanet: ?string
-  } | {
-    __typename: 'Droid',
-    name: string,
-    primaryFunction: ?string
-  }>
-}
+  characters: Array<
+    | {
+        __typename: "Human",
+        name: string,
+        homePlanet: ?string
+      }
+    | {
+        __typename: "Droid",
+        name: string,
+        primaryFunction: ?string
+      }
+  >
+};
 ```
 
 This type can then be used as follows to ensure that all possible types are handled:
@@ -180,11 +181,21 @@ This type can then be used as follows to ensure that all possible types are hand
 ```javascript
 function CharacterFigures({ characters }: CharactersQuery) {
   return characters.map(character => {
-    switch(character.__typename) {
+    switch (character.__typename) {
       case "Human":
-        return <HumanFigure homePlanet={character.homePlanet} name={character.name} />
+        return (
+          <HumanFigure
+            homePlanet={character.homePlanet}
+            name={character.name}
+          />
+        );
       case "Droid":
-        return <DroidFigure primaryFunction={character.primaryFunction} name={character.name} />
+        return (
+          <DroidFigure
+            primaryFunction={character.primaryFunction}
+            name={character.name}
+          />
+        );
     }
   });
 }

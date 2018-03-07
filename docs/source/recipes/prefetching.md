@@ -9,10 +9,10 @@ In Apollo Client, prefetching is very simple and can be done by running a compon
 ```js
 const FeedEntry = ({ entry, currentUser, onVote, client }) => {
   const repoLink = `/${entry.repository.full_name}`;
-  const prefetchComments = (repoFullName) => () => {
+  const prefetchComments = repoFullName => () => {
     client.query({
       query: COMMENT_QUERY,
-      variables: { repoName: repoFullName },
+      variables: { repoName: repoFullName }
     });
   };
 
@@ -28,8 +28,11 @@ const FeedEntry = ({ entry, currentUser, onVote, client }) => {
           user_url={entry.postedBy.html_url}
           username={entry.postedBy.login}
         >
-          <Link to={repoLink} onMouseOver={prefetchComments(entry.repository.full_name)}>
-              View comments ({entry.commentCount})
+          <Link
+            to={repoLink}
+            onMouseOver={prefetchComments(entry.repository.full_name)}
+          >
+            View comments ({entry.commentCount})
           </Link>
         </RepoInfo>
       </div>

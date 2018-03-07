@@ -1,10 +1,10 @@
-import resolve from 'rollup-plugin-node-resolve';
+import resolve from "rollup-plugin-node-resolve";
 
-import build from '../../rollup.config';
+import build from "../../rollup.config";
 
 export default Object.assign(
   {
-    plugins: [resolve()],
+    plugins: [resolve()]
   },
-  build('apollo.cache.core'),
+  build("apollo.cache.core")
 );

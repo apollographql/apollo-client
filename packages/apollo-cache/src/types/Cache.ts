@@ -1,4 +1,4 @@
-import { DataProxy } from './DataProxy';
+import { DataProxy } from "./DataProxy";
 
 export namespace Cache {
   export type WatchCallback = (newData: any) => void;

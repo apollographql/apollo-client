@@ -1,13 +1,13 @@
-import { ExecutionResult, DocumentNode } from 'graphql';
-import { ApolloCache, Cache, DataProxy } from 'apollo-cache';
+import { ExecutionResult, DocumentNode } from "graphql";
+import { ApolloCache, Cache, DataProxy } from "apollo-cache";
 
-import { QueryStoreValue } from '../data/queries';
+import { QueryStoreValue } from "../data/queries";
 import {
   getOperationName,
   tryFunctionOrLogError,
-  graphQLResultHasError,
-} from 'apollo-utilities';
-import { MutationQueryReducer } from '../core/types';
+  graphQLResultHasError
+} from "apollo-utilities";
+import { MutationQueryReducer } from "../core/types";
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -38,7 +38,7 @@ export class DataStore<TSerialized> {
     document: DocumentNode,
     variables: any,
     fetchMoreForQueryId: string | undefined,
-    ignoreErrors: boolean = false,
+    ignoreErrors: boolean = false
   ) {
     let writeWithErrors = !graphQLResultHasError(result);
     if (ignoreErrors && graphQLResultHasError(result) && result.data) {
@@ -47,9 +47,9 @@ export class DataStore<TSerialized> {
     if (!fetchMoreForQueryId && writeWithErrors) {
       this.cache.write({
         result: result.data,
-        dataId: 'ROOT_QUERY',
+        dataId: "ROOT_QUERY",
         query: document,
-        variables: variables,
+        variables: variables
       });
     }
   }
@@ -57,16 +57,16 @@ export class DataStore<TSerialized> {
   public markSubscriptionResult(
     result: ExecutionResult,
     document: DocumentNode,
-    variables: any,
+    variables: any
   ) {
     // the subscription interface should handle not sending us results we no longer subscribe to.
     // XXX I don't think we ever send in an object with errors, but we might in the future...
     if (!graphQLResultHasError(result)) {
       this.cache.write({
         result: result.data,
-        dataId: 'ROOT_SUBSCRIPTION',
+        dataId: "ROOT_SUBSCRIPTION",
         query: document,
-        variables: variables,
+        variables: variables
       });
     }
   }
@@ -81,7 +81,7 @@ export class DataStore<TSerialized> {
   }) {
     if (mutation.optimisticResponse) {
       let optimistic: Object;
-      if (typeof mutation.optimisticResponse === 'function') {
+      if (typeof mutation.optimisticResponse === "function") {
         optimistic = mutation.optimisticResponse(mutation.variables);
       } else {
         optimistic = mutation.optimisticResponse;
@@ -94,7 +94,7 @@ export class DataStore<TSerialized> {
           document: mutation.document,
           variables: mutation.variables,
           updateQueries: mutation.updateQueries,
-          update: mutation.update,
+          update: mutation.update
         });
       };
 
@@ -124,9 +124,9 @@ export class DataStore<TSerialized> {
       const cacheWrites: Cache.WriteOptions[] = [];
       cacheWrites.push({
         result: mutation.result.data,
-        dataId: 'ROOT_MUTATION',
+        dataId: "ROOT_MUTATION",
         query: mutation.document,
-        variables: mutation.variables,
+        variables: mutation.variables
       });
 
       if (mutation.updateQueries) {
@@ -139,7 +139,7 @@ export class DataStore<TSerialized> {
               query: query.document,
               variables: query.variables,
               returnPartialData: true,
-              optimistic: false,
+              optimistic: false
             });
 
             if (!complete) {
@@ -151,17 +151,17 @@ export class DataStore<TSerialized> {
               updater(currentQueryResult, {
                 mutationResult: mutation.result,
                 queryName: getOperationName(query.document) || undefined,
-                queryVariables: query.variables,
-              }),
+                queryVariables: query.variables
+              })
             );
 
             // Write the modified result back into the store if we got a new result.
             if (nextQueryResult) {
               cacheWrites.push({
                 result: nextQueryResult,
-                dataId: 'ROOT_QUERY',
+                dataId: "ROOT_QUERY",
                 query: query.document,
-                variables: query.variables,
+                variables: query.variables
               });
             }
           });
@@ -185,7 +185,7 @@ export class DataStore<TSerialized> {
 
   public markMutationComplete({
     mutationId,
-    optimisticResponse,
+    optimisticResponse
   }: {
     mutationId: string;
     optimisticResponse?: any;
@@ -197,13 +197,13 @@ export class DataStore<TSerialized> {
   public markUpdateQueryResult(
     document: DocumentNode,
     variables: any,
-    newResult: any,
+    newResult: any
   ) {
     this.cache.write({
       result: newResult,
-      dataId: 'ROOT_QUERY',
+      dataId: "ROOT_QUERY",
       variables,
-      query: document,
+      query: document
     });
   }
 

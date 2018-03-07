@@ -5,23 +5,23 @@
  */
 
 // externals
-import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult } from 'graphql';
-import { ApolloLink, Operation, Observable } from 'apollo-link';
-import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
+import gql from "graphql-tag";
+import { DocumentNode, ExecutionResult } from "graphql";
+import { ApolloLink, Operation, Observable } from "apollo-link";
+import { InMemoryCache, ApolloReducerConfig } from "apollo-cache-inmemory";
 
-import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
+import { MockSubscriptionLink } from "../../../__mocks__/mockLinks";
 
 // core
-import { ApolloQueryResult } from '../../types';
-import { NetworkStatus } from '../../networkStatus';
-import { ObservableQuery } from '../../ObservableQuery';
-import { WatchQueryOptions } from '../../watchQueryOptions';
-import { QueryManager } from '../../QueryManager';
-import { DataStore } from '../../../data/store';
+import { ApolloQueryResult } from "../../types";
+import { NetworkStatus } from "../../networkStatus";
+import { ObservableQuery } from "../../ObservableQuery";
+import { WatchQueryOptions } from "../../watchQueryOptions";
+import { QueryManager } from "../../QueryManager";
+import { DataStore } from "../../../data/store";
 
-describe('Subscription lifecycles', () => {
-  it('cleans up and reuses data like QueryRecycler wants', done => {
+describe("Subscription lifecycles", () => {
+  it("cleans up and reuses data like QueryRecycler wants", done => {
     const query = gql`
       query Luke {
         people_one(id: 1) {
@@ -35,22 +35,22 @@ describe('Subscription lifecycles', () => {
 
     const initialData = {
       people_one: {
-        name: 'Luke Skywalker',
-        friends: [{ name: 'Leia Skywalker' }],
-      },
+        name: "Luke Skywalker",
+        friends: [{ name: "Leia Skywalker" }]
+      }
     };
 
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
-      link,
+      link
     });
 
     // step 1, get some data
     const observable = queryManager.watchQuery<any>({
       query,
       variables: {},
-      fetchPolicy: 'cache-and-network',
+      fetchPolicy: "cache-and-network"
     });
 
     const observableQueries = [];
@@ -62,7 +62,7 @@ describe('Subscription lifecycles', () => {
 
       observableQuery.setOptions({
         query,
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: "cache-and-network"
       });
 
       return observableQuery;
@@ -82,14 +82,14 @@ describe('Subscription lifecycles', () => {
 
           // step 2, recycle it
           observable.setOptions({
-            fetchPolicy: 'standby',
+            fetchPolicy: "standby",
             pollInterval: 0,
-            fetchResults: false,
+            fetchResults: false
           });
 
           observableQueries.push({
             observableQuery: observable,
-            subscription: observable.subscribe({}),
+            subscription: observable.subscribe({})
           });
 
           // step 3, unsubscribe from observable
@@ -104,7 +104,7 @@ describe('Subscription lifecycles', () => {
             done();
           }, 10);
         }
-      },
+      }
     });
 
     setInterval(() => {

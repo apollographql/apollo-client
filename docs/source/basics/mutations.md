@@ -64,19 +64,21 @@ Most mutations will require arguments in the form of query variables, and you ma
 The simplest option is to directly pass options to the default `mutate` prop when you call it in the wrapped component:
 
 ```js
-import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import React, { Component } from "react";
+import { graphql } from "react-apollo";
+import gql from "graphql-tag";
 
 class NewEntry extends Component {
   onClick() {
-    this.props.mutate({
-      variables: { repoFullName: 'apollographql/apollo-client' }
-    })
+    this.props
+      .mutate({
+        variables: { repoFullName: "apollographql/apollo-client" }
+      })
       .then(({ data }) => {
-        console.log('got data', data);
-      }).catch((error) => {
-        console.log('there was an error sending the query', error);
+        console.log("got data", data);
+      })
+      .catch(error => {
+        console.log("there was an error sending the query", error);
       });
   }
 
@@ -103,30 +105,28 @@ While the above approach with the default prop works just fine, typically you'd 
 ```js
 const NewEntryWithData = graphql(submitRepository, {
   props: ({ mutate }) => ({
-    submit: (repoFullName) => mutate({ variables: { repoFullName } }),
-  }),
+    submit: repoFullName => mutate({ variables: { repoFullName } })
+  })
 })(NewEntry);
 ```
 
 Here's that in context with a component, which can now be much simpler because it just needs to pass one argument:
 
 ```js
-import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import React, { Component } from "react";
+import { graphql } from "react-apollo";
+import gql from "graphql-tag";
 
 const NewEntry = ({ submit }) => (
-  <div onClick={() => submit('apollographql/apollo-client')}>
-    Click me
-  </div>
+  <div onClick={() => submit("apollographql/apollo-client")}>Click me</div>
 );
 
 const submitRepository = gql`...`; // Same query as above
 
 const NewEntryWithData = graphql(submitRepository, {
   props: ({ mutate }) => ({
-    submit: (repoFullName) => mutate({ variables: { repoFullName } }),
-  }),
+    submit: repoFullName => mutate({ variables: { repoFullName } })
+  })
 })(NewEntry);
 ```
 
@@ -137,10 +137,9 @@ Note that, in general, you don't need to use the results from the mutation callb
 If you need more than one mutation on a component, you can make a graphql container for each:
 
 ```js
-const ComponentWithMutations =
-  graphql(submitNewUser, { name: 'newUserMutation' })(
-    graphql(submitRepository, { name: 'newRepositoryMutation' })(Component)
-  )
+const ComponentWithMutations = graphql(submitNewUser, {
+  name: "newUserMutation"
+})(graphql(submitRepository, { name: "newRepositoryMutation" })(Component));
 ```
 
 Make sure to use the [`name` option on the `graphql()` container](setup#graphql-config-name) to name the provided prop, so that the two containers don't both try to name their function `mutate`.
@@ -148,17 +147,18 @@ Make sure to use the [`name` option on the `graphql()` container](setup#graphql-
 If you want a better syntax for the above, consider using [`compose`](setup#compose):
 
 ```js
-import { compose } from 'react-apollo';
+import { compose } from "react-apollo";
 
 const ComponentWithMutations = compose(
-  graphql(submitNewUser, { name: 'newUserMutation' }),
-  graphql(submitRepository, { name: 'newRepositoryMutation' })
+  graphql(submitNewUser, { name: "newUserMutation" }),
+  graphql(submitRepository, { name: "newRepositoryMutation" })
 )(Component);
 ```
 
 This does the exact same thing as the previous snippet, but with a nicer syntax that flattens things out.
 
 If you need to run multiple mutations in one query you can do that like so:
+
 ```
 const replaceUser = gql`
   mutation replaceUser($userToAdd: User!, $userToRemove: User! ) {
@@ -178,11 +178,12 @@ const ReplaceCurrentUser = graphql(replaceUser, {
   },
 })(Component);
 ```
+
 These mutations will be run in series, so the first one is guaranteed to succeed before the second one will start. This is useful if you have multiple mutations that need to be run at the same time and that are dependant on each other. You can use [mutation batching](./network-layer.html#MutationBatching) if the order doesn't matter and your server supports batching.
 
 <h2 id="optimistic-ui">Optimistic UI</h2>
 
-Sometimes your client code can easily predict the result of a successful mutation even before the server responds with the result. For instance, in GitHunt, when a user comments on a repository, we want to show the new comment in the UI immediately, without waiting on the latency of a round trip to the server, giving the user a faster UI experience. This is what we call [Optimistic UI](../features/optimistic-ui.html). This is possible with Apollo if the client can predict an *optimistic response* for the mutation.
+Sometimes your client code can easily predict the result of a successful mutation even before the server responds with the result. For instance, in GitHunt, when a user comments on a repository, we want to show the new comment in the UI immediately, without waiting on the latency of a round trip to the server, giving the user a faster UI experience. This is what we call [Optimistic UI](../features/optimistic-ui.html). This is possible with Apollo if the client can predict an _optimistic response_ for the mutation.
 
 All you need to do is specify the `optimisticResponse` option. This "fake result" will be used to update active queries immediately, in the same way that the server's mutation response would have done. The optimistic patches are stored in a separate place in the cache, so once the actual mutation returns, the relevant optimistic update is automatically thrown away and replaced with the real result.
 
@@ -237,7 +238,6 @@ In GraphQL, mutations can return any type, and that type can be queried just lik
 
 In most cases, the data available from a mutation result should be the server developer's best guess of the data a client would need to understand what happened on the server. For example, a mutation that creates a new comment on a blog post might return the comment itself. A mutation that reorders an array might need to return the whole array.
 
-
 <h2 id="store-updates">Updating the cache after a mutation</h2>
 
 Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update our cached data: after a mutation. As such, Apollo Client has optimized the experience for updating your cache with the read and write methods after a mutation with the `update` function. Let us say that we have the following GraphQL mutation:
@@ -270,12 +270,12 @@ At the end of our mutation we want our query to include the new todo like we had
 // We assume that the GraphQL operations `TodoCreateMutation` and
 // `TodoAppQuery` have already been defined using the `gql` tag.
 
-const text = 'Hello, world!';
+const text = "Hello, world!";
 
 client.mutate({
   mutation: TodoCreateMutation,
   variables: {
-    text,
+    text
   },
   update: (proxy, { data: { createTodo } }) => {
     // Read the data from our cache for this query.
@@ -286,7 +286,7 @@ client.mutate({
 
     // Write our data back to the cache.
     proxy.writeQuery({ query: TodoAppQuery, data });
-  },
+  }
 });
 ```
 
@@ -309,11 +309,13 @@ The reason the `mutate` function accepts the same options is that it will use th
 ```js
 function MyComponent({ mutate }) {
   return (
-    <button onClick={() => {
-      mutate({
-        variables: { foo: 42 },
-      });
-    }}>
+    <button
+      onClick={() => {
+        mutate({
+          variables: { foo: 42 }
+        });
+      }}
+    >
       Mutate
     </button>
   );
@@ -321,7 +323,6 @@ function MyComponent({ mutate }) {
 
 export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
-
 
 <h3 id="graphql-mutation-options">`config.options`</h3>
 
@@ -339,29 +340,31 @@ The properties accepted in this options object may also be accepted by the [`pro
 export default graphql(gql`mutation { ... }`, {
   options: {
     // Options go here.
-  },
+  }
 })(MyComponent);
 ```
 
 ```js
 export default graphql(gql`mutation { ... }`, {
-  options: (props) => ({
+  options: props => ({
     // Options are computed from `props` here.
-  }),
+  })
 })(MyComponent);
 ```
 
 ```js
 function MyComponent({ mutate }) {
   return (
-    <button onClick={() => {
-      mutate({
-        // Options are component from `props` and component state here.
-      });
-    }}>
+    <button
+      onClick={() => {
+        mutate({
+          // Options are component from `props` and component state here.
+        });
+      }}
+    >
       Mutate
     </button>
-  )
+  );
 }
 
 export default graphql(gql`mutation { ... }`)(MyComponent);
@@ -374,18 +377,21 @@ The variables which will be used to execute the mutation operation. These variab
 **Example:**
 
 ```js
-export default graphql(gql`
+export default graphql(
+  gql`
   mutation ($foo: String!, $bar: String!) {
     ...
   }
-`, {
-  options: (props) => ({
-    variables: {
-      foo: props.foo,
-      bar: props.bar,
-    },
-  }),
-})(MyComponent);
+`,
+  {
+    options: props => ({
+      variables: {
+        foo: props.foo,
+        bar: props.bar
+      }
+    })
+  }
+)(MyComponent);
 ```
 
 <h3 id="graphql-mutation-options-optimisticResponse">`options.optimisticResponse`</h3>
@@ -401,29 +407,31 @@ This optimistic response will be used with [`options.update`](#graphql-mutation-
 ```js
 function MyComponent({ newText, mutate }) {
   return (
-    <button onClick={() => {
-      mutate({
-        variables: {
-          text: newText,
-        },
-        // The optimistic response has all of the fields that are included in
-        // the GraphQL mutation document below.
-        optimisticResponse: {
-          createTodo: {
-            id: -1, // A temporary id. The server decides the real id.
-            text: newText,
-            completed: false,
+    <button
+      onClick={() => {
+        mutate({
+          variables: {
+            text: newText
           },
-        },
-      });
-    }}>
+          // The optimistic response has all of the fields that are included in
+          // the GraphQL mutation document below.
+          optimisticResponse: {
+            createTodo: {
+              id: -1, // A temporary id. The server decides the real id.
+              text: newText,
+              completed: false
+            }
+          }
+        });
+      }}
+    >
       Add Todo
     </button>
   );
 }
 
 export default graphql(gql`
-  mutation ($text: String!) {
+  mutation($text: String!) {
     createTodo(text: $text) {
       id
       text
@@ -445,30 +453,33 @@ To read the data from the store that you are changing, make sure to use methods 
 
 For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../features/caching.html#updating-the-cache-after-a-mutation).
 
-[`DataProxy`]: caching.html#direct
-[`writeQuery`]: caching.html#writequery-and-writefragment
-[`writeFragment`]: caching.html#writequery-and-writefragment
-[`readQuery`]: caching.html#readquery
-[`readFragment`]: caching.html#readfragment
+[`dataproxy`]: caching.html#direct
+[`writequery`]: caching.html#writequery-and-writefragment
+[`writefragment`]: caching.html#writequery-and-writefragment
+[`readquery`]: caching.html#readquery
+[`readfragment`]: caching.html#readfragment
 
 **Example:**
 
 ```js
-const query = gql`{ todos { ... } }`
+const query = gql`{ todos { ... } }`;
 
-export default graphql(gql`
+export default graphql(
+  gql`
   mutation ($text: String!) {
     createTodo(text: $text) { ... }
   }
-`, {
-  options: {
-    update: (proxy, { data: { createTodo } }) => {
-      const data = proxy.readQuery({ query });
-      data.todos.push(createTodo);
-      proxy.writeQuery({ query, data });
-    },
-  },
-})(MyComponent);
+`,
+  {
+    options: {
+      update: (proxy, { data: { createTodo } }) => {
+        const data = proxy.readQuery({ query });
+        data.todos.push(createTodo);
+        proxy.writeQuery({ query, data });
+      }
+    }
+  }
+)(MyComponent);
 ```
 
 <h3 id="graphql-mutation-options-refetchQueries">`options.refetchQueries`</h3>
@@ -483,8 +494,8 @@ If `options.refetchQueries` is an array of strings then Apollo Client will look 
 
 If `options.refetchQueries` is an array of objects then the objects must have two properties:
 
-- `query`: Query is a required property that accepts a GraphQL query created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL query operation that will be executed once the mutation has completed.
-- `[variables]`: Is an optional object of variables that is required when `query` accepts some variables.
+* `query`: Query is a required property that accepts a GraphQL query created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL query operation that will be executed once the mutation has completed.
+* `[variables]`: Is an optional object of variables that is required when `query` accepts some variables.
 
 If an array of objects with this shape is specified then Apollo Client will refetch these queries with their variables.
 
@@ -493,51 +504,44 @@ If an array of objects with this shape is specified then Apollo Client will refe
 ```js
 export default graphql(gql`mutation { ... }`, {
   options: {
-    refetchQueries: [
-      'CommentList',
-      'PostList',
-    ],
-  },
+    refetchQueries: ["CommentList", "PostList"]
+  }
 })(MyComponent);
 ```
 
 ```js
-import { COMMENT_LIST_QUERY } from '../components/CommentList';
+import { COMMENT_LIST_QUERY } from "../components/CommentList";
 
 export default graphql(gql`mutation { ... }`, {
-  options: (props) => ({
+  options: props => ({
     refetchQueries: [
       {
-        query: COMMENT_LIST_QUERY,
+        query: COMMENT_LIST_QUERY
       },
       {
         query: gql`
-          query ($id: ID!) {
+          query($id: ID!) {
             post(id: $id) {
               commentCount
             }
           }
         `,
         variables: {
-          id: props.postID,
-        },
-      },
-    ],
-  }),
+          id: props.postID
+        }
+      }
+    ]
+  })
 })(MyComponent);
 ```
+
 ```js
 export default graphql(gql`mutation { ... }`, {
   options: {
-    refetchQueries: (mutationResult) => [
-      'CommentList',
-      'PostList',
-    ],
-  },
+    refetchQueries: mutationResult => ["CommentList", "PostList"]
+  }
 })(MyComponent);
 ```
-
-
 
 <h3 id="graphql-mutation-options-updateQueries">`options.updateQueries`</h3>
 
@@ -571,9 +575,9 @@ The first argument to the function you provide as the value for your object will
 
 The second argument to your function value will be an object with three properties:
 
-- `mutationResult`: The `mutationResult` property will represent the result of your mutation after hitting the server. If you provided an [`options.optimisticResponse`](#graphql-mutation-options-optimisticResponse) then `mutationResult` may be that object.
-- `queryVariables`: The last set of variables that the query was executed with. This is helpful because when you specify the query name it will only update the data in the store for your current variable set.
-- `queryName`: This is the name of the query you are updating. It is the same name as the key you provided to `options.updateQueries`.
+* `mutationResult`: The `mutationResult` property will represent the result of your mutation after hitting the server. If you provided an [`options.optimisticResponse`](#graphql-mutation-options-optimisticResponse) then `mutationResult` may be that object.
+* `queryVariables`: The last set of variables that the query was executed with. This is helpful because when you specify the query name it will only update the data in the store for your current variable set.
+* `queryName`: This is the name of the query you are updating. It is the same name as the key you provided to `options.updateQueries`.
 
 The return value of your `options.updateQueries` functions _must_ have the same shape as your first `previousData` argument. However, you _must not_ mutate the `previousData` object. Instead you must create a new object with your changes. Just like in a Redux reducer.
 
@@ -582,28 +586,29 @@ To learn more about `options.updateQueries` read our usage documentation on [con
 **Example:**
 
 ```js
-export default graphql(gql`
+export default graphql(
+  gql`
   mutation ($text: String!) {
     submitComment(text: $text) { ... }
   }
-`, {
-  options: {
-    updateQueries: {
-      Comments: (previousData, { mutationResult }) => {
-        const newComment = mutationResult.data.submitComment;
-        // Note how we return a new copy of `previousData` instead of mutating
-        // it. This is just like a Redux reducer!
-        return {
-          ...previousData,
-          entry: {
-            ...previousData.entry,
-            comments: [newComment, ...previousData.entry.comments],
-          },
-        };
-      },
-    },
-  },
-})(MyComponent);
+`,
+  {
+    options: {
+      updateQueries: {
+        Comments: (previousData, { mutationResult }) => {
+          const newComment = mutationResult.data.submitComment;
+          // Note how we return a new copy of `previousData` instead of mutating
+          // it. This is just like a Redux reducer!
+          return {
+            ...previousData,
+            entry: {
+              ...previousData.entry,
+              comments: [newComment, ...previousData.entry.comments]
+            }
+          };
+        }
+      }
+    }
+  }
+)(MyComponent);
 ```
-
-

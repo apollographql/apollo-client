@@ -1,11 +1,11 @@
-import { ObservableQuery } from '../../src/core/ObservableQuery';
-import { ApolloQueryResult } from '../../src/core/types';
-import { Subscription } from '../../src/util/Observable';
+import { ObservableQuery } from "../../src/core/ObservableQuery";
+import { ApolloQueryResult } from "../../src/core/types";
+import { Subscription } from "../../src/util/Observable";
 
 export default function subscribeAndCount(
   done: (...args) => void,
   observable: ObservableQuery<any>,
-  cb: (handleCount: number, result: ApolloQueryResult<any>) => any,
+  cb: (handleCount: number, result: ApolloQueryResult<any>) => any
 ): Subscription {
   let handleCount = 0;
   const subscription = observable.subscribe({
@@ -23,7 +23,7 @@ export default function subscribeAndCount(
         });
       }
     },
-    error: done.fail,
+    error: done.fail
   });
   return subscription;
 }

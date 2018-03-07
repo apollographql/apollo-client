@@ -1,7 +1,7 @@
-import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
-import { isEqual } from 'apollo-utilities';
+import { DocumentNode, GraphQLError, ExecutionResult } from "graphql";
+import { isEqual } from "apollo-utilities";
 
-import { NetworkStatus } from '../core/networkStatus';
+import { NetworkStatus } from "../core/networkStatus";
 
 export type QueryStoreValue = {
   queryString: string;
@@ -43,7 +43,7 @@ export class QueryStore {
       // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
       // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
       throw new Error(
-        'Internal Error: may not update existing query string in store',
+        "Internal Error: may not update existing query string in store"
       );
     }
 
@@ -91,7 +91,7 @@ export class QueryStore {
       networkError: null,
       graphQLErrors: graphQLErrors,
       networkStatus,
-      metadata: query.metadata,
+      metadata: query.metadata
     };
 
     // If the action had a `moreForQueryId` property then we need to set the
@@ -101,7 +101,7 @@ export class QueryStore {
     // error action branch, but importantly *not* in the client result branch.
     // This is because the implementation of `fetchMore` *always* sets
     // `fetchPolicy` to `network-only` so we would never have a client result.
-    if (typeof query.fetchMoreForQueryId === 'string') {
+    if (typeof query.fetchMoreForQueryId === "string") {
       this.store[query.fetchMoreForQueryId].networkStatus =
         NetworkStatus.fetchMore;
     }
@@ -110,7 +110,7 @@ export class QueryStore {
   public markQueryResult(
     queryId: string,
     result: ExecutionResult,
-    fetchMoreForQueryId: string | undefined,
+    fetchMoreForQueryId: string | undefined
   ) {
     if (!this.store[queryId]) return;
 
@@ -123,7 +123,7 @@ export class QueryStore {
     // If we have a `fetchMoreForQueryId` then we need to update the network
     // status for that query. See the branch for query initialization for more
     // explanation about this process.
-    if (typeof fetchMoreForQueryId === 'string') {
+    if (typeof fetchMoreForQueryId === "string") {
       this.store[fetchMoreForQueryId].networkStatus = NetworkStatus.ready;
     }
   }
@@ -131,7 +131,7 @@ export class QueryStore {
   public markQueryError(
     queryId: string,
     error: Error,
-    fetchMoreForQueryId: string | undefined,
+    fetchMoreForQueryId: string | undefined
   ) {
     if (!this.store[queryId]) return;
 
@@ -141,7 +141,7 @@ export class QueryStore {
     // If we have a `fetchMoreForQueryId` then we need to update the network
     // status for that query. See the branch for query initialization for more
     // explanation about this process.
-    if (typeof fetchMoreForQueryId === 'string') {
+    if (typeof fetchMoreForQueryId === "string") {
       this.markQueryError(fetchMoreForQueryId, error, undefined);
     }
   }
@@ -171,12 +171,12 @@ export class QueryStore {
           // XXX set loading to true so listeners don't trigger unless they want results with partial data
           res[key] = {
             ...this.store[key],
-            networkStatus: NetworkStatus.loading,
+            networkStatus: NetworkStatus.loading
           };
 
           return res;
         },
-        {} as { [queryId: string]: QueryStoreValue },
+        {} as { [queryId: string]: QueryStoreValue }
       );
   }
 }

@@ -12,13 +12,13 @@ export class MutationStore {
   public initMutation(
     mutationId: string,
     mutationString: string,
-    variables: Object | undefined,
+    variables: Object | undefined
   ) {
     this.store[mutationId] = {
       mutationString: mutationString,
       variables: variables || {},
       loading: true,
-      error: null,
+      error: null
     };
   }
 

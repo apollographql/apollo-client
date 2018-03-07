@@ -1,15 +1,15 @@
-import graphql from '../';
-import gql from 'graphql-tag';
+import graphql from "../";
+import gql from "graphql-tag";
 
-import { cloneElement, createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { cloneElement, createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
-describe('result mapper', () => {
-  it('can deal with promises', () => {
+describe("result mapper", () => {
+  it("can deal with promises", () => {
     const resolver = (_, root) => {
       return new Promise(res => {
         setTimeout(() => {
-          Promise.resolve(root).then(val => res(val + 'fake'));
+          Promise.resolve(root).then(val => res(val + "fake"));
         }, 10);
       });
     };
@@ -22,7 +22,7 @@ describe('result mapper', () => {
         values.reduce((resolvedObject, value, i) => {
           resolvedObject[keys[i]] = value;
           return resolvedObject;
-        }, Object.create(null)),
+        }, Object.create(null))
       );
     }
 
@@ -35,23 +35,23 @@ describe('result mapper', () => {
       }
     `;
 
-    const result = graphql(resolver, query, '', null, null, {
-      resultMapper: promiseForObject,
+    const result = graphql(resolver, query, "", null, null, {
+      resultMapper: promiseForObject
     });
 
     return result.then(value => {
       expect(value).toEqual({
         a: {
-          b: 'fakefake',
-          c: 'fakefake',
-        },
+          b: "fakefake",
+          c: "fakefake"
+        }
       });
     });
   });
 
-  it('can construct React elements', () => {
+  it("can construct React elements", () => {
     const resolver = (fieldName, root, args) => {
-      if (fieldName === 'text') {
+      if (fieldName === "text") {
         return args.value;
       }
 
@@ -69,8 +69,8 @@ describe('result mapper', () => {
     };
 
     function gqlToReact(document): any {
-      return graphql(resolver, document, '', null, null, {
-        resultMapper: reactMapper,
+      return graphql(resolver, document, "", null, null, {
+        resultMapper: reactMapper
       });
     }
 
@@ -86,7 +86,7 @@ describe('result mapper', () => {
     `;
 
     expect(renderToStaticMarkup(gqlToReact(query))).toBe(
-      '<div><span id="my-id">This is text</span><span></span></div>',
+      '<div><span id="my-id">This is text</span><span></span></div>'
     );
   });
 });

@@ -1,28 +1,28 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode } from "graphql";
 
-import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
+import { Cache, DataProxy, ApolloCache, Transaction } from "apollo-cache";
 
 import {
   getFragmentQueryDocument,
-  addTypenameToDocument,
-} from 'apollo-utilities';
+  addTypenameToDocument
+} from "apollo-utilities";
 
-import { HeuristicFragmentMatcher } from './fragmentMatcher';
+import { HeuristicFragmentMatcher } from "./fragmentMatcher";
 import {
   OptimisticStoreItem,
   ApolloReducerConfig,
   NormalizedCache,
-  NormalizedCacheObject,
-} from './types';
-import { writeResultToStore } from './writeToStore';
-import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
-import { defaultNormalizedCacheFactory } from './objectCache';
-import { record } from './recordingCache';
+  NormalizedCacheObject
+} from "./types";
+import { writeResultToStore } from "./writeToStore";
+import { readQueryFromStore, diffQueryAgainstStore } from "./readFromStore";
+import { defaultNormalizedCacheFactory } from "./objectCache";
+import { record } from "./recordingCache";
 const defaultConfig: ApolloReducerConfig = {
   fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
-  storeFactory: defaultNormalizedCacheFactory,
+  storeFactory: defaultNormalizedCacheFactory
 };
 
 export function defaultDataIdFromObject(result: any): string | null {
@@ -55,14 +55,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // backwards compat
     if ((this.config as any).customResolvers) {
       console.warn(
-        'customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version.',
+        "customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version."
       );
       this.config.cacheRedirects = (this.config as any).customResolvers;
     }
 
     if ((this.config as any).cacheResolvers) {
       console.warn(
-        'cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.',
+        "cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version."
       );
       this.config.cacheRedirects = (this.config as any).cacheResolvers;
     }
@@ -97,7 +97,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       rootId: query.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
       previousResult: query.previousResult,
-      config: this.config,
+      config: this.config
     });
   }
 
@@ -109,7 +109,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
-      fragmentMatcherFunction: this.config.fragmentMatcher.match,
+      fragmentMatcherFunction: this.config.fragmentMatcher.match
     });
 
     this.broadcastWatches();
@@ -123,7 +123,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
-      config: this.config,
+      config: this.config
     });
   }
 
@@ -179,7 +179,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public recordOptimisticTransaction(
     transaction: Transaction<NormalizedCacheObject>,
-    id: string,
+    id: string
   ) {
     this.silenceBroadcast = true;
 
@@ -195,7 +195,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.optimistic.push({
       id,
       transaction,
-      data: patch,
+      data: patch
     });
 
     this.silenceBroadcast = false;
@@ -210,35 +210,35 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public readQuery<QueryType>(
     options: DataProxy.Query,
-    optimistic: boolean = false,
+    optimistic: boolean = false
   ): QueryType {
     return this.read({
       query: options.query,
       variables: options.variables,
-      optimistic,
+      optimistic
     });
   }
 
   public readFragment<FragmentType>(
     options: DataProxy.Fragment,
-    optimistic: boolean = false,
+    optimistic: boolean = false
   ): FragmentType | null {
     return this.read({
       query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
+        getFragmentQueryDocument(options.fragment, options.fragmentName)
       ),
       variables: options.variables,
       rootId: options.id,
-      optimistic,
+      optimistic
     });
   }
 
   public writeQuery(options: DataProxy.WriteQueryOptions): void {
     this.write({
-      dataId: 'ROOT_QUERY',
+      dataId: "ROOT_QUERY",
       result: options.data,
       query: this.transformDocument(options.query),
-      variables: options.variables,
+      variables: options.variables
     });
   }
 
@@ -247,9 +247,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       dataId: options.id,
       result: options.data,
       query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
+        getFragmentQueryDocument(options.fragment, options.fragmentName)
       ),
-      variables: options.variables,
+      variables: options.variables
     });
   }
 
@@ -266,7 +266,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         // TODO: previousResult isn't in the types - this will only work
         // with ObservableQuery which is in a different package
         previousResult: (c as any).previousResult && c.previousResult(),
-        optimistic: c.optimistic,
+        optimistic: c.optimistic
       });
 
       c.callback(newData);

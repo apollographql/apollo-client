@@ -1,27 +1,27 @@
 // This file implements some of the basic benchmarks around
 // Apollo Client.
 
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
 import {
   group,
   benchmark,
   afterEach,
   DescriptionObject,
-  dataIdFromObject,
-} from './util';
+  dataIdFromObject
+} from "./util";
 
-import { ApolloClient, ApolloQueryResult } from '../src/index';
+import { ApolloClient, ApolloQueryResult } from "../src/index";
 
-import { times, cloneDeep } from 'lodash';
+import { times, cloneDeep } from "lodash";
 
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache } from "apollo-cache-inmemory";
 
-import { Operation, ApolloLink, FetchResult, Observable } from 'apollo-link';
+import { Operation, ApolloLink, FetchResult, Observable } from "apollo-link";
 
-import { print } from 'graphql/language/printer';
+import { print } from "graphql/language/printer";
 
-import { collectAndReportBenchmarks } from './github-reporter';
+import { collectAndReportBenchmarks } from "./github-reporter";
 
 interface MockedResponse {
   request: Operation;
@@ -39,7 +39,7 @@ function requestToKey(request: Operation): string {
 
   return JSON.stringify({
     variables: request.variables || {},
-    query: queryString,
+    query: queryString
   });
 }
 
@@ -69,15 +69,15 @@ class MockLink extends ApolloLink {
     if (!responses || responses.length === 0) {
       throw new Error(
         `No more mocked responses for the query: ${print(
-          operation.query,
-        )}, variables: ${JSON.stringify(operation.variables)}`,
+          operation.query
+        )}, variables: ${JSON.stringify(operation.variables)}`
       );
     }
 
     const { result, error, delay } = responses.shift()!;
     if (!result && !error) {
       throw new Error(
-        `Mocked response should contain either result or error: ${key}`,
+        `Mocked response should contain either result or error: ${key}`
       );
     }
 
@@ -110,21 +110,21 @@ const simpleQuery = gql`
 const simpleResult = {
   data: {
     author: {
-      firstName: 'John',
-      lastName: 'Smith',
-    },
-  },
+      firstName: "John",
+      lastName: "Smith"
+    }
+  }
 };
 
 const getClientInstance = () => {
   const link = mockSingleLink({
     request: { query: simpleQuery } as Operation,
-    result: simpleResult,
+    result: simpleResult
   });
 
   return new ApolloClient({
     link,
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache({ addTypename: false })
   });
 };
 
@@ -135,15 +135,15 @@ const createReservations = (count: number) => {
   }[] = [];
   times(count, reservationIndex => {
     reservations.push({
-      name: 'Fake Reservation',
-      id: reservationIndex.toString(),
+      name: "Fake Reservation",
+      id: reservationIndex.toString()
     });
   });
   return reservations;
 };
 
 group(end => {
-  benchmark('baseline', done => {
+  benchmark("baseline", done => {
     let arr = Array.from({ length: 100 }, () => Math.random());
     arr.sort();
     done();
@@ -154,12 +154,12 @@ group(end => {
 group(end => {
   const link = mockSingleLink({
     request: { query: simpleQuery } as Operation,
-    result: simpleResult,
+    result: simpleResult
   });
 
   const cache = new InMemoryCache();
 
-  benchmark('constructing an instance', done => {
+  benchmark("constructing an instance", done => {
     new ApolloClient({ link, cache });
     done();
   });
@@ -167,7 +167,7 @@ group(end => {
 });
 
 group(end => {
-  benchmark('fetching a query result from mocked server', done => {
+  benchmark("fetching a query result from mocked server", done => {
     const client = getClientInstance();
     client.query({ query: simpleQuery }).then(_ => {
       done();
@@ -178,11 +178,11 @@ group(end => {
 });
 
 group(end => {
-  benchmark('write data and receive update from the cache', done => {
+  benchmark("write data and receive update from the cache", done => {
     const client = getClientInstance();
     const observable = client.watchQuery({
       query: simpleQuery,
-      fetchPolicy: 'cache-only',
+      fetchPolicy: "cache-only"
     });
     observable.subscribe({
       next(res: ApolloQueryResult<Object>) {
@@ -191,8 +191,8 @@ group(end => {
         }
       },
       error(_: Error) {
-        console.warn('Error occurred in observable.');
-      },
+        console.warn("Error occurred in observable.");
+      }
     });
     client.query({ query: simpleQuery });
   });
@@ -212,7 +212,7 @@ group(end => {
     benchmark(
       {
         name: `write data and deliver update to ${count} subscribers`,
-        count,
+        count
       },
       done => {
         const promises: Promise<void>[] = [];
@@ -224,16 +224,16 @@ group(end => {
               client
                 .watchQuery({
                   query: simpleQuery,
-                  fetchPolicy: 'cache-only',
+                  fetchPolicy: "cache-only"
                 })
                 .subscribe({
                   next(res: ApolloQueryResult<Object>) {
                     if (Object.keys(res.data).length > 0) {
                       resolve();
                     }
-                  },
+                  }
                 });
-            }),
+            })
           );
         });
 
@@ -241,11 +241,11 @@ group(end => {
         Promise.all(promises).then(() => {
           done();
         });
-      },
+      }
     );
 
     afterEach((description: DescriptionObject, event: any) => {
-      const iterCount = description['count'] as number;
+      const iterCount = description["count"] as number;
       meanTimes[iterCount.toString()] = event.target.stats.mean * 1000;
     });
   });
@@ -267,11 +267,11 @@ times(4, (countR: number) => {
   const originalResult = {
     data: {
       author: {
-        name: 'John Smith',
+        name: "John Smith",
         id: 1,
-        __typename: 'Author',
-      },
-    },
+        __typename: "Author"
+      }
+    }
   };
 
   group(end => {
@@ -281,7 +281,7 @@ times(4, (countR: number) => {
           return obj.__typename + obj.id;
         }
         return null;
-      },
+      }
     });
 
     // insert a bunch of stuff into the cache
@@ -292,23 +292,23 @@ times(4, (countR: number) => {
       return cache.writeQuery({
         query,
         variables: { id: index },
-        data: result.data as any,
+        data: result.data as any
       });
     });
 
     benchmark(
       {
         name: `read single item from cache with ${count} items in cache`,
-        count,
+        count
       },
       done => {
         const randomIndex = Math.floor(Math.random() * count);
         cache.readQuery({
           query,
-          variables: { id: randomIndex },
+          variables: { id: randomIndex }
         });
         done();
-      },
+      }
     );
 
     end();
@@ -321,7 +321,7 @@ times(4, index => {
   group(end => {
     const cache = new InMemoryCache({
       dataIdFromObject,
-      addTypename: false,
+      addTypename: false
     });
 
     const query = gql`
@@ -334,7 +334,7 @@ times(4, index => {
         }
       }
     `;
-    const houseId = '12';
+    const houseId = "12";
     const reservationCount = 5 * Math.pow(4, index);
     const reservations = createReservations(reservationCount);
 
@@ -345,9 +345,9 @@ times(4, index => {
       variables,
       data: {
         house: {
-          reservations,
-        },
-      },
+          reservations
+        }
+      }
     });
 
     benchmark(
@@ -355,10 +355,10 @@ times(4, index => {
       done => {
         cache.readQuery({
           query,
-          variables,
+          variables
         });
         done();
-      },
+      }
     );
 
     end();
@@ -384,22 +384,22 @@ times(4, index => {
         }
       }
     `;
-    const variables = { id: '7' };
+    const variables = { id: "7" };
     const reservations = createReservations(reservationCount);
     const result = {
-      house: { reservations },
+      house: { reservations }
     };
 
     const cache = new InMemoryCache({
       dataIdFromObject,
-      addTypename: false,
+      addTypename: false
     });
 
     cache.write({
-      dataId: 'ROOT_QUERY',
+      dataId: "ROOT_QUERY",
       query,
       variables,
-      result,
+      result
     });
 
     // We only keep track of the results so that V8 doesn't decide to just throw
@@ -411,10 +411,10 @@ times(4, index => {
         results = cache.diff({
           query,
           variables,
-          optimistic: false,
+          optimistic: false
         });
         done();
-      },
+      }
     );
 
     end();

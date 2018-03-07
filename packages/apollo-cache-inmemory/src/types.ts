@@ -1,7 +1,7 @@
-import { DocumentNode } from 'graphql';
-import { FragmentMatcher } from 'graphql-anywhere';
-import { Transaction } from 'apollo-cache';
-import { IdValue, StoreValue } from 'apollo-utilities';
+import { DocumentNode } from "graphql";
+import { FragmentMatcher } from "graphql-anywhere";
+import { Transaction } from "apollo-cache";
+import { IdValue, StoreValue } from "apollo-utilities";
 
 export type IdGetter = (value: Object) => string | null | undefined;
 
@@ -40,7 +40,7 @@ export interface StoreObject {
 }
 
 export type NormalizedCacheFactory = (
-  seed?: NormalizedCacheObject,
+  seed?: NormalizedCacheObject
 ) => NormalizedCache;
 
 export type OptimisticStoreItem = {
@@ -83,7 +83,7 @@ export interface FragmentMatcherInterface {
   match(
     idValue: IdValue,
     typeCondition: string,
-    context: ReadStoreContext,
+    context: ReadStoreContext
   ): boolean;
 }
 
@@ -123,7 +123,7 @@ export type IntrospectionResultData = {
 export type CacheResolver = (
   rootValue: any,
   args: { [argName: string]: any },
-  context: any,
+  context: any
 ) => any;
 
 export type CacheResolverMap = {

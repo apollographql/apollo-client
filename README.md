@@ -1,6 +1,5 @@
 # [Apollo client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
 To get started with the React integration, go to our [**React Apollo documentation website**](https://www.apollographql.com/docs/react/).
@@ -37,21 +36,20 @@ Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com
 You get started by constructing an instance of the core class [`ApolloClient`][]. If you load `ApolloClient` from the [`apollo-client-preset`][] package, it will be configured with a few reasonable defaults such as our standard in-memory cache and a link to a GraphQL API at `/graphql`.
 
 ```js
-import ApolloClient from 'apollo-client-preset';
+import ApolloClient from "apollo-client-preset";
 
 const client = new ApolloClient();
 ```
 
-
 To point `ApolloClient` at a different URL, just create your own `HttpLink` instance, like so, replacing `https://graphql.example.com` with your GraphQL API's URL:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { HttpLink } from 'apollo-link-http';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient } from "apollo-client";
+import { HttpLink } from "apollo-link-http";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
 const client = new ApolloClient({
-  link: new HttpLink({ uri: 'https://graphql.example.com' }),
+  link: new HttpLink({ uri: "https://graphql.example.com" }),
   cache: new InMemoryCache()
 });
 ```
@@ -59,19 +57,20 @@ const client = new ApolloClient({
 Most of the time you'll hook up your client to a frontend integration. But if you'd like to directly execute a query with your client, you may now call the `client.query` method like this:
 
 ```js
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
-client.query({
-  query: gql`
-    query TodoApp {
-      todos {
-        id
-        text
-        completed
+client
+  .query({
+    query: gql`
+      query TodoApp {
+        todos {
+          id
+          text
+          completed
+        }
       }
-    }
-  `,
-})
+    `
+  })
   .then(data => console.log(data))
   .catch(error => console.error(error));
 ```
@@ -80,24 +79,24 @@ Now your client will be primed with some data in its cache. You can continue to 
 
 To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the [**`apollo-client` API reference**][].
 
-[`ApolloClient`]: http://apollographql.com/docs/react
+[`apolloclient`]: http://apollographql.com/docs/react
 [`apollo-client-preset`]: https://www.npmjs.com/package/apollo-client-preset
-[reactively watching queries with `watchQuery`]: http://apollographql.com/docs/react/reference/index.html#ApolloClient\.watchQuery
+[reactively watching queries with `watchquery`]: http://apollographql.com/docs/react/reference/index.html#ApolloClient.watchQuery
 [changing data on your server with `mutate`]: http://apollographql.com/docs/react/basics/mutations
-[reading a fragment from your local cache with `readFragment`]: https://www.apollographql.com/docs/react/basics/caching.html#readfragment
-[**`apollo-client` API reference**]: http://apollographql.com/docs/react/reference/index.html
+[reading a fragment from your local cache with `readfragment`]: https://www.apollographql.com/docs/react/basics/caching.html#readfragment
+[**`apollo-client` api reference**]: http://apollographql.com/docs/react/reference/index.html
 
 ## Learn how to use Apollo Client with your favorite framework
 
-- [React](http://apollographql.com/docs/react/)
-- [Angular](http://apollographql.com/docs/angular/)
-- [Vue](https://github.com/Akryum/vue-apollo)
-- [Ember](https://github.com/bgentry/ember-apollo-client)
-- [Polymer](https://github.com/aruntk/polymer-apollo)
-- [Meteor](http://apollographql.com/docs/react/recipes/meteor.html)
-- [Blaze](http://github.com/Swydo/blaze-apollo)
-- [Vanilla JS](http://apollographql.com/docs/react/reference)
-- [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
+* [React](http://apollographql.com/docs/react/)
+* [Angular](http://apollographql.com/docs/angular/)
+* [Vue](https://github.com/Akryum/vue-apollo)
+* [Ember](https://github.com/bgentry/ember-apollo-client)
+* [Polymer](https://github.com/aruntk/polymer-apollo)
+* [Meteor](http://apollographql.com/docs/react/recipes/meteor.html)
+* [Blaze](http://github.com/Swydo/blaze-apollo)
+* [Vanilla JS](http://apollographql.com/docs/react/reference)
+* [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
 ---
 

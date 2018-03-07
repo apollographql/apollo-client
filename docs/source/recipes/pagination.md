@@ -38,15 +38,15 @@ const FeedWithData = graphql(FEED_QUERY, {
   options(props) {
     return {
       variables: {
-        type: (
-          props.params &&
-          props.params.type &&
-          props.params.type.toUpperCase()
-        ) || 'TOP',
+        type:
+          (props.params &&
+            props.params.type &&
+            props.params.type.toUpperCase()) ||
+          "TOP",
         offset: 0,
-        limit: ITEMS_PER_PAGE,
+        limit: ITEMS_PER_PAGE
       },
-      fetchPolicy: 'network-only',
+      fetchPolicy: "network-only"
     };
   },
   props({ data: { loading, feed, currentUser, fetchMore } }) {
@@ -61,19 +61,21 @@ const FeedWithData = graphql(FEED_QUERY, {
             // We are able to figure out which offset to use because it matches
             // the feed length, but we could also use state, or the previous
             // variables to calculate this (see the cursor example below)
-            offset: feed.length,
+            offset: feed.length
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
-            if (!fetchMoreResult.data) { return previousResult; }
+            if (!fetchMoreResult.data) {
+              return previousResult;
+            }
             return Object.assign({}, previousResult, {
               // Append the new feed results to the old one
-              feed: [...previousResult.feed, ...fetchMoreResult.data.feed],
+              feed: [...previousResult.feed, ...fetchMoreResult.data.feed]
             });
-          },
+          }
         });
-      },
+      }
     };
-  },
+  }
 })(Feed);
 ```
 
@@ -98,7 +100,7 @@ const Feed = ({ vote, loading, currentUser, feed, loadMoreEntries }) => {
       {loading ? <Loading /> : null}
     </div>
   );
-}
+};
 ```
 
 The above approach works great for limit/offset pagination. One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.
@@ -137,7 +139,7 @@ const CommentsWithData = graphql(CommentsQuery, {
         return fetchMore({
           query: MoreCommentsQuery,
           variables: {
-            cursor: cursor,
+            cursor: cursor
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
             const previousEntry = previousResult.entry;
@@ -151,14 +153,14 @@ const CommentsWithData = graphql(CommentsQuery, {
 
               entry: {
                 // Put the new comments in the front of the list
-                comments: [...newComments, ...previousEntry.comments],
-              },
+                comments: [...newComments, ...previousEntry.comments]
+              }
             };
-          },
+          }
         });
-      },
+      }
     };
-  },
+  }
 })(Comments);
 ```
 
@@ -166,11 +168,11 @@ const CommentsWithData = graphql(CommentsQuery, {
 
 Relay, another popular GraphQL client, is opinionated about the input and output of paginated queries, so people sometimes build their server's pagination model around Relay's needs. If you have a server that is designed to work with the [Relay Cursor Connections](https://facebook.github.io/relay/graphql/connections.htm) spec, you can also call that server from Apollo Client with no problems.
 
-Using Relay-style cursors is very similar to basic cursor-based pagination.  The main difference is in the format of the query response which affects where you get the cursor.
+Using Relay-style cursors is very similar to basic cursor-based pagination. The main difference is in the format of the query response which affects where you get the cursor.
 
-Relay provides a `pageInfo` object on the returned cursor connection which contains the cursor of the first and last items returned as the properties `startCursor` and `endCursor` respectively.  This object also contains a boolean property `hasNextPage` which can be used to determine if there are more results available.
+Relay provides a `pageInfo` object on the returned cursor connection which contains the cursor of the first and last items returned as the properties `startCursor` and `endCursor` respectively. This object also contains a boolean property `hasNextPage` which can be used to determine if there are more results available.
 
-The following example specifies a request of 10 items at a time and that results should start after the provided `cursor`.  If `null` is passed for the cursor relay will ignore it and provide results starting from the beginning of the data set which allows the use of the same query for both initial and subsequent requests.
+The following example specifies a request of 10 items at a time and that results should start after the provided `cursor`. If `null` is passed for the cursor relay will ignore it and provide results starting from the beginning of the data set which allows the use of the same query for both initial and subsequent requests.
 
 ```js
 const CommentsQuery = gql`
@@ -203,26 +205,28 @@ const CommentsWithData = graphql(CommentsQuery, {
         return fetchMore({
           query: CommentsQuery,
           variables: {
-            cursor: comments.pageInfo.endCursor,
+            cursor: comments.pageInfo.endCursor
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
             const newEdges = fetchMoreResult.comments.edges;
             const pageInfo = fetchMoreResult.comments.pageInfo;
 
-            return newEdges.length ? {
-              // Put the new comments at the end of the list and update `pageInfo`
-              // so we have the new `endCursor` and `hasNextPage` values
-              comments: {
-                __typename: previousResult.comments.__typename,
-                edges: [...previousResult.comments.edges, ...newEdges],
-                pageInfo,
-              },
-            } : previousResult;
-          },
+            return newEdges.length
+              ? {
+                  // Put the new comments at the end of the list and update `pageInfo`
+                  // so we have the new `endCursor` and `hasNextPage` values
+                  comments: {
+                    __typename: previousResult.comments.__typename,
+                    edges: [...previousResult.comments.edges, ...newEdges],
+                    pageInfo
+                  }
+                }
+              : previousResult;
+          }
         });
-      },
+      }
     };
-  },
+  }
 })(Feed);
 ```
 

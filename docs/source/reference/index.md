@@ -6,7 +6,7 @@ description: The API for the apollo-client package
 
 <h2 id="apollo-client">ApolloClient</h2>
 
-The `ApolloClient` class is the core API for Apollo, and the one you'll need to  use no matter which integration you are using:
+The `ApolloClient` class is the core API for Apollo, and the one you'll need to use no matter which integration you are using:
 
 {% tsapibox ApolloClient.constructor %}
 {% tsapibox ApolloClient.watchQuery %}

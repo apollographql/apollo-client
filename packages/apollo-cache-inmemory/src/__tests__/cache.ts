@@ -1,28 +1,26 @@
-import { ApolloCache } from 'apollo-cache';
-import gql, { disableFragmentWarnings } from 'graphql-tag';
+import { ApolloCache } from "apollo-cache";
+import gql, { disableFragmentWarnings } from "graphql-tag";
 
-import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
+import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from "..";
 
 disableFragmentWarnings();
 
-describe('Cache', () => {
-  function createCache(
-    {
-      initialState,
-      config,
-    }: {
-      initialState?: any;
-      config?: ApolloReducerConfig;
-    } = {},
-  ): ApolloCache<NormalizedCache> {
+describe("Cache", () => {
+  function createCache({
+    initialState,
+    config
+  }: {
+    initialState?: any;
+    config?: ApolloReducerConfig;
+  } = {}): ApolloCache<NormalizedCache> {
     return new InMemoryCache(
-      config || { addTypename: false },
+      config || { addTypename: false }
       // XXX this is the old format. The tests need to be updated but since it is mapped down
     ).restore(initialState ? initialState.apollo.data : {});
   }
 
-  describe('readQuery', () => {
-    it('will read some data from the store', () => {
+  describe("readQuery", () => {
+    it("will read some data from the store", () => {
       const proxy = createCache({
         initialState: {
           apollo: {
@@ -30,11 +28,11 @@ describe('Cache', () => {
               ROOT_QUERY: {
                 a: 1,
                 b: 2,
-                c: 3,
-              },
-            },
-          },
-        },
+                c: 3
+              }
+            }
+          }
+        }
       });
       expect(
         proxy.readQuery({
@@ -42,8 +40,8 @@ describe('Cache', () => {
             {
               a
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ a: 1 });
       expect(
         proxy.readQuery({
@@ -52,8 +50,8 @@ describe('Cache', () => {
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ b: 2, c: 3 });
       expect(
         proxy.readQuery({
@@ -63,12 +61,12 @@ describe('Cache', () => {
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ a: 1, b: 2, c: 3 });
     });
 
-    it('will read some deeply nested data from the store', () => {
+    it("will read some deeply nested data from the store", () => {
       const proxy = createCache({
         initialState: {
           apollo: {
@@ -78,29 +76,29 @@ describe('Cache', () => {
                 b: 2,
                 c: 3,
                 d: {
-                  type: 'id',
-                  id: 'foo',
-                  generated: false,
-                },
+                  type: "id",
+                  id: "foo",
+                  generated: false
+                }
               },
               foo: {
                 e: 4,
                 f: 5,
                 g: 6,
                 h: {
-                  type: 'id',
-                  id: 'bar',
-                  generated: false,
-                },
+                  type: "id",
+                  id: "bar",
+                  generated: false
+                }
               },
               bar: {
                 i: 7,
                 j: 8,
-                k: 9,
-              },
-            },
-          },
-        },
+                k: 9
+              }
+            }
+          }
+        }
       });
 
       expect(
@@ -112,8 +110,8 @@ describe('Cache', () => {
                 e
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ a: 1, d: { e: 4 } });
       expect(
         proxy.readQuery({
@@ -127,8 +125,8 @@ describe('Cache', () => {
                 }
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ a: 1, d: { e: 4, h: { i: 7 } } });
       expect(
         proxy.readQuery({
@@ -148,28 +146,28 @@ describe('Cache', () => {
                 }
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({
         a: 1,
         b: 2,
         c: 3,
-        d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+        d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } }
       });
     });
 
-    it('will read some data from the store with variables', () => {
+    it("will read some data from the store with variables", () => {
       const proxy = createCache({
         initialState: {
           apollo: {
             data: {
               ROOT_QUERY: {
                 'field({"literal":true,"value":42})': 1,
-                'field({"literal":false,"value":42})': 2,
-              },
-            },
-          },
-        },
+                'field({"literal":false,"value":42})': 2
+              }
+            }
+          }
+        }
       });
 
       expect(
@@ -182,22 +180,22 @@ describe('Cache', () => {
           `,
           variables: {
             literal: false,
-            value: 42,
-          },
-        }),
+            value: 42
+          }
+        })
       ).toEqual({ a: 1, b: 2 });
     });
-    it('will read some data from the store with null variables', () => {
+    it("will read some data from the store with null variables", () => {
       const proxy = createCache({
         initialState: {
           apollo: {
             data: {
               ROOT_QUERY: {
-                'field({"literal":false,"value":null})': 1,
-              },
-            },
-          },
-        },
+                'field({"literal":false,"value":null})': 1
+              }
+            }
+          }
+        }
       });
 
       expect(
@@ -209,51 +207,51 @@ describe('Cache', () => {
           `,
           variables: {
             literal: false,
-            value: null,
-          },
-        }),
+            value: null
+          }
+        })
       ).toEqual({ a: 1 });
     });
   });
 
-  describe('readFragment', () => {
-    it('will throw an error when there is no fragment', () => {
+  describe("readFragment", () => {
+    it("will throw an error when there is no fragment", () => {
       const proxy = createCache();
 
       expect(() => {
         proxy.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             query {
               a
               b
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
       );
       expect(() => {
         proxy.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             schema {
               query: Query
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will throw an error when there is more than one fragment but no fragment name', () => {
+    it("will throw an error when there is more than one fragment but no fragment name", () => {
       const proxy = createCache();
 
       expect(() => {
         proxy.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -262,14 +260,14 @@ describe('Cache', () => {
             fragment b on B {
               b
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
       expect(() => {
         proxy.readFragment({
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -282,54 +280,54 @@ describe('Cache', () => {
             fragment c on C {
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will read some deeply nested data from the store at any id', () => {
+    it("will read some deeply nested data from the store at any id", () => {
       const proxy = createCache({
         initialState: {
           apollo: {
             data: {
               ROOT_QUERY: {
-                __typename: 'Type1',
+                __typename: "Type1",
                 a: 1,
                 b: 2,
                 c: 3,
                 d: {
-                  type: 'id',
-                  id: 'foo',
-                  generated: false,
-                },
+                  type: "id",
+                  id: "foo",
+                  generated: false
+                }
               },
               foo: {
-                __typename: 'Foo',
+                __typename: "Foo",
                 e: 4,
                 f: 5,
                 g: 6,
                 h: {
-                  type: 'id',
-                  id: 'bar',
-                  generated: false,
-                },
+                  type: "id",
+                  id: "bar",
+                  generated: false
+                }
               },
               bar: {
-                __typename: 'Bar',
+                __typename: "Bar",
                 i: 7,
                 j: 8,
-                k: 9,
-              },
-            },
-          },
-        },
+                k: 9
+              }
+            }
+          }
+        }
       });
 
       expect(
         proxy.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -337,12 +335,12 @@ describe('Cache', () => {
                 i
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ e: 4, h: { i: 7 } });
       expect(
         proxy.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -354,34 +352,34 @@ describe('Cache', () => {
                 k
               }
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
       expect(
         proxy.readFragment({
-          id: 'bar',
+          id: "bar",
           fragment: gql`
             fragment fragmentBar on Bar {
               i
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ i: 7 });
       expect(
         proxy.readFragment({
-          id: 'bar',
+          id: "bar",
           fragment: gql`
             fragment fragmentBar on Bar {
               i
               j
               k
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ i: 7, j: 8, k: 9 });
       expect(
         proxy.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -400,12 +398,12 @@ describe('Cache', () => {
               k
             }
           `,
-          fragmentName: 'fragmentFoo',
-        }),
+          fragmentName: "fragmentFoo"
+        })
       ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
       expect(
         proxy.readFragment({
-          id: 'bar',
+          id: "bar",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -424,29 +422,29 @@ describe('Cache', () => {
               k
             }
           `,
-          fragmentName: 'fragmentBar',
-        }),
+          fragmentName: "fragmentBar"
+        })
       ).toEqual({ i: 7, j: 8, k: 9 });
     });
 
-    it('will read some data from the store with variables', () => {
+    it("will read some data from the store with variables", () => {
       const proxy = createCache({
         initialState: {
           apollo: {
             data: {
               foo: {
-                __typename: 'Foo',
+                __typename: "Foo",
                 'field({"literal":true,"value":42})': 1,
-                'field({"literal":false,"value":42})': 2,
-              },
-            },
-          },
-        },
+                'field({"literal":false,"value":42})': 2
+              }
+            }
+          }
+        }
       });
 
       expect(
         proxy.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment foo on Foo {
               a: field(literal: true, value: 42)
@@ -455,74 +453,74 @@ describe('Cache', () => {
           `,
           variables: {
             literal: false,
-            value: 42,
-          },
-        }),
+            value: 42
+          }
+        })
       ).toEqual({ a: 1, b: 2 });
     });
 
-    it('will return null when an id that can’t be found is provided', () => {
+    it("will return null when an id that can’t be found is provided", () => {
       const client1 = createCache();
       const client2 = createCache({
         initialState: {
           apollo: {
             data: {
-              bar: { __typename: 'Bar', a: 1, b: 2, c: 3 },
-            },
-          },
-        },
+              bar: { __typename: "Bar", a: 1, b: 2, c: 3 }
+            }
+          }
+        }
       });
       const client3 = createCache({
         initialState: {
           apollo: {
             data: {
-              foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
-            },
-          },
-        },
+              foo: { __typename: "Foo", a: 1, b: 2, c: 3 }
+            }
+          }
+        }
       });
 
       expect(
         client1.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fooFragment on Foo {
               a
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toEqual(null);
       expect(
         client2.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fooFragment on Foo {
               a
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toEqual(null);
       expect(
         client3.readFragment({
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fooFragment on Foo {
               a
               b
               c
             }
-          `,
-        }),
+          `
+        })
       ).toEqual({ a: 1, b: 2, c: 3 });
     });
   });
 
-  describe('writeQuery', () => {
-    it('will write some data to the store', () => {
+  describe("writeQuery", () => {
+    it("will write some data to the store", () => {
       const proxy = createCache();
 
       proxy.writeQuery({
@@ -531,13 +529,13 @@ describe('Cache', () => {
           {
             a
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
-          a: 1,
-        },
+          a: 1
+        }
       });
 
       proxy.writeQuery({
@@ -547,15 +545,15 @@ describe('Cache', () => {
             b
             c
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
-          c: 3,
-        },
+          c: 3
+        }
       });
 
       proxy.writeQuery({
@@ -566,19 +564,19 @@ describe('Cache', () => {
             b
             c
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 4,
           b: 5,
-          c: 6,
-        },
+          c: 6
+        }
       });
     });
 
-    it('will write some deeply nested data to the store', () => {
+    it("will write some deeply nested data to the store", () => {
       const proxy = createCache();
 
       proxy.writeQuery({
@@ -590,21 +588,21 @@ describe('Cache', () => {
               e
             }
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d': {
-          e: 4,
-        },
+        "$ROOT_QUERY.d": {
+          e: 4
+        }
       });
 
       proxy.writeQuery({
@@ -618,29 +616,29 @@ describe('Cache', () => {
               }
             }
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d': {
+        "$ROOT_QUERY.d": {
           e: 4,
           h: {
-            type: 'id',
-            id: '$ROOT_QUERY.d.h',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d.h",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d.h': {
-          i: 7,
-        },
+        "$ROOT_QUERY.d.h": {
+          i: 7
+        }
       });
 
       proxy.writeQuery({
@@ -648,7 +646,7 @@ describe('Cache', () => {
           a: 1,
           b: 2,
           c: 3,
-          d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+          d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } }
         },
         query: gql`
           {
@@ -666,7 +664,7 @@ describe('Cache', () => {
               }
             }
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
@@ -675,36 +673,36 @@ describe('Cache', () => {
           b: 2,
           c: 3,
           d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d': {
+        "$ROOT_QUERY.d": {
           e: 4,
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: '$ROOT_QUERY.d.h',
-            generated: true,
-          },
+            type: "id",
+            id: "$ROOT_QUERY.d.h",
+            generated: true
+          }
         },
-        '$ROOT_QUERY.d.h': {
+        "$ROOT_QUERY.d.h": {
           i: 7,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
     });
 
-    it('will write some data to the store with variables', () => {
+    it("will write some data to the store with variables", () => {
       const proxy = createCache();
 
       proxy.writeQuery({
         data: {
           a: 1,
-          b: 2,
+          b: 2
         },
         query: gql`
           query($literal: Boolean, $value: Int) {
@@ -714,24 +712,24 @@ describe('Cache', () => {
         `,
         variables: {
           literal: false,
-          value: 42,
-        },
+          value: 42
+        }
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 1,
-          'field({"literal":false,"value":42})': 2,
-        },
+          'field({"literal":false,"value":42})': 2
+        }
       });
     });
-    it('will write some data to the store with variables where some are null', () => {
+    it("will write some data to the store with variables where some are null", () => {
       const proxy = createCache();
 
       proxy.writeQuery({
         data: {
           a: 1,
-          b: 2,
+          b: 2
         },
         query: gql`
           query($literal: Boolean, $value: Int) {
@@ -741,60 +739,60 @@ describe('Cache', () => {
         `,
         variables: {
           literal: false,
-          value: null,
-        },
+          value: null
+        }
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 1,
-          'field({"literal":false,"value":null})': 2,
-        },
+          'field({"literal":false,"value":null})': 2
+        }
       });
     });
   });
 
-  describe('writeFragment', () => {
-    it('will throw an error when there is no fragment', () => {
+  describe("writeFragment", () => {
+    it("will throw an error when there is no fragment", () => {
       const proxy = createCache();
 
       expect(() => {
         proxy.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             query {
               a
               b
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
       );
       expect(() => {
         proxy.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             schema {
               query: Query
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will throw an error when there is more than one fragment but no fragment name', () => {
+    it("will throw an error when there is more than one fragment but no fragment name", () => {
       const proxy = createCache();
 
       expect(() => {
         proxy.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -803,15 +801,15 @@ describe('Cache', () => {
             fragment b on B {
               b
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
       expect(() => {
         proxy.writeFragment({
           data: {},
-          id: 'x',
+          id: "x",
           fragment: gql`
             fragment a on A {
               a
@@ -824,21 +822,21 @@ describe('Cache', () => {
             fragment c on C {
               c
             }
-          `,
+          `
         });
       }).toThrowError(
-        'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
 
-    it('will write some deeply nested data into the store at any id', () => {
+    it("will write some deeply nested data into the store at any id", () => {
       const proxy = createCache({
-        config: { dataIdFromObject: (o: any) => o.id, addTypename: false },
+        config: { dataIdFromObject: (o: any) => o.id, addTypename: false }
       });
 
       proxy.writeFragment({
-        data: { __typename: 'Foo', e: 4, h: { id: 'bar', i: 7 } },
-        id: 'foo',
+        data: { __typename: "Foo", e: 4, h: { id: "bar", i: 7 } },
+        id: "foo",
         fragment: gql`
           fragment fragmentFoo on Foo {
             e
@@ -846,25 +844,25 @@ describe('Cache', () => {
               i
             }
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           e: 4,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
-          i: 7,
-        },
+          i: 7
+        }
       });
       proxy.writeFragment({
-        data: { __typename: 'Foo', f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
-        id: 'foo',
+        data: { __typename: "Foo", f: 5, g: 6, h: { id: "bar", j: 8, k: 9 } },
+        id: "foo",
         fragment: gql`
           fragment fragmentFoo on Foo {
             f
@@ -874,7 +872,7 @@ describe('Cache', () => {
               k
             }
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
@@ -883,26 +881,26 @@ describe('Cache', () => {
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
           i: 7,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
 
       proxy.writeFragment({
-        data: { i: 10, __typename: 'Bar' },
-        id: 'bar',
+        data: { i: 10, __typename: "Bar" },
+        id: "bar",
         fragment: gql`
           fragment fragmentBar on Bar {
             i
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
@@ -911,27 +909,27 @@ describe('Cache', () => {
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
           i: 10,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
 
       proxy.writeFragment({
-        data: { j: 11, k: 12, __typename: 'Bar' },
-        id: 'bar',
+        data: { j: 11, k: 12, __typename: "Bar" },
+        id: "bar",
         fragment: gql`
           fragment fragmentBar on Bar {
             j
             k
           }
-        `,
+        `
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
@@ -940,27 +938,27 @@ describe('Cache', () => {
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
           i: 10,
           j: 11,
-          k: 12,
-        },
+          k: 12
+        }
       });
 
       proxy.writeFragment({
         data: {
-          __typename: 'Foo',
+          __typename: "Foo",
           e: 4,
           f: 5,
           g: 6,
-          h: { __typename: 'Bar', id: 'bar', i: 7, j: 8, k: 9 },
+          h: { __typename: "Bar", id: "bar", i: 7, j: 8, k: 9 }
         },
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment fooFragment on Foo {
             e
@@ -979,7 +977,7 @@ describe('Cache', () => {
             k
           }
         `,
-        fragmentName: 'fooFragment',
+        fragmentName: "fooFragment"
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
@@ -988,21 +986,21 @@ describe('Cache', () => {
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
           i: 7,
           j: 8,
-          k: 9,
-        },
+          k: 9
+        }
       });
 
       proxy.writeFragment({
-        data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
-        id: 'bar',
+        data: { __typename: "Bar", i: 10, j: 11, k: 12 },
+        id: "bar",
         fragment: gql`
           fragment fooFragment on Foo {
             e
@@ -1021,7 +1019,7 @@ describe('Cache', () => {
             k
           }
         `,
-        fragmentName: 'barFragment',
+        fragmentName: "barFragment"
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
@@ -1030,21 +1028,21 @@ describe('Cache', () => {
           f: 5,
           g: 6,
           h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
+            type: "id",
+            id: "bar",
+            generated: false
+          }
         },
         bar: {
           i: 10,
           j: 11,
-          k: 12,
-        },
+          k: 12
+        }
       });
     });
-    it('writes data that can be read back', () => {
+    it("writes data that can be read back", () => {
       const proxy = createCache({
-        config: { addTypename: true },
+        config: { addTypename: true }
       });
       const readWriteFragment = gql`
         fragment aFragment on query {
@@ -1054,34 +1052,34 @@ describe('Cache', () => {
         }
       `;
       const data = {
-        __typename: 'query',
-        getSomething: { id: '123', __typename: 'Something' },
+        __typename: "query",
+        getSomething: { id: "123", __typename: "Something" }
       };
       proxy.writeFragment({
         data,
-        id: 'query',
-        fragment: readWriteFragment,
+        id: "query",
+        fragment: readWriteFragment
       });
 
       const result = proxy.readFragment({
         fragment: readWriteFragment,
-        id: 'query',
+        id: "query"
       });
       expect(result).toEqual(data);
     });
 
-    it('will write some data to the store with variables', () => {
+    it("will write some data to the store with variables", () => {
       const proxy = createCache({
-        config: { addTypename: true },
+        config: { addTypename: true }
       });
 
       proxy.writeFragment({
         data: {
           a: 1,
           b: 2,
-          __typename: 'Foo',
+          __typename: "Foo"
         },
-        id: 'foo',
+        id: "foo",
         fragment: gql`
           fragment foo on Foo {
             a: field(literal: true, value: 42)
@@ -1090,22 +1088,22 @@ describe('Cache', () => {
         `,
         variables: {
           literal: false,
-          value: 42,
-        },
+          value: 42
+        }
       });
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
-          __typename: 'Foo',
+          __typename: "Foo",
           'field({"literal":true,"value":42})': 1,
-          'field({"literal":false,"value":42})': 2,
-        },
+          'field({"literal":false,"value":42})': 2
+        }
       });
     });
   });
 
-  describe('performTransaction', () => {
-    it('will not broadcast mid-transaction', () => {
+  describe("performTransaction", () => {
+    it("will not broadcast mid-transaction", () => {
       const cache = createCache();
 
       let numBroadcasts = 0;
@@ -1121,7 +1119,7 @@ describe('Cache', () => {
         optimistic: false,
         callback: () => {
           numBroadcasts++;
-        },
+        }
       });
 
       expect(numBroadcasts).toEqual(0);
@@ -1129,7 +1127,7 @@ describe('Cache', () => {
       cache.performTransaction(proxy => {
         proxy.writeQuery({
           data: { a: 1 },
-          query,
+          query
         });
 
         expect(numBroadcasts).toEqual(0);
@@ -1142,7 +1140,7 @@ describe('Cache', () => {
               b
               c
             }
-          `,
+          `
         });
 
         expect(numBroadcasts).toEqual(0);
@@ -1152,8 +1150,8 @@ describe('Cache', () => {
     });
   });
 
-  describe('performOptimisticTransaction', () => {
-    it('will only broadcast once', () => {
+  describe("performOptimisticTransaction", () => {
+    it("will only broadcast once", () => {
       const cache = createCache();
 
       let numBroadcasts = 0;
@@ -1169,7 +1167,7 @@ describe('Cache', () => {
         optimistic: true,
         callback: () => {
           numBroadcasts++;
-        },
+        }
       });
 
       expect(numBroadcasts).toEqual(0);
@@ -1177,7 +1175,7 @@ describe('Cache', () => {
       cache.recordOptimisticTransaction(proxy => {
         proxy.writeQuery({
           data: { a: 1 },
-          query,
+          query
         });
 
         expect(numBroadcasts).toEqual(0);
@@ -1190,7 +1188,7 @@ describe('Cache', () => {
               b
               c
             }
-          `,
+          `
         });
 
         expect(numBroadcasts).toEqual(0);

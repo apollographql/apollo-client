@@ -4,14 +4,14 @@ This document describes the process Apollo contributors use to organize issues. 
 
 We would love to have more contributors who are willing to help out with triaging issues. You can begin by helping issue requesters create good reproductions and by confirming those reproductions on your own machine. It won't be long before the core maintainers notice your work and ask whether you'd like to be promoted to an issue maintainer.
 
-- [Issue lifecycle](#issue-lifecycle)
-  - [Bugs](#bugs)
-  - [Help questions](#help-questions)
-  - [Feature requests](#feature-requests)
-- [Classification](#classification)
-  - [Severity](#severity)
-  - [Impact](#impact)
-- [Issues ready to claim](#issues-ready-to-claim)
+* [Issue lifecycle](#issue-lifecycle)
+  * [Bugs](#bugs)
+  * [Help questions](#help-questions)
+  * [Feature requests](#feature-requests)
+* [Classification](#classification)
+  * [Severity](#severity)
+  * [Impact](#impact)
+* [Issues ready to claim](#issues-ready-to-claim)
 
 ## Issue lifecycle
 
@@ -26,8 +26,8 @@ The first step is in determining whether the issue is a bug, help question or fe
 1. Duplicates should be closed and marked as such.
 2. If the bug would be better filed under a different repository (react-apollo, graphql-tag, graphql-anywhere, etc. ), close the issue and politely point the author to the right location.
 3. Add the `bug` label. Bugs should have a high-quality reproduction as described [here](CONTRIBUTING.md#reporting-bugs). You may need to help the reporter reduce their bug to a minimal reproduction. Leave the issue open.
-5. A reproduction should be confirmed by at least one person other than the original reporter. Run the reproduction and validate that the bug exists; then make a note of your findings on the issue. If a reproduction is supplied but doesn't work, add the `can't-reproduce` label and make a comment describing what happened.
-6. Finally, once you've confirmed the reproduction add the `confirmed` label and [classify](#classification) the issue (removing the `can't-reproduce` label if it exists).
+4. A reproduction should be confirmed by at least one person other than the original reporter. Run the reproduction and validate that the bug exists; then make a note of your findings on the issue. If a reproduction is supplied but doesn't work, add the `can't-reproduce` label and make a comment describing what happened.
+5. Finally, once you've confirmed the reproduction add the `confirmed` label and [classify](#classification) the issue (removing the `can't-reproduce` label if it exists).
 
 ### Help questions
 
@@ -36,8 +36,8 @@ The first step is in determining whether the issue is a bug, help question or fe
 ### Feature requests
 
 1. For reasons described [here](CONTRIBUTING.md#feature-requests), we would prefer features to be built as separate packages. If the feature can clearly be built as a package, explain this to the requester and close the issue.
-> - If the feature could be built as a package and serves a particular need, encourage the user to contribute it themselves.
->- If the underlying issue could be better solved by existing technology, encourage them to seek help in the [Slack channel](http://dev.apollodata.com/#slack) or on [Stack Overflow](http://stackoverflow.com/questions/tagged/apollo).
+   > * If the feature could be built as a package and serves a particular need, encourage the user to contribute it themselves.
+   > * If the underlying issue could be better solved by existing technology, encourage them to seek help in the [Slack channel](http://dev.apollodata.com/#slack) or on [Stack Overflow](http://stackoverflow.com/questions/tagged/apollo).
 2. If you haven't closed the issue, add the `feature` label.
 3. If it's not possible to build the feature as a package (as you identified in step 1), explore whether creating hooks in core would make it possible to do so. If it would, redefine the issue as a request to create those hooks.
 4. Work with the requester and others in the community to build a clear specification for the feature and update the issue description accordingly.
@@ -47,23 +47,25 @@ Core contributors may add the `pull-requests-encouraged` label to feature reques
 
 <h2 id="classification">Classification</h2>
 
-Assign a classification (via GH labels) that enables the community to determine how to prioritize which issues to work on. The classification is based on *Severity x Impact* .
+Assign a classification (via GH labels) that enables the community to determine how to prioritize which issues to work on. The classification is based on _Severity x Impact_ .
 
 ### Severity
+
 _[Severity:has-workaround, Severity:production, Severity:blocks-development]_
 
-- If there is a workaround, apply the `Severity:has-workaround` label.
-- If the issue affects production apps, apply the `Severity:production` label.
-- If the issue blocks development, apply the `Severity:blocks-development` label.
+* If there is a workaround, apply the `Severity:has-workaround` label.
+* If the issue affects production apps, apply the `Severity:production` label.
+* If the issue blocks development, apply the `Severity:blocks-development` label.
 
 ### Impact
+
 _[Impact:few, Impact:some, Impact:most]_
 
 This is a somewhat subjective label and is interpreted in conjunction with Github's upvotes. As a general guideline:
 
-- `Impact:few` issues would go unnoticed by almost all users, apart from those using a very niche feature, or a feature in an unusual way.
-- `Impact:some` issues would impact users using a feature that is commonly but not universally used.
-- `Impact:most` issues would impact more or less every user of Apollo.
+* `Impact:few` issues would go unnoticed by almost all users, apart from those using a very niche feature, or a feature in an unusual way.
+* `Impact:some` issues would impact users using a feature that is commonly but not universally used.
+* `Impact:most` issues would impact more or less every user of Apollo.
 
 ## Issues ready to claim
 

@@ -40,12 +40,12 @@ When we use `graphql` with a GraphQL query document, two things happen:
 In addition to the `currentUser` field selected in the query, the `data` prop also includes a field called `loading`, a Boolean value indicating if the query is currently being loaded from the server, and a field called `error` to indicate if there was an error fetching the data. So if we were to look at the shape of the props, it would look like this:
 
 ```js
-(props) => {
-    const loading = props.data.loading;
-    const error = props.data.error;
-    const currentUser = props.data.currentUser;
-    // render UI with loading, error, or currentUser
-}
+props => {
+  const loading = props.data.loading;
+  const error = props.data.error;
+  const currentUser = props.data.currentUser;
+  // render UI with loading, error, or currentUser
+};
 ```
 
 The `data.currentUser` prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent.
@@ -56,16 +56,20 @@ As seen above, `graphql` will pass the result of the query to the wrapped compon
 
 For queries, the shape of the `data` prop is the following:
 
-- `...fields`: One key for each root field in the query.
-- `loading`: This field is `true` if there is currently a query fetch in flight, including after calling `refetch`. `false` otherwise.
-- `error`: An ApolloError object that represents the different possible errors that might happen when running a query.
+* `...fields`: One key for each root field in the query.
+* `loading`: This field is `true` if there is currently a query fetch in flight, including after calling `refetch`. `false` otherwise.
+* `error`: An ApolloError object that represents the different possible errors that might happen when running a query.
 
 There are a lot more methods as well, which you can read about [in the API docs for queries](#graphql-query-data). As an example, for a query like this:
 
 ```graphql
 query getUserAndLikes($id: ID!) {
-  user(userId: $id) { name }
-  likes(userId: $id) { count }
+  user(userId: $id) {
+    name
+  }
+  likes(userId: $id) {
+    count
+  }
 }
 ```
 
@@ -104,9 +108,8 @@ const CurrentUserForLayout = gql`
 `;
 
 const ProfileWithData = graphql(CurrentUserForLayout, {
-  options: { variables: { avatarSize: 100 } },
+  options: { variables: { avatarSize: 100 } }
 })(Profile);
-
 ```
 
 <h2 id="options-from-props">Computing from props</h2>
@@ -115,11 +118,11 @@ Typically, variables to the query will be computed from the `props` of the wrapp
 
 ```js
 // The caller could do something like:
-<ProfileWithData avatarSize={300} />
+<ProfileWithData avatarSize={300} />;
 
 // And our HOC could look like:
 const ProfileWithData = graphql(CurrentUserForLayout, {
-  options: ({ avatarSize }) => ({ variables: { avatarSize } }),
+  options: ({ avatarSize }) => ({ variables: { avatarSize } })
 })(Profile);
 ```
 
@@ -132,7 +135,7 @@ There are a lot of other options you can pass in other than just `variables`, fo
 ```js
 const ProfileWithData = graphql(CurrentUserForLayout, {
   // See the watchQuery API for the options you can provide here
-  options: { pollInterval: 20000 },
+  options: { pollInterval: 20000 }
 })(Profile);
 ```
 
@@ -148,7 +151,7 @@ For example, you could use this if you want to ignore a query if a user isn't au
 
 ```js
 const ProfileWithData = graphql(CurrentUserForLayout, {
-  skip: (ownProps) => !ownProps.authenticated,
+  skip: ownProps => !ownProps.authenticated
 })(Profile);
 ```
 
@@ -156,7 +159,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 ```js
 const ProfileWithData = graphql(CurrentUserForLayout, {
-  skip: true,
+  skip: true
 })(Profile);
 ```
 
@@ -199,7 +202,6 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 If you want complete control over the props of the child component, use the `props` option to map the query `data` object into any number of props that will be passed into the child:
 
 ```js
-
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
@@ -246,8 +248,12 @@ The `data` prop contains the data fetched from your query in addition to some ot
 
 ```graphql
 {
-  viewer { name }
-  todos { text }
+  viewer {
+    name
+  }
+  todos {
+    text
+  }
 }
 ```
 
@@ -311,7 +317,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 If an error occurred then this property will be an instance of [`ApolloError`][]. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
-[`ApolloError`]: /docs/react/reference/index.html#ApolloError
+[`apolloerror`]: /docs/react/reference/index.html#ApolloError
 
 **Example:**
 
@@ -389,11 +395,7 @@ The `data.refetch` function takes a single `variables` object argument. The `var
 
 ```js
 function MyComponent({ data: { refetch } }) {
-  return (
-    <button onClick={() => refetch()}>
-      Reload
-    </button>
-  );
+  return <button onClick={() => refetch()}>Reload</button>;
 }
 
 export default graphql(gql`query { ... }`)(MyComponent);
@@ -407,9 +409,9 @@ The `data.fetchMore` function allows you to do pagination with your query compon
 
 The `data.fetchMore` function takes a single `options` object argument. The `options` argument may take the following properties:
 
-- `[query]`: This is an optional GraphQL document created with the `gql` GraphQL tag. If you specify a `query` then that query will be fetched when you call `data.fetchMore`. If you do not specify a `query`, then the query from your `graphql()` HOC will be used.
-- `[variables]`: The optional variables you may provide that will be used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`).
-- `updateQuery(previousResult, { fetchMoreResult, queryVariables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `queryVariables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `queryVariables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](./../recipes/pagination.html) recipe which has a full example.
+* `[query]`: This is an optional GraphQL document created with the `gql` GraphQL tag. If you specify a `query` then that query will be fetched when you call `data.fetchMore`. If you do not specify a `query`, then the query from your `graphql()` HOC will be used.
+* `[variables]`: The optional variables you may provide that will be used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`).
+* `updateQuery(previousResult, { fetchMoreResult, queryVariables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `queryVariables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `queryVariables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](./../recipes/pagination.html) recipe which has a full example.
 
 **Example:**
 
@@ -419,9 +421,9 @@ data.fetchMore({
     return {
       ...previousResult,
       // Add the new feed data to the end of the old feed data.
-      feed: [...previousResult.feed, ...fetchMoreResult.feed],
+      feed: [...previousResult.feed, ...fetchMoreResult.feed]
     };
-  },
+  }
 });
 ```
 
@@ -433,10 +435,10 @@ This function returns an `unsubscribe` function handler which can be used to uns
 
 A common practice is to wrap the `subscribeToMore` call within `componentWillReceiveProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can attach it to the component instance. See the example for more details.
 
-- `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
-- `[variables]`: The optional variables you may provide that will be used with the `document` option.
-- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback. Alternatively, you could update the query using a [reducer](http://dev.apollodata.com/react/cache-updates.html#resultReducers) as part of the [options](http://dev.apollodata.com/react/queries.html#graphql-options) of your `graphql()` function.
-- `[onError]`: An optional error callback.
+* `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
+* `[variables]`: The optional variables you may provide that will be used with the `document` option.
+* `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback. Alternatively, you could update the query using a [reducer](http://dev.apollodata.com/react/cache-updates.html#resultReducers) as part of the [options](http://dev.apollodata.com/react/queries.html#graphql-options) of your `graphql()` function.
+* `[onError]`: An optional error callback.
 
 In order to update the query's store with the result of the subscription, you must specify either the `updateQuery` option in `subscribeToMore` or the `reducer` option in your `graphql()` function.
 
@@ -471,7 +473,6 @@ class SubscriptionComponent extends Component {
   }
 }
 ```
-
 
 <h3 id="graphql-query-data-startPolling">`data.startPolling(interval)`</h3>
 
@@ -513,18 +514,22 @@ class MyComponent extends Component {
   render() {
     return (
       <div>
-        <button onClick={() => {
-          this.props.data.startPolling(1000);
-        }}>
+        <button
+          onClick={() => {
+            this.props.data.startPolling(1000);
+          }}
+        >
           Start Polling
         </button>
-        <button onClick={() => {
-          this.props.data.stopPolling();
-        }}>
+        <button
+          onClick={() => {
+            this.props.data.stopPolling();
+          }}
+        >
           Stop Polling
         </button>
       </div>
-    )
+    );
   }
 }
 
@@ -543,14 +548,14 @@ The first argument will be the data for your query that currently exists in the 
 
 The second argument is an object with a single property, `variables`. The `variables` property allows you to see what variables were used when reading the `previousResult` from the store.
 
-This method will *not* update anything on the server. It will only update data in your client cache and if you reload your JavaScript environment then your update will disappear.
+This method will _not_ update anything on the server. It will only update data in your client cache and if you reload your JavaScript environment then your update will disappear.
 
 **Example:**
 
 ```js
-data.updateQuery((previousResult) => ({
+data.updateQuery(previousResult => ({
   ...previousResult,
-  count: previousResult.count + 1,
+  count: previousResult.count + 1
 }));
 ```
 
@@ -560,7 +565,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
 
 **Example:**
 
@@ -568,15 +573,15 @@ The options available for use  in this object depend on the operation type you p
 export default graphql(gql`{ ... }`, {
   options: {
     // Options go here.
-  },
+  }
 })(MyComponent);
 ```
 
 ```js
 export default graphql(gql`{ ... }`, {
-  options: (props) => ({
+  options: props => ({
     // Options are computed from `props` here.
-  }),
+  })
 })(MyComponent);
 ```
 
@@ -587,40 +592,43 @@ The variables that will be used when executing the query operation. These variab
 **Example:**
 
 ```js
-export default graphql(gql`
+export default graphql(
+  gql`
   query ($width: Int!, $height: Int!) {
     ...
   }
-`, {
-  options: (props) => ({
-    variables: {
-      width: props.size,
-      height: props.size,
-    },
-  }),
-})(MyComponent);
+`,
+  {
+    options: props => ({
+      variables: {
+        width: props.size,
+        height: props.size
+      }
+    })
+  }
+)(MyComponent);
 ```
 
 <h3 id="graphql-config-options-fetchPolicy">`options.fetchPolicy`</h3>
 
-The fetch policy is an option which allows you to specify how you want your component to interact with the Apollo data cache. By default your component will try to read from the cache first, and if the full data for your query is in the cache then Apollo simply returns the data from the cache. If the full data for your query is *not* in the cache then Apollo will execute your request using your network interface. By changing this option you can change this behavior.
+The fetch policy is an option which allows you to specify how you want your component to interact with the Apollo data cache. By default your component will try to read from the cache first, and if the full data for your query is in the cache then Apollo simply returns the data from the cache. If the full data for your query is _not_ in the cache then Apollo will execute your request using your network interface. By changing this option you can change this behavior.
 
 Valid `fetchPolicy` values are:
 
-- `cache-first`: This is the default value where we always try reading data from your cache first. If all the data needed to fulfill your query is in the cache then that data will be returned. Apollo will only fetch from the network if a cached result is not available. This fetch policy aims to minimize the number of network requests sent when rendering your component.
-- `cache-and-network`: This fetch policy will have Apollo first trying to read data from your cache. If all the data needed to fulfill your query is in the cache then that data will be returned. However, regardless of whether or not the full data is in your cache this `fetchPolicy` will *always* execute query with the network interface unlike `cache-first` which will only execute your query if the query data is not in your cache. This fetch policy optimizes for users getting a quick response while also trying to keep cached data consistent with your server data at the cost of extra network requests.
-- `network-only`: This fetch policy will *never* return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
-- `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()`][] and [`readFragment()`][] methods available to you on your [`ApolloClient`][] instance.
+* `cache-first`: This is the default value where we always try reading data from your cache first. If all the data needed to fulfill your query is in the cache then that data will be returned. Apollo will only fetch from the network if a cached result is not available. This fetch policy aims to minimize the number of network requests sent when rendering your component.
+* `cache-and-network`: This fetch policy will have Apollo first trying to read data from your cache. If all the data needed to fulfill your query is in the cache then that data will be returned. However, regardless of whether or not the full data is in your cache this `fetchPolicy` will _always_ execute query with the network interface unlike `cache-first` which will only execute your query if the query data is not in your cache. This fetch policy optimizes for users getting a quick response while also trying to keep cached data consistent with your server data at the cost of extra network requests.
+* `network-only`: This fetch policy will _never_ return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
+* `cache-only`: This fetch policy will _never_ execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()`][] and [`readFragment()`][] methods available to you on your [`ApolloClient`][] instance.
 
-[`readQuery()`]: cache#ApolloClient.readQuery
-[`readFragment()`]: cache#ApolloClient.readFragment
-[`ApolloClient`]: /docs/react
+[`readquery()`]: cache#ApolloClient.readQuery
+[`readfragment()`]: cache#ApolloClient.readFragment
+[`apolloclient`]: /docs/react
 
 **Example:**
 
 ```js
 export default graphql(gql`query { ... }`, {
-  options: { fetchPolicy: 'cache-and-network' },
+  options: { fetchPolicy: "cache-and-network" }
 })(MyComponent);
 ```
 
@@ -630,19 +638,17 @@ The error policy is an option which allows you to specify how you want your comp
 
 Valid `errorPolicy` values are:
 
-- `none`: This is the default value where we treat GraphQL errors as runtime errors. Apollo will discard any data that came back with the request and render your component with an `error` prop.
-- `ignore`: Much like `none`, this causes Apollo to ignore any data from your server, but it also won't update your UI aside from setting the loading state back to false. 
-- `all`: Selecting all means you want to be notified any time there are any GraphQL errors. It will render your component with any data from the request and any errors with their information. It is particularly helpful for server side rendering so your UI always shows something
-
+* `none`: This is the default value where we treat GraphQL errors as runtime errors. Apollo will discard any data that came back with the request and render your component with an `error` prop.
+* `ignore`: Much like `none`, this causes Apollo to ignore any data from your server, but it also won't update your UI aside from setting the loading state back to false.
+* `all`: Selecting all means you want to be notified any time there are any GraphQL errors. It will render your component with any data from the request and any errors with their information. It is particularly helpful for server side rendering so your UI always shows something
 
 **Example:**
 
 ```js
 export default graphql(gql`query { ... }`, {
-  options: { errorPolicy: 'all' },
+  options: { errorPolicy: "all" }
 })(MyComponent);
 ```
-
 
 <h3 id="graphql-config-options-pollInterval">`options.pollInterval`</h3>
 
@@ -656,7 +662,7 @@ If you set `options.pollInterval` to 0 then that means no polling instead of exe
 
 ```js
 export default graphql(gql`query { ... }`, {
-  options: { pollInterval: 5000 },
+  options: { pollInterval: 5000 }
 })(MyComponent);
 ```
 
@@ -670,7 +676,7 @@ The default value is `false`.
 
 ```js
 export default graphql(gql`query { ... }`, {
-  options: { notifyOnNetworkStatusChange: true },
+  options: { notifyOnNetworkStatusChange: true }
 })(MyComponent);
 ```
 

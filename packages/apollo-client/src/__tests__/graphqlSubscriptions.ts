@@ -1,19 +1,19 @@
-import gql from 'graphql-tag';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import gql from "graphql-tag";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
-import { mockObservableLink, MockedSubscription } from '../__mocks__/mockLinks';
+import { mockObservableLink, MockedSubscription } from "../__mocks__/mockLinks";
 
-import ApolloClient from '../';
+import ApolloClient from "../";
 
-import { QueryManager } from '../core/QueryManager';
-import { DataStore } from '../data/store';
+import { QueryManager } from "../core/QueryManager";
+import { DataStore } from "../data/store";
 
-describe('GraphQL Subscriptions', () => {
+describe("GraphQL Subscriptions", () => {
   const results = [
-    'Dahivat Pandya',
-    'Vyacheslav Kim',
-    'Changping Chen',
-    'Amanda Liu',
+    "Dahivat Pandya",
+    "Vyacheslav Kim",
+    "Changping Chen",
+    "Amanda Liu"
   ].map(name => ({ result: { data: { user: { name } } }, delay: 10 }));
 
   let sub1: MockedSubscription;
@@ -31,9 +31,9 @@ describe('GraphQL Subscriptions', () => {
           }
         `,
         variables: {
-          name: 'Changping Chen',
-        },
-      },
+          name: "Changping Chen"
+        }
+      }
     };
 
     options = {
@@ -45,8 +45,8 @@ describe('GraphQL Subscriptions', () => {
         }
       `,
       variables: {
-        name: 'Changping Chen',
-      },
+        name: "Changping Chen"
+      }
     };
 
     defaultSub1 = {
@@ -59,9 +59,9 @@ describe('GraphQL Subscriptions', () => {
           }
         `,
         variables: {
-          name: 'Changping Chen',
-        },
-      },
+          name: "Changping Chen"
+        }
+      }
     };
 
     defaultOptions = {
@@ -71,16 +71,16 @@ describe('GraphQL Subscriptions', () => {
             name
           }
         }
-      `,
+      `
     };
   });
 
-  it('should start a subscription on network interface and unsubscribe', done => {
+  it("should start a subscription on network interface and unsubscribe", done => {
     const link = mockObservableLink(defaultSub1);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     let count = 0;
@@ -91,22 +91,22 @@ describe('GraphQL Subscriptions', () => {
 
         // Test unsubscribing
         if (count > 1) {
-          throw new Error('next fired after unsubscribing');
+          throw new Error("next fired after unsubscribing");
         }
         sub.unsubscribe();
         done();
-      },
+      }
     });
 
     link.simulateResult(results[0]);
   });
 
-  it('should subscribe with default values', done => {
+  it("should subscribe with default values", done => {
     const link = mockObservableLink(sub1);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false })
     });
 
     let count = 0;
@@ -116,22 +116,22 @@ describe('GraphQL Subscriptions', () => {
 
         // Test unsubscribing
         if (count > 1) {
-          throw new Error('next fired after unsubscribing');
+          throw new Error("next fired after unsubscribing");
         }
         sub.unsubscribe();
 
         done();
-      },
+      }
     });
 
     link.simulateResult(results[0]);
   });
 
-  it('should multiplex subscriptions', done => {
+  it("should multiplex subscriptions", done => {
     const link = mockObservableLink(sub1);
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false }))
     });
 
     const obs = queryManager.startGraphQLSubscription(options);
@@ -146,7 +146,7 @@ describe('GraphQL Subscriptions', () => {
         if (counter === 2) {
           done();
         }
-      },
+      }
     }) as any;
 
     // Subscribe again. Should also receive the same result.
@@ -158,18 +158,18 @@ describe('GraphQL Subscriptions', () => {
         if (counter === 2) {
           done();
         }
-      },
+      }
     }) as any;
 
     link.simulateResult(results[0]);
   });
 
-  it('should receive multiple results for a subscription', done => {
+  it("should receive multiple results for a subscription", done => {
     const link = mockObservableLink(sub1);
     let numResults = 0;
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false }))
     });
 
     // tslint:disable-next-line
@@ -180,7 +180,7 @@ describe('GraphQL Subscriptions', () => {
         if (numResults === 4) {
           done();
         }
-      },
+      }
     }) as any;
 
     for (let i = 0; i < 4; i++) {

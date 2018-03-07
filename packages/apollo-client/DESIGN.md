@@ -22,13 +22,13 @@ I think there is a "minimum viable" set of features for a good GraphQL client. A
 
 Based on talking to some developers, I believe that list includes, in no particular order:
 
-- Optimistic UI for mutations
-- A cache so that you don't refetch data you already have
-- The ability to manually refetch data when you know it has changed
-- The ability to preload data you might need later
-- Minimal server roundtrips to render the initial UI
-- Query aggregation from your UI tree
-- Basic handling of pagination, most critically being able to fetch a new page of items when you already have some
+* Optimistic UI for mutations
+* A cache so that you don't refetch data you already have
+* The ability to manually refetch data when you know it has changed
+* The ability to preload data you might need later
+* Minimal server roundtrips to render the initial UI
+* Query aggregation from your UI tree
+* Basic handling of pagination, most critically being able to fetch a new page of items when you already have some
 
 The implementation process will determine the order in which these are completed.
 

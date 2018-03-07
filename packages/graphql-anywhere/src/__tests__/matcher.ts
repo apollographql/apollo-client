@@ -1,8 +1,8 @@
-import graphql, { FragmentMatcher } from '../';
-import gql from 'graphql-tag';
+import graphql, { FragmentMatcher } from "../";
+import gql from "graphql-tag";
 
-describe('fragment matcher', () => {
-  it('does basic things', () => {
+describe("fragment matcher", () => {
+  it("does basic things", () => {
     const resolver = fieldName => fieldName;
 
     const query = gql`
@@ -30,30 +30,30 @@ describe('fragment matcher', () => {
     `;
 
     const fragmentMatcher: FragmentMatcher = (_, typeCondition) =>
-      typeCondition === 'Yes';
+      typeCondition === "Yes";
 
-    const resultWithMatcher = graphql(resolver, query, '', null, null, {
-      fragmentMatcher,
+    const resultWithMatcher = graphql(resolver, query, "", null, null, {
+      fragmentMatcher
     });
 
     expect(resultWithMatcher).toEqual({
       a: {
-        b: 'b',
-        c: 'c',
-        e: 'e',
-      },
+        b: "b",
+        c: "c",
+        e: "e"
+      }
     });
 
-    const resultNoMatcher = graphql(resolver, query, '', null, null);
+    const resultNoMatcher = graphql(resolver, query, "", null, null);
 
     expect(resultNoMatcher).toEqual({
       a: {
-        b: 'b',
-        c: 'c',
-        d: 'd',
-        e: 'e',
-        f: 'f',
-      },
+        b: "b",
+        c: "c",
+        d: "d",
+        e: "e",
+        f: "f"
+      }
     });
   });
 });

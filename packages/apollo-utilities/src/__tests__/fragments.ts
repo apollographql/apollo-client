@@ -1,14 +1,14 @@
-import { print } from 'graphql/language/printer';
-import gql from 'graphql-tag';
-import { disableFragmentWarnings } from 'graphql-tag';
+import { print } from "graphql/language/printer";
+import gql from "graphql-tag";
+import { disableFragmentWarnings } from "graphql-tag";
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
-import { getFragmentQueryDocument } from '../fragments';
+import { getFragmentQueryDocument } from "../fragments";
 
-describe('getFragmentQueryDocument', () => {
-  it('will throw an error if there is an operation', () => {
+describe("getFragmentQueryDocument", () => {
+  it("will throw an error if there is an operation", () => {
     expect(() =>
       getFragmentQueryDocument(
         gql`
@@ -17,10 +17,10 @@ describe('getFragmentQueryDocument', () => {
             b
             c
           }
-        `,
-      ),
+        `
+      )
     ).toThrowError(
-      'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+      "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
     );
     expect(() =>
       getFragmentQueryDocument(
@@ -30,10 +30,10 @@ describe('getFragmentQueryDocument', () => {
             b
             c
           }
-        `,
-      ),
+        `
+      )
     ).toThrowError(
-      'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+      "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
     );
     expect(() =>
       getFragmentQueryDocument(
@@ -43,10 +43,10 @@ describe('getFragmentQueryDocument', () => {
             b
             c
           }
-        `,
-      ),
+        `
+      )
     ).toThrowError(
-      "Found a query operation named 'Named'. No operations are allowed when using a fragment as a query. Only fragments are allowed.",
+      "Found a query operation named 'Named'. No operations are allowed when using a fragment as a query. Only fragments are allowed."
     );
     expect(() =>
       getFragmentQueryDocument(
@@ -56,11 +56,11 @@ describe('getFragmentQueryDocument', () => {
             b
             c
           }
-        `,
-      ),
+        `
+      )
     ).toThrowError(
       "Found a mutation operation named 'Named'. No operations are allowed when using a fragment as a query. " +
-        'Only fragments are allowed.',
+        "Only fragments are allowed."
     );
     expect(() =>
       getFragmentQueryDocument(
@@ -70,15 +70,15 @@ describe('getFragmentQueryDocument', () => {
             b
             c
           }
-        `,
-      ),
+        `
+      )
     ).toThrowError(
       "Found a subscription operation named 'Named'. No operations are allowed when using a fragment as a query. " +
-        'Only fragments are allowed.',
+        "Only fragments are allowed."
     );
   });
 
-  it('will throw an error if there is not exactly one fragment but no `fragmentName`', () => {
+  it("will throw an error if there is not exactly one fragment but no `fragmentName`", () => {
     expect(() => {
       getFragmentQueryDocument(gql`
         fragment foo on Foo {
@@ -94,7 +94,7 @@ describe('getFragmentQueryDocument', () => {
         }
       `);
     }).toThrowError(
-      'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+      "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
     );
     expect(() => {
       getFragmentQueryDocument(gql`
@@ -117,18 +117,18 @@ describe('getFragmentQueryDocument', () => {
         }
       `);
     }).toThrowError(
-      'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+      "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
     );
     expect(() => {
       getFragmentQueryDocument(gql`
         scalar Foo
       `);
     }).toThrowError(
-      'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+      "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
     );
   });
 
-  it('will create a query document where the single fragment is spread in the root query', () => {
+  it("will create a query document where the single fragment is spread in the root query", () => {
     expect(
       print(
         getFragmentQueryDocument(gql`
@@ -137,8 +137,8 @@ describe('getFragmentQueryDocument', () => {
             b
             c
           }
-        `),
-      ),
+        `)
+      )
     ).toEqual(
       print(gql`
         {
@@ -150,11 +150,11 @@ describe('getFragmentQueryDocument', () => {
           b
           c
         }
-      `),
+      `)
     );
   });
 
-  it('will create a query document where the named fragment is spread in the root query', () => {
+  it("will create a query document where the named fragment is spread in the root query", () => {
     expect(
       print(
         getFragmentQueryDocument(
@@ -180,9 +180,9 @@ describe('getFragmentQueryDocument', () => {
               ...bar
             }
           `,
-          'foo',
-        ),
-      ),
+          "foo"
+        )
+      )
     ).toEqual(
       print(gql`
         {
@@ -209,7 +209,7 @@ describe('getFragmentQueryDocument', () => {
           ...foo
           ...bar
         }
-      `),
+      `)
     );
     expect(
       print(
@@ -236,9 +236,9 @@ describe('getFragmentQueryDocument', () => {
               ...bar
             }
           `,
-          'bar',
-        ),
-      ),
+          "bar"
+        )
+      )
     ).toEqual(
       print(gql`
         {
@@ -265,7 +265,7 @@ describe('getFragmentQueryDocument', () => {
           ...foo
           ...bar
         }
-      `),
+      `)
     );
     expect(
       print(
@@ -292,9 +292,9 @@ describe('getFragmentQueryDocument', () => {
               ...bar
             }
           `,
-          'baz',
-        ),
-      ),
+          "baz"
+        )
+      )
     ).toEqual(
       print(gql`
         {
@@ -321,7 +321,7 @@ describe('getFragmentQueryDocument', () => {
           ...foo
           ...bar
         }
-      `),
+      `)
     );
   });
 });

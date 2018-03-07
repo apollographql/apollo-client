@@ -1,11 +1,11 @@
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
-import graphql from '../';
+import graphql from "../";
 
-describe('directives', () => {
-  it('skips a field that has the skip directive', () => {
+describe("directives", () => {
+  it("skips a field that has the skip directive", () => {
     const resolver = () => {
-      throw new Error('should not be called');
+      throw new Error("should not be called");
     };
 
     const query = gql`
@@ -19,12 +19,12 @@ describe('directives', () => {
     expect(result).toEqual({});
   });
 
-  it('includes info about arbitrary directives', () => {
+  it("includes info about arbitrary directives", () => {
     const resolver = (fieldName, root, args, context, info) => {
       const { doSomethingDifferent } = info.directives;
       let data = root[info.resultKey];
       if (doSomethingDifferent) {
-        if (doSomethingDifferent.but === 'notTooCrazy') {
+        if (doSomethingDifferent.but === "notTooCrazy") {
           return data;
         }
         return undefined;
@@ -33,8 +33,8 @@ describe('directives', () => {
     };
 
     const input = {
-      a: 'something',
-      b: 'hidden',
+      a: "something",
+      b: "hidden"
     };
 
     const query = gql`
@@ -46,6 +46,6 @@ describe('directives', () => {
 
     const result = graphql(resolver, query, input);
 
-    expect(result).toEqual({ a: 'something' });
+    expect(result).toEqual({ a: "something" });
   });
 });

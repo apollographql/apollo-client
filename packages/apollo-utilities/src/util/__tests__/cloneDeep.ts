@@ -1,7 +1,7 @@
-import { cloneDeep } from '../cloneDeep';
+import { cloneDeep } from "../cloneDeep";
 
-describe('cloneDeep', () => {
-  it('will clone primitive values', () => {
+describe("cloneDeep", () => {
+  it("will clone primitive values", () => {
     expect(cloneDeep(undefined)).toEqual(undefined);
     expect(cloneDeep(null)).toEqual(null);
     expect(cloneDeep(true)).toEqual(true);
@@ -9,11 +9,11 @@ describe('cloneDeep', () => {
     expect(cloneDeep(-1)).toEqual(-1);
     expect(cloneDeep(+1)).toEqual(+1);
     expect(cloneDeep(0.5)).toEqual(0.5);
-    expect(cloneDeep('hello')).toEqual('hello');
-    expect(cloneDeep('world')).toEqual('world');
+    expect(cloneDeep("hello")).toEqual("hello");
+    expect(cloneDeep("world")).toEqual("world");
   });
 
-  it('will clone objects', () => {
+  it("will clone objects", () => {
     const value1 = {};
     const value2 = { a: 1, b: 2, c: 3 };
     const value3 = { x: { a: 1, b: 2, c: 3 }, y: { a: 1, b: 2, c: 3 } };
@@ -33,7 +33,7 @@ describe('cloneDeep', () => {
     expect(clonedValue3.y).toEqual(value3.y);
   });
 
-  it('will clone arrays', () => {
+  it("will clone arrays", () => {
     const value1: Array<number> = [];
     const value2 = [1, 2, 3];
     const value3 = [[1, 2, 3], [1, 2, 3]];

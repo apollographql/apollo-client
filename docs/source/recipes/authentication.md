@@ -8,55 +8,57 @@ Apollo Client uses the ultra flexible [Apollo Link](/docs/link) that includes se
 
 ## Cookie
 
-If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `credentials: 'same-origin'` as shown below, if your backend server is the same domain or else `credentials: 'include'` if your backend is a different domain. 
+If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g. `credentials: 'same-origin'` as shown below, if your backend server is the same domain or else `credentials: 'include'` if your backend is a different domain.
 
 ```js
 const link = createHttpLink({
-  uri: '/graphql',
-  credentials: 'same-origin'
+  uri: "/graphql",
+  credentials: "same-origin"
 });
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link,
+  link
 });
 ```
 
 This option is simply passed through to the [`fetch` implementation](https://github.com/github/fetch) used by the HttpLink when sending the query.
 
-Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings, 
+Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings,
+
 ```js
 // enable cors
 var corsOptions = {
-  origin: '<insert uri of front-end domain>',
+  origin: "<insert uri of front-end domain>",
   credentials: true // <-- REQUIRED backend setting
 };
 app.use(cors(corsOptions));
 ```
+
 ## Header
 
 Another common way to identify yourself when using HTTP is to send along an authorization header. Apollo Links make creating middlewares that lets you modify requests before they are sent to the server. It's easy to add an `authorization` header to every HTTP request. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { createHttpLink } from 'apollo-link-http';
-import { setContext } from 'apollo-link-context';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient } from "apollo-client";
+import { createHttpLink } from "apollo-link-http";
+import { setContext } from "apollo-link-context";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
 const httpLink = createHttpLink({
-  uri: '/graphql',
+  uri: "/graphql"
 });
 
 const authLink = setContext((_, { headers }) => {
   // get the authentication token from local storage if it exists
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   // return the headers to the context so httpLink can read them
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : "",
+      authorization: token ? `Bearer ${token}` : ""
     }
-  }
+  };
 });
 
 const client = new ApolloClient({
@@ -74,7 +76,6 @@ Since Apollo caches all of your query results, it's important to get rid of them
 The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. The component has to be wrapped in `withApollo` higher order component to have direct access to `Apolloclient` through props.
 
 Another option is to reload the page, which will have a similar effect.
-
 
 ```js
 import { withApollo, graphql } from 'react-apollo';

@@ -14,9 +14,9 @@ export function isEqual(a: any, b: any): boolean {
   // well.
   if (
     a != null &&
-    typeof a === 'object' &&
+    typeof a === "object" &&
     b != null &&
-    typeof b === 'object'
+    typeof b === "object"
   ) {
     // Compare all of the keys in `a`. If one of the keys has a different value, or that key does
     // not exist in `b` return false immediately.

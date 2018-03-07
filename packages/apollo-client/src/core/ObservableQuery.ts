@@ -1,28 +1,28 @@
 import {
   isEqual,
   tryFunctionOrLogError,
-  maybeDeepFreeze,
-} from 'apollo-utilities';
-import { GraphQLError } from 'graphql';
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import { Observable, Observer, Subscription } from '../util/Observable';
+  maybeDeepFreeze
+} from "apollo-utilities";
+import { GraphQLError } from "graphql";
+import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus";
+import { Observable, Observer, Subscription } from "../util/Observable";
 
-import { QueryScheduler } from '../scheduler/scheduler';
+import { QueryScheduler } from "../scheduler/scheduler";
 
-import { ApolloError } from '../errors/ApolloError';
+import { ApolloError } from "../errors/ApolloError";
 
-import { QueryManager } from './QueryManager';
-import { ApolloQueryResult, FetchType } from './types';
+import { QueryManager } from "./QueryManager";
+import { ApolloQueryResult, FetchType } from "./types";
 import {
   ModifiableWatchQueryOptions,
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ErrorPolicy,
-  UpdateQueryFn,
-} from './watchQueryOptions';
+  UpdateQueryFn
+} from "./watchQueryOptions";
 
-import { QueryStoreValue } from '../data/queries';
+import { QueryStoreValue } from "../data/queries";
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
@@ -39,7 +39,7 @@ export interface FetchMoreOptions {
     options: {
       fetchMoreResult?: { [key: string]: any };
       variables: { [key: string]: any };
-    },
+    }
   ) => Object;
 }
 
@@ -49,12 +49,12 @@ export interface UpdateQueryOptions {
 
 export const hasError = (
   storeValue: QueryStoreValue,
-  policy: ErrorPolicy = 'none',
+  policy: ErrorPolicy = "none"
 ) =>
   storeValue &&
   ((storeValue.graphQLErrors &&
     storeValue.graphQLErrors.length > 0 &&
-    policy === 'none') ||
+    policy === "none") ||
     storeValue.networkError);
 
 export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
@@ -81,14 +81,14 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   constructor({
     scheduler,
     options,
-    shouldSubscribe = true,
+    shouldSubscribe = true
   }: {
     scheduler: QueryScheduler<any>;
     options: WatchQueryOptions;
     shouldSubscribe?: boolean;
   }) {
     super((observer: Observer<ApolloQueryResult<T>>) =>
-      this.onSubscribe(observer),
+      this.onSubscribe(observer)
     );
 
     // active state
@@ -138,7 +138,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         },
         error(error) {
           reject(error);
-        },
+        }
       };
       subscription = that.subscribe(observer);
     });
@@ -156,7 +156,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         data: this.lastError ? {} : this.lastResult ? this.lastResult.data : {},
         error: this.lastError,
         loading: false,
-        networkStatus: NetworkStatus.error,
+        networkStatus: NetworkStatus.error
       };
     }
 
@@ -169,8 +169,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         networkStatus: queryStoreValue.networkStatus,
         error: new ApolloError({
           graphQLErrors: queryStoreValue.graphQLErrors,
-          networkError: queryStoreValue.networkError,
-        }),
+          networkError: queryStoreValue.networkError
+        })
       };
     }
 
@@ -187,8 +187,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // See more: https://github.com/apollostack/apollo-client/issues/707
     // Basically: is there a query in flight right now (modolo the next tick)?
     const loading =
-      (this.options.fetchPolicy === 'network-only' && queryLoading) ||
-      (partial && this.options.fetchPolicy !== 'cache-only');
+      (this.options.fetchPolicy === "network-only" && queryLoading) ||
+      (partial && this.options.fetchPolicy !== "cache-only");
 
     // if there is nothing in the query store, it means this query hasn't fired yet or it has been cleaned up. Therefore the
     // network status is dependent on queryLoading.
@@ -202,13 +202,13 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const result = {
       data,
       loading: isNetworkRequestInFlight(networkStatus),
-      networkStatus,
+      networkStatus
     } as ApolloQueryResult<T>;
 
     if (
       queryStoreValue &&
       queryStoreValue.graphQLErrors &&
-      this.options.errorPolicy === 'all'
+      this.options.errorPolicy === "all"
     ) {
       result.errors = queryStoreValue.graphQLErrors;
     }
@@ -239,11 +239,11 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
   public refetch(variables?: any): Promise<ApolloQueryResult<T>> {
     // early return if trying to read from cache during refetch
-    if (this.options.fetchPolicy === 'cache-only') {
+    if (this.options.fetchPolicy === "cache-only") {
       return Promise.reject(
         new Error(
-          'cache-only fetchPolicy option should not be used together with query refetch.',
-        ),
+          "cache-only fetchPolicy option should not be used together with query refetch."
+        )
       );
     }
 
@@ -251,7 +251,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       // update observable variables
       this.variables = {
         ...this.variables,
-        ...variables,
+        ...variables
       };
     }
 
@@ -259,14 +259,14 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       // Update the existing options with new variables
       this.options.variables = {
         ...this.options.variables,
-        ...this.variables,
+        ...this.variables
       };
     }
 
     // Override fetchPolicy for this call only
     const combinedOptions: WatchQueryOptions = {
       ...this.options,
-      fetchPolicy: 'network-only',
+      fetchPolicy: "network-only"
     };
 
     return this.queryManager
@@ -275,12 +275,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
+    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions
   ): Promise<ApolloQueryResult<T>> {
     // early return if no update Query
     if (!fetchMoreOptions.updateQuery) {
       throw new Error(
-        'updateQuery option is required. This function defines how to update the query data with the new results.',
+        "updateQuery option is required. This function defines how to update the query data with the new results."
       );
     }
 
@@ -299,18 +299,18 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
             ...fetchMoreOptions,
             variables: {
               ...this.variables,
-              ...fetchMoreOptions.variables,
-            },
+              ...fetchMoreOptions.variables
+            }
           };
         }
 
-        combinedOptions.fetchPolicy = 'network-only';
+        combinedOptions.fetchPolicy = "network-only";
 
         return this.queryManager.fetchQuery(
           qid,
           combinedOptions as WatchQueryOptions,
           FetchType.normal,
-          this.queryId,
+          this.queryId
         );
       })
       .then(fetchMoreResult => {
@@ -318,8 +318,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           (previousResult: any, { variables }: { [key: string]: any }) =>
             fetchMoreOptions.updateQuery(previousResult, {
               fetchMoreResult: fetchMoreResult.data,
-              variables,
-            }),
+              variables
+            })
         );
 
         return fetchMoreResult as ApolloQueryResult<T>;
@@ -333,7 +333,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
-        variables: options.variables,
+        variables: options.variables
       })
       .subscribe({
         next: data => {
@@ -341,8 +341,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
             this.updateQuery((previous: Object, { variables }) =>
               (options.updateQuery as UpdateQueryFn)(previous, {
                 subscriptionData: data,
-                variables,
-              }),
+                variables
+              })
             );
           }
         },
@@ -351,8 +351,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
             options.onError(err);
             return;
           }
-          console.error('Unhandled GraphQL subscription error', err);
-        },
+          console.error("Unhandled GraphQL subscription error", err);
+        }
       });
 
     this.subscriptionHandles.push(subscription);
@@ -369,12 +369,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   // Note: if the query is not active (there are no subscribers), the promise
   // will return null immediately.
   public setOptions(
-    opts: ModifiableWatchQueryOptions,
+    opts: ModifiableWatchQueryOptions
   ): Promise<ApolloQueryResult<T>> {
     const oldOptions = this.options;
     this.options = {
       ...this.options,
-      ...opts,
+      ...opts
     } as WatchQueryOptions;
 
     if (opts.pollInterval) {
@@ -385,18 +385,18 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     // If fetchPolicy went from cache-only to something else, or from something else to network-only
     const tryFetch: boolean =
-      (oldOptions.fetchPolicy !== 'network-only' &&
-        opts.fetchPolicy === 'network-only') ||
-      (oldOptions.fetchPolicy === 'cache-only' &&
-        opts.fetchPolicy !== 'cache-only') ||
-      (oldOptions.fetchPolicy === 'standby' &&
-        opts.fetchPolicy !== 'standby') ||
+      (oldOptions.fetchPolicy !== "network-only" &&
+        opts.fetchPolicy === "network-only") ||
+      (oldOptions.fetchPolicy === "cache-only" &&
+        opts.fetchPolicy !== "cache-only") ||
+      (oldOptions.fetchPolicy === "standby" &&
+        opts.fetchPolicy !== "standby") ||
       false;
 
     return this.setVariables(
       this.options.variables,
       tryFetch,
-      opts.fetchResults,
+      opts.fetchResults
     );
   }
 
@@ -423,14 +423,14 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   public setVariables(
     variables: any,
     tryFetch: boolean = false,
-    fetchResults = true,
+    fetchResults = true
   ): Promise<ApolloQueryResult<T>> {
     // since setVariables restarts the subscription, we reset the tornDown status
     this.isTornDown = false;
 
     const newVariables = {
       ...this.variables,
-      ...variables,
+      ...variables
     };
 
     if (isEqual(newVariables, this.variables) && !tryFetch) {
@@ -455,30 +455,30 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       return this.queryManager
         .fetchQuery(this.queryId, {
           ...this.options,
-          variables: this.variables,
+          variables: this.variables
         } as WatchQueryOptions)
         .then(result => maybeDeepFreeze(result));
     }
   }
 
   public updateQuery(
-    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any,
+    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any
   ): void {
     const {
       previousResult,
       variables,
-      document,
+      document
     } = this.queryManager.getQueryWithPreviousResult(this.queryId);
 
     const newResult = tryFunctionOrLogError(() =>
-      mapFn(previousResult, { variables }),
+      mapFn(previousResult, { variables })
     );
 
     if (newResult) {
       this.queryManager.dataStore.markUpdateQueryResult(
         document,
         variables,
-        newResult,
+        newResult
       );
       this.queryManager.broadcastQueries();
     }
@@ -494,11 +494,11 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
   public startPolling(pollInterval: number) {
     if (
-      this.options.fetchPolicy === 'cache-first' ||
-      this.options.fetchPolicy === 'cache-only'
+      this.options.fetchPolicy === "cache-first" ||
+      this.options.fetchPolicy === "cache-only"
     ) {
       throw new Error(
-        'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
+        "Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries."
       );
     }
 
@@ -520,9 +520,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       !(observer as any)._subscription._observer.error
     ) {
       (observer as any)._subscription._observer.error = (
-        error: ApolloError,
+        error: ApolloError
       ) => {
-        console.error('Unhandled error', error.message, error.stack);
+        console.error("Unhandled error", error.message, error.stack);
       };
     }
 
@@ -551,11 +551,11 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     if (!!this.options.pollInterval) {
       if (
-        this.options.fetchPolicy === 'cache-first' ||
-        this.options.fetchPolicy === 'cache-only'
+        this.options.fetchPolicy === "cache-first" ||
+        this.options.fetchPolicy === "cache-only"
       ) {
         throw new Error(
-          'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
+          "Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries."
         );
       }
 
@@ -571,7 +571,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       error: (error: ApolloError) => {
         this.lastError = error;
         this.observers.forEach(obs => obs.error && obs.error(error));
-      },
+      }
     };
 
     this.queryManager.startQuery<T>(
@@ -580,8 +580,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       this.queryManager.queryListenerForObserver(
         this.queryId,
         this.options,
-        observer,
-      ),
+        observer
+      )
     );
   }
 

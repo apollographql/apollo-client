@@ -8,15 +8,15 @@
 // At the moment, the QueryScheduler implements the one-polling-instance-at-a-time logic and
 // adds queries to the QueryBatcher queue.
 
-import { QueryManager } from '../core/QueryManager';
+import { QueryManager } from "../core/QueryManager";
 
-import { FetchType, QueryListener } from '../core/types';
+import { FetchType, QueryListener } from "../core/types";
 
-import { ObservableQuery } from '../core/ObservableQuery';
+import { ObservableQuery } from "../core/ObservableQuery";
 
-import { WatchQueryOptions } from '../core/watchQueryOptions';
+import { WatchQueryOptions } from "../core/watchQueryOptions";
 
-import { NetworkStatus } from '../core/networkStatus';
+import { NetworkStatus } from "../core/networkStatus";
 
 export class QueryScheduler<TCacheShape> {
   // Map going from queryIds to query options that are in flight.
@@ -41,7 +41,7 @@ export class QueryScheduler<TCacheShape> {
 
   constructor({
     queryManager,
-    ssrMode,
+    ssrMode
   }: {
     queryManager: QueryManager<TCacheShape>;
     ssrMode?: boolean;
@@ -63,7 +63,7 @@ export class QueryScheduler<TCacheShape> {
   public fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
-    fetchType: FetchType,
+    fetchType: FetchType
   ) {
     return new Promise((resolve, reject) => {
       this.queryManager
@@ -80,11 +80,11 @@ export class QueryScheduler<TCacheShape> {
   public startPollingQuery<T>(
     options: WatchQueryOptions,
     queryId: string,
-    listener?: QueryListener,
+    listener?: QueryListener
   ): string {
     if (!options.pollInterval) {
       throw new Error(
-        'Attempted to start a polling query without a polling interval.',
+        "Attempted to start a polling query without a polling interval."
       );
     }
 
@@ -140,13 +140,13 @@ export class QueryScheduler<TCacheShape> {
 
         const queryOptions = this.registeredQueries[queryId];
         const pollingOptions = { ...queryOptions } as WatchQueryOptions;
-        pollingOptions.fetchPolicy = 'network-only';
+        pollingOptions.fetchPolicy = "network-only";
         // don't let unhandled rejections happen
         this.fetchQuery<T>(queryId, pollingOptions, FetchType.poll).catch(
-          () => {},
+          () => {}
         );
         return true;
-      },
+      }
     );
 
     if (this.intervalQueries[interval].length === 0) {
@@ -160,15 +160,13 @@ export class QueryScheduler<TCacheShape> {
   // and query options must have been added to this.registeredQueries before this function is called.
   public addQueryOnInterval<T>(
     queryId: string,
-    queryOptions: WatchQueryOptions,
+    queryOptions: WatchQueryOptions
   ) {
     const interval = queryOptions.pollInterval;
 
     if (!interval) {
       throw new Error(
-        `A poll interval is required to start polling query with id '${
-          queryId
-        }'.`,
+        `A poll interval is required to start polling query with id '${queryId}'.`
       );
     }
 
@@ -190,16 +188,16 @@ export class QueryScheduler<TCacheShape> {
 
   // Used only for unit testing.
   public registerPollingQuery<T>(
-    queryOptions: WatchQueryOptions,
+    queryOptions: WatchQueryOptions
   ): ObservableQuery<T> {
     if (!queryOptions.pollInterval) {
       throw new Error(
-        'Attempted to register a non-polling query with the scheduler.',
+        "Attempted to register a non-polling query with the scheduler."
       );
     }
     return new ObservableQuery<T>({
       scheduler: this,
-      options: queryOptions,
+      options: queryOptions
     });
   }
 }

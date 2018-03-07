@@ -3,8 +3,8 @@ import {
   SelectionSetNode,
   FieldNode,
   FragmentDefinitionNode,
-  InlineFragmentNode,
-} from 'graphql';
+  InlineFragmentNode
+} from "graphql";
 
 import {
   getMainDefinition,
@@ -17,27 +17,27 @@ import {
   isField,
   isInlineFragment,
   resultKeyNameFromField,
-  argumentsObjectFromField,
-} from 'apollo-utilities';
+  argumentsObjectFromField
+} from "apollo-utilities";
 
 export type Resolver = (
   fieldName: string,
   rootValue: any,
   args: any,
   context: any,
-  info: ExecInfo,
+  info: ExecInfo
 ) => any;
 
 export type VariableMap = { [name: string]: any };
 
 export type ResultMapper = (
   values: { [fieldName: string]: any },
-  rootValue: any,
+  rootValue: any
 ) => any;
 export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
-  context: any,
+  context: any
 ) => boolean;
 
 export type ExecContext = {
@@ -83,7 +83,7 @@ export function graphql(
   rootValue?: any,
   contextValue?: any,
   variableValues?: VariableMap,
-  execOptions: ExecOptions = {},
+  execOptions: ExecOptions = {}
 ) {
   const mainDefinition = getMainDefinition(document);
 
@@ -101,20 +101,20 @@ export function graphql(
     variableValues,
     resultMapper,
     resolver,
-    fragmentMatcher,
+    fragmentMatcher
   };
 
   return executeSelectionSet(
     mainDefinition.selectionSet,
     rootValue,
-    execContext,
+    execContext
   );
 }
 
 function executeSelectionSet(
   selectionSet: SelectionSetNode,
   rootValue: any,
-  execContext: ExecContext,
+  execContext: ExecContext
 ) {
   const { fragmentMap, contextValue, variableValues: variables } = execContext;
 
@@ -158,7 +158,7 @@ function executeSelectionSet(
         const fragmentResult = executeSelectionSet(
           fragment.selectionSet,
           rootValue,
-          execContext,
+          execContext
         );
 
         merge(result, fragmentResult);
@@ -176,7 +176,7 @@ function executeSelectionSet(
 function executeField(
   field: FieldNode,
   rootValue: any,
-  execContext: ExecContext,
+  execContext: ExecContext
 ): any {
   const { variableValues: variables, contextValue, resolver } = execContext;
 
@@ -186,7 +186,7 @@ function executeField(
   const info: ExecInfo = {
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
-    directives: getDirectiveInfoFromField(field, variables),
+    directives: getDirectiveInfoFromField(field, variables)
   };
 
   const result = resolver(fieldName, rootValue, args, contextValue, info);
@@ -229,7 +229,7 @@ function executeSubSelectedArray(field, result, execContext) {
 }
 
 export function merge(dest, src) {
-  if (src === null || typeof src !== 'object') {
+  if (src === null || typeof src !== "object") {
     // These types just override whatever was in dest
     return src;
   }

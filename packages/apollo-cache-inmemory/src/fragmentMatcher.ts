@@ -1,11 +1,11 @@
-import { isTest, warnOnceInDevelopment, IdValue } from 'apollo-utilities';
+import { isTest, warnOnceInDevelopment, IdValue } from "apollo-utilities";
 
 import {
   ReadStoreContext,
   FragmentMatcherInterface,
   PossibleTypesMap,
-  IntrospectionResultData,
-} from './types';
+  IntrospectionResultData
+} from "./types";
 
 let haveWarned = false;
 
@@ -28,7 +28,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
   public match(
     idValue: IdValue,
     typeCondition: string,
-    context: ReadStoreContext,
+    context: ReadStoreContext
   ): boolean {
     const obj = context.store.get(idValue.id);
 
@@ -43,13 +43,13 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
    Please turn on the addTypename option and include __typename when writing fragments so that Apollo Client
    can accurately match fragments.`);
         console.warn(
-          'Could not find __typename on Fragment ',
+          "Could not find __typename on Fragment ",
           typeCondition,
-          obj,
+          obj
         );
         console.warn(
           `DEPRECATION WARNING: using fragments without __typename is unsupported behavior ` +
-            `and will be removed in future versions of Apollo client. You should fix this and set addTypename to true now.`,
+            `and will be removed in future versions of Apollo client. You should fix this and set addTypename to true now.`
         );
 
         /* istanbul ignore if */
@@ -77,7 +77,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
      Apollo Client will not be able to able to accurately map fragments.` +
         `To make this error go away, use the IntrospectionFragmentMatcher as described in the docs: ` +
         `https://www.apollographql.com/docs/react/recipes/fragment-matching.html`,
-      'error',
+      "error"
     );
 
     context.returnPartialData = true;
@@ -94,7 +94,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
   }) {
     if (options && options.introspectionQueryResultData) {
       this.possibleTypesMap = this.parseIntrospectionResult(
-        options.introspectionQueryResultData,
+        options.introspectionQueryResultData
       );
       this.isReady = true;
     } else {
@@ -107,12 +107,12 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
   public match(
     idValue: IdValue,
     typeCondition: string,
-    context: ReadStoreContext,
+    context: ReadStoreContext
   ) {
     if (!this.isReady) {
       // this should basically never happen in proper use.
       throw new Error(
-        'FragmentMatcher.match() was called before FragmentMatcher.init()',
+        "FragmentMatcher.match() was called before FragmentMatcher.init()"
       );
     }
 
@@ -125,8 +125,8 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
     if (!obj.__typename) {
       throw new Error(
         `Cannot match fragment because __typename property is missing: ${JSON.stringify(
-          obj,
-        )}`,
+          obj
+        )}`
       );
     }
 
@@ -143,13 +143,13 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
   }
 
   private parseIntrospectionResult(
-    introspectionResultData: IntrospectionResultData,
+    introspectionResultData: IntrospectionResultData
   ): PossibleTypesMap {
     const typeMap: PossibleTypesMap = {};
     introspectionResultData.__schema.types.forEach(type => {
-      if (type.kind === 'UNION' || type.kind === 'INTERFACE') {
+      if (type.kind === "UNION" || type.kind === "INTERFACE") {
         typeMap[type.name] = type.possibleTypes.map(
-          implementingType => implementingType.name,
+          implementingType => implementingType.name
         );
       }
     });

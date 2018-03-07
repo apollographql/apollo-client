@@ -1,15 +1,15 @@
-import { getFragmentDefinitions, createFragmentMap } from 'apollo-utilities';
-import { DocumentNode } from 'graphql';
-import gql from 'graphql-tag';
+import { getFragmentDefinitions, createFragmentMap } from "apollo-utilities";
+import { DocumentNode } from "graphql";
+import gql from "graphql-tag";
 
-import { withError } from './diffAgainstStore';
-import { withWarning } from './writeToStore';
+import { withError } from "./diffAgainstStore";
+import { withWarning } from "./writeToStore";
 
 import {
   HeuristicFragmentMatcher,
   writeQueryToStore,
-  readQueryFromStore,
-} from '../';
+  readQueryFromStore
+} from "../";
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
@@ -19,21 +19,21 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     result,
     query,
     variables,
-    fragmentMap,
+    fragmentMap
   });
 
   const reconstructedResult = readQueryFromStore({
     store,
     query,
     variables,
-    fragmentMatcherFunction,
+    fragmentMatcherFunction
   });
 
   expect(reconstructedResult).toEqual(result);
 }
 
-describe('roundtrip', () => {
-  it('real graphql result', () => {
+describe("roundtrip", () => {
+  it("real graphql result", () => {
     storeRoundtrip(
       gql`
         {
@@ -44,13 +44,13 @@ describe('roundtrip', () => {
       `,
       {
         people_one: {
-          name: 'Luke Skywalker',
-        },
-      },
+          name: "Luke Skywalker"
+        }
+      }
     );
   });
 
-  it('multidimensional array (#776)', () => {
+  it("multidimensional array (#776)", () => {
     storeRoundtrip(
       gql`
         {
@@ -60,12 +60,12 @@ describe('roundtrip', () => {
         }
       `,
       {
-        rows: [[{ value: 1 }, { value: 2 }], [{ value: 3 }, { value: 4 }]],
-      },
+        rows: [[{ value: 1 }, { value: 2 }], [{ value: 3 }, { value: 4 }]]
+      }
     );
   });
 
-  it('array with null values (#1551)', () => {
+  it("array with null values (#1551)", () => {
     storeRoundtrip(
       gql`
         {
@@ -75,12 +75,12 @@ describe('roundtrip', () => {
         }
       `,
       {
-        list: [null, { value: 1 }],
-      },
+        list: [null, { value: 1 }]
+      }
     );
   });
 
-  it('enum arguments', () => {
+  it("enum arguments", () => {
     storeRoundtrip(
       gql`
         {
@@ -91,13 +91,13 @@ describe('roundtrip', () => {
       `,
       {
         hero: {
-          name: 'Luke Skywalker',
-        },
-      },
+          name: "Luke Skywalker"
+        }
+      }
     );
   });
 
-  it('with an alias', () => {
+  it("with an alias", () => {
     storeRoundtrip(
       gql`
         {
@@ -111,16 +111,16 @@ describe('roundtrip', () => {
       `,
       {
         luke: {
-          name: 'Luke Skywalker',
+          name: "Luke Skywalker"
         },
         vader: {
-          name: 'Darth Vader',
-        },
-      },
+          name: "Darth Vader"
+        }
+      }
     );
   });
 
-  it('with variables', () => {
+  it("with variables", () => {
     storeRoundtrip(
       gql`
         {
@@ -134,20 +134,20 @@ describe('roundtrip', () => {
       `,
       {
         luke: {
-          name: 'Luke Skywalker',
+          name: "Luke Skywalker"
         },
         vader: {
-          name: 'Darth Vader',
-        },
+          name: "Darth Vader"
+        }
       },
       {
-        lukeId: '1',
-        vaderId: '4',
-      },
+        lukeId: "1",
+        vaderId: "4"
+      }
     );
   });
 
-  it('with GraphQLJSON scalar type', () => {
+  it("with GraphQLJSON scalar type", () => {
     storeRoundtrip(
       gql`
         {
@@ -160,47 +160,47 @@ describe('roundtrip', () => {
       `,
       {
         updateClub: {
-          uid: '1d7f836018fc11e68d809dfee940f657',
-          name: 'Eple',
+          uid: "1d7f836018fc11e68d809dfee940f657",
+          name: "Eple",
           settings: {
-            name: 'eple',
-            currency: 'AFN',
+            name: "eple",
+            currency: "AFN",
             calendarStretch: 2,
             defaultPreAllocationPeriod: 1,
             confirmationEmailCopy: null,
-            emailDomains: null,
-          },
-        },
-      },
+            emailDomains: null
+          }
+        }
+      }
     );
   });
 
-  describe('directives', () => {
-    it('should be able to query with skip directive true', () => {
+  describe("directives", () => {
+    it("should be able to query with skip directive true", () => {
       storeRoundtrip(
         gql`
           query {
             fortuneCookie @skip(if: true)
           }
         `,
-        {},
+        {}
       );
     });
 
-    it('should be able to query with skip directive false', () => {
+    it("should be able to query with skip directive false", () => {
       storeRoundtrip(
         gql`
           query {
             fortuneCookie @skip(if: false)
           }
         `,
-        { fortuneCookie: 'live long and prosper' },
+        { fortuneCookie: "live long and prosper" }
       );
     });
   });
 
-  describe('fragments', () => {
-    it('should work on null fields', () => {
+  describe("fragments", () => {
+    it("should work on null fields", () => {
       storeRoundtrip(
         gql`
           query {
@@ -212,12 +212,12 @@ describe('roundtrip', () => {
           }
         `,
         {
-          field: null,
-        },
+          field: null
+        }
       );
     });
 
-    it('should work on basic inline fragments', () => {
+    it("should work on basic inline fragments", () => {
       storeRoundtrip(
         gql`
           query {
@@ -231,14 +231,14 @@ describe('roundtrip', () => {
         `,
         {
           field: {
-            __typename: 'Obj',
-            stuff: 'Result',
-          },
-        },
+            __typename: "Obj",
+            stuff: "Result"
+          }
+        }
       );
     });
 
-    it('should resolve on union types with inline fragments without typenames with warning', () => {
+    it("should resolve on union types with inline fragments without typenames with warning", () => {
       return withWarning(() => {
         storeRoundtrip(
           gql`
@@ -257,22 +257,22 @@ describe('roundtrip', () => {
           {
             all_people: [
               {
-                name: 'Luke Skywalker',
-                side: 'bright',
+                name: "Luke Skywalker",
+                side: "bright"
               },
               {
-                name: 'R2D2',
-                model: 'astromech',
-              },
-            ],
-          },
+                name: "R2D2",
+                model: "astromech"
+              }
+            ]
+          }
         );
       }, /using fragments/);
     });
 
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
-    it('should throw an error on two of the same inline fragment types', () => {
+    it("should throw an error on two of the same inline fragment types", () => {
       return expect(() => {
         storeRoundtrip(
           gql`
@@ -292,17 +292,17 @@ describe('roundtrip', () => {
           {
             all_people: [
               {
-                __typename: 'Jedi',
-                name: 'Luke Skywalker',
-                side: 'bright',
-              },
-            ],
-          },
+                __typename: "Jedi",
+                name: "Luke Skywalker",
+                side: "bright"
+              }
+            ]
+          }
         );
       }).toThrowError(/Can\'t find field rank on object/);
     });
 
-    it('should resolve fields it can on interface with non matching inline fragments', () => {
+    it("should resolve fields it can on interface with non matching inline fragments", () => {
       return withError(() => {
         storeRoundtrip(
           gql`
@@ -319,21 +319,21 @@ describe('roundtrip', () => {
           {
             dark_forces: [
               {
-                __typename: 'Droid',
-                name: '8t88',
-                model: '88',
+                __typename: "Droid",
+                name: "8t88",
+                model: "88"
               },
               {
-                __typename: 'Darth',
-                name: 'Anakin Skywalker',
-              },
-            ],
-          },
+                __typename: "Darth",
+                name: "Anakin Skywalker"
+              }
+            ]
+          }
         );
       }, /IntrospectionFragmentMatcher/);
     });
 
-    it('should resolve on union types with spread fragments', () => {
+    it("should resolve on union types with spread fragments", () => {
       return withError(() => {
         storeRoundtrip(
           gql`
@@ -357,22 +357,22 @@ describe('roundtrip', () => {
           {
             all_people: [
               {
-                __typename: 'Jedi',
-                name: 'Luke Skywalker',
-                side: 'bright',
+                __typename: "Jedi",
+                name: "Luke Skywalker",
+                side: "bright"
               },
               {
-                __typename: 'Droid',
-                name: 'R2D2',
-                model: 'astromech',
-              },
-            ],
-          },
+                __typename: "Droid",
+                name: "R2D2",
+                model: "astromech"
+              }
+            ]
+          }
         );
       }, /IntrospectionFragmentMatcher/);
     });
 
-    it('should work with a fragment on the actual interface or union', () => {
+    it("should work with a fragment on the actual interface or union", () => {
       return withError(() => {
         storeRoundtrip(
           gql`
@@ -396,22 +396,22 @@ describe('roundtrip', () => {
           {
             all_people: [
               {
-                __typename: 'Jedi',
-                name: 'Luke Skywalker',
-                side: 'bright',
+                __typename: "Jedi",
+                name: "Luke Skywalker",
+                side: "bright"
               },
               {
-                __typename: 'Droid',
-                name: 'R2D2',
-                model: 'astromech',
-              },
-            ],
-          },
+                __typename: "Droid",
+                name: "R2D2",
+                model: "astromech"
+              }
+            ]
+          }
         );
       }, /IntrospectionFragmentMatcher/);
     });
 
-    it('should throw on error on two of the same spread fragment types', () => {
+    it("should throw on error on two of the same spread fragment types", () => {
       expect(() =>
         storeRoundtrip(
           gql`
@@ -435,17 +435,17 @@ describe('roundtrip', () => {
           {
             all_people: [
               {
-                __typename: 'Jedi',
-                name: 'Luke Skywalker',
-                side: 'bright',
-              },
-            ],
-          },
-        ),
+                __typename: "Jedi",
+                name: "Luke Skywalker",
+                side: "bright"
+              }
+            ]
+          }
+        )
       ).toThrowError(/Can\'t find field rank on object/);
     });
 
-    it('should resolve on @include and @skip with inline fragments', () => {
+    it("should resolve on @include and @skip with inline fragments", () => {
       storeRoundtrip(
         gql`
           query {
@@ -463,15 +463,15 @@ describe('roundtrip', () => {
         `,
         {
           person: {
-            __typename: 'Jedi',
-            name: 'Luke Skywalker',
-            side: 'bright',
-          },
-        },
+            __typename: "Jedi",
+            name: "Luke Skywalker",
+            side: "bright"
+          }
+        }
       );
     });
 
-    it('should resolve on @include and @skip with spread fragments', () => {
+    it("should resolve on @include and @skip with spread fragments", () => {
       storeRoundtrip(
         gql`
           fragment jediFragment on Jedi {
@@ -493,11 +493,11 @@ describe('roundtrip', () => {
         `,
         {
           person: {
-            __typename: 'Jedi',
-            name: 'Luke Skywalker',
-            side: 'bright',
-          },
-        },
+            __typename: "Jedi",
+            name: "Luke Skywalker",
+            side: "bright"
+          }
+        }
       );
     });
   });

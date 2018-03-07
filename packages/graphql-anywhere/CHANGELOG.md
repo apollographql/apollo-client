@@ -1,51 +1,65 @@
 # Change log
 
 ## vNEXT
-- Map coverage to original source
+
+* Map coverage to original source
 
 ### 4.1.4
-- dependency updates
-- support null literal
+
+* dependency updates
+* support null literal
 
 ### 4.1.3
-- update to latest apollo-utilities
+
+* update to latest apollo-utilities
 
 ### 4.1.2
-- update to latest apollo-utilities
+
+* update to latest apollo-utilities
 
 ### 4.1.1
-- package dependency updates
+
+* package dependency updates
 
 ### 4.1.0
-- add support for async resolution via `import { graphql } from 'graphql-anywhere/lib/async'` as an experimental way to do async resolvers
+
+* add support for async resolution via `import { graphql } from 'graphql-anywhere/lib/async'` as an experimental way to do async resolvers
 
 ### 4.1.0-alpha.0
-- add support for async resolution via `import { graphql } from 'graphql-anywhere/lib/async'` as an experimental way to do async resolvers
+
+* add support for async resolution via `import { graphql } from 'graphql-anywhere/lib/async'` as an experimental way to do async resolvers
 
 ### 4.0.2
-- package dependency updates
+
+* package dependency updates
 
 ### 4.0.1
-- Improved rollup builds
+
+* Improved rollup builds
 
 ### 4.0.0
-- Replace core utils with apollo-utilities
-- Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
+
+* Replace core utils with apollo-utilities
+* Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
 
 ### v3.1.0
-- Add `directives` to the `info` argument, with information about all of the directives on the current field. [PR #52](https://github.com/apollographql/graphql-anywhere/pull/52) by [brysgo](https://github.com/brysgo) and [cesarsolorzano](https://github.com/cesarsolorzano)
-- Merging overlapping fragment and inline object fields [PR #67](https://github.com/apollographql/graphql-anywhere/pull/67) by [abergenw](https://github.com/abergenw)
+
+* Add `directives` to the `info` argument, with information about all of the directives on the current field. [PR #52](https://github.com/apollographql/graphql-anywhere/pull/52) by [brysgo](https://github.com/brysgo) and [cesarsolorzano](https://github.com/cesarsolorzano)
+* Merging overlapping fragment and inline object fields [PR #67](https://github.com/apollographql/graphql-anywhere/pull/67) by [abergenw](https://github.com/abergenw)
 
 ### v3.0.1
-- Fix behavior of getMainDefinition to allow fragment definitions to precede the main operation definition
+
+* Fix behavior of getMainDefinition to allow fragment definitions to precede the main operation definition
 
 ### v3.0.0
-- Improve performance of getMainDefinition.
-- Breaking: getMainDefiniton now returns first operation definition in document instead of query before mutation.
+
+* Improve performance of getMainDefinition.
+* Breaking: getMainDefiniton now returns first operation definition in document instead of query before mutation.
 
 ### v2.2.0
-- Fix mishandling of arrays in fragments
-- Operation definition can also be a mutation (instead of only query)
+
+* Fix mishandling of arrays in fragments
+* Operation definition can also be a mutation (instead of only query)
 
 ### v2.1.0
 
@@ -76,24 +90,24 @@ This is essentially the code that lived in https://www.npmjs.com/package/graphql
 
 ### v0.2.4
 
-- Added support for fragments. If there are multiple fragments in the provided document, the first one is used as the query.
+* Added support for fragments. If there are multiple fragments in the provided document, the first one is used as the query.
 
 ### v0.2.3
 
-- Remove dep on lodash.isarray
+* Remove dep on lodash.isarray
 
 ### v0.2.2
 
-- Add enum support
+* Add enum support
 
 ### v0.2.1
 
-- Add context arg to `fragmentMatcher`.
+* Add context arg to `fragmentMatcher`.
 
 ### v0.2.0
 
-- Change the last argument to `options`, move `resultMapper` there, and add `fragmentMatcher`.
+* Change the last argument to `options`, move `resultMapper` there, and add `fragmentMatcher`.
 
 ### v0.1.x
 
-- Changes were not tracker before this version.
+* Changes were not tracker before this version.

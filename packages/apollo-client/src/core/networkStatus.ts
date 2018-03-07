@@ -42,7 +42,7 @@ export enum NetworkStatus {
   /**
    * No request is in flight for this query, but one or more errors were detected.
    */
-  error = 8,
+  error = 8
 }
 
 /**
@@ -50,7 +50,7 @@ export enum NetworkStatus {
  * status.
  */
 export function isNetworkRequestInFlight(
-  networkStatus: NetworkStatus,
+  networkStatus: NetworkStatus
 ): boolean {
   return networkStatus < 7;
 }

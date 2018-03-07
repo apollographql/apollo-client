@@ -25,7 +25,7 @@ const client = new ApolloClient({ ... });
 
 The `readQuery` method is very similar to the [`query` method on `ApolloClient`][] except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
 
-[`query` method on `ApolloClient`]: apollo-client-api.html#ApolloClient.query
+[`query` method on `apolloclient`]: apollo-client-api.html#ApolloClient.query
 
 ```js
 const { todo } = client.readQuery({
@@ -37,7 +37,7 @@ const { todo } = client.readQuery({
         completed
       }
     }
-  `,
+  `
 });
 ```
 
@@ -57,16 +57,16 @@ const { todo } = client.readQuery({
     }
   `,
   variables: {
-    id: 5,
-  },
+    id: 5
+  }
 });
 ```
 
 **Resources:**
 
-- [`ApolloClient#query` API documentation](apollo-client-api.html#ApolloClient.query)
-- [`ApolloClient#readQuery` API documentation](apollo-client-api.html#ApolloClient.readQuery)
-- [`DataProxy#readQuery` API documentation](apollo-client-api.html#DataProxy.readQuery)
+* [`ApolloClient#query` API documentation](apollo-client-api.html#ApolloClient.query)
+* [`ApolloClient#readQuery` API documentation](apollo-client-api.html#ApolloClient.readQuery)
+* [`DataProxy#readQuery` API documentation](apollo-client-api.html#DataProxy.readQuery)
 
 <h2 id="readfragment">`readFragment`</h2>
 
@@ -98,14 +98,14 @@ const client = new ApolloClient({
 
 ```js
 const todo = client.readFragment({
-  id: '5',
+  id: "5",
   fragment: gql`
     fragment myTodo on Todo {
       id
       text
       completed
     }
-  `,
+  `
 });
 ```
 
@@ -117,32 +117,32 @@ The beauty of `readFragment` is that the todo could have come from anywhere! The
 
 **Resources:**
 
-- [`ApolloClient#readFragment` API documentation](apollo-client-api.html#ApolloClient.readFragment)
-- [`DataProxy#readFragment` API documentation](apollo-client-api.html#DataProxy.readFragment)
+* [`ApolloClient#readFragment` API documentation](apollo-client-api.html#ApolloClient.readFragment)
+* [`DataProxy#readFragment` API documentation](apollo-client-api.html#DataProxy.readFragment)
 
 <h2 id="writequery-and-writefragment">`writeQuery` and `writeFragment`</h2>
 
-Not only can you read arbitrary data from the Apollo Client cache, but you can also write any data that you would like to the cache. The methods you use to do this are `writeQuery` and `writeFragment`. They will allow you to change data in your local cache, but it is important to remember that *they will not change any data on your server*. If you reload your environment then changes made with `writeQuery` and `writeFragment` will disappear.
+Not only can you read arbitrary data from the Apollo Client cache, but you can also write any data that you would like to the cache. The methods you use to do this are `writeQuery` and `writeFragment`. They will allow you to change data in your local cache, but it is important to remember that _they will not change any data on your server_. If you reload your environment then changes made with `writeQuery` and `writeFragment` will disappear.
 
 These methods have the same signature as their `readQuery` and `readFragment` counterparts except they also require an additional `data` variable. So for example, if you wanted to update the `completed` flag locally for your todo with id `'5'` you could execute the following:
 
 ```js
 client.writeFragment({
-  id: '5',
+  id: "5",
   fragment: gql`
     fragment myTodo on Todo {
       completed
     }
   `,
   data: {
-    completed: true,
-  },
+    completed: true
+  }
 });
 ```
 
 Any subscriber to the Apollo Client store will instantly see this update and render new UI accordingly.
 
-> **Note:** Again, remember that using `writeQuery` or `writeFragment` only changes data *locally*. If you reload your environment then changes made with these methods will no longer exist.
+> **Note:** Again, remember that using `writeQuery` or `writeFragment` only changes data _locally_. If you reload your environment then changes made with these methods will no longer exist.
 
 Or if you wanted to add a new todo to a list fetched from the server, you could use `readQuery` and `writeQuery` together.
 
@@ -160,26 +160,26 @@ const query = gql`
 const data = client.readQuery({ query });
 
 const myNewTodo = {
-  id: '6',
-  text: 'Start using Apollo Client.',
-  completed: false,
+  id: "6",
+  text: "Start using Apollo Client.",
+  completed: false
 };
 
 client.writeQuery({
   query,
   data: {
-    todos: [...data.todos, myNewTodo],
-  },
+    todos: [...data.todos, myNewTodo]
+  }
 });
 ```
 
 **Resources:**
 
-- [`ApolloClient#watchQuery` API documentation](apollo-client-api.html#ApolloClient.watchQuery)
-- [`ApolloClient#writeQuery` API documentation](apollo-client-api.html#ApolloClient.writeQuery)
-- [`ApolloClient#writeFragment` API documentation](apollo-client-api.html#ApolloClient.writeFragment)
-- [`DataProxy#writeQuery` API documentation](apollo-client-api.html#ApolloClient.writeQuery)
-- [`DataProxy#writeFragment` API documentation](apollo-client-api.html#ApolloClient.writeFragment)
+* [`ApolloClient#watchQuery` API documentation](apollo-client-api.html#ApolloClient.watchQuery)
+* [`ApolloClient#writeQuery` API documentation](apollo-client-api.html#ApolloClient.writeQuery)
+* [`ApolloClient#writeFragment` API documentation](apollo-client-api.html#ApolloClient.writeFragment)
+* [`DataProxy#writeQuery` API documentation](apollo-client-api.html#ApolloClient.writeQuery)
+* [`DataProxy#writeFragment` API documentation](apollo-client-api.html#ApolloClient.writeFragment)
 
 <h2 id="updating-the-cache-after-a-mutation">Updating the cache after a mutation</h2>
 
@@ -213,12 +213,12 @@ At the end of our mutation we want our query to include the new todo like we had
 // We assume that the GraphQL operations `TodoCreateMutation` and
 // `TodoAppQuery` have already been defined using the `gql` tag.
 
-const text = 'Hello, world!';
+const text = "Hello, world!";
 
 client.mutate({
   mutation: TodoCreateMutation,
   variables: {
-    text,
+    text
   },
   update: (proxy, { data: { createTodo } }) => {
     // Read the data from our cache for this query.
@@ -229,36 +229,36 @@ client.mutate({
 
     // Write our data back to the cache.
     proxy.writeQuery({ query: TodoAppQuery, data });
-  },
+  }
 });
 ```
 
 The first `proxy` argument is an instance of [`DataProxy`][] has the same for methods that we just learned exist on the Apollo Client: `readQuery`, `readFragment`, `writeQuery`, and `writeFragment`. The reason we call them on a `proxy` object here instead of on our `client` instance is that we can easily apply optimistic updates (which we will demonstrate in a bit). The `proxy` object also provides an isolated transaction which shields you from any other mutations going on at the same time, and the `proxy` object also batches writes together until the very end.
 
-[`DataProxy`]: apollo-client-api.html#DataProxy
+[`dataproxy`]: apollo-client-api.html#DataProxy
 
-If you provide an `optimisticResponse` option to the mutation then the `update` function will be run twice. Once immediately after you call `client.mutate` with the data from `optimisticResponse`. After the mutation successfully executes against the server the changes made in the first call to `update` will be rolled back and `update` will be called with the *actual* data returned by the mutation and not just the optimistic response.
+If you provide an `optimisticResponse` option to the mutation then the `update` function will be run twice. Once immediately after you call `client.mutate` with the data from `optimisticResponse`. After the mutation successfully executes against the server the changes made in the first call to `update` will be rolled back and `update` will be called with the _actual_ data returned by the mutation and not just the optimistic response.
 
 Putting it all together:
 
 ```js
-const text = 'Hello, world!';
+const text = "Hello, world!";
 
 client.mutate({
   mutation: TodoCreateMutation,
   variables: {
-    text,
+    text
   },
   optimisticResponse: {
     id: -1, // -1 is a temporary id for the optimistic response.
     text,
-    completed: false,
+    completed: false
   },
   update: (proxy, { data: { createTodo } }) => {
     const data = proxy.readQuery({ query: TodoAppQuery });
     data.todos.push(createTodo);
     proxy.writeQuery({ query: TodoAppQuery, data });
-  },
+  }
 });
 ```
 
@@ -268,5 +268,5 @@ The `update` function is not a good place for side-effects as it may be called m
 
 **Resources:**
 
-- [`ApolloClient#mutate` API documentation](apollo-client-api.html#ApolloClient.mutate)
-- [`DataProxy` API documentation](apollo-client-api.html#DataProxy)
+* [`ApolloClient#mutate` API documentation](apollo-client-api.html#ApolloClient.mutate)
+* [`DataProxy` API documentation](apollo-client-api.html#DataProxy)

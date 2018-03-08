@@ -18,7 +18,7 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  window.__APOLLO_STATE__ = client.extract();
+  window.__APOLLO_STATE__ = client.cache.extract();
 </script>
 ```
 
@@ -192,7 +192,7 @@ const client = new ApolloClient(....);
 getDataFromTree(App).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(App);
-  const initialState = client.extract();
+  const initialState = client.cache.extract();
 
   const html = <Html content={content} state={initialState} />;
 
@@ -261,7 +261,7 @@ const client = new ApolloClient(....);
 
 // during request
 renderToStringWithData(App).then((content) => {
-  const initialState = client.extract();
+  const initialState = client.cache.extract();
   const html = <Html content={content} state={initialState} />;
 
   res.status(200);

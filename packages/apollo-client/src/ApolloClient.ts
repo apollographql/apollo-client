@@ -389,18 +389,27 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<ApolloQueryResult<any>[]> | Promise<void> {
+  public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
+    let observableQueryPromises: Promise<ApolloQueryResult<any>>[] | null;
     return Promise.resolve()
       .then(() => {
-        this.queryManager
+        return this.queryManager
           ? this.queryManager.clearStore()
           : Promise.resolve(null);
       })
-      .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
+      .then(promises => {
+        observableQueryPromises = promises;
+        return Promise.all(this.resetStoreCallbacks.map(fn => fn()));
+      })
       .then(() => {
-        this.queryManager
-          ? this.queryManager.reFetchObservableQueries()
-          : Promise.resolve(null);
+        if (observableQueryPromises) {
+          this.queryManager.broadcastQueries();
+          return Promise.all(observableQueryPromises);
+        } else {
+          return this.queryManager
+            ? this.queryManager.reFetchObservableQueries()
+            : Promise.resolve(null);
+        }
       });
   }
 

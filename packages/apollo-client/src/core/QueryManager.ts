@@ -812,7 +812,7 @@ export class QueryManager<TStore> {
     }
   }
 
-  public clearStore(): Promise<void> {
+  public clearStore(): Promise<Promise<ApolloQueryResult<any>>[]> {
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
     // requests since these may depend on values that previously existed
@@ -822,6 +822,10 @@ export class QueryManager<TStore> {
     this.fetchQueryPromises.forEach(({ reject }) => {
       reject(new Error('Store reset while query was in flight.'));
     });
+
+    const observableQueryPromises: Promise<
+      ApolloQueryResult<any>
+    >[] = this.getObservableQueryPromises();
 
     const resetIds: string[] = [];
     this.queries.forEach(({ observableQuery }, queryId) => {
@@ -833,7 +837,7 @@ export class QueryManager<TStore> {
 
     // begin removing data from the store
     const reset = this.dataStore.reset();
-    return reset;
+    return reset.then(() => observableQueryPromises);
   }
 
   public resetStore(): Promise<ApolloQueryResult<any>[]> {
@@ -843,7 +847,11 @@ export class QueryManager<TStore> {
     // watched. If there is an existing query in flight when the store is reset,
     // the promise for it will be rejected and its results will not be written to the
     // store.
-    return this.clearStore().then(() => this.reFetchObservableQueries());
+    return this.clearStore().then(observableQueryPromises => {
+      this.broadcastQueries();
+
+      return Promise.all(observableQueryPromises);
+    });
   }
 
   private getObservableQueryPromises(

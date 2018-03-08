@@ -945,8 +945,8 @@ export class QueryManager<TStore> {
   }
 
   public stopQuery(queryId: string) {
-    this.removeQuery(queryId);
     this.stopQueryInStore(queryId);
+    this.removeQuery(queryId);
   }
 
   public removeQuery(queryId: string) {

@@ -400,6 +400,7 @@ export class QueryManager<TStore> {
       // we don't return the promise for cache-and-network since it is already
       // returned below from the cache
       if (fetchPolicy !== 'cache-and-network') {
+        console.trace();
         return networkResult;
       } else {
         // however we need to catch the error so it isn't unhandled in case of
@@ -434,7 +435,8 @@ export class QueryManager<TStore> {
       // reset.
       if (!queryStoreValue) return;
 
-      const { observableQuery } = this.getQuery(queryId);
+      const { observableQuery, lastRequestId } = this.getQuery(queryId);
+      if (lastRequestId) console.log(lastRequestId);
 
       const fetchPolicy = observableQuery
         ? observableQuery.options.fetchPolicy
@@ -450,6 +452,9 @@ export class QueryManager<TStore> {
       const lastResult = observableQuery
         ? observableQuery.getLastResult()
         : null;
+
+      console.log(lastResult);
+      console.log(queryStoreValue);
 
       const lastError = observableQuery ? observableQuery.getLastError() : null;
 
@@ -495,6 +500,7 @@ export class QueryManager<TStore> {
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
           });
+          console.log(apolloError);
           previouslyHadError = true;
           if (observer.error) {
             try {
@@ -822,10 +828,16 @@ export class QueryManager<TStore> {
     this.fetchQueryPromises.forEach(({ reject }) => {
       reject(new Error('Store reset while query was in flight.'));
     });
+    //Refetch observable queries and
+    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = []; //this.getObservableQueryPromises();
 
-    const observableQueryPromises: Promise<
-      ApolloQueryResult<any>
-    >[] = this.getObservableQueryPromises();
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (observableQuery) {
+        this.setQuery(queryId, ({ lastRequestId }) => ({
+          lastRequestId: (lastRequestId || 1) + 1,
+        }));
+      }
+    });
 
     const resetIds: string[] = [];
     this.queries.forEach(({ observableQuery }, queryId) => {
@@ -848,8 +860,8 @@ export class QueryManager<TStore> {
     // the promise for it will be rejected and its results will not be written to the
     // store.
     return this.clearStore().then(observableQueryPromises => {
+      return this.reFetchObservableQueries();
       this.broadcastQueries();
-
       return Promise.all(observableQueryPromises);
     });
   }
@@ -1032,6 +1044,7 @@ export class QueryManager<TStore> {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
       if (!info.invalidated || !info.listeners) return;
+      // console.log(id, info.listeners)
       info.listeners
         // it's possible for the listener to be undefined if the query is being stopped
         // See here for more detail: https://github.com/apollostack/apollo-client/issues/231

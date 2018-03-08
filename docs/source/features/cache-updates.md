@@ -525,7 +525,7 @@ export class Foo extends Component {
   constructor(props) {
     super(props);
     this.unsubscribe = props.client.onResetStore(
-      () => this.setState({ reset: false }
+      () => this.setState({ reset: false })
     );
     this.state = { reset: false };
   }

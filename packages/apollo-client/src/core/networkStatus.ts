@@ -28,13 +28,6 @@ export enum NetworkStatus {
   refetch = 4,
 
   /**
-   * For Observable Queries after the store is cleared, prevents the observer from being notified of
-   * the network error thrown for in-flight queries during a clearStore() call
-   */
-
-  paused = 5,
-
-  /**
    * Indicates that a polling query is currently in flight. So for example if you are polling a
    * query every 10 seconds then the network status will switch to `poll` every 10 seconds whenever
    * a poll request has been sent but not resolved.

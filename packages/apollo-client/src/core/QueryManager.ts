@@ -383,10 +383,7 @@ export class QueryManager<TStore> {
           throw error;
         } else {
           const { lastRequestId } = this.getQuery(queryId);
-          if (
-            requestId >= (lastRequestId || 1) &&
-            this.queryStore.get(queryId).networkStatus !== NetworkStatus.paused
-          ) {
+          if (requestId >= (lastRequestId || 1)) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
@@ -437,7 +434,7 @@ export class QueryManager<TStore> {
       // reset.
       if (!queryStoreValue) return;
 
-      const { observableQuery, lastRequestId } = this.getQuery(queryId);
+      const { observableQuery } = this.getQuery(queryId);
 
       const fetchPolicy = observableQuery
         ? observableQuery.options.fetchPolicy
@@ -498,7 +495,7 @@ export class QueryManager<TStore> {
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
           });
-          greviouslyHadError = true;
+          previouslyHadError = true;
           if (observer.error) {
             try {
               observer.error(apolloError);
@@ -826,18 +823,22 @@ export class QueryManager<TStore> {
       reject(new Error('Store reset while query was in flight.'));
     });
 
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (observableQuery) {
+        this.setQuery(queryId, ({ lastRequestId }) => ({
+          lastRequestId: (lastRequestId || 1) + 1,
+        }));
+      }
+    });
+
     const resetIds: string[] = [];
     this.queries.forEach(({ observableQuery }, queryId) => {
       if (observableQuery) resetIds.push(queryId);
     });
 
     this.queryStore.reset(resetIds);
-
-    // this.queries.forEach(({ observableQuery }, queryId) => {
-    //   if (observableQuery) this.queryStore.markQueryPaused(queryId);
-    // });
-
     this.mutationStore.reset();
+
     // begin removing data from the store
     const reset = this.dataStore.reset();
     return reset;

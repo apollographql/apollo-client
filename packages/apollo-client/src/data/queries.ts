@@ -146,6 +146,17 @@ export class QueryStore {
     }
   }
 
+  public markQueryPaused(queryId: string, fetchMoreForQueryId?: string) {
+    this.store[queryId].networkStatus = NetworkStatus.paused;
+
+    // If we have a `fetchMoreForQueryId` then we need to update the network
+    // status for that query. See the branch for query initialization for more
+    // explanation about this process.
+    if (typeof fetchMoreForQueryId === 'string') {
+      this.store[fetchMoreForQueryId].networkStatus = NetworkStatus.paused;
+    }
+  }
+
   public markQueryResultClient(queryId: string, complete: boolean) {
     if (!this.store[queryId]) return;
 
@@ -171,7 +182,7 @@ export class QueryStore {
           // XXX set loading to true so listeners don't trigger unless they want results with partial data
           res[key] = {
             ...this.store[key],
-            networkStatus: NetworkStatus.loading,
+            networkStatus: NetworkStatus.paused,
           };
 
           return res;

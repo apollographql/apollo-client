@@ -3,6 +3,7 @@
 
 ### vNext
 - Map coverage to original source
+- Fix memory leak in addTypenameToDocument due to readFragment [PR#3133](https://github.com/apollographql/apollo-client/pull/3133)
 
 ### 1.1.3
 - dependency updates

@@ -168,7 +168,8 @@ export function removeDirectivesFromDocument(
 const added = new Map();
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
-  const cached = added.get(doc);
+  const docAsMapKey = JSON.stringify(doc);
+  const cached = added.get(docAsMapKey);
   if (cached) return cached;
 
   const docClone = cloneDeep(doc);
@@ -181,7 +182,7 @@ export function addTypenameToDocument(doc: DocumentNode) {
     );
   });
 
-  added.set(doc, docClone);
+  added.set(docAsMapKey, docClone);
   return docClone;
 }
 

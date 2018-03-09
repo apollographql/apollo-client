@@ -2268,7 +2268,7 @@ describe('client', () => {
     expect(count).toEqual(2);
   });
 
-  it('resetStore makes onResetStore callbacks before notifying queries', async () => {
+  it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
     const delay = time => new Promise(r => setTimeout(r, time));
 
     const query = gql`

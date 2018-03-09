@@ -806,15 +806,11 @@ export class QueryManager<TStore> {
     // that we have issued so far and not yet resolved (in the case of
     // queries).
     this.fetchQueryPromises.forEach(({ reject }) => {
-      reject(new Error('Store reset while query was in flight.'));
-    });
-
-    this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery) {
-        this.setQuery(queryId, ({ lastRequestId }) => ({
-          lastRequestId: (lastRequestId || 1) + 1,
-        }));
-      }
+      reject(
+        new Error(
+          'Store reset while query was in flight(not completed in link chain)',
+        ),
+      );
     });
 
     const resetIds: string[] = [];

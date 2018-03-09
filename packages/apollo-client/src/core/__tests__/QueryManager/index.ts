@@ -3142,6 +3142,7 @@ describe('QueryManager', () => {
             new Observable(observer => {
               timesFired += 1;
               observer.next({ data });
+              observer.complete();
               return;
             }),
         ),

@@ -390,26 +390,17 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * active queries.
    */
   public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
-    let observableQueryPromises: Promise<ApolloQueryResult<any>>[] | null;
     return Promise.resolve()
       .then(() => {
         return this.queryManager
           ? this.queryManager.clearStore()
           : Promise.resolve(null);
       })
-      .then(promises => {
-        observableQueryPromises = promises;
-        return Promise.all(this.resetStoreCallbacks.map(fn => fn()));
-      })
+      .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
       .then(() => {
-        if (observableQueryPromises) {
-          this.queryManager.broadcastQueries();
-          return Promise.all(observableQueryPromises);
-        } else {
-          return this.queryManager
-            ? this.queryManager.reFetchObservableQueries()
-            : Promise.resolve(null);
-        }
+        return this.queryManager
+          ? this.queryManager.reFetchObservableQueries()
+          : Promise.resolve(null);
       });
   }
 

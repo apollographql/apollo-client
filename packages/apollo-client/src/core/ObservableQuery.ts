@@ -33,18 +33,21 @@ export type ApolloCurrentResult<T> = {
   partial?: boolean;
 };
 
-export interface FetchMoreOptions {
+export interface FetchMoreOptions<
+  TData = any,
+  TVariables = OperationVariables
+> {
   updateQuery: (
-    previousQueryResult: { [key: string]: any },
+    previousQueryResult: TData,
     options: {
-      fetchMoreResult?: { [key: string]: any };
-      variables: { [key: string]: any };
+      fetchMoreResult?: TData;
+      variables?: TVariables;
     },
-  ) => Object;
+  ) => TData;
 }
 
-export interface UpdateQueryOptions {
-  variables?: Object;
+export interface UpdateQueryOptions<TVariables> {
+  variables?: TVariables;
 }
 
 export const hasError = (
@@ -275,8 +278,9 @@ export class ObservableQuery<
       .then(result => maybeDeepFreeze(result));
   }
 
-  public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
+  public fetchMore<K extends keyof TVariables>(
+    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K> &
+      FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     // early return if no update Query
     if (!fetchMoreOptions.updateQuery) {
@@ -316,12 +320,11 @@ export class ObservableQuery<
         );
       })
       .then(fetchMoreResult => {
-        this.updateQuery(
-          (previousResult: any, { variables }: { [key: string]: any }) =>
-            fetchMoreOptions.updateQuery(previousResult, {
-              fetchMoreResult: fetchMoreResult.data,
-              variables,
-            }),
+        this.updateQuery((previousResult, { variables }) =>
+          fetchMoreOptions.updateQuery(previousResult, {
+            fetchMoreResult: fetchMoreResult.data as TData,
+            variables,
+          }),
         );
 
         return fetchMoreResult as ApolloQueryResult<TData>;
@@ -331,7 +334,9 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore(options: SubscribeToMoreOptions): () => void {
+  public subscribeToMore(
+    options: SubscribeToMoreOptions<TData, TVariables>,
+  ): () => void {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
@@ -340,11 +345,14 @@ export class ObservableQuery<
       .subscribe({
         next: data => {
           if (options.updateQuery) {
-            this.updateQuery((previous: Object, { variables }) =>
-              (options.updateQuery as UpdateQueryFn)(previous, {
-                subscriptionData: data,
-                variables,
-              }),
+            this.updateQuery((previous, { variables }) =>
+              (options.updateQuery as UpdateQueryFn<TData, TVariables>)(
+                previous,
+                {
+                  subscriptionData: data as { data: TData },
+                  variables,
+                },
+              ),
             );
           }
         },
@@ -460,7 +468,10 @@ export class ObservableQuery<
   }
 
   public updateQuery(
-    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any,
+    mapFn: (
+      previousQueryResult: TData,
+      options: UpdateQueryOptions<TVariables>,
+    ) => TData,
   ): void {
     const {
       previousResult,
@@ -469,7 +480,7 @@ export class ObservableQuery<
     } = this.queryManager.getQueryWithPreviousResult(this.queryId);
 
     const newResult = tryFunctionOrLogError(() =>
-      mapFn(previousResult, { variables }),
+      mapFn(previousResult, { variables: variables as TVariables }),
     );
 
     if (newResult) {

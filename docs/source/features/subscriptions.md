@@ -211,7 +211,7 @@ and start the actual subscription by calling the `subscribeToNewComments` functi
 
 ```js
 export class CommentsPage extends Component {
-    componentWillMount() {
+    componentDidMount() {
         this.props.subscribeToNewComments({
             repoFullName: this.props.repoFullName,
         });

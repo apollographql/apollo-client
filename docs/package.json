@@ -5,7 +5,7 @@
   "hexo": {
     "version": "3.4.3"
   },
-  "dependencies": {
+  "devDependencies": {
     "hexo": "3.4.4",
     "hexo-generator-archive": "^0.1.2",
     "hexo-generator-category": "^0.1.2",

@@ -3,12 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "hexo": {
-    "version": "3.4.4"
+    "version": "3.6.0"
   },
   "devDependencies": {
     "apollo-hexo-config": "^1.0.2",
     "chexo": "^1.0.4",
-    "hexo": "3.4.4",
+    "hexo": "3.6.0",
     "hexo-generator-archive": "^0.1.2",
     "hexo-generator-category": "^0.1.2",
     "hexo-generator-index": "^0.2.0",

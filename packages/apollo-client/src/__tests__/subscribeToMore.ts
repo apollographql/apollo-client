@@ -76,6 +76,13 @@ describe('subscribeToMore', () => {
     },
   };
 
+  const result4 = {
+    data: {
+      entry: [{ value: 1 }, { value: 2 }],
+    },
+  };
+  const req4 = { request: { query }, result: result4 };
+
   it('triggers new result from subscription data', done => {
     let latestResult: any = null;
     const wSLink = mockObservableLink(sub1);
@@ -119,7 +126,7 @@ describe('subscribeToMore', () => {
         stale: false,
       });
       done();
-    }, 50);
+    }, 15);
 
     for (let i = 0; i < 2; i++) {
       wSLink.simulateResult(results[i]);
@@ -177,7 +184,7 @@ describe('subscribeToMore', () => {
       expect(counter).toBe(2);
       expect(errorCount).toBe(1);
       done();
-    }, 50);
+    }, 15);
 
     for (let i = 0; i < 2; i++) {
       wSLink.simulateResult(results2[i]);
@@ -238,11 +245,114 @@ describe('subscribeToMore', () => {
       expect(errorCount).toBe(1);
       console.error = consoleErr;
       done();
-    }, 50);
+    }, 15);
 
     for (let i = 0; i < 2; i++) {
       wSLink.simulateResult(results3[i]);
     }
+  });
+
+  it('should not corrupt the cache (#3062)', async done => {
+    let latestResult: any = null;
+    const wSLink = mockObservableLink(sub1);
+    const httpLink = mockSingleLink(req4);
+
+    const link = ApolloLink.split(isSub, wSLink, httpLink);
+    let counter = 0;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }).restore({
+        'ROOT_QUERY.entry.0': {
+          value: 1,
+        },
+        'ROOT_QUERY.entry.1': {
+          value: 2,
+        },
+        ROOT_QUERY: {
+          entry: [
+            {
+              type: 'id',
+              id: 'ROOT_QUERY.entry.0',
+              generated: true,
+            },
+            {
+              type: 'id',
+              id: 'ROOT_QUERY.entry.1',
+              generated: true,
+            },
+          ],
+        },
+      }),
+      link,
+    });
+
+    const obsHandle = client.watchQuery({ query });
+
+    const sub = obsHandle.subscribe({
+      next(queryResult) {
+        latestResult = queryResult;
+        counter++;
+      },
+    });
+
+    let nextMutation = '';
+    obsHandle.subscribeToMore({
+      document: gql`
+        subscription createdEntry {
+          name
+        }
+      `,
+      updateQuery: (prev, { subscriptionData }) => {
+        expect(prev.entry).not.toContainEqual(nextMutation);
+        return {
+          entry: [...prev.entry, { value: subscriptionData.data.name }],
+        };
+      },
+    });
+
+    const wait = dur => new Promise(resolve => setTimeout(resolve, dur));
+
+    for (let i = 0; i < 2; i++) {
+      // init optimistic mutation
+      let data = client.cache.readQuery({ query }, false);
+      client.cache.recordOptimisticTransaction(proxy => {
+        nextMutation = { value: results[i].result.data.name };
+        proxy.writeQuery({
+          data: { entry: [...data.entry, nextMutation] },
+          query,
+        });
+      }, i);
+      // on slow networks, subscription can happen first
+      wSLink.simulateResult(results[i]);
+      await wait(results[i].delay + 1);
+      // complete mutation
+      client.cache.removeOptimistic(i);
+      // note: we don't complete mutation with performTransaction because a real example would detect duplicates
+    }
+    sub.unsubscribe();
+    expect(counter).toBe(3);
+    expect(latestResult).toEqual({
+      data: {
+        entry: [
+          {
+            value: 1,
+          },
+          {
+            value: 2,
+          },
+          {
+            value: 'Dahivat Pandya',
+          },
+          {
+            value: 'Amanda Liu',
+          },
+        ],
+      },
+      loading: false,
+      networkStatus: 7,
+      stale: false,
+    });
+    done();
   });
   // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.
 });

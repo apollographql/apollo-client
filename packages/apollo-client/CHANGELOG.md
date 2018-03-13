@@ -4,6 +4,11 @@
 ### vNEXT
 - Map coverage to original source
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
+- Fix Memory Leak in Query Manager [PR#3119](https://github.com/apollographql/apollo-client/pull/3119)
+- Pass non-optimistic query to `subscribeToMore` updateQuery
+[PR#3068](https://github.com/apollographql/apollo-client/pull/3068)
+- onResetStore callbacks occur before refetching Observable Queries[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
+- Error message for in flight queries during `resetStore` includes link completion note[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
 
 ### 2.2.3
 - dependency updates

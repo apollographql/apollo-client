@@ -538,7 +538,9 @@ export class QueryManager {
       } else {
         // however we need to catch the error so it isn't unhandled in case of
         // network error
-        networkResult.catch(() => {});
+        networkResult.catch(() => {
+          //
+        });
       }
     }
     // If we have no query to send to the server, we should return the result

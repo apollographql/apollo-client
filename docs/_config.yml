@@ -21,38 +21,39 @@ sidebar_categories:
   null:
     - index
     - why-apollo
-    - quick-start
+    - try-apollo
     - integrations
+    - react-apollo-migration
   Essentials:
     - essentials/setup
     - essentials/queries
     - essentials/mutations
-    - essentials/hoc
-  Advanced:
-    - advanced/boost-migration
-    - advanced/network-layer
-    - advanced/caching
-    - advanced/update-store
-    - advanced/subscriptions
-    - advanced/fragments
+    - essentials/client-access
   Features:
     - features/error-handling
     - features/optimistic-ui
     - features/server-side-rendering
+    - features/pagination
+    - features/refetching
+    - features/performance
     - features/developer-tooling
-    - features/react-native
-    - features/static-typing
+  Advanced:
+    - advanced/boost-migration
+    - advanced/subscriptions
+    - advanced/network-layer
+    - advanced/caching
+    - advanced/fragments
   Recipes:
     - recipes/simple-example
     - recipes/query-splitting
-    - recipes/pagination
     - recipes/authentication
-    - recipes/prefetching
-    - recipes/fragment-matching
     - recipes/2.0-migration
+    - recipes/static-typing
+    - recipes/react-native
     - recipes/babel
     - recipes/webpack
     - recipes/meteor
     - recipes/recompose
   API:
     - api/apollo-client
+    - api/react-apollo

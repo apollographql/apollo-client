@@ -1,5 +1,5 @@
 ---
-title: Server Side Rendering
+title: Server-side rendering
 ---
 
 

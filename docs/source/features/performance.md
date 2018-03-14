@@ -1,6 +1,10 @@
 ---
-title: Prefetching data
+title: Improved performance
 ---
+
+<h2 id="cache-redirects">Redirecting to cached data</h2>
+
+<h2 id="prefetching">Prefetching data</h2>
 
 Prefetching is one of the easiest ways to make your application's UI feel a lot faster with Apollo Client. Prefetching simply means loading data into the cache before it needs to be rendered on the screen. Essentially, we want to load all data required for a view as soon as we can guess that a user will navigate to it.
 

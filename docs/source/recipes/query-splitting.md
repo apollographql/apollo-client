@@ -1,5 +1,5 @@
 ---
-title: Query Splitting
+title: Query splitting
 ---
 
 Prefetching is an easy way to make your applications UI feel faster. You can use mouse events to predict the data that could be needed.
@@ -144,12 +144,12 @@ const withData = compose(
   withSeriesEpisodes
 )
 
-function SeriesDetailView({ 
+function SeriesDetailView({
   seriesDetailData: {
     loading: seriesLoading,
     oneSeries,
   },
-  seriesWithEpisodesData: { 
+  seriesWithEpisodesData: {
     loading: episodesLoading,
     oneSeries: { episodes } = {},
   }

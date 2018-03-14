@@ -1,6 +1,6 @@
 ---
-title: Quick Start
-description: The easiest way to get started with Apollo Client
+title: Try Apollo!
+description: The easiest way to try out Apollo Client
 ---
 
 Want to get started with Apollo Client? This page will guide you through your first GraphQL query with Apollo in less than ten minutes. For this example, we're going to be using:

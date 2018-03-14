@@ -86,7 +86,7 @@ const readStoreResolver: Resolver = (
         if (resolver) {
           fieldValue = resolver(obj, args, {
             getCacheKey: (obj: { __typename: string; id: string | number }) =>
-              toIdValue(context.dataIdFromObject(obj)),
+              toIdValue(context.dataIdFromObject(obj), obj.__typename),
           });
         }
       }

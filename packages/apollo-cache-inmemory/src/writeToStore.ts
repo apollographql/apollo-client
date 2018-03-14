@@ -25,6 +25,8 @@ import {
   shouldInclude,
   storeKeyNameFromField,
   getQueryDefinition,
+  StoreValue,
+  toIdValue,
 } from 'apollo-utilities';
 
 import { defaultNormalizedCacheFactory, ObjectCache } from './objectCache';
@@ -243,7 +245,7 @@ export function writeSelectionSetToStore({
         // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
         // Right now we have to pretend that we're passing in an idValue and that there's a store
         // on the context.
-        const idValue: IdValue = { type: 'id', id: 'self', generated: false };
+        const idValue = toIdValue('self', undefined);
         const fakeContext: ReadStoreContext = {
           // NOTE: fakeContext always uses ObjectCache
           // since this is only to ensure the return value of 'matches'
@@ -336,7 +338,7 @@ function writeFieldToStore({
 }) {
   const { variables, dataIdFromObject, store } = context;
 
-  let storeValue: any;
+  let storeValue: StoreValue;
   let storeObject: StoreObject;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables);
@@ -404,27 +406,29 @@ function writeFieldToStore({
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
     // This allows us to distinguish IDs from normal scalars.
-    storeValue = {
-      type: 'id',
-      id: valueDataId,
-      generated,
-    };
+    storeValue = toIdValue(valueDataId, value.__typename, generated);
 
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the
     // data from that id with the data we're about to write in the store.
     storeObject = store.get(dataId);
-    if (storeObject && storeObject[storeFieldName] !== storeValue) {
-      const escapedId = storeObject[storeFieldName] as IdValue;
+    const escapedId =
+      storeObject && (storeObject[storeFieldName] as IdValue | undefined);
+    if (escapedId !== storeValue && isIdValue(escapedId)) {
+      const idToStore = storeValue as IdValue;
+      const hadTypename = escapedId.typename !== undefined;
+      const hasTypename = idToStore.typename !== undefined;
+      const typenameChanged =
+        hadTypename && hasTypename && escapedId.typename !== idToStore.typename;
+      const lostRealId =
+        idToStore.generated && !escapedId.generated && !typenameChanged;
+      const lostTypename = hadTypename && !hasTypename;
 
       // If there is already a real id in the store and the current id we
       // are dealing with is generated, we throw an error.
-      if (
-        isIdValue(storeValue) &&
-        storeValue.generated &&
-        isIdValue(escapedId) &&
-        !escapedId.generated
-      ) {
+      // One exception we allow is when the typename has changed, which occurs
+      // when schema defines a union, both with and without an ID in the same place
+      if (lostRealId) {
         throw new Error(
           `Store error: the application attempted to write an object with no provided id` +
             ` but the store already contains an id of ${
@@ -434,10 +438,26 @@ function writeFieldToStore({
             print(field),
         );
       }
+      if (lostTypename) {
+        throw new Error(
+          `Store error: the application attempted to write an object with no provided typename` +
+            ` but the store already contains an object with typename of ${
+              escapedId.typename
+            } for the object of id ${escapedId.id}. The selectionSet` +
+            ` that was trying to be written is:\n` +
+            print(field),
+        );
+      }
 
-      if (isIdValue(escapedId) && escapedId.generated) {
+      if (escapedId.generated) {
         generatedKey = escapedId.id;
-        shouldMerge = true;
+        // we should only merge if it's an object of the same type
+        // otherwise, we should delete the generated object
+        if (typenameChanged) {
+          store.delete(generatedKey);
+        } else {
+          shouldMerge = true;
+        }
       }
     }
   }
@@ -494,12 +514,6 @@ function processArrayValue(
       });
     }
 
-    const idStoreValue: IdValue = {
-      type: 'id',
-      id: itemDataId,
-      generated,
-    };
-
-    return idStoreValue;
+    return toIdValue(itemDataId, item.__typename, generated);
   });
 }

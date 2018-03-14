@@ -406,7 +406,8 @@ function writeFieldToStore({
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
     // This allows us to distinguish IDs from normal scalars.
-    storeValue = toIdValue(valueDataId, value.__typename, generated);
+    const typename = value.__typename;
+    storeValue = toIdValue(valueDataId, typename, generated);
 
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the
@@ -415,20 +416,17 @@ function writeFieldToStore({
     const escapedId =
       storeObject && (storeObject[storeFieldName] as IdValue | undefined);
     if (escapedId !== storeValue && isIdValue(escapedId)) {
-      const idToStore = storeValue as IdValue;
       const hadTypename = escapedId.typename !== undefined;
-      const hasTypename = idToStore.typename !== undefined;
+      const hasTypename = typename !== undefined;
       const typenameChanged =
-        hadTypename && hasTypename && escapedId.typename !== idToStore.typename;
-      const lostRealId =
-        idToStore.generated && !escapedId.generated && !typenameChanged;
-      const lostTypename = hadTypename && !hasTypename;
+        hadTypename && hasTypename && escapedId.typename !== typename;
 
       // If there is already a real id in the store and the current id we
       // are dealing with is generated, we throw an error.
       // One exception we allow is when the typename has changed, which occurs
-      // when schema defines a union, both with and without an ID in the same place
-      if (lostRealId) {
+      // when schema defines a union, both with and without an ID in the same place.
+      // checks if we "lost" the read id
+      if (generated && !escapedId.generated && !typenameChanged) {
         throw new Error(
           `Store error: the application attempted to write an object with no provided id` +
             ` but the store already contains an id of ${
@@ -438,7 +436,8 @@ function writeFieldToStore({
             print(field),
         );
       }
-      if (lostTypename) {
+      // checks if we "lost" the typename
+      if (hadTypename && !hasTypename) {
         throw new Error(
           `Store error: the application attempted to write an object with no provided typename` +
             ` but the store already contains an object with typename of ${

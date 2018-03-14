@@ -3,6 +3,7 @@
 ### vNEXT
 - Fix the ability to specify IDs in Apollo configuration to tell queries about updates when new information becomes available [PR #2274](https://github.com/apollographql/apollo-client/pull/2274)
 - Fix response not being included with errors that have response body [PR #2239](https://github.com/apollographql/apollo-client/pull/2239)
+- Ensure network errors don't cause unhandled rejections on cache-and-network policies
 
 - Allow conditional refetchQueries [PR #2234](https://github.com/apollographql/apollo-client/pull/2234)
 

@@ -23,6 +23,7 @@ declare module 'apollo-utilities' {
     type: 'id';
     id: string;
     generated: boolean;
+    typename: string | void;
   }
 
   declare export interface JsonValue {

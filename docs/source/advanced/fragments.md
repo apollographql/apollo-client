@@ -1,5 +1,5 @@
 ---
-title: Using Fragments
+title: Using fragments
 ---
 
 A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) is a shared piece of query logic.

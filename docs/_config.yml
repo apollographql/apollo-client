@@ -25,16 +25,16 @@ sidebar_categories:
     - integrations
     - react-apollo-migration
   Essentials:
-    - essentials/setup
+    - essentials/get-started
     - essentials/queries
     - essentials/mutations
-    - essentials/client-access
+    - essentials/direct-access
   Features:
     - features/error-handling
     - features/optimistic-ui
-    - features/server-side-rendering
     - features/pagination
     - features/refetching
+    - features/server-side-rendering
     - features/performance
     - features/developer-tooling
   Advanced:

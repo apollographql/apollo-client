@@ -1,7 +1,9 @@
 ---
 title: Developer tools
-description: How to use extensions and developer tools to get insight into what your app is doing.
+description: How to use extensions and developer tools to analyze your data
 ---
+
+<h2 id="engine">Apollo Engine</h2>
 
 <h2 id="devtools">Apollo Client Devtools</h2>
 

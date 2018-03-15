@@ -1,5 +1,5 @@
 ---
-title: Accessing the client
+title: Using Apollo Client directly
 ---
 
 <h2 id="apolloconsumer">The ApolloConsumer component</h2>

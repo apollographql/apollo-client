@@ -1,5 +1,5 @@
 ---
-title: Improved performance
+title: Improving performance
 ---
 
 <h2 id="cache-redirects">Redirecting to cached data</h2>

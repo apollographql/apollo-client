@@ -1,5 +1,5 @@
 ---
-title: Try Apollo!
+title: Try Apollo Client!
 description: The easiest way to try out Apollo Client
 ---
 

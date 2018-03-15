@@ -1,7 +1,7 @@
 ---
-title: API Reference (apollo-client)
+title: Apollo Client
 order: 11
-description: The API for the apollo-client package
+description: Apollo Client API reference
 ---
 
 <h2 id="apollo-client">ApolloClient</h2>

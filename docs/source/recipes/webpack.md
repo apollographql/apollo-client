@@ -1,5 +1,5 @@
 ---
-title: Webpack configuration
+title: Loading queries with Webpack
 ---
 
 You can load GraphQL queries over `.graphql` files using Webpack. The package `graphql-tag` comes with a loader easy to setup and with some benefits:

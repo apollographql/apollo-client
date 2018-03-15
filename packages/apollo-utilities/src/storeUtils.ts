@@ -268,11 +268,24 @@ export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return idObject && (idObject as IdValue | JsonValue).type === 'id';
 }
 
+let haveWarned = false;
+
 export function toIdValue(
   id: string,
   typename: string | undefined,
   generated = false,
 ): IdValue {
+  if (typeof typename === 'boolean') {
+    generated = typename;
+    typename = undefined;
+    if (!haveWarned) {
+      console.warn(
+        `DEPRECATION WARNING: using toIdValue utility without typename as a second argument ` +
+          `is an unsupported behavior and will be removed in future versions of Apollo utilities.`,
+      );
+      haveWarned = true;
+    }
+  }
   return {
     type: 'id',
     id,

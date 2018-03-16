@@ -58,7 +58,7 @@ const App = () => (
   <Query query={GET_DOG}>
     {({ loading, error, data }) => {
       if (loading) return <div>Loading...</div>;
-      if (error) return <div>Error :(</div>;
+      if (error) return <div>Error :</div>;
 
       return (
         <Dog url={data.dog.displayImage} breed={data.dog.breed} />

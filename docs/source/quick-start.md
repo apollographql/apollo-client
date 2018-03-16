@@ -66,6 +66,14 @@ const App = () => (
     }}
   </Query>
 )
+
+const Dog = ({url, breed}) => (
+  <div>
+    <img src={url} alt={`${breed}`} />
+    <span>{`The ${breed} breed is totally awesome.`}</span>
+  </div>
+)
+
 ```
 
 Time to celebrate! 🎉 You just made your first Query component. The Query component binds your GraphQL query to your UI so Apollo Client can take care of fetching your data, tracking loading & error states, and updating your UI via the `data` prop. Why don't you try experimenting with creating more Query components by forking our example app, [Pupstagram](https://codesandbox.io/s/r5qp83z0yq)?

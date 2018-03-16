@@ -182,7 +182,7 @@ const withData = graphql(COMMENT_QUERY, {
         return {
            ...props,
             subscribeToNewComments: params => {
-                return props.comments.subscribeToMore({
+                return props.data.subscribeToMore({
                     document: COMMENTS_SUBSCRIPTION,
                     variables: {
                         repoName: params.repoFullName,

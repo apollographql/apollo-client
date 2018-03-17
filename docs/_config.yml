@@ -31,9 +31,9 @@ sidebar_categories:
     - essentials/direct-access
   Features:
     - features/error-handling
-    - features/optimistic-ui
+    - features/local-state
     - features/pagination
-    - features/refetching
+    - features/optimistic-ui
     - features/server-side-rendering
     - features/performance
     - features/developer-tooling

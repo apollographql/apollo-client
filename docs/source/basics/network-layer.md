@@ -81,7 +81,7 @@ The following example shows the use of multiple middlewares passed as an array:
 ```js
 import ApolloClient from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
-import { ApolloLink, from } from 'apollo-link';
+import { ApolloLink } from 'apollo-link';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 

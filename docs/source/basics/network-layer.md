@@ -63,7 +63,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
   operation.setContext({
     headers: {
       authorization: localStorage.getItem('token') || null,
-    } 
+    }
   });
 
   return forward(operation);
@@ -81,7 +81,7 @@ The following example shows the use of multiple middlewares passed as an array:
 ```js
 import ApolloClient from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
-import { ApolloLink, from } from 'apollo-link';
+import { ApolloLink, fromPromise } from 'apollo-link';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 
@@ -91,7 +91,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
     headers: {
       ...headers,
       authorization: localStorage.getItem('token') || null,
-    } 
+    }
   }));
 
   return forward(operation);
@@ -103,7 +103,7 @@ const otherMiddleware = new ApolloLink((operation, forward) => {
     headers: {
       ...headers,
       'recent-activity': localStorage.getItem('lastOnlineTime') || null,
-    } 
+    }
   }));
 
   return forward(operation);
@@ -111,7 +111,7 @@ const otherMiddleware = new ApolloLink((operation, forward) => {
 
 
 const client = new ApolloClient({
-  link: from([
+  link: fromPromise([
     authMiddleware,
     otherMiddleware,
     httpLink

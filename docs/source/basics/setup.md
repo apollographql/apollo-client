@@ -4,13 +4,13 @@ title: Setup and options
 
 <h2 id="installation">Installation</h2>
 
-To get started with Apollo and React, you will need to install a few packages from npm or use the [`apollo-client-preset`](https://www.npmjs.com/package/apollo-client-preset) package. 
+To get started with Apollo and React, you will need to install a few packages from npm or use [`apollo-boost`](https://www.npmjs.com/package/apollo-boost).
 
 > If you are first getting started with Apollo Client, the preset package is a quick and easy way to try it out!
 
 ```bash
 # installing the preset package and react integration
-npm install apollo-client-preset react-apollo graphql-tag graphql --save
+npm install apollo-boost react-apollo graphql --save
 
 # installing each piece independently
 npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag graphql --save
@@ -25,7 +25,7 @@ To get started using Apollo with React, we need to create an `ApolloClient` and 
 
 <h3 id="creating-client">Creating a client</h3>
 
-To get started, create an [`ApolloClient`](#constructor) instance and point it at your GraphQL server:
+To get started, create an [`ApolloClient`](#ApolloClient) instance and point it at your GraphQL server:
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -40,7 +40,7 @@ const client = new ApolloClient({
 });
 ```
 
-The client takes a variety of [options](#constructor), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/link):
+The client takes a variety of [options](#ApolloClient), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/link):
 
 ```js
 import { ApolloClient } from 'apollo-client';

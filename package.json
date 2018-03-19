@@ -35,12 +35,12 @@
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.min.js",
-      "maxSize": "11.7 kB"
+      "maxSize": "11.8 kB"
     },
     {
-      "name": "apollo-client-preset",
-      "path": "./packages/apollo-client-preset/lib/bundle.min.js",
-      "maxSize": "31 kB"
+      "name": "apollo-boost",
+      "path": "./packages/apollo-boost/lib/bundle.min.js",
+      "maxSize": "33 kB"
     },
     {
       "name": "apollo-utilities",
@@ -75,10 +75,13 @@
     "bundlesize": "0.16.0",
     "codecov": "3.0.0",
     "danger": "1.2.0",
-    "lerna": "2.8.0",
+    "lerna": "2.9.0",
     "lint-staged": "6.1.0",
     "pre-commit": "1.2.2",
-    "prettier": "1.10.2",
+    "prettier": "1.11.1",
+    "rollup-plugin-local-resolve": "^1.0.7",
+    "rollup-plugin-node-resolve": "^3.0.3",
+    "rollup-plugin-sourcemaps": "^0.4.2",
     "ts-jest": "20.0.14",
     "typescript": "2.5.2"
   }

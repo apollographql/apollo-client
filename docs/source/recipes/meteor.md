@@ -349,10 +349,13 @@ createApolloServer(req => ({
   cacheControl: true,
 }), {
   configServer: (graphQLServer) => {
-    app.use(engine.expressMiddleware());
+    graphQLServer.use(engine.expressMiddleware());
     // Any other config server stuff
   },
 });
+
+// Start apollo engine
+engine.start();
 ```
 
 ## Importing `.graphql` files

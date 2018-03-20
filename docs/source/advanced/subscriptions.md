@@ -115,6 +115,63 @@ const link = split(
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
 
+<h2 id="subscription-component">Subscription Component</h2>
+The easiest way to bring live data to your UI is using the Subscription component from React Apollo. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
+
+```js
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription onCommentAdded($repoFullName: String!) {
+    commentAdded(repoFullName: $repoFullName) {
+      id
+      content
+    }
+  }
+`;
+
+const DontReadTheComments = ({ repoFullName }) => (
+  <Subscription
+    subscription={COMMENTS_SUBSCRIPTION}
+    variables={{ repoFullName }}
+  >
+    {({ data: { commentAdded }, loading }) => (
+      <h4>New comment: {!loading && commentAdded.content}</h4>
+    )}
+  </Subscription>
+);
+```
+
+<h2 id="api">Subscription Component API overview</h2>
+
+If you're looking for an overview of all the props `Subscription` accepts and its render prop function, look no further!
+
+<h3 id="props">Props</h3>
+
+The Subscription component accepts the following props. Only `subscription` and `children` are **required**.
+
+<dl>
+  <dt>`subscription`: DocumentNode</dt>
+  <dd>A GraphQL subscription document parsed into an AST by `graphql-tag`. **Required**</dd>
+  <dt>`children`: (result: SubscriptionResult) => React.ReactNode</dt>
+  <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
+  <dt>`variables`: { [key: string]: any }</dt>
+  <dd>An object containing all of the variables your subscription needs to execute</dd>
+  <dt>`shouldResubscribe`: boolean</dt>
+  <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
+</dl>
+
+<h3 id="render-prop">Render prop function</h3>
+
+The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties
+
+<dl>
+  <dt>`data`: TData</dt>
+  <dd>An object containing the result of your GraphQL subscription. Defaults to an empty object.</dd>
+  <dt>`loading`: boolean</dt>
+  <dd>A boolean that indicates whether any initial data has been returned</dd>
+  <dt>`error`: ApolloError</dt>
+  <dd>A runtime error with `graphQLErrors` and `networkError` properties</dd>
+</dl>
+
 <h2 id="subscribe-to-more">subscribeToMore</h2>
 
 With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
@@ -129,31 +186,32 @@ With `subscribeToMore`, you can easily do the latter.
 Here is a regular query:
 
 ```js
-import { CommentsPage } from './comments-page.js';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { CommentsPage } from "./comments-page.js";
+import { graphql } from "react-apollo";
+import gql from "graphql-tag";
 
 const COMMENT_QUERY = gql`
-    query Comment($repoName: String!) {
-      entry(repoFullName: $repoName) {
-        comments {
-          id
-          content
-        }
+  query Comment($repoName: String!) {
+    entry(repoFullName: $repoName) {
+      comments {
+        id
+        content
       }
     }
+  }
 `;
 
 const withData = graphql(COMMENT_QUERY, {
-    name: 'comments',
-    options: ({ params }) => ({
-        variables: {
-            repoName: `${params.org}/${params.repoName}`
-        },
-    })
+  name: "comments",
+  options: ({ params }) => ({
+    variables: {
+      repoName: `${params.org}/${params.repoName}`
+    }
+  })
 });
 
 export const CommentsPageWithData = withData(CommentsPage);
+
 ```
 
 Now, let's add the subscription.
@@ -164,59 +222,60 @@ Note that the `updateQuery` callback must return an object of the same shape as 
 
 ```js
 const COMMENTS_SUBSCRIPTION = gql`
-    subscription onCommentAdded($repoFullName: String!){
-      commentAdded(repoFullName: $repoFullName){
-        id
-        content
-      }
+  subscription onCommentAdded($repoFullName: String!) {
+    commentAdded(repoFullName: $repoFullName) {
+      id
+      content
     }
+  }
 `;
 
 const withData = graphql(COMMENT_QUERY, {
-    name: 'comments',
-    options: ({ params }) => ({
-        variables: {
-            repoName: `${params.org}/${params.repoName}`
-        },
-    }),
-    props: props => {
-        return {
-           ...props,
-            subscribeToNewComments: params => {
-                return props.comments.subscribeToMore({
-                    document: COMMENTS_SUBSCRIPTION,
-                    variables: {
-                        repoName: params.repoFullName,
-                    },
-                    updateQuery: (prev, {subscriptionData}) => {
-                        if (!subscriptionData.data) {
-                            return prev;
-                        }
-
-                        const newFeedItem = subscriptionData.data.commentAdded;
-
-                        return Object.assign({}, prev, {
-                            entry: {
-                                comments: [newFeedItem, ...prev.entry.comments]
-                            }
-                        });
-                    }
-                });
+  name: "comments",
+  options: ({ params }) => ({
+    variables: {
+      repoName: `${params.org}/${params.repoName}`
+    }
+  }),
+  props: props => {
+    return {
+      ...props,
+      subscribeToNewComments: params => {
+        return props.comments.subscribeToMore({
+          document: COMMENTS_SUBSCRIPTION,
+          variables: {
+            repoName: params.repoFullName
+          },
+          updateQuery: (prev, { subscriptionData }) => {
+            if (!subscriptionData.data) {
+              return prev;
             }
-        };
-    },
+
+            const newFeedItem = subscriptionData.data.commentAdded;
+
+            return Object.assign({}, prev, {
+              entry: {
+                comments: [newFeedItem, ...prev.entry.comments]
+              }
+            });
+          }
+        });
+      }
+    };
+  }
 });
+
 ```
 
 and start the actual subscription by calling the `subscribeToNewComments` function with the subscription variables:
 
 ```js
 export class CommentsPage extends Component {
-    componentDidMount() {
-        this.props.subscribeToNewComments({
-            repoFullName: this.props.repoFullName,
-        });
-    }
+  componentDidMount() {
+    this.props.subscribeToNewComments({
+      repoFullName: this.props.repoFullName,
+    });
+  }
 }
 ```
 

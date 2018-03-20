@@ -198,7 +198,7 @@ While not as complex as loading state, responding to errors in your component is
 
 <h2 id="api">Query API overview</h2>
 
-If you're looking for an overview of all the props `Query` accepts and its render prop function, look no further! Most `Query` components will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the Query component API in more detail with usage examples, visit our [reference guide](../api/react-apollo).
+If you're looking for an overview of all the props `Query` accepts and its render prop function, look no further! Most `Query` components will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `Query` component API in more detail with usage examples, visit our [reference guide](../api/react-apollo).
 
 <h3 id="props">Props</h3>
 

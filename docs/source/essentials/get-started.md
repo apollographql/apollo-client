@@ -20,7 +20,7 @@ npm i apollo-boost react-apollo graphql-tag graphql -S
 - `graphql-tag`: Necessary for parsing your GraphQL queries
 - `graphql`: You might already have this as a dependency. If not, please install it now.
 
-If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/add-react-to-a-new-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
+> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/add-react-to-a-new-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
 
 <h2 id="creating-client">Create a client</h2>
 
@@ -143,21 +143,27 @@ The awesome thing about Apollo Boost is that you don't have to set any of this u
 
 <h3 id="configuration">Configuration options</h3>
 
-Here are the options you can pass to the `ApolloClient` exported from `apollo-boost`. None of them are required.
+Here are the options you can pass to the `ApolloClient` exported from `apollo-boost`. All of them are optional.
 
-- uri: A string representing your GraphQL server endpoint. Defaults to `/graphql`
-- fetchOptions: An object representing any options you would like to pass to fetch (credentials, headers, etc). These options are static, so they don't change on each request.
-- request?: (operation: Operation) => Promise<void>;
-  - This function is called on each request. It takes an operation and can return a promise. To dynamically set `fetchOptions`, you can add them to the context of the operation with `operation.setContext({ headers })`. Any options set here will take precedence over `fetchOptions`.
-  - Use this function for authentication
-- onError: (errorObj: { graphQLErrors: GraphQLError[], networkError: Error, response?: ExecutionResult, operation: Operation }) => void
-  - We include a default error handler to log out your errors for you. If you would like to handle your errors differently, specify this function
-- clientState: An object representing your configuration for `apollo-link-state`. This is useful if you would like to use the Apollo cache for local state management. Learn more in our [quick start](docs/link/links/state.html#start).
-- cacheRedirects: An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](../features/performance/cache-redirects).
+<dl>
+  <dt>`uri`: string</dt>
+  <dd>A string representing your GraphQL server endpoint. Defaults to `/graphql`</dd>
+  <dt>`fetchOptions`: Object</dt>
+  <dd>Any options you would like to pass to fetch (credentials, headers, etc). These options are static, so they don't change on each request.</dd>
+  <dt>`request`: (operation: Operation) => Promise<void></dt>
+  <dd>This function is called on each request. It takes a GraphQL operation and can return a promise. To dynamically set `fetchOptions`, you can add them to the context of the operation with `operation.setContext({ headers })`. Any options set here will take precedence over `fetchOptions`. Useful for authentication.</dd>
+  <dt>`onError`: (errorObj: { graphQLErrors: GraphQLError[], networkError: Error, response?: ExecutionResult, operation: Operation }) => void</dt>
+  <dd>We include a default error handler to log out your errors to the console. If you would like to handle your errors differently, specify this function.</dd>
+  <dt>`clientState`: { resolvers?: Object, defaults?: Object, typeDefs?: string | Array<string> }</dt>
+  <dd>An object representing your configuration for `apollo-link-state`. This is useful if you would like to use the Apollo cache for local state management. Learn more in our [quick start](docs/link/links/state.html#start).</dd>
+  <dt>`cacheRedirects`: Object</dt>
+  <dd>An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](../features/performance/cache-redirects).</dd>
+</dl>
 
 <h2 id="next-steps">Next steps</h2>
 
 Now that you've learned how to fetch data with Apollo Client, you're ready to dive deeper into creating more complex queries and mutations. After this section, we recommend moving onto:
+
 - [Queries](./queries): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
 - [Mutations](./mutations): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
 - [Using Apollo Client directly](./direct-access): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Learn when and how in our guide or visit the API reference for a full list of options.

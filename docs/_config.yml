@@ -15,6 +15,12 @@ root: /docs/react/
 typescript_api_box:
   data_file: docs.json
 
+apis:
+  docsearch:
+    appId: D4TXOQD7SH
+    apiKey: 818262c1ec4675e8d5da52f01d4f345a
+    indexName: apollodata
+
 # This setting also defines the page order used to generate the Previous/Next links at the bottom of each page
 sidebar_categories:
   # Basics

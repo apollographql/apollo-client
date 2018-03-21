@@ -303,11 +303,12 @@ mutate({
 Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](https://www.apollographql.com/docs/react/basics/mutations.html#graphql-mutation-options-update).
 
 ```javascript
-import CommentAppQuery from '../queries/CommentAppQuery';
-
 const SUBMIT_COMMENT_MUTATION = gql`
   mutation submitComment($repoFullName: String!, $commentContent: String!) {
-    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+    submitComment(
+      repoFullName: $repoFullName
+      commentContent: $commentContent
+    ) {
       postedBy {
         login
         html_url
@@ -318,26 +319,27 @@ const SUBMIT_COMMENT_MUTATION = gql`
   }
 `;
 
-const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
-  props({ ownProps, mutate }) {
-    return {
-      submit({ repoFullName, commentContent }) {
-        return mutate({
-          variables: { repoFullName, commentContent },
-
-          update: (store, { data: { submitComment } }) => {
-            // Read the data from our cache for this query.
-            const data = store.readQuery({ query: CommentAppQuery });
-            // Add our comment from the mutation to the end.
-            data.comments.push(submitComment);
-            // Write our data back to the cache.
-            store.writeQuery({ query: CommentAppQuery, data });
-          },
-        });
-      },
-    };
-  },
-})(CommentsPage);
+const CommentsPageWithMutations = () => (
+  <Mutation mutation={SUBMIT_COMMENT_MUTATION}>
+    {mutate => {
+      <AddComment
+        submit={({ repoFullName, commentContent }) =>
+          mutate({
+            variables: { repoFullName, commentContent },
+            update: (store, { data: { submitComment } }) => {
+              // Read the data from our cache for this query.
+              const data = store.readQuery({ query: CommentAppQuery });
+              // Add our comment from the mutation to the end.
+              data.comments.push(submitComment);
+              // Write our data back to the cache.
+              store.writeQuery({ query: CommentAppQuery, data });
+            }
+          })
+        }
+      />;
+    }}
+  </Mutation>
+);
 ```
 
 <h3 id="fetchMore">Incremental loading: `fetchMore`</h3>
@@ -349,52 +351,50 @@ In our GitHunt example, we have a paginated feed that displays a list of GitHub 
 Let's see how to do that with the `fetchMore` method on a query:
 
 ```javascript
-const FeedQuery = gql`
+const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-    # ...
-  }`;
+    currentUser {
+      login
+    }
+    feed(type: $type, offset: $offset, limit: $limit) {
+      id
+      # ...
+    }
+  }
+`;
 
-const FeedWithData = graphql(FeedQuery, {
-  props({ data: { loading, feed, currentUser, fetchMore } }) {
-    return {
-      loading,
-      feed,
-      currentUser,
-      loadNextPage() {
-        return fetchMore({
-          variables: {
-            offset: feed.length,
-          },
-
-          updateQuery: (previousResult, { fetchMoreResult }) => {
-            if (!fetchMoreResult) { return previousResult; }
-
-            return Object.assign({}, previousResult, {
-              feed: [...previousResult.feed, ...fetchMoreResult.feed],
-            });
-          },
-        });
-      },
-    };
-  },
-})(Feed);
+const FeedWithData = ({ match }) => (
+  <Query
+    query={FEED_QUERY}
+    variables={{
+      type: match.params.type.toUpperCase() || "TOP",
+      offset: 0,
+      limit: 10
+    }}
+    fetchPolicy="cache-and-network"
+  >
+    {({ data, fetchMore }) => (
+      <Feed
+        entries={data.feed || []}
+        onLoadMore={() =>
+          fetchMore({
+            variables: {
+              offset: data.feed.length
+            },
+            updateQuery: (prev, { fetchMoreResult }) => {
+              if (!fetchMoreResult) return prev;
+              return Object.assign({}, prev, {
+                feed: [...prev.feed, ...fetchMoreResult.feed]
+              });
+            }
+          })
+        }
+      />
+    )}
+  </Query>
+);
 ```
 
-We have two components here: `FeedWithData` and `Feed`. The `FeedWithData` container implementation produces the `props` to be passed to the presentational `Feed` component. Specifically, we're mapping the `loadNextPage` prop to the following:
-
-```js
-return fetchMore({
-  variables: {
-    offset: feed.length,
-  },
-  updateQuery: (prev, { fetchMoreResult }) => {
-    if (!fetchMoreResult.data) { return prev; }
-    return Object.assign({}, prev, {
-      feed: [...prev.feed, ...fetchMoreResult.feed],
-    });
-  },
-});
-```
 
 The `fetchMore` method takes a map of `variables` to be sent with the new query. Here, we're setting the offset to `feed.length` so that we fetch items that aren't already displayed on the feed. This variable map is merged with the one that's been specified for the query associated with the component. This means that other variables, e.g. the `limit` variable, will have the same value as they do within the component query.
 

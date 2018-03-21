@@ -186,10 +186,6 @@ With `subscribeToMore`, you can easily do the latter.
 Here is a regular query:
 
 ```js
-import { CommentsPage } from "./comments-page.js";
-import { graphql } from "react-apollo";
-import gql from "graphql-tag";
-
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
     entry(repoFullName: $repoName) {
@@ -201,17 +197,14 @@ const COMMENT_QUERY = gql`
   }
 `;
 
-const withData = graphql(COMMENT_QUERY, {
-  name: "comments",
-  options: ({ params }) => ({
-    variables: {
-      repoName: `${params.org}/${params.repoName}`
-    }
-  })
-});
-
-export const CommentsPageWithData = withData(CommentsPage);
-
+const CommentsPageWithData = ({ params }) => (
+  <Query
+    query={COMMENT_QUERY}
+    variables={{ repoName: `${params.org}/${params.repoName}` }}
+  >
+    {result => <CommentsPage {...result} />}
+  </Query>
+);
 ```
 
 Now, let's add the subscription.
@@ -221,49 +214,54 @@ Add a function called `subscribeToNewComments` that will subscribe using `subscr
 Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
 
 ```js
+const COMMENT_QUERY = gql`
+  query Comment($repoName: String!) {
+    entry(repoFullName: $repoName) {
+      comments {
+        id
+        content
+      }
+    }
+  }
+`;
+
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($repoFullName: String!) {
-    commentAdded(repoFullName: $repoFullName) {
+  subscription onCommentAdded($repoName: String!) {
+    commentAdded(repoName: $repoName) {
       id
       content
     }
   }
 `;
 
-const withData = graphql(COMMENT_QUERY, {
-  name: "comments",
-  options: ({ params }) => ({
-    variables: {
-      repoName: `${params.org}/${params.repoName}`
-    }
-  }),
-  props: props => {
-    return {
-      ...props,
-      subscribeToNewComments: params => {
-        return props.comments.subscribeToMore({
-          document: COMMENTS_SUBSCRIPTION,
-          variables: {
-            repoName: params.repoFullName
-          },
-          updateQuery: (prev, { subscriptionData }) => {
-            if (!subscriptionData.data) {
-              return prev;
+const CommentsPageWithData = ({ params }) => (
+  <Query
+    query={COMMENT_QUERY}
+    variables={{ repoName: `${params.org}/${params.repoName}` }}
+  >
+    {({ subscribeToMore, ...result }) => (
+      <CommentsPage
+        {...result}
+        subscribeToNewComments={() =>
+          subscribeToMore({
+            document: COMMENTS_SUBSCRIPTION,
+            variables: { repoName: params.repoName },
+            updateQuery: (prev, { subscriptionData }) => {
+              if (!subscriptionData.data) return prev;
+              const newFeedItem = subscriptionData.data.commentAdded;
+
+              return Object.assign({}, prev, {
+                entry: {
+                  comments: [newFeedItem, ...prev.entry.comments]
+                }
+              });
             }
-
-            const newFeedItem = subscriptionData.data.commentAdded;
-
-            return Object.assign({}, prev, {
-              entry: {
-                comments: [newFeedItem, ...prev.entry.comments]
-              }
-            });
-          }
-        });
-      }
-    };
-  }
-});
+          })
+        }
+      />
+    )}
+  </Query>
+);
 
 ```
 
@@ -272,9 +270,7 @@ and start the actual subscription by calling the `subscribeToNewComments` functi
 ```js
 export class CommentsPage extends Component {
   componentDidMount() {
-    this.props.subscribeToNewComments({
-      repoFullName: this.props.repoFullName,
-    });
+    this.props.subscribeToNewComments();
   }
 }
 ```

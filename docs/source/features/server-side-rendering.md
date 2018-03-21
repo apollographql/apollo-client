@@ -244,9 +244,12 @@ const client = new ApolloClient({
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
 ```js
-const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
-  options: { ssr: false }, // won't be called during SSR
-});
+const withClientOnlyUser = () => (
+  <Query query={GET_USER_WITH_ID} ssr={false}>
+    {({ data }) => <span>I won't be run on the server</span>}
+  </Query>
+);
+
 ```
 
 <h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>

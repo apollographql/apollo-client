@@ -41,10 +41,10 @@
     "apollo-utilities": "^1.0.10"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.4",
+    "@types/graphql": "0.12.5",
     "@types/jest": "21.1.10",
     "browserify": "15.2.0",
-    "graphql": "0.13.1",
+    "graphql": "0.13.2",
     "graphql-tag": "2.8.0",
     "jest": "20.0.4",
     "rimraf": "2.6.2",

@@ -114,6 +114,34 @@ const link = split(
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
 
+<h2 id="subscribe">subscribe</h2>
+
+To accomodate for simple cases where you would like to react to subscription events, you can use the `subscribe` function.
+
+```js
+  componentDidMount() {
+    // call the "subscribe" method on Apollo Client
+    this.props.client.subscribe({
+      query: GRAPHQL_SUBSCRIPTION,
+    }).subscribe({
+      next: (data) => {
+        // ... do something with data
+      },
+      error(err) {
+        console.error('err', err);
+      },
+    });
+  }
+  
+  const GRAPHQL_SUBSCRIPTION = gql`
+    subscription {
+      ...
+    }
+  `;
+  
+  export const MyComponent = withApollo(MyComponent);
+```
+
 <h2 id="subscribe-to-more">subscribeToMore</h2>
 
 With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:

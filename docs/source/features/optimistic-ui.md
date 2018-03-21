@@ -15,8 +15,7 @@ The main way to get GraphQL data into your UI components with Apollo is to use a
 Here's what this looks like in the code:
 
 ```js
-
-const updateComment = gql`
+const UPDATE_COMMENT = gql`
   mutation updateComment($commentId: ID!, $commentContent: String!) {
     updateComment(commentId: $commentId, commentContent: $commentContent) {
       id
@@ -25,24 +24,27 @@ const updateComment = gql`
     }
   }
 `;
-
-const CommentPageWithData = graphql(updateComment, {
-  props: ({ ownProps, mutate }) => ({
-    submit({ commentId, commentContent }) {
-      return mutate({
-        variables: { commentId, commentContent },
-        optimisticResponse: {
-          __typename: 'Mutation',
-          updateComment: {
-            id: commentId,
-            __typename: 'Comment',
-            content: commentContent,
-          },
-        },
-      });
-    },
-  }),
-})(CommentPage);
+const CommentPageWithData = () => (
+  <Mutation mutation={UPDATE_COMMENT}>
+    {mutate => {
+      <AddComment
+        addComment={({ commentId, commentContent }) =>
+          mutate({
+            variables: { commentId, commentContent },
+            optimisticResponse: {
+              __typename: "Mutation",
+              updateComment: {
+                id: commentId,
+                __typename: "Comment",
+                content: commentContent
+              }
+            }
+          })
+        }
+      />;
+    }}
+  </Mutation>
+);
 ```
 
 We select `id` and `__typename` because that's what our `dataIdFromObject` uses to determine a globally unique object ID. We need to make sure to provide the right values for those fields, so that Apollo knows what object we are referring to.
@@ -56,15 +58,12 @@ In that case we need to specify how to integrate the new data into existing quer
 Here is a concrete example from GitHunt, which inserts a comment into an existing list of comments.
 
 ```js
-import React from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
-
-import CommentAppQuery from '../queries/CommentAppQuery';
-
 const SUBMIT_COMMENT_MUTATION = gql`
   mutation submitComment($repoFullName: String!, $commentContent: String!) {
-    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+    submitComment(
+      repoFullName: $repoFullName
+      commentContent: $commentContent
+    ) {
       postedBy {
         login
         html_url
@@ -75,32 +74,34 @@ const SUBMIT_COMMENT_MUTATION = gql`
   }
 `;
 
-const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
-  props({ ownProps, mutate }) {
-    return {
-      submit({ repoFullName, commentContent }) {
-        return mutate({
-          variables: { repoFullName, commentContent },
-          optimisticResponse: {
-            __typename: 'Mutation',
-            submitComment: {
-              __typename: 'Comment',
-              postedBy: ownProps.currentUser,
-              createdAt: +new Date,
-              content: commentContent,
+const CommentsPageWithMutations = ({ currentUser }) => (
+  <Mutation mutation={SUBMIT_COMMENT_MUTATION}>
+    {mutate => (
+      <CommentsPage
+        submit={(repoFullName, commentContent) =>
+          mutate({
+            variables: { repoFullName, commentContent },
+            optimisticResponse: {
+              __typename: "Mutation",
+              submitComment: {
+                __typename: "Comment",
+                postedBy: currentUser,
+                createdAt: new Date(),
+                content: commentContent
+              }
             },
-          },
-          update: (proxy, { data: { submitComment } }) => {
-            // Read the data from our cache for this query.
-            const data = proxy.readQuery({ query: CommentAppQuery });
-            // Add our comment from the mutation to the end.
-            data.comments.push(submitComment);
-            // Write our data back to the cache.
-            proxy.writeQuery({ query: CommentAppQuery, data });
-          },
-        });
-      },
-    };
-  },
-})(CommentsPage);
+            update: (proxy, { data: { submitComment } }) => {
+              // Read the data from our cache for this query.
+              const data = proxy.readQuery({ query: CommentAppQuery });
+              // Add our comment from the mutation to the end.
+              data.comments.push(submitComment);
+              // Write our data back to the cache.
+              proxy.writeQuery({ query: CommentAppQuery, data });
+            }
+          })
+        }
+      />
+    )}
+  </Mutation>
+);
 ```

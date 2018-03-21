@@ -34,7 +34,7 @@ Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full full
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
 
-<h2 id="operation-result">Typeing the Higher Order Components</h2>
+<h2 id="operation-result">Typing the Higher Order Components</h2>
 
 Since the result of a query will be sent to the wrapped component as props, we want to be able to tell our type system the shape of those props. Here is an example setting types for an operation using the `graphql` higher order component (**note**: the follow sections also work for the query, mutation, and subscription hocs):
 

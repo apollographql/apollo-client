@@ -5,20 +5,20 @@ description: Learn how to quickly set up Apollo Client in your React app
 
 The simplest way to get started with Apollo Client is by using Apollo Boost, our starter kit that configures your client for you with our recommended settings. Apollo Boost includes packages that we think are essential for building an Apollo app, like our in memory cache, local state management, and error handling. It's also flexible enough to handle features like authentication.
 
-If you're an advanced user who would like to configure Apollo Client from scratch, head on over to our [Apollo Boost migration guide](../advanced/boost-migration). For the majority of users, Apollo Boost should meet your needs, so we don't recommend switching unless you absolutely need more customization.
+If you're an advanced user who would like to configure Apollo Client from scratch, head on over to our [Apollo Boost migration guide](../advanced/boost-migration.html). For the majority of users, Apollo Boost should meet your needs, so we don't recommend switching unless you absolutely need more customization.
 
 <h2 id="installation">Installation</h2>
 
 First, let's install some packages!
 
 ```bash
-npm i apollo-boost react-apollo graphql-tag graphql -S
+npm install apollo-boost react-apollo graphql-tag graphql --save
 ```
 
 - `apollo-boost`: Package containing everything you need to set up Apollo Client
 - `react-apollo`: View layer integration for React
 - `graphql-tag`: Necessary for parsing your GraphQL queries
-- `graphql`: You might already have this as a dependency. If not, please install it now.
+- `graphql`: Also parses your GraphQL queries
 
 > If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/add-react-to-a-new-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
 
@@ -32,7 +32,7 @@ In our `index.js` file, let's import `ApolloClient` from `apollo-boost` and add 
 import ApolloClient from "apollo-boost";
 
 const client = new ApolloClient({
-  uri: `https://w5xlvm3vzz.lp.gql.zone/graphql`
+  uri: "https://w5xlvm3vzz.lp.gql.zone/graphql"
 });
 ```
 
@@ -164,7 +164,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
 
 Now that you've learned how to fetch data with Apollo Client, you're ready to dive deeper into creating more complex queries and mutations. After this section, we recommend moving onto:
 
-- [Queries](./queries): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
-- [Mutations](./mutations): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
-- [Using Apollo Client directly](./direct-access): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Learn when and how in our guide or visit the API reference for a full list of options.
+- [Queries](./queries.html): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
+- [Mutations](./mutations.html): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
+- [Using Apollo Client directly](./direct-access.html): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Learn when and how in our guide or visit the API reference for a full list of options.
 

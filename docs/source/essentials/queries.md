@@ -13,7 +13,7 @@ The following examples assume that you've already set up Apollo Client and have 
 
 <h2 id="basic">The Query component</h2>
 
-The Query component is one of the most important building blocks of your Apollo application. To create a Query component, just pass a GraphQL query string wrapped with the `gql` function to `this.props.query` and provide a function to `this.props.children` that tells React what to render. The Query component is an example of a React component that uses the [render prop](https://reactjs.org/docs/render-props.html) pattern. React will call the render prop function you provide with an object from Apollo Client containing loading, error, and data properties that you can use to render your UI. Let's look at an example:
+The `Query` component is one of the most important building blocks of your Apollo application. To create a `Query` component, just pass a GraphQL query string wrapped with the `gql` function to `this.props.query` and provide a function to `this.props.children` that tells React what to render. The `Query` component is an example of a React component that uses the [render prop](https://reactjs.org/docs/render-props.html) pattern. React will call the render prop function you provide with an object from Apollo Client containing loading, error, and data properties that you can use to render your UI. Let's look at an example:
 
 First, let's create our GraphQL query. Remember to wrap your query string in the `gql` function in order to parse it into a query document. Once we have our GraphQL query, let's attach it to our `Query` component by passing it to the `query` prop.
 

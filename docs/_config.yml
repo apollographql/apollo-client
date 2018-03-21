@@ -28,10 +28,9 @@ sidebar_categories:
     - essentials/get-started
     - essentials/queries
     - essentials/mutations
-    - essentials/direct-access
+    - essentials/local-state
   Features:
     - features/error-handling
-    - features/local-state
     - features/pagination
     - features/optimistic-ui
     - features/server-side-rendering

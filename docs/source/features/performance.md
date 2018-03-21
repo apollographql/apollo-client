@@ -8,41 +8,46 @@ title: Improving performance
 
 Prefetching is one of the easiest ways to make your application's UI feel a lot faster with Apollo Client. Prefetching simply means loading data into the cache before it needs to be rendered on the screen. Essentially, we want to load all data required for a view as soon as we can guess that a user will navigate to it.
 
-In Apollo Client, prefetching is very simple and can be done by running a component's query before it is rendered. As a simple example, in GitHunt, we use the `withApollo` higher-order component to directly call a `query` as soon as the user hovers over a link to the comments page. With the data prefetched, the comments page renders immediately, and the user often experiences no delay at all:
+We can accomplish this in only a few lines of code by calling `client.query` whenever the user hovers over a link. Let's see this in action in the `Feed` component in our example app [Pupstagram](https://codesandbox.io/s/r5qp83z0yq).
 
-```js
-const FeedEntry = ({ entry, currentUser, onVote, client }) => {
-  const repoLink = `/${entry.repository.full_name}`;
-  const prefetchComments = (repoFullName) => () => {
-    client.query({
-      query: COMMENT_QUERY,
-      variables: { repoName: repoFullName },
-    });
-  };
+```jsx
+const Feed = () => (
+  <View style={styles.container}>
+    <Header />
+    <Query query={GET_DOGS}>
+      {({ loading, error, data, client }) => {
+        if (loading) return <Fetching />;
+        if (error) return <Error />;
 
-  return (
-    <div className="media">
-      ...
-      <div className="media-body">
-        <RepoInfo
-          description={entry.repository.description}
-          stargazers_count={entry.repository.stargazers_count}
-          open_issues_count={entry.repository.open_issues_count}
-          created_at={entry.createdAt}
-          user_url={entry.postedBy.html_url}
-          username={entry.postedBy.login}
-        >
-          <Link to={repoLink} onMouseOver={prefetchComments(entry.repository.full_name)}>
-              View comments ({entry.commentCount})
-          </Link>
-        </RepoInfo>
-      </div>
-    </div>
-  );
-};
-
-const FeedEntryWithApollo = withApollo(FeedEntry);
+        return (
+          <DogList
+            data={data.dogs}
+            renderRow={(type, data) => (
+              <Link
+                to={{
+                  pathname: `/${data.breed}/${data.id}`,
+                  state: { id: data.id }
+                }}
+                onMouseOver={() =>
+                  client.query({
+                    query: GET_DOG,
+                    variables: { breed: data.breed }
+                  })
+                }
+                style={{ textDecoration: "none" }}
+              >
+                <Dog {...data} url={data.displayImage} />
+              </Link>
+            )}
+          />
+        );
+      }}
+    </Query>
+  </View>
+);
 ```
+
+All we have to do is access the client in the render prop function and call `client.query` when the user hovers over the link. Once the user clicks on the link, the data will already be available in the Apollo cache, so the user won't see a loading state.
 
 There are a lot of different ways to anticipate that the user will end up needing some data in the UI. In addition to using the hover state, here are some other places you can preload data:
 

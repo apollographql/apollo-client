@@ -192,6 +192,46 @@ The `networkStatus` property is an enum with number values from 1-8 representing
 
 While not as complex as loading state, responding to errors in your component is also customizable via the `errorPolicy` prop on the `Query` component. The default value for `errorPolicy` is "none" in which we treat all GraphQL errors as runtime errors. In the event of an error, Apollo Client will discard any data that came back with the request and set the `error` property in the render prop function to true. If you'd like to show any partial data along with any error information, set the `errorPolicy` to "all".
 
+<h2 id="manual-query">Manually firing a query</h2>
+
+When React mounts a `Query` component, Apollo Client automatically fires off your query. What if you wanted to delay firing your query until the user performs an action, such as clicking on a button? For this scenario, we want to use an `ApolloConsumer` component and directly call `client.query()` instead.
+
+```jsx
+import React, { Component } from 'react';
+import { ApolloConsumer } from 'react-apollo';
+
+class DelayedQuery extends Component {
+  state = { dog: null };
+
+  onDogFetched = dog => this.setState(() => ({ dog }));
+
+  render() {
+    return (
+      <ApolloConsumer>
+        {client => (
+          <div>
+            {this.state.dog && <img src={this.state.dog.displayImage} />}
+            <button
+              onClick={async () => {
+                const { data } = await client.query({
+                  query: GET_DOG_PHOTO,
+                  variables: { breed: "bulldog" }
+                });
+                this.onDogFetched(data.dog);
+              }}
+            >
+              Click me!
+            </button>
+          </div>
+        )}
+      </ApolloConsumer>
+    );
+  }
+}
+```
+
+Fetching this way is quite verbose, so we recommend trying to use a `Query` component if at all possible!
+
 > If you'd like to view a complete version of the app we just built, you can check out the CodeSandbox [here](https://codesandbox.io/s/n3jykqpxwm).
 
 <h2 id="api">Query API overview</h2>
@@ -221,8 +261,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>Pass in false to skip your query during server-side rendering.</dd>
   <dt>`displayName`: string</dt>
   <dd>The name of your component to be displayed in React DevTools. Defaults to 'Query'.</dd>
-  <dt>`skip`: boolean</dt>
-  <dd>If skip is true, the query will be skipped entirely.</dd>
+  <dt>`delay`: boolean</dt>
+  <dd>If `delay` is true, the `Query` component will not fetch the query on mount although its children will still render. Use `delay` with `load` in the render prop function to manually fire the query.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
@@ -246,6 +286,8 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
   <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
   <dd>A function that enables [pagination](../features/pagination) for your query</dd>
+  <dt>`load`: () => void</dt>
+  <dd>A function to manually fetch the query instead of fetching when the component mounts. Use with the `delay` prop on the `Query` component. Useful for prefetching data</dd>
   <dt>`startPolling`: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
   <dt>`stopPolling`: () => void</dt>

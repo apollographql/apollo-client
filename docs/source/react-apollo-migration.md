@@ -17,8 +17,10 @@ const GET_DOGS = gql`
     dogs {
       id
       name
-    } 
-}`;
+    }
+  }
+`;
+
 const GoodDogsBrent = () => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {
@@ -80,7 +82,7 @@ const Profile = ({ refetch }) => (
   >
     {({ loading, data: { currentUser } }) => {
        if (loading) return <span>loading....</span>;
-        return <h1>Welcome back {currentUser.firstName}</h1>     
+        return <h1>Welcome back {currentUser.firstName}</h1>
     }}
   </Query>
 );
@@ -88,7 +90,7 @@ const Profile = ({ refetch }) => (
 
 And just like that we have the same UI but everything is a component!
 
-<h3 id="compose-to-render-composition">Updating mutliple connected components with compose</h3>
+<h3 id="compose-to-render-composition">Updating multiple connected components with compose</h3>
 
 In some cases, it may make sense to split your queries into different operations for resuse, better performance, and seperation of concerns. In the past, to easily group all of those data requriements together meant using the `compose` function from React Apollo. Now, you can just compose them directly in your render function! Take a look at this simple example:
 
@@ -108,14 +110,14 @@ const QueryTwo = gql`
 const withOne = graphql(QueryOne, {
   props: ({ data }) => ({
     loadingOne: data.loading,
-    one: data.one  
+    one: data.one
   }),
 });
 
 const withTwo = graphql(QueryTwo, {
   props: ({ data }) => ({
     loadingTwo: data.loading,
-    one: data.one  
+    one: data.one
   }),
 });
 
@@ -148,7 +150,7 @@ const NumbersWithData = () => (
       <Query query={QueryTwo}>
         {({ loading: loadingTwo, data: { two }}) => {
           if (loadingOne || loadingTwo) return <span>loading...</span>
-          return <h3>{one} is less than {two}</h3>       
+          return <h3>{one} is less than {two}</h3>
         }}
       </Query>
     )}
@@ -158,48 +160,15 @@ const NumbersWithData = () => (
 
 And just like that, we have two composed queries! To explore more migration examples, take a look at each individual commit on this [pull request](https://github.com/apollographql/GitHunt-React/pull/275). It shows a number of use cases being refactored to the new components.
 
-For more information on how to use the new Query component, read the [full guide](./essentials/queries.html)! 
+For more information on how to use the new Query component, read the [full guide](./essentials/queries.html)!
 
 
-<h2 id="components">The Mutation and Subscription Component</h2>
+<h2 id="components">The Mutation and Subscription Components</h2>
 
-Much like the Query component, the Mutation and Subscription component are ways to use Apollo directly within your react tree. They simplify integrating with Apollo, and keep your React app written in React! For more information on the Mutation component, [check out the usage guide](./essentials/mutations.html) or if you are wanting to learn about the Subscription component, [read how to here](./advanced/subscriptions.html). 
-
-<h2 id="new-hocs">New higher order components</h2>
-
-Even though we really love the new components with React Apollo 2.1, there are still a lot of cases where higher order components are just as nice! With the 2.1, you can have your cake and eat it too thanks to the `query`, `mutation`, and `subscription` higher order components.
-
-All of the new hocs take the same arguments as the `graphql` function when creating a wrapper:
-
-```js
-const PROFILE_QUERY = gql`
-  query GetUser {
-    currentUser {
-      firstName
-    }
-  }
-`;
-
-const Profile = ({ loading, currentUser }) => {
-  if (loading) return <span>loading....</span>;
-  return <h1>Welcome back {currentUser.firstName}</h1>
-}
-
-export default query(PROFILE_QUERY, {
-  options: ({ refetch }) => ({
-    fetchPolicy: refetch ? 'cache-and-network' : 'cache-first',
-  }),
-  props: ({ data: { loading, currentUser } }) => ({
-    loading,
-    currentUser,
-  }),
-})(Profile);
-```
-
-There primary benefit comes from advanced TypeScript definitions, easier to reason about code, and eventually being able to tree shake out the parts that you don't use.
+Much like the Query component, the Mutation and Subscription component are ways to use Apollo directly within your react tree. They simplify integrating with Apollo, and keep your React app written in React! For more information on the Mutation component, [check out the usage guide](./essentials/mutations.html) or if you are wanting to learn about the Subscription component, [read how to here](./advanced/subscriptions.html).
 
 <h2 id="context">ApolloConsumer</h2>
-With upcomming versions of React (starting in React 16.3), there is a new version of context that makes is easier than ever to use components connected to state higher in the tree. While the 2.1 doesn't required React 16.3, we are making easier than ever to start writing in this style with the `<ApolloConsumer>` component. This is just like the `withApollo` higher order component, just in a normal React component! It takes no props and expects a child function which recieves the instance of Apollo Client in your tree. For example:
+With upcoming versions of React (starting in React 16.3), there is a new version of context that makes is easier than ever to use components connected to state higher in the tree. While the 2.1 doesn't required React 16.3, we are making easier than ever to start writing in this style with the `<ApolloConsumer>` component. This is just like the `withApollo` higher order component, just in a normal React component! It takes no props and expects a child function which recieves the instance of Apollo Client in your tree. For example:
 
 ```js
 const MyClient = () => (

@@ -78,7 +78,11 @@ import gql from 'graphql-tag';
 
 // make sure to set an initial value for status in defaults when you initialize link-state
 const QueryThatSubscribesToMutation = () => (
-  <Query query={gql`{ status @client }`}>
+  <Query query={gql`
+    {
+      status @client
+    }
+  `}>
     ({ data, client }) => (
       <div>
        <p>{data.status}</p>

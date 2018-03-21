@@ -140,6 +140,33 @@ FeedEntry.fragments = {
 };
 ```
 
+<h3 id="co-locating-fragments-with-es-modules">Co-locating Fragments With ES Modules</h3>
+When using ES Modules, you may want to take advantage of ES module exports to explicitly export your fragments instead of attaching
+it as a subfield of `ComponentClass.fragments`.
+
+For instance:
+
+```js
+export default class VoteButtons extends React.Component { ... }
+export const fragments = {
+  entry: gql`
+  fragment VoteButtons on Entry {
+    score
+    vote {
+      vote_value
+    }
+  }
+`,
+}
+```
+
+A benefit of doing this is that your module dependencies become more direct. Instead of loading a Component Class module just to get
+access to it's fragments, you can directly import its fragments.
+
+```
+import { fragments as VoteButtonsFragments } from './VoteButtons';
+```
+
 <h3 id="filtering-with-fragments">Filtering With Fragments</h3>
 
 We can also use the `graphql-anywhere` package to filter the exact fields from the `entry` before passing them to the subcomponent. So when we render a `VoteButtons`, we can simply do:

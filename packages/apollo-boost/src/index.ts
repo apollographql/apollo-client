@@ -21,6 +21,7 @@ export interface PresetConfig {
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;
   cacheRedirects?: CacheResolverMap;
+  connectToDevTools: boolean;
 }
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {

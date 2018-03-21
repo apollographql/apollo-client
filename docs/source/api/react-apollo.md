@@ -32,6 +32,140 @@ ReactDOM.render(
 );
 ```
 
+<h2 id="apollo-consumer" title="ApolloConsumer">`ApolloConsumer`</h2>
+
+To access the client directly, create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function will be called with your `ApolloClient` instance as its only argument. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [new React context API](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md).
+
+Here's the `ApolloConsumer` component in action:
+
+```jsx
+import React from 'react';
+import { ApolloConsumer } from "react-apollo";
+
+const WithApolloClient = () => (
+  <ApolloConsumer>
+    {client => "We have access to the client!" /* do stuff here */}
+  </ApolloConsumer>
+);
+```
+
+<h2 id="query" title="Query">`Query`</h2>
+
+<h3 id="props">Props</h3>
+
+The Query component accepts the following props. Only `query` and `children` are **required**.
+
+<dl>
+  <dt>`query`: DocumentNode</dt>
+  <dd>A GraphQL query document parsed into an AST by `graphql-tag`. **Required**</dd>
+  <dt>`children`: (result: QueryResult) => React.ReactNode</dt>
+  <dd>A function returning the UI you want to render based on your query result. **Required**</dd>
+  <dt>`variables`: { [key: string]: any }</dt>
+  <dd>An object containing all of the variables your query needs to execute</dd>
+  <dt>`pollInterval`: number</dt>
+  <dd>Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling).</dd>
+  <dt>`notifyOnNetworkStatusChange`: boolean</dt>
+  <dd>Whether updates to the network status or network error should re-render your component. Defaults to false.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
+  <dt>`errorPolicy`: ErrorPolicy</dt>
+  <dd>How you want your component to handle network and GraphQL errors. Defaults to "none", which means we treat GraphQL errors as runtime errors.</dd>
+  <dt>`ssr`: boolean</dt>
+  <dd>Pass in false to skip your query during server-side rendering.</dd>
+  <dt>`displayName`: string</dt>
+  <dd>The name of your component to be displayed in React DevTools. Defaults to 'Query'.</dd>
+  <dt>`skip`: boolean</dt>
+  <dd>If skip is true, the query will be skipped entirely.</dd>
+  <dt>`context`: Record<string, any></dt>
+  <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+</dl>
+
+<h3 id="render-prop">Render prop function</h3>
+
+The render prop function that you pass to the `children` prop of `Query` is called with an object (`QueryResult`) that has the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
+
+<dl>
+  <dt>`data`: TData</dt>
+  <dd>An object containing the result of your GraphQL query. Defaults to an empty object.</dd>
+  <dt>`loading`: boolean</dt>
+  <dd>A boolean that indicates whether the request is in flight</dd>
+  <dt>`error`: ApolloError</dt>
+  <dd>A runtime error with `graphQLErrors` and `networkError` properties</dd>
+  <dt>`variables`: { [key: string]: any }</dt>
+  <dd>An object containing the variables the query was called with</dd>
+  <dt>`networkStatus`: NetworkStatus</dt>
+  <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the `notifyOnNetworkStatusChange` prop.</dd>
+  <dt>`refetch`: (variables?: TVariables) => Promise<ApolloQueryResult></dt>
+  <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
+  <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
+  <dd>A function that enables [pagination](../features/pagination) for your query</dd>
+  <dt>`startPolling`: (interval: number) => void</dt>
+  <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
+  <dt>`stopPolling`: () => void</dt>
+  <dd>This function stops the query from polling.</dd>
+  <dt>`subscribeToMore`: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
+  <dd>A function that sets up a [subscription](../advanced/subscriptions). `subscribeToMore` returns a function that you can use to unsubscribe.</dd>
+  <dt>`updateQuery`: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
+  <dd>A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>Your `ApolloClient` instance. Useful for manually firing queries or writing data to the cache.</dd>
+</dl>
+
+<h2 id="mutation" title="Mutation">`Mutation`</h2>
+
+<h3 id="props">Props</h3>
+
+The Mutation component accepts the following props. Only `mutation` and `children` are **required**.
+
+<dl>
+  <dt>`mutation`: DocumentNode</dt>
+  <dd>A GraphQL mutation document parsed into an AST by `graphql-tag`. **Required**</dd>
+  <dt>`children`: (mutate: Function, result: MutationResult) => React.ReactNode</dt>
+  <dd>A function that allows you to trigger a mutation from your UI. **Required**</dd>
+  <dt>`variables`: { [key: string]: any }</dt>
+  <dd>An object containing all of the variables your mutation needs to execute</dd>
+  <dt>`update`: (cache: DataProxy, mutationResult: FetchResult)</dt>
+  <dd>A function used to update the cache after a mutation occurs</dd>
+  <dt>`ignoreResults`: boolean</dt>
+  <dd>If true, the `data` property on the render prop function will not update with the mutation result.</dd>
+  <dt>`optimisticResponse`: Object</dt>
+  <dd>Provide a [mutation response](../features/optimistic-ui) before the result comes back from the server</dd>
+  <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables}></dt>
+  <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
+  <dt>`onCompleted`: (data: TData) => void</dt>
+  <dd>A callback executed once your mutation successfully completes</dd>
+  <dt>`onError`: (error: ApolloError) => void</dt>
+  <dd>A callback executed in the event of an error</dd>
+  <dt>`context`: Record<string, any></dt>
+  <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+</dl>
+
+<h3 id="render-prop">Render prop function</h3>
+
+The render prop function that you pass to the `children` prop of `Mutation` is called with the `mutate` function and an object with the mutation result. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
+
+**Mutate function:**
+
+<dl>
+  <dt>`mutate`: (options?: MutationOptions) => Promise<FetchResult></dt>
+  <dd>A function to trigger a mutation from your UI. You can optionally pass `variables`, `optimisticResponse`, `refetchQueries`, and `update` in as options, which will override any props passed to the `Mutation` component. The function returns a promise that fulfills with your mutation result.</dd>
+</dl>
+
+**Mutation result:**
+
+<dl>
+  <dt>`data`: TData</dt>
+  <dd>The data returned from your mutation. It can be undefined if `ignoreResults` is true.</dd>
+  <dt>`loading`: boolean</dt>
+  <dd>A boolean indicating whether your mutation is in flight</dd>
+  <dt>`error`: ApolloError</dt>
+  <dd>Any errors returned from the mutation</dd>
+  <dt>`called`: boolean</dt>
+  <dd>A boolean indicating if the mutate function has been called</dd>
+</dl>
+
+<h2 id="subscription" title="Subscription">`Subscription`</h2>
+
 <h2 id="graphql" title="graphql(...)">`graphql(query, [config])(component)`</h2>
 
 ```js

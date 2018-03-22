@@ -3,7 +3,7 @@ title: Introduction
 description: What is Apollo Client and what does it do?
 ---
 
-[Apollo](https://www.nasa.gov/mission_pages/apollo/missions/index.html) Client is the best way to use GraphQL to build client applications. It is designed from day one to make it easy to build UI that fetches data with GraphQL. To get the most out of Apollo Client, you should use it with one of its view layer integrations like [react](./essentials/get-started).
+[Apollo](https://www.nasa.gov/mission_pages/apollo/missions/index.html) Client is the best way to use GraphQL to build client applications. It is designed from day one to make it easy to build UI that fetches data with GraphQL. To get the most out of Apollo Client, you should use it with one of its view layer integrations like [React](./essentials/get-started).
 
 Apollo Client can be used in any JavaScript frontend where you want to describe your data using GraphQL. It's:
 
@@ -21,11 +21,11 @@ These docs will help you to go from getting started with Apollo to becoming an e
 
 The docs for Apollo Client are mainly written using the [React integration](./essentials/get-started.html), but most of the examples work no matter where you use Apollo. The docs are broken into five distinct sections to make it easy to find your way around:
 
-1. **Essentials**, which outline the why and how of using Apollo Client to build your application.
+1. **Essentials**, which outline everything you need to know in order to get started quickly.
 2. **Features**, which go over all of the amazing things you can do with Apollo Client.
 2. **Advanced**, which showcase some of the advanced capabilities of Apollo Client that your app may need.
 3. **Recipes**, to isolate and explain how to do common patterns.
-4. **Reference**, to act as an entry point to find API details for the client.
+4. **API**, to act as an entry point to find API details for Apollo Client and React Apollo.
 
 Getting started is as simple as installing a few libraries from [npm](https://npmjs.org)! The [setup](./essentials/get-started.html) is a good place to start your adventure with Apollo!
 

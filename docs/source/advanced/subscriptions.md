@@ -183,7 +183,7 @@ With GraphQL subscriptions your client will be alerted on push from the server a
 
 With `subscribeToMore`, you can easily do the latter.
 
-`subscribeToMore` is a function available on every query result in `react-apollo`. It works just like [`fetchMore`](cache-updates.html#fetchMore), except that the update function gets called every time the subscription returns, instead of only once.
+`subscribeToMore` is a function available on every query result in `react-apollo`. It works just like [`fetchMore`](./caching.html#fetchMore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 

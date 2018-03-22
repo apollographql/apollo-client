@@ -181,5 +181,5 @@ const MyClient = () => (
 )
 ```
 
-For more usage tips on the ApolloConsumer component, checkout the guide [here](./essentials/direct-access.html)
+For more usage tips on the ApolloConsumer component, checkout the guide [here](./essentials/local-state.html)
 

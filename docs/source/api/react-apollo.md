@@ -99,13 +99,13 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dt>`refetch`: (variables?: TVariables) => Promise<ApolloQueryResult></dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
   <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
-  <dd>A function that enables [pagination](../features/pagination) for your query</dd>
+  <dd>A function that enables [pagination](../features/pagination.html) for your query</dd>
   <dt>`startPolling`: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
   <dt>`stopPolling`: () => void</dt>
   <dd>This function stops the query from polling.</dd>
   <dt>`subscribeToMore`: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
-  <dd>A function that sets up a [subscription](../advanced/subscriptions). `subscribeToMore` returns a function that you can use to unsubscribe.</dd>
+  <dd>A function that sets up a [subscription](../advanced/subscriptions.html). `subscribeToMore` returns a function that you can use to unsubscribe.</dd>
   <dt>`updateQuery`: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
   <dd>A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription</dd>
   <dt>`client`: ApolloClient</dt>
@@ -130,7 +130,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dt>`ignoreResults`: boolean</dt>
   <dd>If true, the `data` property on the render prop function will not update with the mutation result.</dd>
   <dt>`optimisticResponse`: Object</dt>
-  <dd>Provide a [mutation response](../features/optimistic-ui) before the result comes back from the server</dd>
+  <dd>Provide a [mutation response](../features/optimistic-ui.html) before the result comes back from the server</dd>
   <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables}></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
   <dt>`onCompleted`: (data: TData) => void</dt>
@@ -520,9 +520,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 <h3 id="graphql-query-data-error">`data.error`</h3>
 
-If an error occurred then this property will be an instance of [`ApolloError`][]. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
-
-[`ApolloError`]: /docs/react/reference/index.html#ApolloError
+If an error occurred then this property will be an instance of `ApolloError`. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
 **Example:**
 
@@ -612,7 +610,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 <h3 id="graphql-query-data-fetchMore">`data.fetchMore(options)`</h3>
 
-The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](./../recipes/pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
+The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](../features/pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
 
 `data.fetchMore` returns a promise that resolves once the query executed to fetch more data has resolved.
 
@@ -620,7 +618,7 @@ The `data.fetchMore` function takes a single `options` object argument. The `opt
 
 - `[query]`: This is an optional GraphQL document created with the `gql` GraphQL tag. If you specify a `query` then that query will be fetched when you call `data.fetchMore`. If you do not specify a `query`, then the query from your `graphql()` HOC will be used.
 - `[variables]`: The optional variables you may provide that will be used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`).
-- `updateQuery(previousResult, { fetchMoreResult, queryVariables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `queryVariables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `queryVariables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](./../recipes/pagination.html) recipe which has a full example.
+- `updateQuery(previousResult, { fetchMoreResult, queryVariables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `queryVariables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `queryVariables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](../features/pagination.html) recipe which has a full example.
 
 **Example:**
 
@@ -646,7 +644,7 @@ A common practice is to wrap the `subscribeToMore` call within `componentWillRec
 
 - `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
-- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback. Alternatively, you could update the query using a [reducer](http://dev.apollodata.com/react/cache-updates.html#resultReducers) as part of the [options](http://dev.apollodata.com/react/queries.html#graphql-options) of your `graphql()` function.
+- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback.
 - `[onError]`: An optional error callback.
 
 In order to update the query's store with the result of the subscription, you must specify either the `updateQuery` option in `subscribeToMore` or the `reducer` option in your `graphql()` function.
@@ -821,11 +819,7 @@ Valid `fetchPolicy` values are:
 - `cache-first`: This is the default value where we always try reading data from your cache first. If all the data needed to fulfill your query is in the cache then that data will be returned. Apollo will only fetch from the network if a cached result is not available. This fetch policy aims to minimize the number of network requests sent when rendering your component.
 - `cache-and-network`: This fetch policy will have Apollo first trying to read data from your cache. If all the data needed to fulfill your query is in the cache then that data will be returned. However, regardless of whether or not the full data is in your cache this `fetchPolicy` will *always* execute query with the network interface unlike `cache-first` which will only execute your query if the query data is not in your cache. This fetch policy optimizes for users getting a quick response while also trying to keep cached data consistent with your server data at the cost of extra network requests.
 - `network-only`: This fetch policy will *never* return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
-- `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()`][] and [`readFragment()`][] methods available to you on your [`ApolloClient`][] instance.
-
-[`readQuery()`]: cache#ApolloClient.readQuery
-[`readFragment()`]: cache#ApolloClient.readFragment
-[`ApolloClient`]: /docs/react
+- `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()` and `readFragment()`](../advanced/caching.html#readquery) methods available to you on your `ApolloClient` instance.
 
 **Example:**
 
@@ -1041,13 +1035,7 @@ In order to change the data in your store call methods on your [`DataProxy`][] i
 
 To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`][] and [`readFragment`][].
 
-For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../features/caching.html#updating-the-cache-after-a-mutation).
-
-[`DataProxy`]: caching.html#direct
-[`writeQuery`]: caching.html#writequery-and-writefragment
-[`writeFragment`]: caching.html#writequery-and-writefragment
-[`readQuery`]: caching.html#readquery
-[`readFragment`]: caching.html#readfragment
+For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../advanced/caching.html#updating-the-cache-after-a-mutation).
 
 **Example:**
 
@@ -1174,8 +1162,6 @@ The second argument to your function value will be an object with three properti
 - `queryName`: This is the name of the query you are updating. It is the same name as the key you provided to `options.updateQueries`.
 
 The return value of your `options.updateQueries` functions _must_ have the same shape as your first `previousData` argument. However, you _must not_ mutate the `previousData` object. Instead you must create a new object with your changes. Just like in a Redux reducer.
-
-To learn more about `options.updateQueries` read our usage documentation on [controlling the store with `updateQueries`](../features/cache-updates.html#updateQueries).
 
 **Example:**
 

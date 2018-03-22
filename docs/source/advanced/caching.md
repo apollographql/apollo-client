@@ -98,7 +98,7 @@ mutation {
 }
 ```
 
-If the `id` field on both results matches up, then the `score` field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use [fragments](fragments.html) to share fields between the query and the mutation that affects it.
+If the `id` field on both results matches up, then the `score` field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use [fragments](./fragments.html) to share fields between the query and the mutation that affects it.
 
 <h2 id="direct">Direct Cache Access</h2>
 
@@ -300,7 +300,7 @@ mutate({
 })
 ```
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](https://www.apollographql.com/docs/react/basics/mutations.html#graphql-mutation-options-update).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-apollo.html#graphql-mutation-options-update).
 
 ```javascript
 const SUBMIT_COMMENT_MUTATION = gql`
@@ -602,7 +602,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check our our more in depth guide [here](../recipes/server-side-rendering.html).
+If you would like to learn more about server side rendering, please check our our more in depth guide [here](../features/server-side-rendering.html).
 
 <h3 id="persistence">Cache persistence</h3>
 

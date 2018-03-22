@@ -39,10 +39,10 @@ This documentation site is written with examples using React, but Apollo has an 
 
 - JavaScript
   - [Angular](/docs/angular)
-  - [Vue](./basics/integrations.html#vue)
+  - [Vue](./integrations.html#vue)
   - [Meteor](./recipes/meteor.html)
-  - [Ember](./basics/integrations.html#ember)
-  - [Polymer](./basics/integrations.html#polymer)
+  - [Ember](./integrations.html#ember)
+  - [Polymer](./integrations.html#polymer)
 - Native mobile
   - [Native iOS with Swift](/docs/ios)
   - [Native Android with Java](https://github.com/apollographql/apollo-android)

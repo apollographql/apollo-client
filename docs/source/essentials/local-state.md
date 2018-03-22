@@ -324,46 +324,9 @@ const Detail = ({ match: { params: { breed, id } } }) => (
 
 <h2 id="queries">Next steps</h2>
 
-Accessing the client directly is helpful for [updating local data](../features/local-state) in the Apollo cache with `apollo-link-state`. In this example, we're writing a single value to the cache using the `ApolloConsumer` component.
+Managing your local data with Apollo Client can simplify your state management code since the Apollo cache is your single source of truth for all data in your application. If you'd like to learn more about `apollo-link-state`, check out:
 
-```jsx
-import React from 'react';
-import { ApolloConsumer } from 'react-apollo';
-
-const SimpleMutation = () => (
-  <ApolloConsumer>
-    {(cache) => (
-      <button onClick={() => cache.writeData({ data: { status: 'yo' }})}>Click me!</button>
-    )}
-  </ApolloConsumer>
-)
-```
-
-It's important to note that this write does not depend on the data that's currently in the cache. For mutations where you need to query the cache first, like adding an item to a list, you should write a mutation and client-side resolvers instead of taking this approach.
-
-If you're writing a component that performs a local mutation and also needs to subscribe to its result, just wrap it in a `Query` component and access the client in the render prop function.
-
-```jsx
-import React from 'react';
-import { Query } from 'react-apollo';
-import gql from 'graphql-tag';
-
-// make sure to set an initial value for status in defaults when you initialize link-state
-const QueryThatSubscribesToMutation = () => (
-  <Query query={gql`
-    {
-      status @client
-    }
-  `}>
-    ({ data, client }) => (
-      <div>
-       <p>{data.status}</p>
-       <button onClick={() => client.writeData({ data: { status: 'yo' }})}>Click me!</button>
-      </div>
-    )
-  </Query>
-)
-```
-
-With this approach, there are some tradeoffs. `cache.writeData` writes the data directly to the cache without creating a mutation or calling resolvers. If you write to the cache directly outside of the context of your client-side schema and resolvers, you won't gain the tooling benefits of client schema introspection for that write. That being said, we think this approach is generally fine for one-off local mutations that don't depend on the data that's currently in the cache.
+- [`apollo-link-state` docs](/docs/link/links/state.html): Dive deeper into the concepts we just learned, such as resolvers and mixed queries, by taking a look at the `apollo-link-state` docs.
+- [The future of state management](https://dev-blog.apollodata.com/the-future-of-state-management-dd410864cae2): Read about our vision for the future of state management with GraphQL in the `apollo-link-state` announcement post.
+- [Tutorial video by Sara Vieira](https://youtu.be/2RvRcnD8wHY): Check out this tutorial video by Sara Vieira if you'd like a step-by-step walkthrough on building an app with `apollo-link-state`.
 

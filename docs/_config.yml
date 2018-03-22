@@ -21,7 +21,6 @@ sidebar_categories:
   null:
     - index
     - why-apollo
-    - try-apollo
     - integrations
     - react-apollo-migration
   Essentials:

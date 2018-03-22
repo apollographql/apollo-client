@@ -42,8 +42,6 @@ sidebar_categories:
     - advanced/caching
     - advanced/fragments
   Recipes:
-    - recipes/simple-example
-    - recipes/query-splitting
     - recipes/authentication
     - recipes/2.0-migration
     - recipes/static-typing

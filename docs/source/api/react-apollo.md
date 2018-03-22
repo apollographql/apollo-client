@@ -4,6 +4,7 @@ description: React Apollo API reference
 ---
 
 <h2 id="ApolloProvider" title="ApolloProvider">`ApolloProvider`</h2>
+
 React-Apollo includes a component for providing a client instance to a React component tree, and a higher-order component for retrieving that client instance.
 
 ```js
@@ -51,7 +52,7 @@ const WithApolloClient = () => (
 
 <h2 id="query" title="Query">`Query`</h2>
 
-<h3 id="props">Props</h3>
+<h3 id="query-props">Props</h3>
 
 The Query component accepts the following props. Only `query` and `children` are **required**.
 
@@ -80,7 +81,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
 
-<h3 id="render-prop">Render prop function</h3>
+<h3 id="query-render-prop">Render prop function</h3>
 
 The render prop function that you pass to the `children` prop of `Query` is called with an object (`QueryResult`) that has the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
@@ -113,7 +114,7 @@ The render prop function that you pass to the `children` prop of `Query` is call
 
 <h2 id="mutation" title="Mutation">`Mutation`</h2>
 
-<h3 id="props">Props</h3>
+<h3 id="mutation-props">Props</h3>
 
 The Mutation component accepts the following props. Only `mutation` and `children` are **required**.
 
@@ -140,7 +141,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
 
-<h3 id="render-prop">Render prop function</h3>
+<h3 id="mutation-render-prop">Render prop function</h3>
 
 The render prop function that you pass to the `children` prop of `Mutation` is called with the `mutate` function and an object with the mutation result. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
 
@@ -165,6 +166,35 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 </dl>
 
 <h2 id="subscription" title="Subscription">`Subscription`</h2>
+
+<h3 id="subscription-props">Props</h3>
+
+The Subscription component accepts the following props. Only `subscription` and `children` are **required**.
+
+<dl>
+  <dt>`subscription`: DocumentNode</dt>
+  <dd>A GraphQL subscription document parsed into an AST by `graphql-tag`. **Required**</dd>
+  <dt>`children`: (result: SubscriptionResult) => React.ReactNode</dt>
+  <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
+  <dt>`variables`: { [key: string]: any }</dt>
+  <dd>An object containing all of the variables your subscription needs to execute</dd>
+  <dt>`shouldResubscribe`: boolean</dt>
+  <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
+</dl>
+
+<h3 id="subscription-render-prop">Render prop function</h3>
+
+The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties
+
+<dl>
+  <dt>`data`: TData</dt>
+  <dd>An object containing the result of your GraphQL subscription. Defaults to an empty object.</dd>
+  <dt>`loading`: boolean</dt>
+  <dd>A boolean that indicates whether any initial data has been returned</dd>
+  <dt>`error`: ApolloError</dt>
+  <dd>A runtime error with `graphQLErrors` and `networkError` properties</dd>
+</dl>
+
 
 <h2 id="graphql" title="graphql(...)">`graphql(query, [config])(component)`</h2>
 

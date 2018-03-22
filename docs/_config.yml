@@ -53,3 +53,11 @@ sidebar_categories:
   API:
     - api/apollo-client
     - api/react-apollo
+
+redirects:
+  /docs/react/essentials/get-started.html#api:
+    docs/react/api/react-apollo.html
+  /docs/react/essentials/queries.html#api:
+    docs/react/api/react-apollo.html#graphql-query-options
+  /docs/react/basics/mutations.html#api:
+    docs/react/api/react-apollo.html#graphql-mutation-options

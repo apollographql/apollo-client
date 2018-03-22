@@ -41,15 +41,15 @@
     "apollo-utilities": "^1.0.10"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.4",
+    "@types/graphql": "0.12.5",
     "@types/jest": "21.1.10",
     "browserify": "15.2.0",
-    "graphql": "0.13.1",
+    "graphql": "0.13.2",
     "graphql-tag": "2.8.0",
     "jest": "20.0.4",
     "rimraf": "2.6.2",
     "rollup": "0.56.4",
-    "rollup-plugin-node-resolve": "3.2.0",
+    "rollup-plugin-node-resolve": "3.3.0",
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",
     "typescript": "2.5.2",

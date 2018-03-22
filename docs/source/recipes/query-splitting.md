@@ -100,10 +100,6 @@ const client = new ApolloClient({
 
 A component for the second view that implements the two queries could look like this:
 ```jsx
-import React, { PropTypes, } from 'react'
-import { graphql, compose } from 'react-apollo'
-import gql from 'graphql-tag'
-
 const QUERY_SERIES_DETAIL_VIEW = gql`
   query seriesDetailData($seriesId: Int!) {
     oneSeries(id: $seriesId) {
@@ -113,7 +109,7 @@ const QUERY_SERIES_DETAIL_VIEW = gql`
       cover
     }
   }
-`
+`;
 
 const QUERY_SERIES_EPISODES = gql`
   query seriesEpisodes($seriesId: Int!) {
@@ -126,59 +122,38 @@ const QUERY_SERIES_EPISODES = gql`
       }
     }
   }
-`
-const options = ({ seriesId, }) => ({ variables: { seriesId, }, })
+`;
 
-const withSeriesDetailData = graphql(QUERY_SERIES_DETAIL_VIEW, {
-  name: `seriesDetailData`,
-  options,
-})
-
-const withSeriesEpisodes = graphql(QUERY_SERIES_EPISODES, {
-  name: `seriesWithEpisodesData`,
-  options,
-})
-
-const withData = compose(
-  withSeriesDetailData,
-  withSeriesEpisodes
-)
-
-function SeriesDetailView({
-  seriesDetailData: {
-    loading: seriesLoading,
-    oneSeries,
-  },
-  seriesWithEpisodesData: {
-    loading: episodesLoading,
-    oneSeries: { episodes } = {},
-  }
-}) {
-  return (
-    <div>
-      <h1>{seriesLoading ? `Loading...` : oneSeries.title}</h1>
-      <img src={seriesLoading ? `/dummy.jpg` : oneSeries.cover} />
-      <h2>Episodes</h2>
-      <ul>
-      {episodesLoading ? <li>Loading...</li> : episodes.map(episode => (
-        <li key={episode.id}>
-          <img src={episode.cover} />
-          <a href={`/episode/${episode.id}`}>{episode.title}</a>
-        </li>
-      ))}
-      </ul>
-    </div>
-  )
-}
-
-const SeriesDetailViewWithData = withData(SeriesDetailView)
-
-SeriesDetailViewWithData.propTypes = {
-  seriesId: PropTypes.number.isRequired,
-}
-
-export default SeriesDetailView
-
+const SeriesDetailView = ({ seriesId }) => (
+  <Query query={QUERY_SERIES_DETAIL_VIEW} variables={{ seriesId }}>
+    {({ loading: seriesLoading, data: { onSeries } }) => (
+      <Query query={QUERY_SERIES_EPISODES} variables={{ seriesId }}>
+        {({
+          loading: episodesLoading,
+          data: { oneSeries: { episodes } = {} }
+        }) => (
+          <div>
+            <h1>{seriesLoading ? `Loading...` : oneSeries.title}</h1>
+            <img src={seriesLoading ? `/dummy.jpg` : oneSeries.cover} />
+            <h2>Episodes</h2>
+            <ul>
+              {episodesLoading ? (
+                <li>Loading...</li>
+              ) : (
+                episodes.map(episode => (
+                  <li key={episode.id}>
+                    <img src={episode.cover} />
+                    <a href={`/episode/${episode.id}`}>{episode.title}</a>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        )}
+      </Query>
+    )}
+  </Query>
+);
 ```
 
 Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/docs/link/links/batch-http.html) those two queries can be send to the server in one network request.

@@ -11,10 +11,10 @@ Want to get started with Apollo Client? This page will guide you through your fi
 
 <h2 id="query">Your first query</h2>
 
-First, install `apollo-boost`, `graphql` & `react-apollo@beta`.
+First, install `apollo-boost`, `graphql` & `react-apollo`.
 
 ```shell
-npm i apollo-boost graphql react-apollo@beta -S
+npm i apollo-boost graphql react-apollo -S
 ```
 
 Next, create your client. Once you create your client, hook it up to your app by passing it to the `ApolloProvider` exported from `react-apollo`.

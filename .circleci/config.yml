@@ -81,7 +81,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit"
+          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
@@ -93,15 +93,18 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps: 
       - checkout
-      - run: npm i 
-      - run: npm run diff -- "packages/**/*" $CIRCLE_COMPARE_URL
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Allow bypassed packages
-          command: echo 'nothing changed that this package cares about'
-          when: on_fail
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor="jest-junit"
+          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
@@ -113,15 +116,18 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps: 
       - checkout
-      - run: npm i 
-      - run: npm run diff -- "packages/**/*" $CIRCLE_COMPARE_URL
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Allow bypassed packages
-          command: echo 'nothing changed that this package cares about'
-          when: on_fail
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor="jest-junit"
+          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
@@ -133,15 +139,18 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps: 
       - checkout
-      - run: npm i 
-      - run: npm run diff -- "packages/**/*" $CIRCLE_COMPARE_URL
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Allow bypassed packages
-          command: echo 'nothing changed that this package cares about'
-          when: on_fail
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor="jest-junit"
+          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
@@ -153,15 +162,18 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps: 
       - checkout
-      - run: npm i 
-      - run: npm run diff -- "packages/**/*" $CIRCLE_COMPARE_URL
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Allow bypassed packages
-          command: echo 'nothing changed that this package cares about'
-          when: on_fail
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor="jest-junit"
+          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
@@ -173,15 +185,18 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps: 
       - checkout
-      - run: npm i 
-      - run: npm run diff -- "packages/**/*" $CIRCLE_COMPARE_URL
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Allow bypassed packages
-          command: echo 'nothing changed that this package cares about'
-          when: on_fail
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor="jest-junit"
+          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
@@ -198,9 +213,9 @@ workflows:
       - Filesize
       - Typecheck
       - Apollo Client
-      # - Apollo Boost
-      # - Apollo Cache
-      # - Apollo InMemory Cache
-      # - Apollo Utilities
-      # - GraphQL Anywhere
+      - Apollo Boost
+      - Apollo Cache
+      - Apollo InMemory Cache
+      - Apollo Utilities
+      - GraphQL Anywhere
 

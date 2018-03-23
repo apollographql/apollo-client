@@ -42,11 +42,11 @@
     "graphql-tag": "^2.4.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.4",
+    "@types/graphql": "0.12.5",
     "@types/jest": "21.1.10",
     "apollo-cache": "^1.1.6",
     "browserify": "15.2.0",
-    "graphql": "0.13.1",
+    "graphql": "0.13.2",
     "jest": "20.0.4",
     "lodash": "4.17.5",
     "rimraf": "2.6.2",

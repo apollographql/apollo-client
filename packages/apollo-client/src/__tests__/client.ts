@@ -2203,7 +2203,7 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
     client.queryManager = {
-      resetStore: () => {
+      clearStore: () => {
         done();
       },
     } as QueryManager;
@@ -2266,6 +2266,104 @@ describe('client', () => {
     expect(count).toEqual(0);
     await client.resetStore();
     expect(count).toEqual(2);
+  });
+
+  it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
+    const delay = time => new Promise(r => setTimeout(r, time));
+
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const data = {
+      author: {
+        __typename: 'Author',
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+
+    const data2 = {
+      author: {
+        __typename: 'Author',
+        firstName: 'Joe',
+        lastName: 'Joe',
+      },
+    };
+
+    let timesFired = 0;
+    const link = ApolloLink.from([
+      new ApolloLink(
+        () =>
+          new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            return;
+          }),
+      ),
+    ]);
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    let count = 0;
+    const onResetStoreOne = jest.fn(async () => {
+      expect(count).toEqual(0);
+      await delay(10).then(() => count++);
+      expect(count).toEqual(1);
+    });
+
+    const onResetStoreTwo = jest.fn(async () => {
+      expect(count).toEqual(0);
+      await delay(11).then(() => count++);
+      expect(count).toEqual(2);
+
+      try {
+        console.log(client.readQuery({ query }));
+        fail('should not see any data');
+      } catch (e) {
+        expect(e.message).toMatch(/Can't find field/);
+      }
+
+      client.cache.writeQuery({ query, data: data2 });
+    });
+
+    client.onResetStore(onResetStoreOne);
+    client.onResetStore(onResetStoreTwo);
+
+    let called = false;
+    const next = jest.fn(async d => {
+      if (called) {
+        expect(onResetStoreOne).toHaveBeenCalled();
+      } else {
+        expect(d).toEqual(data);
+        called = true;
+      }
+    });
+
+    const observable = client
+      .watchQuery<any>({
+        query,
+        notifyOnNetworkStatusChange: false,
+      })
+      .subscribe({
+        next,
+        error: fail,
+        complete: fail,
+      });
+
+    expect(count).toEqual(0);
+    await client.resetStore();
+    expect(count).toEqual(2);
+    //watchQuery should only receive data twice
+    expect(next).toHaveBeenCalledTimes(2);
   });
 
   it('has a reFetchObservableQueries method which calls QueryManager', done => {

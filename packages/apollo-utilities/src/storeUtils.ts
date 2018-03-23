@@ -20,6 +20,7 @@ export interface IdValue {
   type: 'id';
   id: string;
   generated: boolean;
+  typename: string | undefined;
 }
 
 export interface JsonValue {
@@ -267,11 +268,21 @@ export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return idObject && (idObject as IdValue | JsonValue).type === 'id';
 }
 
-export function toIdValue(id: string, generated = false): IdValue {
+export type IdConfig = {
+  id: string;
+  typename: string | undefined;
+};
+
+export function toIdValue(
+  idConfig: string | IdConfig,
+  generated = false,
+): IdValue {
   return {
     type: 'id',
-    id,
     generated,
+    ...(typeof idConfig === 'string'
+      ? { id: idConfig, typename: undefined }
+      : idConfig),
   };
 }
 

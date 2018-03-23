@@ -11,7 +11,7 @@ import { PureQueryOptions } from './types';
  * - cache-first (default): return result from cache. Only fetch from network if cached result is not available.
  * - cache-and-network: return result from cache first (if it exists), then return network result once it's available.
  * - cache-only: return result from cache if available, fail otherwise.
- * - no-cache: return resutl from network, fail if network call doesn't succeed, don't save to cache
+ * - no-cache: return result from network, fail if network call doesn't succeed, don't save to cache
  * - network-only: return result from network, fail if network call doesn't succeed, save to cache
  * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */

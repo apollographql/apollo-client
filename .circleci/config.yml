@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run: npm i
       # with this we can see if there are any changes to packages (or just docs)
-      - run: ./test.sh "packages/**/*" "npm run danger"
+      - run: ./.circleci/test.sh "packages/**/*" "npm run danger"
 
   Docs:
     docker: [ { image: 'circleci/node:8' } ]
@@ -18,21 +18,21 @@ jobs:
       # will fail if there is some other problem
       # this is a place to verify the build including crawling for broken links
       # XXX replace with running and crawling docs site
-      - run: ./test.sh "docs/**/*" "cd docs && npm i && npm run build"
+      - run: ./.circleci/test.sh "docs/**/*" "cd docs && npm i && npm run build"
       
   Filesize:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
       - checkout
       - run: npm i
-      - run: ./test.sh "packages/**/*" "npm run compile && npm run filesize"
+      - run: ./.circleci/test.sh "packages/**/*" "npm run compile && npm run filesize"
       
   Typecheck:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
       - checkout
       - run: npm i
-      - run: ./test.sh "packages/**/*" "npm run type-check"
+      - run: ./.circleci/test.sh "packages/**/*" "npm run type-check"
 
   Apollo Client:
     docker: [ { image: 'circleci/node:8' } ]
@@ -41,7 +41,7 @@ jobs:
       - run: npm i 
       - run:
           name: Jest suite
-          command: ./test.sh "packages/**/*" "npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit"
+          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit"
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:

@@ -2022,6 +2022,44 @@ describe('client', () => {
         },
       });
     });
+
+    it('fetches from cache first, then network and does not have an unhandled error on network failure', done => {
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { errors: [{ name: 'SomeError', message: 'network failure' }] },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      client.writeQuery({ query, data: initialData });
+
+      const obs = client.watchQuery({
+        query,
+        fetchPolicy: 'cache-and-network',
+      });
+      let shouldFail = true;
+      process.once('unhandledRejection', rejection => {
+        if (shouldFail) done(new Error('promise had an unhandledRejection'));
+      });
+      let count = 0;
+      obs.subscribe({
+        next: result => {
+          assert.deepEqual(result.data, initialData);
+          assert.equal(result.loading, true);
+          count++;
+        },
+        error: e => {
+          assert.match(e.message, /network failure/);
+          assert.equal(count, 1); // make sure next was called.
+          setTimeout(() => {
+            shouldFail = false;
+            done();
+          }, 0);
+        },
+      });
+    });
   });
 
   describe('standby queries', () => {

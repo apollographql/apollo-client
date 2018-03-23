@@ -531,8 +531,16 @@ export class QueryManager {
         }
       });
 
+      // we don't return the promise for cache-and-network since it is already
+      // returned below from the cache
       if (fetchPolicy !== 'cache-and-network') {
         return networkResult;
+      } else {
+        // however we need to catch the error so it isn't unhandled in case of
+        // network error
+        networkResult.catch(() => {
+          //
+        });
       }
     }
     // If we have no query to send to the server, we should return the result

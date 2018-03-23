@@ -798,7 +798,7 @@ export class QueryManager<TStore> {
     }
   }
 
-  public resetStore(): Promise<ApolloQueryResult<any>[]> {
+  public clearStore(): Promise<void> {
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
     // requests since these may depend on values that previously existed
@@ -806,7 +806,11 @@ export class QueryManager<TStore> {
     // that we have issued so far and not yet resolved (in the case of
     // queries).
     this.fetchQueryPromises.forEach(({ reject }) => {
-      reject(new Error('Store reset while query was in flight.'));
+      reject(
+        new Error(
+          'Store reset while query was in flight(not completed in link chain)',
+        ),
+      );
     });
 
     const resetIds: string[] = [];
@@ -816,22 +820,22 @@ export class QueryManager<TStore> {
 
     this.queryStore.reset(resetIds);
     this.mutationStore.reset();
-    // begin removing data from the store
-    const dataStoreReset = this.dataStore.reset();
 
+    // begin removing data from the store
+    const reset = this.dataStore.reset();
+    return reset;
+  }
+
+  public resetStore(): Promise<ApolloQueryResult<any>[]> {
     // Similarly, we have to have to refetch each of the queries currently being
     // observed. We refetch instead of error'ing on these since the assumption is that
     // resetting the store doesn't eliminate the need for the queries currently being
     // watched. If there is an existing query in flight when the store is reset,
     // the promise for it will be rejected and its results will not be written to the
     // store.
-    const observableQueryPromises: Promise<
-      ApolloQueryResult<any>
-    >[] = this.getObservableQueryPromises();
-
-    this.broadcastQueries();
-
-    return dataStoreReset.then(() => Promise.all(observableQueryPromises));
+    return this.clearStore().then(() => {
+      return this.reFetchObservableQueries();
+    });
   }
 
   private getObservableQueryPromises(
@@ -945,8 +949,8 @@ export class QueryManager<TStore> {
   }
 
   public stopQuery(queryId: string) {
-    this.removeQuery(queryId);
     this.stopQueryInStore(queryId);
+    this.removeQuery(queryId);
   }
 
   public removeQuery(queryId: string) {
@@ -956,7 +960,10 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
+  public getCurrentQueryResult<T>(
+    observableQuery: ObservableQuery<T>,
+    optimistic: boolean = true,
+  ) {
     const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
@@ -970,7 +977,7 @@ export class QueryManager<TStore> {
           query,
           variables,
           previousResult: lastResult ? lastResult.data : undefined,
-          optimistic: true,
+          optimistic,
         });
 
         return maybeDeepFreeze({ data, partial: false });
@@ -1000,7 +1007,7 @@ export class QueryManager<TStore> {
 
     const { variables, query } = observableQuery.options;
 
-    const { data } = this.getCurrentQueryResult(observableQuery);
+    const { data } = this.getCurrentQueryResult(observableQuery, false);
 
     return {
       previousResult: data,

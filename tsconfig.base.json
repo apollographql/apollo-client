@@ -5,7 +5,7 @@
     "noUnusedLocals": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "removeComments": true,
+    "removeComments": false,
     "sourceMap": true,
     "declaration": true,
     "target": "es5",

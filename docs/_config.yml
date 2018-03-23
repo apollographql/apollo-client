@@ -15,7 +15,8 @@ root: /docs/react/
 typescript_api_box:
   data_file: docs.json
 
-# This setting also defines the page order used to generate the Previous/Next links at the bottom of each page
+# This setting also defines the page order used to generate the
+# Previous/Next links at the bottom of each page
 sidebar_categories:
   # Basics
   null:

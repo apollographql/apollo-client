@@ -882,4 +882,74 @@ describe('getDirectivesFromDocument', () => {
     const doc = getDirectivesFromDocument([{ name: 'client' }], query);
     expect(print(doc)).toBe(print(expected));
   });
+
+  describe('includeAllFragments', () => {
+    it('= false: should remove the values without a client in fragment', () => {
+      const query = gql`
+        fragment client on ClientData {
+          hi @client
+          bye @storage
+          bar
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+          bar {
+            baz
+          }
+        }
+      `;
+
+      const expected = gql`
+        fragment client on ClientData {
+          hi @client
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+        }
+      `;
+      const doc = getDirectivesFromDocument([{ name: 'client' }], query, false);
+      expect(print(doc)).toBe(print(expected));
+    });
+
+    it('= true: should include the values without a client in fragment', () => {
+      const query = gql`
+        fragment client on ClientData {
+          hi @client
+          bye @storage
+          bar
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+          bar {
+            baz
+          }
+        }
+      `;
+
+      const expected = gql`
+        fragment client on ClientData {
+          hi @client
+          bye @storage
+          bar
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+        }
+      `;
+      const doc = getDirectivesFromDocument([{ name: 'client' }], query, true);
+      expect(print(doc)).toBe(print(expected));
+    });
+  });
 });

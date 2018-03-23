@@ -2,8 +2,9 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "bootstrap": "npm i && lerna bootstrap",
-    "postinstall": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap",
+    "diff": "check-if-folder-contents-changed-in-git-commit-range",
+    "postinstall": "npm run bootstrap",
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",
@@ -70,18 +71,19 @@
     "*.json*": ["prettier --write", "git add"]
   },
   "pre-commit": "lint-staged",
-  "dependencies": {},
   "devDependencies": {
     "bundlesize": "0.16.0",
+    "check-if-folder-contents-changed-in-git-commit-range": "^1.0.0",
     "codecov": "3.0.0",
     "danger": "1.2.0",
+    "jest-junit": "^3.6.0",
     "lerna": "2.9.0",
     "lint-staged": "6.1.0",
     "pre-commit": "1.2.2",
     "prettier": "1.11.1",
-    "rollup-plugin-local-resolve": "^1.0.7",
-    "rollup-plugin-node-resolve": "^3.0.3",
-    "rollup-plugin-sourcemaps": "^0.4.2",
+    "rollup-plugin-local-resolve": "1.0.7",
+    "rollup-plugin-node-resolve": "3.3.0",
+    "rollup-plugin-sourcemaps": "0.4.2",
     "ts-jest": "20.0.14",
     "typescript": "2.5.2"
   }

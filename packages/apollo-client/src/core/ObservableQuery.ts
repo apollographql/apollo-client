@@ -428,10 +428,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // since setVariables restarts the subscription, we reset the tornDown status
     this.isTornDown = false;
 
-    const newVariables = {
-      ...this.variables,
-      ...variables,
-    };
+    const newVariables = variables
 
     if (isEqual(newVariables, this.variables) && !tryFetch) {
       // If we have no observers, then we don't actually want to make a network

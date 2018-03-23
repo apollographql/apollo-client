@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Errors occurring during fetchMore no longer errors out the original query [PR#2906](https://github.com/apollographql/apollo-client/pull/2906)
 - Map coverage to original source
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
 - Fix Memory Leak in Query Manager [PR#3119](https://github.com/apollographql/apollo-client/pull/3119)

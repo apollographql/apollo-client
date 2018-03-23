@@ -142,7 +142,7 @@ export class QueryStore {
     // status for that query. See the branch for query initialization for more
     // explanation about this process.
     if (typeof fetchMoreForQueryId === 'string') {
-      this.markQueryError(fetchMoreForQueryId, error, undefined);
+      this.markQueryResultClient(fetchMoreForQueryId, true);
     }
   }
 

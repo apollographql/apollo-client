@@ -1,6 +1,5 @@
 import { GraphQLError } from 'graphql';
 
-// XXX some duck typing here because for some reason new ApolloError is not instanceof ApolloError
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty('graphQLErrors');
 }
@@ -65,5 +64,7 @@ export class ApolloError extends Error {
     }
 
     this.extraInfo = extraInfo;
+
+    Object.setPrototypeOf(this, ApolloError.prototype);
   }
 }

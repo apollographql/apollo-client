@@ -1388,6 +1388,19 @@ describe('QueryManager', () => {
     });
   });
 
+  it('runs a mutation even when errors is empty array #2912', () => {
+    const errors = [];
+    return assertMutationRoundtrip({
+      mutation: gql`
+        mutation makeListPrivate {
+          makeListPrivate(id: "5")
+        }
+      `,
+      errors,
+      data: { makeListPrivate: true },
+    });
+  });
+
   it('runs a mutation with default errorPolicy equal to "none"', () => {
     const errors = [new GraphQLError('foo')];
 

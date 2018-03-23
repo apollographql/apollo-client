@@ -7,7 +7,8 @@
     "James Baxley <james@meteor.com>",
     "Jonas Helfer <jonas@helfer.email>",
     "Sashko Stubailo <sashko@stubailo.com>",
-    "James Burgess <jamesmillerburgess@gmail.com>"
+    "James Burgess <jamesmillerburgess@gmail.com>",
+    "Bazyli Brzóska <bazyli.brzoska@gmail.com>"
   ],
   "license": "MIT",
   "main": "./lib/bundle.umd.js",
@@ -33,8 +34,10 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js --i apollo-cache --i apollo-utilities --i graphql -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/bundle.umd.js --i apollo-cache --i apollo-utilities --i graphql -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "dependencies": {
@@ -46,11 +49,11 @@
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.4",
+    "@types/graphql": "0.12.5",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.102",
+    "@types/lodash": "4.14.105",
     "browserify": "15.2.0",
-    "graphql": "0.13.1",
+    "graphql": "0.13.2",
     "graphql-tag": "2.8.0",
     "jest": "20.0.4",
     "lodash": "4.17.5",
@@ -66,12 +69,6 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "mapCoverage": true
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

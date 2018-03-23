@@ -11,7 +11,7 @@ import { mockSingleLink } from '../../__mocks__/mockLinks';
 
 import { ObservableQuery, ApolloCurrentResult } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';
-import { ApolloQueryResult } from '../types';
+import { ApolloQueryResult, FetchType } from '../types';
 import { QueryManager } from '../QueryManager';
 import { DataStore } from '../../data/store';
 import ApolloClient from '../../';
@@ -1143,6 +1143,82 @@ describe('ObservableQuery', () => {
           expect(result.networkStatus).toBe(NetworkStatus.ready);
           expect(result.loading).toBe(false);
           expect(result.data).toEqual(dataTwo);
+          done();
+        }
+      });
+    });
+  });
+
+  describe('refetch', () => {
+    it('calls fetchRequest with fetchPolicy `network-only` when using a non-networked fetch policy', done => {
+      const mockedResponses = [
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query, variables: differentVariables },
+          result: { data: dataTwo },
+        },
+      ];
+
+      const queryManager = mockQueryManager(...mockedResponses);
+      const firstRequest = mockedResponses[0].request;
+      const observable = queryManager.watchQuery({
+        query: firstRequest.query,
+        variables: firstRequest.variables,
+        fetchPolicy: 'cache-and-network',
+      });
+
+      const origFetchQuery = queryManager.fetchQuery;
+      queryManager.fetchQuery = jest.fn(() =>
+        origFetchQuery.apply(queryManager, arguments),
+      );
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          observable.refetch(differentVariables);
+        } else if (handleCount === 3) {
+          expect(queryManager.fetchQuery.mock.calls[1][1].fetchPolicy).toEqual(
+            'network-only',
+          );
+          done();
+        }
+      });
+    });
+
+    it('calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy', done => {
+      const mockedResponses = [
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query, variables: differentVariables },
+          result: { data: dataTwo },
+        },
+      ];
+
+      const queryManager = mockQueryManager(...mockedResponses);
+      const firstRequest = mockedResponses[0].request;
+      const observable = queryManager.watchQuery({
+        query: firstRequest.query,
+        variables: firstRequest.variables,
+        fetchPolicy: 'no-cache',
+      });
+
+      const origFetchQuery = queryManager.fetchQuery;
+      queryManager.fetchQuery = jest.fn(() =>
+        origFetchQuery.apply(queryManager, arguments),
+      );
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          observable.refetch(differentVariables);
+        } else if (handleCount === 3) {
+          expect(queryManager.fetchQuery.mock.calls[1][1].fetchPolicy).toEqual(
+            'no-cache',
+          );
           done();
         }
       });

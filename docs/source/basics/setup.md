@@ -336,7 +336,7 @@ Another benefit of `config.props` is that it also allows you to decouple your pu
 
 **Example:**
 
-This example uses [`props.data.fetchMore`](#graphql-query-data-fetchMore).
+This example uses [`props.data.fetchMore`](/docs/react/basics/queries.html#graphql-query-data-fetchMore).
 
 ```js
 export default graphql(gql`{ ... }`, {

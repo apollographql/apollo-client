@@ -86,7 +86,10 @@ const readStoreResolver: Resolver = (
         if (resolver) {
           fieldValue = resolver(obj, args, {
             getCacheKey: (obj: { __typename: string; id: string | number }) =>
-              toIdValue(context.dataIdFromObject(obj)),
+              toIdValue({
+                id: context.dataIdFromObject(obj),
+                typename: obj.__typename,
+              }),
           });
         }
       }
@@ -277,9 +280,8 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
 
     const sameAsPreviousResult =
       // Confirm that we have the same keys in both the current result and the previous result.
-      Object.keys(idValue.previousResult).reduce(
-        (sameKeys, key) => sameKeys && currentResultKeys.indexOf(key) > -1,
-        true,
+      Object.keys(idValue.previousResult).every(
+        key => currentResultKeys.indexOf(key) > -1,
       ) &&
       // Perform a shallow comparison of the result fields with the previous result. If all of
       // the shallow fields are referentially equal to the fields of the previous result we can

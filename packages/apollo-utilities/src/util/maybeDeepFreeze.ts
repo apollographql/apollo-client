@@ -20,7 +20,14 @@ function deepFreeze(o: any) {
 
 export function maybeDeepFreeze(obj: any) {
   if (isDevelopment() || isTest()) {
-    return deepFreeze(obj);
+    // Polyfilled Symbols potentially cause infinite / very deep recursion while deep freezing
+    // which is known to crash IE11 (https://github.com/apollographql/apollo-client/issues/3043).
+    const symbolIsPolyfilled =
+      typeof Symbol === 'function' && typeof Symbol('') === 'string';
+
+    if (!symbolIsPolyfilled) {
+      return deepFreeze(obj);
+    }
   }
   return obj;
 }

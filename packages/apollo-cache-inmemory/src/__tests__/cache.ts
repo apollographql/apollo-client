@@ -6,15 +6,13 @@ import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
 disableFragmentWarnings();
 
 describe('Cache', () => {
-  function createCache(
-    {
-      initialState,
-      config,
-    }: {
-      initialState?: any;
-      config?: ApolloReducerConfig;
-    } = {},
-  ): ApolloCache<NormalizedCache> {
+  function createCache({
+    initialState,
+    config,
+  }: {
+    initialState?: any;
+    config?: ApolloReducerConfig;
+  } = {}): ApolloCache<NormalizedCache> {
     return new InMemoryCache(
       config || { addTypename: false },
       // XXX this is the old format. The tests need to be updated but since it is mapped down
@@ -849,19 +847,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).extract()).toEqual({
-        foo: {
-          e: 4,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
-        },
-        bar: {
-          i: 7,
-        },
-      });
+      expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
       proxy.writeFragment({
         data: { __typename: 'Foo', f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
         id: 'foo',
@@ -877,23 +863,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).extract()).toEqual({
-        foo: {
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
-        },
-        bar: {
-          i: 7,
-          j: 8,
-          k: 9,
-        },
-      });
+      expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
       proxy.writeFragment({
         data: { i: 10, __typename: 'Bar' },
@@ -905,23 +875,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).extract()).toEqual({
-        foo: {
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
-        },
-        bar: {
-          i: 10,
-          j: 8,
-          k: 9,
-        },
-      });
+      expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
       proxy.writeFragment({
         data: { j: 11, k: 12, __typename: 'Bar' },
@@ -934,23 +888,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).extract()).toEqual({
-        foo: {
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
-        },
-        bar: {
-          i: 10,
-          j: 11,
-          k: 12,
-        },
-      });
+      expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
       proxy.writeFragment({
         data: {
@@ -982,23 +920,7 @@ describe('Cache', () => {
         fragmentName: 'fooFragment',
       });
 
-      expect((proxy as InMemoryCache).extract()).toEqual({
-        foo: {
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
-        },
-        bar: {
-          i: 7,
-          j: 8,
-          k: 9,
-        },
-      });
+      expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
       proxy.writeFragment({
         data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
@@ -1024,23 +946,7 @@ describe('Cache', () => {
         fragmentName: 'barFragment',
       });
 
-      expect((proxy as InMemoryCache).extract()).toEqual({
-        foo: {
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
-          },
-        },
-        bar: {
-          i: 10,
-          j: 11,
-          k: 12,
-        },
-      });
+      expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
     });
     it('writes data that can be read back', () => {
       const proxy = createCache({

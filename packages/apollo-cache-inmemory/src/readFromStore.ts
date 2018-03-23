@@ -72,21 +72,24 @@ const readStoreResolver: Resolver = (
 
   if (typeof fieldValue === 'undefined') {
     if (
-      context.cacheResolvers &&
+      context.cacheRedirects &&
       obj &&
       (obj.__typename || objId === 'ROOT_QUERY')
     ) {
       const typename = obj.__typename || 'Query';
 
       // Look for the type in the custom resolver map
-      const type = context.cacheResolvers[typename];
+      const type = context.cacheRedirects[typename];
       if (type) {
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];
         if (resolver) {
           fieldValue = resolver(obj, args, {
             getCacheKey: (obj: { __typename: string; id: string | number }) =>
-              toIdValue(context.dataIdFromObject(obj)),
+              toIdValue({
+                id: context.dataIdFromObject(obj),
+                typename: obj.__typename,
+              }),
           });
         }
       }
@@ -166,7 +169,7 @@ export function diffQueryAgainstStore<T>({
     store,
     returnPartialData,
     dataIdFromObject: (config && config.dataIdFromObject) || null,
-    cacheResolvers: (config && config.cacheResolvers) || {},
+    cacheRedirects: (config && config.cacheRedirects) || {},
     // Flag set during execution
     hasMissingField: false,
   };
@@ -277,9 +280,8 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
 
     const sameAsPreviousResult =
       // Confirm that we have the same keys in both the current result and the previous result.
-      Object.keys(idValue.previousResult).reduce(
-        (sameKeys, key) => sameKeys && currentResultKeys.indexOf(key) > -1,
-        true,
+      Object.keys(idValue.previousResult).every(
+        key => currentResultKeys.indexOf(key) > -1,
       ) &&
       // Perform a shallow comparison of the result fields with the previous result. If all of
       // the shallow fields are referentially equal to the fields of the previous result we can

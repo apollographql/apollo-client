@@ -10,7 +10,7 @@ jobs:
       # if there are test changes, this will return exit code 0 and keep the runner
       # if not, the last run (with when: on_fail) will pick up and flag the build
       # as green!
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed Danger
           command: echo 'nothing changed that danger cares about'
@@ -25,7 +25,7 @@ jobs:
       # we skip any potential docs tests because the netlify build
       # will fail if there is some other problem
       # this is a place to verify the build including crawling for broken links
-      - run: check-if-folder-contents-changed-in-git-commit-range docs/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- docs/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed Docs
           command: echo 'nothing changed within the docs folder'
@@ -38,7 +38,7 @@ jobs:
     steps:
       - checkout
       - run: npm i
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed Filesize
           command: echo 'nothing changed within packages to recalculate'
@@ -51,7 +51,7 @@ jobs:
     steps:
       - checkout
       - run: npm i
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed type checking
           command: echo 'nothing changed within packages to re check'
@@ -63,7 +63,7 @@ jobs:
     steps: 
       - checkout
       - run: npm i 
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed packages
           command: echo 'nothing changed that this package cares about'
@@ -83,7 +83,7 @@ jobs:
     steps: 
       - checkout
       - run: npm i 
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed packages
           command: echo 'nothing changed that this package cares about'
@@ -103,7 +103,7 @@ jobs:
     steps: 
       - checkout
       - run: npm i 
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed packages
           command: echo 'nothing changed that this package cares about'
@@ -123,7 +123,7 @@ jobs:
     steps: 
       - checkout
       - run: npm i 
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed packages
           command: echo 'nothing changed that this package cares about'
@@ -143,7 +143,7 @@ jobs:
     steps: 
       - checkout
       - run: npm i 
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed packages
           command: echo 'nothing changed that this package cares about'
@@ -163,7 +163,7 @@ jobs:
     steps: 
       - checkout
       - run: npm i 
-      - run: check-if-folder-contents-changed-in-git-commit-range packages/**/* $CIRCLE_COMPARE_URL
+      - run: npm run diff -- packages/**/* $CIRCLE_COMPARE_URL
       - run:
           name: Allow bypassed packages
           command: echo 'nothing changed that this package cares about'

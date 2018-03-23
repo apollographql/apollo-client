@@ -2,6 +2,7 @@
 
 ### vNext
 - Map coverage to original source
+- Don't `deepFreeze` in development/test environments if ES6 symbols are polyfilled [PR#3082](https://github.com/apollographql/apollo-client/pull/3082)
 - Added ability to include or ignore fragments in `getDirectivesFromDocument` [PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
 
 ### 1.1.3

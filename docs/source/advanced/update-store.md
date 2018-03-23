@@ -129,7 +129,7 @@ mutate({
 
 <h3 id="directAccess">`update`</h3>
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](http://dev.apollodata.com/react/api-mutations.html#graphql-mutation-options-update).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-apollo/mutations.html#graphql-mutation-options-update).
 
 ```javascript
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -362,7 +362,9 @@ Although `fetchMore` is often used for pagination, there are many other cases in
 
 <h3 id="connection-directive">The `@connection` directive</h3>
 
-By default, the result of a `fetchMore` will be stored in the cache according to the initial query executed and its parameters. Due to this behavior, it can be hard to know the location in the cache to run an imperative update on if the variables from the initial query are not known, which often happens if we are running store updates from a different place than where the queries are executed.
+Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Since these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don’t care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
+
+To solve this Apollo Client 1.6 introduced the `@connection` directive to specify a custom store key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
 
 To have a stable cache location for query results, Apollo Client 1.6 introduced the `@connection` directive, which can be used to specify a custom store key for results. To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
@@ -523,7 +525,7 @@ export class Foo extends Component {
   constructor(props) {
     super(props);
     this.unsubscribe = props.client.onResetStore(
-      () => this.setState({ reset: false }
+      () => this.setState({ reset: false })
     );
     this.state = { reset: false };
   }

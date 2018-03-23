@@ -4,13 +4,13 @@ title: Setup and options
 
 <h2 id="installation">Installation</h2>
 
-To get started with Apollo and React, you will need to install a few packages from npm or use the [`apollo-client-preset`](https://www.npmjs.com/package/apollo-client-preset) package. 
+To get started with Apollo and React, you will need to install a few packages from npm or use [`apollo-boost`](https://www.npmjs.com/package/apollo-boost).
 
 > If you are first getting started with Apollo Client, the preset package is a quick and easy way to try it out!
 
 ```bash
 # installing the preset package and react integration
-npm install apollo-client-preset react-apollo graphql-tag graphql --save
+npm install apollo-boost react-apollo graphql --save
 
 # installing each piece independently
 npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag graphql --save
@@ -25,7 +25,7 @@ To get started using Apollo with React, we need to create an `ApolloClient` and 
 
 <h3 id="creating-client">Creating a client</h3>
 
-To get started, create an [`ApolloClient`](#constructor) instance and point it at your GraphQL server:
+To get started, create an [`ApolloClient`](#ApolloClient) instance and point it at your GraphQL server:
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -40,7 +40,7 @@ const client = new ApolloClient({
 });
 ```
 
-The client takes a variety of [options](#constructor), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/link):
+The client takes a variety of [options](#ApolloClient), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/link):
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -172,8 +172,8 @@ At this point you are ready to start building something with Apollo! Checkout th
 <h3 id="ApolloClient">`ApolloClient`</h3>
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.
 
-- `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more infomation about creating links, read the [docs](/docs/link).
-- `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more infomation read the [cache docs](./caching.html).
+- `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more information about creating links, read the [docs](/docs/link).
+- `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more information read the [cache docs](./caching.html).
 - `ssrMode`: When using the client for [server side rendering](../recipes/server-side-rendering.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
 - `ssrForceFetchDelay`: determines the time interval before Apollo Client force fetchs queries after a server side render.
 - `connectToDevTools`: This argument allows the [Apollo Client Devtools](../features/developer-tooling.html) to connect to your application's Apollo Client. You can set this to be `true` to use the tools in production (they are on by default in dev mode).

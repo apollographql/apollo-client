@@ -229,7 +229,7 @@ describe('mutiple results', () => {
     link.simulateResult({ result: { data: initialData } });
   });
 
-  it('allows multiple query results from link with all errors', done => {
+  xit('allows multiple query results from link with all errors', done => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {

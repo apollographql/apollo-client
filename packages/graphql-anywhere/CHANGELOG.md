@@ -1,6 +1,17 @@
 # Change log
 
 ## vNEXT
+- Map coverage to original source
+
+### 4.1.4
+- dependency updates
+- support null literal
+
+### 4.1.3
+- update to latest apollo-utilities
+
+### 4.1.2
+- update to latest apollo-utilities
 
 ### 4.1.1
 - package dependency updates

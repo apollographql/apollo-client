@@ -102,7 +102,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   public writeData({ id, data }: Cache.WriteDataOptions): void {
-    if (id) {
+    if (typeof id !== 'undefined') {
       let typenameResult = null;
       // Since we can't use fragments without having a typename in the store,
       // we need to make sure we have one.

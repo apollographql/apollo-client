@@ -1,3 +1,5 @@
+import sourcemaps from 'rollup-plugin-sourcemaps';
+
 export const globals = {
   // Apollo
   'apollo-client': 'apollo.core',
@@ -8,23 +10,33 @@ export const globals = {
   'graphql-anywhere': 'graphqlAnywhere',
 };
 
-export default (name, override = {}) =>
-  Object.assign(
+export default (name, override = {}) => {
+  const config = Object.assign(
     {
       input: 'lib/index.js',
-      output: {
-        file: 'lib/bundle.umd.js',
-        format: 'umd',
-      },
-      name,
-      exports: 'named',
-      sourcemap: true,
-      external: Object.keys(globals),
+      //output: merged separately
       onwarn,
-      globals,
+      external: Object.keys(globals),
     },
     override,
   );
+
+  config.output = Object.assign(
+    {
+      file: 'lib/bundle.umd.js',
+      format: 'umd',
+      name,
+      exports: 'named',
+      sourcemap: true,
+      globals,
+    },
+    config.output,
+  );
+
+  config.plugins = config.plugins || [];
+  config.plugins.push(sourcemaps());
+  return config;
+};
 
 function onwarn(message) {
   const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];

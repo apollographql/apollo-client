@@ -867,13 +867,13 @@ describe('diffing queries against the store', () => {
         person: listResult.people[0],
       };
 
-      const cacheResolvers = {
+      const cacheRedirects = {
         Query: {
           person: (_: any, args: any) => toIdValue(args['id']),
         },
       };
 
-      const config = { dataIdFromObject, cacheResolvers };
+      const config = { dataIdFromObject, cacheRedirects };
 
       const { result } = diffQueryAgainstStore({
         store,

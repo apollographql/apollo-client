@@ -167,7 +167,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
         ) {
           // Only for Chrome
-          if (navigator.userAgent.indexOf('Chrome') > -1) {
+          if (window.navigator && window.navigator.userAgent.indexOf('Chrome') > -1) {
             // tslint:disable-next-line
             console.debug(
               'Download the Apollo DevTools ' +
@@ -264,7 +264,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe(options: SubscriptionOptions): Observable<any> {
+  public subscribe<T=any>(options: SubscriptionOptions): Observable<T> {
     this.initQueryManager();
 
     return this.queryManager.startGraphQLSubscription(options);
@@ -389,14 +389,19 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<ApolloQueryResult<any>[]> | Promise<null> {
+  public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
     return Promise.resolve()
       .then(() => {
-        this.queryManager
-          ? this.queryManager.resetStore()
+        return this.queryManager
+          ? this.queryManager.clearStore()
           : Promise.resolve(null);
       })
-      .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())));
+      .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
+      .then(() => {
+        return this.queryManager
+          ? this.queryManager.reFetchObservableQueries()
+          : Promise.resolve(null);
+      });
   }
 
   /**

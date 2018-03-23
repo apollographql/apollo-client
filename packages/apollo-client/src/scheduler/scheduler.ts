@@ -166,9 +166,7 @@ export class QueryScheduler<TCacheShape> {
 
     if (!interval) {
       throw new Error(
-        `A poll interval is required to start polling query with id '${
-          queryId
-        }'.`,
+        `A poll interval is required to start polling query with id '${queryId}'.`,
       );
     }
 

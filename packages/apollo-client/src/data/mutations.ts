@@ -23,13 +23,25 @@ export class MutationStore {
   }
 
   public markMutationError(mutationId: string, error: Error) {
-    this.store[mutationId].loading = false;
-    this.store[mutationId].error = error;
+    const mutation = this.store[mutationId];
+
+    if (!mutation) {
+      return;
+    }
+
+    mutation.loading = false;
+    mutation.error = error;
   }
 
   public markMutationResult(mutationId: string) {
-    this.store[mutationId].loading = false;
-    this.store[mutationId].error = null;
+    const mutation = this.store[mutationId];
+
+    if (!mutation) {
+      return;
+    }
+
+    mutation.loading = false;
+    mutation.error = null;
   }
 
   public reset() {

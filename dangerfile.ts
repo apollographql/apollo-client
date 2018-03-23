@@ -7,6 +7,7 @@ const pr = danger.github.pr;
 const commits = danger.github.commits;
 const modified = danger.git.modified_files;
 const bodyAndTitle = (pr.body + pr.title).toLowerCase();
+console.log(commits.map(({ sha }) => sha));
 
 // Custom modifiers for people submitting PRs to be able to say "skip this"
 const trivialPR = bodyAndTitle.includes('trivial');

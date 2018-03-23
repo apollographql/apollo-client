@@ -8,6 +8,7 @@
 
 ### 2.2.4
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
+- Fix `no-cache` fetch policy so it returns data [PR#3102](https://github.com/apollographql/apollo-client/pull/3102)
 - Fix Memory Leak in Query Manager [PR#3119](https://github.com/apollographql/apollo-client/pull/3119)
 - Pass non-optimistic query to `subscribeToMore` updateQuery
 [PR#3068](https://github.com/apollographql/apollo-client/pull/3068)

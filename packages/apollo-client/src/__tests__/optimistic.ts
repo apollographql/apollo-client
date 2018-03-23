@@ -280,10 +280,10 @@ describe('optimistic mutation results', () => {
             expect(dataInStore).not.toHaveProperty('Todo99');
             expect(dataInStore).toHaveProperty('Todo66');
             expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-              realIdValue('Todo66'),
+              realIdValue('Todo66', 'Todo'),
             );
             expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-              realIdValue('Todo99'),
+              realIdValue('Todo99', 'Todo'),
             );
           });
       });
@@ -299,10 +299,10 @@ describe('optimistic mutation results', () => {
           expect(dataInStore).toHaveProperty('Todo66');
           // <any> can be removed once @types/chai adds deepInclude
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66'),
+            realIdValue('Todo66', 'Todo'),
           );
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo99'),
+            realIdValue('Todo99', 'Todo'),
           );
           expect((dataInStore['Todo99'] as any).text).toBe(expectedText1);
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
@@ -514,10 +514,10 @@ describe('optimistic mutation results', () => {
             expect(dataInStore).not.toHaveProperty('Todo99');
             expect(dataInStore).toHaveProperty('Todo66');
             expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-              realIdValue('Todo66'),
+              realIdValue('Todo66', 'Todo'),
             );
             expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-              realIdValue('Todo99'),
+              realIdValue('Todo99', 'Todo'),
             );
           });
       });
@@ -532,10 +532,10 @@ describe('optimistic mutation results', () => {
           expect(dataInStore).toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66'),
+            realIdValue('Todo66', 'Todo'),
           );
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo99'),
+            realIdValue('Todo99', 'Todo'),
           );
           expect((dataInStore['Todo99'] as any).text).toBe(expectedText1);
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
@@ -1033,10 +1033,10 @@ describe('optimistic mutation results', () => {
           expect(dataInStore).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66'),
+            realIdValue('Todo66', 'Todo'),
           );
           expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-            realIdValue('Todo99'),
+            realIdValue('Todo99', 'Todo'),
           );
         });
     });
@@ -1511,10 +1511,10 @@ describe('optimistic mutation results', () => {
           expect(dataInStore).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66'),
+            realIdValue('Todo66', 'Todo'),
           );
           expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-            realIdValue('Todo99'),
+            realIdValue('Todo99', 'Todo'),
           );
         });
     });
@@ -1859,10 +1859,11 @@ describe('optimistic mutation - githunt comments', () => {
   });
 });
 
-function realIdValue(id: string) {
+function realIdValue(id: string, typename: string) {
   return {
     type: 'id',
     generated: false,
     id,
+    typename,
   };
 }

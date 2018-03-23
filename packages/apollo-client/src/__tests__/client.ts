@@ -2649,18 +2649,7 @@ describe('@connect', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
-      expect((client.cache as InMemoryCache).extract()).toEqual({
-        'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
-        ROOT_QUERY: {
-          abc: [
-            {
-              generated: true,
-              id: 'ROOT_QUERY.abc.0',
-              type: 'id',
-            },
-          ],
-        },
-      });
+      expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
   });
 
@@ -2705,21 +2694,7 @@ describe('@connect', () => {
 
     return client.query({ query, variables }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
-      expect((client.cache as InMemoryCache).extract()).toEqual({
-        'ROOT_QUERY.abc({"order":"popularity"}).0': {
-          name: 'abcd',
-          __typename: 'Book',
-        },
-        ROOT_QUERY: {
-          'abc({"order":"popularity"})': [
-            {
-              generated: true,
-              id: 'ROOT_QUERY.abc({"order":"popularity"}).0',
-              type: 'id',
-            },
-          ],
-        },
-      });
+      expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
   });
 

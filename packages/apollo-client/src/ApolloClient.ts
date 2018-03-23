@@ -167,7 +167,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
         ) {
           // Only for Chrome
-          if (navigator.userAgent.indexOf('Chrome') > -1) {
+          if (window.navigator && window.navigator.userAgent.indexOf('Chrome') > -1) {
             // tslint:disable-next-line
             console.debug(
               'Download the Apollo DevTools ' +

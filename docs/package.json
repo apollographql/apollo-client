@@ -6,8 +6,8 @@
     "version": "3.6.0"
   },
   "devDependencies": {
-    "apollo-hexo-config": "^1.0.2",
-    "chexo": "^1.0.4",
+    "apollo-hexo-config": "1.0.5",
+    "chexo": "1.0.4",
     "hexo": "3.6.0",
     "hexo-generator-archive": "0.1.5",
     "hexo-generator-category": "0.1.3",
@@ -17,10 +17,10 @@
     "hexo-renderer-less": "0.2.0",
     "hexo-renderer-marked": "0.3.2",
     "hexo-server": "0.3.1",
-    "hexo-typescript-api-box": "^0.9.1",
-    "meteor-theme-hexo": "^1.0.1",
-    "typedoc": "^0.9.0",
-    "typescript": "^2.5.3"
+    "hexo-typescript-api-box": "0.9.1",
+    "meteor-theme-hexo": "1.0.3",
+    "typedoc": "0.9.0",
+    "typescript": "2.7.2"
   },
   "scripts": {
     "start": "npm run build && chexo apollo-hexo-config -- server",

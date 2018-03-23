@@ -4,7 +4,7 @@ title: Integrating with React Native
 
 You can use Apollo with React Native exactly as you would with React Web.
 
-To introduce Apollo to your app, install `react-apollo` from npm and use them in your app as outlined in the [setup](initialization.html) article:
+To introduce Apollo to your app, install `react-apollo` from npm and use them in your app as outlined in the [setup](../essentials/get-started.html) article:
 
 ```bash
 npm install react-apollo --save

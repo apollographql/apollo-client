@@ -1,6 +1,5 @@
 # Change log
 
-
 ### vNext
 - BREAKING: Add `typename` as a required second argument in `toIdValue` helper [PR#3159](https://github.com/apollographql/apollo-client/pull/3159)
 - Map coverage to original source

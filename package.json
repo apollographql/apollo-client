@@ -4,7 +4,6 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
-    "postinstall": "lerna bootstrap",
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",

@@ -5,7 +5,15 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
       - checkout
-      - run: npm i
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       # with this we can see if there are any changes to packages (or just docs)
       - run: ./.circleci/test.sh "packages/**/*" "npm run danger"
 
@@ -13,7 +21,15 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
       - checkout
-      - run: npm i
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       # we skip any potential docs tests because the netlify build
       # will fail if there is some other problem
       # this is a place to verify the build including crawling for broken links
@@ -24,21 +40,45 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
       - checkout
-      - run: npm i
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run: ./.circleci/test.sh "packages/**/*" "npm run compile && npm run filesize"
       
   Typecheck:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
       - checkout
-      - run: npm i
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run: ./.circleci/test.sh "packages/**/*" "npm run type-check"
 
   Apollo Client:
     docker: [ { image: 'circleci/node:8' } ]
     steps: 
       - checkout
-      - run: npm i 
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
           name: Jest suite
           command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit"

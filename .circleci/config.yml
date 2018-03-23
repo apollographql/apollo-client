@@ -14,8 +14,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      # with this we can see if there are any changes to packages (or just docs)
-      - run: ./.circleci/test.sh "packages/**/*" "npm run danger"
+      - run: npm run danger
 
   Docs:
     docker: [ { image: 'circleci/node:8' } ]
@@ -30,11 +29,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      # we skip any potential docs tests because the netlify build
-      # will fail if there is some other problem
-      # this is a place to verify the build including crawling for broken links
-      # XXX replace with running and crawling docs site
-      - run: ./.circleci/test.sh "docs/**/*" "cd docs && npm i && npm run build"
+      - run: cd docs && npm i && npm run build
       
   Filesize:
     docker: [ { image: 'circleci/node:8' } ]
@@ -49,7 +44,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - run: ./.circleci/test.sh "packages/**/*" "npm run filesize"
+      - run: npm run filesize
       
   Typecheck:
     docker: [ { image: 'circleci/node:8' } ]
@@ -64,7 +59,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - run: ./.circleci/test.sh "packages/**/*" "npm run type-check"
+      - run: npm run type-check
 
   Apollo Client:
     docker: [ { image: 'circleci/node:8' } ]
@@ -81,7 +76,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
+          command: npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -104,7 +99,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
+          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -127,7 +122,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
+          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -150,7 +145,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
+          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -173,7 +168,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
+          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -196,7 +191,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: ./.circleci/test.sh "packages/**/*" "npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true"
+          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:

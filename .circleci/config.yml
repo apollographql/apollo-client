@@ -58,7 +58,7 @@ jobs:
           when: on_fail
       - run: npm run type-check
 
-   Apollo Client:
+  Apollo Client:
     docker: [ { image: 'circleci/node:8' } ]
     steps: 
       - checkout

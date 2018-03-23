@@ -159,7 +159,7 @@ const ComponentWithMutations = compose(
 This does the exact same thing as the previous snippet, but with a nicer syntax that flattens things out.
 
 If you need to run multiple mutations in one query you can do that like so:
-```
+```js
 const replaceUser = gql`
   mutation replaceUser($userToAdd: User!, $userToRemove: User! ) {
     submitNewUser(newUser: $userToAdd){
@@ -351,7 +351,7 @@ export default graphql(gql`mutation { ... }`, {
 })(MyComponent);
 ```
 
-```js
+```jsx
 function MyComponent({ mutate }) {
   return (
     <button onClick={() => {
@@ -398,7 +398,7 @@ This optimistic response will be used with [`options.update`](#graphql-mutation-
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ newText, mutate }) {
   return (
     <button onClick={() => {

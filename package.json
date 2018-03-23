@@ -2,8 +2,9 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "bootstrap": "npm i && lerna bootstrap",
-    "postinstall": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap",
+    "diff": "check-if-folder-contents-changed-in-git-commit-range",
+    "postinstall": "npm run bootstrap",
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",
@@ -70,11 +71,12 @@
     "*.json*": ["prettier --write", "git add"]
   },
   "pre-commit": "lint-staged",
-  "dependencies": {},
   "devDependencies": {
     "bundlesize": "0.16.0",
+    "check-if-folder-contents-changed-in-git-commit-range": "^1.0.0",
     "codecov": "3.0.0",
     "danger": "1.2.0",
+    "jest-junit": "^3.6.0",
     "lerna": "2.9.0",
     "lint-staged": "6.1.0",
     "pre-commit": "1.2.2",

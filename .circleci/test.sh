@@ -1,5 +1,5 @@
 set +e
-npm run diff -- "$1" $CIRCLE_COMPARE_SCRIPT > /dev/null; rc=$?;
+npm run diff -- "$1" $CIRCLE_COMPARE_URL > /dev/null; rc=$?;
 set -e
 
 if [ ! ${rc} -eq 0 ]

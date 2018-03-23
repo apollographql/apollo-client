@@ -1,5 +1,5 @@
 ---
-title: Why Apollo?
+title: Why Apollo Client?
 description: Why choose Apollo Client to manage your data?
 ---
 

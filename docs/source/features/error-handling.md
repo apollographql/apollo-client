@@ -1,5 +1,5 @@
 ---
-title: Error Handling
+title: Error handling
 description: Handling errors with Apollo
 ---
 
@@ -20,17 +20,33 @@ Much like `fetchPolicy`, `errorPolicy` allows you to control how GraphQL Errors 
 
 You can set `errorPolicy` on each request like so:
 ```js
-const withDataAndErrors = graphql(MY_MIXED_QUERY, {
-  options: {
-    errorPolicy: 'all'
+const MY_QUERY = gql`
+  query WillFail {
+    badField
+    goodField
   }
-});
+`;
+const ShowingSomeErrors = () => (
+  <Query query={MY_QUERY} errorPolicy="all">
+    {({ error, data, loading }) => {
+      if (loading) return <span>loading...</span>
+      return (
+        <div>
+          <h2>Good: {data.goodField}</h2>
+          <pre>Bad: {error.graphQLErrors.map(({ message }, i) => (
+            <span key={i}>{message}</span>
+          ))}
+        </div>
+      )
+    }}
+  </Query>
+);
 ```
 Any errors reported will come under an `error` prop along side the data returned from the cache or server.
 
 
 <h2 id="network" title="Network errors">Network Errors</h2>
-When using Apollo Link, the ability to handle network errors is way more powerful. The best way to do this is to use the `apollo-link-error` to catch and handle server errors, network errors, and GraphQL errors. 
+When using Apollo Link, the ability to handle network errors is way more powerful. The best way to do this is to use the `apollo-link-error` to catch and handle server errors, network errors, and GraphQL errors.
 
 #### Usage
 ```js

@@ -3,26 +3,35 @@
   "version": "0.0.0",
   "private": true,
   "hexo": {
-    "version": "3.4.3"
+    "version": "3.6.0"
   },
-  "dependencies": {
-    "hexo": "3.4.4",
-    "hexo-generator-archive": "^0.1.2",
-    "hexo-generator-category": "^0.1.2",
-    "hexo-generator-index": "^0.2.0",
-    "hexo-generator-tag": "^0.2.0",
-    "hexo-renderer-ejs": "^0.3.0",
-    "hexo-renderer-less": "^0.2.0",
-    "hexo-renderer-marked": "^0.3.0",
-    "hexo-server": "^0.3.0",
-    "hexo-typescript-api-box": "^0.9.1",
-    "typedoc": "^0.9.0",
-    "typescript": "^2.5.3"
+  "devDependencies": {
+    "apollo-hexo-config": "1.0.5",
+    "chexo": "1.0.4",
+    "hexo": "3.6.0",
+    "hexo-generator-archive": "0.1.5",
+    "hexo-generator-category": "0.1.3",
+    "hexo-generator-index": "0.2.1",
+    "hexo-generator-tag": "0.2.0",
+    "hexo-renderer-ejs": "0.3.1",
+    "hexo-renderer-less": "0.2.0",
+    "hexo-renderer-marked": "0.3.2",
+    "hexo-server": "0.3.1",
+    "hexo-typescript-api-box": "0.9.1",
+    "meteor-theme-hexo": "1.0.3",
+    "typedoc": "0.9.0",
+    "typescript": "2.7.2"
   },
   "scripts": {
-    "types":
-      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
-    "build": "npm run types && hexo generate",
-    "start": "hexo serve"
+    "start": "npm run build && chexo apollo-hexo-config -- server",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "build": "npm run types && chexo apollo-hexo-config -- generate",
+    "clean": "hexo clean",
+    "test": "npm run clean; npm run build"
+  },
+  "renovate": {
+    "extends": [
+      "apollo-docs"
+    ]
   }
 }

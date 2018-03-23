@@ -19,6 +19,7 @@ jobs:
 
   Docs:
     docker: [ { image: 'circleci/node:8' } ]
+    steps:
       - checkout
       - run: npm i
       # we skip any potential docs tests because the netlify build

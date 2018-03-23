@@ -2,6 +2,7 @@
 # Change log
 
 ### vNEXT
+- Errors occurring during fetchMore no longer errors out the original query [PR#2906](https://github.com/apollographql/apollo-client/pull/2906)
 - Map coverage to original source
 - Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
 - Fix `no-cache` fetch policy so it returns data [PR#3102](https://github.com/apollographql/apollo-client/pull/3102)
@@ -10,6 +11,8 @@
 [PR#3068](https://github.com/apollographql/apollo-client/pull/3068)
 - onResetStore callbacks occur before refetching Observable Queries[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
 - Error message for in flight queries during `resetStore` includes link completion note[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
+- Fix navigator being undefined on React Native [PR##3164](https://github.com/apollographql/apollo-client/pull/3164)
+- Remove spread of variables preventing issues with removing keys [#3081](https://github.com/apollographql/apollo-client/pull/3081)
 
 ### 2.2.3
 - dependency updates

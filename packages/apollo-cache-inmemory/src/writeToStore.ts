@@ -245,7 +245,7 @@ export function writeSelectionSetToStore({
         // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
         // Right now we have to pretend that we're passing in an idValue and that there's a store
         // on the context.
-        const idValue = toIdValue('self', undefined);
+        const idValue = toIdValue({ id: 'self', typename: undefined });
         const fakeContext: ReadStoreContext = {
           // NOTE: fakeContext always uses ObjectCache
           // since this is only to ensure the return value of 'matches'
@@ -407,7 +407,7 @@ function writeFieldToStore({
     // We take the id and escape it (i.e. wrap it with an enclosing object).
     // This allows us to distinguish IDs from normal scalars.
     const typename = value.__typename;
-    storeValue = toIdValue(valueDataId, typename, generated);
+    storeValue = toIdValue({ id: valueDataId, typename }, generated);
 
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the
@@ -513,6 +513,6 @@ function processArrayValue(
       });
     }
 
-    return toIdValue(itemDataId, item.__typename, generated);
+    return toIdValue({ id: itemDataId, typename: item.__typename }, generated);
   });
 }

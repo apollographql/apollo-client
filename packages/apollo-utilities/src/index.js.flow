@@ -101,10 +101,14 @@ declare module 'apollo-utilities' {
 
   declare export function isIdValue(idObject: StoreValue): boolean;
 
-  declare export function toIdValue(
+  declare export type IdConfig = {
     id: string,
     typename: string | void,
-    generated: boolean,
+  };
+
+  declare export function toIdValue(
+    id: string | IdConfig,
+    generated?: boolean,
   ): IdValue;
 
   declare export function isJsonValue(jsonObject: StoreValue): boolean;

@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 
 export function isApolloError(err: Error): err is ApolloError {
-  return err instanceof ApolloError;
+  return err.hasOwnProperty('graphQLErrors');
 }
 
 // Sets the error message on this error according to the

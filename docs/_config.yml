@@ -21,36 +21,43 @@ sidebar_categories:
   null:
     - index
     - why-apollo
-    - quick-start
-    - basics/integrations
-    - 2.0-migration
-  Basics:
-    - basics/setup
-    - basics/queries
-    - basics/mutations
-    - basics/network-layer
-    - basics/caching
+    - integrations
+    - react-apollo-migration
+  Essentials:
+    - essentials/get-started
+    - essentials/queries
+    - essentials/mutations
+    - essentials/local-state
   Features:
     - features/error-handling
-    - features/caching
+    - features/pagination
     - features/optimistic-ui
-    - features/cache-updates
-    - features/fragments
+    - features/server-side-rendering
+    - features/performance
     - features/developer-tooling
-    - features/subscriptions
-    - features/react-native
-    - features/static-typing
+  Advanced:
+    - advanced/boost-migration
+    - advanced/subscriptions
+    - advanced/network-layer
+    - advanced/caching
+    - advanced/fragments
   Recipes:
-    - recipes/simple-example
-    - recipes/query-splitting
-    - recipes/pagination
     - recipes/authentication
-    - recipes/prefetching
-    - recipes/server-side-rendering
-    - recipes/fragment-matching
+    - recipes/2.0-migration
+    - recipes/static-typing
+    - recipes/react-native
     - recipes/babel
     - recipes/webpack
     - recipes/meteor
     - recipes/recompose
-  Reference:
-    - reference/index
+  API:
+    - api/apollo-client
+    - api/react-apollo
+
+redirects:
+  /docs/react/essentials/get-started.html#api:
+    docs/react/api/react-apollo.html
+  /docs/react/essentials/queries.html#api:
+    docs/react/api/react-apollo.html#graphql-query-options
+  /docs/react/basics/mutations.html#api:
+    docs/react/api/react-apollo.html#graphql-mutation-options

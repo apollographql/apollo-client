@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.1.1",
+  "version": "4.1.7",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -15,10 +15,8 @@
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
-    "build:browser":
-      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
-    "minify:browser":
-      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "repository": {
@@ -35,25 +33,28 @@
     "react"
   ],
   "author": "Sashko Stubailo <sashko@stubailo.com>",
+  "contributors": [
+    "James Burgess <jamesmillerburgess@gmail.com>"
+  ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "^1.0.4"
+    "apollo-utilities": "^1.0.10"
   },
   "devDependencies": {
-    "@types/graphql": "0.11.8",
+    "@types/graphql": "0.12.5",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.92",
-    "@types/node": "8.5.8",
+    "@types/lodash": "4.14.105",
+    "@types/node": "8.9.5",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.3",
     "browserify": "15.2.0",
-    "graphql": "0.12.3",
-    "graphql-tag": "2.6.1",
+    "graphql": "0.13.2",
+    "graphql-tag": "2.8.0",
     "jest": "20.0.4",
     "react": "15.6.2",
     "react-dom": "15.6.2",
-    "rollup": "0.54.0",
+    "rollup": "0.56.4",
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",
     "typescript": "2.5.2",
@@ -64,6 +65,12 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "mapCoverage": true
   }
 }

@@ -8,6 +8,7 @@ import {
   ObjectValueNode,
   ListValueNode,
   EnumValueNode,
+  NullValueNode,
   VariableNode,
   InlineFragmentNode,
   ValueNode,
@@ -86,6 +87,10 @@ function isEnumValue(value: ValueNode): value is EnumValueNode {
   return value.kind === 'EnumValue';
 }
 
+function isNullValue(value: ValueNode): value is NullValueNode {
+  return value.kind === 'NullValue';
+}
+
 export function valueToObjectRepresentation(
   argObj: any,
   name: NameNode,
@@ -118,6 +123,8 @@ export function valueToObjectRepresentation(
     });
   } else if (isEnumValue(value)) {
     argObj[name.value] = (value as EnumValueNode).value;
+  } else if (isNullValue(value)) {
+    argObj[name.value] = null;
   } else {
     throw new Error(`The inline argument "${name.value}" of kind "${
       (value as any).kind
@@ -166,6 +173,15 @@ export type Directives = {
   };
 };
 
+const KNOWN_DIRECTIVES: string[] = [
+  'connection',
+  'include',
+  'skip',
+  'client',
+  'rest',
+  'export',
+];
+
 export function getStoreKeyName(
   fieldName: string,
   args?: Object,
@@ -199,13 +215,26 @@ export function getStoreKeyName(
     }
   }
 
+  let completeFieldName: string = fieldName;
+
   if (args) {
     const stringifiedArgs: string = stringify(args);
-
-    return `${fieldName}(${stringifiedArgs})`;
+    const stringifiedArgs: string = JSON.stringify(args);
+    completeFieldName += `(${stringifiedArgs})`;
   }
 
-  return fieldName;
+  if (directives) {
+    Object.keys(directives).forEach(key => {
+      if (KNOWN_DIRECTIVES.indexOf(key) !== -1) return;
+      if (directives[key] && Object.keys(directives[key]).length) {
+        completeFieldName += `@${key}(${JSON.stringify(directives[key])})`;
+      } else {
+        completeFieldName += `@${key}`;
+      }
+    });
+  }
+
+  return completeFieldName;
 }
 
 export function argumentsObjectFromField(

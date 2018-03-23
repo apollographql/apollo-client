@@ -2,6 +2,26 @@
 # Change log
 
 ### vNEXT
+- Map coverage to original source
+- Added `getCacheKey` function to the link context for use in state-link [PR#2998](https://github.com/apollographql/apollo-client/pull/2998)
+- Fix Memory Leak in Query Manager [PR#3119](https://github.com/apollographql/apollo-client/pull/3119)
+- Pass non-optimistic query to `subscribeToMore` updateQuery
+[PR#3068](https://github.com/apollographql/apollo-client/pull/3068)
+- onResetStore callbacks occur before refetching Observable Queries[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
+- Error message for in flight queries during `resetStore` includes link completion note[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
+- Fix navigator being undefined on React Native [PR##3164](https://github.com/apollographql/apollo-client/pull/3164)
+- Remove spread of variables preventing issues with removing keys [#3081](https://github.com/apollographql/apollo-client/pull/3081)
+
+### 2.2.3
+- dependency updates
+- Provide data when errorPolicy is set "all"
+
+### 2.2.2
+- Fixed potential race condition in mutations
+- Add new fetchPolicy called 'no-cache' to bypass reading from or saving to the cache when making a query
+
+### 2.2.1
+- Allow optional parameter to include queries in standby mode when refetching observed queries [PR#2804](https://github.com/apollographql/apollo-client/pull/2804)
 
 ### 2.2.0
 - include `optimisticResponse` in the context passed to apollo-link for mutations [PR#2704](https://github.com/apollographql/apollo-client/pull/2704)

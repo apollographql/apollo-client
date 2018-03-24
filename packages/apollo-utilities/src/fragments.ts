@@ -65,28 +65,21 @@ export function getFragmentQueryDocument(
 
   // Generate a query document with an operation that simply spreads the
   // fragment inside of it.
-  const query: DocumentNode = {
-    ...document,
-    definitions: [
-      {
-        kind: 'OperationDefinition',
-        operation: 'query',
-        selectionSet: {
-          kind: 'SelectionSet',
-          selections: [
-            {
-              kind: 'FragmentSpread',
-              name: {
-                kind: 'Name',
-                value: actualFragmentName,
-              },
-            },
-          ],
+  document.definitions.unshift({
+    kind: 'OperationDefinition',
+    operation: 'query',
+    selectionSet: {
+      kind: 'SelectionSet',
+      selections: [
+        {
+          kind: 'FragmentSpread',
+          name: {
+            kind: 'Name',
+            value: actualFragmentName,
+          },
         },
-      },
-      ...document.definitions,
-    ],
-  };
-
-  return query;
+      ],
+    },
+  });
+  return document;
 }

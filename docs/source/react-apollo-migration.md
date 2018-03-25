@@ -117,7 +117,7 @@ const withOne = graphql(QueryOne, {
 const withTwo = graphql(QueryTwo, {
   props: ({ data }) => ({
     loadingTwo: data.loading,
-    one: data.one
+    two: data.two
   }),
 });
 

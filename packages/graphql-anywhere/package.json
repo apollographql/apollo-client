@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.1.7",
+  "version": "4.1.8",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -15,10 +15,8 @@
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
-    "build:browser":
-      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
-    "minify:browser":
-      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "repository": {
@@ -40,7 +38,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "^1.0.10"
+    "apollo-utilities": "^1.0.11"
   },
   "devDependencies": {
     "@types/graphql": "0.12.5",
@@ -67,6 +65,11 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ]
   }
 }

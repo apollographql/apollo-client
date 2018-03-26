@@ -259,7 +259,7 @@ const QUERY_SERIES_EPISODES = gql`
 
 const SeriesDetailView = ({ seriesId }) => (
   <Query query={QUERY_SERIES_DETAIL_VIEW} variables={{ seriesId }}>
-    {({ loading: seriesLoading, data: { onSeries } }) => (
+    {({ loading: seriesLoading, data: { oneSeries } }) => (
       <Query query={QUERY_SERIES_EPISODES} variables={{ seriesId }}>
         {({
           loading: episodesLoading,

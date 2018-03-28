@@ -15,8 +15,10 @@
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
-    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "repository": {
@@ -33,9 +35,7 @@
     "react"
   ],
   "author": "Sashko Stubailo <sashko@stubailo.com>",
-  "contributors": [
-    "James Burgess <jamesmillerburgess@gmail.com>"
-  ],
+  "contributors": ["James Burgess <jamesmillerburgess@gmail.com>"],
   "license": "MIT",
   "dependencies": {
     "apollo-utilities": "^1.0.11"
@@ -53,7 +53,7 @@
     "graphql-tag": "2.8.0",
     "jest": "20.0.4",
     "react": "15.6.2",
-    "react-dom": "16.2.0",
+    "react-dom": "15.6.2",
     "rollup": "0.56.4",
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",
@@ -65,11 +65,6 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

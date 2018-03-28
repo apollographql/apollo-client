@@ -419,6 +419,7 @@ describe('ObservableQuery', () => {
         },
       ]);
       queryManager = createQueryManager({ link });
+      // fetch first data from server
       observable = queryManager.watchQuery({ query: testQuery });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -427,6 +428,7 @@ describe('ObservableQuery', () => {
             expect(result.data).toEqual(data);
             expect(timesFired).toBe(1);
 
+            // set policy to be cache-only but data is found
             setTimeout(() => {
               observable.setOptions({ fetchPolicy: 'cache-only' });
               queryManager.resetStore();
@@ -434,14 +436,12 @@ describe('ObservableQuery', () => {
           } else if (handleCount === 2) {
             expect(result.data).toEqual({});
             expect(timesFired).toBe(1);
-
             setTimeout(() => {
               observable.setOptions({ fetchPolicy: 'cache-first' });
             }, 0);
           } else if (handleCount === 3) {
             expect(result.data).toEqual(data);
             expect(timesFired).toBe(2);
-
             done();
           }
         } catch (e) {

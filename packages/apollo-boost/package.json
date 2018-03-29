@@ -42,7 +42,7 @@
     "graphql-tag": "^2.4.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.5",
+    "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
     "apollo-cache": "^1.1.7",
     "browserify": "15.2.0",

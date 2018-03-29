@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@types/benchmark": "1.0.31",
-    "@types/graphql": "0.12.5",
+    "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.105",

@@ -3,39 +3,32 @@ title: Introduction
 description: What is Apollo Client and what does it do?
 ---
 
-[Apollo](https://www.nasa.gov/mission_pages/apollo/missions/index.html) Client is the best way to use GraphQL to build client applications. It is designed from day one to make it easy to build UI that fetches data with GraphQL. To get the most out of Apollo Client, you should use it with one of its view layer integrations like [React](./essentials/get-started).
+Apollo Client is the best way to use GraphQL to build client applications. The client is designed to help you quickly build a UI that fetches data with GraphQL. You can use  Apollo Client in any JavaScript front end, the client is:
 
-Apollo Client can be used in any JavaScript frontend where you want to describe your data using GraphQL. It's:
+- **Incrementally adoptable**. You can drop it into an existing app today.
+-  **Universally compatible**. Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
+- **Simple to get started with**. Start loading data right away and learn about advanced features later.
+- **Inspectable and understandable**. Interrogate and understand exactly what is happening in an application.
+- **Built for interactive apps**. Application users make changes and see them reflected immediately.
+- **Small and flexible**. You don't get stuff your application doesn't need.
 
-1. **Incrementally adoptable**, so that you can drop it into an existing app today.
-2. **Universally compatible**, so that Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
-3. **Simple to get started with**, so you can start loading data right away and learn about advanced features later.
-4. **Inspectable and understandable**, so that you can understand exactly what is happening in your app.
-5. **Built for interactive apps**, so your users can make changes and see them reflected immediately.
-6. **Small and flexible**, so you don't get stuff you don't need.
-7. **Community driven**, because Apollo is driven by the community and serves a variety of use cases.
+Finally, the Apollo Client is **Community driven**, which means its creators make sure it serves a variety of use cases.
 
-These docs will help you to go from getting started with Apollo to becoming an expert!
+<h2 title="Where to go next" id="starting">Where to go next</h2>
 
-<h2 title="Getting started" id="starting">Getting Started</h2>
+- Use the **ESSENTIALS** to [get started with a React example](./essentials/get-started.html) and learn the basics.
+- The **FEATURES** detail the amazing things you can do with Apollo Client.
+- The **ADVANCED** capabilities of Apollo Client details features that your app may need.
+- Use the **RECIPES** to learn about and understand common patterns.
+- Review our **API** to discover API details for Apollo Client and React Apollo.
 
-The docs for Apollo Client are mainly written using the [React integration](./essentials/get-started.html), but most of the examples work no matter where you use Apollo. The docs are broken into five distinct sections to make it easy to find your way around:
 
-1. **Essentials**, which outline everything you need to know in order to get started quickly.
-2. **Features**, which go over all of the amazing things you can do with Apollo Client.
-2. **Advanced**, which showcase some of the advanced capabilities of Apollo Client that your app may need.
-3. **Recipes**, to isolate and explain how to do common patterns.
-4. **API**, to act as an entry point to find API details for Apollo Client and React Apollo.
+<h2 id="other-platforms" title="Prefer a non-React Platform?">Prefer a non-React Platform?</h2>
 
-Getting started is as simple as installing a few libraries from [npm](https://npmjs.org)! The [setup](./essentials/get-started.html) is a good place to start your adventure with Apollo!
-
-<h2 id="graphql-servers">Just GraphQL</h2>
-
-We believe that using GraphQL should be easy and fun. One of the ways Apollo is designed for this is that if you can write your query in [GraphiQL](https://github.com/graphql/graphiql), it'll work with Apollo Client! Because it doesn't assume anything beyond the official GraphQL specification, Apollo works with every GraphQL server implementation, for *every* language. It doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo can handle it. You can find a list of GraphQL server implementations on [graphql.org](http://graphql.org/code/#server-libraries).
-
-<h2 id="other-platforms" title="Other JS + native platforms">Other JavaScript + native platforms</h2>
-
-This documentation site is written with examples using React, but Apollo has an implementation for every client platform:
+To get the most out of Apollo Client, you should use it with one of its several
+view layer integrations. The examples in this doc use the React integration. If
+you aren't using React, Apollo supports many other platforms and documentation
+to get you started:
 
 - JavaScript
   - [Angular](/docs/angular)
@@ -46,3 +39,17 @@ This documentation site is written with examples using React, but Apollo has an 
 - Native mobile
   - [Native iOS with Swift](/docs/ios)
   - [Native Android with Java](https://github.com/apollographql/apollo-android)
+
+<h2 id="graphql-servers">Just using GraphQL?</h2>
+
+We believe that using GraphQL should be easy and fun. One way Apollo supports
+this is that you can write your queries in
+[GraphiQL](https://github.com/graphql/graphiql) and they will just work with
+Apollo Client! Because Apollo doesn't assume anything beyond the official
+GraphQL specification, it works with every GraphQL server implementation, for
+*every* language.
+
+Apollo doesn't impose any requirements on your schema either! If you can send a
+query to a standard GraphQL server, Apollo can handle it. You can find a list of
+GraphQL server implementations on
+[graphql.org](http://graphql.org/code/#server-libraries).

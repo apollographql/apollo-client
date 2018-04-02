@@ -4,6 +4,7 @@
 ### vNEXT
 
 - fixed edge case bug of changing fetchPolicies right after resetStore with no variables present
+- Typescript improvements. Made observable query parameterized on data and variables: `ObservableQuery<TData, TVariables>` [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
 
 ### 2.2.8
 - Added the graphQLResultHasError in QueryManager.ts to check not only if result.errors is null, but also empty.
@@ -21,7 +22,6 @@
 - `ApolloError` can now be checked with `instanceof` operator 
 - Fix navigator being undefined on React Native [PR##3164](https://github.com/apollographql/apollo-client/pull/3164)
 - Remove spread of variables preventing issues with removing keys [#3081](https://github.com/apollographql/apollo-client/pull/3081)
-- Typescript improvements. Made observable query parameterized on data and variables: `ObservableQuery<TData, TVariables>` [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
 
 ### 2.2.3
 - dependency updates

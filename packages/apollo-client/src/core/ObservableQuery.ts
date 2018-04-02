@@ -403,7 +403,7 @@ export class ObservableQuery<
       false;
 
     return this.setVariables(
-      this.options.variables,
+      this.options.variables as TVariables,
       tryFetch,
       opts.fetchResults,
     );
@@ -430,7 +430,7 @@ export class ObservableQuery<
    *
    */
   public setVariables(
-    variables?: TVariables,
+    variables: TVariables,
     tryFetch: boolean = false,
     fetchResults = true,
   ): Promise<ApolloQueryResult<TData>> {

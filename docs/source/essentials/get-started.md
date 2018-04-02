@@ -51,10 +51,10 @@ client
       }
     `
   })
-  .then(data => console.log({ data }));
+  .then(result => console.log(result));
 ```
 
-Open up your console and inspect the data object. You should see `rates` attached, along with some other properties like `loading` and `networkStatus`. While you don't need React or another front-end framework just to fetch data with Apollo Client, our view layer integrations make it easier to bind your queries to your UI and reactively update your components with data. Let's learn how to connect Apollo Client to React so we can start building query components with `react-apollo`.
+Open up your console and inspect the result object. You should see `data` property with `rates` attached, along with some other properties like `loading` and `networkStatus`. While you don't need React or another front-end framework just to fetch data with Apollo Client, our view layer integrations make it easier to bind your queries to your UI and reactively update your components with data. Let's learn how to connect Apollo Client to React so we can start building query components with `react-apollo`.
 
 <h2 id="creating-provider">Connect your client to React</h2>
 

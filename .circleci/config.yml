@@ -76,7 +76,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -99,7 +99,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -122,7 +122,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -145,7 +145,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -168,7 +168,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -191,7 +191,7 @@ jobs:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:

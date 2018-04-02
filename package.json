@@ -46,7 +46,7 @@
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "4.75 kB"
+      "maxSize": "5 kB"
     },
     {
       "name": "graphql-anywhere",
@@ -72,12 +72,12 @@
   },
   "pre-commit": "lint-staged",
   "devDependencies": {
-    "bundlesize": "0.16.0",
-    "check-if-folder-contents-changed-in-git-commit-range": "^1.0.0",
+    "bundlesize": "0.17.0",
+    "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.0.0",
     "danger": "1.2.0",
-    "jest-junit": "^3.6.0",
-    "lerna": "2.9.0",
+    "jest-junit": "3.6.0",
+    "lerna": "2.9.1",
     "lint-staged": "6.1.0",
     "pre-commit": "1.2.2",
     "prettier": "1.11.1",

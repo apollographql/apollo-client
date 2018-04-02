@@ -33,6 +33,7 @@ import {
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { QueryListener, ApolloQueryResult, FetchType } from './types';
+import { graphQLResultHasError } from 'apollo-utilities';
 
 export interface QueryInfo {
   listeners: QueryListener[];
@@ -193,7 +194,7 @@ export class QueryManager<TStore> {
       });
       execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
-          if (result.errors && errorPolicy === 'none') {
+          if (graphQLResultHasError(result) && errorPolicy === 'none') {
             error = new ApolloError({
               graphQLErrors: result.errors,
             });
@@ -264,7 +265,11 @@ export class QueryManager<TStore> {
             });
           });
           this.setQuery(mutationId, () => ({ document: undefined }));
-          if (errorPolicy === 'ignore' && storeResult && storeResult.errors) {
+          if (
+            errorPolicy === 'ignore' &&
+            storeResult &&
+            graphQLResultHasError(storeResult)
+          ) {
             delete storeResult.errors;
           }
           resolve(storeResult as FetchResult<T>);
@@ -1076,6 +1081,10 @@ export class QueryManager<TStore> {
                 reject(e);
                 return;
               }
+            } else {
+              this.setQuery(queryId, () => ({
+                newData: { result: result.data, complete: true },
+              }));
             }
 
             this.queryStore.markQueryResult(
@@ -1100,7 +1109,7 @@ export class QueryManager<TStore> {
             errorsFromStore = result.errors;
           }
 
-          if (fetchMoreForQueryId) {
+          if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
             // We don't write fetchMore results to the store because this would overwrite
             // the original result in case an @connection directive is used.
             resultFromStore = result.data;

@@ -9,7 +9,7 @@ description: How to use extensions and developer tools to analyze your data
 
 * **Improve response times**: With caching and persisted queries
 * **Identify and understand hotspots**: With performance tracing and history
-* **Keep and eye on your API**: With alerts and regular reports
+* **Keep an eye on your API**: With alerts and regular reports
 
 Apollo Engine can run anywhere your GraphQL server can. It operates in one of two modes, either as a package you install into your Node server, or as a standalone proxy you can run with Docker, which works with any GraphQL server library. We've architected it to work for the most demanding of environments.
 

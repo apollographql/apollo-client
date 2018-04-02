@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -33,17 +33,19 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf lib/* && rimraf coverage/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.5",
+    "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.105",
-    "@types/node": "8.9.5",
+    "@types/node": "8.10.1",
     "browserify": "15.2.0",
-    "flow-bin": "0.68.0",
+    "flow-bin": "0.69.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.8.0",
     "jest": "20.0.4",
@@ -60,12 +62,6 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "mapCoverage": true
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

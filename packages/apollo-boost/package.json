@@ -1,6 +1,6 @@
 {
   "name": "apollo-boost",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "The easiest way to get started with Apollo Client",
   "author": "Peggy Rayzis <peggy@apollographql.com>",
   "contributors": [
@@ -28,13 +28,15 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser": "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache-inmemory": "^1.1.11",
-    "apollo-client": "^2.2.7",
+    "apollo-cache-inmemory": "^1.1.12",
+    "apollo-client": "^2.2.8",
     "apollo-link": "^1.0.6",
     "apollo-link-error": "^1.0.3",
     "apollo-link-http": "^1.3.1",
@@ -42,9 +44,9 @@
     "graphql-tag": "^2.4.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.5",
+    "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "apollo-cache": "^1.1.6",
+    "apollo-cache": "^1.1.7",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "jest": "20.0.4",
@@ -60,12 +62,6 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "mapCoverage": true
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

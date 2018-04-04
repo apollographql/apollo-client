@@ -55,6 +55,7 @@ const client = new ApolloClient({
 
 `ApolloClient` has some other options which control the behavior of the client, and we'll see examples of their use throughout this guide.
 
+> Note: A common pattern is to export `client` to allow operation to run out of band
 
 <h3 id="creating-provider">Creating a provider</h3>
 

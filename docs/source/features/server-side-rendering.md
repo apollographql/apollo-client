@@ -71,15 +71,17 @@ Once you put that all together, you'll end up with initialization code that look
 import { ApolloProvider } from 'react-apollo';
 import { ApolloClient } from 'apollo-client';
 import { createHttpLink } from 'apollo-link-http';
-import Express from 'express';
-import { StaticRouter } from 'react-router';
 import { InMemoryCache } from "apollo-cache-inmemory";
+import express from 'express';
+import React from 'react';
+import { StaticRouter } from 'react-router';
+import fetch from 'node-fetch';
 
 import Layout from './routes/Layout';
 
 // Note you don't have to use any particular http server, but
 // we're using Express in this example
-const app = new Express();
+const app = express();
 app.use((req, res) => {
 
   const client = new ApolloClient({
@@ -92,6 +94,7 @@ app.use((req, res) => {
       headers: {
         cookie: req.header('Cookie'),
       },
+      fetch: fetch,
     }),
     cache: new InMemoryCache(),
   });
@@ -185,6 +188,7 @@ At the point that the promise resolves, your Apollo Client store will be complet
 
 ```js
 import { getDataFromTree } from "react-apollo"
+import ReactDOM from 'react-dom/server';
 
 const client = new ApolloClient(....);
 
@@ -259,6 +263,7 @@ The `renderToStringWithData` function simplifies the above and simply returns th
 ```js
 // server application code (integrated usage)
 import { renderToStringWithData } from "react-apollo"
+import ReactDOM from 'react-dom/server';
 
 const client = new ApolloClient(....);
 

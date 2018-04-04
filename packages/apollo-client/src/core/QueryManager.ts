@@ -308,7 +308,7 @@ export class QueryManager<TStore> {
       fetchPolicy !== 'network-only' &&
       fetchPolicy !== 'no-cache'
     ) {
-      const { complete, result } = this.dataStore.getCache().diff({
+      const { complete, result } = cache.diff({
         query,
         variables,
         returnPartialData: true,

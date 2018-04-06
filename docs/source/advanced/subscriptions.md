@@ -161,8 +161,6 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
 </dl>
 
-By default, 
-
 <h3 id="render-prop">Render prop function</h3>
 
 The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties

@@ -13,7 +13,7 @@ The most common need when using type systems with GraphQL is to type the results
 
 <h2 id="typing-components">Typing the Component APIs</h2>
 
-Using Apollo together with TypeScript couldn't be eaiser than using it with component API released in React Apollo 2.1:
+Using Apollo together with TypeScript couldn't be easier than using it with component API released in React Apollo 2.1:
 
 ```js
 interface Data {

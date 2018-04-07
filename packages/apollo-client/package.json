@@ -62,7 +62,7 @@
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.105",
-    "@types/node": "8.10.1",
+    "@types/node": "8.10.2",
     "apollo-cache-inmemory": "^1.1.12",
     "benchmark": "2.1.4",
     "browserify": "15.2.0",
@@ -81,7 +81,7 @@
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",
     "typescript": "2.4.2",
-    "uglify-js": "3.3.17",
+    "uglify-js": "3.3.18",
     "webpack": "3.10.0",
     "webpack-bundle-analyzer": "2.11.1"
   },

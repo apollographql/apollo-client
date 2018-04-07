@@ -76,7 +76,7 @@ const cache = new InMemoryCache({
 
 <h3 id="automatic-updates">Automatic cache updates</h3>
 
-Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we do the following query:
+Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we perform the following query:
 
 ```graphql
 {
@@ -87,7 +87,7 @@ Let's look at a case where just using the cache normalization results in the cor
 }
 ```
 
-Then, we do the following mutation:
+Then, we perform the following mutation:
 
 ```graphql
 mutation {

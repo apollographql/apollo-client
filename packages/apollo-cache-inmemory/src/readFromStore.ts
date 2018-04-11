@@ -300,14 +300,7 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
     }
   }
 
-  // Add the id to the result fields. It should be non-enumerable so users can’t see it without
-  // trying very hard.
-  Object.defineProperty(resultFields, ID_KEY, {
-    enumerable: false,
-    configurable: false,
-    writable: false,
-    value: idValue.id,
-  });
+  resultFields[ID_KEY] = idValue.id;
 
   return resultFields;
 }

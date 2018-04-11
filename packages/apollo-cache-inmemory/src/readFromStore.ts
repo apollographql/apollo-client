@@ -10,7 +10,9 @@ import {
   isIdValue,
   toIdValue,
   getStoreKeyName,
+  StoreValue,
 } from 'apollo-utilities';
+
 import { Cache } from 'apollo-cache';
 
 import {
@@ -18,6 +20,7 @@ import {
   IdValueWithPreviousResult,
   ReadStoreContext,
   DiffQueryAgainstStoreOptions,
+  StoreObject,
 } from './types';
 
 /**
@@ -67,13 +70,20 @@ const readStoreResolver: Resolver = (
 
   const objId = idValue.id;
   const obj = context.store.get(objId);
-  const storeKeyName = getStoreKeyName(fieldName, args, directives);
-  let fieldValue = (obj || {})[storeKeyName];
 
-  if (typeof fieldValue === 'undefined') {
+  let storeKeyName = fieldName;
+  if (args || directives) {
+    storeKeyName = getStoreKeyName(storeKeyName, args, directives);
+  }
+
+  let fieldValue: StoreValue | string | void = void 0;
+
+  if (obj) {
+    fieldValue = obj[storeKeyName];
+
     if (
+      typeof fieldValue === 'undefined' &&
       context.cacheRedirects &&
-      obj &&
       (obj.__typename || objId === 'ROOT_QUERY')
     ) {
       const typename = obj.__typename || 'Query';
@@ -85,11 +95,12 @@ const readStoreResolver: Resolver = (
         const resolver = type[fieldName];
         if (resolver) {
           fieldValue = resolver(obj, args, {
-            getCacheKey: (obj: { __typename: string; id: string | number }) =>
-              toIdValue({
-                id: context.dataIdFromObject(obj),
-                typename: obj.__typename,
-              }),
+            getCacheKey(storeObj: StoreObject) {
+              return toIdValue({
+                id: context.dataIdFromObject(storeObj),
+                typename: storeObj.__typename,
+              });
+            },
           });
         }
       }

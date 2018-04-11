@@ -6,7 +6,7 @@ title: Recompose patterns
 
 <h2 id="loading-status">Loading status</h2>
 
-A common use-case when using the `graphql` HOC is to display a "loading" screen while your data is being fetched. We end up with something like this:
+A common use-case when using the `graphql` HOC is to display a "loading" screen while your data is being fetched. We often end up with something like this:
 
 ```js
 const Component = props => {
@@ -20,7 +20,7 @@ const Component = props => {
 }
 ```
 
-Recompose has a utility function `branch()` which lets us compose different HOC's based on the results of a test function. We can combine it with another Recompose method, `renderComponent()`. So we can say "If we are loading, render `LoadingPlaceholder` instead of our default component", like so:
+Recompose has a utility function `branch()` which lets us compose different HOCs based on the results of a test function. We can combine it with another Recompose method, `renderComponent()`. So we can say "If we are loading, render `LoadingPlaceholder` instead of our default component", like so:
 
 ```js
 import { propType } from 'graphql-anywhere'
@@ -235,10 +235,10 @@ Note that we check the current value of `pollInterval` before changing it, becau
 
 <h2 id="other">Other use-cases</h2>
 
-Recompose is a powerful tool and can be applied to all sorts of other cases. Here are a final few examples.
+Recompose is a powerful tool and can be applied to all sorts of other cases. Here are a few final examples.
 
 Normally, if you wanted to add side effects to the `mutate` function, you would manage them in the `graphql` HOC's [`props` option](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-config-props) by doing something like `{ mutate: () => mutate().then(sideEffectHandler) }`. But that's not very reusable. Using recompose's `withHandlers()` you can compose the same prop manipulation in any number of components. You can see a more detailed example [here](https://medium.com/front-end-developers/how-i-write-mutations-in-apollo-w-recompose-1c0ab06ef4ea).
 
-Mutations can also be tracked using recompose's `withState`, as it has no effect on your query's `loading` state. You can use it, for example, to disable buttons while submitting form data.
+Mutations can also be tracked using recompose's `withState`, since it has no effect on your query's `loading` state. For example, you could use it to disable buttons while submitting form data.
 
 See the full Recompose docs [here](https://github.com/acdlite/recompose).

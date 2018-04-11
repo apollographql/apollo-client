@@ -267,8 +267,6 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
   <dt>`skip`: boolean</dt>
   <dd>Skipping the query execution</dd>
-  <dt>`pollInterval`: number</dt>
-  <dd>Poll interval in milliseconds</dd>
 </dl>
 
 <h3 id="render-prop">Render prop function</h3>

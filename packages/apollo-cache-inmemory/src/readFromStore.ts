@@ -204,7 +204,7 @@ export function diffQueryAgainstStore<T>({
   );
 
   return {
-    result,
+    result: result as T,
     complete: !context.hasMissingField,
   };
 }

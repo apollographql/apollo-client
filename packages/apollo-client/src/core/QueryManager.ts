@@ -343,7 +343,6 @@ export class QueryManager<TStore> {
 
     this.queryStore.initQuery({
       queryId,
-      queryString: print(query),
       document: query,
       storePreviousVariables: shouldFetch,
       variables,
@@ -512,7 +511,7 @@ export class QueryManager<TStore> {
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
                   'for the query ' +
-                  queryStoreValue.queryString,
+                  print(queryStoreValue.document),
               );
             }
           }

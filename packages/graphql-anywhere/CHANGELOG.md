@@ -1,6 +1,7 @@
 # Change log
 
 ## vNEXT
+- Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 
 ### 4.1.8
 - Map coverage to original source

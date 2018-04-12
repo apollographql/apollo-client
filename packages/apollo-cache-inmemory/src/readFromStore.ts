@@ -94,7 +94,7 @@ export function diffQueryAgainstStore<T>({
     rootIdValue,
     context,
     variables,
-    { fragmentMatcher: fragmentMatcherFunction },
+    fragmentMatcherFunction,
   );
 
   return {

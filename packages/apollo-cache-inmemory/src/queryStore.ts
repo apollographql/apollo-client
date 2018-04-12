@@ -56,10 +56,6 @@ export type ExecInfo = {
   directives: DirectiveInfo;
 };
 
-export type ExecOptions = {
-  fragmentMatcher?: FragmentMatcher;
-};
-
 export function assertIdValue(idValue: IdValue) {
   if (!isIdValue(idValue)) {
     throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
@@ -243,15 +239,13 @@ export default function queryStore(
   rootValue?: any,
   contextValue?: any,
   variableValues?: VariableMap,
-  execOptions: ExecOptions = {},
+  // Default matcher always matches all fragments
+  fragmentMatcher: FragmentMatcher = () => true,
 ) {
   const mainDefinition = getMainDefinition(document);
 
   const fragments = getFragmentDefinitions(document);
   const fragmentMap = createFragmentMap(fragments);
-
-  // Default matcher always matches all fragments
-  const fragmentMatcher = execOptions.fragmentMatcher || (() => true);
 
   const execContext: ExecContext = {
     fragmentMap,

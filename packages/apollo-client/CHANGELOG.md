@@ -4,6 +4,7 @@
 ### vNEXT
 
 - fixed edge case bug of changing fetchPolicies right after resetStore with no variables present
+- fixed Android error when error handling
 
 ### 2.2.8
 - Added the graphQLResultHasError in QueryManager.ts to check not only if result.errors is null, but also empty.

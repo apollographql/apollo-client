@@ -63,7 +63,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
         }
       }
 
-      context.returnPartialData = true;
+      (context as any).returnPartialData = true;
       return true;
     }
 
@@ -84,7 +84,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
       'error',
     );
 
-    context.returnPartialData = true;
+    (context as any).returnPartialData = true;
     return true;
   }
 }

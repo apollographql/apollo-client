@@ -48,12 +48,12 @@ export type VariableMap = { [name: string]: any };
 export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
-  context: any,
+  context: ReadStoreContext,
 ) => boolean;
 
 type ExecContext = {
   fragmentMap: FragmentMap;
-  contextValue: any;
+  contextValue: ReadStoreContext;
   variableValues: VariableMap;
   fragmentMatcher: FragmentMatcher;
 };
@@ -260,9 +260,9 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
  */
 export default function executeStoreQuery(
   query: DocumentNode,
-  rootValue?: any,
-  contextValue?: any,
-  variableValues?: VariableMap,
+  rootValue: any,
+  contextValue: ReadStoreContext,
+  variableValues: VariableMap,
   // Default matcher always matches all fragments
   fragmentMatcher: FragmentMatcher = () => true,
 ): ExecResult {

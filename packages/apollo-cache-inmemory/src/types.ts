@@ -72,10 +72,10 @@ export type ApolloReducerConfig = {
 };
 
 export type ReadStoreContext = {
-  store: NormalizedCache;
-  returnPartialData: boolean;
-  cacheRedirects: CacheResolverMap;
-  dataIdFromObject?: IdGetter;
+  readonly store: NormalizedCache;
+  readonly returnPartialData: boolean;
+  readonly cacheRedirects: CacheResolverMap;
+  readonly dataIdFromObject?: IdGetter;
 };
 
 export interface FragmentMatcherInterface {

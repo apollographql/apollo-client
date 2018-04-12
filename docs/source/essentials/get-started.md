@@ -106,11 +106,15 @@ const ExchangeRates = () => (
       if (loading) return <p>Loading...</p>;
       if (error) return <p>Error :(</p>;
 
-      return data.rates.map(({ currency, rate }) => (
-        <div key={currency}>
-          <p>{`${currency}: ${rate}`}</p>
+      return (
+        <div>
+          {data.rates.map(({ currency, rate }) => (
+            <div key={currency}>
+              <p>{`${currency}: ${rate}`}</p>
+            </div>
+          ))}
         </div>
-      ));
+      )
     }}
   </Query>
 );

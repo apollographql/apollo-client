@@ -65,6 +65,6 @@ export class ApolloError extends Error {
 
     this.extraInfo = extraInfo;
 
-    Object.setPrototypeOf(this, ApolloError.prototype);
+    this.__proto__ = ApolloError.prototype;
   }
 }

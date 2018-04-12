@@ -69,8 +69,6 @@ export function diffQueryAgainstStore<T>({
     returnPartialData,
     dataIdFromObject: (config && config.dataIdFromObject) || null,
     cacheRedirects: (config && config.cacheRedirects) || {},
-    // Flag set during execution
-    hasMissingField: false,
   };
 
   const rootIdValue = {
@@ -79,16 +77,11 @@ export function diffQueryAgainstStore<T>({
     previousResult,
   };
 
-  const result = executeStoreQuery(
+  return executeStoreQuery(
     query,
     rootIdValue,
     context,
     variables,
     fragmentMatcherFunction,
   );
-
-  return {
-    result: result as T,
-    complete: !context.hasMissingField,
-  };
 }

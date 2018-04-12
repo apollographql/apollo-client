@@ -63,6 +63,12 @@ type ExecInfo = {
   directives: DirectiveInfo;
 };
 
+export type ExecResult<R = any> = {
+  result: R;
+  // True if no missing fields were encountered while computing the result.
+  complete: boolean;
+};
+
 export function assertIdValue(idValue: IdValue) {
   if (!isIdValue(idValue)) {
     throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
@@ -77,7 +83,7 @@ function readStoreResolver(
   args: any,
   context: ReadStoreContext,
   { resultKey, directives }: ExecInfo,
-) {
+): ExecResult<StoreValue> {
   assertIdValue(idValue);
 
   const objId = idValue.id;
@@ -92,7 +98,7 @@ function readStoreResolver(
     storeKeyName = getStoreKeyName(storeKeyName, args, directives);
   }
 
-  let fieldValue: StoreValue | string | void = void 0;
+  let fieldValue: StoreValue | void = void 0;
 
   if (obj) {
     fieldValue = obj[storeKeyName];
@@ -134,9 +140,10 @@ function readStoreResolver(
       );
     }
 
-    context.hasMissingField = true;
-
-    return fieldValue;
+    return {
+      result: fieldValue,
+      complete: false,
+    };
   }
 
   // if this is an object scalar, it must be a json blob and we have to unescape it
@@ -151,9 +158,16 @@ function readStoreResolver(
       idValue.previousResult &&
       isEqual(idValue.previousResult[resultKey], fieldValue.json)
     ) {
-      return idValue.previousResult[resultKey];
+      return {
+        result: idValue.previousResult[resultKey],
+        complete: true,
+      };
     }
-    return fieldValue.json;
+
+    return {
+      result: fieldValue.json,
+      complete: true,
+    };
   }
 
   // If we had a previous result, try adding that previous result value for this field to our field
@@ -165,8 +179,11 @@ function readStoreResolver(
     );
   }
 
-  return fieldValue;
-};
+  return {
+    result: fieldValue,
+    complete: true,
+  };
+}
 
 /**
  * Adds a previous result value to id values in a nested array. For a single id value and a single
@@ -248,12 +265,10 @@ export default function executeStoreQuery(
   variableValues?: VariableMap,
   // Default matcher always matches all fragments
   fragmentMatcher: FragmentMatcher = () => true,
-) {
+): ExecResult {
   const mainDefinition = getMainDefinition(query);
-
   const fragments = getFragmentDefinitions(query);
   const fragmentMap = createFragmentMap(fragments);
-
   const execContext: ExecContext = {
     fragmentMap,
     contextValue,
@@ -272,9 +287,10 @@ function executeSelectionSet(
   selectionSet: SelectionSetNode,
   rootValue: any,
   execContext: ExecContext,
-) {
+): ExecResult {
   const { fragmentMap, contextValue, variableValues: variables } = execContext;
   const result: { [key: string]: any } = {};
+  let complete = true;
 
   selectionSet.selections.forEach(selection => {
     if (!shouldInclude(selection, variables)) {
@@ -283,7 +299,15 @@ function executeSelectionSet(
     }
 
     if (isField(selection)) {
-      const fieldResult = executeField(selection, rootValue, execContext);
+      const { result: fieldResult, complete: fieldComplete } = executeField(
+        selection,
+        rootValue,
+        execContext,
+      );
+
+      if (!fieldComplete) {
+        complete = false;
+      }
 
       const resultFieldKey = resultKeyNameFromField(selection);
 
@@ -311,27 +335,32 @@ function executeSelectionSet(
       const typeCondition = fragment.typeCondition.name.value;
 
       if (execContext.fragmentMatcher(rootValue, typeCondition, contextValue)) {
-        const fragmentResult = executeSelectionSet(
-          fragment.selectionSet,
-          rootValue,
-          execContext,
-        );
+        const {
+          result: fragmentResult,
+          complete: fragmentComplete,
+        } = executeSelectionSet(fragment.selectionSet, rootValue, execContext);
+
+        if (!fragmentComplete) {
+          complete = false;
+        }
 
         merge(result, fragmentResult);
       }
     }
   });
 
-  return resultMapper(result, rootValue);
+  return {
+    result: resultMapper(result, rootValue),
+    complete,
+  };
 }
 
 function executeField(
   field: FieldNode,
   rootValue: any,
   execContext: ExecContext,
-): any {
+): ExecResult {
   const { variableValues: variables, contextValue } = execContext;
-
   const fieldName = field.name.value;
   const args = argumentsObjectFromField(field, variables);
 
@@ -340,34 +369,56 @@ function executeField(
     directives: getDirectiveInfoFromField(field, variables),
   };
 
-  const result = readStoreResolver(fieldName, rootValue, args, contextValue, info);
+  const { result, complete } = readStoreResolver(
+    fieldName,
+    rootValue,
+    args,
+    contextValue,
+    info,
+  );
 
   // Handle all scalar types here
   if (!field.selectionSet) {
-    return result;
+    return { result, complete };
   }
 
   // From here down, the field has a selection set, which means it's trying to
   // query a GraphQLObjectType
   if (result == null) {
     // Basically any field in a GraphQL response can be null, or missing
-    return result;
+    return { result, complete };
+  }
+
+  function finish(res: ExecResult): ExecResult {
+    return {
+      result: res.result,
+      complete: complete && res.complete,
+    };
   }
 
   if (Array.isArray(result)) {
-    return executeSubSelectedArray(field, result, execContext);
+    return finish(executeSubSelectedArray(field, result, execContext));
   }
 
   // Returned value is an object, and the query has a sub-selection. Recurse.
-  return executeSelectionSet(field.selectionSet, result, execContext);
+  return finish(executeSelectionSet(field.selectionSet, result, execContext));
 }
 
 function executeSubSelectedArray(
   field: FieldNode,
   result: any[],
   execContext: ExecContext,
-): any[] {
-  return result.map(item => {
+): ExecResult {
+  let complete = true;
+
+  function finish<T>(res: ExecResult<T>): T {
+    if (!res.complete) {
+      complete = false;
+    }
+    return res.result;
+  }
+
+  result = result.map(item => {
     // null value in array
     if (item === null) {
       return null;
@@ -375,12 +426,14 @@ function executeSubSelectedArray(
 
     // This is a nested array, recurse
     if (Array.isArray(item)) {
-      return executeSubSelectedArray(field, item, execContext);
+      return finish(executeSubSelectedArray(field, item, execContext));
     }
 
     // This is an object, run the selection set on it
-    return executeSelectionSet(field.selectionSet, item, execContext);
+    return finish(executeSelectionSet(field.selectionSet, item, execContext));
   });
+
+  return { result, complete };
 }
 
 const hasOwn = Object.prototype.hasOwnProperty;

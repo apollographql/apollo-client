@@ -234,17 +234,17 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
  * and it will be async
  *
  */
-export default function queryStore(
-  document: DocumentNode,
+export default function executeStoreQuery(
+  query: DocumentNode,
   rootValue?: any,
   contextValue?: any,
   variableValues?: VariableMap,
   // Default matcher always matches all fragments
   fragmentMatcher: FragmentMatcher = () => true,
 ) {
-  const mainDefinition = getMainDefinition(document);
+  const mainDefinition = getMainDefinition(query);
 
-  const fragments = getFragmentDefinitions(document);
+  const fragments = getFragmentDefinitions(query);
   const fragmentMap = createFragmentMap(fragments);
 
   const execContext: ExecContext = {

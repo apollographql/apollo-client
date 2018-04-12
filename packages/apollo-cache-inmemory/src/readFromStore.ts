@@ -1,4 +1,4 @@
-import queryStore from './queryStore';
+import executeStoreQuery from './executeStoreQuery';
 
 import {
   assign,
@@ -89,7 +89,7 @@ export function diffQueryAgainstStore<T>({
     previousResult,
   };
 
-  const result = queryStore(
+  const result = executeStoreQuery(
     query,
     rootIdValue,
     context,

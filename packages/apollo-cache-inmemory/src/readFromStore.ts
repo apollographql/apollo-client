@@ -1,4 +1,4 @@
-import graphqlAnywhere, { Resolver, ExecInfo } from 'graphql-anywhere';
+import graphqlAnywhere, { Resolver, ExecInfo } from './graphql';
 
 import {
   IdValue,

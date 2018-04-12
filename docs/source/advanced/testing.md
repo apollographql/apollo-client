@@ -67,7 +67,7 @@ test("it shows a dog", () => {
 });
 ```
 
-In order to test the component in isolation we need to mock out all the calls to the backend. This will make our tests predictable. Rect-apollo provides the `<MockedProvider />` component in order to do just that! `<MockedProvider />` allows you to specify the exact results that should be returned for a certain query using the `mocks` prop.
+To test the component in isolation we need to mock out all the calls to the backend. This will make our tests predictable. React-apollo provides the `<MockedProvider />` component in order to do just that! `<MockedProvider />` allows you to specify the exact results that should be returned for a certain query using the `mocks` prop.
 
 Let's see how we can write the example using this component:
 
@@ -88,7 +88,7 @@ query getDog($name: String) {
 export const Dog = (...)
 ```
 
-Next, we go to our test file and define the mocked result that should be returned for the query. Mocks is an array that takes an object with specific request and the associated result.
+Next, we go to our test file and define the mocked result that should be returned for the query. `mocks` is an array that takes an object with specific `request` and the associated `result`.
 
 ```js
 import { GET_DOG, Dog } from "./dog";
@@ -212,11 +212,9 @@ describe("dog with query", () => {
               // The second render has the data.
               expect(result.loading).toBe(false);
               expect(result.dog).toEqual({
-                dog: {
                   id: "1",
                   name: "Buck",
                   breed: "bulldog"
-                }
               });
               done()
             }
@@ -297,7 +295,7 @@ Finally, we need to test that the `<Dog />` component has correctly connected th
 it("renders <Dog />", () => {
   render(
     <MockedProvider mocks={mocks}>
-      <Dog />
+      <Dog name="Buck" />
     </MockedProvider>
   );
   

@@ -15,16 +15,6 @@ import {
 } from './types';
 
 /**
- * The key which the cache id for a given value is stored in the result object. This key is private
- * and should not be used by Apollo client users.
- *
- * Uses a symbol if available in the environment.
- *
- * @private
- */
-export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
-
-/**
  * Resolves the result of a query solely from the store (i.e. never hits the server).
  *
  * @param {Store} store The {@link NormalizedCache} used by Apollo for the `data` portion of the

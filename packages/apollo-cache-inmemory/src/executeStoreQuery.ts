@@ -33,7 +33,15 @@ import {
   StoreObject,
 } from './types';
 
-import { ID_KEY } from './readFromStore';
+/**
+ * The key which the cache id for a given value is stored in the result object. This key is private
+ * and should not be used by Apollo client users.
+ *
+ * Uses a symbol if available in the environment.
+ *
+ * @private
+ */
+export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
 
 export type VariableMap = { [name: string]: any };
 

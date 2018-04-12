@@ -37,11 +37,6 @@ import { ID_KEY } from './readFromStore';
 
 export type VariableMap = { [name: string]: any };
 
-export type ResultMapper = (
-  values: { [fieldName: string]: any },
-  rootValue: any,
-) => any;
-
 export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
@@ -52,7 +47,6 @@ export type ExecContext = {
   fragmentMap: FragmentMap;
   contextValue: any;
   variableValues: VariableMap;
-  resultMapper: ResultMapper;
   fragmentMatcher: FragmentMatcher;
 };
 
@@ -63,7 +57,6 @@ export type ExecInfo = {
 };
 
 export type ExecOptions = {
-  resultMapper?: ResultMapper;
   fragmentMatcher?: FragmentMatcher;
 };
 
@@ -257,8 +250,6 @@ export default function queryStore(
   const fragments = getFragmentDefinitions(document);
   const fragmentMap = createFragmentMap(fragments);
 
-  const resultMapper = execOptions.resultMapper;
-
   // Default matcher always matches all fragments
   const fragmentMatcher = execOptions.fragmentMatcher || (() => true);
 
@@ -266,7 +257,6 @@ export default function queryStore(
     fragmentMap,
     contextValue,
     variableValues,
-    resultMapper,
     fragmentMatcher,
   };
 
@@ -331,11 +321,7 @@ function executeSelectionSet(
     }
   });
 
-  if (execContext.resultMapper) {
-    return execContext.resultMapper(result, rootValue);
-  }
-
-  return result;
+  return resultMapper(result, rootValue);
 }
 
 function executeField(
@@ -413,4 +399,77 @@ function merge(
       }
     });
   }
+}
+
+/**
+ * Maps a result from `graphql-anywhere` to a final result value.
+ *
+ * If the result and the previous result from the `idValue` pass a shallow equality test, we just
+ * return the `previousResult` to maintain referential equality.
+ *
+ * We also add a private id property to the result that we can use later on.
+ *
+ * @private
+ */
+function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
+  // If we had a previous result, we may be able to return that and preserve referential equality
+  if (idValue.previousResult) {
+    const currentResultKeys = Object.keys(resultFields);
+
+    const sameAsPreviousResult =
+      // Confirm that we have the same keys in both the current result and the previous result.
+      Object.keys(idValue.previousResult).every(
+        key => currentResultKeys.indexOf(key) > -1,
+      ) &&
+      // Perform a shallow comparison of the result fields with the previous result. If all of
+      // the shallow fields are referentially equal to the fields of the previous result we can
+      // just return the previous result.
+      //
+      // While we do a shallow comparison of objects, but we do a deep comparison of arrays.
+      currentResultKeys.every(key =>
+        areNestedArrayItemsStrictlyEqual(
+          resultFields[key],
+          idValue.previousResult[key],
+        ),
+      );
+
+    if (sameAsPreviousResult) {
+      return idValue.previousResult;
+    }
+  }
+
+  Object.defineProperty(resultFields, ID_KEY, {
+    enumerable: false,
+    configurable: true,
+    writable: false,
+    value: idValue.id,
+  });
+
+  return resultFields;
+}
+
+type NestedArray<T> = T | Array<T | Array<T | Array<T>>>;
+
+/**
+ * Compare all the items to see if they are all referentially equal in two arrays no matter how
+ * deeply nested the arrays are.
+ *
+ * @private
+ */
+function areNestedArrayItemsStrictlyEqual(
+  a: NestedArray<any>,
+  b: NestedArray<any>,
+): boolean {
+  // If `a` and `b` are referentially equal, return true.
+  if (a === b) {
+    return true;
+  }
+  // If either `a` or `b` are not an array or not of the same length return false. `a` and `b` are
+  // known to not be equal here, we checked above.
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+    return false;
+  }
+  // Otherwise let us compare all of the array items (which are potentially nested arrays!) to see
+  // if they are equal.
+  return a.every((item, i) => areNestedArrayItemsStrictlyEqual(item, b[i]));
 }

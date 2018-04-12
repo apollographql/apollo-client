@@ -214,7 +214,7 @@ type Variables = {
 
 type ChildProps = ChildDataProps<InputProps, Response, Variables>;
 
-const withCharacter = graphql<InputProps, Response, Variables, ChildProps>>(HERO_QUERY, {
+const withCharacter = graphql<InputProps, Response, Variables, ChildProps>(HERO_QUERY, {
   options: ({ episode }) => ({
     variables: { episode }
   }),

@@ -1,32 +1,39 @@
 import {
   DocumentNode,
-  SelectionSetNode,
   FieldNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
+  SelectionSetNode,
 } from 'graphql';
 
 import {
-  getMainDefinition,
-  getFragmentDefinitions,
-  createFragmentMap,
-  FragmentMap,
   DirectiveInfo,
-  shouldInclude,
-  getDirectiveInfoFromField,
-  isField,
-  isInlineFragment,
-  resultKeyNameFromField,
+  FragmentMap,
+  IdValue,
+  StoreValue,
   argumentsObjectFromField,
+  createFragmentMap,
+  getDirectiveInfoFromField,
+  getFragmentDefinitions,
+  getMainDefinition,
+  getStoreKeyName,
+  isEqual,
+  isField,
+  isIdValue,
+  isInlineFragment,
+  isJsonValue,
+  resultKeyNameFromField,
+  shouldInclude,
+  toIdValue,
 } from 'apollo-utilities';
 
-export type Resolver = (
-  fieldName: string,
-  rootValue: any,
-  args: any,
-  context: any,
-  info: ExecInfo,
-) => any;
+import {
+  IdValueWithPreviousResult,
+  ReadStoreContext,
+  StoreObject,
+} from './types';
+
+import { ID_KEY } from './readFromStore';
 
 export type VariableMap = { [name: string]: any };
 
@@ -46,7 +53,6 @@ export type ExecContext = {
   contextValue: any;
   variableValues: VariableMap;
   resultMapper: ResultMapper;
-  resolver: Resolver;
   fragmentMatcher: FragmentMatcher;
 };
 
@@ -60,6 +66,167 @@ export type ExecOptions = {
   resultMapper?: ResultMapper;
   fragmentMatcher?: FragmentMatcher;
 };
+
+export function assertIdValue(idValue: IdValue) {
+  if (!isIdValue(idValue)) {
+    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
+an object reference. This should never happen during normal use unless you have custom code \
+that is directly manipulating the store; please file an issue.`);
+  }
+}
+
+function readStoreResolver(
+  fieldName: string,
+  idValue: IdValueWithPreviousResult,
+  args: any,
+  context: ReadStoreContext,
+  { resultKey, directives }: ExecInfo,
+) {
+  assertIdValue(idValue);
+
+  const objId = idValue.id;
+  const obj = context.store.get(objId);
+
+  let storeKeyName = fieldName;
+  if (args || directives) {
+    // We happen to know here that getStoreKeyName returns its first
+    // argument unmodified if there are no args or directives, so we can
+    // avoid calling the function at all in that case, as a small but
+    // important optimization to this frequently executed code.
+    storeKeyName = getStoreKeyName(storeKeyName, args, directives);
+  }
+
+  let fieldValue: StoreValue | string | void = void 0;
+
+  if (obj) {
+    fieldValue = obj[storeKeyName];
+
+    if (
+      typeof fieldValue === 'undefined' &&
+      context.cacheRedirects &&
+      (obj.__typename || objId === 'ROOT_QUERY')
+    ) {
+      const typename = obj.__typename || 'Query';
+
+      // Look for the type in the custom resolver map
+      const type = context.cacheRedirects[typename];
+      if (type) {
+        // Look for the field in the custom resolver map
+        const resolver = type[fieldName];
+        if (resolver) {
+          fieldValue = resolver(obj, args, {
+            getCacheKey(storeObj: StoreObject) {
+              return toIdValue({
+                id: context.dataIdFromObject(storeObj),
+                typename: storeObj.__typename,
+              });
+            },
+          });
+        }
+      }
+    }
+  }
+
+  if (typeof fieldValue === 'undefined') {
+    if (!context.returnPartialData) {
+      throw new Error(
+        `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(
+          obj,
+          null,
+          2,
+        )}.`,
+      );
+    }
+
+    context.hasMissingField = true;
+
+    return fieldValue;
+  }
+
+  // if this is an object scalar, it must be a json blob and we have to unescape it
+  if (isJsonValue(fieldValue)) {
+    // If the JSON blob is the same now as in the previous result, return the previous result to
+    // maintain referential equality.
+    //
+    // `isEqual` will first perform a referential equality check (with `===`) in case the JSON
+    // value has not changed in the store, and then a deep equality check if that fails in case a
+    // new JSON object was returned by the API but that object may still be the same.
+    if (
+      idValue.previousResult &&
+      isEqual(idValue.previousResult[resultKey], fieldValue.json)
+    ) {
+      return idValue.previousResult[resultKey];
+    }
+    return fieldValue.json;
+  }
+
+  // If we had a previous result, try adding that previous result value for this field to our field
+  // value. This will create a new value without mutating the old one.
+  if (idValue.previousResult) {
+    fieldValue = addPreviousResultToIdValues(
+      fieldValue,
+      idValue.previousResult[resultKey],
+    );
+  }
+
+  return fieldValue;
+};
+
+/**
+ * Adds a previous result value to id values in a nested array. For a single id value and a single
+ * previous result then the previous value is added directly.
+ *
+ * For arrays we put all of the ids from the previous result array in a map and add them to id
+ * values with the same id.
+ *
+ * This function does not mutate. Instead it returns new instances of modified values.
+ *
+ * @private
+ */
+function addPreviousResultToIdValues(value: any, previousResult: any): any {
+  // If the value is an `IdValue`, add the previous result to it whether or not that
+  // `previousResult` is undefined.
+  //
+  // If the value is an array, recurse over each item trying to add the `previousResult` for that
+  // item.
+  if (isIdValue(value)) {
+    return {
+      ...value,
+      previousResult,
+    };
+  } else if (Array.isArray(value)) {
+    const idToPreviousResult: Map<string, any> = new Map();
+
+    // If the previous result was an array, we want to build up our map of ids to previous results
+    // using the private `ID_KEY` property that is added in `resultMapper`.
+    if (Array.isArray(previousResult)) {
+      previousResult.forEach(item => {
+        // item can be null
+        if (item && item[ID_KEY]) {
+          idToPreviousResult.set(item[ID_KEY], item);
+        }
+      });
+    }
+
+    // For every value we want to add the previous result.
+    return value.map((item, i) => {
+      // By default the previous result for this item will be in the same array position as this
+      // item.
+      let itemPreviousResult = previousResult && previousResult[i];
+
+      // If the item is an id value, we should check to see if there is a previous result for this
+      // specific id. If there is, that will be the value for `itemPreviousResult`.
+      if (isIdValue(item)) {
+        itemPreviousResult =
+          idToPreviousResult.get(item.id) || itemPreviousResult;
+      }
+
+      return addPreviousResultToIdValues(item, itemPreviousResult);
+    });
+  }
+  // Return the value, nothing changed.
+  return value;
+}
 
 /* Based on graphql function from graphql-js:
  *
@@ -78,8 +245,7 @@ export type ExecOptions = {
  * and it will be async
  *
  */
-export default function graphql(
-  resolver: Resolver,
+export default function queryStore(
   document: DocumentNode,
   rootValue?: any,
   contextValue?: any,
@@ -101,7 +267,6 @@ export default function graphql(
     contextValue,
     variableValues,
     resultMapper,
-    resolver,
     fragmentMatcher,
   };
 
@@ -178,7 +343,7 @@ function executeField(
   rootValue: any,
   execContext: ExecContext,
 ): any {
-  const { variableValues: variables, contextValue, resolver } = execContext;
+  const { variableValues: variables, contextValue } = execContext;
 
   const fieldName = field.name.value;
   const args = argumentsObjectFromField(field, variables);
@@ -189,7 +354,7 @@ function executeField(
     directives: getDirectiveInfoFromField(field, variables),
   };
 
-  const result = resolver(fieldName, rootValue, args, contextValue, info);
+  const result = readStoreResolver(fieldName, rootValue, args, contextValue, info);
 
   // Handle all scalar types here
   if (!field.selectionSet) {

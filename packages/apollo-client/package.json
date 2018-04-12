@@ -54,7 +54,7 @@
     "zen-observable": "^0.7.0"
   },
   "peerDependencies": {
-    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"
+    "graphql": "0.13.2"
   },
   "devDependencies": {
     "@types/benchmark": "1.0.31",

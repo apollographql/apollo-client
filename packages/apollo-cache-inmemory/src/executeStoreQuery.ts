@@ -51,15 +51,14 @@ export type FragmentMatcher = (
   context: any,
 ) => boolean;
 
-export type ExecContext = {
+type ExecContext = {
   fragmentMap: FragmentMap;
   contextValue: any;
   variableValues: VariableMap;
   fragmentMatcher: FragmentMatcher;
 };
 
-export type ExecInfo = {
-  isLeaf: boolean;
+type ExecInfo = {
   resultKey: string;
   directives: DirectiveInfo;
 };
@@ -337,7 +336,6 @@ function executeField(
   const args = argumentsObjectFromField(field, variables);
 
   const info: ExecInfo = {
-    isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
     directives: getDirectiveInfoFromField(field, variables),
   };

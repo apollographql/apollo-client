@@ -7,7 +7,7 @@ import {
   FragmentDefinitionNode,
 } from 'graphql';
 import { print } from 'graphql/language/printer';
-import { FragmentMatcher } from 'graphql-anywhere';
+import { FragmentMatcher } from './queryStore';
 
 import {
   assign,

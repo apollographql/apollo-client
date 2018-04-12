@@ -1,5 +1,5 @@
 import { DocumentNode } from 'graphql';
-import { FragmentMatcher } from 'graphql-anywhere';
+import { FragmentMatcher } from './queryStore';
 import { Transaction } from 'apollo-cache';
 import { IdValue, StoreValue } from 'apollo-utilities';
 

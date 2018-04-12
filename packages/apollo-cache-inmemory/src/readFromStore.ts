@@ -1,4 +1,4 @@
-import queryStore from './graphql';
+import queryStore from './queryStore';
 
 import {
   assign,

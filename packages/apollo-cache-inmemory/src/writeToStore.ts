@@ -310,10 +310,6 @@ function writeFieldToStore({
   let storeObject: StoreObject;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables);
-  // specifies if we need to merge existing keys in the store
-  let shouldMerge = false;
-  // If we merge, this will be the generatedKey
-  let generatedKey: string = '';
 
   // If this is a scalar value...
   if (!field.selectionSet || value === null) {
@@ -417,7 +413,6 @@ function writeFieldToStore({
       }
 
       if (escapedId.generated) {
-        generatedKey = escapedId.id;
         // We should only merge if it's an object of the same type,
         // otherwise we should delete the generated object
         if (typenameChanged) {
@@ -425,27 +420,21 @@ function writeFieldToStore({
           // inlined, and the new object is not. This is indicated by
           // the old id being generated, and the new id being real.
           if (!generated) {
-            store.delete(generatedKey);
+            store.delete(escapedId.id);
           }
         } else {
-          shouldMerge = true;
+          mergeWithGenerated(escapedId.id, (storeValue as IdValue).id, store);
         }
       }
     }
   }
 
-  const newStoreObj = {
-    ...store.get(dataId),
-    [storeFieldName]: storeValue,
-  } as StoreObject;
-
-  if (shouldMerge) {
-    mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
-  }
-
   storeObject = store.get(dataId);
   if (!storeObject || storeValue !== storeObject[storeFieldName]) {
-    store.set(dataId, newStoreObj);
+    store.set(dataId, {
+      ...storeObject,
+      [storeFieldName]: storeValue,
+    });
   }
 }
 

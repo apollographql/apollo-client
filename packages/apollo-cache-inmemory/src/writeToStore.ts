@@ -112,13 +112,13 @@ export function writeQueryToStore({
 }
 
 export type WriteContext = {
-  store: NormalizedCache;
-  storeFactory: NormalizedCacheFactory;
-  processedData?: { [x: string]: FieldNode[] };
-  variables?: any;
-  dataIdFromObject?: IdGetter;
-  fragmentMap?: FragmentMap;
-  fragmentMatcherFunction?: FragmentMatcher;
+  readonly store: NormalizedCache;
+  readonly storeFactory: NormalizedCacheFactory;
+  readonly processedData?: { [x: string]: FieldNode[] };
+  readonly variables?: any;
+  readonly dataIdFromObject?: IdGetter;
+  readonly fragmentMap?: FragmentMap;
+  readonly fragmentMatcherFunction?: FragmentMatcher;
 };
 
 export function writeResultToStore({

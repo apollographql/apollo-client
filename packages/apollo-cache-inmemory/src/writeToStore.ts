@@ -68,9 +68,6 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
  * @param dataIdFromObject A function that returns an object identifier given a particular result
  * object. See the store documentation for details and an example of this function.
  *
- * @param fragmentMap A map from the name of a fragment to its fragment definition. These fragments
- * can be referenced within the query document.
- *
  * @param fragmentMatcherFunction A function to use for matching fragment conditions in GraphQL documents
  */
 export function writeQueryToStore({
@@ -80,7 +77,6 @@ export function writeQueryToStore({
   store = storeFactory(),
   variables,
   dataIdFromObject,
-  fragmentMap = {} as FragmentMap,
   fragmentMatcherFunction,
 }: {
   result: Object;
@@ -89,7 +85,6 @@ export function writeQueryToStore({
   storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
-  fragmentMap?: FragmentMap;
   fragmentMatcherFunction?: FragmentMatcher;
 }): NormalizedCache {
   const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
@@ -107,7 +102,7 @@ export function writeQueryToStore({
         processedData: {},
         variables,
         dataIdFromObject,
-        fragmentMap,
+        fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         fragmentMatcherFunction,
       },
     });

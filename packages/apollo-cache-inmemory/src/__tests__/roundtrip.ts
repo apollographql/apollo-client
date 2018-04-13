@@ -15,12 +15,10 @@ import {
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
   const store = writeQueryToStore({
     result,
     query,
     variables,
-    fragmentMap,
   });
 
   const reconstructedResult = readQueryFromStore({

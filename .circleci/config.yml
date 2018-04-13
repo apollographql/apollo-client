@@ -21,16 +21,16 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "docs/package.json" }}
       - run:
           name: install-npm
-          command: npm install
+          command: cd docs && npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "docs/package.json" }}
           paths:
-            - ./node_modules
-      - run: cd docs && npm i && npm run build
-      
+            - ./docs/node_modules
+      - run: cd docs && npm run ci
+
   Filesize:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
@@ -45,7 +45,7 @@ jobs:
           paths:
             - ./node_modules
       - run: npm run filesize
-      
+
   Typecheck:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
@@ -63,7 +63,7 @@ jobs:
 
   Apollo Client:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
@@ -86,7 +86,7 @@ jobs:
 
   Apollo Boost:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
@@ -109,7 +109,7 @@ jobs:
 
   Apollo Cache:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
@@ -132,7 +132,7 @@ jobs:
 
   Apollo InMemory Cache:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
@@ -155,7 +155,7 @@ jobs:
 
   Apollo Utilities:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
@@ -178,7 +178,7 @@ jobs:
 
   GraphQL Anywhere:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}

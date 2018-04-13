@@ -3,7 +3,6 @@ import {
   FieldNode,
   DocumentNode,
   InlineFragmentNode,
-  OperationDefinitionNode,
   FragmentDefinitionNode,
 } from 'graphql';
 import { print } from 'graphql/language/printer';
@@ -71,25 +70,23 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
  * @param fragmentMatcherFunction A function to use for matching fragment conditions in GraphQL documents
  */
 export function writeQueryToStore({
-  result,
   query,
+  result,
   storeFactory = defaultNormalizedCacheFactory,
   store = storeFactory(),
   variables,
   dataIdFromObject,
   fragmentMatcherFunction,
 }: {
-  result: Object;
   query: DocumentNode;
+  result: Object;
   store?: NormalizedCache;
   storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
   fragmentMatcherFunction?: FragmentMatcher;
 }): NormalizedCache {
-  const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
-
-  variables = assign({}, getDefaultValues(queryDefinition), variables);
+  const queryDefinition = getQueryDefinition(query);
 
   try {
     return writeSelectionSetToStore({
@@ -100,7 +97,7 @@ export function writeQueryToStore({
         store,
         storeFactory,
         processedData: {},
-        variables,
+        variables: assign({}, getDefaultValues(queryDefinition), variables),
         dataIdFromObject,
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         fragmentMatcherFunction,
@@ -142,23 +139,19 @@ export function writeResultToStore({
 }): NormalizedCache {
   // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
   const operationDefinition = getOperationDefinition(document);
-  const selectionSet = operationDefinition.selectionSet;
-  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
-
-  variables = assign({}, getDefaultValues(operationDefinition), variables);
 
   try {
     return writeSelectionSetToStore({
       result,
       dataId,
-      selectionSet,
+      selectionSet: operationDefinition.selectionSet,
       context: {
         store,
         storeFactory,
         processedData: {},
-        variables,
+        variables: assign({}, getDefaultValues(operationDefinition), variables),
         dataIdFromObject,
-        fragmentMap,
+        fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
         fragmentMatcherFunction,
       },
     });

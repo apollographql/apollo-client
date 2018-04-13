@@ -166,42 +166,42 @@ export function writeSelectionSetToStore({
   const { variables, store, fragmentMap } = context;
 
   selectionSet.selections.forEach(selection => {
-    const included = shouldInclude(selection, variables);
+    if (!shouldInclude(selection, variables)) {
+      return;
+    }
 
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
-      if (included) {
-        if (typeof value !== 'undefined') {
-          writeFieldToStore({
-            dataId,
-            value,
-            field: selection,
-            context,
-          });
-        } else {
-          // if this is a defered field we don't need to throw / warn
-          const isDefered =
-            selection.directives &&
-            selection.directives.length &&
-            selection.directives.some(
-              directive => directive.name && directive.name.value === 'defer',
-            );
+      if (typeof value !== 'undefined') {
+        writeFieldToStore({
+          dataId,
+          value,
+          field: selection,
+          context,
+        });
+      } else {
+        // if this is a defered field we don't need to throw / wanr
+        const isDefered =
+          selection.directives &&
+          selection.directives.length &&
+          selection.directives.some(
+            directive => directive.name && directive.name.value === 'defer',
+          );
 
-          if (!isDefered && context.fragmentMatcherFunction) {
-            // XXX We'd like to throw an error, but for backwards compatibility's sake
-            // we just print a warning for the time being.
-            //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
-            if (!isProduction()) {
-              console.warn(
-                `Missing field ${resultFieldKey} in ${JSON.stringify(
-                  result,
-                  null,
-                  2,
-                ).substring(0, 100)}`,
-              );
-            }
+        if (!isDefered && context.fragmentMatcherFunction) {
+          // XXX We'd like to throw an error, but for backwards compatibility's sake
+          // we just print a warning for the time being.
+          //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
+          if (!isProduction()) {
+            console.warn(
+              `Missing field ${resultFieldKey} in ${JSON.stringify(
+                result,
+                null,
+                2,
+              ).substring(0, 100)}`,
+            );
           }
         }
       }
@@ -243,7 +243,7 @@ export function writeSelectionSetToStore({
         }
       }
 
-      if (included && matches) {
+      if (matches) {
         writeSelectionSetToStore({
           result,
           selectionSet: fragment.selectionSet,

@@ -33,7 +33,6 @@ import { defaultNormalizedCacheFactory, ObjectCache } from './objectCache';
 import {
   IdGetter,
   NormalizedCache,
-  NormalizedCacheFactory,
   ReadStoreContext,
   StoreObject,
 } from './types';
@@ -72,8 +71,7 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
 export function writeQueryToStore({
   query,
   result,
-  storeFactory = defaultNormalizedCacheFactory,
-  store = storeFactory(),
+  store = defaultNormalizedCacheFactory(),
   variables,
   dataIdFromObject,
   fragmentMatcherFunction,
@@ -81,7 +79,6 @@ export function writeQueryToStore({
   query: DocumentNode;
   result: Object;
   store?: NormalizedCache;
-  storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
   fragmentMatcherFunction?: FragmentMatcher;
@@ -95,7 +92,6 @@ export function writeQueryToStore({
       selectionSet: queryDefinition.selectionSet,
       context: {
         store,
-        storeFactory,
         processedData: {},
         variables: assign({}, getDefaultValues(queryDefinition), variables),
         dataIdFromObject,
@@ -110,7 +106,6 @@ export function writeQueryToStore({
 
 export type WriteContext = {
   readonly store: NormalizedCache;
-  readonly storeFactory: NormalizedCacheFactory;
   readonly processedData?: { [x: string]: FieldNode[] };
   readonly variables?: any;
   readonly dataIdFromObject?: IdGetter;
@@ -122,8 +117,7 @@ export function writeResultToStore({
   dataId,
   result,
   document,
-  storeFactory = defaultNormalizedCacheFactory,
-  store = storeFactory(),
+  store = defaultNormalizedCacheFactory(),
   variables,
   dataIdFromObject,
   fragmentMatcherFunction,
@@ -132,7 +126,6 @@ export function writeResultToStore({
   result: any;
   document: DocumentNode;
   store?: NormalizedCache;
-  storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
   fragmentMatcherFunction?: FragmentMatcher;
@@ -147,7 +140,6 @@ export function writeResultToStore({
       selectionSet: operationDefinition.selectionSet,
       context: {
         store,
-        storeFactory,
         processedData: {},
         variables: assign({}, getDefaultValues(operationDefinition), variables),
         dataIdFromObject,

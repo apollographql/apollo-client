@@ -1180,7 +1180,6 @@ describe('writing to the store', () => {
             selectionSet: def.selectionSet,
             result: cloneDeep(result),
             context: {
-              storeFactory: defaultNormalizedCacheFactory,
               store: defaultNormalizedCacheFactory(),
               variables,
               dataIdFromObject: () => '5',

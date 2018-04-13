@@ -39,10 +39,6 @@ export interface StoreObject {
   [storeFieldKey: string]: StoreValue;
 }
 
-export type NormalizedCacheFactory = (
-  seed?: NormalizedCacheObject,
-) => NormalizedCache;
-
 export type OptimisticStoreItem = {
   id: string;
   data: NormalizedCacheObject;
@@ -68,7 +64,6 @@ export type ApolloReducerConfig = {
   fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
   cacheRedirects?: CacheResolverMap;
-  storeFactory?: NormalizedCacheFactory;
 };
 
 export type ReadStoreContext = {

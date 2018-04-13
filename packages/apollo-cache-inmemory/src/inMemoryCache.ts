@@ -22,7 +22,6 @@ const defaultConfig: ApolloReducerConfig = {
   fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
-  storeFactory: defaultNormalizedCacheFactory,
 };
 
 export function defaultDataIdFromObject(result: any): string | null {
@@ -69,7 +68,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
 
     this.addTypename = this.config.addTypename;
-    this.data = this.config.storeFactory();
+    this.data = defaultNormalizedCacheFactory();
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -92,7 +91,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
 
     return readQueryFromStore({
-      store: this.config.storeFactory(this.extract(query.optimistic)),
+      store: defaultNormalizedCacheFactory(this.extract(query.optimistic)),
       query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
@@ -118,7 +117,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
     return diffQueryAgainstStore({
-      store: this.config.storeFactory(this.extract(query.optimistic)),
+      store: defaultNormalizedCacheFactory(this.extract(query.optimistic)),
       query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,

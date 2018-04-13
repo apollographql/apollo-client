@@ -23,7 +23,6 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   storeKeyNameFromField,
-  getQueryDefinition,
   StoreValue,
   toIdValue,
 } from 'apollo-utilities';
@@ -83,25 +82,15 @@ export function writeQueryToStore({
   dataIdFromObject?: IdGetter;
   fragmentMatcherFunction?: FragmentMatcher;
 }): NormalizedCache {
-  const queryDefinition = getQueryDefinition(query);
-
-  try {
-    return writeSelectionSetToStore({
-      dataId: 'ROOT_QUERY',
-      result,
-      selectionSet: queryDefinition.selectionSet,
-      context: {
-        store,
-        processedData: {},
-        variables: assign({}, getDefaultValues(queryDefinition), variables),
-        dataIdFromObject,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        fragmentMatcherFunction,
-      },
-    });
-  } catch (e) {
-    throw enhanceErrorWithDocument(e, query);
-  }
+  return writeResultToStore({
+    dataId: 'ROOT_QUERY',
+    result,
+    document: query,
+    store,
+    variables,
+    dataIdFromObject,
+    fragmentMatcherFunction,
+  });
 }
 
 export type WriteContext = {

@@ -27,7 +27,8 @@ import {
   toIdValue,
 } from 'apollo-utilities';
 
-import { defaultNormalizedCacheFactory, ObjectCache } from './objectCache';
+import { ObjectCache } from './objectCache';
+import { defaultNormalizedCacheFactory } from './optimisticObjectCache';
 
 import {
   IdGetter,

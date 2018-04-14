@@ -264,7 +264,7 @@ export default function executeStoreQuery(
   contextValue: ReadStoreContext,
   variableValues: VariableMap,
   // Default matcher always matches all fragments
-  fragmentMatcher: FragmentMatcher = () => true,
+  fragmentMatcher: FragmentMatcher = defaultFragmentMatcher,
 ): ExecResult {
   const mainDefinition = getMainDefinition(query);
   const fragments = getFragmentDefinitions(query);
@@ -281,6 +281,10 @@ export default function executeStoreQuery(
     rootValue,
     execContext,
   );
+}
+
+function defaultFragmentMatcher() {
+  return true;
 }
 
 function executeSelectionSet(

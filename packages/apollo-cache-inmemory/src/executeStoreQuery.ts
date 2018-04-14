@@ -33,6 +33,9 @@ import {
   StoreObject,
 } from './types';
 
+import { wrap, defaultMakeCacheKey } from './optimism';
+import { OptimisticObjectCache } from './optimisticObjectCache';
+
 /**
  * The key which the cache id for a given value is stored in the result object. This key is private
  * and should not be used by Apollo client users.
@@ -258,9 +261,9 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
  * and it will be async
  *
  */
-export default function executeStoreQuery(
+export default wrap(function executeStoreQuery(
   query: DocumentNode,
-  rootValue: any,
+  rootValue: IdValueWithPreviousResult,
   contextValue: ReadStoreContext,
   variableValues: VariableMap,
   // Default matcher always matches all fragments
@@ -281,7 +284,37 @@ export default function executeStoreQuery(
     rootValue,
     execContext,
   );
-}
+}, {
+  makeCacheKey(
+    query: DocumentNode,
+    rootValue: IdValueWithPreviousResult,
+    context: ReadStoreContext,
+    variables: VariableMap,
+  ) {
+    // TODO Figure out how to handle previous results in a way that is
+    // compatible with optimistic caching.
+    if (rootValue.previousResult) {
+      return;
+    }
+
+    // TODO Figure out how to disable returning partial data in a way that is
+    // compatible with optimistic caching.
+    if (!context.returnPartialData) {
+      return;
+    }
+
+    // The result of executeStoreQuery can be safely cached only if the
+    // underlying store is capable of tracking dependencies and invalidating
+    // the cache when relevant data have changed.
+    if (context.store instanceof OptimisticObjectCache) {
+      return defaultMakeCacheKey(
+        query,
+        context.store,
+        JSON.stringify(variables),
+      );
+    }
+  }
+});
 
 function defaultFragmentMatcher() {
   return true;

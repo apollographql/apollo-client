@@ -71,15 +71,15 @@ export function diffQueryAgainstStore<T>({
     cacheRedirects: (config && config.cacheRedirects) || {},
   };
 
-  const rootIdValue = {
-    type: 'id',
-    id: rootId,
-    previousResult,
-  };
-
   return executeStoreQuery(
     query,
-    rootIdValue,
+    {
+      type: 'id',
+      id: rootId,
+      previousResult,
+      generated: true,
+      typename: 'Query',
+    },
     context,
     variables,
     fragmentMatcherFunction,

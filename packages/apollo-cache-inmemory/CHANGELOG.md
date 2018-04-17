@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- Fix typo in documentation
 
 ### 1.1.12
 - Fix an edge case where fields that were unions of two types, one with an `id`,

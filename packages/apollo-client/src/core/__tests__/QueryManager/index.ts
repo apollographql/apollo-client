@@ -3078,12 +3078,10 @@ describe('QueryManager', () => {
           expect(result.data).toEqual(data2);
           expect(timesFired).toBe(2);
         },
-      ).catch(e => {
-        done.fail(e);
-      });
+      );
     });
 
-    it('should not refetch toredown queries', done => {
+    it('should not refetch torn-down queries', done => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const query = gql`
@@ -3119,7 +3117,7 @@ describe('QueryManager', () => {
       ).then(() => {
         expect(timesFired).toBe(1);
 
-        // at this point the observable query has been toredown
+        // at this point the observable query has been torn down
         // because observableToPromise unsubscribe before resolving
         queryManager.resetStore();
 
@@ -3516,7 +3514,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it('should not refetch toredown queries', done => {
+    it('should not refetch torn-down queries', done => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const query = gql`
@@ -3552,7 +3550,7 @@ describe('QueryManager', () => {
       ).then(() => {
         expect(timesFired).toBe(1);
 
-        // at this point the observable query has been toredown
+        // at this point the observable query has been torn down
         // because observableToPromise unsubscribe before resolving
         queryManager.reFetchObservableQueries();
 

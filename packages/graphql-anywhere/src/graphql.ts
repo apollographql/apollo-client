@@ -228,10 +228,12 @@ function executeSubSelectedArray(field, result, execContext) {
   });
 }
 
+const hasOwn = Object.prototype.hasOwnProperty;
+
 export function merge(dest, src) {
   Object.keys(src).forEach(key => {
     const srcVal = src[key];
-    if (typeof dest[key] === 'undefined') {
+    if (!hasOwn.call(dest, key)) {
       dest[key] = srcVal;
     } else if (srcVal && typeof srcVal === 'object') {
       merge(dest[key], srcVal);

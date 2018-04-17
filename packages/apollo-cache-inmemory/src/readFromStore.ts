@@ -73,6 +73,10 @@ const readStoreResolver: Resolver = (
 
   let storeKeyName = fieldName;
   if (args || directives) {
+    // We happen to know here that getStoreKeyName returns its first
+    // argument unmodified if there are no args or directives, so we can
+    // avoid calling the function at all in that case, as a small but
+    // important optimization to this frequently executed code.
     storeKeyName = getStoreKeyName(storeKeyName, args, directives);
   }
 

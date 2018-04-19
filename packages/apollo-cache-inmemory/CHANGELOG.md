@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 - Fix typo in documentation
 
 ### 1.1.12

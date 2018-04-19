@@ -2,8 +2,8 @@
 # Change log
 
 ### vNEXT
-
 - fixed edge case bug of changing fetchPolicies right after resetStore with no variables present
+- Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 
 ### 2.2.8
 - Added the graphQLResultHasError in QueryManager.ts to check not only if result.errors is null, but also empty.

@@ -137,8 +137,7 @@ import { ApolloLink } from 'apollo-link';
 const cache = new InMemoryCache({
   cacheRedirects: {
     Query: {
-      movie: (_, { id }, { getCacheKey }) =>
-        getCacheKey({ __typename: 'Movie', id });
+      movie: (_, { id }, { getCacheKey }) => getCacheKey({ __typename: 'Movie', id })
     }
   }
 });
@@ -154,7 +153,7 @@ const request = async (operation) => {
 
 const requestLink = new ApolloLink((operation, forward) =>
   new Observable(observer => {
-    let handle: any;
+    let handle;
     Promise.resolve(operation)
       .then(oper => request(oper))
       .then(() => {
@@ -167,7 +166,7 @@ const requestLink = new ApolloLink((operation, forward) =>
       .catch(observer.error.bind(observer));
 
     return () => {
-      if (handle) handle.unsubscribe;
+      if (handle) handle.unsubscribe();
     };
   })
 );

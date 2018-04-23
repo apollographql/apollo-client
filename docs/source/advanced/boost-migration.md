@@ -168,7 +168,7 @@ const requestLink = new ApolloLink((operation, forward) =>
       .catch(observer.error.bind(observer));
 
     return () => {
-      if (handle) return handle.unsubscribe;
+      if (handle) handle.unsubscribe();
     };
   })
 );

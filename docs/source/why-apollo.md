@@ -3,7 +3,7 @@ title: Why Apollo Client?
 description: Why choose Apollo Client to manage your data?
 ---
 
-Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've came to the right place. Through practical examples inspired by our [example app Pupstagram](https://codesandbox.io/s/r5qp83z0yq), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
+Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've come to the right place. Through practical examples inspired by our [example app Pupstagram](https://codesandbox.io/s/r5qp83z0yq), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
 
 <h2 id="declarative-data">Declarative data fetching</h2>
 

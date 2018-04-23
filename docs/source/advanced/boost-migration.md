@@ -132,8 +132,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { HttpLink } from 'apollo-link-http';
 import { onError } from 'apollo-link-error';
 import { withClientState } from 'apollo-link-state';
-import { ApolloLink } from 'apollo-link';
-import { Observable } from 'rxjs/Observable';
+import { ApolloLink, Observable } from 'apollo-link';
 
 const cache = new InMemoryCache({
   cacheRedirects: {

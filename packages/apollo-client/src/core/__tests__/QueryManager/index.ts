@@ -1,10 +1,10 @@
 // externals
-import { from } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
+import { from, observable as symbol__observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   InMemoryCache,
   ApolloReducerConfig,
@@ -475,18 +475,16 @@ describe('QueryManager', () => {
 
     const observable = from(handle);
 
-    observable.pipe(
-      map(result => assign({ fromRx: true }, result)).subscribe({
-        next: wrap(done, newResult => {
-          const expectedResult = assign(
-            { fromRx: true, loading: false, networkStatus: 7, stale: false },
-            expResult,
-          );
-          expect(newResult).toEqual(expectedResult);
-          done();
-        }),
+    observable.pipe(map(result => assign({ fromRx: true }, result))).subscribe({
+      next: wrap(done, newResult => {
+        const expectedResult = assign(
+          { fromRx: true, loading: false, networkStatus: 7, stale: false },
+          expResult,
+        );
+        expect(newResult).toEqual(expectedResult);
+        done();
       }),
-    );
+    });
   });
 
   it('allows you to subscribe twice to one query', done => {

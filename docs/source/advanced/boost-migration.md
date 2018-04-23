@@ -133,6 +133,7 @@ import { HttpLink } from 'apollo-link-http';
 import { onError } from 'apollo-link-error';
 import { withClientState } from 'apollo-link-state';
 import { ApolloLink } from 'apollo-link';
+import { Observable } from 'rxjs/Observable';
 
 const cache = new InMemoryCache({
   cacheRedirects: {
@@ -154,7 +155,7 @@ const request = async (operation) => {
 
 const requestLink = new ApolloLink((operation, forward) =>
   new Observable(observer => {
-    let handle: any;
+    let handle;
     Promise.resolve(operation)
       .then(oper => request(oper))
       .then(() => {
@@ -167,7 +168,7 @@ const requestLink = new ApolloLink((operation, forward) =>
       .catch(observer.error.bind(observer));
 
     return () => {
-      if (handle) handle.unsubscribe;
+      if (handle) return handle.unsubscribe;
     };
   })
 );

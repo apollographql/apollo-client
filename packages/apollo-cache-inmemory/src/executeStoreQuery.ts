@@ -320,7 +320,7 @@ function defaultFragmentMatcher() {
   return true;
 }
 
-function executeSelectionSet(
+const executeSelectionSet = wrap(function (
   selectionSet: SelectionSetNode,
   rootValue: any,
   execContext: ExecContext,
@@ -390,7 +390,27 @@ function executeSelectionSet(
     result: resultMapper(result, rootValue),
     complete,
   };
-}
+}, {
+  makeCacheKey(
+    selectionSet: SelectionSetNode,
+    rootValue: any,
+    context: ExecContext,
+  ) {
+    if (!rootValue.previousResult &&
+        context.contextValue.returnPartialData &&
+        context.contextValue.store instanceof OptimisticObjectCache) {
+      return defaultMakeCacheKey(
+        selectionSet,
+        context.contextValue.store,
+        JSON.stringify(context.variableValues),
+        // Unlike executeStoreQuery, executeSelectionSet can be called
+        // recursively on nested objects, so it's important to include the
+        // ID of the current parent object in the cache key.
+        rootValue.id,
+      );
+    }
+  }
+});
 
 function executeField(
   field: FieldNode,

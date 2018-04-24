@@ -412,7 +412,7 @@ const executeSelectionSet = wrap(function (
   }
 });
 
-function executeField(
+const executeField = wrap(function (
   field: FieldNode,
   rootValue: any,
   execContext: ExecContext,
@@ -459,7 +459,23 @@ function executeField(
 
   // Returned value is an object, and the query has a sub-selection. Recurse.
   return finish(executeSelectionSet(field.selectionSet, result, execContext));
-}
+}, {
+  makeCacheKey(
+    field: FieldNode,
+    rootValue: any,
+    execContext: ExecContext,
+  ) {
+    if (execContext.contextValue.returnPartialData &&
+        execContext.contextValue.store instanceof OptimisticObjectCache) {
+      return defaultMakeCacheKey(
+        field,
+        execContext.contextValue.store,
+        JSON.stringify(execContext.variableValues),
+        rootValue.id,
+      );
+    }
+  }
+});
 
 function executeSubSelectedArray(
   field: FieldNode,

@@ -21,7 +21,7 @@ const GET_DOGS = gql`
   }
 `;
 
-const GoodDogsBrent = () => (
+const GoodDogsBront = () => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {
       if (error) return <Error />

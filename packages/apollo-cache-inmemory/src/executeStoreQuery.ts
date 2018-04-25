@@ -66,10 +66,15 @@ type ExecInfo = {
   directives: DirectiveInfo;
 };
 
+export type ExecResultMissingField = {
+  objectId: string;
+  fieldName: string;
+};
+
 export type ExecResult<R = any> = {
   result: R;
-  // True if no missing fields were encountered while computing the result.
-  complete: boolean;
+  // Empty array if no missing fields encountered while computing result.
+  missing?: ExecResultMissingField[];
 };
 
 export function assertIdValue(idValue: IdValue) {
@@ -133,19 +138,12 @@ function readStoreResolver(
   }
 
   if (typeof fieldValue === 'undefined') {
-    if (!context.returnPartialData) {
-      throw new Error(
-        `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(
-          obj,
-          null,
-          2,
-        )}.`,
-      );
-    }
-
     return {
       result: fieldValue,
-      complete: false,
+      missing: [{
+        objectId: objId,
+        fieldName: storeKeyName,
+      }],
     };
   }
 
@@ -163,13 +161,11 @@ function readStoreResolver(
     ) {
       return {
         result: idValue.previousResult[resultKey],
-        complete: true,
       };
     }
 
     return {
       result: fieldValue.json,
-      complete: true,
     };
   }
 
@@ -184,7 +180,6 @@ function readStoreResolver(
 
   return {
     result: fieldValue,
-    complete: true,
   };
 }
 
@@ -297,12 +292,6 @@ export default wrap(function executeStoreQuery(
       return;
     }
 
-    // TODO Figure out how to disable returning partial data in a way that is
-    // compatible with optimistic caching.
-    if (!context.returnPartialData) {
-      return;
-    }
-
     // The result of executeStoreQuery can be safely cached only if the
     // underlying store is capable of tracking dependencies and invalidating
     // the cache when relevant data have changed.
@@ -326,8 +315,17 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
   execContext: ExecContext,
 ): ExecResult {
   const { fragmentMap, contextValue, variableValues: variables } = execContext;
-  const result: { [key: string]: any } = {};
-  let complete = true;
+  const finalResult: ExecResult = {
+    result: {},
+  };
+
+  function handleMissing<T>(result: ExecResult<T>): T {
+    if (result.missing) {
+      finalResult.missing = finalResult.missing || [];
+      finalResult.missing.push(...result.missing);
+    }
+    return result.result;
+  }
 
   selectionSet.selections.forEach(selection => {
     if (!shouldInclude(selection, variables)) {
@@ -336,25 +334,14 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
     }
 
     if (isField(selection)) {
-      const { result: fieldResult, complete: fieldComplete } = executeField(
-        selection,
-        rootValue,
-        execContext,
-      );
+      const fieldResult = handleMissing(executeField(selection, rootValue, execContext));
 
-      if (!fieldComplete) {
-        complete = false;
+      if (typeof fieldResult !== 'undefined') {
+        merge(finalResult.result, {
+          [resultKeyNameFromField(selection)]: fieldResult,
+        });
       }
 
-      const resultFieldKey = resultKeyNameFromField(selection);
-
-      if (fieldResult !== undefined) {
-        if (result[resultFieldKey] === undefined) {
-          result[resultFieldKey] = fieldResult;
-        } else {
-          merge(result[resultFieldKey], fieldResult);
-        }
-      }
     } else {
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
@@ -372,24 +359,16 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
       const typeCondition = fragment.typeCondition.name.value;
 
       if (execContext.fragmentMatcher(rootValue, typeCondition, contextValue)) {
-        const {
-          result: fragmentResult,
-          complete: fragmentComplete,
-        } = executeSelectionSet(fragment.selectionSet, rootValue, execContext);
-
-        if (!fragmentComplete) {
-          complete = false;
-        }
-
-        merge(result, fragmentResult);
+        merge(finalResult.result, handleMissing(
+          executeSelectionSet(fragment.selectionSet, rootValue, execContext),
+        ));
       }
     }
   });
 
-  return {
-    result: resultMapper(result, rootValue),
-    complete,
-  };
+  finalResult.result = resultMapper(finalResult.result, rootValue);
+  return finalResult;
+
 }, {
   makeCacheKey(
     selectionSet: SelectionSetNode,
@@ -397,7 +376,6 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
     context: ExecContext,
   ) {
     if (!rootValue.previousResult &&
-        context.contextValue.returnPartialData &&
         context.contextValue.store instanceof OptimisticObjectCache) {
       return defaultMakeCacheKey(
         selectionSet,
@@ -426,7 +404,7 @@ const executeField = wrap(function _executeField(
     directives: getDirectiveInfoFromField(field, variables),
   };
 
-  const { result, complete } = readStoreResolver(
+  const readStoreResult = readStoreResolver(
     fieldName,
     rootValue,
     args,
@@ -436,37 +414,56 @@ const executeField = wrap(function _executeField(
 
   // Handle all scalar types here
   if (!field.selectionSet) {
-    return { result, complete };
+    return readStoreResult;
   }
 
   // From here down, the field has a selection set, which means it's trying to
   // query a GraphQLObjectType
-  if (result == null) {
+  if (readStoreResult.result == null) {
     // Basically any field in a GraphQL response can be null, or missing
-    return { result, complete };
+    return readStoreResult;
   }
 
-  function finish(res: ExecResult): ExecResult {
+  function handleMissing<T>(res: ExecResult<T>): ExecResult<T> {
+    let missing: ExecResultMissingField[] = null;
+
+    if (readStoreResult.missing) {
+      missing = missing || [];
+      missing.push(...readStoreResult.missing);
+    }
+
+    if (res.missing) {
+      missing = missing || [];
+      missing.push(...res.missing);
+    }
+
     return {
       result: res.result,
-      complete: complete && res.complete,
+      missing,
     };
   }
 
-  if (Array.isArray(result)) {
-    return finish(executeSubSelectedArray(field, result, execContext));
+  if (Array.isArray(readStoreResult.result)) {
+    return handleMissing(executeSubSelectedArray(
+      field,
+      readStoreResult.result,
+      execContext,
+    ));
   }
 
   // Returned value is an object, and the query has a sub-selection. Recurse.
-  return finish(executeSelectionSet(field.selectionSet, result, execContext));
+  return handleMissing(executeSelectionSet(
+    field.selectionSet,
+    readStoreResult.result,
+    execContext,
+  ));
 }, {
   makeCacheKey(
     field: FieldNode,
     rootValue: any,
     execContext: ExecContext,
   ) {
-    if (execContext.contextValue.returnPartialData &&
-        execContext.contextValue.store instanceof OptimisticObjectCache) {
+    if (execContext.contextValue.store instanceof OptimisticObjectCache) {
       return defaultMakeCacheKey(
         field,
         execContext.contextValue.store,
@@ -482,13 +479,15 @@ function executeSubSelectedArray(
   result: any[],
   execContext: ExecContext,
 ): ExecResult {
-  let complete = true;
+  let missing: ExecResultMissingField[] = null;
 
-  function finish<T>(res: ExecResult<T>): T {
-    if (!res.complete) {
-      complete = false;
+  function handleMissing<T>(childResult: ExecResult<T>): T {
+    if (childResult.missing) {
+      missing = missing || [];
+      missing.push(...childResult.missing);
     }
-    return res.result;
+
+    return childResult.result;
   }
 
   result = result.map(item => {
@@ -499,14 +498,14 @@ function executeSubSelectedArray(
 
     // This is a nested array, recurse
     if (Array.isArray(item)) {
-      return finish(executeSubSelectedArray(field, item, execContext));
+      return handleMissing(executeSubSelectedArray(field, item, execContext));
     }
 
     // This is an object, run the selection set on it
-    return finish(executeSelectionSet(field.selectionSet, item, execContext));
+    return handleMissing(executeSelectionSet(field.selectionSet, item, execContext));
   });
 
-  return { result, complete };
+  return { result, missing };
 }
 
 const hasOwn = Object.prototype.hasOwnProperty;

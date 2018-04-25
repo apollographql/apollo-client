@@ -71,7 +71,7 @@ export function diffQueryAgainstStore<T>({
     cacheRedirects: (config && config.cacheRedirects) || {},
   };
 
-  return executeStoreQuery(
+  const execResult = executeStoreQuery(
     query,
     {
       type: 'id',
@@ -84,4 +84,21 @@ export function diffQueryAgainstStore<T>({
     variables,
     fragmentMatcherFunction,
   );
+
+  const hasMissingFields =
+    execResult.missing && execResult.missing.length > 0;
+
+  if (hasMissingFields && ! context.returnPartialData) {
+    const { fieldName, objectId } = execResult.missing[0];
+    throw new Error(
+      `Can't find field ${fieldName} on object (${objectId}) ${
+        JSON.stringify(store.get(objectId), null, 2)
+      }.`
+    );
+  }
+
+  return {
+    result: execResult.result,
+    complete: !hasMissingFields,
+  };
 }

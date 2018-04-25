@@ -88,13 +88,15 @@ export function diffQueryAgainstStore<T>({
   const hasMissingFields =
     execResult.missing && execResult.missing.length > 0;
 
-  if (hasMissingFields && ! context.returnPartialData) {
-    const { fieldName, objectId } = execResult.missing[0];
-    throw new Error(
-      `Can't find field ${fieldName} on object (${objectId}) ${
-        JSON.stringify(store.get(objectId), null, 2)
-      }.`
-    );
+  if (hasMissingFields && ! returnPartialData) {
+    execResult.missing.forEach(info => {
+      if (info.tolerable) return;
+      throw new Error(
+        `Can't find field ${info.fieldName} on object (${info.objectId}) ${
+          JSON.stringify(store.get(info.objectId), null, 2)
+        }.`
+      );
+    });
   }
 
   return {

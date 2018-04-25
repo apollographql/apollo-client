@@ -69,6 +69,7 @@ type ExecInfo = {
 export type ExecResultMissingField = {
   objectId: string;
   fieldName: string;
+  tolerable: boolean;
 };
 
 export type ExecResult<R = any> = {
@@ -143,6 +144,7 @@ function readStoreResolver(
       missing: [{
         objectId: objId,
         fieldName: storeKeyName,
+        tolerable: false,
       }],
     };
   }
@@ -359,9 +361,25 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
       const typeCondition = fragment.typeCondition.name.value;
 
       if (execContext.fragmentMatcher(rootValue, typeCondition, contextValue)) {
-        merge(finalResult.result, handleMissing(
-          executeSelectionSet(fragment.selectionSet, rootValue, execContext),
-        ));
+        let fragmentExecResult = executeSelectionSet(
+          fragment.selectionSet,
+          rootValue,
+          execContext,
+        );
+
+        if (fragmentExecResult.missing) {
+          const obj = execContext.contextValue.store.get(rootValue.id);
+          if (!(obj && obj.__typename === typeCondition)) {
+            fragmentExecResult = {
+              ...fragmentExecResult,
+              missing: fragmentExecResult.missing.map(info => {
+                return { ...info, tolerable: true };
+              }),
+            };
+          }
+        }
+
+        merge(finalResult.result, handleMissing(fragmentExecResult));
       }
     }
   });

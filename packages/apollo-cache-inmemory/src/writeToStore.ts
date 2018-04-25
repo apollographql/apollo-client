@@ -220,17 +220,17 @@ export function writeSelectionSetToStore({
           // NOTE: fakeContext always uses ObjectCache
           // since this is only to ensure the return value of 'matches'
           store: new ObjectCache({ self: result }),
-          returnPartialData: false,
           cacheRedirects: {},
         };
-        matches = context.fragmentMatcherFunction(
+        const match = context.fragmentMatcherFunction(
           idValue,
           fragment.typeCondition.name.value,
           fakeContext,
         );
-        if (!isProduction() && fakeContext.returnPartialData) {
+        if (!isProduction() && match === 'heuristic') {
           console.error('WARNING: heuristic fragment matching going on!');
         }
+        matches = !!match;
       }
 
       if (matches) {

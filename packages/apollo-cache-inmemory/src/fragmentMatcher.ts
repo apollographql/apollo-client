@@ -29,7 +29,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     idValue: IdValue,
     typeCondition: string,
     context: ReadStoreContext,
-  ): boolean {
+  ): boolean | 'heuristic' {
     const obj = context.store.get(idValue.id);
 
     if (!obj && idValue.id === 'ROOT_QUERY') {
@@ -63,7 +63,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
         }
       }
 
-      return true;
+      return 'heuristic';
     }
 
     if (obj.__typename === typeCondition) {
@@ -83,7 +83,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
       'error',
     );
 
-    return true;
+    return 'heuristic';
   }
 }
 

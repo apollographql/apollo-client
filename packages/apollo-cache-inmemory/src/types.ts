@@ -68,7 +68,6 @@ export type ApolloReducerConfig = {
 
 export type ReadStoreContext = {
   readonly store: NormalizedCache;
-  readonly returnPartialData: boolean;
   readonly cacheRedirects: CacheResolverMap;
   readonly dataIdFromObject?: IdGetter;
 };
@@ -78,7 +77,7 @@ export interface FragmentMatcherInterface {
     idValue: IdValue,
     typeCondition: string,
     context: ReadStoreContext,
-  ): boolean;
+  ): boolean | 'heuristic';
 }
 
 export type PossibleTypesMap = { [key: string]: string[] };

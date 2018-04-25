@@ -66,7 +66,6 @@ export function diffQueryAgainstStore<T>({
   const context: ReadStoreContext = {
     // Global settings
     store,
-    returnPartialData,
     dataIdFromObject: (config && config.dataIdFromObject) || null,
     cacheRedirects: (config && config.cacheRedirects) || {},
   };

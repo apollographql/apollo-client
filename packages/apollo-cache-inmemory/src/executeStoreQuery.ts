@@ -52,7 +52,7 @@ export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
   context: ReadStoreContext,
-) => boolean;
+) => boolean | 'heuristic';
 
 type ExecContext = {
   fragmentMap: FragmentMap;
@@ -360,23 +360,21 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
 
       const typeCondition = fragment.typeCondition.name.value;
 
-      if (execContext.fragmentMatcher(rootValue, typeCondition, contextValue)) {
+      const match = execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+      if (match) {
         let fragmentExecResult = executeSelectionSet(
           fragment.selectionSet,
           rootValue,
           execContext,
         );
 
-        if (fragmentExecResult.missing) {
-          const obj = execContext.contextValue.store.get(rootValue.id);
-          if (!(obj && obj.__typename === typeCondition)) {
-            fragmentExecResult = {
-              ...fragmentExecResult,
-              missing: fragmentExecResult.missing.map(info => {
-                return { ...info, tolerable: true };
-              }),
-            };
-          }
+        if (match === 'heuristic' && fragmentExecResult.missing) {
+          fragmentExecResult = {
+            ...fragmentExecResult,
+            missing: fragmentExecResult.missing.map(info => {
+              return { ...info, tolerable: true };
+            }),
+          };
         }
 
         merge(finalResult.result, handleMissing(fragmentExecResult));

@@ -9,6 +9,9 @@
   `{ prop2: 'value2', prop1: 'value1' }`.
   [PR #2869](https://github.com/apollographql/apollo-client/pull/2869)
 
+- Avoid needless `hasOwnProperty` check in `deepFreeze`.
+  [PR #3545](https://github.com/apollographql/apollo-client/pull/3545)
+
 ### 1.0.13
 
 - Make `maybeDeepFreeze` a little more defensive, by always using

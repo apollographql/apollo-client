@@ -320,7 +320,7 @@ function defaultFragmentMatcher() {
   return true;
 }
 
-const executeSelectionSet = wrap(function (
+const executeSelectionSet = wrap(function _executeSelectionSet(
   selectionSet: SelectionSetNode,
   rootValue: any,
   execContext: ExecContext,
@@ -412,7 +412,7 @@ const executeSelectionSet = wrap(function (
   }
 });
 
-const executeField = wrap(function (
+const executeField = wrap(function _executeField(
   field: FieldNode,
   rootValue: any,
   execContext: ExecContext,

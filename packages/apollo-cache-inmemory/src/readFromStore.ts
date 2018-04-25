@@ -4,6 +4,7 @@ import {
   assign,
   getDefaultValues,
   getQueryDefinition,
+  isEqual,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -75,7 +76,6 @@ export function diffQueryAgainstStore<T>({
     {
       type: 'id',
       id: rootId,
-      previousResult,
       generated: true,
       typename: 'Query',
     },
@@ -96,6 +96,12 @@ export function diffQueryAgainstStore<T>({
         }.`
       );
     });
+  }
+
+  if (previousResult) {
+    if (isEqual(previousResult, execResult.result)) {
+      execResult.result = previousResult;
+    }
   }
 
   return {

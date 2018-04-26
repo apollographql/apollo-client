@@ -96,18 +96,20 @@ Then add the plugin in your `.babelrc` configuration file:
 Now any `import` statements importing from a GraphQL file type will return a ready-to-use GraphQL DocumentNode object.
 
 ```javascript
-import myImportedQuery from './productsQuery.graphql'
+import React, { Component } from 'react';
+import { graphql } from 'react-apollo';
+import myImportedQuery from './productsQuery.graphql';
 // or for files with multiple operations:
-// import { query1, query2 } from './queries.graphql'
+// import { query1, query2 } from './queries.graphql';
 
 class QueryingComponent extends Component {
   render() {
-    if (this.props.data.loading) return <h3>Loading...</h3>
-    return <div>{`This is my data: ${this.props.data.queryName}`}</div>
+    if (this.props.data.loading) return <h3>Loading...</h3>;
+    return <div>{`This is my data: ${this.props.data.queryName}`}</div>;
   }
 }
 
-export default graphql(myImportedQuery)(QueryingComponent)
+export default graphql(myImportedQuery)(QueryingComponent);
 ```
 
 ## Fragments

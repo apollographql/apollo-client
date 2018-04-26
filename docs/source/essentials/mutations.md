@@ -267,7 +267,7 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
   <dt>`called`: boolean</dt>
   <dd>A boolean indicating if the mutate function has been called</dd>
   <dt>`client`: ApolloClient</dt>
-  <dd>Your `ApolloClient` instance. Useful for manually firing queries or writing data to the cache.</dd>
+  <dd>Your `ApolloClient` instance. Useful for invoking cache methods outside the context of the update function, such as `client.writeData` and `client.readQuery`.</dd>
 </dl>
 
 <h2 id="next-steps">Next steps</h2>

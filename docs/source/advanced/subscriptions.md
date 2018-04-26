@@ -157,7 +157,7 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
   <dt>`variables`: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your subscription needs to execute</dd>
-  <dt>`shouldResubscribe`: boolean or (currentProps: Object, nextProps: Object) => boolean</dt>
+  <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
 </dl>
 

@@ -22,7 +22,7 @@ const Feed = () => (
 )
 ```
 
-Here we're using a Query component to fetch some dogs from our GraphQL server and display them in a list. The Query component uses the [render prop API](https://reactjs.org/docs/render-props.html) (with a function as a child) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
+Here we're using a Query component to fetch some dogs from our GraphQL server and display them in a list. The Query component uses the React [render prop API](https://reactjs.org/docs/render-props.html) (with a function as a child) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
 
 Apollo Client takes care of the request cycle from start to finish, including tracking loading and error states for you. There's no middleware to set up or boilerplate to write before making your first request, nor do you need to worry about transforming and caching the response. All you have to do is describe the data your component needs and let Apollo Client do the heavy lifting. 💪
 

@@ -92,7 +92,7 @@ And just like that we have the same UI but everything is a component!
 
 <h3 id="compose-to-render-composition">Updating multiple connected components with compose</h3>
 
-In some cases, it may make sense to split your queries into different operations for resuse, better performance, and separation of concerns. In the past, to easily group all of those data requirements together meant using the `compose` function from React Apollo. Now, you can just compose them directly in your render function! Take a look at this simple example:
+In some cases, it may make sense to split your queries into different operations for reuse, better performance, and separation of concerns. In the past, to easily group all of those data requirements together meant using the `compose` function from React Apollo. Now, you can just compose them directly in your render function! Take a look at this simple example:
 
 ```js
 const QueryOne = gql`

@@ -60,7 +60,6 @@ const defaultQueryInfo = {
 };
 
 export interface QueryPromise {
-  promise: Promise<ApolloQueryResult<any>>;
   resolve: (result: ApolloQueryResult<any>) => void;
   reject: (error: Error) => void;
 }
@@ -681,8 +680,9 @@ export class QueryManager<TStore> {
     options.notifyOnNetworkStatusChange = false;
 
     const requestId = this.idCounter;
-    const resPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, resPromise, resolve, reject);
+
+    return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+      this.addFetchQueryPromise<T>(requestId, resolve, reject);
 
       return this.watchQuery<T>(options, false)
         .result()
@@ -695,8 +695,6 @@ export class QueryManager<TStore> {
           reject(error);
         });
     });
-
-    return resPromise;
   }
 
   public generateQueryId() {
@@ -751,12 +749,10 @@ export class QueryManager<TStore> {
   // Adds a promise to this.fetchQueryPromises for a given request ID.
   public addFetchQueryPromise<T>(
     requestId: number,
-    promise: Promise<ApolloQueryResult<T>>,
     resolve: (result: ApolloQueryResult<T>) => void,
     reject: (error: Error) => void,
   ) {
     this.fetchQueryPromises.set(requestId.toString(), {
-      promise,
       resolve,
       reject,
     });
@@ -1060,8 +1056,9 @@ export class QueryManager<TStore> {
 
     let resultFromStore: any;
     let errorsFromStore: any;
-    const retPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
+
+    return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+      this.addFetchQueryPromise<T>(requestId, resolve, reject);
       const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
@@ -1154,8 +1151,6 @@ export class QueryManager<TStore> {
         subscriptions: subscriptions.concat([subscription]),
       }));
     });
-
-    return retPromise;
   }
 
   // Refetches a query given that query's name. Refetches

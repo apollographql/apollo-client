@@ -52,6 +52,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     super();
     this.config = { ...defaultConfig, ...config };
 
+    // KAMIL: restore optimistic
+    // const restored = JSON.parse(localStorage.getItem('optimistic'));
+    // this.optimistic = restored || [];
+
     // backwards compat
     if ((this.config as any).customResolvers) {
       console.warn(
@@ -73,6 +77,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public restore(data: NormalizedCacheObject): this {
     if (data) this.data.replace(data);
+    // KAMIL: removeOptimistic
     return this;
   }
 
@@ -146,6 +151,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return Promise.resolve();
   }
 
+  /**
+   * KAMIL: Remember those saved optimistic objects in recordOptimisticTransaction() ?
+   * this method calls recordOptimisticTransaction on all saved optimistic objects
+   * except the one of requested mutation
+   */
   public removeOptimistic(id: string) {
     // Throw away optimistic changes of that particular mutation
     const toPerform = this.optimistic.filter(item => item.id !== id);
@@ -158,9 +168,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
 
     this.broadcastWatches();
+
+    // KAMIL: setItem('optimistic', "[]");
   }
 
   public performTransaction(transaction: Transaction<NormalizedCacheObject>) {
+    // M11 -
     // TODO: does this need to be different, or is this okay for an in-memory cache?
 
     let alreadySilenced = this.silenceBroadcast;
@@ -177,26 +190,46 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.broadcastWatches();
   }
 
+  /**
+   * KAMIL: a transaction is a function that receives the cache and do stuff with it
+   *
+   * This method extracts the cache, saves it as a new one, perform transaction on the new one
+   * and brings back the original one
+   *
+   * It also stores that optimistic transaction for later usage
+   *
+   * At the end it broadcast watches
+   */
   public recordOptimisticTransaction(
     transaction: Transaction<NormalizedCacheObject>,
     id: string,
   ) {
+    // M06
     this.silenceBroadcast = true;
 
+    // KAMIL: it's here to catch changes on a snapshot of data, that was made by transaction
     const patch = record(this.extract(true), recordingCache => {
       // swapping data instance on 'this' is currently necessary
       // because of the current architecture
+      // KAMIL: they keep the old cache
       const dataCache = this.data;
+      // KAMIL: assings the one that comes from recording
       this.data = recordingCache;
+      // KAMIL: performs a transaction also on a snapshot of a cache (because we swapped this.cache)
       this.performTransaction(transaction);
+      // KAMIL: brings back old cache, the one without any changes so they are trashed
       this.data = dataCache;
     });
 
+    // KAMIL: patch is a snapshot of a Cache but only contains changes, recorded changed
+    // KAMIL: we store it for later usage, to make transaction runs once again but on the original store?
     this.optimistic.push({
       id,
       transaction,
       data: patch,
     });
+
+    // localStorage.setItem('optimistic', JSON.stringify(this.optimistic));
 
     this.silenceBroadcast = false;
 

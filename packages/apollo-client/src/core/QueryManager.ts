@@ -68,8 +68,12 @@ export interface QueryPromise {
 export class QueryManager<TStore> {
   public scheduler: QueryScheduler<TStore>;
   public link: ApolloLink;
+  // KAMIL: is here to store information about mutation, but only about loading and errors
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
+  // KAMIL: is like a action / reducer thing,
+  // we have actions like MARK_SOMETHING
+  // and it will make a change to the Cache based on that action
   public dataStore: DataStore<TStore>;
 
   private deduplicator: ApolloLink;
@@ -139,7 +143,9 @@ export class QueryManager<TStore> {
       );
     }
 
+    // KAMIL: it generates a unique ID for that mutation
     const mutationId = this.generateQueryId();
+    // KAMIL: it's ApolloCache
     const cache = this.dataStore.getCache();
     (mutation = cache.transformDocument(mutation)),
       (variables = assign(
@@ -147,11 +153,14 @@ export class QueryManager<TStore> {
         getDefaultValues(getMutationDefinition(mutation)),
         variables,
       ));
+    // KAMIL: turns DocumentNode into String
     const mutationString = print(mutation);
 
+    // KAMIL: gets
     this.setQuery(mutationId, () => ({ document: mutation }));
 
     // Create a map of update queries by id to the query instead of by name.
+    // KAMIL: we can skip that
     const generateUpdateQueriesInfo: () => {
       [queryId: string]: QueryWithUpdater;
     } = () => {
@@ -171,8 +180,12 @@ export class QueryManager<TStore> {
       return ret;
     };
 
+    // KAMIL: stores mutation with unique id, operation as a string and variables
+    // M01
     this.mutationStore.initMutation(mutationId, mutationString, variables);
 
+    // KAMIL: sets mutation as initialized and passess update function with a optimistic response
+    // M03
     this.dataStore.markMutationInit({
       mutationId,
       document: mutation,
@@ -182,6 +195,7 @@ export class QueryManager<TStore> {
       optimisticResponse,
     });
 
+    // KAMIL: updated queries after we updated the store (if we used optimisticResponse)
     this.broadcastQueries();
 
     return new Promise((resolve, reject) => {
@@ -192,8 +206,11 @@ export class QueryManager<TStore> {
         ...context,
         optimisticResponse,
       });
+
+      // KAMIL: now we go to ApolloLink part
       execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
+          // KAMIL: when it contains errors we save that error for later and stop here
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
             error = new ApolloError({
               graphQLErrors: result.errors,
@@ -201,9 +218,12 @@ export class QueryManager<TStore> {
             return;
           }
 
+          // KAMIL: if there were no errors
           this.mutationStore.markMutationResult(mutationId);
 
+          // KAMIL: if we use cache
           if (fetchPolicy !== 'no-cache') {
+            // KAMIL: we perform markMutationResult again but on a store
             this.dataStore.markMutationResult({
               mutationId,
               result,
@@ -213,6 +233,7 @@ export class QueryManager<TStore> {
               update: updateWithProxyFn,
             });
           }
+
           storeResult = result as FetchResult<T>;
         },
         error: (err: Error) => {
@@ -235,10 +256,18 @@ export class QueryManager<TStore> {
             this.mutationStore.markMutationError(mutationId, error);
           }
 
+          // KAMIL: if ApolloLink completes
+
+          // KAMIL: good place to look at when we're talking about OptimisticLink
+          // KAMIL: (it emits two values, one is optimistic one, second is a network response)
+          // KAMIL: it pushed two values at once because of the logic below
+
           this.dataStore.markMutationComplete({
             mutationId,
             optimisticResponse,
           });
+
+          // KAMIL: it now applied all changes so we can broadcast them
 
           this.broadcastQueries();
 
@@ -264,6 +293,8 @@ export class QueryManager<TStore> {
               fetchPolicy: 'network-only',
             });
           });
+
+          // KAMIL: it removes the document from Query Store
           this.setQuery(mutationId, () => ({ document: undefined }));
           if (
             errorPolicy === 'ignore' &&
@@ -272,6 +303,9 @@ export class QueryManager<TStore> {
           ) {
             delete storeResult.errors;
           }
+
+          // KAMIL: resolves with new data
+
           resolve(storeResult as FetchResult<T>);
         },
       });
@@ -1184,6 +1218,9 @@ export class QueryManager<TStore> {
     return this.queries.get(queryId) || { ...defaultQueryInfo };
   }
 
+  /**
+   * Gets a previous info about the query and use a function to define the new info object
+   */
   private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {
     const prev = this.getQuery(queryId);
     const newInfo = { ...prev, ...updater(prev) };

@@ -59,7 +59,7 @@ export class DataStore<TSerialized> {
     document: DocumentNode,
     variables: any,
   ) {
-    // the subscription interface should handle not sending us results we no longer subscribe to.
+    // the subscription interface  should handle not sending us results we no longer subscribe to.
     // XXX I don't think we ever send in an object with errors, but we might in the future...
     if (!graphQLResultHasError(result)) {
       this.cache.write({
@@ -71,6 +71,11 @@ export class DataStore<TSerialized> {
     }
   }
 
+  /**
+   * KAMIL: has an effect only if we use optimisticResponse
+   * It creates a transaction function (it's this.markMutationResult)
+   * It calls cache.recordOptimisticTransaction
+   */
   public markMutationInit(mutation: {
     mutationId: string;
     document: DocumentNode;
@@ -80,6 +85,7 @@ export class DataStore<TSerialized> {
     optimisticResponse: Object | Function | undefined;
   }) {
     if (mutation.optimisticResponse) {
+      // M04
       let optimistic: Object;
       if (typeof mutation.optimisticResponse === 'function') {
         optimistic = mutation.optimisticResponse(mutation.variables);
@@ -98,10 +104,15 @@ export class DataStore<TSerialized> {
         });
       };
 
+      // M05
+
+      // KAMIL: see definition
       this.cache.recordOptimisticTransaction(c => {
         const orig = this.cache;
         this.cache = c;
 
+        // KAMIL: oh boy, this code is messy
+        // KAMIL: we perform a changeFn on a snapshot of a cache since we swapped this.cache again
         try {
           changeFn();
         } finally {
@@ -111,6 +122,9 @@ export class DataStore<TSerialized> {
     }
   }
 
+  /**
+   * KAMIL:
+   */
   public markMutationResult(mutation: {
     mutationId: string;
     result: ExecutionResult;
@@ -121,7 +135,10 @@ export class DataStore<TSerialized> {
   }) {
     // Incorporate the result from this mutation into the store
     if (!graphQLResultHasError(mutation.result)) {
+      // KAMIL: creates an array of cache writes objects
       const cacheWrites: Cache.WriteOptions[] = [];
+
+      // KAMIL: pushes a write object to update ROOT_MUTATION
       cacheWrites.push({
         result: mutation.result.data,
         dataId: 'ROOT_MUTATION',
@@ -167,15 +184,24 @@ export class DataStore<TSerialized> {
           });
       }
 
+      // KAMIL: it performs transaction for every pushed cache write
       this.cache.performTransaction(c => {
+        // KAMIL: it just writes the value it received to the cache
         cacheWrites.forEach(write => c.write(write));
       });
+
+      // KAMIL: now the store is updated, the real one that can be persisted.
 
       // If the mutation has some writes associated with it then we need to
       // apply those writes to the store by running this reducer again with a
       // write action.
       const update = mutation.update;
+
       if (update) {
+        // KAMIL: if there was an update function applied
+        // KAMIL: it performs also that update function
+        // KAMIL: c is a DataProxy that we get in mutation.update function
+        // KAMIL: so it's basically an ApolloCache
         this.cache.performTransaction(c => {
           tryFunctionOrLogError(() => update(c, mutation.result));
         });
@@ -183,6 +209,9 @@ export class DataStore<TSerialized> {
     }
   }
 
+  /**
+   * KAMIL: It only calls cache.removeOptimistic if an optimistic response is included
+   */
   public markMutationComplete({
     mutationId,
     optimisticResponse,
@@ -191,6 +220,7 @@ export class DataStore<TSerialized> {
     optimisticResponse?: any;
   }) {
     if (!optimisticResponse) return;
+
     this.cache.removeOptimistic(mutationId);
   }
 

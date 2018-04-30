@@ -74,7 +74,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
     const httpLink = new HttpLink({
       uri: (config && config.uri) || '/graphql',
       fetchOptions: (config && config.fetchOptions) || {},
-      credentials: 'same-origin',
+      credentials: (config && config.fetchOptions && config.fetchOptions.credentials) || 'same-origin'
     });
 
     const link = ApolloLink.from([

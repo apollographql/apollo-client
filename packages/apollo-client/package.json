@@ -68,7 +68,7 @@
     "browserify": "15.2.0",
     "bundlesize": "0.17.0",
     "danger": "1.1.0",
-    "flow-bin": "0.69.0",
+    "flow-bin": "0.71.0",
     "github": "12.1.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.8.0",

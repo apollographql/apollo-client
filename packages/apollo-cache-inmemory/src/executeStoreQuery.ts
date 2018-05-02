@@ -32,7 +32,7 @@ import {
 } from './types';
 
 import { wrap, defaultMakeCacheKey } from './optimism';
-import { OptimisticObjectCache } from './optimisticObjectCache';
+import { DepTrackingCache } from './depTrackingCache';
 
 /**
  * The key which the cache id for a given value is stored in the result object. This key is private
@@ -206,7 +206,7 @@ export default wrap(function executeStoreQuery(
     // The result of executeStoreQuery can be safely cached only if the
     // underlying store is capable of tracking dependencies and invalidating
     // the cache when relevant data have changed.
-    if (context.store instanceof OptimisticObjectCache) {
+    if (context.store instanceof DepTrackingCache) {
       return defaultMakeCacheKey(
         query,
         context.store,
@@ -306,7 +306,7 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
     rootValue: any,
     context: ExecContext,
   ) {
-    if (context.contextValue.store instanceof OptimisticObjectCache) {
+    if (context.contextValue.store instanceof DepTrackingCache) {
       return defaultMakeCacheKey(
         selectionSet,
         context.contextValue.store,

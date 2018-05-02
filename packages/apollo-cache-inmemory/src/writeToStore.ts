@@ -28,7 +28,7 @@ import {
 } from 'apollo-utilities';
 
 import { ObjectCache } from './objectCache';
-import { defaultNormalizedCacheFactory } from './optimisticObjectCache';
+import { defaultNormalizedCacheFactory } from './depTrackingCache';
 
 import {
   IdGetter,

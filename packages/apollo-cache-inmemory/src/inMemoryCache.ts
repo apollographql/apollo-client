@@ -16,7 +16,7 @@ import {
 } from './types';
 import { writeResultToStore } from './writeToStore';
 import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
-import { defaultNormalizedCacheFactory } from './optimisticObjectCache';
+import { defaultNormalizedCacheFactory } from './depTrackingCache';
 import { record } from './recordingCache';
 const defaultConfig: ApolloReducerConfig = {
   fragmentMatcher: new HeuristicFragmentMatcher(),

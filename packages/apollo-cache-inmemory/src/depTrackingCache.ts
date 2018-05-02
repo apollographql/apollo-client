@@ -12,7 +12,7 @@ const depend = wrap((
   disposable: true,
 });
 
-export class OptimisticObjectCache implements NormalizedCache {
+export class DepTrackingCache implements NormalizedCache {
   constructor(private data: NormalizedCacheObject = Object.create(null)) {}
 
   public toObject(): NormalizedCacheObject {
@@ -64,5 +64,5 @@ export class OptimisticObjectCache implements NormalizedCache {
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {
-  return new OptimisticObjectCache(seed);
+  return new DepTrackingCache(seed);
 }

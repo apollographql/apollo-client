@@ -81,7 +81,7 @@
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",
     "typescript": "2.4.2",
-    "uglify-js": "3.3.18",
+    "uglify-js": "3.3.23",
     "webpack": "3.10.0",
     "webpack-bundle-analyzer": "2.11.1"
   },

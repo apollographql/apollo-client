@@ -137,8 +137,7 @@ import { ApolloLink, Observable } from 'apollo-link';
 const cache = new InMemoryCache({
   cacheRedirects: {
     Query: {
-      movie: (_, { id }, { getCacheKey }) =>
-        getCacheKey({ __typename: 'Movie', id });
+      movie: (_, { id }, { getCacheKey }) => getCacheKey({ __typename: 'Movie', id })
     }
   }
 });

@@ -51,7 +51,7 @@
     "apollo-link-dedup": "^1.0.0",
     "apollo-utilities": "^1.0.11",
     "symbol-observable": "^1.0.2",
-    "zen-observable": "^0.7.0"
+    "zen-observable": "^0.8.0"
   },
   "peerDependencies": {
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"

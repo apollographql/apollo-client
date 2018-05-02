@@ -1,6 +1,6 @@
 # Change log
 
-## vNEXT
+## 4.1.9
 - Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 
 ### 4.1.8

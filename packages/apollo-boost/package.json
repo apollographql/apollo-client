@@ -1,6 +1,6 @@
 {
   "name": "apollo-boost",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "The easiest way to get started with Apollo Client",
   "author": "Peggy Rayzis <peggy@apollographql.com>",
   "contributors": [
@@ -33,8 +33,8 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache-inmemory": "^1.1.12",
-    "apollo-client": "^2.2.8",
+    "apollo-cache-inmemory": "^1.2.0",
+    "apollo-client": "^2.3.0",
     "apollo-link": "^1.0.6",
     "apollo-link-error": "^1.0.3",
     "apollo-link-http": "^1.3.1",
@@ -44,11 +44,11 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "apollo-cache": "^1.1.7",
+    "apollo-cache": "^1.1.8",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "jest": "20.0.4",
-    "lodash": "4.17.5",
+    "lodash": "4.17.10",
     "rimraf": "2.6.2",
     "ts-jest": "20.0.14",
     "tslint": "5.9.1",

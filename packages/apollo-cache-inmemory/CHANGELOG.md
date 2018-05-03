@@ -24,6 +24,10 @@
 
 - Not documented
 
+### vNEXT
+- Optimize repeated `apollo-cache-inmemory` reads by caching partial query results
+  [#3394](https://github.com/apollographql/apollo-client/pull/3394)
+
 ### 1.2.0
 
 - Various optimizations for cache read performance

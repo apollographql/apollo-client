@@ -890,7 +890,7 @@ The higher order component created when you pass a mutation to `graphql()` will 
 
 The `mutate` function will actually execute your mutation using the network interface therefore mutating your data. The `mutate` function will also then update your cache in ways you define.
 
-To learn more about how mutations work, be sure to check out the [mutations usage documentation](mutations.html).
+To learn more about how mutations work, be sure to check out the [mutations usage documentation](../essentials/mutations.html).
 
 The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
 

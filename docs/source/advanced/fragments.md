@@ -234,8 +234,11 @@ fetch(`${YOUR_API_HOST}/graphql`, {
     );
     result.data.__schema.types = filteredData;
     fs.writeFile('./fragmentTypes.json', JSON.stringify(result.data), err => {
-      if (err) console.error('Error writing fragmentTypes file', err);
-      console.log('Fragment types successfully extracted!');
+      if (err) {
+        console.error('Error writing fragmentTypes file', err);
+      } else {
+        console.log('Fragment types successfully extracted!');
+      }
     });
   });
 ```

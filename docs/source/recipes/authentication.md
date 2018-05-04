@@ -35,7 +35,7 @@ app.use(cors(corsOptions));
 ```
 ## Header
 
-Another common way to identify yourself when using HTTP is to send along an authorization header. Apollo Links allow to create middlewares that let you modify requests before they are sent to the server. It's easy to add an `authorization` header to every HTTP request. In this example, we'll pull the login token from `localStorage` every time a request is sent:
+Another common way to identify yourself when using HTTP is to send along an authorization header. It's easy to add an `authorization` header to every HTTP request by chaining together Apollo Links. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
 ```js
 import { ApolloClient } from 'apollo-client';

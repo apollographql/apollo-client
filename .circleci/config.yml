@@ -30,7 +30,7 @@ jobs:
           paths:
             - ./node_modules
       - run: cd docs && npm i && npm run build
-      
+
   Filesize:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
@@ -45,7 +45,7 @@ jobs:
           paths:
             - ./node_modules
       - run: npm run filesize
-      
+
   Typecheck:
     docker: [ { image: 'circleci/node:8' } ]
     steps:
@@ -63,7 +63,7 @@ jobs:
 
   Apollo Client:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: v1-dependency-cache-{{ checksum "package.json" }}
@@ -86,7 +86,7 @@ jobs:
 
   Apollo Boost:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: v1-dependency-cache-{{ checksum "package.json" }}
@@ -109,7 +109,7 @@ jobs:
 
   Apollo Cache:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: v1-dependency-cache-{{ checksum "package.json" }}
@@ -132,7 +132,7 @@ jobs:
 
   Apollo InMemory Cache:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: v1-dependency-cache-{{ checksum "package.json" }}
@@ -154,8 +154,11 @@ jobs:
           path: reports/junit
 
   Apollo Utilities:
-    docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    docker:
+      image:
+        - 'circleci/node:8'
+        - 'circleci/node:10'
+    steps:
       - checkout
       - restore_cache:
           key: v1-dependency-cache-{{ checksum "package.json" }}
@@ -178,7 +181,7 @@ jobs:
 
   GraphQL Anywhere:
     docker: [ { image: 'circleci/node:8' } ]
-    steps: 
+    steps:
       - checkout
       - restore_cache:
           key: v1-dependency-cache-{{ checksum "package.json" }}

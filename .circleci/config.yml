@@ -3,9 +3,8 @@ version: 2
 jobs:
   Danger:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -21,9 +20,8 @@ jobs:
 
   Docs:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -39,9 +37,8 @@ jobs:
 
   Filesize:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -57,9 +54,8 @@ jobs:
 
   Typecheck:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -75,9 +71,8 @@ jobs:
 
   Apollo Client:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -101,9 +96,8 @@ jobs:
 
   Apollo Boost:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -127,9 +121,8 @@ jobs:
 
   Apollo Cache:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -153,9 +146,8 @@ jobs:
 
   Apollo InMemory Cache:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -179,9 +171,8 @@ jobs:
 
   Apollo Utilities:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -205,9 +196,8 @@ jobs:
 
   GraphQL Anywhere:
     docker:
-      image:
-        - circleci/node:8
-        - circleci/node:10
+      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:

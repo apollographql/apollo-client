@@ -2,7 +2,10 @@ version: 2
 
 jobs:
   Danger:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -17,7 +20,10 @@ jobs:
       - run: npm run danger
 
   Docs:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -32,7 +38,10 @@ jobs:
       - run: cd docs && npm i && npm run build
 
   Filesize:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -47,7 +56,10 @@ jobs:
       - run: npm run filesize
 
   Typecheck:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -62,7 +74,10 @@ jobs:
       - run: npm run type-check
 
   Apollo Client:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -85,7 +100,10 @@ jobs:
           path: reports/junit
 
   Apollo Boost:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -108,7 +126,10 @@ jobs:
           path: reports/junit
 
   Apollo Cache:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -131,7 +152,10 @@ jobs:
           path: reports/junit
 
   Apollo InMemory Cache:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -156,8 +180,8 @@ jobs:
   Apollo Utilities:
     docker:
       image:
-        - 'circleci/node:8'
-        - 'circleci/node:10'
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -180,7 +204,10 @@ jobs:
           path: reports/junit
 
   GraphQL Anywhere:
-    docker: [ { image: 'circleci/node:8' } ]
+    docker:
+      image:
+        - circleci/node:8
+        - circleci/node:10
     steps:
       - checkout
       - restore_cache:

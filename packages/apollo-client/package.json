@@ -79,7 +79,7 @@
     "rollup": "0.58.2",
     "rxjs": "5.5.10",
     "ts-jest": "20.0.14",
-    "tslint": "5.9.1",
+    "tslint": "5.10.0",
     "typescript": "2.4.2",
     "uglify-js": "3.3.23",
     "webpack": "3.10.0",

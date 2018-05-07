@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- More defensive in maybeDeepFreeze.ts due to TypeError: o.hasOwnProperty is not a function
 
 ### 1.0.11
 - `toIdValue` helper now takes an object with `id` and `typename` properties as the preferred interface [PR#3159](https://github.com/apollographql/apollo-client/pull/3159)

@@ -1882,22 +1882,98 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should updated nested inlined array fields', () => {
+  it('should keep reference when type of mixed inlined field with changes', () => {
     const store = defaultNormalizedCacheFactory();
 
     const query = gql`
       query {
-        shelter {
-          id
-          animals {
+        animals {
+          species {
             name
-            species {
-              name
-            }
           }
         }
       }
     `;
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Dog',
+              name: 'dog',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'dog' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+    });
+  });
+
+  it('should not keep reference when type of mixed inlined field with changes to non-inlined field', () => {
+    const store = defaultNormalizedCacheFactory();
 
     const dataIdFromObject = (object: any) => {
       if (object.__typename && object.id) {
@@ -1906,150 +1982,96 @@ describe('writing to the store', () => {
       return undefined;
     };
 
+    const query = gql`
+      query {
+        animals {
+          species {
+            id
+            name
+          }
+        }
+      }
+    `;
+
     writeQueryToStore({
       query,
-      dataIdFromObject,
       result: {
-        shelter: {
-          __typename: 'Shelter',
-          animals: [
-            {
-              __typename: 'Animal',
-              name: 'Carol',
-              species: {
-                __typename: 'Cat',
-                name: 'cat',
-              },
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
             },
-            {
-              __typename: 'Animal',
-              name: 'Dieter',
-              species: {
-                __typename: 'Dog',
-                name: 'dog',
-              },
-            },
-          ],
-          id: 'some-id',
-        },
+          },
+        ],
       },
+      dataIdFromObject,
       store,
     });
 
     expect(store.toObject()).toEqual({
-      '$Shelter__some-id.animals.0.species': {
-        name: 'cat',
-      },
-      '$Shelter__some-id.animals.1.species': {
-        name: 'dog',
-      },
-      'Shelter__some-id': {
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
         animals: [
           {
             generated: true,
-            id: 'Shelter__some-id.animals.0',
-            type: 'id',
-            typename: 'Animal',
-          },
-          {
-            generated: true,
-            id: 'Shelter__some-id.animals.1',
+            id: 'ROOT_QUERY.animals.0',
             type: 'id',
             typename: 'Animal',
           },
         ],
-        id: 'some-id',
       },
-      'Shelter__some-id.animals.0': {
-        name: 'Carol',
+      'ROOT_QUERY.animals.0': {
         species: {
           generated: true,
-          id: '$Shelter__some-id.animals.0.species',
+          id: '$ROOT_QUERY.animals.0.species',
           type: 'id',
           typename: 'Cat',
         },
       },
-      'Shelter__some-id.animals.1': {
-        name: 'Dieter',
-        species: {
-          generated: true,
-          id: '$Shelter__some-id.animals.1.species',
-          type: 'id',
-          typename: 'Dog',
-        },
-      },
-      ROOT_QUERY: {
-        shelter: {
-          generated: false,
-          id: 'Shelter__some-id',
-          type: 'id',
-          typename: 'Shelter',
-        },
-      },
     });
 
     writeQueryToStore({
       query,
-      dataIdFromObject,
       result: {
-        shelter: {
-          __typename: 'Shelter',
-          animals: [
-            // First element deleted -> nested "type" field has GraphQL Type change
-            {
-              __typename: 'Animal',
-              name: 'Dieter',
-              species: {
-                __typename: 'Dog',
-                name: 'dog',
-              },
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              id: 'dog-species',
+              __typename: 'Dog',
+              name: 'dog',
             },
-          ],
-          id: 'some-id',
-        },
+          },
+        ],
       },
+      dataIdFromObject,
       store,
     });
 
     expect(store.toObject()).toEqual({
-      '$Shelter__some-id.animals.0.species': {
+      '$ROOT_QUERY.animals.0.species': undefined,
+      'Dog__dog-species': {
+        id: 'dog-species',
         name: 'dog',
       },
-      'Shelter__some-id': {
+      ROOT_QUERY: {
         animals: [
           {
             generated: true,
-            id: 'Shelter__some-id.animals.0',
+            id: 'ROOT_QUERY.animals.0',
             type: 'id',
             typename: 'Animal',
           },
         ],
-        id: 'some-id',
       },
-      'Shelter__some-id.animals.0': {
-        name: 'Dieter',
+      'ROOT_QUERY.animals.0': {
         species: {
-          generated: true,
-          id: '$Shelter__some-id.animals.0.species',
-          type: 'id',
-          typename: 'Dog',
-        },
-      },
-      'Shelter__some-id.animals.1': {
-        name: 'Dieter',
-        species: {
-          generated: true,
-          id: '$Shelter__some-id.animals.1.species',
-          type: 'id',
-          typename: 'Dog',
-        },
-      },
-      ROOT_QUERY: {
-        shelter: {
           generated: false,
-          id: 'Shelter__some-id',
+          id: 'Dog__dog-species',
           type: 'id',
-          typename: 'Shelter',
+          typename: 'Dog',
         },
       },
     });

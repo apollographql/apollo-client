@@ -6,6 +6,7 @@ function deepFreeze(o: any) {
 
   Object.getOwnPropertyNames(o).forEach(function(prop) {
     if (
+      typeof o.hasOwnProperty === 'function' && 
       o.hasOwnProperty(prop) &&
       o[prop] !== null &&
       (typeof o[prop] === 'object' || typeof o[prop] === 'function') &&

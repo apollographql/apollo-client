@@ -1881,4 +1881,177 @@ describe('writing to the store', () => {
       },
     });
   });
+
+  it('should updated nested inlined array fields', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const query = gql`
+      query {
+        shelter {
+          id
+          animals {
+            name
+            species {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const dataIdFromObject = (object: any) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+      return undefined;
+    };
+
+    writeQueryToStore({
+      query,
+      dataIdFromObject,
+      result: {
+        shelter: {
+          __typename: 'Shelter',
+          animals: [
+            {
+              __typename: 'Animal',
+              name: 'Carol',
+              species: {
+                __typename: 'Cat',
+                name: 'cat',
+              },
+            },
+            {
+              __typename: 'Animal',
+              name: 'Dieter',
+              species: {
+                __typename: 'Dog',
+                name: 'dog',
+              },
+            },
+          ],
+          id: 'some-id',
+        },
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$Shelter__some-id.animals.0.species': {
+        name: 'cat',
+      },
+      '$Shelter__some-id.animals.1.species': {
+        name: 'dog',
+      },
+      'Shelter__some-id': {
+        animals: [
+          {
+            generated: true,
+            id: 'Shelter__some-id.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+          {
+            generated: true,
+            id: 'Shelter__some-id.animals.1',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+        id: 'some-id',
+      },
+      'Shelter__some-id.animals.0': {
+        name: 'Carol',
+        species: {
+          generated: true,
+          id: '$Shelter__some-id.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+      'Shelter__some-id.animals.1': {
+        name: 'Dieter',
+        species: {
+          generated: true,
+          id: '$Shelter__some-id.animals.1.species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+      ROOT_QUERY: {
+        shelter: {
+          generated: false,
+          id: 'Shelter__some-id',
+          type: 'id',
+          typename: 'Shelter',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      dataIdFromObject,
+      result: {
+        shelter: {
+          __typename: 'Shelter',
+          animals: [
+            // First element deleted -> nested "type" field has GraphQL Type change
+            {
+              __typename: 'Animal',
+              name: 'Dieter',
+              species: {
+                __typename: 'Dog',
+                name: 'dog',
+              },
+            },
+          ],
+          id: 'some-id',
+        },
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$Shelter__some-id.animals.0.species': {
+        name: 'dog',
+      },
+      'Shelter__some-id': {
+        animals: [
+          {
+            generated: true,
+            id: 'Shelter__some-id.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+        id: 'some-id',
+      },
+      'Shelter__some-id.animals.0': {
+        name: 'Dieter',
+        species: {
+          generated: true,
+          id: '$Shelter__some-id.animals.0.species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+      'Shelter__some-id.animals.1': {
+        name: 'Dieter',
+        species: {
+          generated: true,
+          id: '$Shelter__some-id.animals.1.species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+      ROOT_QUERY: {
+        shelter: {
+          generated: false,
+          id: 'Shelter__some-id',
+          type: 'id',
+          typename: 'Shelter',
+        },
+      },
+    });
+  });
 });

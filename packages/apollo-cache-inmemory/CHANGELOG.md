@@ -1,5 +1,9 @@
 # Change log
 
+### Next
+
+- Fix cache invalidation for inlined mixed types in union fields within arrays [#3422](https://github.com/apollographql/apollo-client/pull/3422)
+
 ### 1.2.0
 - Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 - Fix typo in documentation

@@ -43,27 +43,18 @@ The first step is in determining whether the issue is a bug, help question or fe
 4. Work with the requester and others in the community to build a clear specification for the feature and update the issue description accordingly.
 5. Finally, add the `confirmed` label and [classify](#classification) the issue.
 
-Core contributors may add the `pull-requests-encouraged` label to feature requests. This indicates the feature is aligned with the project roadmap and a high-quality pull request will almost certainly be merged.
+Core contributors may add the `help-wanted` label to feature requests. This indicates the feature is aligned with the project roadmap and a high-quality pull request will almost certainly be merged.
 
 <h2 id="classification">Classification</h2>
 
-Assign a classification (via GH labels) that enables the community to determine how to prioritize which issues to work on. The classification is based on *Severity x Impact* .
+Assign a classification (via GH labels) that enables the community to determine how to prioritize which issues to work on.
 
-### Severity
-_[Severity:has-workaround, Severity:production, Severity:blocks-development]_
+### Priority
 
-- If there is a workaround, apply the `Severity:has-workaround` label.
-- If the issue affects production apps, apply the `Severity:production` label.
-- If the issue blocks development, apply the `Severity:blocks-development` label.
-
-### Impact
-_[Impact:few, Impact:some, Impact:most]_
-
-This is a somewhat subjective label and is interpreted in conjunction with Github's upvotes. As a general guideline:
-
-- `Impact:few` issues would go unnoticed by almost all users, apart from those using a very niche feature, or a feature in an unusual way.
-- `Impact:some` issues would impact users using a feature that is commonly but not universally used.
-- `Impact:most` issues would impact more or less every user of Apollo.
+- `blocking`: Issue impacts production or dev due to perf, bug, build error, etc.
+- `high-priority`: Issue impacts more or less every user.
+- `medium-priority`: Issue impacts users using a feature that is commonly but not universally used.
+- `low-priority`: Issue would go unnoticed by almost all users, apart from those using a very niche feature, or a feature in an unusual way.
 
 ## Issues ready to claim
 

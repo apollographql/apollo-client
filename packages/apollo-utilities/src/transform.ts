@@ -1,3 +1,4 @@
+import { sha1 } from 'object-hash';
 import {
   DocumentNode,
   SelectionNode,
@@ -168,7 +169,8 @@ export function removeDirectivesFromDocument(
 const added = new Map();
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
-  const cached = added.get(doc);
+  const hash = sha1(doc);
+  const cached = added.get(hash);
   if (cached) return cached;
 
   const docClone = cloneDeep(doc);
@@ -181,7 +183,7 @@ export function addTypenameToDocument(doc: DocumentNode) {
     );
   });
 
-  added.set(doc, docClone);
+  added.set(hash, docClone);
   return docClone;
 }
 
@@ -206,10 +208,11 @@ const connectionRemoveConfig = {
 const removed = new Map();
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   checkDocument(doc);
-  const cached = removed.get(doc);
+  const hash = sha1(doc);
+  const cached = removed.get(hash);
   if (cached) return cached;
   const docClone = removeDirectivesFromDocument([connectionRemoveConfig], doc);
-  removed.set(doc, docClone);
+  removed.set(hash, docClone);
   return docClone;
 }
 

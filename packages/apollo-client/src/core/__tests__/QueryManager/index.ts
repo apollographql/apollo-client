@@ -3,7 +3,7 @@ import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
-import { from, observable as symbol__observable } from 'rxjs';
+import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   InMemoryCache,

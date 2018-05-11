@@ -13,7 +13,7 @@ export class Observable<T> extends LinkObservable<T> {
     return this;
   }
 
-  public ['@@observable']() {
+  public ['@@observable' as any]() {
     return this;
   }
 }

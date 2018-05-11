@@ -66,4 +66,16 @@ describe('config', () => {
 
     expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);
   });
+
+  it('allows you to pass in cache in clientState', () => {
+    class MockCache {}
+
+    const mockCache = new MockCache();
+
+    const client = new ApolloClient({
+      clientState: { cache: mockCache, resolvers },
+    });
+
+    expect(client.cache instanceof MockCache).toEqual(true);
+  });
 });

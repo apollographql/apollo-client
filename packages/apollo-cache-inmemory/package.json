@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-inmemory",
-  "version": "1.1.12",
+  "version": "1.2.1",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -34,14 +34,16 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js --i apollo-cache --i apollo-utilities --i graphql -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/bundle.umd.js --i apollo-cache --i apollo-utilities --i graphql -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache": "^1.1.7",
-    "apollo-utilities": "^1.0.11",
-    "graphql-anywhere": "^4.1.8"
+    "apollo-cache": "^1.1.8",
+    "apollo-utilities": "^1.0.12",
+    "graphql-anywhere": "^4.1.10"
   },
   "peerDependencies": {
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0"
@@ -49,16 +51,16 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.105",
+    "@types/lodash": "4.14.108",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
-    "graphql-tag": "2.8.0",
+    "graphql-tag": "2.9.2",
     "jest": "20.0.4",
-    "lodash": "4.17.5",
+    "lodash": "4.17.10",
     "rimraf": "2.6.2",
-    "rollup": "0.56.4",
+    "rollup": "0.58.2",
     "ts-jest": "20.0.14",
-    "tslint": "5.9.1",
+    "tslint": "5.10.0",
     "typescript": "2.5.2",
     "uglifyjs": "2.4.11"
   },
@@ -67,11 +69,6 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

@@ -92,7 +92,7 @@ And just like that we have the same UI but everything is a component!
 
 <h3 id="compose-to-render-composition">Updating multiple connected components with compose</h3>
 
-In some cases, it may make sense to split your queries into different operations for resuse, better performance, and separation of concerns. In the past, to easily group all of those data requirements together meant using the `compose` function from React Apollo. Now, you can just compose them directly in your render function! Take a look at this simple example:
+In some cases, it may make sense to split your queries into different operations for reuse, better performance, and separation of concerns. In the past, to easily group all of those data requirements together meant using the `compose` function from React Apollo. Now, you can just compose them directly in your render function! Take a look at this simple example:
 
 ```js
 const QueryOne = gql`
@@ -168,7 +168,7 @@ For more information on how to use the new Query component, read the [full guide
 Much like the Query component, the Mutation and Subscription component are ways to use Apollo directly within your react tree. They simplify integrating with Apollo, and keep your React app written in React! For more information on the Mutation component, [check out the usage guide](./essentials/mutations.html) or if you are wanting to learn about the Subscription component, [read how to here](./advanced/subscriptions.html).
 
 <h2 id="context">ApolloConsumer</h2>
-With upcoming versions of React (starting in React 16.3), there is a new version of context that makes it easier than ever to use components connected to state higher in the tree. While the 2.1 doesn't require React 16.3, we are making easier than ever to start writing in this style with the `<ApolloConsumer>` component. This is just like the `withApollo` higher order component, just in a normal React component! It takes no props and expects a child function which recieves the instance of Apollo Client in your tree. For example:
+With upcoming versions of React (starting in React 16.3), there is a new version of context that makes it easier than ever to use components connected to state higher in the tree. While the 2.1 doesn't require React 16.3, we are making it easier than ever to start writing in this style with the `<ApolloConsumer>` component. This is just like the `withApollo` higher order component, just in a normal React component! It takes no props and expects a child function which receives the instance of Apollo Client in your tree. For example:
 
 ```js
 const MyClient = () => (

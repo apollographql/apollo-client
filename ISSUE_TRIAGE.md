@@ -51,7 +51,6 @@ Assign a classification (via GH labels) that enables the community to determine 
 
 ### Priority
 
-- `blocking`: Issue impacts production or dev due to perf, bug, build error, etc.
 - `high-priority`: Issue impacts more or less every user.
 - `medium-priority`: Issue impacts users using a feature that is commonly but not universally used.
 - `low-priority`: Issue would go unnoticed by almost all users, apart from those using a very niche feature, or a feature in an unusual way.

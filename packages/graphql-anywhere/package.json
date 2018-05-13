@@ -45,7 +45,7 @@
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.108",
-    "@types/node": "8.10.13",
+    "@types/node": "8.10.14",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.4",
     "browserify": "15.2.0",

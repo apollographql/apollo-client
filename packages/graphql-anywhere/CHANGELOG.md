@@ -1,5 +1,11 @@
 # Change log
 
+### vNext
+
+- Source files are now excluded when publishing to npm.
+  [Issue #2806](https://github.com/apollographql/apollo-client/issues/2806)
+  [PR XXX]()
+
 ### 4.1.10
 - Fix [#3393](https://github.com/apollographql/apollo-client/issues/3393)
   [PR #3403](https://github.com/apollographql/apollo-client/pull/3403)

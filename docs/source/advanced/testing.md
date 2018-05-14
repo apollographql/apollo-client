@@ -1,11 +1,11 @@
 ---
 title: Testing
-description: Testing react-apollo
+description: Testing React Apollo
 ---
 
-React-apollo relies on [context](https://reactjs.org/docs/context.html) in order to pass the apollo-client instance through the react component tree. In addition, react-apollo makes network requests in order to fetch data. This behavior affects how you write tests for components that use react-apollo.
+React Apollo relies on [context](https://reactjs.org/docs/context.html) in order to pass the Apollo Client instance through the React component tree. In addition, React Apollo makes network requests in order to fetch data. This behavior affects how you write tests for components that use React Apollo.
 
-This guide will explain step-by-step how you can test your react-apollo code.
+This guide will explain step-by-step how you can test your React Apollo code.
 
 Consider the example below:
 
@@ -39,17 +39,17 @@ export const Dog = ({ name }) => (
 );
 ```
 
-If we were to try and write a test for it then you will get an error that the `client` is missing in the context.
+If we were to try and write a test for the `<Dog />` component then you will get an error that the `client` is missing in the context.
 
 ```js
-//broken because of a missing apollo-client in the context
+//broken because of a missing Apollo Client in the context
 test("it shows a dog", () => {
   render(<Dog name="Buck" />);
   expect(dogsToBePresent);
 });
 ```
 
-In order to fix this we could wrap the component in an `<ApolloProvider />` and pass an instance of apollo-client to the `client` prop. However, this will cause our tests to run against an actual back-end which makes the tests very unpredictable for the following reasons:
+In order to fix this we could wrap the component in an `<ApolloProvider />` and pass an instance of Apollo Client to the `client` prop. However, this will cause our tests to run against an actual backend which makes the tests very unpredictable for the following reasons:
 
 * The server could be down
 * No network connection
@@ -67,7 +67,7 @@ test("it shows a dog", () => {
 });
 ```
 
-To test the component in isolation we need to mock out all the calls to the backend. This will make our tests predictable. React-apollo provides the `<MockedProvider />` component in order to do just that! `<MockedProvider />` allows you to specify the exact results that should be returned for a certain query using the `mocks` prop.
+To test the component in isolation we need to mock out all the calls to the backend. This will make our tests predictable. React Apollo provides the `<MockedProvider />` component in order to do just that! `<MockedProvider />` allows you to specify the exact results that should be returned for a certain query using the `mocks` prop.
 
 Let's see how we can write the example using this component:
 
@@ -120,14 +120,14 @@ test("it shows a dog", () => {
     </MockedProvider>
   );
 
-  //Fails because react-apollo will initially show a loading state
+  //Fails because React Apollo will initially show a loading state
   expect(dogsToBePresent);
 });
 ```
 
-Despite having mocked the request the above test will still fail. Due to the asynchronous nature of react-apollo the loading state will be rendered instead of the dog name.
+Despite having mocked the request the above test will still fail. React Apollo will first show a loading state before it successfully retrieves the data and renders the dog name.
 
-In order to overcome this issue we advise you separate the react-apollo components from presentational components and test these independently.
+In order to overcome this issue you can separate the React Apollo components from presentational components and test these independently.
 
 Let's see how we can refactor the code to improve testability.
 
@@ -142,7 +142,7 @@ query getDog($name: String) {
 }
 `;
 
-// The react-apollo component
+// The React Apollo component
 export const DogQuery = ({ children, name }) => (
   <Query query={GET_DOG} variables={{name}}>
     {({ loading, error, data }) =>
@@ -298,7 +298,7 @@ it("renders <Dog />", () => {
       <Dog name="Buck" />
     </MockedProvider>
   );
-  
+
   expect(loadingToBeShown);
 });
 ```

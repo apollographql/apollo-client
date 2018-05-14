@@ -65,6 +65,8 @@ export class ApolloError extends Error {
 
     this.extraInfo = extraInfo;
 
-    Object.setPrototypeOf(this, ApolloError.prototype);
+    // We're not using `Object.setPrototypeOf` here as it isn't fully
+    // supported on Android (see issue #3236).
+    (this as any).__proto__ = ApolloError.prototype;
   }
 }

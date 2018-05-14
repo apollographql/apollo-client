@@ -201,7 +201,7 @@ export function writeSelectionSetToStore({
             context,
           });
         } else {
-          // if this is a defered field we don't need to throw / wanr
+          // if this is a defered field we don't need to throw / warn
           const isDefered =
             selection.directives &&
             selection.directives.length &&

@@ -3,7 +3,7 @@ title: Why Apollo Client?
 description: Why choose Apollo Client to manage your data?
 ---
 
-Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've came to the right place. Through practical examples inspired by our [example app Pupstagram](https://codesandbox.io/s/r5qp83z0yq), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
+Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've come to the right place. Through practical examples inspired by our [example app Pupstagram](https://codesandbox.io/s/r5qp83z0yq), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
 
 <h2 id="declarative-data">Declarative data fetching</h2>
 
@@ -22,7 +22,7 @@ const Feed = () => (
 )
 ```
 
-Here we're using a Query component to fetch some dogs from our GraphQL server and display them in a list. The Query component uses the render prop API (with a function as a child) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
+Here we're using a Query component to fetch some dogs from our GraphQL server and display them in a list. The Query component uses the React [render prop API](https://reactjs.org/docs/render-props.html) (with a function as a child) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
 
 Apollo Client takes care of the request cycle from start to finish, including tracking loading and error states for you. There's no middleware to set up or boilerplate to write before making your first request, nor do you need to worry about transforming and caching the response. All you have to do is describe the data your component needs and let Apollo Client do the heavy lifting. 💪
 

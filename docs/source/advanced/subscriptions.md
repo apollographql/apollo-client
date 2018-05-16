@@ -132,7 +132,7 @@ const COMMENTS_SUBSCRIPTION = gql`
 
 const DontReadTheComments = ({ repoFullName }) => (
   <Subscription
-    query={COMMENTS_SUBSCRIPTION}
+    subscription={COMMENTS_SUBSCRIPTION}
     variables={{ repoFullName }}
   >
     {({ data: { commentAdded }, loading }) => (

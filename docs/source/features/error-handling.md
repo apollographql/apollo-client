@@ -36,6 +36,7 @@ const ShowingSomeErrors = () => (
           <pre>Bad: {error.graphQLErrors.map(({ message }, i) => (
             <span key={i}>{message}</span>
           ))}
+          </pre>
         </div>
       )
     }}

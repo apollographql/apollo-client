@@ -116,7 +116,4 @@ if (!isBot) {
     );
   });
   raiseIssueAboutPaths(fail, onlyTestFiles, 'an `only` was left in the test');
-
-  // Politely ask for their name in the authors file
-  message('Please add your name and email to the AUTHORS file (optional)');
 }

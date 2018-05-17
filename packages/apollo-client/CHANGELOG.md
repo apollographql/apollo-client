@@ -6,6 +6,10 @@
   (Android), by instead setting the `prototype` of `this` manually.
   [Issue #3236](https://github.com/apollographql/apollo-client/issues/3236)
   [PR #3306](https://github.com/apollographql/apollo-client/pull/3306)
+- Added safety checks in case when query component gets unmounted while `fetchMore` is in flight
+  (Android), by instead setting the `prototype` of `this` manually.
+  [Issue #3466](https://github.com/apollographql/apollo-client/issues/3466)
+  [PR #3469](https://github.com/apollographql/apollo-client/pull/3469)
 
 ### 2.3.0
 - fixed edge case bug of changing fetchPolicies right after resetStore with no variables present

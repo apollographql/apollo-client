@@ -34,8 +34,10 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js --i apollo-cache --i apollo-utilities --i graphql -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/bundle.umd.js --i apollo-cache --i apollo-utilities --i graphql -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "dependencies": {
@@ -59,7 +61,7 @@
     "rollup": "0.58.2",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
-    "typescript": "2.5.2",
+    "typescript": "2.8.3",
     "uglifyjs": "2.4.11"
   },
   "jest": {
@@ -67,11 +69,6 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

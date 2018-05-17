@@ -85,6 +85,6 @@
     "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-sourcemaps": "0.4.2",
     "ts-jest": "20.0.14",
-    "typescript": "2.5.2"
+    "typescript": "2.8.3"
   }
 }

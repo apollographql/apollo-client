@@ -17,7 +17,7 @@
     "hexo-typescript-api-box": "0.9.1",
     "meteor-theme-hexo": "1.0.9",
     "typedoc": "0.9.0",
-    "typescript": "2.7.2"
+    "typescript": "2.8.3"
   },
   "scripts": {
     "start": "npm run build && chexo apollo-hexo-config -- server",

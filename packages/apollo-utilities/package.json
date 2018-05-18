@@ -38,12 +38,11 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "json-stable-stringify": "1.0.1"
+    "fast-json-stable-stringify": "^2.0.0"
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "@types/json-stable-stringify": "1.0.32",
     "@types/lodash": "4.14.108",
     "@types/node": "8.10.15",
     "browserify": "15.2.0",

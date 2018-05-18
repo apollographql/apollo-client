@@ -57,7 +57,7 @@
     "rollup": "0.58.2",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
-    "typescript": "2.5.2",
+    "typescript": "2.8.3",
     "uglify": "0.1.5"
   },
   "jest": {

@@ -33,6 +33,7 @@ import {
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { QueryListener, ApolloQueryResult, FetchType } from './types';
+import { graphQLResultHasError } from 'apollo-utilities';
 
 export interface QueryInfo {
   listeners: QueryListener[];
@@ -59,7 +60,6 @@ const defaultQueryInfo = {
 };
 
 export interface QueryPromise {
-  promise: Promise<ApolloQueryResult<any>>;
   resolve: (result: ApolloQueryResult<any>) => void;
   reject: (error: Error) => void;
 }
@@ -193,7 +193,7 @@ export class QueryManager<TStore> {
       });
       execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
-          if (result.errors && errorPolicy === 'none') {
+          if (graphQLResultHasError(result) && errorPolicy === 'none') {
             error = new ApolloError({
               graphQLErrors: result.errors,
             });
@@ -265,7 +265,10 @@ export class QueryManager<TStore> {
               });
             }
             this.setQuery(mutationId, () => ({ document: undefined }));
-            if (errorPolicy === 'ignore' && storeResult && storeResult.errors) {
+            if (errorPolicy === 'ignore' &&
+              storeResult &&
+              graphQLResultHasError(storeResult)
+            ) {
               delete storeResult.errors;
             }
             resolve(storeResult as FetchResult<T>);
@@ -342,7 +345,6 @@ export class QueryManager<TStore> {
 
     this.queryStore.initQuery({
       queryId,
-      queryString: print(query),
       document: query,
       storePreviousVariables: shouldFetch,
       variables,
@@ -511,7 +513,7 @@ export class QueryManager<TStore> {
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
                   'for the query ' +
-                  queryStoreValue.queryString,
+                  print(queryStoreValue.document),
               );
             }
           }
@@ -681,8 +683,9 @@ export class QueryManager<TStore> {
     options.notifyOnNetworkStatusChange = false;
 
     const requestId = this.idCounter;
-    const resPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, resPromise, resolve, reject);
+
+    return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+      this.addFetchQueryPromise<T>(requestId, resolve, reject);
 
       return this.watchQuery<T>(options, false)
         .result()
@@ -695,8 +698,6 @@ export class QueryManager<TStore> {
           reject(error);
         });
     });
-
-    return resPromise;
   }
 
   public generateQueryId() {
@@ -751,12 +752,10 @@ export class QueryManager<TStore> {
   // Adds a promise to this.fetchQueryPromises for a given request ID.
   public addFetchQueryPromise<T>(
     requestId: number,
-    promise: Promise<ApolloQueryResult<T>>,
     resolve: (result: ApolloQueryResult<T>) => void,
     reject: (error: Error) => void,
   ) {
     this.fetchQueryPromises.set(requestId.toString(), {
-      promise,
       resolve,
       reject,
     });
@@ -1060,8 +1059,9 @@ export class QueryManager<TStore> {
 
     let resultFromStore: any;
     let errorsFromStore: any;
-    const retPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
+
+    return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+      this.addFetchQueryPromise<T>(requestId, resolve, reject);
       const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
@@ -1080,6 +1080,10 @@ export class QueryManager<TStore> {
                 reject(e);
                 return;
               }
+            } else {
+              this.setQuery(queryId, () => ({
+                newData: { result: result.data, complete: true },
+              }));
             }
 
             this.queryStore.markQueryResult(
@@ -1104,7 +1108,7 @@ export class QueryManager<TStore> {
             errorsFromStore = result.errors;
           }
 
-          if (fetchMoreForQueryId) {
+          if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
             // We don't write fetchMore results to the store because this would overwrite
             // the original result in case an @connection directive is used.
             resultFromStore = result.data;
@@ -1150,8 +1154,6 @@ export class QueryManager<TStore> {
         subscriptions: subscriptions.concat([subscription]),
       }));
     });
-
-    return retPromise;
   }
 
   // Refetches a query given that query's name. Refetches

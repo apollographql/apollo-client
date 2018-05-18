@@ -51,10 +51,10 @@ client
       }
     `
   })
-  .then(({ data }) => console.log({ data }));
+  .then(result => console.log(result));
 ```
 
-Open up your console and inspect the data object. You should see `rates` attached, along with some other properties like `loading` and `networkStatus`. While you don't need React or another front-end framework just to fetch data with Apollo Client, our view layer integrations make it easier to bind your queries to your UI and reactively update your components with data. Let's learn how to connect Apollo Client to React so we can start building query components with `react-apollo`.
+Open up your console and inspect the result object. You should see a `data` property with `rates` attached, along with some other properties like `loading` and `networkStatus`. While you don't need React or another front-end framework just to fetch data with Apollo Client, our view layer integrations make it easier to bind your queries to your UI and reactively update your components with data. Let's learn how to connect Apollo Client to React so we can start building query components with `react-apollo`.
 
 <h2 id="creating-provider">Connect your client to React</h2>
 
@@ -157,7 +157,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   <dt>`clientState`: { resolvers?: Object, defaults?: Object, typeDefs?: string | Array<string> }</dt>
   <dd>An object representing your configuration for `apollo-link-state`. This is useful if you would like to use the Apollo cache for local state management. Learn more in our [quick start](/docs/link/links/state.html#start).</dd>
   <dt>`cacheRedirects`: Object</dt>
-  <dd>An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](../features/performance.html#cache-redirects).</dd>
+  <dd>A map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](../features/performance.html#cache-redirects).</dd>
 </dl>
 
 <h2 id="next-steps">Next steps</h2>
@@ -166,5 +166,5 @@ Now that you've learned how to fetch data with Apollo Client, you're ready to di
 
 - [Queries](./queries.html): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
 - [Mutations](./mutations.html): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
-- [Using Apollo Client directly](./direct-access.html): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Learn when and how in our guide or visit the API reference for a full list of options.
+- [Apollo Client API](../api/apollo-client.html): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Visit the API reference for a full list of options.
 

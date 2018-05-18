@@ -1,10 +1,10 @@
 import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
+import { print } from 'graphql/language/printer';
 import { isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
 
 export type QueryStoreValue = {
-  queryString: string;
   document: DocumentNode;
   variables: Object;
   previousVariables?: Object | null;
@@ -27,7 +27,6 @@ export class QueryStore {
 
   public initQuery(query: {
     queryId: string;
-    queryString: string;
     document: DocumentNode;
     storePreviousVariables: boolean;
     variables: Object;
@@ -38,7 +37,11 @@ export class QueryStore {
   }) {
     const previousQuery = this.store[query.queryId];
 
-    if (previousQuery && previousQuery.queryString !== query.queryString) {
+    if (
+      previousQuery &&
+      previousQuery.document !== query.document &&
+      print(previousQuery.document) !== print(query.document)
+    ) {
       // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
       // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
       // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
@@ -84,7 +87,6 @@ export class QueryStore {
     // the store. We probably want a refetch action instead, because I suspect that if you refetch
     // before the initial fetch is done, you'll get an error.
     this.store[query.queryId] = {
-      queryString: query.queryString,
       document: query.document,
       variables: query.variables,
       previousVariables,
@@ -142,7 +144,7 @@ export class QueryStore {
     // status for that query. See the branch for query initialization for more
     // explanation about this process.
     if (typeof fetchMoreForQueryId === 'string') {
-      this.markQueryError(fetchMoreForQueryId, error, undefined);
+      this.markQueryResultClient(fetchMoreForQueryId, true);
     }
   }
 

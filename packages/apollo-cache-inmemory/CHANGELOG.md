@@ -1,6 +1,12 @@
 # Change log
 
-### vNext
+### 1.2.0
+- Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
+- Fix typo in documentation
+
+### 1.1.12
+- Fix an edge case where fields that were unions of two types, one with an `id`,
+one without an `id`, would cause the cache to throw while saving the result [#3159](https://github.com/apollographql/apollo-client/pull/3159)
 - Map coverage to original source
 - Fixed bug with cacheRedirects not getting attached [#3016](https://github.com/apollographql/apollo-client/pull/3016)
 

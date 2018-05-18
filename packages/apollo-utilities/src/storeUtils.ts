@@ -220,7 +220,6 @@ export function getStoreKeyName(
 
   if (args) {
     const stringifiedArgs: string = stringify(args);
-    const stringifiedArgs: string = JSON.stringify(args);
     completeFieldName += `(${stringifiedArgs})`;
   }
 

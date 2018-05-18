@@ -6,12 +6,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run: npm run danger
@@ -21,12 +21,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run: cd docs && npm i && npm run build
@@ -36,12 +36,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run: npm run filesize
@@ -51,12 +51,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run: npm run type-check
@@ -66,17 +66,17 @@ jobs:
     steps: 
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -89,17 +89,17 @@ jobs:
     steps: 
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -112,17 +112,17 @@ jobs:
     steps: 
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -135,17 +135,17 @@ jobs:
     steps: 
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -158,17 +158,17 @@ jobs:
     steps: 
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -181,17 +181,17 @@ jobs:
     steps: 
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
           command: npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
           name: Jest suite
-          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload || true
+          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:

@@ -1,4 +1,4 @@
-# apollo-boost 🚀
+# apollo-boost
 The fastest, easiest way to get started with Apollo Client!
 
 Apollo Boost is a zero-config way to start using Apollo Client. It includes some sensible defaults, such as our recommended `InMemoryCache` and `HttpLink`, which come configured for you with our recommended settings.
@@ -135,4 +135,3 @@ const client = new ApolloClient({
   }
 });
 ```
-

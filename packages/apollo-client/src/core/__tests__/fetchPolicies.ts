@@ -218,6 +218,28 @@ describe('network-only', () => {
   });
 });
 describe('no-cache', () => {
+  it('requests from the network when not in cache', () => {
+    let called = 0;
+    const inspector = new ApolloLink((operation, forward) => {
+      called++;
+      return forward(operation).map(result => {
+        called++;
+        return result;
+      });
+    });
+
+    const client = new ApolloClient({
+      link: inspector.concat(createLink()),
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    return client
+      .query({ fetchPolicy: 'no-cache', query })
+      .then(actualResult => {
+        expect(actualResult.data).toEqual(result);
+        expect(called).toBe(2);
+      });
+  });
   it('requests from the network even if already in cache', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {

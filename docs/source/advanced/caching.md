@@ -76,7 +76,7 @@ const cache = new InMemoryCache({
 
 <h3 id="automatic-updates">Automatic cache updates</h3>
 
-Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we do the following query:
+Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we perform the following query:
 
 ```graphql
 {
@@ -87,7 +87,7 @@ Let's look at a case where just using the cache normalization results in the cor
 }
 ```
 
-Then, we do the following mutation:
+Then, we perform the following mutation:
 
 ```graphql
 mutation {
@@ -303,6 +303,8 @@ mutate({
 Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-apollo.html#graphql-mutation-options-update).
 
 ```javascript
+import CommentAppQuery from '../queries/CommentAppQuery';
+
 const SUBMIT_COMMENT_MUTATION = gql`
   mutation submitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(

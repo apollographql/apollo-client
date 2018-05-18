@@ -56,7 +56,7 @@ const AddTodo = () => {
 };
 ```
 
-First, create your GraphQL mutation, wrap it in `gql`, and pass it to the `mutation` prop on the `Mutation` component. The `Mutation` component also requires a function as a child (also called the render prop function). The first argument of the render prop function is the mutate function, which is how you tell Apollo Client that you'd like to trigger a mutation. The mutate function optionally takes `variables`, `optimisticResponse`, `refetchQueries`, and `update`; however, you can also pass in those values as props to the `Mutation` component. In the example, notice how we use the mutate function (called `addTodo`) to submit the form with our variables.
+First, create your GraphQL mutation, wrap it in `gql`, and pass it to the `mutation` prop on the `Mutation` component. The `Mutation` component also requires a function as a child (also called the render prop function). The first argument of the render prop function is the mutate function, which you call to tell Apollo Client that you'd like to trigger a mutation. The mutate function optionally takes `variables`, `optimisticResponse`, `refetchQueries`, and `update`; however, you can also pass in those values as props to the `Mutation` component. In the example, notice how we use the mutate function (called `addTodo`) to submit the form with our variables.
 
 The second argument to the render prop function is an object with your mutation result on the `data` property, as well as booleans for `loading` and if the mutate function was `called`, in addition to `error`. If you'd like to ignore the result of the mutation, pass `ignoreResults` as a prop to the mutation component.
 

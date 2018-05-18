@@ -76,7 +76,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
   private lastResult: ApolloQueryResult<T>;
   private lastError: ApolloError;
-  private lastVariables: { [key: string]: any };
 
   constructor({
     scheduler,
@@ -238,8 +237,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   public refetch(variables?: any): Promise<ApolloQueryResult<T>> {
+    const { fetchPolicy } = this.options;
     // early return if trying to read from cache during refetch
-    if (this.options.fetchPolicy === 'cache-only') {
+    if (fetchPolicy === 'cache-only') {
       return Promise.reject(
         new Error(
           'cache-only fetchPolicy option should not be used together with query refetch.',
@@ -264,9 +264,13 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     }
 
     // Override fetchPolicy for this call only
+    // only network-only and no-cache are safe to use
+    const isNetworkFetchPolicy =
+      fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
+
     const combinedOptions: WatchQueryOptions = {
       ...this.options,
-      fetchPolicy: 'network-only',
+      fetchPolicy: isNetworkFetchPolicy ? fetchPolicy : 'network-only',
     };
 
     return this.queryManager
@@ -428,7 +432,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // since setVariables restarts the subscription, we reset the tornDown status
     this.isTornDown = false;
 
-    const newVariables = variables
+    const newVariables = variables ? variables : this.variables;
 
     if (isEqual(newVariables, this.variables) && !tryFetch) {
       // If we have no observers, then we don't actually want to make a network
@@ -439,7 +443,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       }
       return this.result();
     } else {
-      this.lastVariables = this.variables;
       this.variables = newVariables;
       this.options.variables = newVariables;
 

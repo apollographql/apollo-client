@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[
-  `MapCache Cache writeFragment will write some deeply nested data into the store at any id 1`
+  `Cache writeFragment will write some deeply nested data into the store at any id 1`
 ] = `
 Object {
   "bar": Object {
@@ -20,7 +20,7 @@ Object {
 `;
 
 exports[
-  `MapCache Cache writeFragment will write some deeply nested data into the store at any id 2`
+  `Cache writeFragment will write some deeply nested data into the store at any id 2`
 ] = `
 Object {
   "bar": Object {
@@ -43,7 +43,7 @@ Object {
 `;
 
 exports[
-  `MapCache Cache writeFragment will write some deeply nested data into the store at any id 3`
+  `Cache writeFragment will write some deeply nested data into the store at any id 3`
 ] = `
 Object {
   "bar": Object {
@@ -66,7 +66,7 @@ Object {
 `;
 
 exports[
-  `MapCache Cache writeFragment will write some deeply nested data into the store at any id 4`
+  `Cache writeFragment will write some deeply nested data into the store at any id 4`
 ] = `
 Object {
   "bar": Object {
@@ -89,7 +89,7 @@ Object {
 `;
 
 exports[
-  `MapCache Cache writeFragment will write some deeply nested data into the store at any id 5`
+  `Cache writeFragment will write some deeply nested data into the store at any id 5`
 ] = `
 Object {
   "bar": Object {
@@ -112,7 +112,7 @@ Object {
 `;
 
 exports[
-  `MapCache Cache writeFragment will write some deeply nested data into the store at any id 6`
+  `Cache writeFragment will write some deeply nested data into the store at any id 6`
 ] = `
 Object {
   "bar": Object {
@@ -132,20 +132,4 @@ Object {
     },
   },
 }
-`;
-
-exports[
-  `MapCache writing to the store throws when trying to write an object without id that was previously queried with id 1`
-] = `
-"Error writing result to store for query:
- query Failure {
-  item {
-    stringField
-  }
-}
-
-Store error: the application attempted to write an object with no provided id but the store already contains an id of abcd for this object. The selectionSet that was trying to be written is:
-item {
-  stringField
-}"
 `;

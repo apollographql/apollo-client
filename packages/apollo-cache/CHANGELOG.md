@@ -1,5 +1,7 @@
 
 ### vNext
+
+## 1.1.6
 - Improve code coverage
 - Map coverage to original source
 

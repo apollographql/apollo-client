@@ -869,7 +869,8 @@ describe('diffing queries against the store', () => {
 
       const cacheRedirects = {
         Query: {
-          person: (_: any, args: any) => toIdValue(args['id']),
+          person: (_: any, args: any) =>
+            toIdValue({ id: args['id'], typename: 'Person' }),
         },
       };
 

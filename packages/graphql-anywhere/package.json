@@ -45,7 +45,7 @@
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.108",
-    "@types/node": "8.10.14",
+    "@types/node": "8.10.15",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.4",
     "browserify": "15.2.0",
@@ -57,7 +57,7 @@
     "rollup": "0.58.2",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
-    "typescript": "2.5.2",
+    "typescript": "2.8.3",
     "uglify": "0.1.5"
   },
   "jest": {

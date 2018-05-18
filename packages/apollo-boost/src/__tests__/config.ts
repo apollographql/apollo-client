@@ -66,4 +66,15 @@ describe('config', () => {
 
     expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);
   });
+
+  it('allows you to pass in requestCredentials', () => {
+    const cacheRedirects = { Query: { foo: () => 'woo' } };
+
+    const client = new ApolloClient({
+      cacheRedirects,
+      requestCredentials: 'include',
+    });
+
+    expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);
+  });
 });

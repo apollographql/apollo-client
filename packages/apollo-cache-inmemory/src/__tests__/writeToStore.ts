@@ -173,7 +173,7 @@ describe('writing to the store', () => {
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
-        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'numberField({"floatArg":3.14,"intArg":5})': 5,
         'stringField({"arg":"This is a string!"})': 'Heyo',
       },
     });
@@ -215,7 +215,7 @@ describe('writing to the store', () => {
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
-        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'numberField({"floatArg":3.14,"intArg":5})': 5,
         'stringField({"arg":"This is a default string!"})': 'Heyo',
       },
     });
@@ -1188,17 +1188,17 @@ describe('writing to the store', () => {
           }).toObject(),
         ).toEqual({
           '5': {
-            'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
-            },
-            'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
-            },
             id: 'id',
+            'some_mutation({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})': {
+              generated: false,
+              id: '5',
+              type: 'id',
+            },
+            'some_mutation_with_variables({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})': {
+              generated: false,
+              id: '5',
+              type: 'id',
+            },
           },
         });
       } else {

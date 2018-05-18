@@ -146,7 +146,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
-        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'numberField({"floatArg":3.14,"intArg":5})': 5,
         'stringField({"arg":"This is a string!"})': 'Heyo',
       },
     });
@@ -219,7 +219,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
-        'numberField({"intArg":0,"floatArg":3.14})': 5,
+        'numberField({"floatArg":3.14,"intArg":0})': 5,
         'stringField({"arg":"This is a default string!"})': 'Heyo',
       },
     });

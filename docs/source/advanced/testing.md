@@ -306,3 +306,5 @@ it("renders <Dog />", () => {
 We have now successfully tested the code!
 
 In case you want some more information, we have created an [example repo](https://github.com/apollographql/react-apollo/tree/master/examples/components) that illustrates how you can use the techniques outlined in this guide to test your components.
+
+Refer to the [docs](../api/react-apollo.html#MockedProvider) for more information on the API for `<MockedProvider />`.

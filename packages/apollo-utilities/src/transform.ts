@@ -9,10 +9,9 @@ import {
   FragmentDefinitionNode,
   ArgumentNode,
   FragmentSpreadNode,
-  InlineFragmentNode,
   VariableDefinitionNode,
+  VariableNode,
 } from "graphql";
-import { print } from "graphql/language/printer";
 
 import { cloneDeep } from "./util/cloneDeep";
 
@@ -217,7 +216,7 @@ export function removeDirectivesFromDocument(
 
       const remainingArguments = getAllArgumentsFromSelectionSet(
         newSelectionSet
-      );
+      )
 
       removedArguments = [
         ...removedArguments,
@@ -233,14 +232,20 @@ export function removeDirectivesFromDocument(
           .filter(
             removedArg =>
               !remainingArguments.some(
-                remainingArg =>
-                  remainingArg.value.name.value === removedArg.value.name.value
+                remainingArg => {
+                  if (remainingArg.value.kind !== 'Variable' || !(remainingArg.value as VariableNode)) return false
+                  if (removedArg.value.kind !== 'Variable' || !(removedArg.value as VariableNode)) return false
+                  return remainingArg.value.name.value === removedArg.value.name.value
+                }
               )
           )
-          .map(argument => ({
-            name: argument.value.name.value,
-            remove: aggressiveRemove,
-          })),
+          .map(argument => {
+            if (argument.value.kind !== 'Variable' || !(argument.value as VariableNode)) return null
+            return {
+              name: argument.value.name.value,
+              remove: aggressiveRemove,
+            }
+          }),
       ];
 
       const remainingFragmentSpreads = getAllFragmentSpreadsFromSelectionSet(
@@ -429,6 +434,7 @@ export function getDirectivesFromDocument(
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
   return (argument: ArgumentNode): Boolean => {
     return config.some((config: RemoveArgumentsConfig) => {
+      if (argument.value.kind !== 'Variable' || !(argument.value as VariableNode)) return false
       if (!argument.value.name) return false;
       if (config.name === argument.value.name.value) return true;
       if (config.test && config.test(argument)) return true;
@@ -593,15 +599,6 @@ function removeArgumentsFromSelectionSet(
   return selectionSet;
 }
 
-function hasFragmentSpreadInSelectionSet(
-  config: RemoveFragmentSpreadConfig[],
-  selectionSet: SelectionSetNode
-): boolean {
-  return filterSelectionSet(selectionSet, selection =>
-    hasFragmentSpreadInSelection(config, selection)
-  );
-}
-
 function hasFragmentSpreadInSelection(
   config: RemoveFragmentSpreadConfig[],
   selection: SelectionNode
@@ -670,10 +667,6 @@ function removeFragmentSpreadFromSelectionSet(
   selectionSet: SelectionSetNode
 ): SelectionSetNode {
   if (!selectionSet.selections) return selectionSet;
-  // if any of the directives are set to remove this selectionSet, remove it
-  const agressiveRemove = config.some(
-    (dir: RemoveFragmentSpreadConfig) => dir.remove
-  );
 
   selectionSet.selections = selectionSet.selections.filter(
     selection => !hasFragmentSpreadInSelection(config, selection)
@@ -689,15 +682,6 @@ function removeFragmentSpreadFromSelectionSet(
   });
 
   return selectionSet;
-}
-
-function getFragmentSpreadsFromSelectionSet(
-  config: GetFragmentSpreadConfig[],
-  selectionSet: SelectionSetNode
-): SelectionNode[] {
-  return selectionSet.selections.filter(selection =>
-    hasFragmentSpreadInSelection(config, selection)
-  );
 }
 
 function getAllFragmentSpreadsFromSelectionSet(

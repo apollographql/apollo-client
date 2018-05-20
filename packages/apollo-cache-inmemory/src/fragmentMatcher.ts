@@ -30,6 +30,10 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     typeCondition: string,
     context: ReadStoreContext,
   ): boolean {
+    if (idValue.id === 'ROOT_QUERY') {
+      return true;
+    }
+
     const obj = context.store.get(idValue.id);
 
     if (!obj) {

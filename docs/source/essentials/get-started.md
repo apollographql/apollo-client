@@ -166,5 +166,5 @@ Now that you've learned how to fetch data with Apollo Client, you're ready to di
 
 - [Queries](./queries.html): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
 - [Mutations](./mutations.html): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
-- [Using Apollo Client directly](./direct-access.html): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Learn when and how in our guide or visit the API reference for a full list of options.
+- [Apollo Client API](../api/apollo-client.html): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Visit the API reference for a full list of options.
 

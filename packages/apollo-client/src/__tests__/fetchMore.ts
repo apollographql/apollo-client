@@ -237,6 +237,44 @@ describe('fetchMore on an observable query', () => {
     sub = null;
   }
 
+  it('triggers new result with new variables', () => {
+    latestResult = null;
+    return setup({
+      request: {
+        query,
+        variables: variablesMore,
+      },
+      result: resultMore,
+    })
+      .then(watchedQuery => {
+        return watchedQuery.fetchMore({
+          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+          updateQuery: (prev, options) => {
+            console.log(prev, options, 'YOOOOO MY TEST DOE');
+
+            expect(options.variables).toEqual(variablesMore);
+
+            const state = cloneDeep(prev) as any;
+            state.entry.comments = [
+              ...state.entry.comments,
+              ...(options.fetchMoreResult as any).entry.comments,
+            ];
+            return state;
+          },
+        });
+      })
+      .then(data => {
+        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
+        expect(data.loading).toBe(false);
+        const comments = latestResult.data.entry.comments;
+        expect(comments).toHaveLength(20);
+        for (let i = 1; i <= 20; i++) {
+          expect(comments[i - 1].text).toEqual(`comment ${i}`);
+        }
+        unsetup();
+      });
+  });
+
   it('basic fetchMore results merging', () => {
     latestResult = null;
     return setup({

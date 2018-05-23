@@ -1,4 +1,3 @@
-import { sha1 } from 'object-hash';
 import {
   DocumentNode,
   SelectionNode,
@@ -166,13 +165,8 @@ export function removeDirectivesFromDocument(
   return isNotEmpty(operation, fragments) ? docClone : null;
 }
 
-const added = new Map();
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
-  const hash = sha1(doc);
-  const cached = added.get(hash);
-  if (cached) return cached;
-
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
@@ -182,8 +176,6 @@ export function addTypenameToDocument(doc: DocumentNode) {
       isRoot,
     );
   });
-
-  added.set(hash, docClone);
   return docClone;
 }
 

@@ -1,6 +1,5 @@
 // Provides the methods that allow QueryManager to handle
 // the `skip` and `include` directives within GraphQL.
-import { sha1 } from 'object-hash';
 import {
   FieldNode,
   OperationDefinitionNode,
@@ -112,12 +111,7 @@ export function flattenSelections(selection: SelectionNode): SelectionNode[] {
   );
 }
 
-const added = new Map();
 export function getDirectiveNames(doc: DocumentNode) {
-  const hash = sha1(doc);
-  const cached = added.get(hash);
-  if (cached) return cached;
-
   // operation => [names of directives];
   const directives = doc.definitions
     .filter(
@@ -139,8 +133,6 @@ export function getDirectiveNames(doc: DocumentNode) {
     .reduce((directives, directive) => directives.concat(directive), [])
     // [Directives] => [Name]
     .map((directive: DirectiveNode) => directive.name.value);
-
-  added.set(hash, directives);
   return directives;
 }
 

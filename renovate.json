@@ -13,10 +13,12 @@
     "dependencies"
   ],
   "assignees": [
-    "@jbaxleyiii"
+    "@jbaxleyiii",
+    "@hwillson"
   ],
   "reviewers": [
-    "@jbaxleyiii"
+    "@jbaxleyiii",
+    "@hwillson"
   ],
   "pathRules": [{
     "paths": ["docs/package.json"],

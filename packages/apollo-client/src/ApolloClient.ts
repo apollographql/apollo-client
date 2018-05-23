@@ -206,8 +206,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
-    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
+    if (this.disableNetworkFetches) {
+      if (options.fetchPolicy === 'network-only' || options.fetchPolicy === 'cache-and-network') {
+        options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
+      }
     }
 
     return this.queryManager.watchQuery<T>(options);

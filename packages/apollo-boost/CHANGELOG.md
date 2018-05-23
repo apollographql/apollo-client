@@ -2,6 +2,8 @@
 
 ### vNext
 
+- Use clientState cache if provided [#3439](https://github.com/apollographql/apollo-client/pull/3439)
+
 ## 1.1.4
 - Map coverage to original source
 - fix request parameter type [#3056](https://github.com/apollographql/apollo-client/pull/3056)

@@ -25,10 +25,19 @@ export interface PresetConfig {
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
   constructor(config: PresetConfig) {
-    const cache =
-      config && config.cacheRedirects
-        ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
-        : new InMemoryCache();
+    let cache = null;
+
+    if (config) {
+      if (config.clientState && config.clientState.cache) {
+        cache = config.clientState.cache;
+      } else if (config.cacheRedirects) {
+        cache = new InMemoryCache({ cacheRedirects: config.cacheRedirects });
+      } else {
+        cache = new InMemoryCache();
+      }
+    } else {
+      cache = new InMemoryCache();
+    }
 
     const stateLink =
       config && config.clientState
@@ -50,24 +59,25 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     const requestHandler =
       config && config.request
-        ? new ApolloLink((operation, forward) =>
-            new Observable(observer => {
-              let handle: any;
-              Promise.resolve(operation)
-                .then(oper => config.request(oper))
-                .then(() => {
-                  handle = forward(operation).subscribe({
-                    next: observer.next.bind(observer),
-                    error: observer.error.bind(observer),
-                    complete: observer.complete.bind(observer),
-                  });
-                })
-                .catch(observer.error.bind(observer));
+        ? new ApolloLink(
+            (operation, forward) =>
+              new Observable(observer => {
+                let handle: any;
+                Promise.resolve(operation)
+                  .then(oper => config.request(oper))
+                  .then(() => {
+                    handle = forward(operation).subscribe({
+                      next: observer.next.bind(observer),
+                      error: observer.error.bind(observer),
+                      complete: observer.complete.bind(observer),
+                    });
+                  })
+                  .catch(observer.error.bind(observer));
 
-              return () => {
-                if (handle) handle.unsubscribe;
-              };
-            })
+                return () => {
+                  if (handle) handle.unsubscribe;
+                };
+              }),
           )
         : false;
 

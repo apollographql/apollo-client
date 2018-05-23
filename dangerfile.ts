@@ -62,7 +62,7 @@ console.log("GitHub PR Username:", pr && pr.user && pr.user.login);
 
 const githubBotUsernames = [
   'greenkeeper',
-  'renovate',
+  'renovate[bot]',
 ];
 
 const isBot = pr

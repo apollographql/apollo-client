@@ -58,8 +58,17 @@ const raiseIssueAboutPaths = (
   }
 };
 
-const authors = commits.map(x => x.author.login);
-const isBot = authors.some(x => ['greenkeeper', 'renovate'].indexOf(x) > -1);
+console.log("GitHub PR Username:", pr && pr.user && pr.user.login);
+
+const githubBotUsernames = [
+  'greenkeeper',
+  'renovate',
+];
+
+const isBot = pr
+  && pr.user
+  && pr.user.login
+  && githubBotUsernames.includes(pr.user.login);
 
 // Rules
 if (!isBot) {

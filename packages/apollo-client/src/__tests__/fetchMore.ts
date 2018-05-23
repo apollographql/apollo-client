@@ -250,8 +250,6 @@ describe('fetchMore on an observable query', () => {
         return watchedQuery.fetchMore({
           variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
           updateQuery: (prev, options) => {
-            console.log(prev, options, 'YOOOOO MY TEST DOE');
-
             expect(options.variables).toEqual(variablesMore);
 
             const state = cloneDeep(prev) as any;

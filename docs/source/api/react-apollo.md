@@ -541,7 +541,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 `data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`](#graphql-query-data-loading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
 
 1. `loading`: The query has never been run before and the request is now pending. A query will still have this network status even if a result was returned from the cache, but a query was dispatched anyway.
-2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#graphql-query-options-variables) changes on their queries.
+2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#graphql-config-options-variables) changes on their queries.
 3. `fetchMore`: Indicates that `fetchMore` was called on this query and that the network request created is currently in flight.
 4. `refetch`: It means that `refetch` was called on a query and the refetch request is currently in flight.
 5. Unused.
@@ -763,7 +763,7 @@ data.updateQuery((previousResult) => ({
 }));
 ```
 
-<h3 id="graphql-query-options">`config.options`</h3>
+<h3 id="graphql-query-config-options">`config.options`</h3>
 
 An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 
@@ -892,9 +892,9 @@ The `mutate` function will actually execute your mutation using the network inte
 
 To learn more about how mutations work, be sure to check out the [mutations usage documentation](../essentials/mutations.html).
 
-The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
+The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-config-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
 
-The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`](#graphql-mutation-options) _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`](#graphql-mutation-options).
+The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`](#graphql-mutation-config-options) _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`](#graphql-mutation-config-options).
 
 **Example:**
 
@@ -915,7 +915,7 @@ export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
 
 
-<h3 id="graphql-mutation-options">`config.options`</h3>
+<h3 id="graphql-mutation-config-options">`config.options`</h3>
 
 An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 

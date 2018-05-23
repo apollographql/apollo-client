@@ -76,7 +76,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
   private lastResult: ApolloQueryResult<T>;
   private lastError: ApolloError;
-  private lastVariables: { [key: string]: any };
 
   constructor({
     scheduler,
@@ -444,7 +443,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       }
       return this.result();
     } else {
-      this.lastVariables = this.variables;
       this.variables = newVariables;
       this.options.variables = newVariables;
 

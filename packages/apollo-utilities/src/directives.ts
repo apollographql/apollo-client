@@ -111,11 +111,7 @@ export function flattenSelections(selection: SelectionNode): SelectionNode[] {
   );
 }
 
-const added = new Map();
 export function getDirectiveNames(doc: DocumentNode) {
-  const cached = added.get(doc);
-  if (cached) return cached;
-
   // operation => [names of directives];
   const directives = doc.definitions
     .filter(
@@ -137,8 +133,6 @@ export function getDirectiveNames(doc: DocumentNode) {
     .reduce((directives, directive) => directives.concat(directive), [])
     // [Directives] => [Name]
     .map((directive: DirectiveNode) => directive.name.value);
-
-  added.set(doc, directives);
   return directives;
 }
 

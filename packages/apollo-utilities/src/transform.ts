@@ -197,15 +197,10 @@ const connectionRemoveConfig = {
     return willRemove;
   },
 };
-const removed = new Map();
+
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   checkDocument(doc);
-  const hash = sha1(doc);
-  const cached = removed.get(hash);
-  if (cached) return cached;
-  const docClone = removeDirectivesFromDocument([connectionRemoveConfig], doc);
-  removed.set(hash, docClone);
-  return docClone;
+  return removeDirectivesFromDocument([connectionRemoveConfig], doc);
 }
 
 export type GetDirectiveConfig = {

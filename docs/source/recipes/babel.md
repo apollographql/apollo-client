@@ -71,7 +71,7 @@ const query = gql`
 `;
 ```
 
-## Using babel-plugin-graphql-tag
+## Using babel-plugin-graphql-ast
 
 Install the plugin in your dev dependencies:
 

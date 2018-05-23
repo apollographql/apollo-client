@@ -40,8 +40,8 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.108",
-    "@types/node": "8.10.14",
+    "@types/lodash": "4.14.109",
+    "@types/node": "8.10.17",
     "browserify": "15.2.0",
     "flow-bin": "0.72.0",
     "graphql": "0.13.2",
@@ -49,10 +49,10 @@
     "jest": "20.0.4",
     "lodash": "4.17.10",
     "rimraf": "2.6.2",
-    "rollup": "0.58.2",
+    "rollup": "0.59.1",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
-    "typescript": "2.5.2",
+    "typescript": "2.8.3",
     "uglifyjs": "2.4.11"
   },
   "jest": {

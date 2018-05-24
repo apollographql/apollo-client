@@ -2,6 +2,9 @@
 
 ### vNext
 
+- Remove certain small internal caches to prevent memory leaks when using SSR.
+  [PR #3444](https://github.com/apollographql/apollo-client/pull/3444)
+
 ### 1.0.11
 - `toIdValue` helper now takes an object with `id` and `typename` properties as the preferred interface [PR#3159](https://github.com/apollographql/apollo-client/pull/3159)
 - Map coverage to original source

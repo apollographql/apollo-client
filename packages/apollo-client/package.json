@@ -7,6 +7,7 @@
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",

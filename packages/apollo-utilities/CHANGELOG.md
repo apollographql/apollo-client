@@ -2,6 +2,10 @@
 
 ### vNext
 
+- Make `maybeDeepFreeze` a little more defensive, by always using `Object.prototype.hasOwnProperty` (to avoid cases where the object being frozen doesn't have its own `hasOwnProperty`).
+  [Issue #3426](https://github.com/apollographql/apollo-client/issues/3426)
+  [PR #3418](https://github.com/apollographql/apollo-client/pull/3418)
+
 - Remove certain small internal caches to prevent memory leaks when using SSR.
   [PR #3444](https://github.com/apollographql/apollo-client/pull/3444)
 

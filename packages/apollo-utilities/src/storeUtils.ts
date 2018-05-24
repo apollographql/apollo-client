@@ -16,6 +16,8 @@ import {
   NameNode,
 } from 'graphql';
 
+import { removeSpace } from './util/removeSpace';
+
 export interface IdValue {
   type: 'id';
   id: string;
@@ -125,10 +127,12 @@ export function valueToObjectRepresentation(
   } else if (isNullValue(value)) {
     argObj[name.value] = null;
   } else {
-    throw new Error(`The inline argument "${name.value}" of kind "${
-      (value as any).kind
-    }" is not supported.
-                    Use variables instead of inline arguments to overcome this limitation.`);
+    throw new Error(
+      removeSpace(`The inline argument "${name.value}" of kind "${
+        (value as any).kind
+      }" is not supported.
+                    Use variables instead of inline arguments to overcome this limitation.`),
+    );
   }
 }
 

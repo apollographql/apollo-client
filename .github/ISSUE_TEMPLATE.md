@@ -29,7 +29,7 @@ Instructions for how the issue can be reproduced by a maintainer or contributor.
 <!--
 Run the following command in your project directory and paste its results here:
 
-`npx envinfo@latest --raw '{"System":["OS"],"Binaries":["Node","npm","Yarn"],"Browsers":["Chrome","Edge","Firefox","Safari"],"npmPackages":"*apollo*","npmGlobalPackages":"*apollo*"}`
+`npx envinfo@latest --raw '{"System":["OS"],"Binaries":["Node","npm","Yarn"],"Browsers":["Chrome","Edge","Firefox","Safari"],"npmPackages":"*apollo*","npmGlobalPackages":"*apollo*"}'`
 -->
 
 <!--**Issue Labels**

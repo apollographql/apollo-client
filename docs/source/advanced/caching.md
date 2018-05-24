@@ -448,7 +448,7 @@ client.writeQuery({
 
 Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
 
-<h3 id="cacheRedirect">Cache redirects with `cacheResolvers`</h3>
+<h3 id="cacheRedirect">Cache redirects with `cacheRedirects`</h3>
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 
@@ -479,13 +479,12 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```
-import { toIdValue } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const cache = new InMemoryCache({
-  cacheResolvers: {
+  cacheRedirects: {
     Query: {
-      book: (_, args) => toIdValue(cache.config.dataIdFromObject({ __typename: 'Book', id: args.id })),
+      book: (_, args, { getCacheKey }) => getCacheKey({ __typename: 'Book', id: args.id })),
     },
   },
 });
@@ -493,7 +492,7 @@ const cache = new InMemoryCache({
 
 > Note: This'll also work with custom `dataIdFromObject` methods as long as you use the same one.
 
-Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object. "Query" key in this example is your root query type name.
+Apollo Client will use the ID returned by the custom resolver to look up the item in its cache. `getCacheKey` is passed inside the third argument to the resolver to generate the key of the object based on its `__typename` and `id`. 
 
 To figure out what you should put in the `__typename` property run one of the queries in GraphiQL and get the `__typename` field:
 
@@ -518,12 +517,12 @@ The value that's returned (the name of your type) is what you need to put into t
 It is also possible to return a list of IDs:
 
 ```
-cacheResolvers: {
+cacheRedirects: {
   Query: {
     books: (_, args) => args.ids.map(id =>
-      toIdValue(cache.config.dataIdFromObject({ __typename: 'Book', id: id }))),
+      getCacheKey(({ __typename: 'Book', id: id }))),
   },
-},
+}
 ```
 
 <h3 id="reset-store">Resetting the store</h3>

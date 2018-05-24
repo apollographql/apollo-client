@@ -1882,7 +1882,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should keep reference when type of mixed inlined field with changes', () => {
+  it('should keep reference when type of mixed inlined field changes', () => {
     const store = defaultNormalizedCacheFactory();
 
     const query = gql`
@@ -1972,7 +1972,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should not keep reference when type of mixed inlined field with changes to non-inlined field', () => {
+  it('should not keep reference when type of mixed inlined field changes to non-inlined field', () => {
     const store = defaultNormalizedCacheFactory();
 
     const dataIdFromObject = (object: any) => {

@@ -28,4 +28,22 @@ describe('remove space', () => {
 
     expect(removeSpace(str)).toEqual(expectedStr);
   });
+
+  it('will works by using it as tagged template', () => {
+    const val = {
+      first: 'first',
+      second: 'second',
+    };
+
+    const expectedStr =
+      'The inline argument "first" of kind "second" is not supported.\n' +
+      'Use variables instead of inline arguments to overcome this limitation.';
+
+    expect(removeSpace`The inline argument "${val.first}" of kind "${
+      val.second
+    }" is not supported.
+                    Use variables instead of inline arguments to overcome this limitation.`).toEqual(
+      expectedStr,
+    );
+  });
 });

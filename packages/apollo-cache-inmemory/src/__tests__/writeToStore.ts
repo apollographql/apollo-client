@@ -1881,4 +1881,199 @@ describe('writing to the store', () => {
       },
     });
   });
+
+  it('should keep reference when type of mixed inlined field changes', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const query = gql`
+      query {
+        animals {
+          species {
+            name
+          }
+        }
+      }
+    `;
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Dog',
+              name: 'dog',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'dog' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+    });
+  });
+
+  it('should not keep reference when type of mixed inlined field changes to non-inlined field', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const dataIdFromObject = (object: any) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+      return undefined;
+    };
+
+    const query = gql`
+      query {
+        animals {
+          species {
+            id
+            name
+          }
+        }
+      }
+    `;
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
+          },
+        ],
+      },
+      dataIdFromObject,
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              id: 'dog-species',
+              __typename: 'Dog',
+              name: 'dog',
+            },
+          },
+        ],
+      },
+      dataIdFromObject,
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': undefined,
+      'Dog__dog-species': {
+        id: 'dog-species',
+        name: 'dog',
+      },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: false,
+          id: 'Dog__dog-species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+    });
+  });
 });

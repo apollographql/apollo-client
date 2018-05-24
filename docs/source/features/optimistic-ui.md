@@ -27,8 +27,8 @@ const UPDATE_COMMENT = gql`
 const CommentPageWithData = () => (
   <Mutation mutation={UPDATE_COMMENT}>
     {mutate => {
-      <AddComment
-        addComment={({ commentId, commentContent }) =>
+      <Comment
+        updateComment={({ commentId, commentContent }) =>
           mutate({
             variables: { commentId, commentContent },
             optimisticResponse: {

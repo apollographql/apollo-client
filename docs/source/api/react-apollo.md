@@ -541,7 +541,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 `data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`](#graphql-query-data-loading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
 
 1. `loading`: The query has never been run before and the request is now pending. A query will still have this network status even if a result was returned from the cache, but a query was dispatched anyway.
-2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#graphql-query-options-variables) changes on their queries.
+2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#graphql-config-options-variables) changes on their queries.
 3. `fetchMore`: Indicates that `fetchMore` was called on this query and that the network request created is currently in flight.
 4. `refetch`: It means that `refetch` was called on a query and the refetch request is currently in flight.
 5. Unused.
@@ -763,7 +763,7 @@ data.updateQuery((previousResult) => ({
 }));
 ```
 
-<h3 id="graphql-query-options">`config.options`</h3>
+<h3 id="graphql-query-config-options">`config.options`</h3>
 
 An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 
@@ -820,6 +820,7 @@ Valid `fetchPolicy` values are:
 - `cache-and-network`: This fetch policy will have Apollo first trying to read data from your cache. If all the data needed to fulfill your query is in the cache then that data will be returned. However, regardless of whether or not the full data is in your cache this `fetchPolicy` will *always* execute query with the network interface unlike `cache-first` which will only execute your query if the query data is not in your cache. This fetch policy optimizes for users getting a quick response while also trying to keep cached data consistent with your server data at the cost of extra network requests.
 - `network-only`: This fetch policy will *never* return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
 - `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()` and `readFragment()`](../advanced/caching.html#readquery) methods available to you on your `ApolloClient` instance.
+- `no-cache`: This fetch policy will *never* return your initial data from the cache. Instead it will always make a request using your network interface to the server. Unlike the `network-only` policy, it also will not write any data to the cache after the query completes.
 
 **Example:**
 
@@ -892,9 +893,9 @@ The `mutate` function will actually execute your mutation using the network inte
 
 To learn more about how mutations work, be sure to check out the [mutations usage documentation](../essentials/mutations.html).
 
-The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
+The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-config-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
 
-The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`](#graphql-mutation-options) _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`](#graphql-mutation-options).
+The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`](#graphql-mutation-config-options) _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`](#graphql-mutation-config-options).
 
 **Example:**
 
@@ -915,7 +916,7 @@ export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
 
 
-<h3 id="graphql-mutation-options">`config.options`</h3>
+<h3 id="graphql-mutation-config-options">`config.options`</h3>
 
 An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 

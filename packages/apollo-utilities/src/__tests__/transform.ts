@@ -312,21 +312,6 @@ describe('query transforms', () => {
 
     expect(expectedQueryStr).toBe(print(newQueryDoc));
   });
-  it('should memoize and return cached results', () => {
-    let testQuery = gql`
-      query {
-        author {
-          name {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const newQueryDoc = addTypenameToDocument(testQuery);
-    const secondCall = addTypenameToDocument(testQuery);
-    expect(newQueryDoc).toBe(secondCall);
-  });
 
   it('should not add duplicates', () => {
     let testQuery = gql`
@@ -566,21 +551,6 @@ describe('query transforms', () => {
     const expectedQueryStr = print(expectedQuery);
 
     expect(expectedQueryStr).toBe(print(newQueryDoc));
-  });
-  it('should memoize and return cached results', () => {
-    let testQuery = gql`
-      query {
-        author {
-          name @connection(key: "foo") {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery);
-    const secondCall = removeConnectionDirectiveFromDocument(testQuery);
-    expect(newQueryDoc).toBe(secondCall);
   });
 });
 
@@ -982,4 +952,5 @@ describe('getDirectivesFromDocument', () => {
       const doc = getDirectivesFromDocument([{ name: 'client' }], query, true);
       expect(print(doc)).toBe(print(expected));
     });
+  });
 });

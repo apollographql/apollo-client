@@ -30,6 +30,26 @@ describe('QueryStore', () => {
         );
       },
     );
+
+    it(
+      'should not attempt to set the network status of a ' +
+        '`fetchMoreForQueryId` query, if it does not exist in the store',
+      () => {
+        queryStore.stopQuery(queryId);
+        expect(() => {
+          queryStore.initQuery({
+            queryId: 'new-query-id',
+            document: {} as DocumentNode,
+            storePreviousVariables: false,
+            variables: {},
+            isPoll: false,
+            isRefetch: false,
+            metadata: {},
+            fetchMoreForQueryId: queryId,
+          });
+        }).not.toThrow("Cannot set property 'networkStatus' of undefined");
+      },
+    );
   });
 
   describe('markQueryResult', () => {

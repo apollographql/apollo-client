@@ -484,7 +484,8 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 const cache = new InMemoryCache({
   cacheRedirects: {
     Query: {
-      book: (_, args, { getCacheKey }) => getCacheKey({ __typename: 'Book', id: args.id })),
+      book: (_, args, { getCacheKey }) => 
+        getCacheKey({ __typename: 'Book', id: args.id })
     },
   },
 });
@@ -519,9 +520,10 @@ It is also possible to return a list of IDs:
 ```
 cacheRedirects: {
   Query: {
-    books: (_, args) => args.ids.map(id =>
-      getCacheKey(({ __typename: 'Book', id: id }))),
-  },
+    books: (_, args, { getCacheKey }) =>
+      args.ids.map(id => 
+        getCacheKey({ __typename: 'Book', id: id }))
+  } 
 }
 ```
 

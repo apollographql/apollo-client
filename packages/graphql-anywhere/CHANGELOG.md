@@ -1,6 +1,17 @@
 # Change log
 
-## vNEXT
+### vNext
+
+- Source files are now excluded when publishing to npm.
+  [Issue #2806](https://github.com/apollographql/apollo-client/issues/2806)
+  [PR #3454](https://github.com/apollographql/apollo-client/pull/3454)
+
+### 4.1.10
+- Fix [#3393](https://github.com/apollographql/apollo-client/issues/3393)
+  [PR #3403](https://github.com/apollographql/apollo-client/pull/3403)
+
+### 4.1.9
+- Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 
 ### 4.1.8
 - Map coverage to original source

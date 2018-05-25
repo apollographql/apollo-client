@@ -3,7 +3,7 @@ title: Local state management
 description: Learn how to store your local data in Apollo Client
 ---
 
-We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our application.
+We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our client application.
 
 That's where `apollo-link-state`, our solution for managing local data in Apollo Client, comes in. `apollo-link-state` allows you to store your local data inside the Apollo cache alongside your remote data. To access your local data, just query it with GraphQL. You can even request local and server data within the same query!
 
@@ -62,9 +62,9 @@ import Link from './Link';
 
 const FilterLink = ({ filter, children }) => (
   <ApolloConsumer>
-    {cache => (
+    {client => (
       <Link
-        onClick={() => cache.writeData({ data: { visibilityFilter: filter } })}
+        onClick={() => client.writeData({ data: { visibilityFilter: filter } })}
       >
         {children}
       </Link>
@@ -73,7 +73,7 @@ const FilterLink = ({ filter, children }) => (
 );
 ```
 
-The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [new React context API](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md). From the client instance, you can directly call `cache.writeData` and pass in the data you'd like to write to the cache.
+The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [new React context API](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md). From the client instance, you can directly call `client.writeData` and pass in the data you'd like to write to the cache.
 
 What if we want to immediately subscribe to the data we just wrote to the cache? Let's create an `active` property on the link that marks the link's filter as active if it's the same as the current `visibilityFilter` in the cache. To immediately subscribe to a client-side mutation, wrap it in a `Query` component instead of an `ApolloConsumer` component. The `Query` component also has the client instance exposed on its render prop function.
 

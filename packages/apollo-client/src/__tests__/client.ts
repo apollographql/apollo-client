@@ -131,6 +131,50 @@ describe('client', () => {
     return clientRoundtrip(query, { data });
   });
 
+  it('should allow queries with fragments on root query', () => {
+    const query = gql`
+      query people {
+        ...peeps
+      }
+
+      fragment peeps on Query {
+        allPeople(first: 1) {
+          people {
+            name
+            __typename
+          }
+          __typename
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+            __typename: 'Person',
+          },
+        ],
+        __typename: 'People',
+      },
+    };
+
+    const variables = { first: 1 };
+
+    const link = ApolloLink.from([() => Observable.of({ data })]);
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    client.query({ query, variables }).then(actualResult => {
+      expect(actualResult.data).toEqual(data);
+      done();
+    });
+  });
+
   it('should allow a single query with an apollo-link enabled network interface', done => {
     const query = gql`
       query people {

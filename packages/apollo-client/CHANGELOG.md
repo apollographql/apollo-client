@@ -6,6 +6,15 @@
   (Android), by instead setting the `prototype` of `this` manually.
   [Issue #3236](https://github.com/apollographql/apollo-client/issues/3236)
   [PR #3306](https://github.com/apollographql/apollo-client/pull/3306)
+- Added safeguards to make sure `QueryStore.initQuery` and   
+  `QueryStore.markQueryResult` don't try to set the network status of a
+  `fetchMoreForQueryId` query, if it does not exist in the store. This was
+  happening when a query component was unmounted while a `fetchMore` was still
+  in flight.
+  [Issue #3345](https://github.com/apollographql/apollo-client/issues/3345)
+  [Issue #3466](https://github.com/apollographql/apollo-client/issues/3466)
+  [PR #3367](https://github.com/apollographql/apollo-client/pull/3367)
+  [PR #3469](https://github.com/apollographql/apollo-client/pull/3469)
 
 ### 2.3.0
 - fixed edge case bug of changing fetchPolicies right after resetStore with no variables present

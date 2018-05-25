@@ -228,23 +228,17 @@ function executeSubSelectedArray(field, result, execContext) {
   });
 }
 
+const hasOwn = Object.prototype.hasOwnProperty;
+
 export function merge(dest, src) {
-  if (src === null || typeof src !== 'object') {
-    // These types just override whatever was in dest
-    return src;
+  if (src !== null && typeof src === 'object') {
+    Object.keys(src).forEach(key => {
+      const srcVal = src[key];
+      if (!hasOwn.call(dest, key)) {
+        dest[key] = srcVal;
+      } else {
+        merge(dest[key], srcVal);
+      }
+    });
   }
-
-  // Merge sub-objects
-  Object.keys(dest).forEach(destKey => {
-    if (src.hasOwnProperty(destKey)) {
-      merge(dest[destKey], src[destKey]);
-    }
-  });
-
-  // Add props only on src
-  Object.keys(src).forEach(srcKey => {
-    if (!dest.hasOwnProperty(srcKey)) {
-      dest[srcKey] = src[srcKey];
-    }
-  });
 }

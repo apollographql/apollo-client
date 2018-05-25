@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -14,6 +14,7 @@
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"
@@ -40,19 +41,19 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.105",
-    "@types/node": "8.10.3",
+    "@types/lodash": "4.14.109",
+    "@types/node": "10.1.2",
     "browserify": "15.2.0",
-    "flow-bin": "0.69.0",
+    "flow-bin": "0.72.0",
     "graphql": "0.13.2",
-    "graphql-tag": "2.8.0",
+    "graphql-tag": "2.9.2",
     "jest": "20.0.4",
-    "lodash": "4.17.5",
+    "lodash": "4.17.10",
     "rimraf": "2.6.2",
-    "rollup": "0.56.4",
+    "rollup": "0.59.1",
     "ts-jest": "20.0.14",
-    "tslint": "5.9.1",
-    "typescript": "2.5.2",
+    "tslint": "5.10.0",
+    "typescript": "2.8.3",
     "uglifyjs": "2.4.11"
   },
   "jest": {

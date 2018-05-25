@@ -74,11 +74,11 @@ client.query({
 
 Now your client will be primed with some data in its cache. You can continue to make queries, or you can get your `client` instance to perform all sorts of advanced tasks on your GraphQL data. Such as [reactively watching queries with `watchQuery`][], [changing data on your server with `mutate`][], or [reading a fragment from your local cache with `readFragment`][].
 
-To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the [**`apollo-client` API reference**][https://www.apollographql.com/docs/react/api/apollo-client.html].
+To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the (**`apollo-client` API reference**)[https://www.apollographql.com/docs/react/api/apollo-client.html].
 
 [`ApolloClient`]: https://www.apollographql.com/docs/react/api/apollo-client.html
 [`apollo-boost`]: https://www.apollographql.com/docs/react/essentials/get-started.html#apollo-boost
-[reactively watching queries with `watchQuery`]: http://apollographql.com/docs/react/reference/index.html#ApolloClient\.watchQuery
+[reactively watching queries with `watchQuery`]: https://www.apollographql.com/docs/react/api/apollo-client.html#ApolloClient.watchQuery
 [changing data on your server with `mutate`]: https://www.apollographql.com/docs/react/essentials/mutations.html
 [reading a fragment from your local cache with `readFragment`]: https://www.apollographql.com/docs/react/advanced/caching.html#direct
 

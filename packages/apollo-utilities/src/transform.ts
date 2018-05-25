@@ -190,107 +190,121 @@ export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode
 ): DocumentNode | null {
-  let docClone = cloneDeep(doc);
+  try {
+    let docClone = cloneDeep(doc);
+    let removedArguments: RemoveArgumentsConfig[] = [];
+    let removedFragments: RemoveFragmentSpreadConfig[] = [];
+    const aggressiveRemove = directives.some(directive => directive.remove);
 
-  let removedArguments: RemoveArgumentsConfig[] = [];
-  let removedFragments: RemoveFragmentSpreadConfig[] = [];
-  const aggressiveRemove = directives.some(directive => directive.remove);
+    docClone.definitions.forEach((definition: DefinitionNode) => {
+      const operationDefinition = definition as OperationDefinitionNode;
+      const originalSelectionSet = cloneDeep(operationDefinition.selectionSet);
 
-  docClone.definitions.forEach((definition: DefinitionNode) => {
-    const operationDefinition = definition as OperationDefinitionNode;
-    const originalSelectionSet = cloneDeep(operationDefinition.selectionSet);
-
-    const newSelectionSet = removeDirectivesFromSelectionSet(
-      directives,
-      operationDefinition.selectionSet
-    );
-
-    if (aggressiveRemove && !!docClone) {
-      const matchingSelections = getSelectionsMatchingDirectiveFromSelectionSet(
-        directives.map(config => ({
-          name: config.name,
-          test: config.test,
-        })),
-        originalSelectionSet
+      const newSelectionSet = removeDirectivesFromSelectionSet(
+        directives,
+        operationDefinition.selectionSet
       );
 
-      const remainingArguments = getAllArgumentsFromSelectionSet(
-        newSelectionSet
-      )
-
-      removedArguments = [
-        ...removedArguments,
-        ...matchingSelections
-          .map(getAllArgumentsFromSelection)
-          .reduce(
-            (allArguments, selectionArguments) => [
-              ...allArguments,
-              ...selectionArguments,
-            ],
-            []
-          )
-          .filter(
-            removedArg =>
-              !remainingArguments.some(
-                remainingArg => {
-                  if (remainingArg.value.kind !== 'Variable' || !(remainingArg.value as VariableNode)) return false
-                  if (removedArg.value.kind !== 'Variable' || !(removedArg.value as VariableNode)) return false
-                  return remainingArg.value.name.value === removedArg.value.name.value
-                }
-              )
-          )
-          .map(argument => {
-            if (argument.value.kind !== 'Variable' || !(argument.value as VariableNode)) return null
-            return {
-              name: argument.value.name.value,
-              remove: aggressiveRemove,
-            }
-          }),
-      ];
-
-      const remainingFragmentSpreads = getAllFragmentSpreadsFromSelectionSet(
-        newSelectionSet
-      );
-
-      removedFragments = [
-        ...removedFragments,
-        ...matchingSelections
-          .map(getAllFragmentSpreadsFromSelection)
-          .reduce(
-            (allFragments, selectionFragments) => [
-              ...allFragments,
-              ...selectionFragments,
-            ],
-            []
-          )
-          .filter(
-            removedFragment =>
-              !remainingFragmentSpreads.some(
-                remainingFragment =>
-                  remainingFragment.name.value === removedFragment.name.value
-              )
-          )
-          .map(fragment => ({
-            name: fragment.name.value,
-            remove: aggressiveRemove,
+      if (aggressiveRemove && !!docClone) {
+        const matchingSelections = getSelectionsMatchingDirectiveFromSelectionSet(
+          directives.map(config => ({
+            name: config.name,
+            test: config.test,
           })),
-      ];
-    }
-  });
+          originalSelectionSet
+        );
 
-  if (!!docClone) {
+        const remainingArguments = getAllArgumentsFromSelectionSet(
+          newSelectionSet
+        )
+
+        removedArguments = [
+          ...removedArguments,
+          ...matchingSelections
+            .map(getAllArgumentsFromSelection)
+            .reduce(
+              (allArguments, selectionArguments) => [
+                ...allArguments,
+                ...selectionArguments,
+              ],
+              []
+            )
+            .filter(
+              removedArg =>
+                !remainingArguments.some(
+                  remainingArg => {
+                    if (remainingArg.value.kind !== 'Variable' || !(remainingArg.value as VariableNode)) return false
+                    if (removedArg.value.kind !== 'Variable' || !(removedArg.value as VariableNode)) return false
+                    return remainingArg.value.name.value === removedArg.value.name.value
+                  }
+                )
+            )
+            .map(argument => {
+              if (argument.value.kind !== 'Variable' || !(argument.value as VariableNode)) return null
+              return {
+                name: argument.value.name.value,
+                remove: aggressiveRemove,
+              }
+            }).filter(node => !!node),
+        ];
+
+        const remainingFragmentSpreads = getAllFragmentSpreadsFromSelectionSet(
+          newSelectionSet
+        );
+
+        removedFragments = [
+          ...removedFragments,
+          ...matchingSelections
+            .map(getAllFragmentSpreadsFromSelection)
+            .reduce(
+              (allFragments, selectionFragments) => [
+                ...allFragments,
+                ...selectionFragments,
+              ],
+              []
+            )
+            .filter(
+              removedFragment =>
+                !remainingFragmentSpreads.some(
+                  remainingFragment =>
+                    remainingFragment.name.value === removedFragment.name.value
+                )
+            )
+            .map(fragment => ({
+              name: fragment.name.value,
+              remove: aggressiveRemove,
+            })),
+        ];
+      }
+    });
+
+    if (!docClone) {
+      return null;
+    }
+
     if (removedFragments.length > 0) {
       docClone = removeFragmentSpreadFromDocument(removedFragments, docClone);
+      if (!docClone) {
+        return null;
+      }
     }
+
 
     if (removedArguments.length > 0) {
       docClone = removeArgumentsFromDocument(removedArguments, docClone);
+      if (!docClone) {
+        return null;
+      }
     }
-  }
 
-  const operation = getOperationDefinitionOrDie(docClone);
-  const fragments = createFragmentMap(getFragmentDefinitions(docClone));
-  return isNotEmpty(operation, fragments) ? docClone : null;
+    const operation = getOperationDefinitionOrDie(docClone);
+    const fragments = createFragmentMap(getFragmentDefinitions(docClone));
+
+    return isNotEmpty(operation, fragments) ? docClone : null;
+  } catch (e) {
+    console.log("Caught an error inside of removeDirectivesFromDocument = ", e);
+    throw e;
+  }
 }
 
 const added = new Map();
@@ -336,7 +350,13 @@ export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   checkDocument(doc);
   const cached = removed.get(doc);
   if (cached) return cached;
-  const docClone = removeDirectivesFromDocument([connectionRemoveConfig], doc);
+  let docClone;
+  try {
+    docClone = removeDirectivesFromDocument([connectionRemoveConfig], doc);
+  } catch (err) {
+    console.error("Caught an error in removeDirectivesFromDocument = ", err);
+    throw err;
+  }
   removed.set(doc, docClone);
   return docClone;
 }
@@ -556,6 +576,7 @@ function removeArgumentsFromSelectionSet(
   config: RemoveArgumentsConfig[],
   selectionSet: SelectionSetNode
 ): SelectionSetNode {
+
   if (!selectionSet.selections) return selectionSet;
   // if any of the config is set to remove this selectionSet, remove it
   const aggressiveRemove = config.some(

@@ -72,4 +72,25 @@ describe('QueryStore', () => {
       },
     );
   });
+
+  describe('markQueryError', () => {
+    it(
+      'should set the network status of a `fetchMoreForQueryId` query to ' +
+        '`ready` in the store, if it exists',
+      () => {
+        queryStore.markQueryError(queryId, null, queryId);
+        expect(queryStore.get(queryId).networkStatus).toBe(NetworkStatus.ready);
+      },
+    );
+
+    it(
+      'should not attempt to set the network status of a ' +
+        '`fetchMoreForQueryId` query, if it does not exist in the store',
+      () => {
+        expect(() => {
+          queryStore.markQueryError(queryId, null, 'id-does-not-exist');
+        }).not.toThrow("Cannot set property 'networkStatus' of undefined");
+      },
+    );
+  });
 });

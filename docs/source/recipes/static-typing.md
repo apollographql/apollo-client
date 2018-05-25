@@ -72,7 +72,7 @@ type Variables = {
   episode: string;
 };
 
-// note the first parameter is empty here, we will exaplain that below
+// note the first parameter is empty here, we will explain that below
 const withCharacter = graphql<{}, Response, Variables>(HERO_QUERY, {
   options: () => ({
     variables: { episode: "JEDI" }
@@ -278,7 +278,7 @@ If you are using the `name` property in the configuration of the `graphql` wrapp
 ```javascript
 import { NamedProps, QueryProps } from 'react-apollo';
 
-export const withCharacter = graphql<Response, InputProps, Prop>(HERO_QUERY, {
+export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY, {
   name: 'character',
   props: ({ character, ownProps }: NamedProps<{ character: QueryProps & Response }, Props) => ({
     ...character,

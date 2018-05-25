@@ -15,6 +15,7 @@
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"
@@ -49,14 +50,14 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.108",
+    "@types/lodash": "4.14.109",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
     "jest": "20.0.4",
     "lodash": "4.17.10",
     "rimraf": "2.6.2",
-    "rollup": "0.58.2",
+    "rollup": "0.59.1",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
     "typescript": "2.8.3",

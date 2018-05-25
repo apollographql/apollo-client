@@ -72,7 +72,7 @@ type Variables = {
   episode: string;
 };
 
-// note the first parameter is empty here, we will exaplain that below
+// note the first parameter is empty here, we will explain that below
 const withCharacter = graphql<{}, Response, Variables>(HERO_QUERY, {
   options: () => ({
     variables: { episode: "JEDI" }

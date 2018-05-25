@@ -450,10 +450,15 @@ function writeFieldToStore({
 
       if (escapedId.generated) {
         generatedKey = escapedId.id;
-        // we should only merge if it's an object of the same type
-        // otherwise, we should delete the generated object
+        // We should only merge if it's an object of the same type,
+        // otherwise we should delete the generated object
         if (typenameChanged) {
-          store.delete(generatedKey);
+          // Only delete the generated object when the old object was
+          // inlined, and the new object is not. This is indicated by
+          // the old id being generated, and the new id being real.
+          if (!generated) {
+            store.delete(generatedKey);
+          }
         } else {
           shouldMerge = true;
         }

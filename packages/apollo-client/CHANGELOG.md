@@ -1,5 +1,20 @@
-
 # Change log
+
+### vNext
+
+- Fixed an issue involving `Object.setPrototypeOf()` not working on JSC
+  (Android), by instead setting the `prototype` of `this` manually.
+  [Issue #3236](https://github.com/apollographql/apollo-client/issues/3236)
+  [PR #3306](https://github.com/apollographql/apollo-client/pull/3306)
+- Added safeguards to make sure `QueryStore.initQuery` and   
+  `QueryStore.markQueryResult` don't try to set the network status of a
+  `fetchMoreForQueryId` query, if it does not exist in the store. This was
+  happening when a query component was unmounted while a `fetchMore` was still
+  in flight.
+  [Issue #3345](https://github.com/apollographql/apollo-client/issues/3345)
+  [Issue #3466](https://github.com/apollographql/apollo-client/issues/3466)
+  [PR #3367](https://github.com/apollographql/apollo-client/pull/3367)
+  [PR #3469](https://github.com/apollographql/apollo-client/pull/3469)
 
 ### 2.3.0
 - fixed edge case bug of changing fetchPolicies right after resetStore with no variables present
@@ -18,7 +33,7 @@
 [PR#3068](https://github.com/apollographql/apollo-client/pull/3068)
 - onResetStore callbacks occur before refetching Observable Queries[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
 - Error message for in flight queries during `resetStore` includes link completion note[PR#3010](https://github.com/apollographql/apollo-client/pull/3010)
-- `ApolloError` can now be checked with `instanceof` operator 
+- `ApolloError` can now be checked with `instanceof` operator
 - Fix navigator being undefined on React Native [PR##3164](https://github.com/apollographql/apollo-client/pull/3164)
 - Remove spread of variables preventing issues with removing keys [#3081](https://github.com/apollographql/apollo-client/pull/3081)
 

@@ -6,6 +6,7 @@
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
@@ -44,8 +45,8 @@
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.108",
-    "@types/node": "8.10.12",
+    "@types/lodash": "4.14.109",
+    "@types/node": "8.10.17",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.4",
     "browserify": "15.2.0",
@@ -54,10 +55,10 @@
     "jest": "20.0.4",
     "react": "15.6.2",
     "react-dom": "15.6.2",
-    "rollup": "0.58.2",
+    "rollup": "0.59.1",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
-    "typescript": "2.5.2",
+    "typescript": "2.8.3",
     "uglify": "0.1.5"
   },
   "jest": {

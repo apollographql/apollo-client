@@ -27,9 +27,9 @@ Instructions for how the issue can be reproduced by a maintainer or contributor.
 
 **Versions**
 <!--
-Run the following command in your project directory and paste its results here:
+Run the following command in your project directory, and paste its (automatically copied to clipboard) results here:
 
-`npx envinfo@latest --raw '{"System":["OS"],"Binaries":["Node","npm","Yarn"],"Browsers":["Chrome","Edge","Firefox","Safari"],"npmPackages":"*apollo*","npmGlobalPackages":"*apollo*"}'`
+`npx envinfo@latest --preset apollo --clipboard`
 -->
 
 <!--**Issue Labels**

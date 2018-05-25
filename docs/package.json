@@ -6,28 +6,25 @@
     "version": "3.6.0"
   },
   "devDependencies": {
-    "apollo-hexo-config": "1.0.5",
-    "chexo": "1.0.4",
-    "hexo": "3.7.0",
+    "apollo-hexo-config": "1.0.7",
+    "chexo": "1.0.5",
+    "hexo": "3.7.1",
+    "hexo-prism-plus": "1.0.0",
     "hexo-renderer-ejs": "0.3.1",
     "hexo-renderer-less": "0.2.0",
     "hexo-renderer-marked": "0.3.2",
-    "hexo-server": "0.3.1",
+    "hexo-server": "0.3.2",
     "hexo-typescript-api-box": "0.9.1",
-    "meteor-theme-hexo": "1.0.3",
+    "meteor-theme-hexo": "1.0.9",
     "typedoc": "0.9.0",
-    "typescript": "2.7.2"
+    "typescript": "2.8.3"
   },
   "scripts": {
     "start": "npm run build && chexo apollo-hexo-config -- server",
-    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "types":
+      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
     "build": "npm run types && chexo apollo-hexo-config -- generate",
     "clean": "hexo clean",
     "test": "npm run clean; npm run build"
-  },
-  "renovate": {
-    "extends": [
-      "apollo-docs"
-    ]
   }
 }

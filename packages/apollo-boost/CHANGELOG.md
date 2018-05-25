@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- fix `fetchOptions.credentials` being ignored [#3264](https://github.com/apollographql/apollo-client/pull/3264)
 
 ## 1.1.4
 - Map coverage to original source

@@ -1,11 +1,12 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.1.8",
+  "version": "4.1.10",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
@@ -15,10 +16,8 @@
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
-    "build:browser":
-      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
-    "minify:browser":
-      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "repository": {
@@ -35,29 +34,31 @@
     "react"
   ],
   "author": "Sashko Stubailo <sashko@stubailo.com>",
-  "contributors": ["James Burgess <jamesmillerburgess@gmail.com>"],
+  "contributors": [
+    "James Burgess <jamesmillerburgess@gmail.com>"
+  ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "^1.0.11"
+    "apollo-utilities": "^1.0.12"
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.105",
-    "@types/node": "8.10.2",
+    "@types/lodash": "4.14.109",
+    "@types/node": "10.1.2",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.4",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
-    "graphql-tag": "2.8.0",
+    "graphql-tag": "2.9.2",
     "jest": "20.0.4",
     "react": "15.6.2",
     "react-dom": "15.6.2",
-    "rollup": "0.56.4",
+    "rollup": "0.59.1",
     "ts-jest": "20.0.14",
-    "tslint": "5.9.1",
-    "typescript": "2.5.2",
+    "tslint": "5.10.0",
+    "typescript": "2.8.3",
     "uglify": "0.1.5"
   },
   "jest": {
@@ -65,6 +66,11 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ]
   }
 }

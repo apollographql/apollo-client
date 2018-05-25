@@ -1,7 +1,7 @@
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 
 export class ObjectCache implements NormalizedCache {
-  constructor(private data: NormalizedCacheObject = {}) {}
+  constructor(private data: NormalizedCacheObject = Object.create(null)) {}
   public toObject(): NormalizedCacheObject {
     return this.data;
   }
@@ -15,10 +15,10 @@ export class ObjectCache implements NormalizedCache {
     this.data[dataId] = undefined;
   }
   public clear(): void {
-    this.data = {};
+    this.data = Object.create(null);
   }
   public replace(newData: NormalizedCacheObject): void {
-    this.data = newData || {};
+    this.data = newData || Object.create(null);
   }
 }
 

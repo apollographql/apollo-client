@@ -1,7 +1,6 @@
 {
-  "pinVersions": true,
+  "extends": [":pinOnlyDevDependencies"],
   "semanticCommits": true,
-  "depTypes": [{ "depType": "dependencies", "pinVersions": false }],
   "timezone": "America/Los_Angeles",
   "schedule": [
     "after 10pm and before 5am on every weekday"
@@ -14,10 +13,12 @@
     "dependencies"
   ],
   "assignees": [
-    "@jbaxleyiii"
+    "@jbaxleyiii",
+    "@hwillson"
   ],
   "reviewers": [
-    "@jbaxleyiii"
+    "@jbaxleyiii",
+    "@hwillson"
   ],
   "pathRules": [{
     "paths": ["docs/package.json"],

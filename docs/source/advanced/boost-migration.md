@@ -13,17 +13,7 @@ If you're not using any configuration options on Apollo Boost, migration should 
 
 <h3 id="before">Before</h3>
 
-Here's what client initialization looks like with Apollo Boost:
 
-```js
-import ApolloClient from "apollo-boost";
-
-const client = new ApolloClient({
-  uri: "https://w5xlvm3vzz.lp.gql.zone/graphql"
-});
-```
-
-<h3 id="after">After</h3>
 
 To create a basic client with the same defaults as Apollo Boost, first you need to install some packages:
 
@@ -62,61 +52,23 @@ const client = new ApolloClient({
 
 The `InMemoryCache` is our recommended cache implementation for Apollo Client. The `HttpLink` is an Apollo Link that sends HTTP requests. Your network stack can be made up of one or more links, which you can chain together to create a customizable network stack. Learn more in our [network layer](./network-layer.html) guide or the [Apollo Link](/docs/link.html) docs.
 
+<h3 id="after">After</h3>
+
+Here's what client initialization looks like with Apollo Boost:
+
+```js
+import ApolloClient from "apollo-boost";
+
+const client = new ApolloClient({
+  uri: "https://w5xlvm3vzz.lp.gql.zone/graphql"
+});
+```
+
 <h2 id="advanced-migration">Advanced migration</h2>
 
 If you are using configuration options on Apollo Boost, your migration path will vary depending on which ones you use. The next example will show an Apollo Boost client configured with every possible option.
 
 <h3 id="before">Before</h3>
-
-Here's what client initialization looks like with Apollo Boost:
-
-```js
-import ApolloClient from 'apollo-boost';
-
-const client = new ApolloClient({
-  uri: 'https://w5xlvm3vzz.lp.gql.zone/graphql',
-  fetchOptions: {
-    credentials: 'include'
-  },
-  request: async (operation) => {
-    const token = await AsyncStorage.getItem('token');
-    operation.setContext({
-      headers: {
-        authorization: token
-      }
-    });
-  },
-  onError: ({ graphQLErrors, networkError }) => {
-    if (graphQLErrors) {
-      sendToLoggingService(graphQLErrors);
-    }
-    if (networkError) {
-      logoutUser();
-    }
-  },
-  clientState: {
-    defaults: {
-      isConnected: true
-    },
-    resolvers: {
-      Mutation: {
-        updateNetworkStatus: (_, { isConnected }, { cache }) => {
-          cache.writeData({ data: { isConnected }});
-          return null;
-        }
-      }
-    }
-  },
-  cacheRedirects: {
-    Query: {
-      movie: (_, { id }, { getCacheKey }) =>
-        getCacheKey({ __typename: 'Movie', id });
-    }
-  }
-});
-```
-
-<h3 id="after">After</h3>
 
 To create a client with the same defaults as Apollo Boost, first you need to install some packages:
 
@@ -203,5 +155,57 @@ const client = new ApolloClient({
     })
   ]),
   cache
+});
+```
+
+
+<h3 id="after">After</h3>
+
+
+Here's what client initialization looks like with Apollo Boost:
+
+```js
+import ApolloClient from 'apollo-boost';
+
+const client = new ApolloClient({
+  uri: 'https://w5xlvm3vzz.lp.gql.zone/graphql',
+  fetchOptions: {
+    credentials: 'include'
+  },
+  request: async (operation) => {
+    const token = await AsyncStorage.getItem('token');
+    operation.setContext({
+      headers: {
+        authorization: token
+      }
+    });
+  },
+  onError: ({ graphQLErrors, networkError }) => {
+    if (graphQLErrors) {
+      sendToLoggingService(graphQLErrors);
+    }
+    if (networkError) {
+      logoutUser();
+    }
+  },
+  clientState: {
+    defaults: {
+      isConnected: true
+    },
+    resolvers: {
+      Mutation: {
+        updateNetworkStatus: (_, { isConnected }, { cache }) => {
+          cache.writeData({ data: { isConnected }});
+          return null;
+        }
+      }
+    }
+  },
+  cacheRedirects: {
+    Query: {
+      movie: (_, { id }, { getCacheKey }) =>
+        getCacheKey({ __typename: 'Movie', id });
+    }
+  }
 });
 ```

@@ -63,7 +63,7 @@
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.10",
     "@types/lodash": "4.14.109",
-    "@types/node": "8.10.17",
+    "@types/node": "10.1.2",
     "apollo-cache-inmemory": "^1.2.1",
     "benchmark": "2.1.4",
     "browserify": "15.2.0",

@@ -1,6 +1,6 @@
 {
   "name": "apollo-boost",
-  "version": "0.1.1",
+  "version": "0.1.6",
   "description": "The easiest way to get started with Apollo Client",
   "author": "Peggy Rayzis <peggy@apollographql.com>",
   "contributors": [
@@ -11,6 +11,7 @@
   "license": "MIT",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"
@@ -28,15 +29,13 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser":
-      "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser":
-      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser": "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache-inmemory": "^1.1.9",
-    "apollo-client": "^2.2.5",
+    "apollo-cache-inmemory": "^1.2.1",
+    "apollo-client": "^2.3.1",
     "apollo-link": "^1.0.6",
     "apollo-link-error": "^1.0.3",
     "apollo-link-http": "^1.3.1",
@@ -44,17 +43,17 @@
     "graphql-tag": "^2.4.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.4",
+    "@types/graphql": "0.12.7",
     "@types/jest": "21.1.10",
-    "apollo-cache": "^1.1.4",
+    "apollo-cache": "^1.1.8",
     "browserify": "15.2.0",
-    "graphql": "0.13.1",
+    "graphql": "0.13.2",
     "jest": "20.0.4",
-    "lodash": "4.17.5",
+    "lodash": "4.17.10",
     "rimraf": "2.6.2",
     "ts-jest": "20.0.14",
-    "tslint": "5.9.1",
-    "typescript": "2.5.2",
+    "tslint": "5.10.0",
+    "typescript": "2.8.3",
     "uglifyjs": "2.4.11"
   },
   "jest": {
@@ -62,7 +61,11 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "json"],
-    "mapCoverage": true
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ]
   }
 }

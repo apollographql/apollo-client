@@ -1,5 +1,5 @@
 ---
-title: Server Side Rendering
+title: Server-side rendering
 ---
 
 
@@ -34,7 +34,7 @@ We'll see below how you can generate both the HTML and the Apollo store's state 
 
 Then, when the client runs the first set of queries, the data will be returned instantly because it is already in the store!
 
-If you are using [`forceFetch`](cache-updates.html#forceFetch) on some of the initial queries, you can pass the `ssrForceFetchDelay` option to skip force fetching during initialization, so that even those queries run using the cache:
+If you are using `forceFetch` on some of the initial queries, you can pass the `ssrForceFetchDelay` option to skip force fetching during initialization, so that even those queries run using the cache:
 
 ```js
 const client = new ApolloClient({
@@ -173,7 +173,7 @@ export default routes;
 
 ```
 
-You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/ui/server.js) for a complete working example.
+You can check out the [GitHunt app's `src/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/src/server.js) for a complete working example.
 
 Next we'll see what that rendering code actually does.
 
@@ -244,9 +244,12 @@ const client = new ApolloClient({
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
 ```js
-const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
-  options: { ssr: false }, // won't be called during SSR
-});
+const withClientOnlyUser = () => (
+  <Query query={GET_USER_WITH_ID} ssr={false}>
+    {({ data }) => <span>I won't be run on the server</span>}
+  </Query>
+);
+
 ```
 
 <h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>

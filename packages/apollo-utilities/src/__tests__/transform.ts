@@ -312,21 +312,6 @@ describe('query transforms', () => {
 
     expect(expectedQueryStr).toBe(print(newQueryDoc));
   });
-  it('should memoize and return cached results', () => {
-    let testQuery = gql`
-      query {
-        author {
-          name {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const newQueryDoc = addTypenameToDocument(testQuery);
-    const secondCall = addTypenameToDocument(testQuery);
-    expect(newQueryDoc).toBe(secondCall);
-  });
 
   it('should not add duplicates', () => {
     let testQuery = gql`
@@ -566,21 +551,6 @@ describe('query transforms', () => {
     const expectedQueryStr = print(expectedQuery);
 
     expect(expectedQueryStr).toBe(print(newQueryDoc));
-  });
-  it('should memoize and return cached results', () => {
-    let testQuery = gql`
-      query {
-        author {
-          name @connection(key: "foo") {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery);
-    const secondCall = removeConnectionDirectiveFromDocument(testQuery);
-    expect(newQueryDoc).toBe(secondCall);
   });
 });
 
@@ -881,5 +851,106 @@ describe('getDirectivesFromDocument', () => {
     `;
     const doc = getDirectivesFromDocument([{ name: 'client' }], query);
     expect(print(doc)).toBe(print(expected));
+  });
+  it('should get mutation with client fields', () => {
+    const query = gql`
+      mutation {
+        login @client
+      }
+    `;
+
+    const expected = gql`
+      mutation {
+        login @client
+      }
+    `;
+    const doc = getDirectivesFromDocument([{ name: 'client' }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it('should get mutation fields of client only', () => {
+    const query = gql`
+      mutation {
+        login @client
+        updateUser
+      }
+    `;
+
+    const expected = gql`
+      mutation {
+        login @client
+      }
+    `;
+    const doc = getDirectivesFromDocument([{ name: 'client' }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+  describe('includeAllFragments', () => {
+    it('= false: should remove the values without a client in fragment', () => {
+      const query = gql`
+        fragment client on ClientData {
+          hi @client
+          bye @storage
+          bar
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+          bar {
+            baz
+          }
+        }
+      `;
+
+      const expected = gql`
+        fragment client on ClientData {
+          hi @client
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+        }
+      `;
+      const doc = getDirectivesFromDocument([{ name: 'client' }], query, false);
+      expect(print(doc)).toBe(print(expected));
+    });
+
+    it('= true: should include the values without a client in fragment', () => {
+      const query = gql`
+        fragment client on ClientData {
+          hi @client
+          bye @storage
+          bar
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+          bar {
+            baz
+          }
+        }
+      `;
+
+      const expected = gql`
+        fragment client on ClientData {
+          hi @client
+          bye @storage
+          bar
+        }
+
+        query Mixed {
+          foo @client {
+            ...client
+          }
+        }
+      `;
+      const doc = getDirectivesFromDocument([{ name: 'client' }], query, true);
+      expect(print(doc)).toBe(print(expected));
+    });
   });
 });

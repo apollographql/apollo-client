@@ -10,7 +10,7 @@ In this article, we'll cover the technical details of using Apollo to implement 
 
 <h2 id="fetch-more">Using `fetchMore`</h2>
 
-In Apollo, the easiest way to do pagination is with a function called [`fetchMore`](../features/cache-updates.html#fetchMore), which is provided on the `data` prop by the `graphql` higher order component. This basically allows you to do a new GraphQL query and merge the result into the original result.
+In Apollo, the easiest way to do pagination is with a function called [`fetchMore`](../advanced/caching.html#fetchMore), which is provided on the `data` prop by the `graphql` higher order component. This basically allows you to do a new GraphQL query and merge the result into the original result.
 
 You can specify what query and variables to use for the new query, and how to merge the new query result with the existing data on the client. How exactly you do that will determine what kind of pagination you are implementing.
 
@@ -21,7 +21,6 @@ Offset-based pagination — also called numbered pages — is a very common patt
 Here is an example with numbered pages taken from [GitHunt](https://github.com/apollographql/GitHunt-React):
 
 ```js
-
 const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
     currentUser {
@@ -34,77 +33,45 @@ const FEED_QUERY = gql`
   }
 `;
 
-const ITEMS_PER_PAGE = 10;
-const FeedWithData = graphql(FEED_QUERY, {
-  options(props) {
-    return {
-      variables: {
-        type: (
-          props.params &&
-          props.params.type &&
-          props.params.type.toUpperCase()
-        ) || 'TOP',
-        offset: 0,
-        limit: ITEMS_PER_PAGE,
-      },
-      fetchPolicy: 'network-only',
-    };
-  },
-  props({ data: { loading, feed, currentUser, fetchMore } }) {
-    return {
-      loading,
-      feed,
-      currentUser,
-      loadMoreEntries() {
-        return fetchMore({
-          // query: ... (you can specify a different query. FEED_QUERY is used by default)
-          variables: {
-            // We are able to figure out which offset to use because it matches
-            // the feed length, but we could also use state, or the previous
-            // variables to calculate this (see the cursor example below)
-            offset: feed.length,
-          },
-          updateQuery: (previousResult, { fetchMoreResult }) => {
-            if (!fetchMoreResult) { return previousResult; }
-            return Object.assign({}, previousResult, {
-              // Append the new feed results to the old one
-              feed: [...previousResult.feed, ...fetchMoreResult.feed],
-            });
-          },
-        });
-      },
-    };
-  },
-})(Feed);
-```
-
-[See this code in context in GitHunt.](https://github.com/apollographql/GitHunt-React/blob/c0b18795a18b3da42dc90cf7c63b29b14965206d/ui/Feed.js#L165)
-
-As you can see, `fetchMore` is accessible through the `data` argument to the `props` function. So that our presentational component can remain unaware of Apollo, we use `props` to define a simple "load more" function, named `loadMoreEntries`, that can be called by the child component, `Feed`. This way we don't need to change the `Feed` component at all if we need to change our pagination logic.
-
-In the example above, `loadMoreEntries` is a function which calls `fetchMore` with the length of the current feed as a variable. By default, `fetchMore` more will use the original `query`, so we just pass in new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.
-
-Here is how the `loadMoreEntries` function from above is called from the UI component:
-
-```js
-const Feed = ({ vote, loading, currentUser, feed, loadMoreEntries }) => {
-  return (
-    <div>
-      <FeedContent
-        entries={feed || []}
-        currentUser={currentUser}
-        onVote={vote}
+const FeedData = ({ match }) => (
+  <Query
+    query={FEED_QUERY}
+    variables={{
+      type: match.params.type.toUpperCase() || "TOP",
+      offset: 0,
+      limit: 10
+    }}
+    fetchPolicy="cache-and-network"
+  >
+    {({ data, fetchMore }) => (
+      <Feed
+        entries={data.feed || []}
+        onLoadMore={() =>
+          fetchMore({
+            variables: {
+              offset: data.feed.length
+            },
+            updateQuery: (prev, { fetchMoreResult }) => {
+              if (!fetchMoreResult) return prev;
+              return Object.assign({}, prev, {
+                feed: [...prev.feed, ...fetchMoreResult.feed]
+              });
+            }
+          })
+        }
       />
-      <a onClick={loadMoreEntries}>Load more</a>
-      {loading ? <Loading /> : null}
-    </div>
-  );
-}
+    )}
+  </Query>
+);
 ```
+
+[See this code in context in GitHunt.](https://github.com/apollographql/GitHunt-React/blob/e5d5dc3abcee7352f5d2e981ee559343e361d2e3/src/routes/FeedPage.js#L26-L68)
+
+As you can see, `fetchMore` is accessible through the render prop function. By default, `fetchMore` more will use the original `query`, so we just pass in new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.
 
 The above approach works great for limit/offset pagination. One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.
 
-Note that in order for the UI component to receive an updated `loading` prop after `loadMoreEntries` is called, you must set `notifyOnNetworkStatusChange` to `true` in your higher order component's options.
+Note that in order for the UI component to receive an updated `loading` prop after `fetchMore` is called, you must set `notifyOnNetworkStatusChange` to `true` in your Query component's props.
 
 <h2 id="cursor-pages">Cursor-based</h2>
 
@@ -127,40 +94,39 @@ const MoreCommentsQuery = gql`
   }
 `;
 
-const CommentsWithData = graphql(CommentsQuery, {
-  // This function re-runs every time `data` changes, including after `updateQuery`,
-  // meaning our loadMoreEntries function will always have the right cursor
-  props({ data: { loading, cursor, comments, fetchMore } }) {
-    return {
-      loading,
-      comments,
-      loadMoreEntries: () => {
-        return fetchMore({
-          query: MoreCommentsQuery,
-          variables: {
-            cursor: cursor,
-          },
-          updateQuery: (previousResult, { fetchMoreResult }) => {
-            const previousEntry = previousResult.entry;
-            const newComments = fetchMoreResult.moreComments.comments;
-            const newCursor = fetchMoreResult.moreComments.cursor;
+const CommentsWithData = () => (
+  <Query query={CommentsQuery}>
+    {({ data: { comments, cursor }, loading, fetchMore }) => (
+      <Comments
+        entries={comments || []}
+        onLoadMore={() =>
+          fetchMore({
+            // note this is a different query than the one used in the
+            // Query component
+            query: MoreCommentsQuery,
+            variables: { cursor: cursor },
+            updateQuery: (previousResult, { fetchMoreResult }) => {
+              const previousEntry = previousResult.entry;
+              const newComments = fetchMoreResult.moreComments.comments;
+              const newCursor = fetchMoreResult.moreComments.cursor;
 
-            return {
-              // By returning `cursor` here, we update the `loadMore` function
-              // to the new cursor.
-              cursor: newCursor,
+              return {
+                // By returning `cursor` here, we update the `fetchMore` function
+                // to the new cursor.
+                cursor: newCursor,
+                entry: {
+                  // Put the new comments in the front of the list
+                  comments: [...newComments, ...previousEntry.comments]
+                }
+              };
+            }
+          })
+        }
+      />
+    )}
+  </Query>
+);
 
-              entry: {
-                // Put the new comments in the front of the list
-                comments: [...newComments, ...previousEntry.comments],
-              },
-            };
-          },
-        });
-      },
-    };
-  },
-})(Comments);
 ```
 
 <h2 id="relay-cursors">Relay-style cursor pagination</h2>
@@ -177,54 +143,53 @@ The following example specifies a request of 10 items at a time and that results
 const CommentsQuery = gql`
   query Comments($cursor: String) {
     Comments(first: 10, after: $cursor) {
-      comments {
-        edges {
-          node {
-            author
-            text
-          }
+      edges {
+        node {
+          author
+          text
         }
-        pageInfo {
-          endCursor
-          hasNextPage
-        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
       }
     }
   }
 `;
 
-const CommentsWithData = graphql(CommentsQuery, {
-  // This function re-runs every time `data` changes, including after `updateQuery`,
-  // meaning our loadMoreEntries function will always have the right cursor
-  props({ data: { loading, comments, fetchMore } }) {
-    return {
-      loading,
-      comments,
-      loadMoreEntries: () => {
-        return fetchMore({
-          query: CommentsQuery,
-          variables: {
-            cursor: comments.pageInfo.endCursor,
-          },
-          updateQuery: (previousResult, { fetchMoreResult }) => {
-            const newEdges = fetchMoreResult.comments.edges;
-            const pageInfo = fetchMoreResult.comments.pageInfo;
+const CommentsWithData = () => (
+  <Query query={CommentsQuery}>
+    {({ data: { Comments: comments }, loading, fetchMore }) => (
+      <Comments
+        entries={comments || []}
+        onLoadMore={() =>
+          fetchMore({
+            variables: {
+              cursor: comments.pageInfo.endCursor
+            },
+            updateQuery: (previousResult, { fetchMoreResult }) => {
+              const newEdges = fetchMoreResult.comments.edges;
+              const pageInfo = fetchMoreResult.comments.pageInfo;
 
-            return newEdges.length ? {
-              // Put the new comments at the end of the list and update `pageInfo`
-              // so we have the new `endCursor` and `hasNextPage` values
-              comments: {
-                __typename: previousResult.comments.__typename,
-                edges: [...previousResult.comments.edges, ...newEdges],
-                pageInfo,
-              },
-            } : previousResult;
-          },
-        });
-      },
-    };
-  },
-})(Feed);
+              return newEdges.length
+                ? {
+                    // Put the new comments at the end of the list and update `pageInfo`
+                    // so we have the new `endCursor` and `hasNextPage` values
+                    comments: {
+                      __typename: previousResult.comments.__typename,
+                      edges: [...previousResult.comments.edges, ...newEdges],
+                      pageInfo
+                    }
+                  }
+                : previousResult;
+            }
+          })
+        }
+      />
+    )}
+  </Query>
+);
+
 ```
 
 <h2 id="connection-directive">The `@connection` directive</h2>

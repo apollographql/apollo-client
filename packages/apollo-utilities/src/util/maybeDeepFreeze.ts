@@ -1,12 +1,15 @@
 import { isDevelopment, isTest } from './environment';
 
-// taken straight from https://github.com/substack/deep-freeze to avoid import hassles with rollup
+// Taken (mostly) from https://github.com/substack/deep-freeze to avoid
+// import hassles with rollup.
 function deepFreeze(o: any) {
   Object.freeze(o);
 
+  const hasOwn = Object.prototype.hasOwnProperty;
+
   Object.getOwnPropertyNames(o).forEach(function(prop) {
     if (
-      o.hasOwnProperty(prop) &&
+      hasOwn.call(o, prop) &&
       o[prop] !== null &&
       (typeof o[prop] === 'object' || typeof o[prop] === 'function') &&
       !Object.isFrozen(o[prop])
@@ -20,7 +23,14 @@ function deepFreeze(o: any) {
 
 export function maybeDeepFreeze(obj: any) {
   if (isDevelopment() || isTest()) {
-    return deepFreeze(obj);
+    // Polyfilled Symbols potentially cause infinite / very deep recursion while deep freezing
+    // which is known to crash IE11 (https://github.com/apollographql/apollo-client/issues/3043).
+    const symbolIsPolyfilled =
+      typeof Symbol === 'function' && typeof Symbol('') === 'string';
+
+    if (!symbolIsPolyfilled) {
+      return deepFreeze(obj);
+    }
   }
   return obj;
 }

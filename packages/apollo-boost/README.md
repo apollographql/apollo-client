@@ -1,4 +1,4 @@
-# apollo-boost 🚀
+# apollo-boost
 The fastest, easiest way to get started with Apollo Client!
 
 Apollo Boost is a zero-config way to start using Apollo Client. It includes some sensible defaults, such as our recommended `InMemoryCache` and `HttpLink`, which come configured for you with our recommended settings.
@@ -22,13 +22,13 @@ import { ApolloProvider } from 'react-apollo';
 // Pass your GraphQL endpoint to uri
 const client = new ApolloClient({ uri: 'https://nx9zvp49q7.lp.gql.zone/graphql' });
 
-const ApolloApp = () => (
+const ApolloApp = AppComponent => (
   <ApolloProvider client={client}>
-    <App />
+    <AppComponent />
   </ApolloProvider>
 );
 
-render(ApolloApp, document.getElementById('root'));
+render(ApolloApp(App), document.getElementById('root'));
 ```
 
 Awesome! Your ApolloClient is now connected to your app. Let's create our `<App />` component and make our first query:
@@ -86,7 +86,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
 - onError: (errorObj: { graphQLErrors: GraphQLError[], networkError: Error, response?: ExecutionResult, operation: Operation }) => void
   - We include a default error handler to log out your errors for you. If you would like to handle your errors differently, specify this function
 - clientState: An object representing your configuration for `apollo-link-state`. This is useful if you would like to use the Apollo cache for local state management. Learn more in our [quick start](https://www.apollographql.com/docs/link/links/state.html#start).
-- cacheRedirects: An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](https://www.apollographql.com/docs/react/features/cache-updates.html#cacheRedirect).
+- cacheRedirects: An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](https://www.apollographql.com/docs/react/advanced/caching.html#cacheRedirect).
 
 That's it! Here's an example of all those options in action:
 
@@ -135,4 +135,3 @@ const client = new ApolloClient({
   }
 });
 ```
-

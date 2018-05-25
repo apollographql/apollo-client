@@ -2,24 +2,23 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "bootstrap": "npm i && lerna bootstrap",
-    "postinstall": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap",
+    "diff": "check-if-folder-contents-changed-in-git-commit-range",
+    "postinstall": "npm run bootstrap",
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",
     "benchmark": "cd packages/apollo-client && npm run benchmark",
     "prelint": "npm run lint-fix",
     "lint": "lerna run -- lint",
-    "lint-fix":
-      "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+    "lint-fix": "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
     "filesize": "lerna run -- filesize && bundlesize",
     "type-check": "lerna run -- type-check",
     "coverage": "lerna run -- coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose",
-    "deploy":
-      "lerna publish -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy"
+    "deploy": "lerna publish -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy"
   },
   "bundlesize": [
     {
@@ -45,7 +44,7 @@
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "4.75 kB"
+      "maxSize": "5 kB"
     },
     {
       "name": "graphql-anywhere",
@@ -66,20 +65,23 @@
     "*.js*": [
       "prettier --trailing-comma all --single-quote --write",
       "git add"
-    ],
-    "*.json*": ["prettier --write", "git add"]
+    ]
   },
   "pre-commit": "lint-staged",
-  "dependencies": {},
   "devDependencies": {
-    "bundlesize": "0.16.0",
-    "codecov": "3.0.0",
+    "bundlesize": "0.17.0",
+    "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
+    "codecov": "3.0.2",
     "danger": "1.2.0",
-    "lerna": "2.9.0",
+    "jest-junit": "4.0.0",
+    "lerna": "2.11.0",
     "lint-staged": "6.1.0",
     "pre-commit": "1.2.2",
-    "prettier": "1.10.2",
+    "prettier": "1.12.1",
+    "rollup-plugin-local-resolve": "1.0.7",
+    "rollup-plugin-node-resolve": "3.3.0",
+    "rollup-plugin-sourcemaps": "0.4.2",
     "ts-jest": "20.0.14",
-    "typescript": "2.5.2"
+    "typescript": "2.8.3"
   }
 }

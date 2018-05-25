@@ -69,9 +69,7 @@ export function shouldInclude(
       // means it has to be a variable value if this is a valid @skip or @include directive
       if (ifValue.kind !== 'Variable') {
         throw new Error(
-          `Argument for the @${
-            directiveName
-          } directive must be a variable or a boolean value.`,
+          `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
         );
       } else {
         evaledValue = variables[(ifValue as VariableNode).name.value];
@@ -113,11 +111,7 @@ export function flattenSelections(selection: SelectionNode): SelectionNode[] {
   );
 }
 
-const added = new Map();
 export function getDirectiveNames(doc: DocumentNode) {
-  const cached = added.get(doc);
-  if (cached) return cached;
-
   // operation => [names of directives];
   const directives = doc.definitions
     .filter(
@@ -139,8 +133,6 @@ export function getDirectiveNames(doc: DocumentNode) {
     .reduce((directives, directive) => directives.concat(directive), [])
     // [Directives] => [Name]
     .map((directive: DirectiveNode) => directive.name.value);
-
-  added.set(doc, directives);
   return directives;
 }
 

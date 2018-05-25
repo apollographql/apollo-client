@@ -1,0 +1,135 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[
+  `Cache writeFragment will write some deeply nested data into the store at any id 1`
+] = `
+Object {
+  "bar": Object {
+    "i": 7,
+  },
+  "foo": Object {
+    "e": 4,
+    "h": Object {
+      "generated": false,
+      "id": "bar",
+      "type": "id",
+      "typename": undefined,
+    },
+  },
+}
+`;
+
+exports[
+  `Cache writeFragment will write some deeply nested data into the store at any id 2`
+] = `
+Object {
+  "bar": Object {
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "generated": false,
+      "id": "bar",
+      "type": "id",
+      "typename": undefined,
+    },
+  },
+}
+`;
+
+exports[
+  `Cache writeFragment will write some deeply nested data into the store at any id 3`
+] = `
+Object {
+  "bar": Object {
+    "i": 10,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "generated": false,
+      "id": "bar",
+      "type": "id",
+      "typename": undefined,
+    },
+  },
+}
+`;
+
+exports[
+  `Cache writeFragment will write some deeply nested data into the store at any id 4`
+] = `
+Object {
+  "bar": Object {
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "generated": false,
+      "id": "bar",
+      "type": "id",
+      "typename": undefined,
+    },
+  },
+}
+`;
+
+exports[
+  `Cache writeFragment will write some deeply nested data into the store at any id 5`
+] = `
+Object {
+  "bar": Object {
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "generated": false,
+      "id": "bar",
+      "type": "id",
+      "typename": "Bar",
+    },
+  },
+}
+`;
+
+exports[
+  `Cache writeFragment will write some deeply nested data into the store at any id 6`
+] = `
+Object {
+  "bar": Object {
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "generated": false,
+      "id": "bar",
+      "type": "id",
+      "typename": "Bar",
+    },
+  },
+}
+`;

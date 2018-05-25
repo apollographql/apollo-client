@@ -1,0 +1,217 @@
+version: 2
+
+jobs:
+  Danger:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run: npm run danger
+
+  Docs:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run: cd docs && npm i && npm run build
+      
+  Filesize:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run: npm run filesize
+      
+  Typecheck:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run: npm run type-check
+
+  Apollo Client:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps: 
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Jest suite
+          command: npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          environment:
+            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+
+  Apollo Boost:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps: 
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Jest suite
+          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          environment:
+            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+
+  Apollo Cache:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps: 
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Jest suite
+          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          environment:
+            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+
+  Apollo InMemory Cache:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps: 
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Jest suite
+          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          environment:
+            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+
+  Apollo Utilities:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps: 
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Jest suite
+          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          environment:
+            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+
+  GraphQL Anywhere:
+    docker: [ { image: 'circleci/node:8' } ]
+    steps: 
+      - checkout
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Jest suite
+          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          environment:
+            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+
+workflows:
+  version: 2
+  Build and Test:
+    jobs:
+      - Danger
+      - Docs
+      - Filesize
+      # XXX fix issues and turn this back on
+      # - Typecheck
+      - Apollo Client
+      - Apollo Boost
+      - Apollo Cache
+      - Apollo InMemory Cache
+      - Apollo Utilities
+      - GraphQL Anywhere
+

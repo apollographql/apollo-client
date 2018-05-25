@@ -1271,6 +1271,7 @@ describe('writing to the store', () => {
             type: 'id',
             id: dataIdFromObject(data.author),
             generated: false,
+            typename: 'Author',
           },
         },
         [dataIdFromObject(data.author)!]: {
@@ -1313,6 +1314,7 @@ describe('writing to the store', () => {
             type: 'id',
             id: dataIdFromObject(data.author),
             generated: false,
+            typename: 'Author',
           },
         },
         [dataIdFromObject(data.author)!]: {
@@ -1339,6 +1341,7 @@ describe('writing to the store', () => {
       author: {
         firstName: 'John',
         lastName: 'Smith',
+        __typename: 'Author',
       },
     };
 
@@ -1360,6 +1363,7 @@ describe('writing to the store', () => {
         author {
           firstName
           lastName
+          __typename
         }
       }
     `;
@@ -1376,12 +1380,14 @@ describe('writing to the store', () => {
       '$ROOT_QUERY.author': {
         firstName: 'John',
         lastName: 'Smith',
+        __typename: 'Author',
       },
       ROOT_QUERY: {
         author: {
           type: 'id',
           id: '$ROOT_QUERY.author',
           generated: true,
+          typename: 'Author',
         },
       },
     });
@@ -1397,6 +1403,7 @@ describe('writing to the store', () => {
           type: 'id',
           id: 'Author__129',
           generated: false,
+          typename: 'Author',
         },
       },
     });
@@ -1413,6 +1420,107 @@ describe('writing to the store', () => {
       dataIdFromObject,
     });
     expect(storeWithId.toObject()).toEqual(expStoreWithId.toObject());
+  });
+
+  it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {
+    const dataWithPlaceholder = {
+      author: {
+        hello: 'Foo',
+        __typename: 'Placeholder',
+      },
+    };
+    const dataWithAuthor = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const dataIdFromObject = (object: any) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+      return undefined;
+    };
+    const query = gql`
+      query {
+        author {
+          ... on Author {
+            firstName
+            lastName
+            id
+            __typename
+          }
+          ... on Placeholder {
+            hello
+            __typename
+          }
+        }
+      }
+    `;
+    const expStoreWithPlaceholder = defaultNormalizedCacheFactory({
+      '$ROOT_QUERY.author': {
+        hello: 'Foo',
+        __typename: 'Placeholder',
+      },
+      ROOT_QUERY: {
+        author: {
+          type: 'id',
+          id: '$ROOT_QUERY.author',
+          generated: true,
+          typename: 'Placeholder',
+        },
+      },
+    });
+    const expStoreWithAuthor = defaultNormalizedCacheFactory({
+      Author__129: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+      ROOT_QUERY: {
+        author: {
+          type: 'id',
+          id: 'Author__129',
+          generated: false,
+          typename: 'Author',
+        },
+      },
+    });
+
+    // write the first object, without an ID, placeholder
+    const store = writeQueryToStore({
+      result: dataWithPlaceholder,
+      query,
+      dataIdFromObject,
+    });
+    expect(store.toObject()).toEqual(expStoreWithPlaceholder.toObject());
+
+    // replace with another one of different type with ID
+    writeQueryToStore({
+      result: dataWithAuthor,
+      query,
+      store,
+      dataIdFromObject,
+    });
+    expect(store.toObject()).toEqual(expStoreWithAuthor.toObject());
+
+    // and go back to the original:
+    writeQueryToStore({
+      result: dataWithPlaceholder,
+      query,
+      store,
+      dataIdFromObject,
+    });
+    // Author__129 will remain in the store,
+    // but will not be referenced by any of the fields,
+    // hence we combine, and in that very order
+    expect(store.toObject()).toEqual({
+      ...expStoreWithAuthor.toObject(),
+      ...expStoreWithPlaceholder.toObject(),
+    });
   });
 
   it('does not swallow errors other than field errors', () => {
@@ -1770,6 +1878,201 @@ describe('writing to the store', () => {
       },
       'ROOT_QUERY.abc.0': {
         name: 'efgh',
+      },
+    });
+  });
+
+  it('should keep reference when type of mixed inlined field changes', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const query = gql`
+      query {
+        animals {
+          species {
+            name
+          }
+        }
+      }
+    `;
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Dog',
+              name: 'dog',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'dog' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+    });
+  });
+
+  it('should not keep reference when type of mixed inlined field changes to non-inlined field', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const dataIdFromObject = (object: any) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+      return undefined;
+    };
+
+    const query = gql`
+      query {
+        animals {
+          species {
+            id
+            name
+          }
+        }
+      }
+    `;
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
+          },
+        ],
+      },
+      dataIdFromObject,
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              id: 'dog-species',
+              __typename: 'Dog',
+              name: 'dog',
+            },
+          },
+        ],
+      },
+      dataIdFromObject,
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': undefined,
+      'Dog__dog-species': {
+        id: 'dog-species',
+        name: 'dog',
+      },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: false,
+          id: 'Dog__dog-species',
+          type: 'id',
+          typename: 'Dog',
+        },
       },
     });
   });

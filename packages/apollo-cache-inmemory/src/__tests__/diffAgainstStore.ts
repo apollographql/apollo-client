@@ -1,9 +1,10 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { toIdValue } from 'apollo-utilities';
-
+import { defaultNormalizedCacheFactory } from '../objectCache';
 import { diffQueryAgainstStore, ID_KEY } from '../readFromStore';
 import { writeQueryToStore } from '../writeToStore';
 import { HeuristicFragmentMatcher } from '../fragmentMatcher';
+import { defaultDataIdFromObject } from '../inMemoryCache';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
@@ -24,6 +25,75 @@ export function withError(func: Function, regex: RegExp) {
 }
 
 describe('diffing queries against the store', () => {
+  it('expects named fragments to return complete as true when diffd against the story', () => {
+    const store = defaultNormalizedCacheFactory({});
+
+    const queryResult = diffQueryAgainstStore({
+      store,
+      query: gql`
+        query foo {
+          ...root
+        }
+
+        fragment root on Query {
+          nestedObj {
+            innerArray {
+              id
+              someField
+            }
+          }
+        }
+      `,
+      fragmentMatcherFunction,
+      config: {
+        dataIdFromObject: defaultDataIdFromObject,
+      },
+    });
+
+    expect(queryResult.complete).toEqual(false);
+  });
+
+  it('expects inline fragments to return complete as true when diffd against the story', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const queryResult = diffQueryAgainstStore({
+      store,
+      query: gql`
+        {
+          ... on DummyQuery {
+            nestedObj {
+              innerArray {
+                id
+                otherField
+              }
+            }
+          }
+          ... on Query {
+            nestedObj {
+              innerArray {
+                id
+                someField
+              }
+            }
+          }
+          ... on DummyQuery2 {
+            nestedObj {
+              innerArray {
+                id
+                otherField2
+              }
+            }
+          }
+        }
+      `,
+      fragmentMatcherFunction,
+      config: {
+        dataIdFromObject: defaultDataIdFromObject,
+      },
+    });
+
+    expect(queryResult.complete).toEqual(false);
+  });
   it('returns nothing when the store is enough', () => {
     const query = gql`
       {

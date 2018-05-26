@@ -74,7 +74,7 @@
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",
-    "jest": "20.0.4",
+    "jest": "23.0.0",
     "lint-staged": "6.1.0",
     "lodash": "4.17.10",
     "rollup": "0.59.1",

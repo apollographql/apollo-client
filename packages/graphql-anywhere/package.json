@@ -44,7 +44,7 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "21.1.10",
+    "@types/jest": "22.2.3",
     "@types/lodash": "4.14.109",
     "@types/node": "10.1.2",
     "@types/react": "16.0.34",
@@ -55,7 +55,7 @@
     "jest": "23.0.0",
     "react": "15.6.2",
     "react-dom": "15.6.2",
-    "rollup": "0.59.1",
+    "rollup": "0.59.3",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
     "typescript": "2.8.3",

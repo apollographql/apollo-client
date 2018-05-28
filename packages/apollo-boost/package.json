@@ -46,6 +46,7 @@
     "@types/graphql": "0.12.7",
     "@types/jest": "22.2.3",
     "apollo-cache": "^1.1.8",
+    "apollo-utilities": "^1.0.12",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "jest": "23.0.0",

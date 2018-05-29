@@ -1,4 +1,5 @@
 import ApolloClient, { gql } from '../';
+import { stripSymbols } from 'apollo-utilities';
 
 global.fetch = jest.fn(() =>
   Promise.resolve({ json: () => Promise.resolve({}) }),
@@ -32,7 +33,7 @@ describe('config', () => {
     return client
       .query({ query, fetchPolicy: 'network-only' })
       .then(({ data }) => {
-        expect(data).toEqual({ foo: 'woo' });
+        expect(stripSymbols(data)).toEqual({ foo: 'woo' });
         expect(requestCalled).toEqual(true);
       });
   });
@@ -52,7 +53,7 @@ describe('config', () => {
     return client
       .query({ query, fetchPolicy: 'network-only' })
       .then(({ data }) => {
-        expect(data).toEqual({ foo: 'woo' });
+        expect(stripSymbols(data)).toEqual({ foo: 'woo' });
         expect(requestCalled).toEqual(true);
       });
   });

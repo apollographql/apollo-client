@@ -143,17 +143,15 @@ The following example specifies a request of 10 items at a time and that results
 const CommentsQuery = gql`
   query Comments($cursor: String) {
     Comments(first: 10, after: $cursor) {
-      comments {
-        edges {
-          node {
-            author
-            text
-          }
+      edges {
+        node {
+          author
+          text
         }
-        pageInfo {
-          endCursor
-          hasNextPage
-        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
       }
     }
   }
@@ -161,7 +159,7 @@ const CommentsQuery = gql`
 
 const CommentsWithData = () => (
   <Query query={CommentsQuery}>
-    {({ data: { comments }, loading, fetchMore }) => (
+    {({ data: { Comments: comments }, loading, fetchMore }) => (
       <Comments
         entries={comments || []}
         onLoadMore={() =>

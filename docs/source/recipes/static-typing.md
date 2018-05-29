@@ -278,7 +278,7 @@ If you are using the `name` property in the configuration of the `graphql` wrapp
 ```javascript
 import { NamedProps, QueryProps } from 'react-apollo';
 
-export const withCharacter = graphql<Response, InputProps, Prop>(HERO_QUERY, {
+export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY, {
   name: 'character',
   props: ({ character, ownProps }: NamedProps<{ character: QueryProps & Response }, Props) => ({
     ...character,

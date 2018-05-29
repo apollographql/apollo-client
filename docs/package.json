@@ -15,7 +15,7 @@
     "hexo-renderer-marked": "0.3.2",
     "hexo-server": "0.3.2",
     "hexo-typescript-api-box": "0.9.1",
-    "meteor-theme-hexo": "1.0.9",
+    "meteor-theme-hexo": "1.0.10",
     "typedoc": "0.9.0",
     "typescript": "2.8.3"
   },

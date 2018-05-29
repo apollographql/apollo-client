@@ -1,5 +1,6 @@
 // externals
-import * as Rx from 'rxjs';
+import { from } from 'rxjs/observable/from';
+import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
@@ -34,6 +35,7 @@ import wrap from '../../../util/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../util/observableToPromise';
+import { stripSymbols } from 'apollo-utilities';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.
@@ -141,7 +143,7 @@ describe('QueryManager', () => {
     variables?: Object;
   }) => {
     return mockMutation(opts).then(({ result }) => {
-      expect(result.data).toEqual(opts.data);
+      expect(stripSymbols(result.data)).toEqual(opts.data);
     });
   };
 
@@ -472,15 +474,15 @@ describe('QueryManager', () => {
       result: expResult,
     });
 
-    const observable = Rx.Observable.from(handle as any);
+    const observable = from(handle);
 
-    observable.map(result => assign({ fromRx: true }, result)).subscribe({
+    observable.pipe(map(result => assign({ fromRx: true }, result))).subscribe({
       next: wrap(done, newResult => {
         const expectedResult = assign(
           { fromRx: true, loading: false, networkStatus: 7, stale: false },
           expResult,
         );
-        expect(newResult).toEqual(expectedResult);
+        expect(stripSymbols(newResult)).toEqual(expectedResult);
         done();
       }),
     });
@@ -546,9 +548,9 @@ describe('QueryManager', () => {
           subOneCount++;
 
           if (subOneCount === 1) {
-            expect(result.data).toEqual(data1);
+            expect(stripSymbols(result.data)).toEqual(data1);
           } else if (subOneCount === 2) {
-            expect(result.data).toEqual(data2);
+            expect(stripSymbols(result.data)).toEqual(data2);
           }
         },
       });
@@ -558,10 +560,10 @@ describe('QueryManager', () => {
         next(result) {
           subTwoCount++;
           if (subTwoCount === 1) {
-            expect(result.data).toEqual(data1);
+            expect(stripSymbols(result.data)).toEqual(data1);
             handle.refetch();
           } else if (subTwoCount === 2) {
-            expect(result.data).toEqual(data2);
+            expect(stripSymbols(result.data)).toEqual(data2);
             setTimeout(() => {
               try {
                 expect(subOneCount).toBe(2);
@@ -668,16 +670,16 @@ describe('QueryManager', () => {
 
     let finishCount = 0;
     ob1.subscribe(result => {
-      expect(result.data).toEqual(data1);
+      expect(stripSymbols(result.data)).toEqual(data1);
       finishCount++;
     });
     ob2.subscribe(result => {
-      expect(result.data).toEqual(data2);
+      expect(stripSymbols(result.data)).toEqual(data2);
       expect(finishCount).toBe(2);
       done();
     });
     ob3.subscribe(result => {
-      expect(result.data).toEqual(data3);
+      expect(stripSymbols(result.data)).toEqual(data3);
       finishCount++;
     });
   });
@@ -718,10 +720,10 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(result.data).toEqual(data1);
+        expect(stripSymbols(result.data)).toEqual(data1);
         observable.refetch();
       },
-      result => expect(result.data).toEqual(data2),
+      result => expect(stripSymbols(result.data)).toEqual(data2),
     );
   });
 
@@ -779,12 +781,12 @@ describe('QueryManager', () => {
         try {
           switch (count++) {
             case 0:
-              expect(result.data).toEqual(data1);
+              expect(stripSymbols(result.data)).toEqual(data1);
               firstResultData = result.data;
               observable.refetch();
               break;
             case 1:
-              expect(result.data).toEqual(data2);
+              expect(stripSymbols(result.data)).toEqual(data2);
               expect(result.data).not.toEqual(firstResultData);
               expect(result.data.b).toEqual(firstResultData.b);
               expect(result.data.d).not.toEqual(firstResultData.d);
@@ -792,7 +794,7 @@ describe('QueryManager', () => {
               observable.refetch();
               break;
             case 2:
-              expect(result.data).toEqual(data3);
+              expect(stripSymbols(result.data)).toEqual(data3);
               expect(result.data).not.toBe(firstResultData);
               expect(result.data.b).toEqual(firstResultData.b);
               expect(result.data.d).not.toBe(firstResultData.d);
@@ -845,8 +847,10 @@ describe('QueryManager', () => {
     observable.subscribe({
       next: result => {
         try {
-          expect(result.data).toEqual(data1);
-          expect(result.data).toEqual(observable.currentResult().data);
+          expect(stripSymbols(result.data)).toEqual(data1);
+          expect(stripSymbols(result.data)).toEqual(
+            stripSymbols(observable.currentResult().data),
+          );
           done();
         } catch (error) {
           done.fail(error);
@@ -892,13 +896,13 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(result.data).toEqual(data1);
+        expect(stripSymbols(result.data)).toEqual(data1);
         observable.refetch();
       },
       result => expect(result.networkStatus).toBe(NetworkStatus.refetch),
       result => {
         expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data).toEqual(data2);
+        expect(stripSymbols(result.data)).toEqual(data2);
       },
     );
   });
@@ -934,7 +938,9 @@ describe('QueryManager', () => {
     const handle = queryManager.watchQuery<any>(request);
     handle.subscribe({});
 
-    return handle.refetch().then(result => expect(result.data).toEqual(data2));
+    return handle
+      .refetch()
+      .then(result => expect(stripSymbols(result.data)).toEqual(data2));
   });
 
   it('returns frozen results from refetch', () => {
@@ -969,7 +975,7 @@ describe('QueryManager', () => {
     handle.subscribe({});
 
     return handle.refetch().then(result => {
-      expect(result.data).toEqual(data2);
+      expect(stripSymbols(result.data)).toEqual(data2);
       expect(() => ((result.data as any).stuff = 'awful')).toThrow();
     });
   });
@@ -1041,27 +1047,27 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(result.data).toEqual(data1);
+        expect(stripSymbols(result.data)).toEqual(data1);
         observable.refetch();
       },
       result => {
-        expect(result.data).toEqual(data2);
+        expect(stripSymbols(result.data)).toEqual(data2);
         observable.refetch(variables1);
       },
       result => {
         expect(result.loading).toBe(true);
-        expect(result.data).toEqual(data2);
+        expect(stripSymbols(result.data)).toEqual(data2);
       },
       result => {
-        expect(result.data).toEqual(data3);
+        expect(stripSymbols(result.data)).toEqual(data3);
         observable.refetch(variables2);
       },
       result => {
         expect(result.loading).toBe(true);
-        expect(result.data).toEqual(data3);
+        expect(stripSymbols(result.data)).toEqual(data3);
       },
       result => {
-        expect(result.data).toEqual(data4);
+        expect(stripSymbols(result.data)).toEqual(data4);
       },
     );
   });
@@ -1106,11 +1112,11 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(result.data).toEqual(data1);
+        expect(stripSymbols(result.data)).toEqual(data1);
         observable.refetch();
       },
       result => {
-        expect(result.data).toEqual(data2);
+        expect(stripSymbols(result.data)).toEqual(data2);
         const updatedOptions = assign({}, observable.options);
         delete originalOptions.variables;
         delete updatedOptions.variables;
@@ -1170,12 +1176,12 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(result.data).toEqual(data1);
+        expect(stripSymbols(result.data)).toEqual(data1);
         observable.refetch();
       },
-      result => expect(result.data).toEqual(data2),
+      result => expect(stripSymbols(result.data)).toEqual(data2),
       result => {
-        expect(result.data).toEqual(data3);
+        expect(stripSymbols(result.data)).toEqual(data3);
         observable.stopPolling();
       },
     );
@@ -1262,8 +1268,8 @@ describe('QueryManager', () => {
 
     observable.subscribe({
       next: result => {
-        expect(result.data).toEqual(data);
-        expect(observable.currentResult().data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
+        expect(stripSymbols(observable.currentResult().data)).toEqual(data);
         done();
       },
     });
@@ -1282,7 +1288,7 @@ describe('QueryManager', () => {
     });
 
     return queryManager.query({ query }).then(result => {
-      expect(result.data).toEqual(data);
+      expect(stripSymbols(result.data)).toEqual(data);
       expect(() => ((result.data as any).stuff = 'awful')).toThrow();
     });
   });
@@ -1456,7 +1462,7 @@ describe('QueryManager', () => {
       data,
       config: { dataIdFromObject: getIdField },
     }).then(({ result, queryManager }) => {
-      expect(result.data).toEqual(data);
+      expect(stripSymbols(result.data)).toEqual(data);
 
       // Make sure we updated the store with the new data
       expect(
@@ -1488,7 +1494,7 @@ describe('QueryManager', () => {
       data,
       config: { dataIdFromObject: getIdField },
     }).then(({ result, queryManager }) => {
-      expect(result.data).toEqual(data);
+      expect(stripSymbols(result.data)).toEqual(data);
 
       // Make sure we updated the store with the new data
       expect(
@@ -1530,7 +1536,7 @@ describe('QueryManager', () => {
         mutation,
       })
       .then(result => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
 
         // Make sure we updated the store with the new data
         expect(
@@ -1588,10 +1594,10 @@ describe('QueryManager', () => {
 
     return Promise.all([
       observableToPromise({ observable: observable1 }, result =>
-        expect(result.data).toEqual(data1),
+        expect(stripSymbols(result.data)).toEqual(data1),
       ),
       observableToPromise({ observable: observable2 }, result =>
-        expect(result.data).toEqual(data2),
+        expect(stripSymbols(result.data)).toEqual(data2),
       ),
     ]);
   });
@@ -1645,12 +1651,12 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(result.data).toEqual(data1);
+        expect(stripSymbols(result.data)).toEqual(data1);
         queryManager.query<any>({ query: query2 });
       },
       // 3 because the query init action for the second query causes a callback
       result =>
-        expect(result.data).toEqual({
+        expect(stripSymbols(result.data)).toEqual({
           people_one: {
             name: 'Luke Skywalker has a new name',
             age: 50,
@@ -1721,7 +1727,7 @@ describe('QueryManager', () => {
     })
       .query({ query: query })
       .then(result => {
-        expect(result.data).toEqual(transformedQueryResult);
+        expect(stripSymbols(result.data)).toEqual(transformedQueryResult);
         done();
       });
   });
@@ -1762,7 +1768,7 @@ describe('QueryManager', () => {
     })
       .mutate({ mutation: mutation })
       .then(result => {
-        expect(result.data).toEqual(transformedMutationResult);
+        expect(stripSymbols(result.data)).toEqual(transformedMutationResult);
         done();
       });
   });
@@ -1890,7 +1896,7 @@ describe('QueryManager', () => {
     queryManager
       .query<any>({ query })
       .then(result => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
 
         queryManager
           .query<any>({ query, fetchPolicy: 'network-only' })
@@ -1941,7 +1947,7 @@ describe('QueryManager', () => {
         wait: 60,
       },
       (result: any) => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
         subscription.unsubscribe();
       },
     );
@@ -1993,7 +1999,7 @@ describe('QueryManager', () => {
         ],
       },
       result => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
         expect((queryManager.dataStore.getCache() as InMemoryCache).extract()[
           '$ROOT_QUERY.author'
         ] as Object).toEqual(data.author);
@@ -2033,10 +2039,10 @@ describe('QueryManager', () => {
       // we wait for a little bit to ensure the result of the second query
       // don't trigger another subscription event
       observableToPromise({ observable, wait: 100 }, result => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
       }),
       queryManager.query<any>({ query }).then(result => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
       }),
     ]);
   });
@@ -2067,7 +2073,7 @@ describe('QueryManager', () => {
       metadata: { foo: 'bar' },
     });
     return observableToPromise({ observable }, result => {
-      expect(result.data).toEqual(data);
+      expect(stripSymbols(result.data)).toEqual(data);
       expect(queryManager.queryStore.get(observable.queryId).metadata).toEqual({
         foo: 'bar',
       });
@@ -2145,7 +2151,7 @@ describe('QueryManager', () => {
           wait: 60,
         },
         result => {
-          expect(result).toEqual({
+          expect(stripSymbols(result)).toEqual({
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -2153,7 +2159,7 @@ describe('QueryManager', () => {
           });
         },
         result => {
-          expect(result).toEqual({
+          expect(stripSymbols(result)).toEqual({
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -2167,7 +2173,7 @@ describe('QueryManager', () => {
           wait: 60,
         },
         result => {
-          expect(result).toEqual({
+          expect(stripSymbols(result)).toEqual({
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -2234,7 +2240,7 @@ describe('QueryManager', () => {
     // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
       observableToPromise({ observable: observableWithId, wait: 60 }, result =>
-        expect(result.data).toEqual(dataWithId),
+        expect(stripSymbols(result.data)).toEqual(dataWithId),
       ),
       observableToPromise({
         observable: observableWithoutId,
@@ -2321,11 +2327,12 @@ describe('QueryManager', () => {
     return Promise.all([
       observableToPromise(
         { observable: observableWithoutId, wait: 120 },
-        result => expect(result.data).toEqual(dataWithoutId),
-        result => expect(result.data).toEqual(mergedDataWithoutId),
+        result => expect(stripSymbols(result.data)).toEqual(dataWithoutId),
+        result =>
+          expect(stripSymbols(result.data)).toEqual(mergedDataWithoutId),
       ),
       observableToPromise({ observable: observableWithId, wait: 120 }, result =>
-        expect(result.data).toEqual(dataWithId),
+        expect(stripSymbols(result.data)).toEqual(dataWithId),
       ),
     ]);
   });
@@ -2429,8 +2436,8 @@ describe('QueryManager', () => {
 
       return observableToPromise(
         { observable },
-        result => expect(result.data).toEqual(data1),
-        result => expect(result.data).toEqual(data2),
+        result => expect(stripSymbols(result.data)).toEqual(data1),
+        result => expect(stripSymbols(result.data)).toEqual(data2),
       );
     });
 
@@ -2491,7 +2498,7 @@ describe('QueryManager', () => {
         next: (result: any) => {
           switch (count) {
             case 1:
-              expect(result.data).toEqual(data1);
+              expect(stripSymbols(result.data)).toEqual(data1);
               setTimeout(() => {
                 subHandle.unsubscribe();
                 if (!doneCalled) {
@@ -2672,9 +2679,9 @@ describe('QueryManager', () => {
           observable,
           wait: 60,
         },
-        result => expect(result.data).toEqual(data1),
+        result => expect(stripSymbols(result.data)).toEqual(data1),
         result => {
-          expect(result.data).toEqual(data2);
+          expect(stripSymbols(result.data)).toEqual(data2);
 
           // we unsubscribe here manually, rather than waiting for the timeout.
           subscription.unsubscribe();
@@ -2747,7 +2754,7 @@ describe('QueryManager', () => {
             },
           ],
         },
-        result => expect(result.data).toEqual(data1),
+        result => expect(stripSymbols(result.data)).toEqual(data1),
       );
 
       promise.then(() => {
@@ -2803,8 +2810,8 @@ describe('QueryManager', () => {
 
       return observableToPromise(
         { observable },
-        result => expect(result.data).toEqual(data1),
-        result => expect(result.data).toEqual(data2),
+        result => expect(stripSymbols(result.data)).toEqual(data1),
+        result => expect(stripSymbols(result.data)).toEqual(data2),
       );
     });
 
@@ -2850,7 +2857,7 @@ describe('QueryManager', () => {
       });
 
       return observableToPromise({ observable, wait: 60 }, result => {
-        expect(result.data).toEqual(data1);
+        expect(stripSymbols(result.data)).toEqual(data1);
         observable.stopPolling();
       });
     });
@@ -2901,12 +2908,12 @@ describe('QueryManager', () => {
         observableToPromise(
           { observable },
           result => {
-            expect(result.data).toEqual(data1);
+            expect(stripSymbols(result.data)).toEqual(data1);
             queryManager
               .query({ query, variables, fetchPolicy: 'network-only' })
               .then(() => timeout(new Error('Should have two results by now')));
           },
-          result => expect(result.data).toEqual(data2),
+          result => expect(stripSymbols(result.data)).toEqual(data2),
         ),
         // Ensure that the observable has recieved 2 results *before*
         // the rejection triggered above
@@ -2990,10 +2997,10 @@ describe('QueryManager', () => {
 
       return Promise.all([
         observableToPromise({ observable }, result =>
-          expect(result.data).toEqual(data),
+          expect(stripSymbols(result.data)).toEqual(data),
         ),
         observableToPromise({ observable: observable2 }, result =>
-          expect(result.data).toEqual(data2),
+          expect(stripSymbols(result.data)).toEqual(data2),
         ),
       ]).then(() => {
         observable.subscribe({ next: () => null });
@@ -3002,11 +3009,11 @@ describe('QueryManager', () => {
         return queryManager.resetStore().then(() => {
           const result = queryManager.getCurrentQueryResult(observable);
           expect(result.partial).toBe(false);
-          expect(result.data).toEqual(dataChanged);
+          expect(stripSymbols(result.data)).toEqual(dataChanged);
 
           const result2 = queryManager.getCurrentQueryResult(observable2);
           expect(result2.partial).toBe(false);
-          expect(result2.data).toEqual(data2Changed);
+          expect(stripSymbols(result2.data)).toEqual(data2Changed);
         });
       });
     });
@@ -3068,14 +3075,14 @@ describe('QueryManager', () => {
       return observableToPromise(
         { observable, wait: 0 },
         result => {
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
           // reset the store after data has returned
           queryManager.resetStore();
         },
         result => {
           // only refetch once and make sure data has changed
-          expect(result.data).toEqual(data2);
+          expect(stripSymbols(result.data)).toEqual(data2);
           expect(timesFired).toBe(2);
         },
       );
@@ -3113,7 +3120,7 @@ describe('QueryManager', () => {
       observable = queryManager.watchQuery({ query });
 
       observableToPromise({ observable, wait: 0 }, result =>
-        expect(result.data).toEqual(data),
+        expect(stripSymbols(result.data)).toEqual(data),
       ).then(() => {
         expect(timesFired).toBe(1);
 
@@ -3169,7 +3176,7 @@ describe('QueryManager', () => {
         { observable, wait: 20 },
         result => {
           try {
-            expect(result.data).toEqual(data);
+            expect(stripSymbols(result.data)).toEqual(data);
             expect(timesFired).toBe(1);
           } catch (e) {
             return fail(e);
@@ -3184,7 +3191,7 @@ describe('QueryManager', () => {
         },
         result => {
           try {
-            expect(result.data).toEqual(data);
+            expect(stripSymbols(result.data)).toEqual(data);
             expect(timesFired).toBe(2);
           } catch (e) {
             fail(e);
@@ -3433,10 +3440,10 @@ describe('QueryManager', () => {
 
       return Promise.all([
         observableToPromise({ observable }, result =>
-          expect(result.data).toEqual(data),
+          expect(stripSymbols(result.data)).toEqual(data),
         ),
         observableToPromise({ observable: observable2 }, result =>
-          expect(result.data).toEqual(data2),
+          expect(stripSymbols(result.data)).toEqual(data2),
         ),
       ]).then(() => {
         observable.subscribe({ next: () => null });
@@ -3445,11 +3452,11 @@ describe('QueryManager', () => {
         return queryManager.reFetchObservableQueries().then(() => {
           const result = queryManager.getCurrentQueryResult(observable);
           expect(result.partial).toBe(false);
-          expect(result.data).toEqual(dataChanged);
+          expect(stripSymbols(result.data)).toEqual(dataChanged);
 
           const result2 = queryManager.getCurrentQueryResult(observable2);
           expect(result2.partial).toBe(false);
-          expect(result2.data).toEqual(data2Changed);
+          expect(stripSymbols(result2.data)).toEqual(data2Changed);
         });
       });
     });
@@ -3499,14 +3506,14 @@ describe('QueryManager', () => {
       return observableToPromise(
         { observable, wait: 0 },
         result => {
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
           // refetch the observed queries after data has returned
           queryManager.reFetchObservableQueries();
         },
         result => {
           // only refetch once and make sure data has changed
-          expect(result.data).toEqual(data2);
+          expect(stripSymbols(result.data)).toEqual(data2);
           expect(timesFired).toBe(2);
         },
       ).catch(e => {
@@ -3546,7 +3553,7 @@ describe('QueryManager', () => {
       observable = queryManager.watchQuery({ query });
 
       observableToPromise({ observable, wait: 0 }, result =>
-        expect(result.data).toEqual(data),
+        expect(stripSymbols(result.data)).toEqual(data),
       ).then(() => {
         expect(timesFired).toBe(1);
 
@@ -3598,7 +3605,7 @@ describe('QueryManager', () => {
       return observableToPromise(
         { observable, wait: 20 },
         result => {
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
           setTimeout(
             queryManager.reFetchObservableQueries.bind(queryManager),
@@ -3606,7 +3613,7 @@ describe('QueryManager', () => {
           );
         },
         result => {
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(2);
         },
       );
@@ -3833,7 +3840,7 @@ describe('QueryManager', () => {
         .query({ query })
         .then(result => {
           expect(!result.loading).toBeTruthy();
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
         });
     });
 
@@ -3908,14 +3915,14 @@ describe('QueryManager', () => {
             switch (count++) {
               case 0:
                 expect(result.loading).toBe(false);
-                expect(result.data).toEqual(data1);
+                expect(stripSymbols(result.data)).toEqual(data1);
                 setTimeout(() => {
                   queryManager.resetStore();
                 }, 0);
                 break;
               case 1:
                 expect(result.loading).toBe(false);
-                expect(result.data).toEqual(data2);
+                expect(stripSymbols(result.data)).toEqual(data2);
                 done();
                 break;
               default:
@@ -4001,12 +4008,14 @@ describe('QueryManager', () => {
       return observableToPromise(
         { observable },
         result => {
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
           queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
         },
         result => {
-          expect(observable.currentResult().data).toEqual(secondReqData);
-          expect(result.data).toEqual(secondReqData);
+          expect(stripSymbols(observable.currentResult().data)).toEqual(
+            secondReqData,
+          );
+          expect(stripSymbols(result.data)).toEqual(secondReqData);
         },
       );
     });
@@ -4067,14 +4076,14 @@ describe('QueryManager', () => {
       return observableToPromise(
         { observable },
         result => {
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
           queryManager.mutate({
             mutation,
             refetchQueries: ['fakeQuery', 'getAuthors'],
           });
         },
         result => {
-          expect(result.data).toEqual(secondReqData);
+          expect(stripSymbols(result.data)).toEqual(secondReqData);
           expect(timesWarned).toBe(0);
         },
       );
@@ -4132,7 +4141,7 @@ describe('QueryManager', () => {
 
       const observable = queryManager.watchQuery<any>({ query });
       return observableToPromise({ observable }, result => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
       })
         .then(() => {
           // The subscription has been stopped already
@@ -4203,8 +4212,9 @@ describe('QueryManager', () => {
       let count = 0;
       observable.subscribe({
         next: result => {
+          const resultData = stripSymbols(result.data);
           if (count === 0) {
-            expect(result.data).toEqual(data);
+            expect(resultData).toEqual(data);
             queryManager.mutate({
               mutation,
               variables: mutationVariables,
@@ -4213,11 +4223,13 @@ describe('QueryManager', () => {
           }
           if (count === 1) {
             setTimeout(() => {
-              expect(observable.currentResult().data).toEqual(secondReqData);
+              expect(stripSymbols(observable.currentResult().data)).toEqual(
+                secondReqData,
+              );
               done();
             }, 1);
 
-            expect(result.data).toEqual(secondReqData);
+            expect(resultData).toEqual(secondReqData);
           }
 
           count++;
@@ -4276,12 +4288,12 @@ describe('QueryManager', () => {
       );
       const observable = queryManager.watchQuery<any>({ query });
       const conditional = result => {
-        expect(result.data).toEqual(mutationData);
+        expect(stripSymbols(result.data)).toEqual(mutationData);
         return false;
       };
 
       return observableToPromise({ observable }, result => {
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
         queryManager.mutate({ mutation, refetchQueries: conditional });
       });
     });
@@ -4336,17 +4348,17 @@ describe('QueryManager', () => {
       );
       const observable = queryManager.watchQuery<any>({ query });
       const conditional = result => {
-        expect(result.data).toEqual(mutationData);
+        expect(stripSymbols(result.data)).toEqual(mutationData);
         return [{ query }];
       };
 
       return observableToPromise(
         { observable },
         result => {
-          expect(result.data).toEqual(data);
+          expect(stripSymbols(result.data)).toEqual(data);
           queryManager.mutate({ mutation, refetchQueries: conditional });
         },
-        result => expect(result.data).toEqual(secondReqData),
+        result => expect(stripSymbols(result.data)).toEqual(secondReqData),
       );
     });
 

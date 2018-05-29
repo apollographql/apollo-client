@@ -26,50 +26,20 @@ export function withError(func: Function, regex: RegExp) {
 }
 
 describe('diffing queries against the store', () => {
-  it('expects named fragments to return complete as true when diffd against the story', () => {
-    const store = defaultNormalizedCacheFactory({});
+  it(
+    'expects named fragments to return complete as true when diffd against ' +
+      'the store',
+    () => {
+      const store = defaultNormalizedCacheFactory({});
 
-    const queryResult = diffQueryAgainstStore({
-      store,
-      query: gql`
-        query foo {
-          ...root
-        }
-
-        fragment root on Query {
-          nestedObj {
-            innerArray {
-              id
-              someField
-            }
+      const queryResult = diffQueryAgainstStore({
+        store,
+        query: gql`
+          query foo {
+            ...root
           }
-        }
-      `,
-      fragmentMatcherFunction,
-      config: {
-        dataIdFromObject: defaultDataIdFromObject,
-      },
-    });
 
-    expect(queryResult.complete).toEqual(false);
-  });
-
-  it('expects inline fragments to return complete as true when diffd against the story', () => {
-    const store = defaultNormalizedCacheFactory();
-
-    const queryResult = diffQueryAgainstStore({
-      store,
-      query: gql`
-        {
-          ... on DummyQuery {
-            nestedObj {
-              innerArray {
-                id
-                otherField
-              }
-            }
-          }
-          ... on Query {
+          fragment root on Query {
             nestedObj {
               innerArray {
                 id
@@ -77,24 +47,63 @@ describe('diffing queries against the store', () => {
               }
             }
           }
-          ... on DummyQuery2 {
-            nestedObj {
-              innerArray {
-                id
-                otherField2
+        `,
+        fragmentMatcherFunction,
+        config: {
+          dataIdFromObject: defaultDataIdFromObject,
+        },
+      });
+
+      expect(queryResult.complete).toEqual(false);
+    },
+  );
+
+  it(
+    'expects inline fragments to return complete as true when diffd against ' +
+      'the store',
+    () => {
+      const store = defaultNormalizedCacheFactory();
+
+      const queryResult = diffQueryAgainstStore({
+        store,
+        query: gql`
+          {
+            ... on DummyQuery {
+              nestedObj {
+                innerArray {
+                  id
+                  otherField
+                }
+              }
+            }
+            ... on Query {
+              nestedObj {
+                innerArray {
+                  id
+                  someField
+                }
+              }
+            }
+            ... on DummyQuery2 {
+              nestedObj {
+                innerArray {
+                  id
+                  otherField2
+                }
               }
             }
           }
-        }
-      `,
-      fragmentMatcherFunction,
-      config: {
-        dataIdFromObject: defaultDataIdFromObject,
-      },
-    });
+        `,
+        fragmentMatcherFunction,
+        config: {
+          dataIdFromObject: defaultDataIdFromObject,
+        },
+      });
 
-    expect(queryResult.complete).toEqual(false);
-  });
+      expect(queryResult.complete).toEqual(false);
+    },
+  );
+
   it('returns nothing when the store is enough', () => {
     const query = gql`
       {

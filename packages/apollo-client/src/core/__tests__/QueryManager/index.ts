@@ -1,5 +1,5 @@
 // externals
-import { from } from 'rxjs/observable/from';
+import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';

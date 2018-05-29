@@ -113,7 +113,7 @@ export function flattenSelections(selection: SelectionNode): SelectionNode[] {
 
 export function getDirectiveNames(doc: DocumentNode) {
   // operation => [names of directives];
-  const directives = doc.definitions
+  const directiveNames = doc.definitions
     .filter(
       (definition: OperationDefinitionNode) =>
         definition.selectionSet && definition.selectionSet.selections,
@@ -133,7 +133,7 @@ export function getDirectiveNames(doc: DocumentNode) {
     .reduce((directives, directive) => directives.concat(directive), [])
     // [Directives] => [Name]
     .map((directive: DirectiveNode) => directive.name.value);
-  return directives;
+  return directiveNames;
 }
 
 export function hasDirectives(names: string[], doc: DocumentNode) {

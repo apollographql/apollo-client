@@ -1,5 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
-import { toIdValue } from 'apollo-utilities';
+import { toIdValue, stripSymbols } from 'apollo-utilities';
+
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { diffQueryAgainstStore, ID_KEY } from '../readFromStore';
 import { writeQueryToStore } from '../writeToStore';
@@ -404,7 +405,7 @@ describe('diffing queries against the store', () => {
       query: simpleQuery,
     });
 
-    expect(simpleDiff.result).toEqual({
+    expect(stripSymbols(simpleDiff.result)).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -415,7 +416,7 @@ describe('diffing queries against the store', () => {
       query: inlineFragmentQuery,
     });
 
-    expect(inlineDiff.result).toEqual({
+    expect(stripSymbols(inlineDiff.result)).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -426,7 +427,7 @@ describe('diffing queries against the store', () => {
       query: namedFragmentQuery,
     });
 
-    expect(namedDiff.result).toEqual({
+    expect(stripSymbols(namedDiff.result)).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -487,7 +488,7 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    expect(result).toEqual(queryResult);
+    expect(stripSymbols(result)).toEqual(queryResult);
     expect(result[ID_KEY]).toBe('ROOT_QUERY');
     expect(result.a[0][ID_KEY]).toBe('a:1');
     expect(result.a[1][ID_KEY]).toBe('a:2');
@@ -578,7 +579,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).toEqual(previousResult.a);
       expect(result.c).not.toEqual(previousResult.c);
@@ -659,7 +660,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result.a[0]).toEqual(previousResult.a[0]);
       expect(result.a[1]).toEqual(previousResult.a[1]);
     });
@@ -752,7 +753,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).not.toEqual(previousResult.a);
       expect(result.a[0]).toEqual(previousResult.a[0]);
@@ -837,7 +838,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).not.toEqual(previousResult.a);
       expect(result.a[0]).toEqual(previousResult.a[2]);
@@ -888,7 +889,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).toEqual(previousResult.a);
       expect(result.d).not.toEqual(previousResult.d);

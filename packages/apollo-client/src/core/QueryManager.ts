@@ -248,21 +248,25 @@ export class QueryManager<TStore> {
 
           // allow for conditional refetches
           // XXX do we want to make this the only API one day?
-          if (typeof refetchQueries === 'function')
+          if (typeof refetchQueries === 'function') {
             refetchQueries = refetchQueries(storeResult as ExecutionResult);
+          }
 
-          refetchQueries.forEach(refetchQuery => {
-            if (typeof refetchQuery === 'string') {
-              this.refetchQueryByName(refetchQuery);
-              return;
-            }
+          if (refetchQueries) {
+            refetchQueries.forEach(refetchQuery => {
+              if (typeof refetchQuery === 'string') {
+                this.refetchQueryByName(refetchQuery);
+                return;
+              }
 
-            this.query({
-              query: refetchQuery.query,
-              variables: refetchQuery.variables,
-              fetchPolicy: 'network-only',
+              this.query({
+                query: refetchQuery.query,
+                variables: refetchQuery.variables,
+                fetchPolicy: 'network-only',
+              });
             });
-          });
+          }
+
           this.setQuery(mutationId, () => ({ document: undefined }));
           if (
             errorPolicy === 'ignore' &&

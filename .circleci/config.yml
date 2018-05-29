@@ -4,7 +4,6 @@ jobs:
   Danger:
     docker:
       - image: circleci/node:8
-      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -21,7 +20,6 @@ jobs:
   Docs:
     docker:
       - image: circleci/node:8
-      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -38,7 +36,6 @@ jobs:
   Filesize:
     docker:
       - image: circleci/node:8
-      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -55,7 +52,6 @@ jobs:
   Typecheck:
     docker:
       - image: circleci/node:8
-      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
@@ -234,4 +230,3 @@ workflows:
       - Apollo InMemory Cache
       - Apollo Utilities
       - GraphQL Anywhere
-

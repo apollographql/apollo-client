@@ -2,6 +2,11 @@
 
 ### vNext
 
+- Fixed an issue where the `updateQuery` method passed to
+  `ObservableQuery.fetchMore` was receiving the original query variables,
+  instead of the new variables that it used to fetch more data.
+  [Issue #2499](https://github.com/apollographql/apollo-client/issues/2499)
+  [PR #3500](https://github.com/apollographql/apollo-client/pull/3500)
 - Fixed an issue involving `Object.setPrototypeOf()` not working on JSC
   (Android), by instead setting the `prototype` of `this` manually.
   [Issue #3236](https://github.com/apollographql/apollo-client/issues/3236)

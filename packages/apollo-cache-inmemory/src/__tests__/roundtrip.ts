@@ -1,6 +1,7 @@
 import { getFragmentDefinitions, createFragmentMap } from 'apollo-utilities';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
+import { stripSymbols } from 'apollo-utilities';
 
 import { withError } from './diffAgainstStore';
 import { withWarning } from './writeToStore';
@@ -29,7 +30,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     fragmentMatcherFunction,
   });
 
-  expect(reconstructedResult).toEqual(result);
+  expect(stripSymbols(reconstructedResult)).toEqual(result);
 }
 
 describe('roundtrip', () => {

@@ -246,9 +246,10 @@ describe('fetchMore on an observable query', () => {
       },
       result: resultMore,
     })
-      .then(watchedQuery => {
-        return watchedQuery.fetchMore({
-          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+      .then(watchedQuery =>
+        watchedQuery.fetchMore({
+          // Rely on the fact that the original variables had limit: 10
+          variables: { start: 10 },
           updateQuery: (prev, options) => {
             expect(options.variables).toEqual(variablesMore);
 
@@ -259,10 +260,11 @@ describe('fetchMore on an observable query', () => {
             ];
             return state;
           },
-        });
-      })
+        }),
+      )
       .then(data => {
-        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
+        // This is the server result
+        expect(data.data.entry.comments).toHaveLength(10);
         expect(data.loading).toBe(false);
         const comments = latestResult.data.entry.comments;
         expect(comments).toHaveLength(20);

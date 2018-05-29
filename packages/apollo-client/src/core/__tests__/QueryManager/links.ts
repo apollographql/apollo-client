@@ -5,6 +5,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
 import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
+import { stripSymbols } from 'apollo-utilities';
 
 // mocks
 import mockQueryManager from '../../../__mocks__/mockQueryManager';
@@ -56,9 +57,9 @@ describe('Link interactions', () => {
       expect(cache).toBeDefined();
       return forward(operation).map(result => {
         setTimeout(() => {
-          const cacheResult = cache.read({ query });
+          const cacheResult = stripSymbols(cache.read({ query }));
           expect(cacheResult).toEqual(initialData);
-          expect(cacheResult).toEqual(result.data);
+          expect(cacheResult).toEqual(stripSymbols(result.data));
           if (count === 1) {
             done();
           }

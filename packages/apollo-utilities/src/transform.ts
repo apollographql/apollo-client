@@ -165,12 +165,8 @@ export function removeDirectivesFromDocument(
   return isNotEmpty(operation, fragments) ? docClone : null;
 }
 
-const added = new Map();
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
-  const cached = added.get(doc);
-  if (cached) return cached;
-
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
@@ -180,8 +176,6 @@ export function addTypenameToDocument(doc: DocumentNode) {
       isRoot,
     );
   });
-
-  added.set(doc, docClone);
   return docClone;
 }
 
@@ -203,14 +197,10 @@ const connectionRemoveConfig = {
     return willRemove;
   },
 };
-const removed = new Map();
+
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   checkDocument(doc);
-  const cached = removed.get(doc);
-  if (cached) return cached;
-  const docClone = removeDirectivesFromDocument([connectionRemoveConfig], doc);
-  removed.set(doc, docClone);
-  return docClone;
+  return removeDirectivesFromDocument([connectionRemoveConfig], doc);
 }
 
 export type GetDirectiveConfig = {

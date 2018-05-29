@@ -1,5 +1,13 @@
 # Change log
 
+### Next
+
+- Fixed an issue that caused fragment only queries to sometimes fail.
+  [Issue #3402](https://github.com/apollographql/apollo-client/issues/3402)
+  [PR #3507](https://github.com/apollographql/apollo-client/pull/3507)  
+- Fixed cache invalidation for inlined mixed types in union fields within arrays.
+  [PR #3422](https://github.com/apollographql/apollo-client/pull/3422)
+
 ### 1.2.0
 - Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 - Fix typo in documentation

@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
 import { InMemoryCache } from 'apollo-cache-inmemory';
+import { stripSymbols } from 'apollo-utilities';
 
 import { withWarning } from '../util/wrap';
 
@@ -35,34 +36,40 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readQuery({
-          query: gql`
-            {
-              a
-            }
-          `,
-        }),
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              {
+                a
+              }
+            `,
+          }),
+        ),
       ).toEqual({ a: 1 });
       expect(
-        client.readQuery({
-          query: gql`
-            {
-              b
-              c
-            }
-          `,
-        }),
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              {
+                b
+                c
+              }
+            `,
+          }),
+        ),
       ).toEqual({ b: 2, c: 3 });
       expect(
-        client.readQuery({
-          query: gql`
-            {
-              a
-              b
-              c
-            }
-          `,
-        }),
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              {
+                a
+                b
+                c
+              }
+            `,
+          }),
+        ),
       ).toEqual({ a: 1, b: 2, c: 3 });
     });
 
@@ -101,55 +108,61 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readQuery({
-          query: gql`
-            {
-              a
-              d {
-                e
-              }
-            }
-          `,
-        }),
-      ).toEqual({ a: 1, d: { e: 4, __typename: 'Foo' } });
-      expect(
-        client.readQuery({
-          query: gql`
-            {
-              a
-              d {
-                e
-                h {
-                  i
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              {
+                a
+                d {
+                  e
                 }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
+      ).toEqual({ a: 1, d: { e: 4, __typename: 'Foo' } });
+      expect(
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              {
+                a
+                d {
+                  e
+                  h {
+                    i
+                  }
+                }
+              }
+            `,
+          }),
+        ),
       ).toEqual({
         a: 1,
         d: { __typename: 'Foo', e: 4, h: { i: 7, __typename: 'Bar' } },
       });
       expect(
-        client.readQuery({
-          query: gql`
-            {
-              a
-              b
-              c
-              d {
-                e
-                f
-                g
-                h {
-                  i
-                  j
-                  k
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              {
+                a
+                b
+                c
+                d {
+                  e
+                  f
+                  g
+                  h {
+                    i
+                    j
+                    k
+                  }
                 }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({
         a: 1,
         b: 2,
@@ -176,18 +189,20 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readQuery({
-          query: gql`
-            query($literal: Boolean, $value: Int) {
-              a: field(literal: true, value: 42)
-              b: field(literal: $literal, value: $value)
-            }
-          `,
-          variables: {
-            literal: false,
-            value: 42,
-          },
-        }),
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              query($literal: Boolean, $value: Int) {
+                a: field(literal: true, value: 42)
+                b: field(literal: $literal, value: $value)
+              }
+            `,
+            variables: {
+              literal: false,
+              value: 42,
+            },
+          }),
+        ),
       ).toEqual({ a: 1, b: 2 });
     });
   });
@@ -204,30 +219,34 @@ describe('ApolloClient', () => {
     });
 
     expect(
-      client.readQuery({
-        query: gql`
-          query($literal: Boolean, $value: Int = -1) {
-            a: field(literal: $literal, value: $value)
-          }
-        `,
-        variables: {
-          literal: false,
-          value: 42,
-        },
-      }),
+      stripSymbols(
+        client.readQuery({
+          query: gql`
+            query($literal: Boolean, $value: Int = -1) {
+              a: field(literal: $literal, value: $value)
+            }
+          `,
+          variables: {
+            literal: false,
+            value: 42,
+          },
+        }),
+      ),
     ).toEqual({ a: 2 });
 
     expect(
-      client.readQuery({
-        query: gql`
-          query($literal: Boolean, $value: Int = -1) {
-            a: field(literal: $literal, value: $value)
-          }
-        `,
-        variables: {
-          literal: true,
-        },
-      }),
+      stripSymbols(
+        client.readQuery({
+          query: gql`
+            query($literal: Boolean, $value: Int = -1) {
+              a: field(literal: $literal, value: $value)
+            }
+          `,
+          variables: {
+            literal: true,
+          },
+        }),
+      ),
     ).toEqual({ a: 1 });
   });
 
@@ -346,34 +365,38 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment fragmentFoo on Foo {
-              e
-              h {
-                i
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                h {
+                  i
+                }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({ __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } });
       expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment fragmentFoo on Foo {
-              e
-              f
-              g
-              h {
-                i
-                j
-                k
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                f
+                g
+                h {
+                  i
+                  j
+                  k
+                }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({
         __typename: 'Foo',
         e: 4,
@@ -382,50 +405,56 @@ describe('ApolloClient', () => {
         h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
       });
       expect(
-        client.readFragment({
-          id: 'bar',
-          fragment: gql`
-            fragment fragmentBar on Bar {
-              i
-            }
-          `,
-        }),
+        stripSymbols(
+          client.readFragment({
+            id: 'bar',
+            fragment: gql`
+              fragment fragmentBar on Bar {
+                i
+              }
+            `,
+          }),
+        ),
       ).toEqual({ __typename: 'Bar', i: 7 });
       expect(
-        client.readFragment({
-          id: 'bar',
-          fragment: gql`
-            fragment fragmentBar on Bar {
-              i
-              j
-              k
-            }
-          `,
-        }),
-      ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
-      expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment fragmentFoo on Foo {
-              e
-              f
-              g
-              h {
+        stripSymbols(
+          client.readFragment({
+            id: 'bar',
+            fragment: gql`
+              fragment fragmentBar on Bar {
                 i
                 j
                 k
               }
-            }
+            `,
+          }),
+        ),
+      ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
+      expect(
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                f
+                g
+                h {
+                  i
+                  j
+                  k
+                }
+              }
 
-            fragment fragmentBar on Bar {
-              i
-              j
-              k
-            }
-          `,
-          fragmentName: 'fragmentFoo',
-        }),
+              fragment fragmentBar on Bar {
+                i
+                j
+                k
+              }
+            `,
+            fragmentName: 'fragmentFoo',
+          }),
+        ),
       ).toEqual({
         __typename: 'Foo',
         e: 4,
@@ -434,28 +463,30 @@ describe('ApolloClient', () => {
         h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
       });
       expect(
-        client.readFragment({
-          id: 'bar',
-          fragment: gql`
-            fragment fragmentFoo on Foo {
-              e
-              f
-              g
-              h {
+        stripSymbols(
+          client.readFragment({
+            id: 'bar',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                f
+                g
+                h {
+                  i
+                  j
+                  k
+                }
+              }
+
+              fragment fragmentBar on Bar {
                 i
                 j
                 k
               }
-            }
-
-            fragment fragmentBar on Bar {
-              i
-              j
-              k
-            }
-          `,
-          fragmentName: 'fragmentBar',
-        }),
+            `,
+            fragmentName: 'fragmentBar',
+          }),
+        ),
       ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
     });
 
@@ -472,19 +503,21 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment foo on Foo {
-              a: field(literal: true, value: 42)
-              b: field(literal: $literal, value: $value)
-            }
-          `,
-          variables: {
-            literal: false,
-            value: 42,
-          },
-        }),
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment foo on Foo {
+                a: field(literal: true, value: 42)
+                b: field(literal: $literal, value: $value)
+              }
+            `,
+            variables: {
+              literal: false,
+              value: 42,
+            },
+          }),
+        ),
       ).toEqual({ __typename: 'Foo', a: 1, b: 2 });
     });
 
@@ -531,16 +564,18 @@ describe('ApolloClient', () => {
         }),
       ).toBe(null);
       expect(
-        client3.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment fooFragment on Foo {
-              a
-              b
-              c
-            }
-          `,
-        }),
+        stripSymbols(
+          client3.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fooFragment on Foo {
+                a
+                b
+                c
+              }
+            `,
+          }),
+        ),
       ).toEqual({ __typename: 'Foo', a: 1, b: 2, c: 3 });
     });
   });
@@ -1098,8 +1133,8 @@ describe('ApolloClient', () => {
         next: result => {
           count++;
           if (count === 1) {
-            expect(result.data).toEqual(data);
-            expect(observable.currentResult().data).toEqual(data);
+            expect(stripSymbols(result.data)).toEqual(data);
+            expect(stripSymbols(observable.currentResult().data)).toEqual(data);
             const bestFriends = result.data.people.friends.filter(
               x => x.type === 'best',
             );
@@ -1126,7 +1161,7 @@ describe('ApolloClient', () => {
           }
 
           if (count === 2) {
-            expect(result.data.people.friends).toEqual([
+            expect(stripSymbols(result.data.people.friends)).toEqual([
               data.people.friends[0],
             ]);
             done();
@@ -1152,7 +1187,7 @@ describe('ApolloClient', () => {
       client.writeData({ data: { field: 1 } });
 
       return client.query({ query }).then(({ data }) => {
-        expect({ ...data }).toEqual({ field: 1 });
+        expect(stripSymbols({ ...data })).toEqual({ field: 1 });
       });
     });
 
@@ -1326,21 +1361,23 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment x on Foo {
-              a
-              b
-              c
-              bar {
-                d
-                e
-                f
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment x on Foo {
+                a
+                b
+                c
+                bar {
+                  d
+                  e
+                  f
+                }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({
         __typename: 'Foo',
         a: 1,
@@ -1360,21 +1397,23 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment x on Foo {
-              a
-              b
-              c
-              bar {
-                d
-                e
-                f
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment x on Foo {
+                a
+                b
+                c
+                bar {
+                  d
+                  e
+                  f
+                }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({
         __typename: 'Foo',
         a: 7,
@@ -1396,21 +1435,23 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment x on Foo {
-              a
-              b
-              c
-              bar {
-                d
-                e
-                f
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment x on Foo {
+                a
+                b
+                c
+                bar {
+                  d
+                  e
+                  f
+                }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({
         __typename: 'Foo',
         a: 7,
@@ -1430,21 +1471,23 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readFragment({
-          id: 'foo',
-          fragment: gql`
-            fragment x on Foo {
-              a
-              b
-              c
-              bar {
-                d
-                e
-                f
+        stripSymbols(
+          client.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment x on Foo {
+                a
+                b
+                c
+                bar {
+                  d
+                  e
+                  f
+                }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({
         __typename: 'Foo',
         a: 7,
@@ -1493,23 +1536,25 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client.readQuery({
-          query: gql`
-            {
-              a
-              b
-              foo {
-                c
-                d
-                bar {
-                  key
-                  e
-                  f
+        stripSymbols(
+          client.readQuery({
+            query: gql`
+              {
+                a
+                b
+                foo {
+                  c
+                  d
+                  bar {
+                    key
+                    e
+                    f
+                  }
                 }
               }
-            }
-          `,
-        }),
+            `,
+          }),
+        ),
       ).toEqual({
         a: 1,
         b: 2,

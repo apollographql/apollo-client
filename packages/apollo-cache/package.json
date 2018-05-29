@@ -47,7 +47,7 @@
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
-    "jest": "20.0.4",
+    "jest": "23.0.0",
     "rimraf": "2.6.2",
     "rollup": "0.59.4",
     "rollup-plugin-node-resolve": "3.3.0",

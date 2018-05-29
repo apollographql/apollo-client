@@ -1,5 +1,6 @@
 // externals
-import { from } from 'rxjs/observable/from';
+import { Observable as RxObservable } from 'rxjs/Observable';
+import 'rxjs/add/observable/from';
 import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
@@ -474,7 +475,7 @@ describe('QueryManager', () => {
       result: expResult,
     });
 
-    const observable = from(handle);
+    const observable = RxObservable.from(handle);
 
     observable.pipe(map(result => assign({ fromRx: true }, result))).subscribe({
       next: wrap(done, newResult => {

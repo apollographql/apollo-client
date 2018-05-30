@@ -6,6 +6,7 @@ import { stripSymbols } from 'apollo-utilities';
 import { withWarning } from '../util/wrap';
 
 import ApolloClient from '../';
+import { FetchPolicy } from '../core/watchQueryOptions';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -2049,5 +2050,72 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
+  });
+
+  describe('watchQuery', () => {
+    it(
+      'should change the `fetchPolicy` to `cache-first` if network fetching ' +
+        'is disabled, and the incoming `fetchPolicy` is set to ' +
+        '`network-only` or `cache-and-network`',
+      () => {
+        const client = new ApolloClient({
+          link: ApolloLink.empty(),
+          cache: new InMemoryCache(),
+        });
+        client.disableNetworkFetches = true;
+
+        const query = gql`
+          query someData {
+            foo {
+              bar
+            }
+          }
+        `;
+
+        ['network-only', 'cache-and-network'].forEach(
+          (fetchPolicy: FetchPolicy) => {
+            const observable = client.watchQuery({
+              query,
+              fetchPolicy,
+            });
+            expect(observable.options.fetchPolicy).toEqual('cache-first');
+          },
+        );
+      },
+    );
+
+    it(
+      'should not change the incoming `fetchPolicy` if network fetching ' +
+        'is enabled',
+      () => {
+        const client = new ApolloClient({
+          link: ApolloLink.empty(),
+          cache: new InMemoryCache(),
+        });
+        client.disableNetworkFetches = false;
+
+        const query = gql`
+          query someData {
+            foo {
+              bar
+            }
+          }
+        `;
+
+        [
+          'cache-first',
+          'cache-and-network',
+          'network-only',
+          'cache-only',
+          'no-cache',
+        ].forEach((fetchPolicy: FetchPolicy) => {
+          const observable = client.watchQuery({
+            query,
+            fetchPolicy,
+          });
+          expect(observable.options.fetchPolicy).toEqual(fetchPolicy);
+        });
+      },
+    );
   });
 });

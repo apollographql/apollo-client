@@ -46,13 +46,13 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/zen-observable": "^0.5.3",
+    "@types/zen-observable": "0.5.3",
     "apollo-cache": "^1.1.9",
-    "apollo-link": "^1.0.0",
-    "apollo-link-dedup": "^1.0.0",
+    "apollo-link": "1.2.2",
+    "apollo-link-dedup": "1.0.9",
     "apollo-utilities": "^1.0.13",
-    "symbol-observable": "^1.0.2",
-    "zen-observable": "^0.8.0"
+    "symbol-observable": "1.2.0",
+    "zen-observable": "0.8.8"
   },
   "peerDependencies": {
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"

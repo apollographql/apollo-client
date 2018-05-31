@@ -88,7 +88,7 @@ Then add the plugin in your `.babelrc` configuration file:
 ```
 {
   "plugins": [
-    "inline-import-graphql-ast"
+    "import-graphql"
   ]
 }
 ```

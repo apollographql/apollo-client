@@ -15,14 +15,13 @@
     "hexo-renderer-marked": "0.3.2",
     "hexo-server": "0.3.2",
     "hexo-typescript-api-box": "0.9.1",
-    "meteor-theme-hexo": "1.0.10",
+    "meteor-theme-hexo": "1.0.13",
     "typedoc": "0.9.0",
     "typescript": "2.8.3"
   },
   "scripts": {
     "start": "npm run build && chexo apollo-hexo-config -- server",
-    "types":
-      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
     "build": "npm run types && chexo apollo-hexo-config -- generate",
     "clean": "hexo clean",
     "test": "npm run clean; npm run build"

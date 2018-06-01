@@ -16,6 +16,8 @@ import {
   NameNode,
 } from 'graphql';
 
+import stringify from 'fast-json-stable-stringify';
+
 export interface IdValue {
   type: 'id';
   id: string;
@@ -217,7 +219,10 @@ export function getStoreKeyName(
   let completeFieldName: string = fieldName;
 
   if (args) {
-    const stringifiedArgs: string = JSON.stringify(args);
+    // We can't use `JSON.stringify` here since it's non-deterministic,
+    // and can lead to different store key names being created even though
+    // the `args` object used during creation has the same properties/values.
+    const stringifiedArgs: string = stringify(args);
     completeFieldName += `(${stringifiedArgs})`;
   }
 

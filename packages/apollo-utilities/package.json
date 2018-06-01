@@ -38,6 +38,9 @@
     "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
+  "dependencies": {
+    "fast-json-stable-stringify": "^2.0.0"
+  },
   "devDependencies": {
     "@types/graphql": "~0.12.0",
     "@types/jest": "22.2.3",

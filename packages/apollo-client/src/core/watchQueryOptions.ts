@@ -4,7 +4,7 @@ import { DataProxy } from 'apollo-cache';
 
 import { MutationQueryReducersMap } from './types';
 
-import { PureQueryOptions } from './types';
+import { PureQueryOptions, OperationVariables } from './types';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -36,12 +36,12 @@ export type ErrorPolicy = 'none' | 'ignore' | 'all';
 /**
  * We can change these options to an ObservableQuery
  */
-export interface ModifiableWatchQueryOptions {
+export interface ModifiableWatchQueryOptions<TVariables = OperationVariables> {
   /**
    * A map going from variable name to variable value, where the variables are used
    * within the GraphQL query.
    */
-  variables?: { [key: string]: any };
+  variables?: TVariables;
 
   /**
    * The time interval (in milliseconds) on which this query should be
@@ -73,7 +73,8 @@ export interface ModifiableWatchQueryOptions {
 /**
  * The argument to a query
  */
-export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
+export interface WatchQueryOptions<TVariables = OperationVariables>
+  extends ModifiableWatchQueryOptions<TVariables> {
   /**
    * A GraphQL document that consists of a single query to be sent down to the
    * server.
@@ -93,23 +94,26 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
   context?: any;
 }
 
-export interface FetchMoreQueryOptions {
+export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   query?: DocumentNode;
-  variables?: { [key: string]: any };
+  variables?: Pick<TVariables, K>;
 }
 
-export type UpdateQueryFn = (
-  previousQueryResult: Object,
+export type UpdateQueryFn<TData = any, TVariables = OperationVariables> = (
+  previousQueryResult: TData,
   options: {
-    subscriptionData: { data: any };
-    variables?: { [key: string]: any };
+    subscriptionData: { data: TData };
+    variables?: TVariables;
   },
-) => Object;
+) => TData;
 
-export type SubscribeToMoreOptions = {
+export type SubscribeToMoreOptions<
+  TData = any,
+  TVariables = OperationVariables
+> = {
   document: DocumentNode;
-  variables?: { [key: string]: any };
-  updateQuery?: UpdateQueryFn;
+  variables?: TVariables;
+  updateQuery?: UpdateQueryFn<TData, TVariables>;
   onError?: (error: Error) => void;
 };
 

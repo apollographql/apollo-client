@@ -21,8 +21,7 @@
   },
   "scripts": {
     "start": "npm run build && chexo apollo-hexo-config -- server",
-    "types":
-      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
     "build": "npm run types && chexo apollo-hexo-config -- generate",
     "clean": "hexo clean",
     "test": "npm run clean; npm run build"

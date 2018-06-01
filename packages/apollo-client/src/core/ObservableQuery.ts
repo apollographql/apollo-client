@@ -82,7 +82,6 @@ export class ObservableQuery<
 
   private lastResult: ApolloQueryResult<TData>;
   private lastError: ApolloError;
-  private lastVariables: TVariables;
 
   constructor({
     scheduler,
@@ -294,10 +293,11 @@ export class ObservableQuery<
       );
     }
 
+    let combinedOptions: any;
+
     return Promise.resolve()
       .then(() => {
         const qid = this.queryManager.generateQueryId();
-        let combinedOptions: any;
 
         if (fetchMoreOptions.query) {
           // fetch a new query
@@ -325,10 +325,10 @@ export class ObservableQuery<
         );
       })
       .then(fetchMoreResult => {
-        this.updateQuery((previousResult, { variables }) =>
+        this.updateQuery((previousResult: any) =>
           fetchMoreOptions.updateQuery(previousResult, {
             fetchMoreResult: fetchMoreResult.data as TData,
-            variables,
+            variables: combinedOptions.variables,
           }),
         );
 
@@ -453,7 +453,6 @@ export class ObservableQuery<
       }
       return this.result();
     } else {
-      this.lastVariables = this.variables;
       this.variables = newVariables;
       this.options.variables = newVariables;
 

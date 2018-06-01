@@ -13,7 +13,7 @@ The most common need when using type systems with GraphQL is to type the results
 
 <h2 id="typing-components">Typing the Component APIs</h2>
 
-Using Apollo together with TypeScript couldn't be eaiser than using it with component API released in React Apollo 2.1:
+Using Apollo together with TypeScript couldn't be easier than using it with component API released in React Apollo 2.1:
 
 ```js
 interface Data {
@@ -29,7 +29,7 @@ interface Variables {
 class AllPeopleQuery extends Query<Data, Variables> {}
 ```
 
-Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full full TypeScript support! Since are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables requried for it to work! Everything else is handled by React Apollo's robust type definitions.
+Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables requried for it to work! Everything else is handled by React Apollo's robust type definitions.
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
@@ -72,7 +72,7 @@ type Variables = {
   episode: string;
 };
 
-// note the first parameter is empty here, we will exaplain that below
+// note the first parameter is empty here, we will explain that below
 const withCharacter = graphql<{}, Response, Variables>(HERO_QUERY, {
   options: () => ({
     variables: { episode: "JEDI" }
@@ -141,7 +141,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
-This is expecially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types a project using TypeScript will begin to surface errors where props being passed are invalid:
+This is expecially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
 
 ```javascript
 import React from "react";
@@ -214,7 +214,7 @@ type Variables = {
 
 type ChildProps = ChildDataProps<InputProps, Response, Variables>;
 
-const withCharacter = graphql<InputProps, Response, Variables, ChildProps>>(HERO_QUERY, {
+const withCharacter = graphql<InputProps, Response, Variables, ChildProps>(HERO_QUERY, {
   options: ({ episode }) => ({
     variables: { episode }
   }),
@@ -278,7 +278,7 @@ If you are using the `name` property in the configuration of the `graphql` wrapp
 ```javascript
 import { NamedProps, QueryProps } from 'react-apollo';
 
-export const withCharacter = graphql<Response, InputProps, Prop>(HERO_QUERY, {
+export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY, {
   name: 'character',
   props: ({ character, ownProps }: NamedProps<{ character: QueryProps & Response }, Props) => ({
     ...character,

@@ -41,7 +41,7 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const test = ({ name: { value } }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === 'storage';
     const doc = removeDirectivesFromDocument([{ test }], query);
     expect(print(doc)).toBe(print(expected));
   });
@@ -77,7 +77,7 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const test = ({ name: { value } }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === 'storage';
     const doc = removeDirectivesFromDocument([{ test }], query);
     expect(print(doc)).toBe(print(expected));
   });
@@ -118,7 +118,7 @@ describe('removeDirectivesFromDocument', () => {
     const removed = [
       { name: 'storage' },
       {
-        test: directive => directive.name.value === 'client',
+        test: (directive: any) => directive.name.value === 'client',
       },
     ];
     const doc = removeDirectivesFromDocument(removed, query);
@@ -156,7 +156,7 @@ describe('removeDirectivesFromDocument', () => {
         keep
       }
     `;
-    const test = ({ name: { value } }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === 'storage';
     const doc = removeDirectivesFromDocument([{ test, remove: true }], query);
     expect(print(doc)).toBe(print(expected));
   });
@@ -181,7 +181,7 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
 
-    const test = ({ name: { value } }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === 'storage';
     const doc = removeDirectivesFromDocument([{ test, remove: true }], query);
     expect(doc).toBe(null);
   });
@@ -311,21 +311,6 @@ describe('query transforms', () => {
     const expectedQueryStr = print(expectedQuery);
 
     expect(expectedQueryStr).toBe(print(newQueryDoc));
-  });
-  it('should memoize and return cached results', () => {
-    let testQuery = gql`
-      query {
-        author {
-          name {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const newQueryDoc = addTypenameToDocument(testQuery);
-    const secondCall = addTypenameToDocument(testQuery);
-    expect(newQueryDoc).toBe(secondCall);
   });
 
   it('should not add duplicates', () => {
@@ -567,21 +552,6 @@ describe('query transforms', () => {
 
     expect(expectedQueryStr).toBe(print(newQueryDoc));
   });
-  it('should memoize and return cached results', () => {
-    let testQuery = gql`
-      query {
-        author {
-          name @connection(key: "foo") {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery);
-    const secondCall = removeConnectionDirectiveFromDocument(testQuery);
-    expect(newQueryDoc).toBe(secondCall);
-  });
 });
 
 describe('getDirectivesFromDocument', () => {
@@ -613,7 +583,7 @@ describe('getDirectivesFromDocument', () => {
         field @storage(if: true)
       }
     `;
-    const test = ({ name: { value } }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === 'storage';
     const doc = getDirectivesFromDocument([{ test }], query);
     expect(print(doc)).toBe(print(expected));
   });

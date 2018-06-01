@@ -10,6 +10,7 @@ import { Subscription } from '../util/Observable';
 import ApolloClient from '../';
 
 import gql from 'graphql-tag';
+import { stripSymbols } from 'apollo-utilities';
 
 describe('optimistic mutation results', () => {
   const query = gql`
@@ -213,7 +214,7 @@ describe('optimistic mutation results', () => {
 
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
-            expect(dataInStore).not.toHaveProperty('Todo99');
+            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
           });
       });
 
@@ -277,7 +278,7 @@ describe('optimistic mutation results', () => {
             subscriptionHandle.unsubscribe();
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-            expect(dataInStore).not.toHaveProperty('Todo99');
+            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
             expect(dataInStore).toHaveProperty('Todo66');
             expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
               realIdValue('Todo66', 'Todo'),
@@ -447,7 +448,7 @@ describe('optimistic mutation results', () => {
 
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
-            expect(dataInStore).not.toHaveProperty('Todo99');
+            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
           });
       });
 
@@ -511,7 +512,7 @@ describe('optimistic mutation results', () => {
             subscriptionHandle.unsubscribe();
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-            expect(dataInStore).not.toHaveProperty('Todo99');
+            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
             expect(dataInStore).toHaveProperty('Todo66');
             expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
               realIdValue('Todo66', 'Todo'),
@@ -1030,7 +1031,7 @@ describe('optimistic mutation results', () => {
           subscriptionHandle.unsubscribe();
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
-          expect(dataInStore).not.toHaveProperty('Todo99');
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
             realIdValue('Todo66', 'Todo'),
@@ -1105,12 +1106,12 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      const defaultTodos = result.data.todoList.todos;
+      const defaultTodos = stripSymbols(result.data.todoList.todos);
       let count = 0;
 
       client.watchQuery({ query }).subscribe({
         next: (value: any) => {
-          const todos = value.data.todoList.todos;
+          const todos = stripSymbols(value.data.todoList.todos);
           switch (count++) {
             case 0:
               expect(defaultTodos).toEqual(todos);
@@ -1508,7 +1509,7 @@ describe('optimistic mutation results', () => {
           subscriptionHandle.unsubscribe();
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-          expect(dataInStore).not.toHaveProperty('Todo99');
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
             realIdValue('Todo66', 'Todo'),
@@ -1600,12 +1601,12 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      const defaultTodos = result.data.todoList.todos;
+      const defaultTodos = stripSymbols(result.data.todoList.todos);
       let count = 0;
 
       client.watchQuery({ query }).subscribe({
         next: (value: any) => {
-          const todos = value.data.todoList.todos;
+          const todos = stripSymbols(value.data.todoList.todos);
           switch (count++) {
             case 0:
               expect(defaultTodos).toEqual(todos);

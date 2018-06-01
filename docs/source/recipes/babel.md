@@ -9,7 +9,7 @@ To avoid this runtime overhead, you can precompile your queries created with `gr
 1. Using [babel-plugin-graphql-tag](#using-babel-plugin-graphql-tag)
 2. Using [graphql-tag.macro](#using-graphql-tagmacro)
 
-If you prefer to keep your GraphQL code in separate files (`.graphql` or `.gql`) you can use [babel-plugin-inline-import-graphql-ast](https://github.com/detrohutt/babel-plugin-inline-import-graphql-ast). This plugin still uses `graphql-tag` under the hood, but transparently. You simply `import` your operations/fragments as if each were an export from your GraphQL file. This carries the same precompilation benefits as the above approaches.
+If you prefer to keep your GraphQL code in separate files (`.graphql` or `.gql`) you can use [babel-plugin-import-graphql](https://github.com/detrohutt/babel-plugin-import-graphql). This plugin still uses `graphql-tag` under the hood, but transparently. You simply `import` your operations/fragments as if each were an export from your GraphQL file. This carries the same precompilation benefits as the above approaches.
 
 ## Using babel-plugin-graphql-tag
 
@@ -77,10 +77,10 @@ Install the plugin in your dev dependencies:
 
 ```
 # with npm
-npm install --save-dev babel-plugin-inline-import-graphql-ast
+npm install --save-dev babel-plugin-import-graphql
 
 # or with yarn
-yarn add --dev babel-plugin-inline-import-graphql-ast
+yarn add --dev babel-plugin-import-graphql
 ```
 
 Then add the plugin in your `.babelrc` configuration file:
@@ -88,7 +88,7 @@ Then add the plugin in your `.babelrc` configuration file:
 ```
 {
   "plugins": [
-    "inline-import-graphql-ast"
+    "import-graphql"
   ]
 }
 ```
@@ -114,7 +114,7 @@ export default graphql(myImportedQuery)(QueryingComponent);
 
 ## Fragments
 
-All of these approaches support the use of fragments. 
+All of these approaches support the use of fragments.
 
 For the first two approaches, you can have fragments defined in a different call to `gql` (either in the same file or in a different one). You can then include them into the main query using interpolation, like this:
 
@@ -143,4 +143,4 @@ const query = gql`
 `;
 ```
 
-With `babel-plugin-inline-import-graphql-ast`, you can just include your fragment in your GraphQL file along-side whatever uses it, or even import it from a separate file using the GraphQL `#import` syntax. See the [README](https://github.com/detrohutt/babel-plugin-inline-import-graphql-ast) for more information.
+With `babel-plugin-import-graphql`, you can just include your fragment in your GraphQL file along-side whatever uses it, or even import it from a separate file using the GraphQL `#import` syntax. See the [README](https://github.com/detrohutt/babel-plugin-import-graphql) for more information.

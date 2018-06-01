@@ -318,7 +318,7 @@ export function valueFromNode(
     case 'NullValue':
       return null;
     case 'IntValue':
-      return parseInt(node.value);
+      return parseInt(node.value, 10);
     case 'FloatValue':
       return parseFloat(node.value);
     case 'ListValue':

@@ -2,9 +2,9 @@ import { maybeDeepFreeze } from '../maybeDeepFreeze';
 
 describe('maybeDeepFreeze', () => {
   it('should deep freeze', () => {
-    const foo = { bar: undefined };
+    const foo: any = { bar: undefined };
     maybeDeepFreeze(foo);
-    expect(() => foo.bar = 1).toThrow();
+    expect(() => (foo.bar = 1)).toThrow();
     expect(foo.bar).toBeUndefined();
   });
 
@@ -12,6 +12,6 @@ describe('maybeDeepFreeze', () => {
     const foo = Object.create(null);
     foo.bar = undefined;
     maybeDeepFreeze(foo);
-    expect(() => foo.bar = 1).toThrow();
+    expect(() => (foo.bar = 1)).toThrow();
   });
 });

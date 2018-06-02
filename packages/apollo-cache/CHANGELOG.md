@@ -1,30 +1,52 @@
+# CHANGELOG
 
-### vNext
+### 1.1.9
 
-## 1.1.6
+- No public facing functionality changes.
+- Various internal code cleanup, tooling and dependency changes.
+
+### 1.1.8
+
+- Not documented
+
+### 1.1.7
+
+- Not documented
+
+### 1.1.6
+
 - Improve code coverage
 - Map coverage to original source
 
 ### 1.1.3
-- dependency updates
+
+- Dependency updates
 
 ### 1.1.2
-- dependency updates
+
+- Dependency updates
 
 ### 1.1.1
-- dependency updates
+
+- Dependency updates
 
 ### 1.1.0
-- Add cache.writeData to base cache type & DataProxy [PR#2818](https://github.com/apollographql/apollo-client/pull/2818)
+
+- Add cache.writeData to base cache type & DataProxy
+  [PR #2818](https://github.com/apollographql/apollo-client/pull/2818)
 
 ### 1.0.3
-- dependency updates
+
+- Dependency updates
 
 ### 1.0.2
-- package dependency updates
+
+- Package dependency updates
 
 ### 1.0.1
-- improved rollup builds
+
+- Improved rollup builds
 
 ### 1.0.0
-- initial solid cache API
+
+- Initial solid cache API

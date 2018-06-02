@@ -167,7 +167,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
         ) {
           // Only for Chrome
-          if (window.navigator && window.navigator.userAgent.indexOf('Chrome') > -1) {
+          if (
+            window.navigator &&
+            window.navigator.userAgent.indexOf('Chrome') > -1
+          ) {
             // tslint:disable-next-line
             console.debug(
               'Download the Apollo DevTools ' +
@@ -206,7 +209,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
-    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
+    if (
+      this.disableNetworkFetches &&
+      (options.fetchPolicy === 'network-only' ||
+        options.fetchPolicy === 'cache-and-network')
+    ) {
       options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
     }
 
@@ -264,7 +271,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe<T=any>(options: SubscriptionOptions): Observable<T> {
+  public subscribe<T = any>(options: SubscriptionOptions): Observable<T> {
     this.initQueryManager();
 
     return this.queryManager.startGraphQLSubscription(options);
@@ -398,7 +405,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       })
       .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
       .then(() => {
-        return this.queryManager
+        return this.queryManager && this.queryManager.reFetchObservableQueries
           ? this.queryManager.reFetchObservableQueries()
           : Promise.resolve(null);
       });

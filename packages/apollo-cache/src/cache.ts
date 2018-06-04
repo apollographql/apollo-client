@@ -9,11 +9,11 @@ export type Transaction<T> = (c: ApolloCache<T>) => void;
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
-  public abstract read<T>(query: Cache.ReadOptions): T | null;
-  public abstract write(write: Cache.WriteOptions): void;
+  public abstract read<T, TVariables = any>(query: Cache.ReadOptions<TVariables>): T | null;
+  public abstract write<TResult = any, TVariables = any>(write: Cache.WriteOptions<TResult, TVariables>): void;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
-  public abstract evict(query: Cache.EvictOptions): Cache.EvictionResult;
+  public abstract evict<TVariables = any>(query: Cache.EvictOptions<TVariables>): Cache.EvictionResult;
   public abstract reset(): Promise<void>;
 
   // intializer / offline / ssr API
@@ -60,8 +60,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * @param options
    * @param optimistic
    */
-  public readQuery<QueryType>(
-    options: DataProxy.Query,
+  public readQuery<QueryType, TVariables = any>(
+    options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
   ): QueryType | null {
     return this.read({
@@ -71,8 +71,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public readFragment<FragmentType>(
-    options: DataProxy.Fragment,
+  public readFragment<FragmentType, TVariables = any>(
+    options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
@@ -83,7 +83,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeQuery(options: Cache.WriteQueryOptions): void {
+  public writeQuery<TData = any, TVariables = any>(options: Cache.WriteQueryOptions<TData, TVariables>): void {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
@@ -92,7 +92,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeFragment(options: Cache.WriteFragmentOptions): void {
+  public writeFragment<TData = any, TVariables = any>(options: Cache.WriteFragmentOptions<TData, TVariables>): void {
     this.write({
       dataId: options.id,
       result: options.data,
@@ -101,7 +101,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeData({ id, data }: Cache.WriteDataOptions): void {
+  public writeData<TData = any>({ id, data }: Cache.WriteDataOptions<TData>): void {
     if (typeof id !== 'undefined') {
       let typenameResult = null;
       // Since we can't use fragments without having a typename in the store,
@@ -123,7 +123,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         (typenameResult && typenameResult.__typename) || '__ClientData';
 
       // Add a type here to satisfy the inmemory cache
-      const dataToWrite = { __typename, ...data };
+      const dataToWrite = Object.assign({ __typename }, data);
 
       this.writeFragment({
         id,

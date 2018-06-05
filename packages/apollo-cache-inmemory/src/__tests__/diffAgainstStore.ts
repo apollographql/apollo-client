@@ -1,9 +1,8 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
-import { toIdValue, stripSymbols } from 'apollo-utilities';
+import { toIdValue } from 'apollo-utilities';
 
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { diffQueryAgainstStore } from '../readFromStore';
-import { ID_KEY } from '../executeStoreQuery';
 import { writeQueryToStore } from '../writeToStore';
 import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 import { defaultDataIdFromObject } from '../inMemoryCache';
@@ -415,7 +414,7 @@ describe('diffing queries against the store', () => {
       query: simpleQuery,
     });
 
-    expect(stripSymbols(simpleDiff.result)).toEqual({
+    expect(simpleDiff.result).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -426,7 +425,7 @@ describe('diffing queries against the store', () => {
       query: inlineFragmentQuery,
     });
 
-    expect(stripSymbols(inlineDiff.result)).toEqual({
+    expect(inlineDiff.result).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -437,7 +436,7 @@ describe('diffing queries against the store', () => {
       query: namedFragmentQuery,
     });
 
-    expect(stripSymbols(namedDiff.result)).toEqual({
+    expect(namedDiff.result).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -487,10 +486,14 @@ describe('diffing queries against the store', () => {
       },
     };
 
+    function dataIdFromObject({ id }: { id: string}) {
+      return id;
+    }
+
     const store = writeQueryToStore({
       query,
       result: queryResult,
-      dataIdFromObject: ({ id }: { id: string }) => id,
+      dataIdFromObject,
     });
 
     const { result } = diffQueryAgainstStore({
@@ -498,18 +501,15 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    expect(stripSymbols(result)).toEqual(queryResult);
-    expect(result[ID_KEY]).toBe('ROOT_QUERY');
-    expect(result.a[0][ID_KEY]).toBe('a:1');
-    expect(result.a[1][ID_KEY]).toBe('a:2');
-    expect(result.a[2][ID_KEY]).toBe('a:3');
-    expect(result.c[ID_KEY]).toBe('$ROOT_QUERY.c');
-    expect(result.c.e[0][ID_KEY]).toBe('e:1');
-    expect(result.c.e[1][ID_KEY]).toBe('e:2');
-    expect(result.c.e[2][ID_KEY]).toBe('e:3');
-    expect(result.c.e[3][ID_KEY]).toBe('e:4');
-    expect(result.c.e[4][ID_KEY]).toBe('e:5');
-    expect(result.c.g[ID_KEY]).toBe('$ROOT_QUERY.c.g');
+    expect(result).toEqual(queryResult);
+    expect(dataIdFromObject(result.a[0])).toBe('a:1');
+    expect(dataIdFromObject(result.a[1])).toBe('a:2');
+    expect(dataIdFromObject(result.a[2])).toBe('a:3');
+    expect(dataIdFromObject(result.c.e[0])).toBe('e:1');
+    expect(dataIdFromObject(result.c.e[1])).toBe('e:2');
+    expect(dataIdFromObject(result.c.e[2])).toBe('e:3');
+    expect(dataIdFromObject(result.c.e[3])).toBe('e:4');
+    expect(dataIdFromObject(result.c.e[4])).toBe('e:5');
   });
 
   describe('referential equality preservation', () => {
@@ -589,7 +589,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(stripSymbols(result)).toEqual(queryResult);
+      expect(result).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).toEqual(previousResult.a);
       expect(result.c).not.toEqual(previousResult.c);
@@ -670,7 +670,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(stripSymbols(result)).toEqual(queryResult);
+      expect(result).toEqual(queryResult);
       expect(result.a[0]).toEqual(previousResult.a[0]);
       expect(result.a[1]).toEqual(previousResult.a[1]);
     });
@@ -763,7 +763,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(stripSymbols(result)).toEqual(queryResult);
+      expect(result).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).not.toEqual(previousResult.a);
       expect(result.a[0]).toEqual(previousResult.a[0]);
@@ -825,18 +825,18 @@ describe('diffing queries against the store', () => {
 
       const previousResult = {
         a: [
-          { id: 'a:3', b: 1.3, [ID_KEY]: 'a:3' },
-          { id: 'a:2', b: 1.2, [ID_KEY]: 'a:2' },
-          { id: 'a:1', b: 1.1, [ID_KEY]: 'a:1' },
+          { id: 'a:3', b: 1.3 },
+          { id: 'a:2', b: 1.2 },
+          { id: 'a:1', b: 1.1 },
         ],
         c: {
           d: 2,
           e: [
-            { id: 'e:4', f: 3.4, [ID_KEY]: 'e:4' },
-            { id: 'e:2', f: 3.2, [ID_KEY]: 'e:2' },
-            { id: 'e:5', f: 3.5, [ID_KEY]: 'e:5' },
-            { id: 'e:3', f: 3.3, [ID_KEY]: 'e:3' },
-            { id: 'e:1', f: 3.1, [ID_KEY]: 'e:1' },
+            { id: 'e:4', f: 3.4 },
+            { id: 'e:2', f: 3.2 },
+            { id: 'e:5', f: 3.5 },
+            { id: 'e:3', f: 3.3 },
+            { id: 'e:1', f: 3.1 },
           ],
           g: { h: 4 },
         },
@@ -848,7 +848,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(stripSymbols(result)).toEqual(queryResult);
+      expect(result).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).not.toEqual(previousResult.a);
       expect(result.a[0]).toEqual(previousResult.a[2]);
@@ -899,7 +899,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(stripSymbols(result)).toEqual(queryResult);
+      expect(result).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).toEqual(previousResult.a);
       expect(result.d).not.toEqual(previousResult.d);

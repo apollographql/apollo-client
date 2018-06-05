@@ -34,16 +34,6 @@ import {
 import { wrap, defaultMakeCacheKey } from './optimism';
 import { DepTrackingCache } from './depTrackingCache';
 
-/**
- * The key which the cache id for a given value is stored in the result object. This key is private
- * and should not be used by Apollo client users.
- *
- * Uses a symbol if available in the environment.
- *
- * @private
- */
-export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
-
 export type VariableMap = { [name: string]: any };
 
 export type FragmentMatcher = (
@@ -289,13 +279,6 @@ const executeSelectionSet = wrap(function _executeSelectionSet(
         merge(finalResult.result, handleMissing(fragmentExecResult));
       }
     }
-  });
-
-  Object.defineProperty(finalResult.result, ID_KEY, {
-    enumerable: false,
-    configurable: true,
-    writable: false,
-    value: rootValue.id,
   });
 
   return finalResult;

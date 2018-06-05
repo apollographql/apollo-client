@@ -55,7 +55,7 @@ export default graphql(currentUserQuery)(Profile)
 
 ## React native
 
-[React native](https://facebook.github.io/react-native/) can't use the Webpack loaders. To make the same transformation work in React native, use [babel-plugin-inline-import-graphql-ast](https://github.com/detrohutt/babel-plugin-inline-import-graphql-ast).
+[React native](https://facebook.github.io/react-native/) can't use the Webpack loaders. To make the same transformation work in React native, use [babel-plugin-import-graphql](https://github.com/detrohutt/babel-plugin-import-graphql).
 
 ## Create-React-App
 

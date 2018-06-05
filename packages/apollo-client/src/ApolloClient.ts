@@ -167,7 +167,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
         ) {
           // Only for Chrome
-          if (window.navigator && window.navigator.userAgent.indexOf('Chrome') > -1) {
+          if (
+            window.navigator &&
+            window.navigator.userAgent.indexOf('Chrome') > -1
+          ) {
             // tslint:disable-next-line
             console.debug(
               'Download the Apollo DevTools ' +
@@ -206,7 +209,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
-    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
+    if (
+      this.disableNetworkFetches &&
+      (options.fetchPolicy === 'network-only' ||
+        options.fetchPolicy === 'cache-and-network')
+    ) {
       options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
     }
 
@@ -264,7 +271,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe<T=any>(options: SubscriptionOptions): Observable<T> {
+  public subscribe<T = any>(options: SubscriptionOptions): Observable<T> {
     this.initQueryManager();
 
     return this.queryManager.startGraphQLSubscription(options);
@@ -276,7 +283,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    */
-  public readQuery<T>(options: DataProxy.Query): T | null {
+  public readQuery<T, TVariables = any>(
+    options: DataProxy.Query<TVariables>,
+  ): T | null {
     return this.initProxy().readQuery<T>(options);
   }
 
@@ -291,7 +300,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public readFragment<T>(options: DataProxy.Fragment): T | null {
+  public readFragment<T, TVariables = any>(
+    options: DataProxy.Fragment<TVariables>,
+  ): T | null {
     return this.initProxy().readFragment<T>(options);
   }
 
@@ -300,7 +311,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * the store. This method will start at the root query. To start at a a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
-  public writeQuery(options: DataProxy.WriteQueryOptions): void {
+  public writeQuery<TData = any, TVariables = any>(
+    options: DataProxy.WriteQueryOptions<TData, TVariables>,
+  ): void {
     const result = this.initProxy().writeQuery(options);
     this.queryManager.broadcastQueries();
     return result;
@@ -317,7 +330,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public writeFragment(options: DataProxy.WriteFragmentOptions): void {
+  public writeFragment<TData = any, TVariables = any>(
+    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
+  ): void {
     const result = this.initProxy().writeFragment(options);
     this.queryManager.broadcastQueries();
     return result;
@@ -333,7 +348,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * Since you aren't passing in a query to check the shape of the data,
    * you must pass in an object that conforms to the shape of valid GraphQL data.
    */
-  public writeData(options: DataProxy.WriteDataOptions): void {
+  public writeData<TData = any>(
+    options: DataProxy.WriteDataOptions<TData>,
+  ): void {
     const result = this.initProxy().writeData(options);
     this.queryManager.broadcastQueries();
     return result;
@@ -398,7 +415,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       })
       .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
       .then(() => {
-        return this.queryManager
+        return this.queryManager && this.queryManager.reFetchObservableQueries
           ? this.queryManager.reFetchObservableQueries()
           : Promise.resolve(null);
       });

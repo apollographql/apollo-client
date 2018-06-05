@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloLink, Operation } from 'apollo-link';
 import { InMemoryCache } from 'apollo-cache-inmemory';
+import { stripSymbols } from 'apollo-utilities';
 
 import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
@@ -119,7 +120,7 @@ describe('subscribeToMore', () => {
     setTimeout(() => {
       sub.unsubscribe();
       expect(counter).toBe(3);
-      expect(latestResult).toEqual({
+      expect(stripSymbols(latestResult)).toEqual({
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
@@ -175,7 +176,7 @@ describe('subscribeToMore', () => {
 
     setTimeout(() => {
       sub.unsubscribe();
-      expect(latestResult).toEqual({
+      expect(stripSymbols(latestResult)).toEqual({
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
@@ -235,7 +236,7 @@ describe('subscribeToMore', () => {
 
     setTimeout(() => {
       sub.unsubscribe();
-      expect(latestResult).toEqual({
+      expect(stripSymbols(latestResult)).toEqual({
         data: { entry: { value: 1 } },
         loading: false,
         networkStatus: 7,
@@ -331,7 +332,7 @@ describe('subscribeToMore', () => {
     }
     sub.unsubscribe();
     expect(counter).toBe(3);
-    expect(latestResult).toEqual({
+    expect(stripSymbols(latestResult)).toEqual({
       data: {
         entry: [
           {

@@ -1,5 +1,6 @@
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
+import { stripSymbols } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler';
 import { QueryManager } from '../../core/QueryManager';
@@ -166,7 +167,7 @@ describe('QueryScheduler', () => {
     let subscription = observableQuery.subscribe({
       next(result) {
         timesFired += 1;
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
         subscription.unsubscribe();
       },
     });
@@ -212,7 +213,7 @@ describe('QueryScheduler', () => {
     let observableQuery = scheduler.registerPollingQuery(queryOptions);
     let subscription = observableQuery.subscribe({
       next(result) {
-        expect(result.data).toEqual(data[timesFired]);
+        expect(stripSymbols(result.data)).toEqual(data[timesFired]);
         timesFired += 1;
         if (timesFired === 1) {
           observableQuery.startPolling(70);
@@ -450,7 +451,7 @@ describe('QueryScheduler', () => {
     const subscription = observable.subscribe({
       next(result) {
         timesFired += 1;
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
         subscription.unsubscribe();
         expect(Object.keys(scheduler.registeredQueries).length).toEqual(0);
       },

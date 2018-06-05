@@ -17,6 +17,8 @@ export { gql, InMemoryCache, HttpLink };
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;
   uri?: string;
+  credentials?: string;
+  headers?: any;
   fetchOptions?: HttpLink.Options;
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;
@@ -50,31 +52,33 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     const requestHandler =
       config && config.request
-        ? new ApolloLink((operation, forward) =>
-            new Observable(observer => {
-              let handle: any;
-              Promise.resolve(operation)
-                .then(oper => config.request(oper))
-                .then(() => {
-                  handle = forward(operation).subscribe({
-                    next: observer.next.bind(observer),
-                    error: observer.error.bind(observer),
-                    complete: observer.complete.bind(observer),
-                  });
-                })
-                .catch(observer.error.bind(observer));
+        ? new ApolloLink(
+            (operation, forward) =>
+              new Observable(observer => {
+                let handle: any;
+                Promise.resolve(operation)
+                  .then(oper => config.request(oper))
+                  .then(() => {
+                    handle = forward(operation).subscribe({
+                      next: observer.next.bind(observer),
+                      error: observer.error.bind(observer),
+                      complete: observer.complete.bind(observer),
+                    });
+                  })
+                  .catch(observer.error.bind(observer));
 
-              return () => {
-                if (handle) handle.unsubscribe;
-              };
-            })
+                return () => {
+                  if (handle) handle.unsubscribe;
+                };
+              }),
           )
         : false;
 
     const httpLink = new HttpLink({
       uri: (config && config.uri) || '/graphql',
       fetchOptions: (config && config.fetchOptions) || {},
-      credentials: 'same-origin',
+      credentials: (config && config.credentials) || 'same-origin',
+      headers: (config && config.headers) || {},
     });
 
     const link = ApolloLink.from([

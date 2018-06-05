@@ -31,7 +31,7 @@ jobs:
           key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - run: cd docs && npm i && npm run build
+      - run: cd docs && npm i && npm run build && npm run ci
 
   Filesize:
     docker:

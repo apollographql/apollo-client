@@ -1,5 +1,7 @@
 import ApolloClient, { gql } from '../';
 import { stripSymbols } from 'apollo-utilities';
+import { HttpLink } from 'apollo-link-http';
+import * as fetchMock from 'fetch-mock';
 
 global.fetch = jest.fn(() =>
   Promise.resolve({ json: () => Promise.resolve({}) }),
@@ -66,5 +68,78 @@ describe('config', () => {
     });
 
     expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);
+  });
+
+  const makePromise = res =>
+    new Promise((resolve, reject) => setTimeout(() => resolve(res)));
+  const data = { data: { hello: 'world' } };
+
+  describe('credentials', () => {
+    beforeEach(() => {
+      fetchMock.restore();
+      fetchMock.post('/graphql', makePromise(data));
+    });
+
+    afterEach(() => {
+      fetchMock.restore();
+    });
+
+    it('should set `credentials` to `same-origin` by default', () => {
+      const client = new ApolloClient({});
+      client.query({ query, errorPolicy: 'ignore' });
+      const [uri, options] = fetchMock.lastCall();
+      expect(options.credentials).toEqual('same-origin');
+    });
+
+    it('should set `credentials` to `config.credentials` if supplied', () => {
+      const client = new ApolloClient({
+        credentials: 'some-new-value',
+      });
+      client.query({ query, errorPolicy: 'ignore' });
+      const [uri, options] = fetchMock.lastCall();
+      expect(options.credentials).toEqual('some-new-value');
+    });
+  });
+
+  describe('headers', () => {
+    beforeEach(() => {
+      fetchMock.restore();
+      fetchMock.post('/graphql', makePromise(data));
+    });
+
+    afterEach(() => {
+      fetchMock.restore();
+    });
+
+    it(
+      'should leave existing `headers` in place if no new headers are ' +
+        'provided',
+      () => {
+        const client = new ApolloClient({});
+        client.query({ query, errorPolicy: 'ignore' });
+        const [uri, options] = fetchMock.lastCall();
+        expect(options.headers).toEqual({
+          accept: '*/*',
+          'content-type': 'application/json',
+        });
+      },
+    );
+
+    it('should add new `config.headers` to existing headers', () => {
+      const client = new ApolloClient({
+        headers: {
+          'new-header1': 'value1',
+          'new-header2': 'value2',
+        },
+      });
+      client.query({ query, errorPolicy: 'ignore' });
+      const [uri, options] = fetchMock.lastCall();
+      expect(options.headers).toEqual({
+        accept: '*/*',
+        'content-type': 'application/json',
+        'new-header1': 'value1',
+        'new-header2': 'value2',
+      });
+    });
   });
 });

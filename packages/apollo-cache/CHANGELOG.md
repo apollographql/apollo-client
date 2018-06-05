@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### vNext
+
+- Added optional generics to cache manipulation methods (typescript).
+  [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
+
 ### 1.1.9
 
 - No public facing functionality changes.

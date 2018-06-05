@@ -5,6 +5,8 @@
 - Typescript improvements. Made observable query parameterized on data and
   variables: `ObservableQuery<TData, TVariables>`
   [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
+- Added optional generics to cache manipulation methods (typescript).
+  [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
 
 ### 2.3.2
 

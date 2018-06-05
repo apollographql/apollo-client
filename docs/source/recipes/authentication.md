@@ -65,6 +65,8 @@ const client = new ApolloClient({
 });
 ```
 
+Note that you'll need to switch to using ApolloClient from `apollo-client`, not `apollo-boost` if you haven't already done so, [as documented here](/docs/react/advanced/boost-migration.html).
+
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 
 <h2 id="login-logout">Reset store on logout</h2>

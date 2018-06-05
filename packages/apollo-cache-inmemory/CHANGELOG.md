@@ -5,6 +5,9 @@
 - Added optional generics to cache manipulation methods (typescript).
   [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
 
+- Restore non-enumerability of `resultFields[ID_KEY]`.
+  [PR #3544](https://github.com/apollographql/apollo-client/pull/3544)
+
 ### 1.2.2
 
 - Fixed an issue that caused fragment only queries to sometimes fail.

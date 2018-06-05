@@ -315,7 +315,12 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
     }
   }
 
-  resultFields[ID_KEY] = idValue.id;
+  Object.defineProperty(resultFields, ID_KEY, {
+    enumerable: false,
+    configurable: true,
+    writable: false,
+    value: idValue.id,
+  });
 
   return resultFields;
 }

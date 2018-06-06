@@ -8,7 +8,7 @@ Apollo Client uses the ultra flexible [Apollo Link](/docs/link) that includes se
 
 ## Cookie
 
-If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `credentials: 'same-origin'` as shown below, if your backend server is the same domain or else `credentials: 'include'` if your backend is a different domain. 
+If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `credentials: 'same-origin'` as shown below, if your backend server is the same domain or else `credentials: 'include'` if your backend is a different domain.
 
 ```js
 const link = createHttpLink({
@@ -24,7 +24,7 @@ const client = new ApolloClient({
 
 This option is simply passed through to the [`fetch` implementation](https://github.com/github/fetch) used by the HttpLink when sending the query.
 
-Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings, 
+Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings,
 ```js
 // enable cors
 var corsOptions = {
@@ -65,7 +65,7 @@ const client = new ApolloClient({
 });
 ```
 
-Note that you'll need to switch to using ApolloClient from `apollo-client`, not `apollo-boost` if you haven't already done so, [as documented here](/docs/react/advanced/boost-migration.html).
+Note that the above example is using `ApolloClient` from the `apollo-client` package. Headers can still be modified using `ApolloClient` from the `apollo-boost` package, but since `apollo-boost` doesn't allow the `HttpLink` instance it uses to be modified, headers have to be passed in as a config parameter. See the Apollo Boost [Configuration options](../essentials/get-started.html#configuration) section for more details.
 
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 

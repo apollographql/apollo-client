@@ -6,13 +6,15 @@ export namespace Cache {
     success: Boolean;
   }
 
-  export interface ReadOptions<TVariables = any> extends DataProxy.Query<TVariables> {
+  export interface ReadOptions<TVariables = any>
+    extends DataProxy.Query<TVariables> {
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
   }
 
-  export interface WriteOptions<TResult = any, TVariables = any> extends DataProxy.Query<TVariables> {
+  export interface WriteOptions<TResult = any, TVariables = any>
+    extends DataProxy.Query<TVariables> {
     dataId: string;
     result: TResult;
   }
@@ -25,7 +27,8 @@ export namespace Cache {
     callback: WatchCallback;
   }
 
-  export interface EvictOptions<TVariables = any> extends DataProxy.Query<TVariables> {
+  export interface EvictOptions<TVariables = any>
+    extends DataProxy.Query<TVariables> {
     rootId?: string;
   }
 

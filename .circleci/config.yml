@@ -26,7 +26,7 @@ jobs:
           key: v1-dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install-npm
-          command: npm install
+          command: cd docs && npm install
       - save_cache:
           key: v1-dependency-cache-{{ checksum "package.json" }}
           paths:

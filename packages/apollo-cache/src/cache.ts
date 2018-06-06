@@ -9,11 +9,17 @@ export type Transaction<T> = (c: ApolloCache<T>) => void;
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
-  public abstract read<T, TVariables = any>(query: Cache.ReadOptions<TVariables>): T | null;
-  public abstract write<TResult = any, TVariables = any>(write: Cache.WriteOptions<TResult, TVariables>): void;
+  public abstract read<T, TVariables = any>(
+    query: Cache.ReadOptions<TVariables>,
+  ): T | null;
+  public abstract write<TResult = any, TVariables = any>(
+    write: Cache.WriteOptions<TResult, TVariables>,
+  ): void;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
-  public abstract evict<TVariables = any>(query: Cache.EvictOptions<TVariables>): Cache.EvictionResult;
+  public abstract evict<TVariables = any>(
+    query: Cache.EvictOptions<TVariables>,
+  ): Cache.EvictionResult;
   public abstract reset(): Promise<void>;
 
   // intializer / offline / ssr API
@@ -83,7 +89,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeQuery<TData = any, TVariables = any>(options: Cache.WriteQueryOptions<TData, TVariables>): void {
+  public writeQuery<TData = any, TVariables = any>(
+    options: Cache.WriteQueryOptions<TData, TVariables>,
+  ): void {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
@@ -92,7 +100,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeFragment<TData = any, TVariables = any>(options: Cache.WriteFragmentOptions<TData, TVariables>): void {
+  public writeFragment<TData = any, TVariables = any>(
+    options: Cache.WriteFragmentOptions<TData, TVariables>,
+  ): void {
     this.write({
       dataId: options.id,
       result: options.data,
@@ -101,7 +111,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeData<TData = any>({ id, data }: Cache.WriteDataOptions<TData>): void {
+  public writeData<TData = any>({
+    id,
+    data,
+  }: Cache.WriteDataOptions<TData>): void {
     if (typeof id !== 'undefined') {
       let typenameResult = null;
       // Since we can't use fragments without having a typename in the store,

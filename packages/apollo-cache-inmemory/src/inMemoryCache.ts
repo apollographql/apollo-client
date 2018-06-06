@@ -243,7 +243,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): void {
+  public writeQuery<TData = any, TVariables = any>(
+    options: DataProxy.WriteQueryOptions<TData, TVariables>,
+  ): void {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
@@ -252,7 +254,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): void {
+  public writeFragment<TData = any, TVariables = any>(
+    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
+  ): void {
     this.write({
       dataId: options.id,
       result: options.data,

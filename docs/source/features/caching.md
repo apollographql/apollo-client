@@ -66,7 +66,6 @@ const { todo } = client.readQuery({
 
 - [`ApolloClient#query` API documentation](../api/apollo-client.html#ApolloClient.query)
 - [`ApolloClient#readQuery` API documentation](../api/apollo-client.html#ApolloClient.readQuery)
-- [`DataProxy#readQuery` API documentation](../api/apollo-client.html#DataProxy.readQuery)
 
 <h2 id="readfragment">`readFragment`</h2>
 
@@ -118,7 +117,6 @@ The beauty of `readFragment` is that the todo could have come from anywhere! The
 **Resources:**
 
 - [`ApolloClient#readFragment` API documentation](../api/apollo-client.html#ApolloClient.readFragment)
-- [`DataProxy#readFragment` API documentation](../api/apollo-client.html#DataProxy.readFragment)
 
 <h2 id="writequery-and-writefragment">`writeQuery` and `writeFragment`</h2>
 
@@ -267,4 +265,3 @@ The `update` function is not a good place for side-effects as it may be called m
 **Resources:**
 
 - [`ApolloClient#mutate` API documentation](../api/apollo-client.html#ApolloClient.mutate)
-- [`DataProxy` API documentation](apollo-client-..ient.html#DataProxy)

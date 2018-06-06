@@ -121,7 +121,7 @@ const query = gql`
 `;
 ```
 
-For more information about using fragments, checkout the [guide](../features/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
+For more information about using fragments, checkout the [guide](../advanced/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
 
 <h2 id="connecting-data">Requesting data</h2>
 
@@ -279,7 +279,7 @@ The `graphql()` function will only be able to provide access to your GraphQL dat
 
 [`ApolloClient`]: #ApolloClient
 
-The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](./queries.html), a [mutation](./mutations.html), or a [subscription](../features/subscriptions.html). Go to the appropriate API documentation for more information about the functionality and available options for each type.
+The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](./queries.html), a [mutation](./mutations.html), or a [subscription](../advanced/subscriptions.html). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
 Before we look into the specific behaviors of each operation, let us look at the `config` object.
 

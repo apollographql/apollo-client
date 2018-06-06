@@ -14,6 +14,7 @@ root: /docs/react/
 
 typescript_api_box:
   data_file: docs.json
+  filepath_prefix: packages/apollo-client/src/
 
 # This setting also defines the page order used to generate the
 # Previous/Next links at the bottom of each page

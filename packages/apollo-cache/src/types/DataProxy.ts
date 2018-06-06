@@ -44,14 +44,16 @@ export namespace DataProxy {
     variables?: TVariables;
   }
 
-  export interface WriteQueryOptions<TData, TVariables> extends Query<TVariables> {
+  export interface WriteQueryOptions<TData, TVariables>
+    extends Query<TVariables> {
     /**
      * The data you will be writing to the store.
      */
     data: TData;
   }
 
-  export interface WriteFragmentOptions<TData, TVariables> extends Fragment<TVariables> {
+  export interface WriteFragmentOptions<TData, TVariables>
+    extends Fragment<TVariables> {
     /**
      * The data you will be writing to the store.
      */
@@ -102,14 +104,18 @@ export interface DataProxy {
   /**
    * Writes a GraphQL query to the root query id.
    */
-  writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): void;
+  writeQuery<TData = any, TVariables = any>(
+    options: DataProxy.WriteQueryOptions<TData, TVariables>,
+  ): void;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): void;
+  writeFragment<TData = any, TVariables = any>(
+    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
+  ): void;
 
   /**
    * Sugar for writeQuery & writeFragment.

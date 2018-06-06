@@ -58,17 +58,12 @@ const raiseIssueAboutPaths = (
   }
 };
 
-console.log("GitHub PR Username:", pr && pr.user && pr.user.login);
+console.log('GitHub PR Username:', pr && pr.user && pr.user.login);
 
-const githubBotUsernames = [
-  'greenkeeper',
-  'renovate[bot]',
-];
+const githubBotUsernames = ['greenkeeper', 'renovate[bot]'];
 
-const isBot = pr
-  && pr.user
-  && pr.user.login
-  && githubBotUsernames.includes(pr.user.login);
+const isBot =
+  pr && pr.user && pr.user.login && githubBotUsernames.includes(pr.user.login);
 
 // Rules
 if (!isBot) {
@@ -101,10 +96,7 @@ if (!isBot) {
 
   // Warn when there is a big PR
   const bigPRThreshold = 500;
-  if (
-    github.pr.additions + github.pr.deletions >
-    bigPRThreshold
-  ) {
+  if (github.pr.additions + github.pr.deletions > bigPRThreshold) {
     warn(':exclamation: Big PR');
   }
 

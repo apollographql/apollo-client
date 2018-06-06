@@ -12,4 +12,8 @@ export class Observable<T> extends LinkObservable<T> {
   public [$$observable]() {
     return this;
   }
+
+  public ['@@observable' as any]() {
+    return this;
+  }
 }

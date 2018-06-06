@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-inmemory",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -15,6 +15,7 @@
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"
@@ -39,24 +40,24 @@
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache": "^1.1.8",
-    "apollo-utilities": "^1.0.12",
-    "graphql-anywhere": "^4.1.10"
+    "apollo-cache": "^1.1.9",
+    "apollo-utilities": "^1.0.13",
+    "graphql-anywhere": "^4.1.11"
   },
   "peerDependencies": {
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0"
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",
-    "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.108",
+    "@types/jest": "22.2.3",
+    "@types/lodash": "4.14.109",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
-    "jest": "20.0.4",
+    "jest": "23.0.0",
     "lodash": "4.17.10",
     "rimraf": "2.6.2",
-    "rollup": "0.58.2",
+    "rollup": "0.59.4",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
     "typescript": "2.8.3",

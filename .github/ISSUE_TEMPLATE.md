@@ -25,8 +25,12 @@ If possible, please create a reproduction using https://github.com/apollographql
 Instructions for how the issue can be reproduced by a maintainer or contributor. Be as specific as possible, and only mention what is necessary to reproduce the bug. If possible, try to isolate the exact circumstances in which the bug occurs and avoid speculation over what the cause might be.
 -->
 
-**Version**
-- apollo-client@<version number>
+**Versions**
+<!--
+Run the following command in your project directory, and paste its (automatically copied to clipboard) results here:
+
+`npx envinfo@latest --preset apollo --clipboard`
+-->
 
 <!--**Issue Labels**
 

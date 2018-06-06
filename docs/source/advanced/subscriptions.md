@@ -9,7 +9,7 @@ GraphQL subscriptions are a way to push data from the server to the clients that
 
 A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration.html).
 
 <h2 id="overview">Overview</h2>
 
@@ -157,8 +157,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
   <dt>`variables`: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your subscription needs to execute</dd>
-  <dt>`shouldResubscribe`: boolean</dt>
-  <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
+  <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>
+  <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
 </dl>
 
 <h3 id="render-prop">Render prop function</h3>

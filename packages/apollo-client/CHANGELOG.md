@@ -1,15 +1,45 @@
-# Change log
+# CHANGELOG
 
 ### vNext
 
+- Typescript improvements. Made observable query parameterized on data and
+  variables: `ObservableQuery<TData, TVariables>`
+  [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
+- Added optional generics to cache manipulation methods (typescript).
+  [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
+
+### 2.3.2
+
+- Fix SSR and `cache-and-network` fetch policy
+  [Issue #2119](https://github.com/apollographql/apollo-client/issues/2119)
+  [PR #3372](https://github.com/apollographql/apollo-client/pull/3372)
+- Fixed an issue where the `updateQuery` method passed to
+  `ObservableQuery.fetchMore` was receiving the original query variables,
+  instead of the new variables that it used to fetch more data.
+  [Issue #2499](https://github.com/apollographql/apollo-client/issues/2499)
+  [PR #3500](https://github.com/apollographql/apollo-client/pull/3500)
 - Fixed an issue involving `Object.setPrototypeOf()` not working on JSC
   (Android), by instead setting the `prototype` of `this` manually.
   [Issue #3236](https://github.com/apollographql/apollo-client/issues/3236)
   [PR #3306](https://github.com/apollographql/apollo-client/pull/3306)
+- Added safeguards to make sure `QueryStore.initQuery` and   
+  `QueryStore.markQueryResult` don't try to set the network status of a
+  `fetchMoreForQueryId` query, if it does not exist in the store. This was
+  happening when a query component was unmounted while a `fetchMore` was still
+  in flight.
+  [Issue #3345](https://github.com/apollographql/apollo-client/issues/3345)
+  [Issue #3466](https://github.com/apollographql/apollo-client/issues/3466)
+  [PR #3367](https://github.com/apollographql/apollo-client/pull/3367)
+  [PR #3469](https://github.com/apollographql/apollo-client/pull/3469)
+
+### 2.3.1
+
+- Not documented
 
 ### 2.3.0
 - fixed edge case bug of changing fetchPolicies right after resetStore with no variables present
-- Various optimizations for cache read performance [#3300](https://github.com/apollographql/apollo-client/pull/3300)
+- Various optimizations for cache read performance
+  [#3300](https://github.com/apollographql/apollo-client/pull/3300)
 
 ### 2.2.8
 - Added the graphQLResultHasError in QueryManager.ts to check not only if result.errors is null, but also empty.

@@ -242,15 +242,11 @@ export class QueryManager<TStore> {
 
             this.broadcastQueries();
 
-            if (error) {
-              reject(error);
-              return;
-            }
-
             // allow for conditional refetches
             // XXX do we want to make this the only API one day?
-            if (typeof refetchQueries === 'function')
+            if (typeof refetchQueries === 'function') {
               refetchQueries = refetchQueries(storeResult as ExecutionResult);
+            }
 
             for (const refetchQuery of refetchQueries) {
               if (typeof refetchQuery === 'string') {
@@ -264,13 +260,16 @@ export class QueryManager<TStore> {
                 fetchPolicy: 'network-only',
               });
             }
+
             this.setQuery(mutationId, () => ({ document: undefined }));
-            if (errorPolicy === 'ignore' &&
+            if (
+              errorPolicy === 'ignore' &&
               storeResult &&
               graphQLResultHasError(storeResult)
             ) {
               delete storeResult.errors;
             }
+
             resolve(storeResult as FetchResult<T>);
           } catch (completionError) {
             reject(completionError);

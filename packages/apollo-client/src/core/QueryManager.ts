@@ -1023,7 +1023,7 @@ export class QueryManager<TStore> {
   public broadcastQueries() {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
-      if (!info.invalidated || !info.listeners) return;
+      if (!info.invalidated || !info.listeners.length || info.newData === null) return;
       info.listeners
         // it's possible for the listener to be undefined if the query is being stopped
         // See here for more detail: https://github.com/apollostack/apollo-client/issues/231

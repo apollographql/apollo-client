@@ -309,9 +309,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 <h3 id="graphql-query-data-error">`data.error`</h3>
 
-If an error occurred then this property will be an instance of [`ApolloError`][]. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
-
-[`ApolloError`]: /docs/react/reference/index.html#ApolloError
+If an error occurred then this property will be an instance of `ApolloError`. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
 **Example:**
 
@@ -401,7 +399,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 <h3 id="graphql-query-data-fetchMore">`data.fetchMore(options)`</h3>
 
-The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](./../recipes/pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
+The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](../feature/pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
 
 `data.fetchMore` returns a promise that resolves once the query executed to fetch more data has resolved.
 
@@ -612,9 +610,9 @@ Valid `fetchPolicy` values are:
 - `network-only`: This fetch policy will *never* return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
 - `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()`][] and [`readFragment()`][] methods available to you on your [`ApolloClient`][] instance.
 
-[`readQuery()`]: cache#ApolloClient.readQuery
-[`readFragment()`]: cache#ApolloClient.readFragment
-[`ApolloClient`]: /docs/react
+[`readQuery()`]: ../api/apollo-client.html#ApolloClient.readQuery
+[`readFragment()`]: ../api/apollo-client.html#ApolloClient.readFragment
+[`ApolloClient`]: ../api/apollo-client.html
 
 **Example:**
 
@@ -631,7 +629,7 @@ The error policy is an option which allows you to specify how you want your comp
 Valid `errorPolicy` values are:
 
 - `none`: This is the default value where we treat GraphQL errors as runtime errors. Apollo will discard any data that came back with the request and render your component with an `error` prop.
-- `ignore`: Much like `none`, this causes Apollo to ignore any data from your server, but it also won't update your UI aside from setting the loading state back to false. 
+- `ignore`: Much like `none`, this causes Apollo to ignore any data from your server, but it also won't update your UI aside from setting the loading state back to false.
 - `all`: Selecting all means you want to be notified any time there are any GraphQL errors. It will render your component with any data from the request and any errors with their information. It is particularly helpful for server side rendering so your UI always shows something
 
 

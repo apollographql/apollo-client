@@ -9,7 +9,7 @@ GraphQL subscriptions are a way to push data from the server to the clients that
 
 A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration.html).
 
 <h2 id="overview">Overview</h2>
 

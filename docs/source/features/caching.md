@@ -233,9 +233,7 @@ client.mutate({
 });
 ```
 
-The first `proxy` argument is an instance of [`DataProxy`][] has the same for methods that we just learned exist on the Apollo Client: `readQuery`, `readFragment`, `writeQuery`, and `writeFragment`. The reason we call them on a `proxy` object here instead of on our `client` instance is that we can easily apply optimistic updates (which we will demonstrate in a bit). The `proxy` object also provides an isolated transaction which shields you from any other mutations going on at the same time, and the `proxy` object also batches writes together until the very end.
-
-[`DataProxy`]: ../api/apollo-client.html#DataProxy
+The first `proxy` argument is an instance of `DataProxy` and has the same for methods that we just learned exist on the Apollo Client: `readQuery`, `readFragment`, `writeQuery`, and `writeFragment`. The reason we call them on a `proxy` object here instead of on our `client` instance is that we can easily apply optimistic updates (which we will demonstrate in a bit). The `proxy` object also provides an isolated transaction which shields you from any other mutations going on at the same time, and the `proxy` object also batches writes together until the very end.
 
 If you provide an `optimisticResponse` option to the mutation then the `update` function will be run twice. Once immediately after you call `client.mutate` with the data from `optimisticResponse`. After the mutation successfully executes against the server the changes made in the first call to `update` will be rolled back and `update` will be called with the *actual* data returned by the mutation and not just the optimistic response.
 

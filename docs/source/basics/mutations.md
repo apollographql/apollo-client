@@ -31,7 +31,7 @@ The above mutation will submit a new GitHub repository to GitHunt, saving an ent
 }
 ```
 
-When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](../features/cache-updates.html#normalization), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation. Alternatively, you can use [fragments](../features/fragments.html) to share the fields between a query and a mutation that updates that query.
+When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](../advanced/caching.html#normalization), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation. Alternatively, you can use [fragments](../advanced/fragments.html) to share the fields between a query and a mutation that updates that query.
 
 <h2 id="basics">Basic mutations</h2>
 
@@ -130,7 +130,7 @@ const NewEntryWithData = graphql(submitRepository, {
 })(NewEntry);
 ```
 
-Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, there are [several different options for updating the store after a mutation](../features/cache-updates.html). That way, you can keep your UI components as stateless and declarative as possible.
+Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, there are [several different options for updating the store after a mutation](../advanced/caching.html#after-mutations). That way, you can keep your UI components as stateless and declarative as possible.
 
 <h2 id="multiple-mutations">Multiple mutations</h2>
 
@@ -143,9 +143,9 @@ const ComponentWithMutations =
   )
 ```
 
-Make sure to use the [`name` option on the `graphql()` container](setup#graphql-config-name) to name the provided prop, so that the two containers don't both try to name their function `mutate`.
+Make sure to use the [`name` option on the `graphql()` container](./setup.html#graphql-config-name) to name the provided prop, so that the two containers don't both try to name their function `mutate`.
 
-If you want a better syntax for the above, consider using [`compose`](setup#compose):
+If you want a better syntax for the above, consider using [`compose`](./setup.html#compose):
 
 ```js
 import { compose } from 'react-apollo';
@@ -178,7 +178,7 @@ const ReplaceCurrentUser = graphql(replaceUser, {
   },
 })(Component);
 ```
-These mutations will be run in series, so the first one is guaranteed to succeed before the second one will start. This is useful if you have multiple mutations that need to be run at the same time and that are dependant on each other. You can use [mutation batching](./network-layer.html#MutationBatching) if the order doesn't matter and your server supports batching.
+These mutations will be run in series, so the first one is guaranteed to succeed before the second one will start. This is useful if you have multiple mutations that need to be run at the same time and that are dependant on each other. You can use [mutation batching](../advanced/network-layer.html#MutationBatching) if the order doesn't matter and your server supports batching.
 
 <h2 id="optimistic-ui">Optimistic UI</h2>
 
@@ -445,11 +445,11 @@ To read the data from the store that you are changing, make sure to use methods 
 
 For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../features/caching.html#updating-the-cache-after-a-mutation).
 
-[`DataProxy`]: caching.html#direct
-[`writeQuery`]: caching.html#writequery-and-writefragment
-[`writeFragment`]: caching.html#writequery-and-writefragment
-[`readQuery`]: caching.html#readquery
-[`readFragment`]: caching.html#readfragment
+[`DataProxy`]: ../advanced/caching.html#direct
+[`writeQuery`]: ../advanced/caching.html#writequery-and-writefragment
+[`writeFragment`]: ../advanced/caching.html#writequery-and-writefragment
+[`readQuery`]: ../advanced/caching.html#readquery
+[`readFragment`]: ../advanced/caching.html#readfragment
 
 **Example:**
 
@@ -577,7 +577,7 @@ The second argument to your function value will be an object with three properti
 
 The return value of your `options.updateQueries` functions _must_ have the same shape as your first `previousData` argument. However, you _must not_ mutate the `previousData` object. Instead you must create a new object with your changes. Just like in a Redux reducer.
 
-To learn more about `options.updateQueries` read our usage documentation on [controlling the store with `updateQueries`](../features/cache-updates.html#updateQueries).
+To learn more about `options.updateQueries` read our usage documentation on [controlling the store with `updateQueries`](../api/react-apollo.html#graphql-mutation-options-updateQueries).
 
 **Example:**
 
@@ -605,5 +605,3 @@ export default graphql(gql`
   },
 })(MyComponent);
 ```
-
-

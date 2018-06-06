@@ -43,6 +43,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected optimistic: OptimisticStoreItem[] = [];
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
+  private typenameDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -204,7 +205,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) return addTypenameToDocument(document);
+    if (this.addTypename) {
+      let result = this.typenameDocumentCache.get(document);
+      if (!result) {
+        this.typenameDocumentCache.set(
+          document,
+          (result = addTypenameToDocument(document)),
+        );
+      }
+      return result;
+    }
     return document;
   }
 

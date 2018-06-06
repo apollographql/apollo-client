@@ -8,6 +8,9 @@
 - Restore non-enumerability of `resultFields[ID_KEY]`.
   [PR #3544](https://github.com/apollographql/apollo-client/pull/3544)
 
+- Cache query documents transformed by InMemoryCache.
+  [PR #3553](https://github.com/apollographql/apollo-client/pull/3553)
+
 ### 1.2.2
 
 - Fixed an issue that caused fragment only queries to sometimes fail.

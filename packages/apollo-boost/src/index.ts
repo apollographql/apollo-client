@@ -25,8 +25,41 @@ export interface PresetConfig {
   cacheRedirects?: CacheResolverMap;
 }
 
+// infer this list from the above interface
+// using a typescript transform at compilation time.
+const PRESET_CONFIG_KEYS = [
+  'request',
+  'uri',
+  'credentials',
+  'headers',
+  'fetchOptions',
+  'clientState',
+  'onError',
+  'cacheRedirects',
+];
+
+function include<T>(b: T, a: Array<T>): boolean {
+  return a.indexOf(b) >= 0;
+}
+
+function difference<T>(a: Array<T>, b: Array<T>): Array<T> {
+  return a.filter(x => !include(x, b));
+}
+
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
   constructor(config: PresetConfig) {
+    if (config) {
+      const diff = difference(Object.keys(config), PRESET_CONFIG_KEYS);
+
+      if (diff.length > 0) {
+        // prettier-ignore
+        console.warn(
+          `ApolloBoost was initialized with unsupported options: ${diff.join(' ')}\n` +
+          `https://github.com/apollographql/apollo-client/tree/master/packages/apollo-boost#apollo-boost-options`,
+        );
+      }
+    }
+
     const cache =
       config && config.cacheRedirects
         ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
@@ -52,24 +85,25 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     const requestHandler =
       config && config.request
-        ? new ApolloLink((operation, forward) =>
-            new Observable(observer => {
-              let handle: any;
-              Promise.resolve(operation)
-                .then(oper => config.request(oper))
-                .then(() => {
-                  handle = forward(operation).subscribe({
-                    next: observer.next.bind(observer),
-                    error: observer.error.bind(observer),
-                    complete: observer.complete.bind(observer),
-                  });
-                })
-                .catch(observer.error.bind(observer));
+        ? new ApolloLink(
+            (operation, forward) =>
+              new Observable(observer => {
+                let handle: any;
+                Promise.resolve(operation)
+                  .then(oper => config.request(oper))
+                  .then(() => {
+                    handle = forward(operation).subscribe({
+                      next: observer.next.bind(observer),
+                      error: observer.error.bind(observer),
+                      complete: observer.complete.bind(observer),
+                    });
+                  })
+                  .catch(observer.error.bind(observer));
 
-              return () => {
-                if (handle) handle.unsubscribe;
-              };
-            })
+                return () => {
+                  if (handle) handle.unsubscribe;
+                };
+              }),
           )
         : false;
 

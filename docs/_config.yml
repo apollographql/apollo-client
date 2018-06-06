@@ -63,3 +63,5 @@ redirects:
     docs/react/api/react-apollo.html#graphql-query-options
   /docs/react/basics/mutations.html#api:
     docs/react/api/react-apollo.html#graphql-mutation-options
+  /docs/react/recipes/simple-example.html:
+    docs/react/essentials/get-started.html

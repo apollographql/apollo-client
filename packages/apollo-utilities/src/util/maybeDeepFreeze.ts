@@ -5,11 +5,8 @@ import { isDevelopment, isTest } from './environment';
 function deepFreeze(o: any) {
   Object.freeze(o);
 
-  const hasOwn = Object.prototype.hasOwnProperty;
-
   Object.getOwnPropertyNames(o).forEach(function(prop) {
     if (
-      hasOwn.call(o, prop) &&
       o[prop] !== null &&
       (typeof o[prop] === 'object' || typeof o[prop] === 'function') &&
       !Object.isFrozen(o[prop])

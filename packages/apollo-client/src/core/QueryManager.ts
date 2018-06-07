@@ -473,8 +473,14 @@ export class QueryManager<TStore> {
 
       const errorStatusChanged =
         errorPolicy &&
-        (lastError && lastError.graphQLErrors) !==
-          queryStoreValue.graphQLErrors &&
+        (lastError && lastError.graphQLErrors && lastError.graphQLErrors.length ?
+          lastError.graphQLErrors :
+          emptyList
+        ) !== (
+          queryStoreValue && queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length ?
+            queryStoreValue.graphQLErrors :
+            emptyList
+        ) &&
         errorPolicy !== 'none';
 
       if (

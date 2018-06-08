@@ -8,6 +8,7 @@ import { HttpLink } from 'apollo-link-http';
 import { withClientState, ClientStateConfig } from 'apollo-link-state';
 import { onError, ErrorLink } from 'apollo-link-error';
 
+import { ApolloCache } from 'apollo-cache';
 import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import ApolloClient from 'apollo-client';
@@ -23,14 +24,28 @@ export interface PresetConfig {
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;
   cacheRedirects?: CacheResolverMap;
+  cache?: ApolloCache<any>;
 }
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
   constructor(config: PresetConfig) {
-    const cache =
-      config && config.cacheRedirects
-        ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
-        : new InMemoryCache();
+    if (config && config.cache && config.cacheRedirects) {
+      throw new Error(
+        'Incompatible cache configuration. If providing `cache` then configure' +
+          'the provided instance with `cacheRedirects` instead.',
+      );
+    }
+
+    // First try to use a provided ApolloCache instance:
+    let cache = config && config.cache ? config.cache : null;
+
+    // If no cache instance, then create one using cacheRedirects if given:
+    if (cache === null) {
+      cache =
+        config && config.cacheRedirects
+          ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
+          : new InMemoryCache();
+    }
 
     const stateLink =
       config && config.clientState

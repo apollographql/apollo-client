@@ -58,7 +58,7 @@ const defaultQueryInfo = {
   observableQuery: null,
   subscriptions: [],
 };
-const emptyList = [];
+const emptyList: any[] = [];
 
 export interface QueryPromise {
   resolve: (result: ApolloQueryResult<any>) => void;

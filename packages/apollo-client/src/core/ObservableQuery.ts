@@ -104,7 +104,6 @@ export class ObservableQuery<
     this.options = options;
     this.variables = options.variables || ({} as TVariables);
     this.queryId = scheduler.queryManager.generateQueryId();
-
     this.shouldSubscribe = shouldSubscribe;
 
     // related classes

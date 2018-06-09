@@ -559,8 +559,6 @@ export class ObservableQuery<
   }
 
   private setUpQuery() {
-    console.log(this.queryId, 'SETUP QUERY');
-
     if (this.shouldSubscribe) {
       this.queryManager.addObservableQuery<TData>(this.queryId, this);
     }

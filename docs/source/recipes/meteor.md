@@ -137,7 +137,7 @@ Your Meteor apps may rely on static typings with TypeScript. If so, it is recomm
 
 `meteorClientConfig(customClientConfig = {})`
 
-The `customClientConfig` is an optional object that can have any [Apollo Client options](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient.constructor).
+The `customClientConfig` is an optional object that can have any [Apollo Client options](../api/apollo-client.html#ApolloClient.constructor).
 
 Defining a `customClientConfig` object extends or replaces fields of the default configuration provided by the package.
 

@@ -37,7 +37,7 @@ The `InMemoryCache` constructor takes an optional config object with properties 
 
 - `addTypename`: A boolean to determine whether to add __typename to the document (default: `true`)
 - `dataIdFromObject`: A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in the [Normalization](#normalization) section.
-- `fragmentMatcher`: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](../recipes/fragment-matching.html).
+- `fragmentMatcher`: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](./fragments.html#fragment-matcher).
 - `cacheRedirects` (previously known as `cacheResolvers` or `customResolvers`): An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](https://www.apollographql.com/docs/react/advanced/caching.html#cacheRedirect).
 
 <h3 id="normalization">Normalization</h3>
@@ -484,7 +484,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 const cache = new InMemoryCache({
   cacheRedirects: {
     Query: {
-      book: (_, args, { getCacheKey }) => 
+      book: (_, args, { getCacheKey }) =>
         getCacheKey({ __typename: 'Book', id: args.id })
     },
   },
@@ -493,7 +493,7 @@ const cache = new InMemoryCache({
 
 > Note: This'll also work with custom `dataIdFromObject` methods as long as you use the same one.
 
-Apollo Client will use the ID returned by the custom resolver to look up the item in its cache. `getCacheKey` is passed inside the third argument to the resolver to generate the key of the object based on its `__typename` and `id`. 
+Apollo Client will use the ID returned by the custom resolver to look up the item in its cache. `getCacheKey` is passed inside the third argument to the resolver to generate the key of the object based on its `__typename` and `id`.
 
 To figure out what you should put in the `__typename` property run one of the queries in GraphiQL and get the `__typename` field:
 
@@ -521,9 +521,9 @@ It is also possible to return a list of IDs:
 cacheRedirects: {
   Query: {
     books: (_, args, { getCacheKey }) =>
-      args.ids.map(id => 
+      args.ids.map(id =>
         getCacheKey({ __typename: 'Book', id: id }))
-  } 
+  }
 }
 ```
 
@@ -543,7 +543,7 @@ export default withApollo(graphql(PROFILE_QUERY, {
 
 To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
 
-In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
+In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](/docs/link/links/state.html). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -629,4 +629,3 @@ persistCache({
 ```
 
 For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).
-

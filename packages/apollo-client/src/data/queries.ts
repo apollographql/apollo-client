@@ -79,9 +79,9 @@ export class QueryStore {
     }
 
     let graphQLErrors: GraphQLError[] = [];
-    if (previousQuery && previousQuery.graphQLErrors) {
-      graphQLErrors = previousQuery.graphQLErrors;
-    }
+    // if (previousQuery && previousQuery.graphQLErrors) {
+    //   graphQLErrors = previousQuery.graphQLErrors;
+    // }
 
     // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
     // the store. We probably want a refetch action instead, because I suspect that if you refetch

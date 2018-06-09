@@ -104,6 +104,7 @@ export class ObservableQuery<
     this.options = options;
     this.variables = options.variables || ({} as TVariables);
     this.queryId = scheduler.queryManager.generateQueryId();
+
     this.shouldSubscribe = shouldSubscribe;
 
     // related classes
@@ -558,6 +559,8 @@ export class ObservableQuery<
   }
 
   private setUpQuery() {
+    console.log(this.queryId, 'SETUP QUERY');
+
     if (this.shouldSubscribe) {
       this.queryManager.addObservableQuery<TData>(this.queryId, this);
     }

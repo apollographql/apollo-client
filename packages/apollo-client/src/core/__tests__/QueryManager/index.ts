@@ -296,10 +296,10 @@ describe('QueryManager', () => {
     });
   });
 
-  it('empty error array after a successful request', done => {
+  it('should not have any graphql errors in the query store once a successful query is made for a given queryId', done => {
     const query = gql`
-      query people {
-        allPeople(first: 1) {
+      query people($first: Int) {
+        allPeople(first: $first) {
           people {
             name
           }
@@ -307,15 +307,21 @@ describe('QueryManager', () => {
       }
     `;
 
-    const variables = {};
-
     const queryOptions = {
       errorPolicy: 'all',
     };
 
+    const variables1 = {
+      first: 1,
+    };
+
+    const variables2 = {
+      first: 2,
+    };
+
     const queryManager = mockQueryManager(
       {
-        request: { query, variables },
+        request: { query, variables: variables1 },
         result: {
           errors: [
             {
@@ -326,7 +332,7 @@ describe('QueryManager', () => {
         },
       },
       {
-        request: { query, variables },
+        request: { query, variables: variables2 },
         result: {
           data: {
             allPeople: {
@@ -339,37 +345,42 @@ describe('QueryManager', () => {
       },
     );
 
-    let subCount = 0;
+    let setCount = 0;
 
     const observer = {
       next({ data, errors }) {
-        const queryStoreItem = queryManager.queryStore.get('1');
-        expect(queryStoreItem.graphQLErrors[0]).toBeDefined();
+        if (setCount === 0) {
+          const queryStoreItem = queryManager.queryStore.get('1');
+          expect(queryStoreItem.graphQLErrors[0]).toBeDefined();
+          setCount = 1;
+        } else {
+          const queryStoreItem = queryManager.queryStore.get('1');
+          expect(queryStoreItem.graphQLErrors[0]).toBeUndefined();
+          done();
+        }
+      },
+      error() {
+        return;
       },
     };
 
-    const observer2 = {
-      next({ data, errors }) {
-        const queryStoreItem = queryManager.queryStore.get('1');
-        expect(queryStoreItem.graphQLErrors[0]).toBeUndefined();
-        done();
-      },
-    };
-
-    const finalOptions = assign(
-      { query, variables },
+    const finalOptions1 = assign(
+      { query, variables: variables1 },
       queryOptions,
     ) as WatchQueryOptions;
 
-    queryManager.watchQuery<any>(finalOptions).subscribe({
+    const handle = queryManager.watchQuery<any>(finalOptions1);
+
+    handle.subscribe({
       next: wrap(done, observer.next!),
       error: observer.error,
     });
 
-    queryManager.watchQuery<any>(finalOptions).subscribe({
-      next: wrap(done, observer2.next!),
-      error: observer2.error,
-    });
+    setTimeout(() => {
+      handle.setOptions({
+        variables: variables2,
+      });
+    }, 500);
   });
 
   it('empty error array (handle non-spec-compliant server) #156', done => {

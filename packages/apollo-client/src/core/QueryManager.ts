@@ -650,8 +650,6 @@ export class QueryManager<TStore> {
 
     let transformedOptions = { ...options } as WatchQueryOptions;
 
-    console.log('QUERY ID', this.idCounter);
-
     return new ObservableQuery<T>({
       scheduler: this.scheduler,
       options: transformedOptions,

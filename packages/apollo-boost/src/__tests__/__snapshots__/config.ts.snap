@@ -4,7 +4,7 @@ exports[`config warns about unsupported parameter 1`] = `
 Array [
   Array [
     "ApolloBoost was initialized with unsupported options: link
-https://github.com/apollographql/apollo-client/tree/master/packages/apollo-boost#apollo-boost-options",
+https://www.apollographql.com/docs/react/essentials/get-started.html#configuration",
   ],
 ]
 `;

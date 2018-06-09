@@ -55,7 +55,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
         // prettier-ignore
         console.warn(
           `ApolloBoost was initialized with unsupported options: ${diff.join(' ')}\n` +
-          `https://github.com/apollographql/apollo-client/tree/master/packages/apollo-boost#apollo-boost-options`,
+          `https://www.apollographql.com/docs/react/essentials/get-started.html#configuration`,
         );
       }
     }

@@ -296,6 +296,82 @@ describe('QueryManager', () => {
     });
   });
 
+  it('empty error array after a successful request', done => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const variables = {};
+
+    const queryOptions = {
+      errorPolicy: 'all',
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query, variables },
+        result: {
+          errors: [
+            {
+              name: 'Name',
+              message: 'This is an error message.',
+            },
+          ],
+        },
+      },
+      {
+        request: { query, variables },
+        result: {
+          data: {
+            allPeople: {
+              people: {
+                name: 'Ada Lovelace',
+              },
+            },
+          },
+        },
+      },
+    );
+
+    let subCount = 0;
+
+    const observer = {
+      next({ data, errors }) {
+        const queryStoreItem = queryManager.queryStore.get('1');
+        expect(queryStoreItem.graphQLErrors[0]).toBeDefined();
+      },
+    };
+
+    const observer2 = {
+      next({ data, errors }) {
+        const queryStoreItem = queryManager.queryStore.get('1');
+        expect(queryStoreItem.graphQLErrors[0]).toBeUndefined();
+        done();
+      },
+    };
+
+    const finalOptions = assign(
+      { query, variables },
+      queryOptions,
+    ) as WatchQueryOptions;
+
+    queryManager.watchQuery<any>(finalOptions).subscribe({
+      next: wrap(done, observer.next!),
+      error: observer.error,
+    });
+
+    queryManager.watchQuery<any>(finalOptions).subscribe({
+      next: wrap(done, observer2.next!),
+      error: observer2.error,
+    });
+  });
+
   it('empty error array (handle non-spec-compliant server) #156', done => {
     assertWithObserver({
       done,

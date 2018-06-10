@@ -72,7 +72,10 @@ type Variables = {
   episode: string;
 };
 
-// note the first parameter is empty here, we will explain that below
+// Note that the first parameter here is an empty Object, which means we're
+// not checking incoming props for type safety in this example. The next
+// example (in the "Options" section) shows how the type safety of incoming
+// props can be ensured.
 const withCharacter = graphql<{}, Response, Variables>(HERO_QUERY, {
   options: () => ({
     variables: { episode: "JEDI" }
@@ -289,4 +292,3 @@ export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY,
   })
 });
 ```
-

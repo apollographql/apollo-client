@@ -11,6 +11,14 @@
   values, `[] === undefined` for example. This could cause `ObservableQuery`
   to potentially rerender unnecessarily.
   [PR #3557](https://github.com/apollographql/apollo-client/pull/3557)
+- Typescript improvements. Created a new `QueryOptions` interface that  
+  is now used by `ApolloClient.query` options, instead of the previous
+  `WatchQueryOptions` interface. This helps reduce confusion (especially
+  in the docs) that made it look like `ApolloClient.query` accepted
+  `ApolloClient.watchQuery` only options, like `pollingInterval`.
+  [Issue #3395](https://github.com/apollographql/apollo-client/issues/3395)
+  [PR #3569](https://github.com/apollographql/apollo-client/pull/3569)
+
 ### 2.3.2
 
 - Fix SSR and `cache-and-network` fetch policy

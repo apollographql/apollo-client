@@ -7,6 +7,13 @@
   [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
 - Added optional generics to cache manipulation methods (typescript).
   [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
+- Typescript improvements. Created a new `QueryOptions` interface that  
+  is now used by `ApolloClient.query` options, instead of the previous
+  `WatchQueryOptions` interface. This helps reduce confusion (especially
+  in the docs) that made it look like `ApolloClient.query` accepted
+  `ApolloClient.watchQuery` only options, like `pollingInterval`.
+  [Issue #3395](https://github.com/apollographql/apollo-client/issues/3395)
+  [PR #3569](https://github.com/apollographql/apollo-client/pull/3569)
 
 ### 2.3.2
 

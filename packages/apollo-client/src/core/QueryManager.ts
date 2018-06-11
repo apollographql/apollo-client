@@ -674,6 +674,10 @@ export class QueryManager<TStore> {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
 
+    if ((options as any).pollInterval) {
+      throw new Error('pollInterval option only supported on watchQuery.');
+    }
+
     const requestId = this.idCounter;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {

@@ -7,7 +7,10 @@
   [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
 - Added optional generics to cache manipulation methods (typescript).
   [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
-
+- Fixed an issue where `errorStatusChanged=true` on 2 different falsy error
+  values, `[] === undefined` for example. This could cause `ObservableQuery`
+  to potentially rerender unnecessarily.
+  [PR #3557](https://github.com/apollographql/apollo-client/pull/3557)
 ### 2.3.2
 
 - Fix SSR and `cache-and-network` fetch policy

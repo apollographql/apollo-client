@@ -60,47 +60,6 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
 }
 
 /**
- * We can change these options to an ObservableQuery
- */
-export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
-  extends QueryBaseOptions<TVariables> {
-  /**
-   * The time interval (in milliseconds) on which this query should be
-   * refetched from the server.
-   */
-  pollInterval?: number;
-
-  /**
-   * Whether or not updates to the network status should trigger next on the observer of this query
-   */
-  notifyOnNetworkStatusChange?: boolean;
-}
-
-/**
- * Watched query options.
- */
-export interface WatchQueryOptions<TVariables = OperationVariables>
-  extends ModifiableWatchQueryOptions<TVariables> {
-  /**
-   * A GraphQL document that consists of a single query to be sent down to the
-   * server.
-   */
-  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a lot of tests.
-  query: DocumentNode;
-
-  /**
-   * Arbitrary metadata stored in the store with this query.  Designed for debugging,
-   * developer tools, etc.
-   */
-  metadata?: any;
-
-  /**
-   * Context to be passed to link execution chain
-   */
-  context?: any;
-}
-
-/**
  * Query options.
  */
 export interface QueryOptions<TVariables = OperationVariables>
@@ -124,6 +83,30 @@ export interface QueryOptions<TVariables = OperationVariables>
    */
   context?: any;
 }
+
+/**
+ * We can change these options to an ObservableQuery
+ */
+export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
+  extends QueryBaseOptions<TVariables> {
+  /**
+   * The time interval (in milliseconds) on which this query should be
+   * refetched from the server.
+   */
+  pollInterval?: number;
+
+  /**
+   * Whether or not updates to the network status should trigger next on the observer of this query
+   */
+  notifyOnNetworkStatusChange?: boolean;
+}
+
+/**
+ * Watched query options.
+ */
+export interface WatchQueryOptions<TVariables = OperationVariables>
+  extends QueryOptions<TVariables>,
+    ModifiableWatchQueryOptions<TVariables> {}
 
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   query?: DocumentNode;

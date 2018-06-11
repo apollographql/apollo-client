@@ -46,6 +46,7 @@ sidebar_categories:
   Recipes:
     - recipes/authentication
     - recipes/2.0-migration
+    - recipes/testing
     - recipes/static-typing
     - recipes/react-native
     - recipes/babel

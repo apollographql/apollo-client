@@ -48,7 +48,7 @@
     "apollo-cache": "^1.1.9",
     "apollo-utilities": "^1.0.13",
     "browserify": "15.2.0",
-    "fetch-mock": "^6.4.3",
+    "fetch-mock": "6.4.3",
     "graphql": "0.13.2",
     "jest": "23.0.0",
     "lodash": "4.17.10",

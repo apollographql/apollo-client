@@ -1,6 +1,6 @@
 # CHANGELOG
 
-### vNext
+### 0.1.8
 
 - Allow `cache` to be given as a configuration option to `ApolloBoost`.
   [Issue #3220](https://github.com/apollographql/apollo-client/issues/3220)

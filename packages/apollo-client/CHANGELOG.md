@@ -1,6 +1,6 @@
 # CHANGELOG
 
-### vNext
+### 2.3.3
 
 - Typescript improvements. Made observable query parameterized on data and
   variables: `ObservableQuery<TData, TVariables>`

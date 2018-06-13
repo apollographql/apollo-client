@@ -1,4 +1,4 @@
-import ApolloClient, { gql } from '../';
+import ApolloClient, { gql, InMemoryCache } from '../';
 import { stripSymbols } from 'apollo-utilities';
 import { HttpLink } from 'apollo-link-http';
 import * as fetchMock from 'fetch-mock';
@@ -58,6 +58,28 @@ describe('config', () => {
         expect(stripSymbols(data)).toEqual({ foo: 'woo' });
         expect(requestCalled).toEqual(true);
       });
+  });
+
+  it('throws if passed cache and cacheRedirects', () => {
+    const cache = new InMemoryCache();
+    const cacheRedirects = { Query: { foo: () => 'woo' } };
+
+    expect(_ => {
+      const client = new ApolloClient({
+        cache,
+        cacheRedirects,
+      });
+    }).toThrow('Incompatible cache configuration');
+  });
+
+  it('allows you to pass in cache', () => {
+    const cache = new InMemoryCache();
+
+    const client = new ApolloClient({
+      cache,
+    });
+
+    expect(client.cache).toBe(cache);
   });
 
   it('allows you to pass in cacheRedirects', () => {

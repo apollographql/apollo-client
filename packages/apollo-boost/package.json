@@ -34,6 +34,7 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
+    "apollo-cache": "^1.1.9",
     "apollo-cache-inmemory": "^1.2.2",
     "apollo-client": "^2.3.2",
     "apollo-link": "^1.0.6",
@@ -45,7 +46,6 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "22.2.3",
-    "apollo-cache": "^1.1.9",
     "apollo-utilities": "^1.0.13",
     "browserify": "15.2.0",
     "fetch-mock": "6.4.3",

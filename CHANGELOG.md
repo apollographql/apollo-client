@@ -8,7 +8,8 @@
   variables: `ObservableQuery<TData, TVariables>`
   ([@excitement-engineer](https://github.com/excitement-engineer) in [#3140](https://github.com/apollographql/apollo-client/pull/3140))
 - Added optional generics to cache manipulation methods (typescript).
-  ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))- Typescript improvements. Created a new `QueryOptions` interface that  
+  ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))  
+- Typescript improvements. Created a new `QueryOptions` interface that  
   is now used by `ApolloClient.query` options, instead of the previous
   `WatchQueryOptions` interface. This helps reduce confusion (especially
   in the docs) that made it look like `ApolloClient.query` accepted

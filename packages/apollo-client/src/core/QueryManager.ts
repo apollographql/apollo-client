@@ -264,6 +264,7 @@ export class QueryManager<TStore> {
                 query: refetchQuery.query,
                 variables: refetchQuery.variables,
                 fetchPolicy: 'network-only',
+                context,
               });
             });
           }

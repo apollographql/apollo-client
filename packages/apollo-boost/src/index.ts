@@ -28,72 +28,85 @@ export interface PresetConfig {
 }
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
-  constructor(config: PresetConfig) {
-    if (config && config.cache && config.cacheRedirects) {
+  constructor(config: PresetConfig = {}) {
+    const {
+      request,
+      uri,
+      credentials,
+      headers,
+      fetchOptions,
+      clientState,
+      cacheRedirects,
+      onError: errorCallback,
+    } = config;
+
+    let { cache } = config;
+
+    if (cache && cacheRedirects) {
       throw new Error(
-        'Incompatible cache configuration. If providing `cache` then configure' +
-          'the provided instance with `cacheRedirects` instead.',
+        'Incompatible cache configuration. If providing `cache` then ' +
+          'configure the provided instance with `cacheRedirects` instead.',
       );
     }
 
-    // First try to use a provided ApolloCache instance:
-    let cache = config && config.cache ? config.cache : null;
-
-    // If no cache instance, then create one using cacheRedirects if given:
-    if (cache === null) {
-      cache =
-        config && config.cacheRedirects
-          ? new InMemoryCache({ cacheRedirects: config.cacheRedirects })
-          : new InMemoryCache();
+    if (!cache) {
+      cache = cacheRedirects
+        ? new InMemoryCache({ cacheRedirects })
+        : new InMemoryCache();
     }
 
-    const stateLink =
-      config && config.clientState
-        ? withClientState({ ...config.clientState, cache })
-        : false;
+    const stateLink = clientState
+      ? withClientState({ ...clientState, cache })
+      : false;
 
-    const errorLink =
-      config && config.onError
-        ? onError(config.onError)
-        : onError(({ graphQLErrors, networkError }) => {
-            if (graphQLErrors)
-              graphQLErrors.map(({ message, locations, path }) =>
-                console.log(
-                  `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
-                ),
-              );
-            if (networkError) console.log(`[Network error]: ${networkError}`);
-          });
+    const errorLink = errorCallback
+      ? onError(errorCallback)
+      : onError(({ graphQLErrors, networkError }) => {
+          if (graphQLErrors) {
+            graphQLErrors.map(({ message, locations, path }) =>
+              // tslint:disable-next-line
+              console.log(
+                `[GraphQL error]: Message: ${message}, Location: ` +
+                  `${locations}, Path: ${path}`,
+              ),
+            );
+          }
+          if (networkError) {
+            // tslint:disable-next-line
+            console.log(`[Network error]: ${networkError}`);
+          }
+        });
 
-    const requestHandler =
-      config && config.request
-        ? new ApolloLink(
-            (operation, forward) =>
-              new Observable(observer => {
-                let handle: any;
-                Promise.resolve(operation)
-                  .then(oper => config.request(oper))
-                  .then(() => {
-                    handle = forward(operation).subscribe({
-                      next: observer.next.bind(observer),
-                      error: observer.error.bind(observer),
-                      complete: observer.complete.bind(observer),
-                    });
-                  })
-                  .catch(observer.error.bind(observer));
+    const requestHandler = request
+      ? new ApolloLink(
+          (operation, forward) =>
+            new Observable(observer => {
+              let handle: any;
+              Promise.resolve(operation)
+                .then(oper => request(oper))
+                .then(() => {
+                  handle = forward(operation).subscribe({
+                    next: observer.next.bind(observer),
+                    error: observer.error.bind(observer),
+                    complete: observer.complete.bind(observer),
+                  });
+                })
+                .catch(observer.error.bind(observer));
 
-                return () => {
-                  if (handle) handle.unsubscribe;
-                };
-              }),
-          )
-        : false;
+              return () => {
+                if (handle) {
+                  handle.unsubscribe();
+                }
+              };
+            }),
+        )
+      : false;
 
     const httpLink = new HttpLink({
-      uri: (config && config.uri) || '/graphql',
-      fetchOptions: (config && config.fetchOptions) || {},
-      credentials: (config && config.credentials) || 'same-origin',
-      headers: (config && config.headers) || {},
+      uri: uri || '/graphql',
+      fetchOptions: fetchOptions || {},
+      credentials: credentials || 'same-origin',
+      headers: headers || {},
     });
 
     const link = ApolloLink.from([

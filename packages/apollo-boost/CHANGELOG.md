@@ -3,6 +3,7 @@
 ### vNext
 
 - Allow `cache` to be given as a configuration option to `ApolloBoost`.
+  [Issue #3220](https://github.com/apollographql/apollo-client/issues/3220)
   [PR #3561](https://github.com/apollographql/apollo-client/pull/3561)
 - Allow `headers` and `credentials` to be passed in as configuration
   parameters to the `apollo-boost` `ApolloClient` constructor.

@@ -29,7 +29,7 @@
 - Added optional generics to cache manipulation methods (typescript).
   ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))
 
-### Apollo Cache In Memory (1.2.3)
+### Apollo Cache In-Memory (1.2.3)
 
 - Added optional generics to cache manipulation methods (typescript).
   ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))
@@ -82,7 +82,7 @@
 
 - Various internal code cleanup, tooling and dependency changes.
 
-### Apollo Cache In Memory (1.2.2)
+### Apollo Cache In-Memory (1.2.2)
 
 - Fixed an issue that caused fragment only queries to sometimes fail.
   ([@abhiaiyer91](https://github.com/abhiaiyer91) in [#3507](https://github.com/apollographql/apollo-client/pull/3507))

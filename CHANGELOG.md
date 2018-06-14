@@ -6,6 +6,10 @@
 
 - Export the `QueryOptions` interface, to make sure it can be used by other
   projects (like `apollo-angular`).
+- Fixed an issue caused by typescript changes to the constructor
+  `defaultOptions` param, that prevented `query` defaults from passing type
+  checks.
+  ([@hwillson](https://github.com/hwillson) in [#3585](https://github.com/apollographql/apollo-client/pull/3585))
 
 ### Apollo Boost (0.1.9)
 

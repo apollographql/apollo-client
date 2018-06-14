@@ -41,7 +41,6 @@ sidebar_categories:
     - advanced/subscriptions
     - advanced/network-layer
     - advanced/caching
-    - advanced/testing
     - advanced/fragments
   Recipes:
     - recipes/authentication

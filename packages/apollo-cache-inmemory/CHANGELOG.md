@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### 1.2.4
+
+- No changes
+
 ### 1.2.3
 
 - Added optional generics to cache manipulation methods (typescript).

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### 2.3.4
+
+- Export the `QueryOptions` interface, to make sure it can be used by other
+  projects (like `apollo-angular`).
+
 ### 2.3.3
 
 - Typescript improvements. Made observable query parameterized on data and

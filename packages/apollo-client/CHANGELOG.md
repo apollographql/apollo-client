@@ -8,7 +8,7 @@
   `defaultOptions` param, that prevented `query` defaults from passing type
   checks.
   [Issue #3583](https://github.com/apollographql/apollo-client/issues/3583)
-  [PR #]()
+  [PR #3585](https://github.com/apollographql/apollo-client/pull/3585)
 
 ### 2.3.3
 

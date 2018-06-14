@@ -35,10 +35,10 @@ const client = new ApolloClient({
 
 The `InMemoryCache` constructor takes an optional config object with properties to customize your cache:
 
-- addTypename: A boolean to determine whether to add __typename to the document (default: `true`)
-- dataIdFromObject: A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in the [Normalization](#normalization) section.
-- fragmentMatcher: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](../recipes/fragment-matching.html).
-- cacheResolvers: A map of custom ways to resolve data from other parts of the cache.
+- `addTypename`: A boolean to determine whether to add __typename to the document (default: `true`)
+- `dataIdFromObject`: A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in the [Normalization](#normalization) section.
+- `fragmentMatcher`: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](./fragments.html#fragment-matcher).
+- `cacheRedirects` (previously known as `cacheResolvers` or `customResolvers`): An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](https://www.apollographql.com/docs/react/advanced/caching.html#cacheRedirect).
 
 <h3 id="normalization">Normalization</h3>
 
@@ -76,7 +76,7 @@ const cache = new InMemoryCache({
 
 <h3 id="automatic-updates">Automatic cache updates</h3>
 
-Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we do the following query:
+Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we perform the following query:
 
 ```graphql
 {
@@ -87,7 +87,7 @@ Let's look at a case where just using the cache normalization results in the cor
 }
 ```
 
-Then, we do the following mutation:
+Then, we perform the following mutation:
 
 ```graphql
 mutation {
@@ -303,6 +303,8 @@ mutate({
 Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-apollo.html#graphql-mutation-options-update).
 
 ```javascript
+import CommentAppQuery from '../queries/CommentAppQuery';
+
 const SUBMIT_COMMENT_MUTATION = gql`
   mutation submitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(
@@ -446,7 +448,7 @@ client.writeQuery({
 
 Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
 
-<h3 id="cacheRedirect">Cache redirects with `cacheResolvers`</h3>
+<h3 id="cacheRedirect">Cache redirects with `cacheRedirects`</h3>
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 
@@ -477,13 +479,13 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```
-import { toIdValue } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const cache = new InMemoryCache({
-  cacheResolvers: {
+  cacheRedirects: {
     Query: {
-      book: (_, args) => toIdValue(cache.config.dataIdFromObject({ __typename: 'Book', id: args.id })),
+      book: (_, args, { getCacheKey }) =>
+        getCacheKey({ __typename: 'Book', id: args.id })
     },
   },
 });
@@ -491,7 +493,7 @@ const cache = new InMemoryCache({
 
 > Note: This'll also work with custom `dataIdFromObject` methods as long as you use the same one.
 
-Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object. "Query" key in this example is your root query type name.
+Apollo Client will use the ID returned by the custom resolver to look up the item in its cache. `getCacheKey` is passed inside the third argument to the resolver to generate the key of the object based on its `__typename` and `id`.
 
 To figure out what you should put in the `__typename` property run one of the queries in GraphiQL and get the `__typename` field:
 
@@ -516,12 +518,13 @@ The value that's returned (the name of your type) is what you need to put into t
 It is also possible to return a list of IDs:
 
 ```
-cacheResolvers: {
+cacheRedirects: {
   Query: {
-    books: (_, args) => args.ids.map(id =>
-      toIdValue(cache.config.dataIdFromObject({ __typename: 'Book', id: id }))),
-  },
-},
+    books: (_, args, { getCacheKey }) =>
+      args.ids.map(id =>
+        getCacheKey({ __typename: 'Book', id: id }))
+  }
+}
 ```
 
 <h3 id="reset-store">Resetting the store</h3>
@@ -540,7 +543,7 @@ export default withApollo(graphql(PROFILE_QUERY, {
 
 To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
 
-In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
+In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](/docs/link/links/state.html). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -626,4 +629,3 @@ persistCache({
 ```
 
 For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).
-

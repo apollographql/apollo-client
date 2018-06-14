@@ -59,9 +59,12 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ObservableQuery.updateQuery %}
 {% tsapibox ObservableQuery.startPolling %}
 {% tsapibox ObservableQuery.stopPolling %}
+{% tsapibox ObservableQuery.subscribeToMore %}
 
 <h2 id="types">Types</h2>
 
 {% tsapibox ApolloClientOptions %}
 {% tsapibox DefaultOptions %}
 {% tsapibox NetworkStatus %}
+{% tsapibox ApolloQueryResult %}
+{% tsapibox ApolloCurrentResult %}

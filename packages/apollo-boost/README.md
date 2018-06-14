@@ -1,14 +1,14 @@
-# apollo-boost 🚀
+# apollo-boost
 The fastest, easiest way to get started with Apollo Client!
 
 Apollo Boost is a zero-config way to start using Apollo Client. It includes some sensible defaults, such as our recommended `InMemoryCache` and `HttpLink`, which come configured for you with our recommended settings.
 
 ## Quick start
 
-First, install `apollo-boost`. If you don't have `graphql` & `react-apollo@beta` already in your project, please install those too.
+First, install `apollo-boost`. If you don't have `graphql` & `react-apollo` already in your project, please install those too.
 
 ```shell
-npm i apollo-boost graphql react-apollo@beta -S
+npm i apollo-boost graphql react-apollo -S
 ```
 
 Next, create your client. Once you create your client, hook it up to your app by passing it to the `ApolloProvider` exported from `react-apollo`.
@@ -135,4 +135,3 @@ const client = new ApolloClient({
   }
 });
 ```
-

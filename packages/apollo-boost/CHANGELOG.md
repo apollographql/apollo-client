@@ -1,42 +1,19 @@
-# Change log
+# CHANGELOG
 
-### vNext
+### 0.1.9
 
-## 1.1.4
-- Map coverage to original source
-- fix request parameter type [#3056](https://github.com/apollographql/apollo-client/pull/3056)
+- No changes
 
-### 0.1.0
-- DEPRECATED: `apollo-client-preset`
-- Changed to `apollo-boost` [#2965](https://github.com/apollographql/apollo-client/pull/2965)
+### 0.1.8
 
-### 1.0.9 (last `apollo-client-preset` version)
-- Apollo Client 2.2.3
+- Allow `cache` to be given as a configuration option to `ApolloBoost`.
+  [Issue #3220](https://github.com/apollographql/apollo-client/issues/3220)
+  [PR #3561](https://github.com/apollographql/apollo-client/pull/3561)
+- Allow `headers` and `credentials` to be passed in as configuration
+  parameters to the `apollo-boost` `ApolloClient` constructor.
+  [PR #3098](https://github.com/apollographql/apollo-client/pull/3098)
 
-### 1.0.8
-- Apollo Client 2.2.2
+### 0.1.7
 
-### 1.0.7 (unpublished)
-- Apollo Client 2.2.1
-
-### 1.0.6
-- Apollo Client 2.2.0
-
-### 1.0.5
-- Apollo Client 2.1.1
-
-### 1.0.4
-- Apollo Client 2.1.0
-
-### 1.0.3
-- Apollo Client 2.0.3
-- improved rollup builds
-
-### 1.0.2
-- Apollo Client 2.0.2
-
-### 1.0.1
-- Apollo Client 2.0.1
-
-### 1.0.0
-- Apollo Client 2.0
+- No public facing functionality changes.
+- Various internal code cleanup, tooling and dependency changes.

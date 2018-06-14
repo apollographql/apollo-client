@@ -43,6 +43,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected optimistic: OptimisticStoreItem[] = [];
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
+  private typenameDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -204,12 +205,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) return addTypenameToDocument(document);
+    if (this.addTypename) {
+      let result = this.typenameDocumentCache.get(document);
+      if (!result) {
+        this.typenameDocumentCache.set(
+          document,
+          (result = addTypenameToDocument(document)),
+        );
+      }
+      return result;
+    }
     return document;
   }
 
-  public readQuery<QueryType>(
-    options: DataProxy.Query,
+  public readQuery<QueryType, TVariables = any>(
+    options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
   ): QueryType {
     return this.read({
@@ -219,8 +229,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public readFragment<FragmentType>(
-    options: DataProxy.Fragment,
+  public readFragment<FragmentType, TVariables = any>(
+    options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
@@ -233,7 +243,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public writeQuery(options: DataProxy.WriteQueryOptions): void {
+  public writeQuery<TData = any, TVariables = any>(
+    options: DataProxy.WriteQueryOptions<TData, TVariables>,
+  ): void {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
@@ -242,7 +254,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public writeFragment(options: DataProxy.WriteFragmentOptions): void {
+  public writeFragment<TData = any, TVariables = any>(
+    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
+  ): void {
     this.write({
       dataId: options.id,
       result: options.data,

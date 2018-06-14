@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### 0.1.9
+
+- No changes
+
 ### 0.1.8
 
 - Allow `cache` to be given as a configuration option to `ApolloBoost`.

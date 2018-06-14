@@ -1,5 +1,33 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+### 2.3.4 (June 13, 2018)
+
+### Apollo Client (2.3.4)
+
+- Export the `QueryOptions` interface, to make sure it can be used by other
+  projects (like `apollo-angular`).
+
+### Apollo Boost (0.1.9)
+
+- No changes
+
+### Apollo Cache (1.1.11)
+
+- No changes
+
+### Apollo Cache In-Memory (1.2.4)
+
+- No changes
+
+### Apollo Utilities (1.0.15)
+
+- No changes
+
+### Apollo GraphQL Anywhere (4.1.13)
+
+- No changes
+
+
 ## 2.3.3 (June 13, 2018)
 
 ### Apollo Client (2.3.3)

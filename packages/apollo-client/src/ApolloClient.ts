@@ -20,6 +20,8 @@ import { ObservableQuery } from './core/ObservableQuery';
 import { Observable } from './util/Observable';
 
 import {
+  QueryBaseOptions,
+  QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
@@ -33,7 +35,7 @@ import { version } from './version';
 
 export interface DefaultOptions {
   watchQuery?: ModifiableWatchQueryOptions;
-  query?: ModifiableWatchQueryOptions;
+  query?: QueryBaseOptions;
   mutate?: MutationBaseOptions;
 }
 
@@ -221,15 +223,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * This resolves a single query according to the options specified and returns a
-   * {@link Promise} which is either resolved with the resulting data or rejected
-   * with an error.
+   * This resolves a single query according to the options specified and
+   * returns a {@link Promise} which is either resolved with the resulting data
+   * or rejected with an error.
    *
-   * @param options An object of type {@link WatchQueryOptions} that allows us to describe
-   * how this query should be treated e.g. whether it is a polling query, whether it should hit the
+   * @param options An object of type {@link QueryOptions} that allows us to
+   * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
+  public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {
     this.initQueryManager();
 
     if (this.defaultOptions.query) {
@@ -242,9 +244,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       );
     }
 
-    // XXX Overwriting options is probably not the best way to do this long term...
+    // XXX Overwriting options is probably not the best way to do this long
+    // term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
+      options = { ...options, fetchPolicy: 'cache-first' } as QueryOptions;
     }
 
     return this.queryManager.query<T>(options);

@@ -1094,6 +1094,12 @@ To read the data from the store that you are changing, make sure to use methods 
 
 For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../advanced/caching.html#updating-the-cache-after-a-mutation).
 
+[`DataProxy`]: ../advanced/caching.html#direct
+[`writeQuery`]: ../advanced/caching.html#writequery-and-writefragment
+[`writeFragment`]: ../advanced/caching.html#writequery-and-writefragment
+[`readQuery`]: ../advanced/caching.html#readquery
+[`readFragment`]: ../advanced/caching.html#readfragment
+
 **Example:**
 
 ```js

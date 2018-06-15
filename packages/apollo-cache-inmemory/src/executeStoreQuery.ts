@@ -412,7 +412,10 @@ function merge(
   target: { [key: string]: any },
   source: { [key: string]: any },
 ) {
-  if (source !== null && typeof source === 'object') {
+  if (source !== null && typeof source === 'object' &&
+      // Due to result caching, it's possible that source and target will
+      // be === at some point in the tree, which means we can stop early.
+      source !== target) {
     Object.keys(source).forEach(sourceKey => {
       const sourceVal = source[sourceKey];
       if (!hasOwn.call(target, sourceKey)) {

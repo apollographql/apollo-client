@@ -135,3 +135,8 @@
 
 - Source files are now excluded when publishing to npm.
   ([@hwillson](https://github.com/hwillson) in [#3454](https://github.com/apollographql/apollo-client/pull/3454))
+
+### Apollo GraphQL Anywhere (4.1.13)
+
+- Add support for arrays to graphql-anywheres filter utility.
+  ([@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591))

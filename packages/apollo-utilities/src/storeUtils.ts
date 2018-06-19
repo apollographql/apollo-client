@@ -128,11 +128,9 @@ export function valueToObjectRepresentation(
     argObj[name.value] = null;
   } else {
     throw new Error(
-      'The inline argument "' +
-        name.value +
-        '" of kind "' +
-        (value as any).kind +
-        '" is not supported. Use variables instead of inline arguments to overcome this limitation.',
+      `The inline argument "${name.value}" of kind "${(value as any).kind}"` +
+      'is not supported. Use variables instead of inline arguments to ' +
+      'overcome this limitation.'
     );
   }
 }

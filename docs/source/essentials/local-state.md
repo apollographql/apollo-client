@@ -322,7 +322,7 @@ const Detail = ({ match: { params: { breed, id } } }) => (
 );
 ```
 
-<h2 id="queries">Next steps</h2>
+<h2 id="next-steps">Next steps</h2>
 
 Managing your local data with Apollo Client can simplify your state management code since the Apollo cache is your single source of truth for all data in your application. If you'd like to learn more about `apollo-link-state`, check out:
 

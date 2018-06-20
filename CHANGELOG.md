@@ -1,6 +1,6 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-### 2.3.5 (June 19, 2018)
+## 2.3.5 (June 19, 2018)
 
 ### Apollo Client (2.3.5)
 
@@ -35,7 +35,7 @@
 - No changes.
 
 
-### 2.3.4 (June 13, 2018)
+## 2.3.4 (June 13, 2018)
 
 ### Apollo Client (2.3.4)
 

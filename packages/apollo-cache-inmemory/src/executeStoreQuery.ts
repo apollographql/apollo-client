@@ -416,13 +416,22 @@ function merge(
       // Due to result caching, it's possible that source and target will
       // be === at some point in the tree, which means we can stop early.
       source !== target) {
+
+    // In case the target has been frozen, make an extensible copy so that
+    // we can merge properties into the copy.
+    if (Object.isExtensible && !Object.isExtensible(target)) {
+      target = { ...target };
+    }
+
     Object.keys(source).forEach(sourceKey => {
       const sourceVal = source[sourceKey];
       if (!hasOwn.call(target, sourceKey)) {
         target[sourceKey] = sourceVal;
       } else {
-        merge(target[sourceKey], sourceVal);
+        target[sourceKey] = merge(target[sourceKey], sourceVal);
       }
     });
   }
+
+  return target;
 }

@@ -40,8 +40,8 @@
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache": "^1.1.11",
-    "apollo-utilities": "^1.0.15",
+    "apollo-cache": "^1.1.12",
+    "apollo-utilities": "^1.0.16",
     "optimism": "^0.6.4"
   },
   "peerDependencies": {

@@ -1,8 +1,12 @@
 # CHANGELOG
 
+### 0.1.10
+
+- No changes.
+
 ### 0.1.9
 
-- No changes
+- No changes.
 
 ### 0.1.8
 

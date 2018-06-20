@@ -1,6 +1,6 @@
 # CHANGELOG
 
-### vNext
+### 1.0.16
 
 - Removed unnecessary whitespace from error message
   [Issue #3398](https://github.com/apollographql/apollo-client/issues/3398)

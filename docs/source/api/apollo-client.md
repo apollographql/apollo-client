@@ -49,6 +49,8 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 
 <h2 id="ObservableQuery">ObservableQuery</h2>
 
+Our Observables are extending the implementation in [`zen-observable`](https://github.com/zenparsing/zen-observable). Their documentation may provide additional context and API options for Observables.
+
 {% tsapibox ObservableQuery.variables %}
 {% tsapibox ObservableQuery.result %}
 {% tsapibox ObservableQuery.currentResult %}

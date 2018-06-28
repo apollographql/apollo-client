@@ -46,7 +46,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/zen-observable": "^0.5.3",
+    "@types/zen-observable": "^0.8.0",
     "apollo-cache": "^1.1.12",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "^1.0.0",

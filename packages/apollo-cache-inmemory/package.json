@@ -60,7 +60,7 @@
     "rollup": "0.59.4",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
-    "typescript": "2.8.3",
+    "typescript": "2.9.2",
     "uglifyjs": "2.4.11"
   },
   "jest": {

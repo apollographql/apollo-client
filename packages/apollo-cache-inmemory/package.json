@@ -42,7 +42,7 @@
   "dependencies": {
     "apollo-cache": "^1.1.12",
     "apollo-utilities": "^1.0.16",
-    "optimism": "^0.6.4"
+    "optimism": "^0.6.5"
   },
   "peerDependencies": {
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0"

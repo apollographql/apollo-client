@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### vNext
+
+- Corrected `ApolloClient.queryManager` typing as it may be undefined.
+  [PR #3661](https://github.com/apollographql/apollo-client/pull/3661)
+
 ### 2.3.5
 
 - Internal code formatting updates.

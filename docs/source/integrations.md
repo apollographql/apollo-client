@@ -25,3 +25,5 @@ There are two [Ember](http://emberjs.com/) integrations available:
 <h2 id="polymer" title="Polymer">Polymer</h2>
 A [Polymer](https://www.polymer-project.org/) integration is maintained by Arun Kumar T K. See the Github [repository](https://github.com/aruntk/polymer-apollo) for more details.
 
+<h2 id="lit-apollo" title="lit-apollo">lit-apollo</h2>
+A set of custom-element base classes by Benny Powers that extend from LitElement which let you easily compose front-end apps in a framework-agnostic way. [`lit-apollo`](https://github.com/bennypowers/lit-apollo) is maintained by Benny Powers.

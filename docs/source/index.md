@@ -32,7 +32,9 @@ Most of this sites documentation examples are written using React, but Apollo Cl
   - [Vue](./integrations.html#vue)
   - [Meteor](./recipes/meteor.html)
   - [Ember](./integrations.html#ember)
+- Web Components
   - [Polymer](./integrations.html#polymer)
+  - [lit-apollo](./integrations.html#lit-apollo)
 - Native mobile
   - [Native iOS with Swift](/docs/ios)
   - [Native Android with Java](https://github.com/apollographql/apollo-android)

@@ -20,6 +20,7 @@ export interface PresetConfig {
   uri?: string;
   credentials?: string;
   headers?: any;
+  fetch?: GlobalFetch['fetch'];
   fetchOptions?: HttpLink.Options;
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;
@@ -34,6 +35,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       uri,
       credentials,
       headers,
+      fetch,
       fetchOptions,
       clientState,
       cacheRedirects,
@@ -104,6 +106,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     const httpLink = new HttpLink({
       uri: uri || '/graphql',
+      fetch,
       fetchOptions: fetchOptions || {},
       credentials: credentials || 'same-origin',
       headers: headers || {},

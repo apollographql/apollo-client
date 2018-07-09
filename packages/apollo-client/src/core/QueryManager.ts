@@ -532,7 +532,7 @@ export class QueryManager<TStore> {
             this.setQuery(queryId, () => ({ newData: null }));
 
             data = newData.result;
-            isMissing = !newData.complete ? !newData.complete : false;
+            isMissing = !newData.complete || false;
           } else {
             if (lastResult && lastResult.data && !errorStatusChanged) {
               data = lastResult.data;

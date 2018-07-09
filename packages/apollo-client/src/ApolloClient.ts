@@ -20,6 +20,7 @@ import { ObservableQuery } from './core/ObservableQuery';
 import { Observable } from './util/Observable';
 
 import {
+  QueryBaseOptions,
   QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
@@ -34,7 +35,7 @@ import { version } from './version';
 
 export interface DefaultOptions {
   watchQuery?: ModifiableWatchQueryOptions;
-  query?: QueryOptions;
+  query?: QueryBaseOptions;
   mutate?: MutationBaseOptions;
 }
 
@@ -246,7 +247,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     // XXX Overwriting options is probably not the best way to do this long
     // term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
+      options = { ...options, fetchPolicy: 'cache-first' } as QueryOptions;
     }
 
     return this.queryManager.query<T>(options);

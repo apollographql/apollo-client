@@ -1,5 +1,20 @@
 # CHANGELOG
 
+### 2.3.5
+
+- Internal code formatting updates.
+  [PR #3574](https://github.com/apollographql/apollo-client/pull/3574)
+
+### 2.3.4
+
+- Export the `QueryOptions` interface, to make sure it can be used by other
+  projects (like `apollo-angular`).
+- Fixed an issue caused by typescript changes to the constructor
+  `defaultOptions` param, that prevented `query` defaults from passing type
+  checks.
+  [Issue #3583](https://github.com/apollographql/apollo-client/issues/3583)
+  [PR #3585](https://github.com/apollographql/apollo-client/pull/3585)
+
 ### 2.3.3
 
 - Typescript improvements. Made observable query parameterized on data and

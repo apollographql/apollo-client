@@ -144,6 +144,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       uri: uri || '/graphql',
       fetch,
       fetchOptions: fetchOptions || {},
+      useGETForQueries: (fetchOptions && fetchOptions.useGETForQueries),
       credentials: credentials || 'same-origin',
       headers: headers || {},
     });

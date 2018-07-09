@@ -1,5 +1,11 @@
 # CHANGELOG
 
+### vNext
+
+- Allow `fetch` to be given as a configuration option to ApolloBoost.  
+  [Issue #3578](https://github.com/apollographql/apollo-client/issues/3578)  
+  [PR #3590](https://github.com/apollographql/apollo-client/pull/3590)
+
 ### 0.1.10
 
 - No changes.

@@ -10,6 +10,11 @@
   [@JakeDawkins](https://github.com/JakeDawkins) in [#3642](https://github.com/apollographql/apollo-client/pull/3642)  
   [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644)
 
+### Apollo Boost (vNext)
+
+- Allow `fetch` to be given as a configuration option to `ApolloBoost`.  
+  [@mbaranovski](https://github.com/mbaranovski) in [#3590](https://github.com/apollographql/apollo-client/pull/3590)
+
 ## 2.3.5 (June 19, 2018)
 
 ### Apollo Client (2.3.5)

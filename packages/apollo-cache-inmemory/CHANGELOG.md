@@ -1,8 +1,12 @@
 # CHANGELOG
 
+### 1.2.5
+
+- No changes.
+
 ### 1.2.4
 
-- No changes
+- No changes.
 
 ### 1.2.3
 

@@ -77,6 +77,10 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>The name of your component to be displayed in React DevTools. Defaults to 'Query'.</dd>
   <dt>`skip`: boolean</dt>
   <dd>If skip is true, the query will be skipped entirely.</dd>
+  <dt>`onCompleted`: (data: TData | {}) => void</dt>
+  <dd>A callback executed once your query successfully completes.</dd>
+  <dt>`onError`: (error: ApolloError) => void</dt>
+  <dd>A callback executed in the event of an error.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
@@ -1086,13 +1090,19 @@ export default graphql(gql`
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
 
-`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server.
+`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](./react-apollo.html#mutation-render-prop) section for more details).
 
 In order to change the data in your store call methods on your [`DataProxy`][] instance like [`writeQuery`][] and [`writeFragment`][]. This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
 
 To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`][] and [`readFragment`][].
 
 For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../advanced/caching.html#updating-the-cache-after-a-mutation).
+
+[`DataProxy`]: ../advanced/caching.html#direct
+[`writeQuery`]: ../advanced/caching.html#writequery-and-writefragment
+[`writeFragment`]: ../advanced/caching.html#writequery-and-writefragment
+[`readQuery`]: ../advanced/caching.html#readquery
+[`readFragment`]: ../advanced/caching.html#readfragment
 
 **Example:**
 

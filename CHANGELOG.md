@@ -1,5 +1,28 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## vNext
+
+### Apollo Client (vNext)
+
+- Documentation updates.  
+  [@ananth99](https://github.com/ananth99) in [#3599](https://github.com/apollographql/apollo-client/pull/3599)  
+  [@hwillson](https://github.com/hwillson) in [#3635](https://github.com/apollographql/apollo-client/pull/3635)  
+  [@JakeDawkins](https://github.com/JakeDawkins) in [#3642](https://github.com/apollographql/apollo-client/pull/3642)  
+  [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644)
+  [@gbau](https://github.com/gbau) in [#3644](https://github.com/apollographql/apollo-client/pull/3600)  
+- Updated `graphql` `peerDependencies` to handle 14.x versions.  
+  [@ivank](https://github.com/ivank) in [#3598](https://github.com/apollographql/apollo-client/pull/3598)
+
+### Apollo Boost (vNext)
+
+- Allow `fetch` to be given as a configuration option to `ApolloBoost`.  
+  [@mbaranovski](https://github.com/mbaranovski) in [#3590](https://github.com/apollographql/apollo-client/pull/3590)
+
+### Apollo GraphQL Anywhere (vNext)
+
+- Add support for arrays to `graphql-anywhere`'s filter utility.  
+  [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
+
 ## 2.3.5 (June 19, 2018)
 
 ### Apollo Client (2.3.5)

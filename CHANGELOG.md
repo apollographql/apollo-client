@@ -17,6 +17,11 @@
 - Allow `fetch` to be given as a configuration option to `ApolloBoost`.  
   [@mbaranovski](https://github.com/mbaranovski) in [#3590](https://github.com/apollographql/apollo-client/pull/3590)
 
+### Apollo GraphQL Anywhere (vNext)
+
+- Add support for arrays to `graphql-anywhere`'s filter utility.  
+  [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
+
 ## 2.3.5 (June 19, 2018)
 
 ### Apollo Client (2.3.5)

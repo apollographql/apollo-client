@@ -4,10 +4,12 @@
 
 ### Apollo Client (vNext)
 
-- Documentation updates.  
-  [@ananth99](https://github.com/ananth99) in [#3599](https://github.com/apollographql/apollo-client/pull/3599)  
-  [@hwillson](https://github.com/hwillson) in [#3635](https://github.com/apollographql/apollo-client/pull/3635)  
-  [@JakeDawkins](https://github.com/JakeDawkins) in [#3642](https://github.com/apollographql/apollo-client/pull/3642)  
+- Optimized query invalidation, only invalidates queries with changed data.
+  - [@omfgitsjack](https://github.com/omfgitsjack) in [#3671](https://github.com/apollographql/apollo-client/pull/3671)
+- Documentation updates.
+  [@ananth99](https://github.com/ananth99) in [#3599](https://github.com/apollographql/apollo-client/pull/3599)
+  [@hwillson](https://github.com/hwillson) in [#3635](https://github.com/apollographql/apollo-client/pull/3635)
+  [@JakeDawkins](https://github.com/JakeDawkins) in [#3642](https://github.com/apollographql/apollo-client/pull/3642)
   [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644)
 
 ## 2.3.5 (June 19, 2018)
@@ -44,7 +46,6 @@
 
 - No changes.
 
-
 ## 2.3.4 (June 13, 2018)
 
 ### Apollo Client (2.3.4)
@@ -76,7 +77,6 @@
 
 - No changes
 
-
 ## 2.3.3 (June 13, 2018)
 
 ### Apollo Client (2.3.3)
@@ -85,8 +85,8 @@
   variables: `ObservableQuery<TData, TVariables>`
   ([@excitement-engineer](https://github.com/excitement-engineer) in [#3140](https://github.com/apollographql/apollo-client/pull/3140))
 - Added optional generics to cache manipulation methods (typescript).
-  ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))  
-- Typescript improvements. Created a new `QueryOptions` interface that  
+  ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))
+- Typescript improvements. Created a new `QueryOptions` interface that
   is now used by `ApolloClient.query` options, instead of the previous
   `WatchQueryOptions` interface. This helps reduce confusion (especially
   in the docs) that made it look like `ApolloClient.query` accepted
@@ -130,7 +130,6 @@
 
 - No new changes.
 
-
 ## 2.3.2 (May 29, 2018)
 
 ### Apollo Client (2.3.2)
@@ -144,11 +143,11 @@
 - Fixed an issue involving `Object.setPrototypeOf()` not working on JSC
   (Android), by instead setting the `prototype` of `this` manually.
   ([@seklyza](https://github.com/seklyza) in [#3306](https://github.com/apollographql/apollo-client/pull/3306))
-- Added safeguards to make sure `QueryStore.initQuery` and   
+- Added safeguards to make sure `QueryStore.initQuery` and
   `QueryStore.markQueryResult` don't try to set the network status of a
   `fetchMoreForQueryId` query, if it does not exist in the store. This was
   happening when a query component was unmounted while a `fetchMore` was still
-  in flight.  
+  in flight.
   ([@conrad-vanl](https://github.com/conrad-vanl) in [#3367](https://github.com/apollographql/apollo-client/pull/3367), [@doomsower](https://github.com/doomsower) in [#3469](https://github.com/apollographql/apollo-client/pull/3469))
 
 ### Apollo Boost (0.1.7)

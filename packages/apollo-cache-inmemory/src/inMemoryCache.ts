@@ -278,19 +278,22 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Skip this when silenced (like inside a transaction)
     if (this.silenceBroadcast) return;
 
-    // right now, we invalidate all queries whenever anything changes
     this.watches.forEach((c: Cache.WatchOptions) => {
+      const previousResult = (c as any).previousResult && c.previousResult()
       const newData = this.diff({
         query: c.query,
         variables: c.variables,
 
         // TODO: previousResult isn't in the types - this will only work
         // with ObservableQuery which is in a different package
-        previousResult: (c as any).previousResult && c.previousResult(),
+        previousResult,
         optimistic: c.optimistic,
       });
 
-      c.callback(newData);
+      // Only invalidate the query if the result is actually different
+      if (previousResult !== newData.result) {
+        c.callback(newData)
+      }
     });
   }
 }

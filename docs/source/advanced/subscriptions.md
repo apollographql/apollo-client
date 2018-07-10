@@ -72,12 +72,14 @@ Then, initialize a GraphQL subscriptions transport link:
 
 ```js
 import { WebSocketLink } from 'apollo-link-ws';
+import { SubscriptionClient } from 'SubscriptionClient';
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,
   options: {
     reconnect: true
-  }
+  },
+  webSocketImpl: new SubscriptionClient()
 });
 ```
 

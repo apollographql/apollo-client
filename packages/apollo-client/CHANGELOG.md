@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### 2.3.5
+
+- Internal code formatting updates.
+  [PR #3574](https://github.com/apollographql/apollo-client/pull/3574)
+
 ### 2.3.4
 
 - Export the `QueryOptions` interface, to make sure it can be used by other

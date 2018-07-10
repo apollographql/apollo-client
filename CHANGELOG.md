@@ -1,6 +1,56 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-### 2.3.4 (June 13, 2018)
+## vNext
+
+### Apollo Client (vNext)
+
+- Documentation updates.  
+  [@ananth99](https://github.com/ananth99) in [#3599](https://github.com/apollographql/apollo-client/pull/3599)  
+  [@hwillson](https://github.com/hwillson) in [#3635](https://github.com/apollographql/apollo-client/pull/3635)  
+  [@JakeDawkins](https://github.com/JakeDawkins) in [#3642](https://github.com/apollographql/apollo-client/pull/3642)  
+  [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644)
+
+### Apollo Boost (vNext)
+
+- Allow `fetch` to be given as a configuration option to `ApolloBoost`.  
+  [@mbaranovski](https://github.com/mbaranovski) in [#3590](https://github.com/apollographql/apollo-client/pull/3590)
+
+## 2.3.5 (June 19, 2018)
+
+### Apollo Client (2.3.5)
+
+- Internal code formatting updates.
+  - [@chentsulin](https://github.com/chentsulin) in [#3574](https://github.com/apollographql/apollo-client/pull/3574)
+- Documentation updates.
+  - [@andtos90](https://github.com/andtos90) in [#3596](https://github.com/apollographql/apollo-client/pull/3596)
+  - [@serranoarevalo](https://github.com/serranoarevalo) in [#3554](https://github.com/apollographql/apollo-client/pull/3554)
+  - [@cooperka](https://github.com/cooperka) in [#3594](https://github.com/apollographql/apollo-client/pull/3594)
+  - [@pravdomil](https://github.com/pravdomil) in [#3587](https://github.com/apollographql/apollo-client/pull/3587)
+  - [@excitement-engineer](https://github.com/excitement-engineer) in [#3309](https://github.com/apollographql/apollo-client/pull/3309)
+
+### Apollo Boost (0.1.10)
+
+- No changes.
+
+### Apollo Cache (1.1.12)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.5)
+
+- No changes.
+
+### Apollo Utilities (1.0.16)
+
+- Removed unnecessary whitespace from error message.
+  - [@mbaranovski](https://github.com/mbaranovski) in [#3593](https://github.com/apollographql/apollo-client/pull/3593)
+
+### Apollo GraphQL Anywhere (4.1.14)
+
+- No changes.
+
+
+## 2.3.4 (June 13, 2018)
 
 ### Apollo Client (2.3.4)
 

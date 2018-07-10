@@ -29,7 +29,7 @@ interface Variables {
 class AllPeopleQuery extends Query<Data, Variables> {}
 ```
 
-Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables requried for it to work! Everything else is handled by React Apollo's robust type definitions.
+Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables requried for it to work! Everything else is handled by React Apollo's robust type definitions.
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
@@ -72,7 +72,10 @@ type Variables = {
   episode: string;
 };
 
-// note the first parameter is empty here, we will explain that below
+// Note that the first parameter here is an empty Object, which means we're
+// not checking incoming props for type safety in this example. The next
+// example (in the "Options" section) shows how the type safety of incoming
+// props can be ensured.
 const withCharacter = graphql<{}, Response, Variables>(HERO_QUERY, {
   options: () => ({
     variables: { episode: "JEDI" }
@@ -289,4 +292,3 @@ export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY,
   })
 });
 ```
-

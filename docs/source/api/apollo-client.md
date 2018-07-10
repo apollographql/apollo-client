@@ -40,6 +40,7 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClient.watchQuery %}
 {% tsapibox ApolloClient.query %}
 {% tsapibox ApolloClient.mutate %}
+{% tsapibox ApolloClient.subscribe %}
 {% tsapibox ApolloClient.readQuery %}
 {% tsapibox ApolloClient.readFragment %}
 {% tsapibox ApolloClient.writeQuery %}
@@ -66,3 +67,5 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClientOptions %}
 {% tsapibox DefaultOptions %}
 {% tsapibox NetworkStatus %}
+{% tsapibox ApolloQueryResult %}
+{% tsapibox ApolloCurrentResult %}

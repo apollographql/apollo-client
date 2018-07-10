@@ -39,7 +39,7 @@
     {
       "name": "apollo-boost",
       "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "33 kB"
+      "maxSize": "35 kB"
     },
     {
       "name": "apollo-utilities",

@@ -6,7 +6,7 @@
     "version": "3.7.1"
   },
   "devDependencies": {
-    "apollo-hexo-config": "1.0.7",
+    "apollo-hexo-config": "1.0.8",
     "chexo": "1.0.5",
     "hexo": "3.7.1",
     "hexo-prism-plus": "1.0.0",

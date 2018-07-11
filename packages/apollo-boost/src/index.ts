@@ -35,10 +35,12 @@ const PRESET_CONFIG_KEYS = [
   'uri',
   'credentials',
   'headers',
+  'fetch',
   'fetchOptions',
   'clientState',
   'onError',
   'cacheRedirects',
+  'cache',
 ];
 
 function include<T>(b: T, a: Array<T>): boolean {

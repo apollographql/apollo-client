@@ -1063,7 +1063,7 @@ export class QueryManager<TStore> {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
-            if (fetchPolicy !== 'no-cache') {
+            if (fetchPolicy !== 'no-cache' && !result.errors) {
               try {
                 this.dataStore.markQueryResult(
                   result,
@@ -1093,7 +1093,7 @@ export class QueryManager<TStore> {
             this.broadcastQueries();
           }
 
-          if (result.errors && errorPolicy === 'none') {
+          if (result.errors && errorPolicy === 'none' || result.errors) {
             reject(
               new ApolloError({
                 graphQLErrors: result.errors,

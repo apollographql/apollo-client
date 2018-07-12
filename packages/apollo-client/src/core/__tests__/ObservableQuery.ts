@@ -868,7 +868,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not invalidate the currentResult errors if the variables change', done => {
+    it('does invalidate the currentResult errors if the variables change', done => {
       const queryManager = mockQueryManager(
         {
           request: { query, variables },
@@ -891,7 +891,7 @@ describe('ObservableQuery', () => {
           expect(result.errors).toEqual([error]);
           expect(observable.currentResult().errors).toEqual([error]);
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().errors).toEqual([error]);
+          expect(observable.currentResult().errors).toEqual([]);
         }
         // after loading is done and new results are returned
         if (handleCount === 3) {

@@ -1093,7 +1093,7 @@ export class QueryManager<TStore> {
             this.broadcastQueries();
           }
 
-          if (result.errors && errorPolicy === 'none' || result.errors) {
+          if (result.errors && errorPolicy === 'none') {
             reject(
               new ApolloError({
                 graphQLErrors: result.errors,
@@ -1104,7 +1104,7 @@ export class QueryManager<TStore> {
             errorsFromStore = result.errors;
           }
 
-          if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
+          if (fetchMoreForQueryId || fetchPolicy === 'no-cache'  || result.errors) {
             // We don't write fetchMore results to the store because this would overwrite
             // the original result in case an @connection directive is used.
             resultFromStore = result.data;

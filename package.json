@@ -71,7 +71,7 @@
   "devDependencies": {
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
-    "codecov": "3.0.3",
+    "codecov": "3.0.4",
     "danger": "1.2.0",
     "jest-junit": "4.0.0",
     "lerna": "2.11.0",

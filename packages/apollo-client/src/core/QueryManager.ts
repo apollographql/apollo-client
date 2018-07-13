@@ -1063,7 +1063,7 @@ export class QueryManager<TStore> {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
-            if (fetchPolicy !== 'no-cache') {
+            if (fetchPolicy !== 'no-cache' && !result.errors) {
               try {
                 this.dataStore.markQueryResult(
                   result,
@@ -1104,7 +1104,7 @@ export class QueryManager<TStore> {
             errorsFromStore = result.errors;
           }
 
-          if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
+          if (fetchMoreForQueryId || fetchPolicy === 'no-cache'  || result.errors) {
             // We don't write fetchMore results to the store because this would overwrite
             // the original result in case an @connection directive is used.
             resultFromStore = result.data;

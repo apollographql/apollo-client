@@ -1,4 +1,4 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
 import { FetchResult } from 'apollo-link';
@@ -42,3 +42,21 @@ export type MutationQueryReducer<T> = (
 export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
+
+/**
+ * Define a new type for patches that are sent as a result of using defer.
+ * Its is basically the same as ExecutionResult, except that it has a "path"
+ * field that keeps track of the where the patch is to be merged with the
+ * original result.
+ */
+export interface ExecutionPatchResult {
+  data?: { [key: string]: any };
+  errors?: GraphQLError[];
+  path: (string | number)[];
+}
+
+export function isPatch(
+  data: ExecutionResult | ExecutionPatchResult,
+): data is ExecutionPatchResult {
+  return (data as ExecutionPatchResult).path !== undefined;
+}

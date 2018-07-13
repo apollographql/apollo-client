@@ -33,7 +33,12 @@ import {
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import { QueryListener, ApolloQueryResult, FetchType } from './types';
+import {
+  QueryListener,
+  ApolloQueryResult,
+  FetchType,
+  ExecutionPatchResult,
+} from './types';
 import { graphQLResultHasError } from 'apollo-utilities';
 
 export interface QueryInfo {
@@ -1059,7 +1064,7 @@ export class QueryManager<TStore> {
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, resolve, reject);
       const subscription = execute(this.deduplicator, operation).subscribe({
-        next: (result: ExecutionResult) => {
+        next: (result: ExecutionResult | ExecutionPatchResult) => {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {

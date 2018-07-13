@@ -7,7 +7,11 @@ import {
   tryFunctionOrLogError,
   graphQLResultHasError,
 } from 'apollo-utilities';
-import { MutationQueryReducer } from '../core/types';
+import {
+  ExecutionPatchResult,
+  isPatch,
+  MutationQueryReducer,
+} from '../core/types';
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -33,13 +37,73 @@ export class DataStore<TSerialized> {
     return this.cache;
   }
 
-  public markQueryResult(
+  private mergePatch(
     result: ExecutionResult,
+    patch: ExecutionPatchResult,
+  ): void {
+    if (patch.errors) {
+    }
+
+    if (result) {
+      let curKeyIndex = 0;
+      let curKey: string | number;
+      let curPointer: Record<string, {}> = result as Record<string, {}>;
+      while (curKeyIndex !== patch.path.length) {
+        curKey = patch.path[curKeyIndex++];
+        const isLeaf = curKeyIndex === patch.path.length;
+        if (isLeaf) {
+          if (patch.data) {
+            // Data may not exist if there is an error in the patch
+            curPointer[curKey] = patch.data;
+          }
+        } else {
+          if (curPointer[curKey] === undefined) {
+            // This is indicative of a patch that is not ready to be merged, which
+            // can happen if patches for inner objects arrive before its parent.
+            // The graphql execution phase must make sure that this does not
+            // happen.
+            throw new Error(
+              `Failed to merge patch with path '[${patch.path}]'`,
+            );
+          }
+          if (curPointer[curKey] === null) {
+            // Check whether it should be an array or an object by looking at the
+            // next key, then create the object if it is not present.
+            if (typeof patch.path[curKeyIndex] === 'string') {
+              curPointer[curKey] = {};
+            } else if (typeof patch.path[curKeyIndex] === 'number') {
+              curPointer[curKey] = [];
+            }
+          }
+          curPointer = curPointer[curKey];
+        }
+      }
+    }
+  }
+
+  public markQueryResult(
+    result: ExecutionResult | ExecutionPatchResult,
     document: DocumentNode,
     variables: any,
     fetchMoreForQueryId: string | undefined,
     ignoreErrors: boolean = false,
   ) {
+    if (isPatch(result)) {
+      const originalResult: ExecutionResult | null = this.cache.read({
+        query: document,
+        variables: variables,
+        rootId: 'ROOT_QUERY',
+        optimistic: false,
+      });
+      if (originalResult) {
+        this.mergePatch(originalResult, result);
+        result = { data: originalResult };
+      } else {
+        // Nothing may be written to cache if the first response had an error
+        return;
+      }
+    }
+
     let writeWithErrors = !graphQLResultHasError(result);
     if (ignoreErrors && graphQLResultHasError(result) && result.data) {
       writeWithErrors = true;

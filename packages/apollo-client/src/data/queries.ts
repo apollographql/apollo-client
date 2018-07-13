@@ -3,6 +3,7 @@ import { print } from 'graphql/language/printer';
 import { isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
+import { ExecutionPatchResult, isPatch } from '../core/types';
 
 export type QueryStoreValue = {
   document: DocumentNode;
@@ -114,10 +115,25 @@ export class QueryStore {
 
   public markQueryResult(
     queryId: string,
-    result: ExecutionResult,
+    result: ExecutionResult | ExecutionPatchResult,
     fetchMoreForQueryId: string | undefined,
   ) {
     if (!this.store[queryId]) return;
+
+    // Merge graphqlErrors from patch, if any
+    if (isPatch(result)) {
+      if (result.errors) {
+        const errors: GraphQLError[] = [];
+        this.store[queryId].graphQLErrors!.forEach(error => {
+          errors.push(error);
+        });
+        result.errors.forEach(error => {
+          errors.push(error);
+        });
+        this.store[queryId].graphQLErrors = errors;
+      }
+      return;
+    }
 
     this.store[queryId].networkError = null;
     this.store[queryId].graphQLErrors =

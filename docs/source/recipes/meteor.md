@@ -118,7 +118,7 @@ In order to get the most out of it, you can attach a `dataloader` to every reque
 Here are some great resources to help you integrating query batching in your Meteor application:
 - About batched network interface:
   - [Apollo Client documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), the official documentation explaining how it works and how to set it up.
-  - [Query batching in Apollo](https://dev-blog.apollodata.com/query-batching-in-apollo-63acfd859862), an article from the Apollo blog with more in depth explanation.
+  - [Query batching in Apollo](https://blog.apollographql.com/query-batching-in-apollo-63acfd859862), an article from the Apollo blog with more in depth explanation.
 - About Dataloader:
   - Apollo's [Graphql server documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), get to know how to setup `dataloader` in your server-side implementation.
   - [Dataloader repository](https://github.com/facebook/dataloader), a detailed explanation of batching & caching processes, plus a bonus of a 30-minute source code walkthrough video.

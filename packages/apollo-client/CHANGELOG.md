@@ -4,6 +4,8 @@
 
 - Corrected `ApolloClient.queryManager` typing as it may be undefined.
   [PR #3661](https://github.com/apollographql/apollo-client/pull/3661)
+- Updated `graphql` `peerDependencies` to handle 14.x versions.  
+  [PR #3598](https://github.com/apollographql/apollo-client/pull/3598)
 
 ### 2.3.5
 

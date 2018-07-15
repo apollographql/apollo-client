@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### vNext
+
+- Updated `graphql` `peerDependencies` to handle 14.x versions.  
+  [PR #3598](https://github.com/apollographql/apollo-client/pull/3598)
+
 ### 2.3.5
 
 - Internal code formatting updates.

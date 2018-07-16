@@ -4,6 +4,8 @@
 
 - Updated `graphql` `peerDependencies` to handle 14.x versions.  
   [PR #3598](https://github.com/apollographql/apollo-client/pull/3598)
+- Document `setVariables` internal API status.
+  [PR #3692](https://github.com/apollographql/apollo-client/pull/3692)
 
 ### 2.3.5
 

@@ -186,9 +186,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.version = version;
   }
   /**
-   * This watches the results of the query according to the options specified and
+   * This watches the cache store of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
-   * receive updated results through a GraphQL observer.
+   * receive updated results through a GraphQL observer when the cache store changes.
    * <p /><p />
    * Note that this method is not an implementation of GraphQL subscriptions. Rather,
    * it uses Apollo's store in order to reactively deliver updates to your query results.
@@ -199,9 +199,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * first and last name and his/her first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.
    * <p /><p />
+   * Note that if the cache does not change, the subscriber will *not* be notified.
+   * <p /><p />
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
-   *
    */
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initQueryManager();

@@ -52,6 +52,13 @@ sidebar_categories:
     - recipes/webpack
     - recipes/meteor
     - recipes/recompose
+  Related Guides:
+    - title: State Management
+      href: https://www.apollographql.com/docs/guides/state-mgmt.html
+    - title: Testing React Components
+      href: https://www.apollographql.com/docs/guides/testing-react-components.html
+    - title: Schema Design
+      href: https://www.apollographql.com/docs/guides/schema-design.html
   API:
     - api/apollo-client
     - api/react-apollo

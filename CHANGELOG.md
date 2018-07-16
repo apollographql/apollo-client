@@ -15,6 +15,8 @@
   [@Gamezpedia](https://github.com/Gamezpedia) in [#3612](https://github.com/apollographql/apollo-client/pull/3612)
 - Updated `graphql` `peerDependencies` to handle 14.x versions.  
   [@ivank](https://github.com/ivank) in [#3598](https://github.com/apollographql/apollo-client/pull/3598)
+- Add optional generic type params for variables on low level methods.  
+  [@mvestergaard](https://github.com/mvestergaard) in [#3588](https://github.com/apollographql/apollo-client/pull/3588)
 
 ### Apollo Boost (vNext)
 

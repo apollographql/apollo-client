@@ -11,7 +11,8 @@
   [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644)
   [@gbau](https://github.com/gbau) in [#3644](https://github.com/apollographql/apollo-client/pull/3600)  
   [@chentsulin](https://github.com/chentsulin) in [#3608](https://github.com/apollographql/apollo-client/pull/3608)  
-  [@MikaelCarpenter](https://github.com/MikaelCarpenter) in [#3609](https://github.com/apollographql/apollo-client/pull/3609)
+  [@MikaelCarpenter](https://github.com/MikaelCarpenter) in [#3609](https://github.com/apollographql/apollo-client/pull/3609)  
+  [@Gamezpedia](https://github.com/Gamezpedia) in [#3612](https://github.com/apollographql/apollo-client/pull/3612)
 - Updated `graphql` `peerDependencies` to handle 14.x versions.  
   [@ivank](https://github.com/ivank) in [#3598](https://github.com/apollographql/apollo-client/pull/3598)
 
@@ -24,6 +25,9 @@
 
 - Add support for arrays to `graphql-anywhere`'s filter utility.  
   [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
+- Fix `Cannot convert object to primitive value` error that was showing up
+  when attempting to report a missing property on an object.  
+  [@benjie](https://github.com/benjie) in [#3618](https://github.com/apollographql/apollo-client/pull/3618)
 
 ## 2.3.5 (June 19, 2018)
 

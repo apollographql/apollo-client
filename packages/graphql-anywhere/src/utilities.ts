@@ -13,7 +13,9 @@ export function filter(doc: DocumentNode, data: any): any {
     return root[info.resultKey];
   };
 
-  return graphql(resolver, doc, data);
+  return Array.isArray(data)
+    ? data.map(dataObj => graphql(resolver, doc, dataObj))
+    : graphql(resolver, doc, data);
 }
 
 // TODO: we should probably make check call propType and then throw,

@@ -161,6 +161,8 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   <dd>Is set to `same-origin` by default. This option can be used to indicate whether the user agent should send cookies with requests. See [Request.credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) for more details.</dd>
   <dt>`headers`: Object</dt>
   <dd>Header key/value pairs to pass along with the request.</dd>
+  <dt>`fetch`: GlobalFetch['fetch']</dt>
+  <dd>A [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) compatible API for making a request.</dd>  
 </dl>
 
 <h2 id="next-steps">Next steps</h2>

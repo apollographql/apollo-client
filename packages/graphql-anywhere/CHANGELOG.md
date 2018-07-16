@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### vNext
+
+- Add support for arrays to `filter`.       
+  [PR #3591](https://github.com/apollographql/apollo-client/pull/3591)
+
 ### 4.1.14
 
 - No changes.

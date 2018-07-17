@@ -78,7 +78,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     // difference, so we warn the user, but still try to match it (backcompat).
     warnOnceInDevelopment(
       `You are using the simple (heuristic) fragment matcher, but your queries contain union or interface types.
-     Apollo Client will not be able to able to accurately map fragments.` +
+     Apollo Client will not be able to accurately map fragments. ` +
         `To make this error go away, use the IntrospectionFragmentMatcher as described in the docs: ` +
         `https://www.apollographql.com/docs/react/recipes/fragment-matching.html`,
       'error',

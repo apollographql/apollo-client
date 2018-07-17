@@ -31,6 +31,7 @@ export type ApolloCurrentResult<T> = {
   networkStatus: NetworkStatus;
   error?: ApolloError;
   partial?: boolean;
+  loadingState?: Record<string, any>;
 };
 
 export interface FetchMoreOptions<
@@ -216,6 +217,10 @@ export class ObservableQuery<
       this.options.errorPolicy === 'all'
     ) {
       result.errors = queryStoreValue.graphQLErrors;
+    }
+
+    if (queryStoreValue) {
+      result.loadingState = queryStoreValue.loadingState;
     }
 
     if (!partial) {

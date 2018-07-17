@@ -21,6 +21,7 @@ export type ApolloQueryResult<T> = {
   loading: boolean;
   networkStatus: NetworkStatus;
   stale: boolean;
+  loadingState?: Record<string, any>;
 };
 
 export enum FetchType {

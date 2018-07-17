@@ -13,6 +13,7 @@ import {
   isProduction,
   maybeDeepFreeze,
   hasDirectives,
+  initDeferredFieldLoadingStates,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -38,6 +39,7 @@ import {
   ApolloQueryResult,
   FetchType,
   ExecutionPatchResult,
+  isPatch,
 } from './types';
 import { graphQLResultHasError } from 'apollo-utilities';
 
@@ -567,6 +569,7 @@ export class QueryManager<TStore> {
               loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
               networkStatus: queryStoreValue.networkStatus,
               stale: true,
+              loadingState: queryStoreValue.loadingState,
             };
           } else {
             resultFromStore = {
@@ -574,6 +577,7 @@ export class QueryManager<TStore> {
               loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
               networkStatus: queryStoreValue.networkStatus,
               stale: false,
+              loadingState: queryStoreValue.loadingState,
             };
           }
 
@@ -1065,6 +1069,12 @@ export class QueryManager<TStore> {
       this.addFetchQueryPromise<T>(requestId, resolve, reject);
       const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult | ExecutionPatchResult) => {
+          // Keep track of the individual loading states of each deferred field
+          let loadingState;
+          if (!isPatch(result) && hasDirectives(['defer'], document)) {
+            loadingState = initDeferredFieldLoadingStates(document);
+          }
+
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
@@ -1091,6 +1101,7 @@ export class QueryManager<TStore> {
               queryId,
               result,
               fetchMoreForQueryId,
+              loadingState,
             );
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
@@ -1147,6 +1158,7 @@ export class QueryManager<TStore> {
             loading: false,
             networkStatus: NetworkStatus.ready,
             stale: false,
+            loadingState: {},
           });
         },
       });

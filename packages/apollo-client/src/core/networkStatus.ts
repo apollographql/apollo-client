@@ -43,6 +43,12 @@ export enum NetworkStatus {
    * No request is in flight for this query, but one or more errors were detected.
    */
   error = 8,
+
+  /**
+   * Only a partial response has been received, this could come from the usage
+   * of @defer/live/stream directives.
+   */
+  partial = 9,
 }
 
 /**
@@ -52,5 +58,5 @@ export enum NetworkStatus {
 export function isNetworkRequestInFlight(
   networkStatus: NetworkStatus,
 ): boolean {
-  return networkStatus < 7;
+  return networkStatus < 7 || networkStatus === 9;
 }

@@ -13,6 +13,7 @@ export type QueryStoreValue = {
   networkStatus: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: GraphQLError[];
+  _loadingState?: Record<string, any>;
   loadingState?: Record<string, any>;
   metadata: any;
 };
@@ -125,15 +126,15 @@ export class QueryStore {
 
     // Set up loadingState if it is passed in by QueryManager
     if (loadingState) {
-      this.store[queryId].loadingState = loadingState;
+      this.store[queryId]._loadingState = loadingState;
+      this.store[queryId].loadingState = proxify(loadingState);
     }
 
     if (isPatch(result)) {
       // Update loadingState for every patch received, by traversing its path
       const path = (result as ExecutionPatchResult).path;
-      console.log(`path: ${JSON.stringify(path, null, 2)}`);
       let index = 0;
-      const copy = cloneDeep(this.store[queryId].loadingState);
+      const copy = cloneDeep(this.store[queryId]._loadingState);
       let curPointer = copy;
       while (index < path.length) {
         const key = path[index++];
@@ -147,22 +148,24 @@ export class QueryStore {
               // once we receive a patch that has array data, we need to update the
               // loadingState with an array with the appropriate number of elements.
 
-              const children = cloneDeep(curPointer!.children);
+              const children = cloneDeep(curPointer!._children);
               const childrenArray = [];
               for (let i = 0; i < result.data.length; i++) {
                 childrenArray.push(children);
               }
-              curPointer!.children = childrenArray;
+              curPointer!._children = childrenArray;
             }
-            curPointer!.loading = false;
+            curPointer!._loading = false;
             break;
           }
-          if (curPointer!.children) {
-            curPointer = curPointer!.children;
+          if (curPointer!._children) {
+            curPointer = curPointer!._children;
           }
         }
       }
-      this.store[queryId].loadingState = copy;
+
+      this.store[queryId]._loadingState = copy;
+      this.store[queryId].loadingState = proxify(copy);
 
       // Merge graphqlErrors from patch, if any
       if (result.errors) {
@@ -246,4 +249,72 @@ export class QueryStore {
         {} as { [queryId: string]: QueryStoreValue },
       );
   }
+}
+
+/**
+ * Given a loadingState tree, it returns a proxified version of it that
+ * reduces the amount of boilerplate code required to access nested fields.
+ * Also defaults _isLoaded on any field that is not deferred to true.
+ */
+function proxify(
+  loadingState?: Record<string, any>,
+): Record<string, any> | undefined {
+  if (!loadingState) return loadingState;
+  // if (1 === 1) return loadingState;
+
+  return new Proxy(loadingState, {
+    get(target, prop) {
+      if (target && target[prop as string | number]) {
+        const o = target[prop as string | number];
+        if (typeof o !== 'object')
+          return new Proxy(
+            {},
+            {
+              get(_, prop) {
+                return prop === '_isLoaded' ? true : undefined;
+              },
+            },
+          );
+        if (o._loading) {
+          // Object is still loading
+          return new Proxy(o, {
+            get(_, prop) {
+              // Its children are still loading, so any other property access
+              // should return undefined. Forces user to check for existence
+              // of parent first.
+              return prop === '_isLoaded' ? false : undefined;
+            },
+          });
+        }
+        if (o._children) {
+          if (Array.isArray(o._children)) {
+            const proxiedChildren = o._children.map((c: any) => proxify(c));
+            return new Proxy(o._children, {
+              get(_, prop) {
+                return prop === '_isLoaded' ? true : proxiedChildren[prop];
+              },
+            });
+          } else {
+            const proxiedChildren = proxify(o._children) || {};
+            return new Proxy(o._children, {
+              get(_, prop) {
+                return prop === '_isLoaded'
+                  ? true
+                  : proxiedChildren[prop as string | number];
+              },
+            });
+          }
+        } else {
+          // This is a deferred leaf node and loading is complete
+          return new Proxy(o, {
+            get(_, prop) {
+              return prop === '_isLoaded';
+            },
+          });
+        }
+      }
+      // Otherwise, _isLoaded is the only valid property that can be accessed
+      return prop === '_isLoaded' ? true : undefined;
+    },
+  });
 }

@@ -4,6 +4,7 @@ import { isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
 import { ExecutionPatchResult, isPatch } from '../core/types';
+import { cloneDeep } from 'apollo-utilities';
 
 export type QueryStoreValue = {
   document: DocumentNode;
@@ -12,6 +13,7 @@ export type QueryStoreValue = {
   networkStatus: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: GraphQLError[];
+  loadingState?: Record<string, any>;
   metadata: any;
 };
 
@@ -117,11 +119,52 @@ export class QueryStore {
     queryId: string,
     result: ExecutionResult | ExecutionPatchResult,
     fetchMoreForQueryId: string | undefined,
+    loadingState?: Record<string, any>,
   ) {
     if (!this.store[queryId]) return;
 
-    // Merge graphqlErrors from patch, if any
+    // Set up loadingState if it is passed in by QueryManager
+    if (loadingState) {
+      this.store[queryId].loadingState = loadingState;
+    }
+
     if (isPatch(result)) {
+      // Update loadingState for every patch received, by traversing its path
+      const path = (result as ExecutionPatchResult).path;
+      console.log(`path: ${JSON.stringify(path, null, 2)}`);
+      let index = 0;
+      const copy = cloneDeep(this.store[queryId].loadingState);
+      let curPointer = copy;
+      while (index < path.length) {
+        const key = path[index++];
+        if (curPointer) {
+          curPointer = curPointer[key];
+          if (index === path.length) {
+            // Reached the leaf node
+            if (Array.isArray(result.data)) {
+              // At the time of instantiating the loadingState from the query AST,
+              // we have no way of telling if a field is an array type. Therefore,
+              // once we receive a patch that has array data, we need to update the
+              // loadingState with an array with the appropriate number of elements.
+
+              const children = cloneDeep(curPointer!.children);
+              const childrenArray = [];
+              for (let i = 0; i < result.data.length; i++) {
+                childrenArray.push(children);
+              }
+              curPointer!.children = childrenArray;
+            }
+            curPointer!.loading = false;
+            break;
+          }
+          if (curPointer!.children) {
+            curPointer = curPointer!.children;
+          }
+        }
+      }
+      this.store[queryId].loadingState = copy;
+
+      // Merge graphqlErrors from patch, if any
       if (result.errors) {
         const errors: GraphQLError[] = [];
         this.store[queryId].graphQLErrors!.forEach(error => {

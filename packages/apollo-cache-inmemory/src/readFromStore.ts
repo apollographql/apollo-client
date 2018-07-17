@@ -1,4 +1,4 @@
-import executeStoreQuery from './executeStoreQuery';
+import { executeStoreQuery } from './executeStoreQuery';
 
 import {
   assign,

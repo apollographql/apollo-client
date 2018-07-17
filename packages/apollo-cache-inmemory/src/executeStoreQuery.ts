@@ -32,6 +32,8 @@ import {
 } from './types';
 
 import { wrap, defaultMakeCacheKey } from './optimism';
+export { OptimisticWrapperFunction } from './optimism';
+
 import { DepTrackingCache } from './depTrackingCache';
 
 export type VariableMap = { [name: string]: any };
@@ -163,7 +165,7 @@ function readStoreResolver(
  * and it will be async
  *
  */
-export default wrap(function executeStoreQuery(
+export const executeStoreQuery = wrap(function (
   query: DocumentNode,
   rootValue: IdValue,
   contextValue: ReadStoreContext,

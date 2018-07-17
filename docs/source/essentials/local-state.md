@@ -327,6 +327,6 @@ const Detail = ({ match: { params: { breed, id } } }) => (
 Managing your local data with Apollo Client can simplify your state management code since the Apollo cache is your single source of truth for all data in your application. If you'd like to learn more about `apollo-link-state`, check out:
 
 - [`apollo-link-state` docs](/docs/link/links/state.html): Dive deeper into the concepts we just learned, such as resolvers and mixed queries, by taking a look at the `apollo-link-state` docs.
-- [The future of state management](https://dev-blog.apollodata.com/the-future-of-state-management-dd410864cae2): Read about our vision for the future of state management with GraphQL in the `apollo-link-state` announcement post.
+- [The future of state management](https://blog.apollographql.com/the-future-of-state-management-dd410864cae2): Read about our vision for the future of state management with GraphQL in the `apollo-link-state` announcement post.
 - [Tutorial video by Sara Vieira](https://youtu.be/2RvRcnD8wHY): Check out this tutorial video by Sara Vieira if you'd like a step-by-step walkthrough on building an app with `apollo-link-state`.
 

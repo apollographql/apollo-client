@@ -129,8 +129,8 @@ export function valueToObjectRepresentation(
   } else {
     throw new Error(
       `The inline argument "${name.value}" of kind "${(value as any).kind}"` +
-      'is not supported. Use variables instead of inline arguments to ' +
-      'overcome this limitation.'
+        'is not supported. Use variables instead of inline arguments to ' +
+        'overcome this limitation.',
     );
   }
 }

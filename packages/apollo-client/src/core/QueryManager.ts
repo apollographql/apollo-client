@@ -1,5 +1,10 @@
 import { execute, ApolloLink, FetchResult } from 'apollo-link';
-import { ExecutionResult, DocumentNode } from 'graphql';
+import {
+  ExecutionResult,
+  DocumentNode,
+  SelectionNode,
+  FieldNode,
+} from 'graphql';
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
 import { Cache } from 'apollo-cache';
@@ -13,7 +18,6 @@ import {
   isProduction,
   maybeDeepFreeze,
   hasDirectives,
-  initDeferredFieldLoadingStates,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -604,7 +608,7 @@ export class QueryManager<TStore> {
 
             if (isDifferentResult || previouslyHadError) {
               try {
-                observer.next(maybeDeepFreeze(resultFromStore));
+                observer.next(resultFromStore);
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
                 setTimeout(() => {
@@ -1243,4 +1247,46 @@ export class QueryManager<TStore> {
       },
     };
   }
+}
+
+function extractDeferredFieldsToTree(
+  selection: SelectionNode,
+): Record<string, any> | boolean {
+  const hasDeferDirective: boolean = (selection.directives &&
+    selection.directives.length > 0 &&
+    selection.directives.findIndex(directive => {
+      return directive.name.value === 'defer';
+    }) !== -1) as boolean;
+  const isLeaf: boolean =
+    !(selection as FieldNode).selectionSet ||
+    (selection as FieldNode).selectionSet!.selections.length === 0;
+
+  if (isLeaf) {
+    return hasDeferDirective ? { _loading: true } : true;
+  }
+
+  const map: { _loading?: boolean; _children?: Record<string, any> } = {
+    _loading: hasDeferDirective ? true : undefined,
+    _children: undefined,
+  };
+  let hasDeferredChild = false;
+
+  for (const childSelection of (selection as FieldNode).selectionSet!
+    .selections) {
+    const name = (childSelection as FieldNode).name.value;
+    const subtree = extractDeferredFieldsToTree(childSelection);
+    if (subtree !== undefined) {
+      if (!hasDeferredChild) hasDeferredChild = true;
+      if (!map._children) map._children = {};
+      map._children[name] = subtree;
+    }
+  }
+  return map;
+}
+
+function initDeferredFieldLoadingStates(doc: DocumentNode) {
+  return (extractDeferredFieldsToTree(doc.definitions[0] as any) as Record<
+    string,
+    any
+  >)._children;
 }

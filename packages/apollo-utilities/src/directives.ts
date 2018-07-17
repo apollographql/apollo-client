@@ -136,46 +136,6 @@ export function getDirectiveNames(doc: DocumentNode) {
   return directiveNames;
 }
 
-function extractDeferredFieldsToTree(
-  selection: SelectionNode,
-): Record<string, any> {
-  const hasDeferDirective: boolean =
-    selection.directives &&
-    selection.directives.length > 0 &&
-    selection.directives.findIndex(directive => {
-      return directive.name.value === 'defer';
-    }) !== -1;
-  const isLeaf: boolean =
-    !(selection as FieldNode).selectionSet ||
-    (selection as FieldNode).selectionSet.selections.length === 0;
-
-  if (isLeaf) {
-    return hasDeferDirective ? { loading: true } : undefined;
-  }
-
-  const map: { loading: boolean; children: Record<string, any> } = {
-    loading: hasDeferDirective ? true : undefined,
-    children: undefined,
-  };
-  let hasDeferredChild = false;
-
-  for (const childSelection of (selection as FieldNode).selectionSet
-    .selections) {
-    const name = (childSelection as FieldNode).name.value;
-    const subtree = extractDeferredFieldsToTree(childSelection);
-    if (subtree !== undefined) {
-      if (!hasDeferredChild) hasDeferredChild = true;
-      if (!map.children) map.children = {};
-      map.children[name] = subtree;
-    }
-  }
-  return map;
-}
-
-export function initDeferredFieldLoadingStates(doc: DocumentNode) {
-  return extractDeferredFieldsToTree(doc.definitions[0] as any).children;
-}
-
 export function hasDirectives(names: string[], doc: DocumentNode) {
   return getDirectiveNames(doc).some(
     (name: string) => names.indexOf(name) > -1,

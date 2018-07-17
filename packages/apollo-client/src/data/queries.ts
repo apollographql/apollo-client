@@ -254,67 +254,34 @@ export class QueryStore {
 /**
  * Given a loadingState tree, it returns a proxified version of it that
  * reduces the amount of boilerplate code required to access nested fields.
- * Also defaults _isLoaded on any field that is not deferred to true.
+ * The intercepted getter will return either true (is loaded) or undefined.
  */
 function proxify(
   loadingState?: Record<string, any>,
 ): Record<string, any> | undefined {
   if (!loadingState) return loadingState;
-  // if (1 === 1) return loadingState;
 
   return new Proxy(loadingState, {
     get(target, prop) {
       if (target && target[prop as string | number]) {
         const o = target[prop as string | number];
-        if (typeof o !== 'object')
-          return new Proxy(
-            {},
-            {
-              get(_, prop) {
-                return prop === '_isLoaded' ? true : undefined;
-              },
-            },
-          );
         if (o._loading) {
-          // Object is still loading
-          return new Proxy(o, {
-            get(_, prop) {
-              // Its children are still loading, so any other property access
-              // should return undefined. Forces user to check for existence
-              // of parent first.
-              return prop === '_isLoaded' ? false : undefined;
-            },
-          });
+          // Object is still loading, so we return undefined to prevent
+          // other property access on it. Therefore, we force the user to
+          // do checks on deferred fields.
+          return undefined;
         }
         if (o._children) {
           if (Array.isArray(o._children)) {
-            const proxiedChildren = o._children.map((c: any) => proxify(c));
-            return new Proxy(o._children, {
-              get(_, prop) {
-                return prop === '_isLoaded' ? true : proxiedChildren[prop];
-              },
-            });
+            return o._children.map((c: any) => proxify(c));
           } else {
-            const proxiedChildren = proxify(o._children) || {};
-            return new Proxy(o._children, {
-              get(_, prop) {
-                return prop === '_isLoaded'
-                  ? true
-                  : proxiedChildren[prop as string | number];
-              },
-            });
+            return proxify(o._children) || {};
           }
         } else {
-          // This is a deferred leaf node and loading is complete
-          return new Proxy(o, {
-            get(_, prop) {
-              return prop === '_isLoaded';
-            },
-          });
+          // This is a leaf node and loading is complete
+          return true;
         }
       }
-      // Otherwise, _isLoaded is the only valid property that can be accessed
-      return prop === '_isLoaded' ? true : undefined;
     },
   });
 }

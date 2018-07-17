@@ -608,7 +608,14 @@ export class QueryManager<TStore> {
 
             if (isDifferentResult || previouslyHadError) {
               try {
-                observer.next(resultFromStore);
+                observer.next({
+                  data: maybeDeepFreeze(resultFromStore.data),
+                  loading: maybeDeepFreeze(resultFromStore.loading),
+                  networkStatus: maybeDeepFreeze(resultFromStore.networkStatus),
+                  stale: maybeDeepFreeze(resultFromStore.stale),
+                  // Freeze everything except this since we are proxifying it
+                  loadingState: resultFromStore.loadingState,
+                });
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
                 setTimeout(() => {

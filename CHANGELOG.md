@@ -31,6 +31,12 @@
   when attempting to report a missing property on an object.  
   [@benjie](https://github.com/benjie) in [#3618](https://github.com/apollographql/apollo-client/pull/3618)
 
+### Apollo Cache In-Memory (vNext)
+
+- Add `__typename` and `id` properties to `dataIdFromObject` parameter
+  (typescript)  
+  [@jfurler](https://github.com/jfurler) in [#3641](https://github.com/apollographql/apollo-client/pull/3641)
+
 ## 2.3.5 (June 19, 2018)
 
 ### Apollo Client (2.3.5)

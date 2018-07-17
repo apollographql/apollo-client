@@ -127,7 +127,7 @@ export class QueryStore {
     // Set up loadingState if it is passed in by QueryManager
     if (loadingState) {
       this.store[queryId]._loadingState = loadingState;
-      this.store[queryId].loadingState = proxify(loadingState);
+      this.store[queryId].loadingState = compactLoadingStateTree(loadingState);
     }
 
     if (isPatch(result)) {
@@ -165,7 +165,7 @@ export class QueryStore {
       }
 
       this.store[queryId]._loadingState = copy;
-      this.store[queryId].loadingState = proxify(copy);
+      this.store[queryId].loadingState = compactLoadingStateTree(copy);
 
       // Merge graphqlErrors from patch, if any
       if (result.errors) {
@@ -252,36 +252,32 @@ export class QueryStore {
 }
 
 /**
- * Given a loadingState tree, it returns a proxified version of it that
+ * Given a loadingState tree, it returns a compacted version of it that
  * reduces the amount of boilerplate code required to access nested fields.
- * The intercepted getter will return either true (is loaded) or undefined.
+ * The structure of this will mirror the response data, with deferred fields
+ * set to undefined until its patch is received.
  */
-function proxify(
+function compactLoadingStateTree(
   loadingState?: Record<string, any>,
 ): Record<string, any> | undefined {
   if (!loadingState) return loadingState;
+  const state: Record<string, any> = {};
 
-  return new Proxy(loadingState, {
-    get(target, prop) {
-      if (target && target[prop as string | number]) {
-        const o = target[prop as string | number];
-        if (o._loading) {
-          // Object is still loading, so we return undefined to prevent
-          // other property access on it. Therefore, we force the user to
-          // do checks on deferred fields.
-          return undefined;
-        }
-        if (o._children) {
-          if (Array.isArray(o._children)) {
-            return o._children.map((c: any) => proxify(c));
-          } else {
-            return proxify(o._children) || {};
-          }
-        } else {
-          // This is a leaf node and loading is complete
-          return true;
-        }
+  for (let key in loadingState) {
+    const o = loadingState[key];
+    if (o._loading) {
+      continue;
+    }
+    if (o._children) {
+      if (Array.isArray(o._children)) {
+        state[key] = o._children.map((c: any) => compactLoadingStateTree(c));
+      } else {
+        state[key] = compactLoadingStateTree(o._children);
       }
-    },
-  });
+      continue;
+    }
+    state[key] = true;
+  }
+
+  return state;
 }

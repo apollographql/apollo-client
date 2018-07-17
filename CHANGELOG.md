@@ -2,6 +2,8 @@
 
 ## vNext
 
+- Fix typo in console.warn regarding fragment matching error message.
+
 ### Apollo Client (vNext)
 
 - Documentation updates.  

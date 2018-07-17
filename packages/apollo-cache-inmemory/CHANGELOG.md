@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### vNext
+
+- Fix typo in console.warn regarding fragment matching error message.
+
 ### 1.2.5
 
 - No changes.

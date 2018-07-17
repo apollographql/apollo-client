@@ -1,6 +1,5 @@
 import ApolloClient, { gql, InMemoryCache } from '../';
 import { stripSymbols } from 'apollo-utilities';
-import { HttpLink } from 'apollo-link-http';
 import * as fetchMock from 'fetch-mock';
 
 global.fetch = jest.fn(() =>
@@ -21,6 +20,23 @@ describe('config', () => {
       foo: () => 'woo',
     },
   };
+
+  it('allows you to pass in a custom fetcher', () => {
+    const customFetcher = jest.fn(() =>
+      Promise.resolve({
+        text: () => Promise.resolve('{"data": {"foo": "bar" }}'),
+      }),
+    );
+
+    const client = new ApolloClient({
+      fetch: customFetcher,
+    });
+
+    client.query({ query }).then(({ data }) => {
+      expect(customFetcher).toHaveBeenCalledTimes(1);
+      expect(stripSymbols(data)).toEqual({ foo: 'bar' });
+    });
+  });
 
   it('allows you to pass in a request handler', () => {
     let requestCalled;

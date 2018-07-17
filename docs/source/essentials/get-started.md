@@ -28,10 +28,24 @@ Great, now that you have all the dependencies you need, let's create your Apollo
 In our `index.js` file, let's import `ApolloClient` from `apollo-boost` and add the endpoint for our GraphQL server to the `uri` property of the client config object.
 
 ```js
-import ApolloClient from "apollo-boost";
+import {
+  ApolloClient,
+  HttpLink,
+  InMemoryCache,
+  AppoLink
+ } from "apollo-boost";
+
+
+const cache = new InMemoryCache();
+const link = ApolloLink.from([
+  new HttpLink({
+    uri: "https://w5xlvm3vzz.lp.gql.zone/graphql",
+  }),
+]);
 
 const client = new ApolloClient({
-  uri: "https://w5xlvm3vzz.lp.gql.zone/graphql"
+  cache,
+  link,
 });
 ```
 

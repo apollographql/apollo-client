@@ -52,7 +52,7 @@
     "rollup": "0.62.0",
     "rollup-plugin-node-resolve": "3.3.0",
     "ts-jest": "20.0.14",
-    "tslint": "5.10.0",
+    "tslint": "5.11.0",
     "typescript": "2.9.2",
     "uglifyjs": "2.4.11"
   },

@@ -4,6 +4,7 @@ import {
   DocumentNode,
   SelectionNode,
   FieldNode,
+  Kind,
 } from 'graphql';
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
@@ -1256,6 +1257,10 @@ export class QueryManager<TStore> {
   }
 }
 
+/**
+ * Recursive function that extracts a tree that mirrors the shape of the query,
+ * adding _loading property to fields which are deferred.
+ */
 function extractDeferredFieldsToTree(
   selection: SelectionNode,
 ): Record<string, any> | boolean {
@@ -1265,8 +1270,9 @@ function extractDeferredFieldsToTree(
       return directive.name.value === 'defer';
     }) !== -1) as boolean;
   const isLeaf: boolean =
-    !(selection as FieldNode).selectionSet ||
-    (selection as FieldNode).selectionSet!.selections.length === 0;
+    selection.kind !== Kind.INLINE_FRAGMENT &&
+    (!(selection as FieldNode).selectionSet ||
+      (selection as FieldNode).selectionSet!.selections.length === 0);
 
   if (isLeaf) {
     return hasDeferDirective ? { _loading: true } : true;
@@ -1280,12 +1286,18 @@ function extractDeferredFieldsToTree(
 
   for (const childSelection of (selection as FieldNode).selectionSet!
     .selections) {
-    const name = (childSelection as FieldNode).name.value;
     const subtree = extractDeferredFieldsToTree(childSelection);
     if (subtree !== undefined) {
       if (!hasDeferredChild) hasDeferredChild = true;
-      if (!map._children) map._children = {};
-      map._children[name] = subtree;
+      if (childSelection.kind === Kind.INLINE_FRAGMENT) {
+        if (typeof subtree !== 'boolean') {
+          map._children = Object.assign(map._children || {}, subtree._children);
+        }
+      } else {
+        if (!map._children) map._children = {};
+        const name = (childSelection as FieldNode).name.value;
+        map._children[name] = subtree;
+      }
     }
   }
   return map;

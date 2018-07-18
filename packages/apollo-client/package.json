@@ -55,14 +55,14 @@
     "zen-observable": "^0.8.0"
   },
   "peerDependencies": {
-    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"
+    "graphql": "^0.11.0 || ^14.0.0"
   },
   "devDependencies": {
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.110",
+    "@types/lodash": "4.14.112",
     "@types/node": "10.5.2",
     "apollo-cache-inmemory": "^1.2.5",
     "benchmark": "2.1.4",
@@ -71,18 +71,18 @@
     "danger": "1.1.0",
     "flow-bin": "0.76.0",
     "github": "12.1.0",
-    "graphql": "0.13.2",
+    "graphql": "14.0.0-rc.2",
     "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",
     "jest": "23.0.0",
     "lint-staged": "6.1.0",
     "lodash": "4.17.10",
     "rollup": "0.62.0",
-    "rxjs": "6.2.1",
+    "rxjs": "6.2.2",
     "ts-jest": "20.0.14",
     "tslint": "5.10.0",
     "typescript": "2.9.2",
-    "uglify-js": "3.4.3",
+    "uglify-js": "3.4.4",
     "webpack": "3.12.0",
     "webpack-bundle-analyzer": "2.13.1"
   },

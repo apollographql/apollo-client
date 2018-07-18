@@ -49,7 +49,7 @@ The last argument to the `graphql` function is a set of `graphql-anywhere`-speci
 
 ## Utilities
 
-See http://dev.apollodata.com/react/fragments.html for examples of how you might use these.
+See https://www.apollographql.com/docs/react/advanced/fragments.html for examples of how you might use these.
 
 ```js
 import { filter } from 'graphql-anywhere'

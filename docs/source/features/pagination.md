@@ -208,4 +208,4 @@ const FEED_QUERY = gql`
 `;
 ```
 
-This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use of imperative store updates. In this example, we also use the `@connection` directive's optional `filter` argument, which allows us to include some arguments of the query in the store key. In this case, we want to include the `type` query argument in the store key, which results in multiple store values that accumulate pages from each type of feed.
+This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use for imperative store updates. In this example, we also use the `@connection` directive's optional `filter` argument, which allows us to include some arguments of the query in the store key. In this case, we want to include the `type` query argument in the store key, which results in multiple store values that accumulate pages from each type of feed.

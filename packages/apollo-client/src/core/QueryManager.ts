@@ -608,7 +608,15 @@ export class QueryManager<TStore> {
               lastResult.data === resultFromStore.data
             );
 
-            if (isDifferentResult || previouslyHadError) {
+            if (
+              isDifferentResult ||
+              previouslyHadError ||
+              resultFromStore.loadingState
+            ) {
+              // If loadingState is present, this is a patch from a deferred
+              // query, and we should always treat it as a different result
+              // even though the actual data might be the same (i.e. the patch's
+              // data could be null.
               try {
                 observer.next(maybeDeepFreeze(resultFromStore));
               } catch (e) {

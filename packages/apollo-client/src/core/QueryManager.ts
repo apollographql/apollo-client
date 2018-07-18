@@ -5,6 +5,7 @@ import {
   SelectionNode,
   FieldNode,
   Kind,
+  FragmentDefinitionNode,
 } from 'graphql';
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
@@ -609,14 +610,7 @@ export class QueryManager<TStore> {
 
             if (isDifferentResult || previouslyHadError) {
               try {
-                observer.next({
-                  data: maybeDeepFreeze(resultFromStore.data),
-                  loading: maybeDeepFreeze(resultFromStore.loading),
-                  networkStatus: maybeDeepFreeze(resultFromStore.networkStatus),
-                  stale: maybeDeepFreeze(resultFromStore.stale),
-                  // Freeze everything except this since we are proxifying it
-                  loadingState: resultFromStore.loadingState,
-                });
+                observer.next(maybeDeepFreeze(resultFromStore));
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
                 setTimeout(() => {
@@ -1081,12 +1075,6 @@ export class QueryManager<TStore> {
       this.addFetchQueryPromise<T>(requestId, resolve, reject);
       const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult | ExecutionPatchResult) => {
-          // Keep track of the individual loading states of each deferred field
-          let loadingState;
-          if (!isPatch(result) && hasDirectives(['defer'], document)) {
-            loadingState = initDeferredFieldLoadingStates(document);
-          }
-
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
@@ -1107,6 +1095,13 @@ export class QueryManager<TStore> {
               this.setQuery(queryId, () => ({
                 newData: { result: result.data, complete: true },
               }));
+            }
+
+            // Initialize a tree of individual loading states for each deferred
+            // field, when the initial response arrives.
+            let loadingState;
+            if (!isPatch(result) && hasDirectives(['defer'], document)) {
+              loadingState = initDeferredFieldLoadingStates(document);
             }
 
             this.queryStore.markQueryResult(
@@ -1263,6 +1258,7 @@ export class QueryManager<TStore> {
  */
 function extractDeferredFieldsToTree(
   selection: SelectionNode,
+  fragmentMap: Record<string, any>,
 ): Record<string, any> | boolean {
   const hasDeferDirective: boolean = (selection.directives &&
     selection.directives.length > 0 &&
@@ -1282,13 +1278,32 @@ function extractDeferredFieldsToTree(
     _loading: hasDeferDirective ? true : undefined,
     _children: undefined,
   };
-  let hasDeferredChild = false;
+
+  // Replace FragmentSpreads with its actual selectionSet
+  const expandedFragments: SelectionNode[] = [];
+  (selection as FieldNode).selectionSet!.selections.forEach(childSelection => {
+    if (childSelection.kind === Kind.FRAGMENT_SPREAD) {
+      const fragmentName = childSelection.name.value;
+      fragmentMap[fragmentName].forEach((selection: SelectionNode) => {
+        expandedFragments.push(selection);
+      });
+    }
+  });
+
+  // Remove FragmentSpreads
+  (selection as FieldNode).selectionSet!.selections = (selection as FieldNode).selectionSet!.selections.filter(
+    selection => selection.kind !== Kind.FRAGMENT_SPREAD,
+  );
+
+  // Add expanded FragmentSpreads to the current selection set
+  (selection as FieldNode).selectionSet!.selections = (selection as FieldNode).selectionSet!.selections.concat(
+    expandedFragments,
+  );
 
   for (const childSelection of (selection as FieldNode).selectionSet!
     .selections) {
-    const subtree = extractDeferredFieldsToTree(childSelection);
+    const subtree = extractDeferredFieldsToTree(childSelection, fragmentMap);
     if (subtree !== undefined) {
-      if (!hasDeferredChild) hasDeferredChild = true;
       if (childSelection.kind === Kind.INLINE_FRAGMENT) {
         if (typeof subtree !== 'boolean') {
           map._children = Object.assign(map._children || {}, subtree._children);
@@ -1304,8 +1319,23 @@ function extractDeferredFieldsToTree(
 }
 
 function initDeferredFieldLoadingStates(doc: DocumentNode) {
-  return (extractDeferredFieldsToTree(doc.definitions[0] as any) as Record<
-    string,
-    any
-  >)._children;
+  // Collect all the fragment definitions
+  const fragmentMap: Record<string, SelectionNode[]> = {};
+  doc.definitions
+    .filter(definition => definition.kind === Kind.FRAGMENT_DEFINITION)
+    .forEach(definition => {
+      const fragmentName = (definition as FragmentDefinitionNode).name.value;
+      fragmentMap[
+        fragmentName
+      ] = (definition as FragmentDefinitionNode).selectionSet.selections;
+    });
+
+  const operationDefinition = doc.definitions.filter(
+    definition => definition.kind === Kind.OPERATION_DEFINITION,
+  )[0]; // Take the first element since we do not support multiple operations
+
+  return (extractDeferredFieldsToTree(
+    operationDefinition as any,
+    fragmentMap,
+  ) as Record<string, any>)._children;
 }

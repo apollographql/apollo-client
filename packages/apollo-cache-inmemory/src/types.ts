@@ -3,7 +3,13 @@ import { FragmentMatcher } from './executeStoreQuery';
 import { Transaction } from 'apollo-cache';
 import { IdValue, StoreValue } from 'apollo-utilities';
 
-export type IdGetter = (value: Object) => string | null | undefined;
+export interface IdGetterObj extends Object {
+  __typename?: string;
+  id?: string;
+}
+export declare type IdGetter = (
+  value: IdGetterObj,
+) => string | null | undefined;
 
 /**
  * This is an interface used to access, set and remove

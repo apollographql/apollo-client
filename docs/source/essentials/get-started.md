@@ -19,7 +19,7 @@ npm install apollo-boost react-apollo graphql --save
 - `react-apollo`: View layer integration for React
 - `graphql`: Also parses your GraphQL queries
 
-> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/add-react-to-a-new-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
+> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/create-a-new-react-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
 
 <h2 id="creating-client">Create a client</h2>
 

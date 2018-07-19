@@ -1304,9 +1304,34 @@ function extractDeferredFieldsToTree(
   );
 
   // Add expanded FragmentSpreads to the current selection set
-  (selection as FieldNode).selectionSet!.selections = (selection as FieldNode).selectionSet!.selections.concat(
-    expandedFragments,
-  );
+  expandedFragments.forEach(fragSelection => {
+    const fragFieldName = (fragSelection as FieldNode).name.value;
+    const existingSelection = (selection as FieldNode).selectionSet!.selections.find(
+      selection =>
+        selection.kind !== Kind.INLINE_FRAGMENT &&
+        (selection as FieldNode).name.value === fragFieldName,
+    );
+    if (existingSelection) {
+      const fragSelectionHasDefer =
+        fragSelection.directives &&
+        fragSelection.directives.findIndex(
+          directive => directive.name.value === 'defer',
+        ) >= 0;
+      if (!fragSelectionHasDefer) {
+        // Make sure that the existingSelection is not deferred, since all
+        // selections of the field must specify defer in order for the field
+        // to be deferred. This should match the behavior on apollo-server.
+        if (existingSelection.directives) {
+          existingSelection.directives = existingSelection.directives.filter(
+            directive => directive.name.value !== 'defer',
+          );
+        }
+      }
+    } else {
+      // Add it to the selectionSet
+      (selection as FieldNode).selectionSet!.selections.push(fragSelection);
+    }
+  });
 
   for (const childSelection of (selection as FieldNode).selectionSet!
     .selections) {

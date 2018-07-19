@@ -1074,6 +1074,7 @@ export class QueryManager<TStore> {
       // TODO: Should this be included for all entry points via
       // buildOperationForLink?
       forceFetch: !this.queryDeduplication,
+      isDeferred: hasDirectives(['defer'], document),
     });
 
     let resultFromStore: any;

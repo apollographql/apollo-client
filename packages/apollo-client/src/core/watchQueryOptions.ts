@@ -222,7 +222,14 @@ export interface MutationOptions<
   mutation: DocumentNode;
 
   /**
-   * Context to be passed to link execution chain
+   * The context to be passed to the link execution chain. This context will
+   * only be used with the mutation. It will not be used with
+   * `refetchQueries`. Refetched queries use the context they were
+   * initialized with (since the intitial context is stored as part of the
+   * `ObservableQuery` instance). If a specific context is needed when
+   * refetching queries, make sure it is configured (via the
+   * [`query` `context` option](/docs/react/api/apollo-client.html#ApolloClient.query))
+   * when the query is first initialized/run.
    */
   context?: any;
 

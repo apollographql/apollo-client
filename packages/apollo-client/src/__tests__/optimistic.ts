@@ -189,6 +189,7 @@ describe('optimistic mutation results', () => {
       };
 
       it('handles a single error for a single mutation', () => {
+        expect.assertions(6);
         return setup({
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
@@ -219,6 +220,7 @@ describe('optimistic mutation results', () => {
       });
 
       it('handles errors produced by one mutation in a series', () => {
+        expect.assertions(10);
         let subscriptionHandle: Subscription;
         return setup(
           {
@@ -290,6 +292,7 @@ describe('optimistic mutation results', () => {
       });
 
       it('can run 2 mutations concurrently and handles all intermediate states well', () => {
+        expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
           expectedText2: any,
@@ -423,6 +426,7 @@ describe('optimistic mutation results', () => {
       };
 
       it('handles a single error for a single mutation', () => {
+        expect.assertions(6);
         return setup({
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
@@ -453,6 +457,7 @@ describe('optimistic mutation results', () => {
       });
 
       it('handles errors produced by one mutation in a series', () => {
+        expect.assertions(10);
         let subscriptionHandle: Subscription;
         return setup(
           {
@@ -524,6 +529,7 @@ describe('optimistic mutation results', () => {
       });
 
       it('can run 2 mutations concurrently and handles all intermediate states well', () => {
+        expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
           expectedText2: any,
@@ -662,6 +668,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('will use a passed variable in optimisticResponse', () => {
+      expect.assertions(6);
       let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation, variables },
@@ -801,6 +808,7 @@ describe('optimistic mutation results', () => {
     };
 
     it('will insert a single item to the beginning', () => {
+      expect.assertions(7);
       let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
@@ -857,6 +865,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('two array insert like mutations', () => {
+      expect.assertions(9);
       let subscriptionHandle: Subscription;
       return setup(
         {
@@ -952,6 +961,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('two mutations, one fails', () => {
+      expect.assertions(10);
       let subscriptionHandle: Subscription;
       return setup(
         {
@@ -1043,6 +1053,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('will handle dependent updates', done => {
+      expect.assertions(5);
       link = mockSingleLink(
         {
           request: { query },
@@ -1228,6 +1239,7 @@ describe('optimistic mutation results', () => {
     };
 
     it('will insert a single item to the beginning', () => {
+      expect.assertions(6);
       let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
@@ -1297,6 +1309,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('two array insert like mutations', () => {
+      expect.assertions(9);
       let subscriptionHandle: Subscription;
       return setup(
         {
@@ -1412,6 +1425,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('two mutations, one fails', () => {
+      expect.assertions(10);
       let subscriptionHandle: Subscription;
       return setup(
         {
@@ -1521,6 +1535,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('will handle dependent updates', done => {
+      expect.assertions(5);
       link = mockSingleLink(
         {
           request: { query },
@@ -1818,6 +1833,7 @@ describe('optimistic mutation - githunt comments', () => {
   };
 
   it('can post a new comment', () => {
+    expect.assertions(1);
     const mutationVariables = {
       repoFullName: 'org/repo',
       commentContent: 'New Comment',

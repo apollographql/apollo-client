@@ -4362,6 +4362,85 @@ describe('QueryManager', () => {
       );
     });
 
+    it('should refetch using the original query context (if any)', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const variables = { id: '1234' };
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data },
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+
+      const headers = {
+        someHeader: 'some value',
+      };
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        context: {
+          headers,
+        },
+        notifyOnNetworkStatusChange: false,
+      });
+
+      return observableToPromise(
+        { observable },
+        result => {
+          queryManager.mutate({
+            mutation,
+            refetchQueries: ['getAuthors'],
+          });
+        },
+        result => {
+          const context = queryManager.link.operation.getContext();
+          expect(context.headers).not.toBeUndefined();
+          expect(context.headers.someHeader).toEqual(headers.someHeader);
+        },
+      );
+    });
+
     afterEach(done => {
       // restore standard method
       console.warn = oldWarn;

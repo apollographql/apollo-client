@@ -847,10 +847,10 @@ describe('optimistic mutation results', () => {
 
     });
 
-    it('two array insert like mutations', () => {
+    it('two array insert like mutations', async () => {
       expect.assertions(9);
       let subscriptionHandle: Subscription;
-      return setup(
+      await setup(
         {
           request: { query: mutation },
           result: mutationResult,
@@ -861,86 +861,83 @@ describe('optimistic mutation results', () => {
           delay: 50,
         },
       )
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
+
+      // we have to actually subscribe to the query to be able to update it
+      await new Promise(resolve => {
+        const handle = client.watchQuery({ query });
+        subscriptionHandle = handle.subscribe({
+          next(res) {
+            resolve(res);
+          },
+        });
+      });
+
+      const updateQueries = {
+        todoList: (prev, options) => {
+          const mResult = options.mutationResult;
+
+          const state = cloneDeep<any>(prev);
+
+          if (mResult.data) {
+            state.todoList.todos.unshift(mResult.data.createTodo);
+          }
+
+          return state;
+        },
+      } as MutationQueryReducersMap<IMutationResult>;
+      const promise = client
+        .mutate({
+          mutation,
+          optimisticResponse,
+          updateQueries,
         })
-        .then(() => {
-          const updateQueries = {
-            todoList: (prev, options) => {
-              const mResult = options.mutationResult;
-
-              const state = cloneDeep<any>(prev);
-
-              if (mResult.data) {
-                state.todoList.todos.unshift(mResult.data.createTodo);
-              }
-
-              return state;
-            },
-          } as MutationQueryReducersMap<IMutationResult>;
-          const promise = client
-            .mutate({
-              mutation,
-              optimisticResponse,
-              updateQueries,
-            })
-            .then(res => {
-              const currentDataInStore = (client.cache as InMemoryCache).extract(
-                true,
-              );
-              expect(
-                (currentDataInStore['TodoList5'] as any).todos.length,
-              ).toEqual(5);
-              expect((currentDataInStore['Todo99'] as any).text).toEqual(
-                'This one was created with a mutation.',
-              );
-              expect((currentDataInStore['Todo66'] as any).text).toEqual(
-                'Optimistically generated 2',
-              );
-              return res;
-            });
-
-          const promise2 = client.mutate({
-            mutation,
-            optimisticResponse: optimisticResponse2,
-            updateQueries,
-          });
-
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toEqual(5);
-          expect((dataInStore['Todo99'] as any).text).toEqual(
-            'Optimistically generated',
+        .then(res => {
+          const currentDataInStore = (client.cache as InMemoryCache).extract(
+            true,
           );
-          expect((dataInStore['Todo66'] as any).text).toEqual(
-            'Optimistically generated 2',
-          );
-
-          return Promise.all([promise, promise2]);
-        })
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toEqual(5);
-
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toEqual(
-            'Second mutation.',
-          );
-          expect(newResult.data.todoList.todos[1].text).toEqual(
+          expect(
+            (currentDataInStore['TodoList5'] as any).todos.length,
+          ).toEqual(5);
+          expect((currentDataInStore['Todo99'] as any).text).toEqual(
             'This one was created with a mutation.',
           );
+          expect((currentDataInStore['Todo66'] as any).text).toEqual(
+            'Optimistically generated 2',
+          );
+          return res;
         });
+
+      const promise2 = client.mutate({
+        mutation,
+        optimisticResponse: optimisticResponse2,
+        updateQueries,
+      });
+
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toEqual(5);
+      expect((dataInStore['Todo99'] as any).text).toEqual(
+        'Optimistically generated',
+      );
+      expect((dataInStore['Todo66'] as any).text).toEqual(
+        'Optimistically generated 2',
+      );
+
+      await Promise.all([promise, promise2]);
+
+      const newResult: any = await client.query({ query });
+
+      subscriptionHandle.unsubscribe();
+      // There should be one more todo item than before
+      expect(newResult.data.todoList.todos.length).toEqual(5);
+
+      // Since we used `prepend` it should be at the front
+      expect(newResult.data.todoList.todos[0].text).toEqual(
+        'Second mutation.',
+      );
+      expect(newResult.data.todoList.todos[1].text).toEqual(
+        'This one was created with a mutation.',
+      );
+
     });
 
     it('two mutations, one fails', () => {

@@ -188,35 +188,33 @@ describe('optimistic mutation results', () => {
         },
       };
 
-      it('handles a single error for a single mutation', () => {
+      it('handles a single error for a single mutation', async() => {
         expect.assertions(6);
-        return setup({
+        await setup({
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
         })
-          .then(() => {
-            const promise = client.mutate({
-              mutation,
-              optimisticResponse,
-              updateQueries,
-            });
-
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-            expect((dataInStore['Todo99'] as any).text).toBe(
-              'Optimistically generated',
-            );
-
-            return promise;
-          })
-          .catch(err => {
-            expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe('Network error: forbidden (test error)');
-
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
-            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        try {
+          const promise = client.mutate({
+            mutation,
+            optimisticResponse,
+            updateQueries,
           });
+
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+          expect((dataInStore['Todo99'] as any).text).toBe(
+            'Optimistically generated',
+          );
+          await promise;
+        } catch(err) {
+          expect(err).toBeInstanceOf(Error);
+          expect(err.message).toBe('Network error: forbidden (test error)');
+
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        }
       });
 
       it('handles errors produced by one mutation in a series', () => {

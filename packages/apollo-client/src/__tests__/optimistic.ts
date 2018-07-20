@@ -288,7 +288,7 @@ describe('optimistic mutation results', () => {
 
       });
 
-      it('can run 2 mutations concurrently and handles all intermediate states well', () => {
+      it('can run 2 mutations concurrently and handles all intermediate states well', async () => {
         expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
@@ -309,7 +309,7 @@ describe('optimistic mutation results', () => {
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
         }
         let subscriptionHandle: Subscription;
-        return setup(
+        await setup(
           {
             request: { query: mutation },
             result: mutationResult,
@@ -321,72 +321,69 @@ describe('optimistic mutation results', () => {
             delay: 100,
           },
         )
-          .then(() => {
-            // we have to actually subscribe to the query to be able to update it
-            return new Promise(resolve => {
-              const handle = client.watchQuery({ query });
-              subscriptionHandle = handle.subscribe({
-                next(res) {
-                  resolve(res);
-                },
-              });
-            });
+        // we have to actually subscribe to the query to be able to update it
+        await new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
+            },
+          });
+        });
+
+        const promise = client
+          .mutate({
+            mutation,
+            optimisticResponse,
+            updateQueries,
           })
-          .then(() => {
-            const promise = client
-              .mutate({
-                mutation,
-                optimisticResponse,
-                updateQueries,
-              })
-              .then(res => {
-                checkBothMutationsAreApplied(
-                  'This one was created with a mutation.',
-                  'Optimistically generated 2',
-                );
-                const latestState = client.queryManager.mutationStore;
-                expect(latestState.get('5').loading).toBe(false);
-                expect(latestState.get('6').loading).toBe(true);
-
-                return res;
-              });
-
-            const promise2 = client
-              .mutate({
-                mutation,
-                optimisticResponse: optimisticResponse2,
-                updateQueries,
-              })
-              .then(res => {
-                checkBothMutationsAreApplied(
-                  'This one was created with a mutation.',
-                  'Second mutation.',
-                );
-                const latestState = client.queryManager.mutationStore;
-                expect(latestState.get('5').loading).toBe(false);
-                expect(latestState.get('6').loading).toBe(false);
-
-                return res;
-              });
-
-            const mutationsState = client.queryManager.mutationStore;
-            expect(mutationsState.get('5').loading).toBe(true);
-            expect(mutationsState.get('6').loading).toBe(true);
-
+          .then(res => {
             checkBothMutationsAreApplied(
-              'Optimistically generated',
+              'This one was created with a mutation.',
               'Optimistically generated 2',
             );
+            const latestState = client.queryManager.mutationStore;
+            expect(latestState.get('5').loading).toBe(false);
+            expect(latestState.get('6').loading).toBe(true);
 
-            return Promise.all([promise, promise2]);
+            return res;
+          });
+
+        const promise2 = client
+          .mutate({
+            mutation,
+            optimisticResponse: optimisticResponse2,
+            updateQueries,
           })
-          .then(() => {
-            subscriptionHandle.unsubscribe();
+          .then(res => {
             checkBothMutationsAreApplied(
               'This one was created with a mutation.',
               'Second mutation.',
             );
+            const latestState = client.queryManager.mutationStore;
+            expect(latestState.get('5').loading).toBe(false);
+            expect(latestState.get('6').loading).toBe(false);
+
+            return res;
           });
+
+        const mutationsState = client.queryManager.mutationStore;
+        expect(mutationsState.get('5').loading).toBe(true);
+        expect(mutationsState.get('6').loading).toBe(true);
+
+        checkBothMutationsAreApplied(
+          'Optimistically generated',
+          'Optimistically generated 2',
+        );
+
+        await Promise.all([promise, promise2]);
+
+        subscriptionHandle.unsubscribe();
+        checkBothMutationsAreApplied(
+          'This one was created with a mutation.',
+          'Second mutation.',
+        );
+
       });
     });
 
@@ -422,41 +419,41 @@ describe('optimistic mutation results', () => {
         });
       };
 
-      it('handles a single error for a single mutation', () => {
+      it('handles a single error for a single mutation', async () => {
         expect.assertions(6);
-        return setup({
-          request: { query: mutation },
-          error: new Error('forbidden (test error)'),
-        })
-          .then(() => {
-            const promise = client.mutate({
-              mutation,
-              optimisticResponse,
-              update,
-            });
-
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-            expect((dataInStore['Todo99'] as any).text).toBe(
-              'Optimistically generated',
-            );
-
-            return promise;
+        try {
+          await setup({
+            request: { query: mutation },
+            error: new Error('forbidden (test error)'),
           })
-          .catch(err => {
-            expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe('Network error: forbidden (test error)');
 
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
-            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          const promise = client.mutate({
+            mutation,
+            optimisticResponse,
+            update,
           });
+
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+          expect((dataInStore['Todo99'] as any).text).toBe(
+            'Optimistically generated',
+          );
+
+          await promise;
+        } catch(err) {
+          expect(err).toBeInstanceOf(Error);
+          expect(err.message).toBe('Network error: forbidden (test error)');
+
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        }
       });
 
-      it('handles errors produced by one mutation in a series', () => {
+      it('handles errors produced by one mutation in a series', async () => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
-        return setup(
+        await setup(
           {
             request: { query: mutation },
             error: new Error('forbidden (test error)'),
@@ -466,66 +463,63 @@ describe('optimistic mutation results', () => {
             result: mutationResult2,
           },
         )
-          .then(() => {
-            // we have to actually subscribe to the query to be able to update it
-            return new Promise(resolve => {
-              const handle = client.watchQuery({ query });
-              subscriptionHandle = handle.subscribe({
-                next(res) {
-                  resolve(res);
-                },
-              });
-            });
-          })
-          .then(() => {
-            const promise = client
-              .mutate({
-                mutation,
-                optimisticResponse,
-                update,
-              })
-              .catch(err => {
-                // it is ok to fail here
-                expect(err).toBeInstanceOf(Error);
-                expect(err.message).toBe(
-                  'Network error: forbidden (test error)',
-                );
-                return null;
-              });
 
-            const promise2 = client.mutate({
-              mutation,
-              optimisticResponse: optimisticResponse2,
-              update,
-            });
-
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
-            expect((dataInStore['Todo99'] as any).text).toBe(
-              'Optimistically generated',
-            );
-            expect((dataInStore['Todo66'] as any).text).toBe(
-              'Optimistically generated 2',
-            );
-
-            return Promise.all([promise, promise2]);
-          })
-          .then(() => {
-            subscriptionHandle.unsubscribe();
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-            expect(dataInStore).toHaveProperty('Todo66');
-            expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-              realIdValue('Todo66', 'Todo'),
-            );
-            expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-              realIdValue('Todo99', 'Todo'),
-            );
+        // we have to actually subscribe to the query to be able to update it
+        await new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
+            },
           });
+        });
+
+        const promise = client
+          .mutate({
+            mutation,
+            optimisticResponse,
+            update,
+          })
+          .catch(err => {
+            // it is ok to fail here
+            expect(err).toBeInstanceOf(Error);
+            expect(err.message).toBe(
+              'Network error: forbidden (test error)',
+            );
+            return null;
+          });
+
+        const promise2 = client.mutate({
+          mutation,
+          optimisticResponse: optimisticResponse2,
+          update,
+        });
+
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
+        expect((dataInStore['Todo99'] as any).text).toBe(
+          'Optimistically generated',
+        );
+        expect((dataInStore['Todo66'] as any).text).toBe(
+          'Optimistically generated 2',
+        );
+
+        await Promise.all([promise, promise2]);
+
+        subscriptionHandle.unsubscribe();
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).toHaveProperty('Todo66');
+        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+          realIdValue('Todo66', 'Todo'),
+        );
+        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+          realIdValue('Todo99', 'Todo'),
+        );
       });
 
-      it('can run 2 mutations concurrently and handles all intermediate states well', () => {
+      it('can run 2 mutations concurrently and handles all intermediate states well', async () => {
         expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
@@ -545,7 +539,7 @@ describe('optimistic mutation results', () => {
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
         }
         let subscriptionHandle: Subscription;
-        return setup(
+        await setup(
           {
             request: { query: mutation },
             result: mutationResult,
@@ -568,61 +562,60 @@ describe('optimistic mutation results', () => {
               });
             });
           })
-          .then(() => {
-            const promise = client
-              .mutate({
-                mutation,
-                optimisticResponse,
-                update,
-              })
-              .then(res => {
-                checkBothMutationsAreApplied(
-                  'This one was created with a mutation.',
-                  'Optimistically generated 2',
-                );
-                const latestState = client.queryManager.mutationStore;
-                expect(latestState.get('5').loading).toBe(false);
-                expect(latestState.get('6').loading).toBe(true);
 
-                return res;
-              });
-
-            const promise2 = client
-              .mutate({
-                mutation,
-                optimisticResponse: optimisticResponse2,
-                update,
-              })
-              .then(res => {
-                checkBothMutationsAreApplied(
-                  'This one was created with a mutation.',
-                  'Second mutation.',
-                );
-                const latestState = client.queryManager.mutationStore;
-                expect(latestState.get('5').loading).toBe(false);
-                expect(latestState.get('6').loading).toBe(false);
-
-                return res;
-              });
-
-            const mutationsState = client.queryManager.mutationStore;
-            expect(mutationsState.get('5').loading).toBe(true);
-            expect(mutationsState.get('6').loading).toBe(true);
-
+        const promise = client
+          .mutate({
+            mutation,
+            optimisticResponse,
+            update,
+          })
+          .then(res => {
             checkBothMutationsAreApplied(
-              'Optimistically generated',
+              'This one was created with a mutation.',
               'Optimistically generated 2',
             );
+            const latestState = client.queryManager.mutationStore;
+            expect(latestState.get('5').loading).toBe(false);
+            expect(latestState.get('6').loading).toBe(true);
 
-            return Promise.all([promise, promise2]);
+            return res;
+          });
+
+        const promise2 = client
+          .mutate({
+            mutation,
+            optimisticResponse: optimisticResponse2,
+            update,
           })
-          .then(() => {
-            subscriptionHandle.unsubscribe();
+          .then(res => {
             checkBothMutationsAreApplied(
               'This one was created with a mutation.',
               'Second mutation.',
             );
+            const latestState = client.queryManager.mutationStore;
+            expect(latestState.get('5').loading).toBe(false);
+            expect(latestState.get('6').loading).toBe(false);
+
+            return res;
           });
+
+        const mutationsState = client.queryManager.mutationStore;
+        expect(mutationsState.get('5').loading).toBe(true);
+        expect(mutationsState.get('6').loading).toBe(true);
+
+        checkBothMutationsAreApplied(
+          'Optimistically generated',
+          'Optimistically generated 2',
+        );
+
+        await Promise.all([promise, promise2]);
+
+        subscriptionHandle.unsubscribe();
+        checkBothMutationsAreApplied(
+          'This one was created with a mutation.',
+          'Second mutation.',
+        );
+
       });
     });
   });

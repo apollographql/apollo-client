@@ -193,7 +193,7 @@ describe('optimistic mutation results', () => {
         await setup({
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
-        })
+        });
         try {
           const promise = client.mutate({
             mutation,
@@ -217,10 +217,10 @@ describe('optimistic mutation results', () => {
         }
       });
 
-      it('handles errors produced by one mutation in a series', () => {
+      it('handles errors produced by one mutation in a series', async () => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
-        return setup(
+        await setup(
           {
             request: { query: mutation },
             error: new Error('forbidden (test error)'),
@@ -229,64 +229,63 @@ describe('optimistic mutation results', () => {
             request: { query: mutation },
             result: mutationResult2,
           },
-        )
-          .then(() => {
-            // we have to actually subscribe to the query to be able to update it
-            return new Promise(resolve => {
-              const handle = client.watchQuery({ query });
-              subscriptionHandle = handle.subscribe({
-                next(res) {
-                  resolve(res);
-                },
-              });
-            });
-          })
-          .then(() => {
-            const promise = client
-              .mutate({
-                mutation,
-                optimisticResponse,
-                updateQueries,
-              })
-              .catch(err => {
-                // it is ok to fail here
-                expect(err).toBeInstanceOf(Error);
-                expect(err.message).toBe(
-                  'Network error: forbidden (test error)',
-                );
-                return null;
-              });
+        );
 
-            const promise2 = client.mutate({
-              mutation,
-              optimisticResponse: optimisticResponse2,
-              updateQueries,
-            });
-
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
-            expect((dataInStore['Todo99'] as any).text).toBe(
-              'Optimistically generated',
-            );
-            expect((dataInStore['Todo66'] as any).text).toBe(
-              'Optimistically generated 2',
-            );
-
-            return Promise.all([promise, promise2]);
-          })
-          .then(() => {
-            subscriptionHandle.unsubscribe();
-            const dataInStore = (client.cache as InMemoryCache).extract(true);
-            expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-            expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-            expect(dataInStore).toHaveProperty('Todo66');
-            expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-              realIdValue('Todo66', 'Todo'),
-            );
-            expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-              realIdValue('Todo99', 'Todo'),
-            );
+        // we have to actually subscribe to the query to be able to update it
+        await new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
+            },
           });
+        });
+
+
+        const promise = client
+          .mutate({
+            mutation,
+            optimisticResponse,
+            updateQueries,
+          })
+          .catch(err => {
+            // it is ok to fail here
+            expect(err).toBeInstanceOf(Error);
+            expect(err.message).toBe(
+              'Network error: forbidden (test error)',
+            );
+            return null;
+          });
+
+        const promise2 = client.mutate({
+          mutation,
+          optimisticResponse: optimisticResponse2,
+          updateQueries,
+        });
+
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
+        expect((dataInStore['Todo99'] as any).text).toBe(
+          'Optimistically generated',
+        );
+        expect((dataInStore['Todo66'] as any).text).toBe(
+          'Optimistically generated 2',
+        );
+
+        await Promise.all([promise, promise2]);
+
+        subscriptionHandle.unsubscribe();
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).toHaveProperty('Todo66');
+        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+          realIdValue('Todo66', 'Todo'),
+        );
+        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+          realIdValue('Todo99', 'Todo'),
+        );
+
       });
 
       it('can run 2 mutations concurrently and handles all intermediate states well', () => {

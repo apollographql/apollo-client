@@ -220,7 +220,7 @@ export class ObservableQuery<
     }
 
     if (queryStoreValue) {
-      result.loadingState = queryStoreValue.loadingState;
+      result.loadingState = queryStoreValue.compactedLoadingState;
     }
 
     if (!partial) {

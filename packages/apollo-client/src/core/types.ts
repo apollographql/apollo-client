@@ -46,13 +46,11 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
 
 /**
  * Define a new type for patches that are sent as a result of using defer.
- * Its is basically the same as ExecutionResult, except that it has a "path"
+ * It is basically the same as ExecutionResult, except that it has a "path"
  * field that keeps track of the where the patch is to be merged with the
  * original result.
  */
-export interface ExecutionPatchResult {
-  data?: { [key: string]: any };
-  errors?: GraphQLError[];
+export interface ExecutionPatchResult extends ExecutionResult {
   path: (string | number)[];
 }
 

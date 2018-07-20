@@ -41,9 +41,6 @@ export class DataStore<TSerialized> {
     result: ExecutionResult,
     patch: ExecutionPatchResult,
   ): void {
-    if (patch.errors) {
-    }
-
     if (result) {
       let curKeyIndex = 0;
       let curKey: string | number;

@@ -616,7 +616,7 @@ export class QueryManager<TStore> {
               // If loadingState is present, this is a patch from a deferred
               // query, and we should always treat it as a different result
               // even though the actual data might be the same (i.e. the patch's
-              // data could be null.
+              // data could be null).
               try {
                 observer.next(maybeDeepFreeze(resultFromStore));
               } catch (e) {
@@ -1110,7 +1110,7 @@ export class QueryManager<TStore> {
             // field, when the initial response arrives.
             let loadingState;
             if (!isPatch(result) && hasDirectives(['defer'], document)) {
-              loadingState = initDeferredFieldLoadingStates(document);
+              loadingState = this.initDeferredFieldLoadingStates(document);
             }
 
             this.queryStore.markQueryResult(
@@ -1259,117 +1259,129 @@ export class QueryManager<TStore> {
       },
     };
   }
-}
 
-/**
- * Recursive function that extracts a tree that mirrors the shape of the query,
- * adding _loading property to fields which are deferred.
- */
-function extractDeferredFieldsToTree(
-  selection: SelectionNode,
-  fragmentMap: Record<string, any>,
-): Record<string, any> | boolean {
-  const hasDeferDirective: boolean = (selection.directives &&
-    selection.directives.length > 0 &&
-    selection.directives.findIndex(directive => {
-      return directive.name.value === 'defer';
-    }) !== -1) as boolean;
-  const isLeaf: boolean =
-    selection.kind !== Kind.INLINE_FRAGMENT &&
-    (!(selection as FieldNode).selectionSet ||
-      (selection as FieldNode).selectionSet!.selections.length === 0);
+  /**
+   * Given a DocumentNode, traverse the tree and initialize loading states for
+   * all deferred fields.
+   */
+  private initDeferredFieldLoadingStates(doc: DocumentNode) {
+    // Collect all the fragment definitions
+    const fragmentMap: Record<string, SelectionNode[]> = {};
+    doc.definitions
+      .filter(definition => definition.kind === Kind.FRAGMENT_DEFINITION)
+      .forEach(definition => {
+        const fragmentName = (definition as FragmentDefinitionNode).name.value;
+        fragmentMap[
+          fragmentName
+        ] = (definition as FragmentDefinitionNode).selectionSet.selections;
+      });
 
-  if (isLeaf) {
-    return hasDeferDirective ? { _loading: true } : true;
+    const operationDefinition = doc.definitions.filter(
+      definition => definition.kind === Kind.OPERATION_DEFINITION,
+    )[0]; // Take the first element since we do not support multiple operations
+
+    return (this.extractDeferredFieldsToTree(
+      operationDefinition as any,
+      fragmentMap,
+    ) as Record<string, any>)._children;
   }
 
-  const map: { _loading?: boolean; _children?: Record<string, any> } = {
-    _loading: hasDeferDirective ? true : undefined,
-    _children: undefined,
-  };
+  /**
+   * Recursive function that extracts a tree that mirrors the shape of the query,
+   * adding _loading property to fields which are deferred.
+   */
+  private extractDeferredFieldsToTree(
+    selection: SelectionNode,
+    fragmentMap: Record<string, any>,
+  ): Record<string, any> | boolean {
+    const hasDeferDirective: boolean = (selection.directives &&
+      selection.directives.length > 0 &&
+      selection.directives.findIndex(directive => {
+        return directive.name.value === 'defer';
+      }) !== -1) as boolean;
+    const isLeaf: boolean =
+      selection.kind !== Kind.INLINE_FRAGMENT &&
+      (!(selection as FieldNode).selectionSet ||
+        (selection as FieldNode).selectionSet!.selections.length === 0);
 
-  // Replace FragmentSpreads with its actual selectionSet
-  const expandedFragments: SelectionNode[] = [];
-  (selection as FieldNode).selectionSet!.selections.forEach(childSelection => {
-    if (childSelection.kind === Kind.FRAGMENT_SPREAD) {
-      const fragmentName = childSelection.name.value;
-      fragmentMap[fragmentName].forEach((selection: SelectionNode) => {
-        expandedFragments.push(selection);
-      });
+    if (isLeaf) {
+      return hasDeferDirective ? { _loading: true } : true;
     }
-  });
 
-  // Remove FragmentSpreads
-  (selection as FieldNode).selectionSet!.selections = (selection as FieldNode).selectionSet!.selections.filter(
-    selection => selection.kind !== Kind.FRAGMENT_SPREAD,
-  );
+    const map: { _loading?: boolean; _children?: Record<string, any> } = {
+      _loading: hasDeferDirective ? true : undefined,
+      _children: undefined,
+    };
 
-  // Add expanded FragmentSpreads to the current selection set
-  expandedFragments.forEach(fragSelection => {
-    const fragFieldName = (fragSelection as FieldNode).name.value;
-    const existingSelection = (selection as FieldNode).selectionSet!.selections.find(
-      selection =>
-        selection.kind !== Kind.INLINE_FRAGMENT &&
-        (selection as FieldNode).name.value === fragFieldName,
-    );
-    if (existingSelection) {
-      const fragSelectionHasDefer =
-        fragSelection.directives &&
-        fragSelection.directives.findIndex(
-          directive => directive.name.value === 'defer',
-        ) >= 0;
-      if (!fragSelectionHasDefer) {
-        // Make sure that the existingSelection is not deferred, since all
-        // selections of the field must specify defer in order for the field
-        // to be deferred. This should match the behavior on apollo-server.
-        if (existingSelection.directives) {
-          existingSelection.directives = existingSelection.directives.filter(
-            directive => directive.name.value !== 'defer',
-          );
+    // Replace FragmentSpreads with its actual selectionSet
+    const expandedFragments: SelectionNode[] = [];
+    (selection as FieldNode).selectionSet!.selections.forEach(
+      childSelection => {
+        if (childSelection.kind === Kind.FRAGMENT_SPREAD) {
+          const fragmentName = childSelection.name.value;
+          fragmentMap[fragmentName].forEach((selection: SelectionNode) => {
+            expandedFragments.push(selection);
+          });
         }
-      }
-    } else {
-      // Add it to the selectionSet
-      (selection as FieldNode).selectionSet!.selections.push(fragSelection);
-    }
-  });
+      },
+    );
 
-  for (const childSelection of (selection as FieldNode).selectionSet!
-    .selections) {
-    const subtree = extractDeferredFieldsToTree(childSelection, fragmentMap);
-    if (subtree !== undefined) {
-      if (childSelection.kind === Kind.INLINE_FRAGMENT) {
-        if (typeof subtree !== 'boolean') {
-          map._children = Object.assign(map._children || {}, subtree._children);
+    // Remove FragmentSpreads
+    (selection as FieldNode).selectionSet!.selections = (selection as FieldNode).selectionSet!.selections.filter(
+      selection => selection.kind !== Kind.FRAGMENT_SPREAD,
+    );
+
+    // Add expanded FragmentSpreads to the current selection set
+    expandedFragments.forEach(fragSelection => {
+      const fragFieldName = (fragSelection as FieldNode).name.value;
+      const existingSelection = (selection as FieldNode).selectionSet!.selections.find(
+        selection =>
+          selection.kind !== Kind.INLINE_FRAGMENT &&
+          (selection as FieldNode).name.value === fragFieldName,
+      );
+      if (existingSelection) {
+        const fragSelectionHasDefer =
+          fragSelection.directives &&
+          fragSelection.directives.findIndex(
+            directive => directive.name.value === 'defer',
+          ) >= 0;
+        if (!fragSelectionHasDefer) {
+          // Make sure that the existingSelection is not deferred, since all
+          // selections of the field must specify defer in order for the field
+          // to be deferred. This should match the behavior on apollo-server.
+          if (existingSelection.directives) {
+            existingSelection.directives = existingSelection.directives.filter(
+              directive => directive.name.value !== 'defer',
+            );
+          }
         }
       } else {
-        if (!map._children) map._children = {};
-        const name = (childSelection as FieldNode).name.value;
-        map._children[name] = subtree;
+        // Add it to the selectionSet
+        (selection as FieldNode).selectionSet!.selections.push(fragSelection);
       }
-    }
-  }
-  return map;
-}
-
-function initDeferredFieldLoadingStates(doc: DocumentNode) {
-  // Collect all the fragment definitions
-  const fragmentMap: Record<string, SelectionNode[]> = {};
-  doc.definitions
-    .filter(definition => definition.kind === Kind.FRAGMENT_DEFINITION)
-    .forEach(definition => {
-      const fragmentName = (definition as FragmentDefinitionNode).name.value;
-      fragmentMap[
-        fragmentName
-      ] = (definition as FragmentDefinitionNode).selectionSet.selections;
     });
 
-  const operationDefinition = doc.definitions.filter(
-    definition => definition.kind === Kind.OPERATION_DEFINITION,
-  )[0]; // Take the first element since we do not support multiple operations
-
-  return (extractDeferredFieldsToTree(
-    operationDefinition as any,
-    fragmentMap,
-  ) as Record<string, any>)._children;
+    for (const childSelection of (selection as FieldNode).selectionSet!
+      .selections) {
+      const subtree = this.extractDeferredFieldsToTree(
+        childSelection,
+        fragmentMap,
+      );
+      if (subtree !== undefined) {
+        if (childSelection.kind === Kind.INLINE_FRAGMENT) {
+          if (typeof subtree !== 'boolean') {
+            map._children = Object.assign(
+              map._children || {},
+              subtree._children,
+            );
+          }
+        } else {
+          if (!map._children) map._children = {};
+          const name = (childSelection as FieldNode).name.value;
+          map._children[name] = subtree;
+        }
+      }
+    }
+    return map;
+  }
 }

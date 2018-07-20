@@ -13,8 +13,8 @@ export type QueryStoreValue = {
   networkStatus: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: GraphQLError[];
-  _loadingState?: Record<string, any>;
   loadingState?: Record<string, any>;
+  compactedLoadingState?: Record<string, any>;
   metadata: any;
 };
 
@@ -126,15 +126,17 @@ export class QueryStore {
 
     // Set up loadingState if it is passed in by QueryManager
     if (loadingState) {
-      this.store[queryId]._loadingState = loadingState;
-      this.store[queryId].loadingState = compactLoadingStateTree(loadingState);
+      this.store[queryId].loadingState = loadingState;
+      this.store[queryId].compactedLoadingState = this.compactLoadingStateTree(
+        loadingState,
+      );
     }
 
     if (isPatch(result)) {
       // Update loadingState for every patch received, by traversing its path
       const path = (result as ExecutionPatchResult).path;
       let index = 0;
-      const copy = cloneDeep(this.store[queryId]._loadingState);
+      const copy = cloneDeep(this.store[queryId].loadingState);
       let curPointer = copy;
       while (index < path.length) {
         const key = path[index++];
@@ -164,8 +166,10 @@ export class QueryStore {
         }
       }
 
-      this.store[queryId]._loadingState = copy;
-      this.store[queryId].loadingState = compactLoadingStateTree(copy);
+      this.store[queryId].loadingState = copy;
+      this.store[queryId].compactedLoadingState = this.compactLoadingStateTree(
+        copy,
+      );
 
       // Merge graphqlErrors from patch, if any
       if (result.errors) {
@@ -249,35 +253,37 @@ export class QueryStore {
         {} as { [queryId: string]: QueryStoreValue },
       );
   }
-}
 
-/**
- * Given a loadingState tree, it returns a compacted version of it that
- * reduces the amount of boilerplate code required to access nested fields.
- * The structure of this will mirror the response data, with deferred fields
- * set to undefined until its patch is received.
- */
-function compactLoadingStateTree(
-  loadingState?: Record<string, any>,
-): Record<string, any> | undefined {
-  if (!loadingState) return loadingState;
-  const state: Record<string, any> = {};
+  /**
+   * Given a loadingState tree, it returns a compacted version of it that
+   * reduces the amount of boilerplate code required to access nested fields.
+   * The structure of this will mirror the response data, with deferred fields
+   * set to undefined until its patch is received.
+   */
+  private compactLoadingStateTree(
+    loadingState?: Record<string, any>,
+  ): Record<string, any> | undefined {
+    if (!loadingState) return loadingState;
+    const state: Record<string, any> = {};
 
-  for (let key in loadingState) {
-    const o = loadingState[key];
-    if (o._loading) {
-      continue;
-    }
-    if (o._children) {
-      if (Array.isArray(o._children)) {
-        state[key] = o._children.map((c: any) => compactLoadingStateTree(c));
-      } else {
-        state[key] = compactLoadingStateTree(o._children);
+    for (let key in loadingState) {
+      const o = loadingState[key];
+      if (o._loading) {
+        continue;
       }
-      continue;
+      if (o._children) {
+        if (Array.isArray(o._children)) {
+          state[key] = o._children.map((c: any) =>
+            this.compactLoadingStateTree(c),
+          );
+        } else {
+          state[key] = this.compactLoadingStateTree(o._children);
+        }
+        continue;
+      }
+      state[key] = true;
     }
-    state[key] = true;
-  }
 
-  return state;
+    return state;
+  }
 }

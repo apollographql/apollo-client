@@ -3,8 +3,7 @@
 exports[`config warns about unsupported parameter 1`] = `
 Array [
   Array [
-    "ApolloBoost was initialized with unsupported options: link
-https://www.apollographql.com/docs/react/essentials/get-started.html#configuration",
+    "ApolloBoost was initialized with unsupported options: link",
   ],
 ]
 `;

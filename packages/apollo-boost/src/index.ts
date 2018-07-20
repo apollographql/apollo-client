@@ -28,8 +28,16 @@ export interface PresetConfig {
   cache?: ApolloCache<any>;
 }
 
-// infer this list from the above interface
-// using a typescript transform at compilation time.
+// Yes, these are the exact same as the `PresetConfig` interface. We're
+// defining these again so they can be used to verify that valid config
+// options are being used in the `DefaultClient` constructor, for clients
+// that aren't using Typescript. This duplication is unfortunate, and at
+// some point can likely be adjusted so these items are inferred from
+// the `PresetConfig` interface using a Typescript transform at compilation
+// time. Unfortunately, TS transforms with rollup don't appear to be quite
+// working properly, so this will have to be re-visited at some point.
+// For now, when updating the properties of the `PresetConfig` interface,
+// please also update this constant.
 const PRESET_CONFIG_KEYS = [
   'request',
   'uri',
@@ -43,24 +51,17 @@ const PRESET_CONFIG_KEYS = [
   'cache',
 ];
 
-function include<T>(b: T, a: Array<T>): boolean {
-  return a.indexOf(b) >= 0;
-}
-
-function difference<T>(a: Array<T>, b: Array<T>): Array<T> {
-  return a.filter(x => !include(x, b));
-}
-
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
   constructor(config: PresetConfig = {}) {
     if (config) {
-      const diff = difference(Object.keys(config), PRESET_CONFIG_KEYS);
+      const diff = Object.keys(config).filter(
+        key => PRESET_CONFIG_KEYS.indexOf(key) === -1,
+      );
 
       if (diff.length > 0) {
-        // prettier-ignore
         console.warn(
-          `ApolloBoost was initialized with unsupported options: ${diff.join(' ')}\n` +
-          `https://www.apollographql.com/docs/react/essentials/get-started.html#configuration`,
+          'ApolloBoost was initialized with unsupported options: ' +
+            `${diff.join(' ')}`,
         );
       }
     }

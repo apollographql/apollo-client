@@ -15,7 +15,8 @@
   [@Gamezpedia](https://github.com/Gamezpedia) in [#3612](https://github.com/apollographql/apollo-client/pull/3612)  
   [@jinxac](https://github.com/jinxac) in [#3647](https://github.com/apollographql/apollo-client/pull/3647)  
   [@abernix](https://github.com/abernix) in [#3705](https://github.com/apollographql/apollo-client/pull/3705)  
-  [@dandv](https://github.com/dandv) in [#3703](https://github.com/apollographql/apollo-client/pull/3703)
+  [@dandv](https://github.com/dandv) in [#3703](https://github.com/apollographql/apollo-client/pull/3703)  
+  [@hwillson](https://github.com/hwillson) in [#3580](https://github.com/apollographql/apollo-client/pull/3580)  
 - Updated `graphql` `peerDependencies` to handle 14.x versions.  
   [@ivank](https://github.com/ivank) in [#3598](https://github.com/apollographql/apollo-client/pull/3598)
 - Add optional generic type params for variables on low level methods.  

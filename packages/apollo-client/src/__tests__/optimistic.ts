@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs';
+import {  take, toArray } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
 import { addTypenameToDocument } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -1029,8 +1031,9 @@ describe('optimistic mutation results', () => {
       );
     });
 
-    it('will handle dependent updates', done => {
-      expect.assertions(5);
+    it('will handle dependent updates', async () => {
+      // expect.assertions(5);
+      expect.assertions(1);
       link = mockSingleLink(
         {
           request: { query },
@@ -1094,8 +1097,17 @@ describe('optimistic mutation results', () => {
         }),
       });
 
+      const createObservable = () => Observable.create(observer => {
+        client.watchQuery({ query }).subscribe({
+          next: value => {
+            observer.next(stripSymbols(value.data.todoList.todos))
+          },
+          error: error => observer.error(error)
+        })
+      })
+
       const defaultTodos = stripSymbols(result.data.todoList.todos);
-      let count = 0;
+      /*let count = 0;
 
       client.watchQuery({ query }).subscribe({
         next: (value: any) => {
@@ -1138,25 +1150,29 @@ describe('optimistic mutation results', () => {
           }
         },
         error: error => done.fail(error),
-      });
+      });*/
 
-      function twoMutations() {
-        client
-          .mutate({
-            mutation,
-            optimisticResponse: customOptimisticResponse1,
-            updateQueries,
-          })
-          .catch(error => done.fail(error));
 
-        client
-          .mutate({
-            mutation,
-            optimisticResponse: customOptimisticResponse2,
-            updateQueries,
-          })
-          .catch(error => done.fail(error));
-      }
+      const allValues$ = createObservable().pipe(take(1));
+
+      await client.mutate({
+        mutation,
+        optimisticResponse: customOptimisticResponse1,
+        updateQueries,
+      })
+
+      await client.mutate({
+        mutation,
+        optimisticResponse: customOptimisticResponse2,
+        updateQueries,
+      })
+
+      // Get an array of all the values [over time] on the queryObservable
+      const allValues = await allValues$.pipe(toArray()).toPromise();
+      expect(allValues).toEqual([
+        defaultTodos
+      ]);
+
     });
   });
 

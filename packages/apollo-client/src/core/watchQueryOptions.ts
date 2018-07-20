@@ -131,7 +131,7 @@ export type SubscribeToMoreOptions<
   onError?: (error: Error) => void;
 };
 
-export interface SubscriptionOptions {
+export interface SubscriptionOptions<TVariables = OperationVariables> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single subscription inside of it.
@@ -142,12 +142,15 @@ export interface SubscriptionOptions {
    * An object that maps from the name of a variable as used in the subscription
    * GraphQL document to that variable's value.
    */
-  variables?: { [key: string]: any };
+  variables?: TVariables;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
-export interface MutationBaseOptions<T = { [key: string]: any }> {
+export interface MutationBaseOptions<
+  T = { [key: string]: any },
+  TVariables = OperationVariables
+> {
   /**
    * An object that represents the result of this mutation that will be
    * optimistically stored before the server has actually returned a result.
@@ -205,11 +208,13 @@ export interface MutationBaseOptions<T = { [key: string]: any }> {
    * An object that maps from the name of a variable as used in the mutation
    * GraphQL document to that variable's value.
    */
-  variables?: any;
+  variables?: TVariables;
 }
 
-export interface MutationOptions<T = { [key: string]: any }>
-  extends MutationBaseOptions<T> {
+export interface MutationOptions<
+  T = { [key: string]: any },
+  TVariables = OperationVariables
+> extends MutationBaseOptions<T, TVariables> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single mutation inside of it.
@@ -217,7 +222,14 @@ export interface MutationOptions<T = { [key: string]: any }>
   mutation: DocumentNode;
 
   /**
-   * Context to be passed to link execution chain
+   * The context to be passed to the link execution chain. This context will
+   * only be used with the mutation. It will not be used with
+   * `refetchQueries`. Refetched queries use the context they were
+   * initialized with (since the intitial context is stored as part of the
+   * `ObservableQuery` instance). If a specific context is needed when
+   * refetching queries, make sure it is configured (via the
+   * [`query` `context` option](/docs/react/api/apollo-client.html#ApolloClient.query))
+   * when the query is first initialized/run.
    */
   context?: any;
 

@@ -50,7 +50,7 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.110",
+    "@types/lodash": "4.14.112",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
@@ -59,7 +59,7 @@
     "rimraf": "2.6.2",
     "rollup": "0.62.0",
     "ts-jest": "20.0.14",
-    "tslint": "5.10.0",
+    "tslint": "5.11.0",
     "typescript": "2.9.2",
     "uglifyjs": "2.4.11"
   },

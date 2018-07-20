@@ -11,8 +11,16 @@
   [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644)
   [@gbau](https://github.com/gbau) in [#3644](https://github.com/apollographql/apollo-client/pull/3600)  
   [@chentsulin](https://github.com/chentsulin) in [#3608](https://github.com/apollographql/apollo-client/pull/3608)  
+  [@MikaelCarpenter](https://github.com/MikaelCarpenter) in [#3609](https://github.com/apollographql/apollo-client/pull/3609)  
+  [@Gamezpedia](https://github.com/Gamezpedia) in [#3612](https://github.com/apollographql/apollo-client/pull/3612)  
+  [@jinxac](https://github.com/jinxac) in [#3647](https://github.com/apollographql/apollo-client/pull/3647)  
+  [@abernix](https://github.com/abernix) in [#3705](https://github.com/apollographql/apollo-client/pull/3705)  
+  [@dandv](https://github.com/dandv) in [#3703](https://github.com/apollographql/apollo-client/pull/3703)  
+  [@hwillson](https://github.com/hwillson) in [#3580](https://github.com/apollographql/apollo-client/pull/3580)  
 - Updated `graphql` `peerDependencies` to handle 14.x versions.  
   [@ivank](https://github.com/ivank) in [#3598](https://github.com/apollographql/apollo-client/pull/3598)
+- Add optional generic type params for variables on low level methods.  
+  [@mvestergaard](https://github.com/mvestergaard) in [#3588](https://github.com/apollographql/apollo-client/pull/3588)
 
 ### Apollo Boost (vNext)
 
@@ -23,6 +31,19 @@
 
 - Add support for arrays to `graphql-anywhere`'s filter utility.  
   [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
+- Fix `Cannot convert object to primitive value` error that was showing up
+  when attempting to report a missing property on an object.  
+  [@benjie](https://github.com/benjie) in [#3618](https://github.com/apollographql/apollo-client/pull/3618)
+
+### Apollo Cache In-Memory (vNext)
+
+- Add `__typename` and `id` properties to `dataIdFromObject` parameter
+  (typescript)  
+  [@jfurler](https://github.com/jfurler) in [#3641](https://github.com/apollographql/apollo-client/pull/3641)
+- Fixed an issue caused by `dataIdFromObject` considering returned 0 values to
+  be falsy, instead of being a valid ID, which lead to the store not being
+  updated properly in some cases.  
+  [@hwillson](https://github.com/hwillson) in [#3711](https://github.com/apollographql/apollo-client/pull/3711)
 
 ## 2.3.5 (June 19, 2018)
 

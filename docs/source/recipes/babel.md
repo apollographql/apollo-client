@@ -71,7 +71,7 @@ const query = gql`
 `;
 ```
 
-## Using babel-plugin-graphql-ast
+## Using babel-plugin-import-graphql
 
 Install the plugin in your dev dependencies:
 
@@ -143,4 +143,4 @@ const query = gql`
 `;
 ```
 
-With `babel-plugin-import-graphql`, you can just include your fragment in your GraphQL file along-side whatever uses it, or even import it from a separate file using the GraphQL `#import` syntax. See the [README](https://github.com/detrohutt/babel-plugin-import-graphql) for more information.
+With `babel-plugin-import-graphql`, you can just include your fragment in your GraphQL file along-side whatever uses it, or even import it from a separate file using the `#import` syntax. See the [README](https://github.com/detrohutt/babel-plugin-import-graphql) for more information.

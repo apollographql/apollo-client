@@ -1110,7 +1110,10 @@ export class QueryManager<TStore> {
             // field, when the initial response arrives.
             let loadingState;
             if (!isPatch(result) && hasDirectives(['defer'], document)) {
-              loadingState = this.initDeferredFieldLoadingStates(document);
+              loadingState = this.initDeferredFieldLoadingStates(
+                document,
+                result,
+              );
             }
 
             this.queryStore.markQueryResult(
@@ -1264,7 +1267,10 @@ export class QueryManager<TStore> {
    * Given a DocumentNode, traverse the tree and initialize loading states for
    * all deferred fields.
    */
-  private initDeferredFieldLoadingStates(doc: DocumentNode) {
+  private initDeferredFieldLoadingStates(
+    doc: DocumentNode,
+    result: ExecutionResult,
+  ) {
     // Collect all the fragment definitions
     const fragmentMap: Record<string, SelectionNode[]> = {};
     doc.definitions
@@ -1283,16 +1289,21 @@ export class QueryManager<TStore> {
     return (this.extractDeferredFieldsToTree(
       operationDefinition as any,
       fragmentMap,
+      result.data,
     ) as Record<string, any>)._children;
   }
 
   /**
    * Recursive function that extracts a tree that mirrors the shape of the query,
-   * adding _loading property to fields which are deferred.
+   * adding _loading property to fields which are deferred. Expands
+   * FragmentSpread according to the fragment map that is passed in.
+   * The actual data from the initial response is passed in so that we can
+   * reference the query schema against the data, and handle arrays that we find.
    */
   private extractDeferredFieldsToTree(
     selection: SelectionNode,
     fragmentMap: Record<string, any>,
+    data: Record<string, any> | undefined,
   ): Record<string, any> | boolean {
     const hasDeferDirective: boolean = (selection.directives &&
       selection.directives.length > 0 &&
@@ -1363,22 +1374,46 @@ export class QueryManager<TStore> {
 
     for (const childSelection of (selection as FieldNode).selectionSet!
       .selections) {
-      const subtree = this.extractDeferredFieldsToTree(
-        childSelection,
-        fragmentMap,
-      );
-      if (subtree !== undefined) {
-        if (childSelection.kind === Kind.INLINE_FRAGMENT) {
-          if (typeof subtree !== 'boolean') {
-            map._children = Object.assign(
-              map._children || {},
-              subtree._children,
-            );
+      if (childSelection.kind === Kind.INLINE_FRAGMENT) {
+        const subtree = this.extractDeferredFieldsToTree(
+          childSelection,
+          fragmentMap,
+          data,
+        );
+        if (typeof subtree !== 'boolean') {
+          // Not a leaf node
+          map._children = Object.assign(map._children || {}, subtree._children);
+        }
+      } else {
+        const childName = (childSelection as FieldNode).name.value;
+        let childData;
+        let isArray = false;
+        if (data) {
+          childData = data[childName];
+          isArray = Array.isArray(childData);
+        }
+        const subtree = this.extractDeferredFieldsToTree(
+          childSelection,
+          fragmentMap,
+          // Just pass in the first elem of array, all of them will have
+          // the same fields
+          isArray && childData.length !== 0 ? childData[0] : childData,
+        );
+
+        if (!map._children) map._children = {};
+        if (isArray) {
+          // Make sure that the shape of loadingState matches the shape of the
+          // data. If an array is returned for a field, the loadingState should
+          // be initialized with the correct number of elements.
+          const subtreeArr = [];
+          for (let i = 0; i < childData.length; i++) {
+            if (typeof subtree !== 'boolean') {
+              subtreeArr.push(subtree._children);
+            }
           }
+          map._children[childName] = { _children: subtreeArr };
         } else {
-          if (!map._children) map._children = {};
-          const name = (childSelection as FieldNode).name.value;
-          map._children[name] = subtree;
+          map._children[childName] = subtree;
         }
       }
     }

@@ -160,7 +160,7 @@ export class QueryStore {
             curPointer!._loading = false;
             break;
           }
-          if (curPointer!._children) {
+          if (curPointer && curPointer!._children) {
             curPointer = curPointer!._children;
           }
         }

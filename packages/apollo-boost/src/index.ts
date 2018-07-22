@@ -13,7 +13,7 @@ import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import ApolloClient from 'apollo-client';
 
-export { gql, InMemoryCache, HttpLink };
+export { gql, InMemoryCache, HttpLink, onError, withClientState };
 
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;

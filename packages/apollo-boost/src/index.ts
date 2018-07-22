@@ -26,6 +26,12 @@ export interface PresetConfig {
   onError?: ErrorLink.ErrorHandler;
   cacheRedirects?: CacheResolverMap;
   cache?: ApolloCache<any>;
+  injectLinks?: (
+    errorLink: ApolloLink,
+    requestHandler: ApolloLink | false,
+    stateLink: ApolloLink | false,
+    httpLink: ApolloLink,
+  ) => ApolloLink[];
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -75,6 +81,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       fetchOptions,
       clientState,
       cacheRedirects,
+      injectLinks,
       onError: errorCallback,
     } = config;
 
@@ -148,14 +155,12 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       headers: headers || {},
     });
 
-    const link = ApolloLink.from([
-      errorLink,
-      requestHandler,
-      stateLink,
-      httpLink,
-    ].filter(x => !!x) as ApolloLink[]);
+    let links = injectLinks
+      ? injectLinks(errorLink, requestHandler, stateLink, httpLink)
+      : [errorLink, requestHandler, stateLink, httpLink];
+    links = links.filter(x => !!x);
 
     // super hacky, we will fix the types eventually
-    super({ cache, link } as any);
+    super({ cache, link: ApolloLink.from(links as ApolloLink[]) } as any);
   }
 }

@@ -87,6 +87,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   - We include a default error handler to log out your errors for you. If you would like to handle your errors differently, specify this function
 - clientState: An object representing your configuration for `apollo-link-state`. This is useful if you would like to use the Apollo cache for local state management. Learn more in our [quick start](https://www.apollographql.com/docs/link/links/state.html#start).
 - cacheRedirects: An map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](https://www.apollographql.com/docs/react/advanced/caching.html#cacheRedirect).
+- injectLinks: a function that takes the default links of Apollo-boost and allows you to inject your own link at the position you want. This is useful when you want to add a custom link but want to continue using apollo-boost
 
 That's it! Here's an example of all those options in action:
 

@@ -1097,7 +1097,7 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      const createObservable = () => Observable.create(observer => {
+      const createResponse$ = () => Observable.create(observer => {
         client.watchQuery({ query }).subscribe({
           next: value => {
             observer.next(stripSymbols(value.data.todoList.todos))
@@ -1153,7 +1153,7 @@ describe('optimistic mutation results', () => {
       });*/
 
 
-      const allValues$ = createObservable().pipe(take(1));
+      const responses$ = createResponse$();
 
       await client.mutate({
         mutation,
@@ -1167,9 +1167,15 @@ describe('optimistic mutation results', () => {
         updateQueries,
       })
 
-      // Get an array of all the values [over time] on the queryObservable
-      const allValues = await allValues$.pipe(toArray()).toPromise();
-      expect(allValues).toEqual([
+      // all the responses that happened over time as an array of responses
+      const responses = await responses$
+        .pipe(
+          take(1),
+          toArray(),
+        )
+        .toPromise();
+
+      expect(responses).toEqual([
         defaultTodos
       ]);
 

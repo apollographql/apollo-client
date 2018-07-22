@@ -69,7 +69,7 @@
     "browserify": "15.2.0",
     "bundlesize": "0.17.0",
     "danger": "1.1.0",
-    "flow-bin": "0.76.0",
+    "flow-bin": "0.77.0",
     "github": "12.1.0",
     "graphql": "14.0.0-rc.2",
     "graphql-tag": "2.9.2",

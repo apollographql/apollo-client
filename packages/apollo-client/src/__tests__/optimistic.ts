@@ -1032,7 +1032,6 @@ describe('optimistic mutation results', () => {
     });
 
     it('will handle dependent updates', async () => {
-      // expect.assertions(5);
       expect.assertions(1);
       link = mockSingleLink(
         {
@@ -1097,88 +1096,62 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      const createResponse$ = () => Observable.create(observer => {
-        client.watchQuery({ query }).subscribe({
-          next: value => {
-            observer.next(stripSymbols(value.data.todoList.todos))
-          },
-          error: error => observer.error(error)
-        })
-      })
+      // Have to wrap the QueryObservable with an rxjs observable due to bug
+      // https://github.com/apollographql/apollo-client/issues/3721
+      const promise = Observable.create(observer =>
+        client
+          .watchQuery({ query })
+          .subscribe({
+            next: value => observer.next(stripSymbols(value.data.todoList.todos))
+          })
+      )
+        .pipe(
+          take(5),
+          toArray(),
+        )
+        .toPromise()
 
-      const defaultTodos = stripSymbols(result.data.todoList.todos);
-      /*let count = 0;
+      // Mutations will not trigger a watchQuery with the results of an optimistic response
+      // if set in the same tick of the event loop.
+      // https://github.com/apollographql/apollo-client/issues/3723
+      await new Promise(setTimeout)
 
-      client.watchQuery({ query }).subscribe({
-        next: (value: any) => {
-          const todos = stripSymbols(value.data.todoList.todos);
-          switch (count++) {
-            case 0:
-              expect(defaultTodos).toEqual(todos);
-              twoMutations();
-              break;
-            case 1:
-              expect([
-                customOptimisticResponse1.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 2:
-              expect([
-                customOptimisticResponse2.createTodo,
-                customOptimisticResponse1.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 3:
-              expect([
-                customOptimisticResponse2.createTodo,
-                mutationResult.data.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 4:
-              expect([
-                mutationResult2.data.createTodo,
-                mutationResult.data.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              done();
-              break;
-            default:
-              done.fail(new Error('Next should not have been called again.'));
-          }
-        },
-        error: error => done.fail(error),
-      });*/
-
-
-      const responses$ = createResponse$();
-
-      await client.mutate({
+      client.mutate({
         mutation,
         optimisticResponse: customOptimisticResponse1,
         updateQueries,
       })
 
-      await client.mutate({
+      client.mutate({
         mutation,
         optimisticResponse: customOptimisticResponse2,
         updateQueries,
       })
 
-      // all the responses that happened over time as an array of responses
-      const responses = await responses$
-        .pipe(
-          take(1),
-          toArray(),
-        )
-        .toPromise();
-
+      const responses = await promise
+      const defaultTodos = stripSymbols(result.data.todoList.todos);
       expect(responses).toEqual([
-        defaultTodos
+        defaultTodos,
+        [
+          customOptimisticResponse1.createTodo,
+          ...defaultTodos,
+        ],
+        [
+          customOptimisticResponse2.createTodo,
+          customOptimisticResponse1.createTodo,
+          ...defaultTodos,
+        ],
+        [
+          customOptimisticResponse2.createTodo,
+          mutationResult.data.createTodo,
+          ...defaultTodos,
+        ],
+        [
+          mutationResult2.data.createTodo,
+          mutationResult.data.createTodo,
+          ...defaultTodos,
+        ]
       ]);
-
     });
   });
 

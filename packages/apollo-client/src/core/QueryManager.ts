@@ -122,6 +122,7 @@ export class QueryManager<TStore> {
     optimisticResponse,
     updateQueries: updateQueriesByName,
     refetchQueries = [],
+    awaitRefetchQueries = false,
     update: updateWithProxyFn,
     errorPolicy = 'none',
     fetchPolicy,
@@ -233,7 +234,9 @@ export class QueryManager<TStore> {
           );
         }
 
-        await Promise.all(refetchQueryPromises);
+        if (awaitRefetchQueries) {
+          await Promise.all(refetchQueryPromises);
+        }
 
         this.setQuery(mutationId, () => ({ document: undefined }));
         if (

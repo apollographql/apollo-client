@@ -21,6 +21,11 @@
   [@ivank](https://github.com/ivank) in [#3598](https://github.com/apollographql/apollo-client/pull/3598)
 - Add optional generic type params for variables on low level methods. <br/>
   [@mvestergaard](https://github.com/mvestergaard) in [#3588](https://github.com/apollographql/apollo-client/pull/3588)
+- Add a new `awaitRefetchQueries` config option to the Apollo Client
+  `mutate` function, that when set to `true` will wait for all
+  `refetchQueries` to be fully refetched, before resolving the mutation
+  call. `awaitRefetchQueries` is `false` by default. <br/>
+  [@jzimmek](https://github.com/jzimmek) in [#](https://github.com/apollographql/apollo-client/pull/3169)
 
 ### Apollo Boost (vNext)
 

@@ -1,6 +1,5 @@
-import ApolloClient, { gql } from '../';
+import ApolloClient, { gql, InMemoryCache } from '../';
 import { stripSymbols } from 'apollo-utilities';
-import { HttpLink } from 'apollo-link-http';
 import * as fetchMock from 'fetch-mock';
 
 global.fetch = jest.fn(() =>
@@ -21,6 +20,33 @@ describe('config', () => {
       foo: () => 'woo',
     },
   };
+
+  it('warns about unsupported parameter', () => {
+    jest.spyOn(global.console, 'warn');
+
+    const client = new ApolloClient({
+      link: [],
+    });
+
+    expect(global.console.warn.mock.calls).toMatchSnapshot();
+  });
+
+  it('allows you to pass in a custom fetcher', () => {
+    const customFetcher = jest.fn(() =>
+      Promise.resolve({
+        text: () => Promise.resolve('{"data": {"foo": "bar" }}'),
+      }),
+    );
+
+    const client = new ApolloClient({
+      fetch: customFetcher,
+    });
+
+    client.query({ query }).then(({ data }) => {
+      expect(customFetcher).toHaveBeenCalledTimes(1);
+      expect(stripSymbols(data)).toEqual({ foo: 'bar' });
+    });
+  });
 
   it('allows you to pass in a request handler', () => {
     let requestCalled;
@@ -58,6 +84,28 @@ describe('config', () => {
         expect(stripSymbols(data)).toEqual({ foo: 'woo' });
         expect(requestCalled).toEqual(true);
       });
+  });
+
+  it('throws if passed cache and cacheRedirects', () => {
+    const cache = new InMemoryCache();
+    const cacheRedirects = { Query: { foo: () => 'woo' } };
+
+    expect(_ => {
+      const client = new ApolloClient({
+        cache,
+        cacheRedirects,
+      });
+    }).toThrow('Incompatible cache configuration');
+  });
+
+  it('allows you to pass in cache', () => {
+    const cache = new InMemoryCache();
+
+    const client = new ApolloClient({
+      cache,
+    });
+
+    expect(client.cache).toBe(cache);
   });
 
   it('allows you to pass in cacheRedirects', () => {

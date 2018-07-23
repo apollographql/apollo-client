@@ -26,6 +26,7 @@ import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
 
 import {
+  QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
@@ -528,7 +529,7 @@ export class QueryManager<TStore> {
             this.setQuery(queryId, () => ({ newData: null }));
 
             data = newData.result;
-            isMissing = !newData.complete ? !newData.complete : false;
+            isMissing = !newData.complete || false;
           } else {
             if (lastResult && lastResult.data && !errorStatusChanged) {
               data = lastResult.data;
@@ -655,10 +656,11 @@ export class QueryManager<TStore> {
     });
   }
 
-  public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
+  public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {
     if (!options.query) {
       throw new Error(
-        'query option is required. You must specify your GraphQL document in the query option.',
+        'query option is required. You must specify your GraphQL document ' +
+          'in the query option.',
       );
     }
 
@@ -673,13 +675,6 @@ export class QueryManager<TStore> {
     if ((options as any).pollInterval) {
       throw new Error('pollInterval option only supported on watchQuery.');
     }
-
-    if (typeof options.notifyOnNetworkStatusChange !== 'undefined') {
-      throw new Error(
-        'Cannot call "query" with "notifyOnNetworkStatusChange" option. Only "watchQuery" has that option.',
-      );
-    }
-    options.notifyOnNetworkStatusChange = false;
 
     const requestId = this.idCounter;
 

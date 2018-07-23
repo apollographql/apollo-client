@@ -2,11 +2,38 @@
 
 ### vNext
 
+- Updated `graphql` `peerDependencies` to handle 14.x versions.  
+  [PR #3598](https://github.com/apollographql/apollo-client/pull/3598)
+
+### 2.3.5
+
+- Internal code formatting updates.
+  [PR #3574](https://github.com/apollographql/apollo-client/pull/3574)
+
+### 2.3.4
+
+- Export the `QueryOptions` interface, to make sure it can be used by other
+  projects (like `apollo-angular`).
+- Fixed an issue caused by typescript changes to the constructor
+  `defaultOptions` param, that prevented `query` defaults from passing type
+  checks.
+  [Issue #3583](https://github.com/apollographql/apollo-client/issues/3583)
+  [PR #3585](https://github.com/apollographql/apollo-client/pull/3585)
+
+### 2.3.3
+
 - Typescript improvements. Made observable query parameterized on data and
   variables: `ObservableQuery<TData, TVariables>`
   [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
 - Added optional generics to cache manipulation methods (typescript).
   [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
+- Typescript improvements. Created a new `QueryOptions` interface that  
+  is now used by `ApolloClient.query` options, instead of the previous
+  `WatchQueryOptions` interface. This helps reduce confusion (especially
+  in the docs) that made it look like `ApolloClient.query` accepted
+  `ApolloClient.watchQuery` only options, like `pollingInterval`.
+  [Issue #3395](https://github.com/apollographql/apollo-client/issues/3395)
+  [PR #3569](https://github.com/apollographql/apollo-client/pull/3569)
 
 ### 2.3.2
 

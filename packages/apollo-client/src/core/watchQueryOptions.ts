@@ -34,20 +34,14 @@ export type FetchPolicy =
 export type ErrorPolicy = 'none' | 'ignore' | 'all';
 
 /**
- * We can change these options to an ObservableQuery
+ * Common options shared across all query interfaces.
  */
-export interface ModifiableWatchQueryOptions<TVariables = OperationVariables> {
+export interface QueryBaseOptions<TVariables = OperationVariables> {
   /**
    * A map going from variable name to variable value, where the variables are used
    * within the GraphQL query.
    */
   variables?: TVariables;
-
-  /**
-   * The time interval (in milliseconds) on which this query should be
-   * refetched from the server.
-   */
-  pollInterval?: number;
 
   /**
    * Specifies the {@link FetchPolicy} to be used for this query
@@ -63,23 +57,19 @@ export interface ModifiableWatchQueryOptions<TVariables = OperationVariables> {
    * Whether or not to fetch results
    */
   fetchResults?: boolean;
-
-  /**
-   * Whether or not updates to the network status should trigger next on the observer of this query
-   */
-  notifyOnNetworkStatusChange?: boolean;
 }
 
 /**
- * The argument to a query
+ * Query options.
  */
-export interface WatchQueryOptions<TVariables = OperationVariables>
-  extends ModifiableWatchQueryOptions<TVariables> {
+export interface QueryOptions<TVariables = OperationVariables>
+  extends QueryBaseOptions<TVariables> {
   /**
    * A GraphQL document that consists of a single query to be sent down to the
    * server.
    */
-  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a lot of tests.
+  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a
+  // lot of tests.
   query: DocumentNode;
 
   /**
@@ -93,6 +83,30 @@ export interface WatchQueryOptions<TVariables = OperationVariables>
    */
   context?: any;
 }
+
+/**
+ * We can change these options to an ObservableQuery
+ */
+export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
+  extends QueryBaseOptions<TVariables> {
+  /**
+   * The time interval (in milliseconds) on which this query should be
+   * refetched from the server.
+   */
+  pollInterval?: number;
+
+  /**
+   * Whether or not updates to the network status should trigger next on the observer of this query
+   */
+  notifyOnNetworkStatusChange?: boolean;
+}
+
+/**
+ * Watched query options.
+ */
+export interface WatchQueryOptions<TVariables = OperationVariables>
+  extends QueryOptions<TVariables>,
+    ModifiableWatchQueryOptions<TVariables> {}
 
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   query?: DocumentNode;
@@ -117,7 +131,7 @@ export type SubscribeToMoreOptions<
   onError?: (error: Error) => void;
 };
 
-export interface SubscriptionOptions {
+export interface SubscriptionOptions<TVariables = OperationVariables> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single subscription inside of it.
@@ -128,12 +142,15 @@ export interface SubscriptionOptions {
    * An object that maps from the name of a variable as used in the subscription
    * GraphQL document to that variable's value.
    */
-  variables?: { [key: string]: any };
+  variables?: TVariables;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
-export interface MutationBaseOptions<T = { [key: string]: any }> {
+export interface MutationBaseOptions<
+  T = { [key: string]: any },
+  TVariables = OperationVariables
+> {
   /**
    * An object that represents the result of this mutation that will be
    * optimistically stored before the server has actually returned a result.
@@ -191,11 +208,13 @@ export interface MutationBaseOptions<T = { [key: string]: any }> {
    * An object that maps from the name of a variable as used in the mutation
    * GraphQL document to that variable's value.
    */
-  variables?: any;
+  variables?: TVariables;
 }
 
-export interface MutationOptions<T = { [key: string]: any }>
-  extends MutationBaseOptions<T> {
+export interface MutationOptions<
+  T = { [key: string]: any },
+  TVariables = OperationVariables
+> extends MutationBaseOptions<T, TVariables> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single mutation inside of it.
@@ -203,7 +222,14 @@ export interface MutationOptions<T = { [key: string]: any }>
   mutation: DocumentNode;
 
   /**
-   * Context to be passed to link execution chain
+   * The context to be passed to the link execution chain. This context will
+   * only be used with the mutation. It will not be used with
+   * `refetchQueries`. Refetched queries use the context they were
+   * initialized with (since the intitial context is stored as part of the
+   * `ObservableQuery` instance). If a specific context is needed when
+   * refetching queries, make sure it is configured (via the
+   * [`query` `context` option](/docs/react/api/apollo-client.html#ApolloClient.query))
+   * when the query is first initialized/run.
    */
   context?: any;
 

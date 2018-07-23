@@ -206,6 +206,10 @@ export class QueryManager<TStore> {
 
         this.broadcastQueries();
 
+        if (error) {
+          throw error;
+        }
+
         // allow for conditional refetches
         // XXX do we want to make this the only API one day?
         if (typeof refetchQueries === 'function') {

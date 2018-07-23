@@ -192,6 +192,61 @@ export class QueryManager<TStore> {
         ...context,
         optimisticResponse,
       });
+
+      const completeMutation = async () => {
+        if (error) {
+          this.mutationStore.markMutationError(mutationId, error);
+        }
+
+        this.dataStore.markMutationComplete({
+          mutationId,
+          optimisticResponse,
+        });
+
+        this.broadcastQueries();
+
+        // allow for conditional refetches
+        // XXX do we want to make this the only API one day?
+        if (typeof refetchQueries === 'function') {
+          refetchQueries = refetchQueries(storeResult as ExecutionResult);
+        }
+
+        const refetchQueryPromises: Promise<
+          ApolloQueryResult<any>[] | ApolloQueryResult<{}>
+        >[] = [];
+
+        for (const refetchQuery of refetchQueries) {
+          if (typeof refetchQuery === 'string') {
+            const promise = this.refetchQueryByName(refetchQuery);
+            if (promise) {
+              refetchQueryPromises.push(promise);
+            }
+            continue;
+          }
+
+          refetchQueryPromises.push(
+            this.query({
+              query: refetchQuery.query,
+              variables: refetchQuery.variables,
+              fetchPolicy: 'network-only',
+            }),
+          );
+        }
+
+        await Promise.all(refetchQueryPromises);
+
+        this.setQuery(mutationId, () => ({ document: undefined }));
+        if (
+          errorPolicy === 'ignore' &&
+          storeResult &&
+          graphQLResultHasError(storeResult)
+        ) {
+          delete storeResult.errors;
+        }
+
+        return storeResult as FetchResult<T>;
+      };
+
       execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
@@ -215,6 +270,7 @@ export class QueryManager<TStore> {
           }
           storeResult = result as FetchResult<T>;
         },
+
         error: (err: Error) => {
           this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete({
@@ -230,52 +286,8 @@ export class QueryManager<TStore> {
             }),
           );
         },
-        complete: async () => {
-          try {
-            if (error) {
-              this.mutationStore.markMutationError(mutationId, error);
-            }
 
-            this.dataStore.markMutationComplete({
-              mutationId,
-              optimisticResponse,
-            });
-
-            this.broadcastQueries();
-
-            // allow for conditional refetches
-            // XXX do we want to make this the only API one day?
-            if (typeof refetchQueries === 'function') {
-              refetchQueries = refetchQueries(storeResult as ExecutionResult);
-            }
-
-            for (const refetchQuery of refetchQueries) {
-              if (typeof refetchQuery === 'string') {
-                await this.refetchQueryByName(refetchQuery);
-                continue;
-              }
-
-              await this.query({
-                query: refetchQuery.query,
-                variables: refetchQuery.variables,
-                fetchPolicy: 'network-only',
-              });
-            }
-
-            this.setQuery(mutationId, () => ({ document: undefined }));
-            if (
-              errorPolicy === 'ignore' &&
-              storeResult &&
-              graphQLResultHasError(storeResult)
-            ) {
-              delete storeResult.errors;
-            }
-
-            resolve(storeResult as FetchResult<T>);
-          } catch (completionError) {
-            reject(completionError);
-          }
-        },
+        complete: () => completeMutation().then(resolve, reject),
       });
     });
   }

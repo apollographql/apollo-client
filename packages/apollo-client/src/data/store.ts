@@ -91,6 +91,7 @@ export class DataStore<TSerialized> {
         variables: variables,
         rootId: 'ROOT_QUERY',
         optimistic: false,
+        returnPartialData: true,
       });
       if (originalResult) {
         this.mergePatch(originalResult, result);

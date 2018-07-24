@@ -9,9 +9,7 @@ export type Transaction<T> = (c: ApolloCache<T>) => void;
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
-  public abstract read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>,
-  ): T | null;
+  public abstract read<T, TVariables = any>(query: Cache.DiffOptions): T | null;
   public abstract write<TResult = any, TVariables = any>(
     write: Cache.WriteOptions<TResult, TVariables>,
   ): void;

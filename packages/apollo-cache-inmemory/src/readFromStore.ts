@@ -16,7 +16,6 @@ import {
 import { Cache } from 'apollo-cache';
 
 import {
-  ReadQueryOptions,
   IdValueWithPreviousResult,
   ReadStoreContext,
   DiffQueryAgainstStoreOptions,
@@ -49,13 +48,13 @@ export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
  * will be returned to preserve referential equality.
  */
 export function readQueryFromStore<QueryType>(
-  options: ReadQueryOptions,
+  options: DiffQueryAgainstStoreOptions,
 ): QueryType {
-  const optsPatch = { returnPartialData: false };
-
+  // Defaults returnPartialData to false unless true is passed in
+  // for a deferred query
   return diffQueryAgainstStore<QueryType>({
     ...options,
-    ...optsPatch,
+    returnPartialData: options.returnPartialData || false,
   }).result;
 }
 

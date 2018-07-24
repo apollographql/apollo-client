@@ -988,7 +988,9 @@ export class QueryManager<TStore> {
   ) {
     const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
-    const { newData } = this.getQuery(observableQuery.queryId);
+    const { newData, document } = this.getQuery(observableQuery.queryId);
+    const isDeferred =
+      document !== null ? hasDirectives(['defer'], document) : false;
     // XXX test this
     if (newData) {
       return maybeDeepFreeze({ data: newData.result, partial: false });
@@ -1000,6 +1002,11 @@ export class QueryManager<TStore> {
           variables,
           previousResult: lastResult ? lastResult.data : undefined,
           optimistic,
+          // Setting returnPartialData to true for deferred queries, so that
+          // an error does not get thrown if fields are missing.
+          // Returning {data: {}} will give us problems as it clobbers the
+          // data that we have already received.
+          returnPartialData: isDeferred,
         });
 
         return maybeDeepFreeze({ data, partial: false });
@@ -1069,12 +1076,13 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
+    const isDeferred = hasDirectives(['defer'], document);
     const operation = this.buildOperationForLink(document, variables, {
       ...context,
       // TODO: Should this be included for all entry points via
       // buildOperationForLink?
       forceFetch: !this.queryDeduplication,
-      isDeferred: hasDirectives(['defer'], document),
+      isDeferred,
     });
 
     let resultFromStore: any;
@@ -1109,7 +1117,7 @@ export class QueryManager<TStore> {
             // Initialize a tree of individual loading states for each deferred
             // field, when the initial response arrives.
             let loadingState;
-            if (!isPatch(result) && hasDirectives(['defer'], document)) {
+            if (!isPatch(result) && isDeferred) {
               loadingState = this.initDeferredFieldLoadingStates(
                 document,
                 result,
@@ -1150,6 +1158,7 @@ export class QueryManager<TStore> {
                 variables,
                 query: document,
                 optimistic: false,
+                returnPartialData: isDeferred,
               });
               // this will throw an error if there are missing fields in
               // the results which can happen with errors from the server.

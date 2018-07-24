@@ -15,6 +15,12 @@ describe('config', () => {
     }
   `;
 
+  const mutation = gql`
+    mutation {
+      foo @client
+    }
+  `;
+
   const resolvers = {
     Query: {
       foo: () => 'woo',
@@ -188,6 +194,38 @@ describe('config', () => {
         'new-header1': 'value1',
         'new-header2': 'value2',
       });
+    });
+  });
+
+  describe('fetchOptions.useGETForQueries', () => {
+    beforeEach(() => {
+      fetchMock.restore();
+      fetchMock.get(/\/graphql\?query=.+/, makePromise(data));
+      fetchMock.post('/graphql', makePromise(data));
+    });
+
+    afterEach(() => {
+      fetchMock.restore();
+    });
+
+    it('allows you to use GET method for queries', () => {
+      const client = new ApolloClient({
+        fetchOptions: { useGETForQueries: true }
+      });
+
+      client.query({ query, errorPolicy: 'ignore' });
+      const [uri, options] = fetchMock.lastCall();
+      expect(options.method).toEqual('GET');
+    });
+
+    it('allows you to use POST method for mutations', () => {
+      const client = new ApolloClient({
+        fetchOptions: { useGETForQueries: true }
+      });
+
+      client.mutate({ mutation, errorPolicy: 'ignore' });
+      const [uri, options] = fetchMock.lastCall();
+      expect(options.method).toEqual('POST');
     });
   });
 });

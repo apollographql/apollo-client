@@ -2,6 +2,8 @@
 
 ### vNext
 
+- Support apollo-link-http's useGETForQueries option.
+  [PR #3669](https://github.com/apollographql/apollo-client/pull/3669)
 - Allow `fetch` to be given as a configuration option to ApolloBoost.  
   [Issue #3578](https://github.com/apollographql/apollo-client/issues/3578)  
   [PR #3590](https://github.com/apollographql/apollo-client/pull/3590)

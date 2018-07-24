@@ -37,6 +37,7 @@ sidebar_categories:
     - features/server-side-rendering
     - features/performance
     - features/developer-tooling
+    - features/defer-support
   Advanced:
     - advanced/boost-migration
     - advanced/subscriptions

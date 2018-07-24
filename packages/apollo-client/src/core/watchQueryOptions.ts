@@ -181,6 +181,16 @@ export interface MutationBaseOptions<
     | RefetchQueryDescription;
 
   /**
+   * By default, `refetchQueries` does not wait for the refetched queries to
+   * be completed, before resolving the mutation `Promise`. This ensures that
+   * query refetching does not hold up mutation response handling (query
+   * refetching is handled asynchronously). Set `awaitRefetchQueries` to
+   * `true` if you would like to wait for the refetched queries to complete,
+   * before the mutation can be marked as resolved.
+   */
+  awaitRefetchQueries?: boolean;
+
+  /**
    * A function which provides a {@link DataProxy} and the result of the
    * mutation to allow the user to update the store based on the results of the
    * mutation.
@@ -222,7 +232,14 @@ export interface MutationOptions<
   mutation: DocumentNode;
 
   /**
-   * Context to be passed to link execution chain
+   * The context to be passed to the link execution chain. This context will
+   * only be used with the mutation. It will not be used with
+   * `refetchQueries`. Refetched queries use the context they were
+   * initialized with (since the intitial context is stored as part of the
+   * `ObservableQuery` instance). If a specific context is needed when
+   * refetching queries, make sure it is configured (via the
+   * [`query` `context` option](/docs/react/api/apollo-client.html#ApolloClient.query))
+   * when the query is first initialized/run.
    */
   context?: any;
 

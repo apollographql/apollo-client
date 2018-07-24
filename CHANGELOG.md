@@ -25,7 +25,7 @@
   `mutate` function, that when set to `true` will wait for all
   `refetchQueries` to be fully refetched, before resolving the mutation
   call. `awaitRefetchQueries` is `false` by default. <br/>
-  [@jzimmek](https://github.com/jzimmek) in [#](https://github.com/apollographql/apollo-client/pull/3169)
+  [@jzimmek](https://github.com/jzimmek) in [#3169](https://github.com/apollographql/apollo-client/pull/3169)
 
 ### Apollo Boost (0.1.11)
 

@@ -1,7 +1,7 @@
 // Place your settings in this file to overwrite default and user settings.
 {
   "editor.tabSize": 2,
-  "editor.rulers": [140],
+  "editor.rulers": [80],
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "files.exclude": {

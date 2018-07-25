@@ -1117,10 +1117,19 @@ export class QueryManager<TStore> {
             // Initialize a tree of individual loading states for each deferred
             // field, when the initial response arrives.
             let loadingState;
-            if (!isPatch(result) && isDeferred) {
+            if (isDeferred && !isPatch(result)) {
               loadingState = this.initDeferredFieldLoadingStates(
                 document,
                 result,
+              );
+            }
+
+            // Provide some info about patches that get streamed in behind
+            // the scenes
+            // TODO: Remove this when out of alpha preview
+            if (isDeferred && isPatch(result)) {
+              console.info(
+                `Patch received: ${JSON.stringify(result, null, 2)}`,
               );
             }
 

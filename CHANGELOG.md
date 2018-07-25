@@ -12,7 +12,7 @@
   `getQueryWithPreviousResult` return types are now excplicity identified,
   which helps Typescript avoid the local type reference. For more details,
   see https://github.com/apollographql/apollo-client/issues/3729.
-  [@hwillson](https://github.com/hwillson) in [#](https://github.com/apollographql/apollo-client/pull/)
+  [@hwillson](https://github.com/hwillson) in [#3731](https://github.com/apollographql/apollo-client/pull/3731)
 
 ### Apollo Boost (0.1.12)
 

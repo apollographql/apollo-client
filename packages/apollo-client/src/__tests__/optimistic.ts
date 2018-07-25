@@ -1,5 +1,5 @@
-import { Observable } from 'rxjs';
-import {  take, toArray } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { take, toArray, map } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
 import { addTypenameToDocument } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -1096,16 +1096,10 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      // Have to wrap the QueryObservable with an rxjs observable due to bug
-      // https://github.com/apollographql/apollo-client/issues/3721
-      const promise = Observable.create(observer =>
-        client
-          .watchQuery({ query })
-          .subscribe({
-            next: value => observer.next(stripSymbols(value.data.todoList.todos))
-          })
-      )
+      // wrap the QueryObservable with an rxjs observable
+      const promise = from(client.watchQuery({ query }))
         .pipe(
+          map(value => stripSymbols(value.data.todoList.todos)),
           take(5),
           toArray(),
         )

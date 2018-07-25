@@ -1,8 +1,27 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## vNext
+## 2.3.7 (July 24, 2018)
 
-### Apollo Client (vNext)
+### Apollo Client (2.3.7)
+
+- Release 2.3.6 broke Typescript compilation. `QueryManager`'s
+  `getQueryWithPreviousResult` method included an invalid `variables` return
+  type in the auto-generated `core/QueryManager.d.ts` declaration file. The
+  type definition had a locally referenced path, that appears to have been
+  caused by the typescript compiler getting confused at compile/publish time.
+  `getQueryWithPreviousResult` return types are now excplicity identified,
+  which helps Typescript avoid the local type reference. For more details,
+  see https://github.com/apollographql/apollo-client/issues/3729.
+  [@hwillson](https://github.com/hwillson) in [#3731](https://github.com/apollographql/apollo-client/pull/3731)
+
+### Apollo Boost (0.1.12)
+
+- No changes.
+
+
+## 2.3.6 (July 24, 2018)
+
+### Apollo Client (2.3.6)
 
 - Documentation updates. <br/>
   [@ananth99](https://github.com/ananth99) in [#3599](https://github.com/apollographql/apollo-client/pull/3599) <br/>
@@ -25,9 +44,9 @@
   `mutate` function, that when set to `true` will wait for all
   `refetchQueries` to be fully refetched, before resolving the mutation
   call. `awaitRefetchQueries` is `false` by default. <br/>
-  [@jzimmek](https://github.com/jzimmek) in [#](https://github.com/apollographql/apollo-client/pull/3169)
+  [@jzimmek](https://github.com/jzimmek) in [#3169](https://github.com/apollographql/apollo-client/pull/3169)
 
-### Apollo Boost (vNext)
+### Apollo Boost (0.1.11)
 
 - Allow `fetch` to be given as a configuration option to `ApolloBoost`. <br/>
   [@mbaranovski](https://github.com/mbaranovski) in [#3590](https://github.com/apollographql/apollo-client/pull/3590)
@@ -35,15 +54,11 @@
   options. <br/>
   [@quentin-](https://github.com/quentin-) in [#3551](https://github.com/apollographql/apollo-client/pull/3551)
 
-### Apollo GraphQL Anywhere (vNext)
+### Apollo Cache (1.1.13)
 
-- Add support for arrays to `graphql-anywhere`'s filter utility. <br/>
-  [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
-- Fix `Cannot convert object to primitive value` error that was showing up
-  when attempting to report a missing property on an object. <br/>
-  [@benjie](https://github.com/benjie) in [#3618](https://github.com/apollographql/apollo-client/pull/3618)
+- No changes.
 
-### Apollo Cache In-Memory (vNext)
+### Apollo Cache In-Memory (1.2.6)
 
 - Add `__typename` and `id` properties to `dataIdFromObject` parameter
   (typescript) <br/>
@@ -52,6 +67,19 @@
   be falsy, instead of being a valid ID, which lead to the store not being
   updated properly in some cases. <br/>
   [@hwillson](https://github.com/hwillson) in [#3711](https://github.com/apollographql/apollo-client/pull/3711)
+
+### Apollo Utilities (1.0.17)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.15)
+
+- Add support for arrays to `graphql-anywhere`'s filter utility. <br/>
+  [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
+- Fix `Cannot convert object to primitive value` error that was showing up
+  when attempting to report a missing property on an object. <br/>
+  [@benjie](https://github.com/benjie) in [#3618](https://github.com/apollographql/apollo-client/pull/3618)
+
 
 ## 2.3.5 (June 19, 2018)
 

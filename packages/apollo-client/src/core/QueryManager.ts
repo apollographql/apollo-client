@@ -33,7 +33,12 @@ import {
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import { QueryListener, ApolloQueryResult, FetchType } from './types';
+import {
+  QueryListener,
+  ApolloQueryResult,
+  FetchType,
+  OperationVariables,
+} from './types';
 import { graphQLResultHasError } from 'apollo-utilities';
 
 export interface QueryInfo {
@@ -1005,7 +1010,11 @@ export class QueryManager<TStore> {
 
   public getQueryWithPreviousResult<T>(
     queryIdOrObservable: string | ObservableQuery<T>,
-  ) {
+  ): {
+    previousResult: any;
+    variables: OperationVariables | undefined;
+    document: DocumentNode;
+  } {
     let observableQuery: ObservableQuery<T>;
     if (typeof queryIdOrObservable === 'string') {
       const { observableQuery: foundObserveableQuery } = this.getQuery(

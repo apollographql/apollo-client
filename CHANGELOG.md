@@ -1,5 +1,40 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## 2.3.7 (July 24, 2018)
+
+### Apollo Client (2.3.7)
+
+- Release 2.3.6 broke Typescript compilation. `QueryManager`'s
+  `getQueryWithPreviousResult` method included an invalid `variables` return
+  type in the auto-generated `core/QueryManager.d.ts` declaration file. The
+  type definition had a locally referenced path, that appears to have been
+  caused by the typescript compiler getting confused at compile/publish time.
+  `getQueryWithPreviousResult` return types are now excplicity identified,
+  which helps Typescript avoid the local type reference. For more details,
+  see https://github.com/apollographql/apollo-client/issues/3729.
+  [@hwillson](https://github.com/hwillson) in [#3731](https://github.com/apollographql/apollo-client/pull/3731)
+
+### Apollo Boost (0.1.12)
+
+- No changes.
+
+### Apollo Cache (1.1.14)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.7)
+
+- No changes.
+
+### Apollo Utilities (1.0.18)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.16)
+
+- No changes.
+
+
 ## 2.3.6 (July 24, 2018)
 
 ### Apollo Client (2.3.6)

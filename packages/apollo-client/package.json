@@ -62,7 +62,7 @@
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.112",
+    "@types/lodash": "4.14.113",
     "@types/node": "10.5.2",
     "apollo-cache-inmemory": "^1.2.6",
     "benchmark": "2.1.4",

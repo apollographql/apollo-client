@@ -18,22 +18,6 @@
 
 - No changes.
 
-### Apollo Cache (1.1.14)
-
-- No changes.
-
-### Apollo Cache In-Memory (1.2.7)
-
-- No changes.
-
-### Apollo Utilities (1.0.18)
-
-- No changes.
-
-### Apollo GraphQL Anywhere (4.1.16)
-
-- No changes.
-
 
 ## 2.3.6 (July 24, 2018)
 

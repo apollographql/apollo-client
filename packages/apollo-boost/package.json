@@ -39,7 +39,7 @@
     "apollo-client": "^2.4.0-alpha.4",
     "apollo-link": "^1.0.6",
     "apollo-link-error": "^1.0.3",
-    "apollo-link-http": "1.6.0-alpha.0",
+    "apollo-link-http": "1.6.0-alpha.2",
     "apollo-link-state": "^0.4.0",
     "graphql-tag": "^2.4.2"
   },

@@ -140,7 +140,7 @@ export class QueryStore {
       let curPointer = copy;
       while (index < path.length) {
         const key = path[index++];
-        if (curPointer) {
+        if (curPointer && curPointer[key]) {
           curPointer = curPointer[key];
           if (index === path.length) {
             // Reached the leaf node

@@ -19,7 +19,7 @@
     "coverage:upload": "codecov",
     "danger": "danger run --verbose",
     "deploy": "lerna publish -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy",
-    "deploy-alpha": "lerna publish --npm-tag alpha -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy"
+    "deploy-alpha": "lerna publish --npm-tag alpha -m \"chore: Publish\" --independent --exact && cd packages/apollo-client && npm run deploy"
   },
   "bundlesize": [
     {

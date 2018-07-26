@@ -1,11 +1,11 @@
 ---
 title: Deferred Queries
-description: Optimize data loading with the `@defer` directive
+description: Optimize data loading with the @defer directive
 ---
 
 <h2 id="defer-setup">Setting up</h2>
 
-`@defer` support is an experimental feature that is only available in the alpha preview of Apollo Server and Apollo Client.
+Note: `@defer` support is an experimental feature that is only available in the alpha preview of Apollo Server and Apollo Client.
 
 - On the server:
 
@@ -187,7 +187,6 @@ You can use it in a React component like this:
     }
   }
   ```
-
   In this case, `text` will not be deferred since `@defer` was not applied in the fragment definition.
 
   A common pattern around fragments is to bind it to a component and reuse them across different parts of your UI. This is why it would be ideal to make sure that the `@defer` behavior of fields in a fragment is not overridden.

@@ -19,7 +19,7 @@ Note: `@defer` support is an experimental feature that is only available in the 
   ```
   Or if you are using Apollo Client:
   ```
-  npm install apollo-client@alpha apollo-cache-inmemory@alpha apollo-link-http@alpha apollo-link-error apollo-link
+  npm install react-apollo@alpha apollo-client@alpha apollo-cache-inmemory@alpha apollo-link-http@alpha apollo-link-error apollo-link
   ```
 
 <h2 id="defer">The `@defer` Directive</h2>

@@ -1,6 +1,6 @@
 ---
 title: Deferred Queries
-description: Optimize data loading with the @defer directive
+description: Optimize data loading with the `@defer` directive
 ---
 
 <h2 id="defer-setup">Setting up</h2>
@@ -22,7 +22,7 @@ description: Optimize data loading with the @defer directive
   npm install apollo-client@alpha apollo-cache-inmemory@alpha apollo-link-http@alpha apollo-link-error apollo-link
   ```
 
-<h2 id="defer">The @defer Directive</h2>
+<h2 id="defer">The `@defer` Directive</h2>
 
 Many applications that use Apollo fetch data from a variety of microservices, which may each have varying latencies and cache characteristics. Apollo comes with a built-in directive for deferring parts of your GraphQL query in a declarative way, so that fields that take a long time to resolve do not need to slow down your entire query.
 

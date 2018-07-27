@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.1.15-alpha.10",
+  "version": "4.1.15-alpha.12",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -39,7 +39,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "1.0.17-alpha.10"
+    "apollo-utilities": "1.0.17-alpha.12"
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",

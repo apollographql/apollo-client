@@ -10,7 +10,7 @@
   semver 2), the current ^0.11.0 || ^14.0.0 graphql range doesn't cover
   0.12.* or 0.13.*. This fixes the `apollo-client@X has incorrect peer
   dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
-  seen using `graphql` 0.12.x or 0.13.x.
+  seen using `graphql` 0.12.x or 0.13.x.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3746](https://github.com/apollographql/apollo-client/pull/3746)
 
 

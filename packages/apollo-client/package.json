@@ -102,6 +102,7 @@
     ],
     "setupFiles": [
       "<rootDir>/scripts/tests.js"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

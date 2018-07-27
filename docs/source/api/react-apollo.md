@@ -1190,7 +1190,11 @@ export default graphql(gql`mutation { ... }`, {
 })(MyComponent);
 ```
 
+Please note that refetched queries are handled asynchronously, and by default are not necessarily completed before the mutation has completed. If you want to make sure refetched queries are completed before the mutation is considered done (or resolved), set [`options.awaitRefetchQueries`](#graphql-mutation-options-awaitRefetchQueries) to `true`.
 
+<h3 id="graphql-mutation-options-awaitRefetchQueries">`options.awaitRefetchQueries`</h3>
+
+Queries refetched using [`options.refetchQueries`](#graphql-mutation-options-refetchQueries) are handled asynchronously, which means by default they are not necessarily completed before the mutation has completed. Setting `options.awaitRefetchQueries` to `true` will make sure refetched queries are completed before the mutation is considered done (or resolved). `options.awaitRefetchQueries` is `false` by default.
 
 <h3 id="graphql-mutation-options-updateQueries">`options.updateQueries`</h3>
 

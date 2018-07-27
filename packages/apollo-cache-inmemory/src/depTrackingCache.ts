@@ -1,26 +1,27 @@
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
-import { wrap } from './optimism';
+import { wrap, OptimisticWrapperFunction } from './optimism';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
-// Wrapper function produced by the optimism library, used to depend on
-// dataId strings, for easy invalidation of specific IDs.
-const depend = wrap((
-  data: NormalizedCacheObject,
-  dataId: string,
-) => data[dataId], {
-  disposable: true,
-});
-
 export class DepTrackingCache implements NormalizedCache {
-  constructor(private data: NormalizedCacheObject = Object.create(null)) {}
+  // Wrapper function produced by the optimism library, used to depend on
+  // dataId strings, for easy invalidation of specific IDs.
+  private depend: OptimisticWrapperFunction<(dataId: string) => StoreObject>;
+
+  constructor(private data: NormalizedCacheObject = Object.create(null)) {
+    this.depend = wrap((
+      dataId: string,
+    ) => this.data[dataId], {
+      disposable: true,
+    });
+  }
 
   public toObject(): NormalizedCacheObject {
     return this.data;
   }
 
   public get(dataId: string): StoreObject {
-    depend(this.data, dataId);
+    this.depend(dataId);
     return this.data[dataId];
   }
 
@@ -28,14 +29,14 @@ export class DepTrackingCache implements NormalizedCache {
     const oldValue = this.data[dataId];
     if (value !== oldValue) {
       this.data[dataId] = value;
-      depend.dirty(this.data, dataId);
+      this.depend.dirty(dataId);
     }
   }
 
   public delete(dataId: string): void {
     if (hasOwn.call(this.data, dataId)) {
       delete this.data[dataId];
-      depend.dirty(this.data, dataId);
+      this.depend.dirty(dataId);
     }
   }
 

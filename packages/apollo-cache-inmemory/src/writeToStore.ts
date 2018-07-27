@@ -354,7 +354,7 @@ function writeFieldToStore({
         );
       }
 
-      if (semanticId) {
+      if (semanticId || (typeof semanticId === 'number' && semanticId === 0)) {
         valueDataId = semanticId;
         generated = false;
       }

@@ -4,39 +4,96 @@
 
 ### Apollo Client (vNext)
 
-- Documentation updates.  
-  [@ananth99](https://github.com/ananth99) in [#3599](https://github.com/apollographql/apollo-client/pull/3599)  
-  [@hwillson](https://github.com/hwillson) in [#3635](https://github.com/apollographql/apollo-client/pull/3635)  
-  [@JakeDawkins](https://github.com/JakeDawkins) in [#3642](https://github.com/apollographql/apollo-client/pull/3642)  
-  [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644)
-  [@gbau](https://github.com/gbau) in [#3644](https://github.com/apollographql/apollo-client/pull/3600)  
-  [@chentsulin](https://github.com/chentsulin) in [#3608](https://github.com/apollographql/apollo-client/pull/3608)  
-  [@MikaelCarpenter](https://github.com/MikaelCarpenter) in [#3609](https://github.com/apollographql/apollo-client/pull/3609)  
-  [@Gamezpedia](https://github.com/Gamezpedia) in [#3612](https://github.com/apollographql/apollo-client/pull/3612)  
-  [@jinxac](https://github.com/jinxac) in [#3647](https://github.com/apollographql/apollo-client/pull/3647)
-- Updated `graphql` `peerDependencies` to handle 14.x versions.  
+- Adjusted the `graphql` peer dependency to cover explicit minor ranges.
+  Since the ^ operator only covers any minor version if the major version
+  is not 0 (since a major version of 0 is technically considered development by
+  semver 2), the current ^0.11.0 || ^14.0.0 graphql range doesn't cover
+  0.12.* or 0.13.*. This fixes the `apollo-client@X has incorrect peer
+  dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
+  seen using `graphql` 0.12.x or 0.13.x.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3746](https://github.com/apollographql/apollo-client/pull/3746)
+
+
+## 2.3.7 (July 24, 2018)
+
+### Apollo Client (2.3.7)
+
+- Release 2.3.6 broke Typescript compilation. `QueryManager`'s
+  `getQueryWithPreviousResult` method included an invalid `variables` return
+  type in the auto-generated `core/QueryManager.d.ts` declaration file. The
+  type definition had a locally referenced path, that appears to have been
+  caused by the typescript compiler getting confused at compile/publish time.
+  `getQueryWithPreviousResult` return types are now excplicity identified,
+  which helps Typescript avoid the local type reference. For more details,
+  see https://github.com/apollographql/apollo-client/issues/3729.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3731](https://github.com/apollographql/apollo-client/pull/3731)
+
+### Apollo Boost (0.1.12)
+
+- No changes.
+
+
+## 2.3.6 (July 24, 2018)
+
+### Apollo Client (2.3.6)
+
+- Documentation updates. <br/>
+  [@ananth99](https://github.com/ananth99) in [#3599](https://github.com/apollographql/apollo-client/pull/3599) <br/>
+  [@hwillson](https://github.com/hwillson) in [#3635](https://github.com/apollographql/apollo-client/pull/3635) <br/>
+  [@JakeDawkins](https://github.com/JakeDawkins) in [#3642](https://github.com/apollographql/apollo-client/pull/3642) <br/>
+  [@hwillson](https://github.com/hwillson) in [#3644](https://github.com/apollographql/apollo-client/pull/3644) <br/>
+  [@gbau](https://github.com/gbau) in [#3644](https://github.com/apollographql/apollo-client/pull/3600) <br/>
+  [@chentsulin](https://github.com/chentsulin) in [#3608](https://github.com/apollographql/apollo-client/pull/3608) <br/>
+  [@MikaelCarpenter](https://github.com/MikaelCarpenter) in [#3609](https://github.com/apollographql/apollo-client/pull/3609) <br/>
+  [@Gamezpedia](https://github.com/Gamezpedia) in [#3612](https://github.com/apollographql/apollo-client/pull/3612) <br/>
+  [@jinxac](https://github.com/jinxac) in [#3647](https://github.com/apollographql/apollo-client/pull/3647) <br/>
+  [@abernix](https://github.com/abernix) in [#3705](https://github.com/apollographql/apollo-client/pull/3705) <br/>
+  [@dandv](https://github.com/dandv) in [#3703](https://github.com/apollographql/apollo-client/pull/3703) <br/>
+  [@hwillson](https://github.com/hwillson) in [#3580](https://github.com/apollographql/apollo-client/pull/3580) <br/>
+- Updated `graphql` `peerDependencies` to handle 14.x versions. <br/>
   [@ivank](https://github.com/ivank) in [#3598](https://github.com/apollographql/apollo-client/pull/3598)
-- Add optional generic type params for variables on low level methods.  
+- Add optional generic type params for variables on low level methods. <br/>
   [@mvestergaard](https://github.com/mvestergaard) in [#3588](https://github.com/apollographql/apollo-client/pull/3588)
+- Add a new `awaitRefetchQueries` config option to the Apollo Client
+  `mutate` function, that when set to `true` will wait for all
+  `refetchQueries` to be fully refetched, before resolving the mutation
+  call. `awaitRefetchQueries` is `false` by default. <br/>
+  [@jzimmek](https://github.com/jzimmek) in [#3169](https://github.com/apollographql/apollo-client/pull/3169)
 
-### Apollo Boost (vNext)
+### Apollo Boost (0.1.11)
 
-- Allow `fetch` to be given as a configuration option to `ApolloBoost`.  
+- Allow `fetch` to be given as a configuration option to `ApolloBoost`. <br/>
   [@mbaranovski](https://github.com/mbaranovski) in [#3590](https://github.com/apollographql/apollo-client/pull/3590)
+- The `apollo-boost` `ApolloClient` constructor now warns about unsupported
+  options. <br/>
+  [@quentin-](https://github.com/quentin-) in [#3551](https://github.com/apollographql/apollo-client/pull/3551)
 
-### Apollo GraphQL Anywhere (vNext)
+### Apollo Cache (1.1.13)
 
-- Add support for arrays to `graphql-anywhere`'s filter utility.  
-  [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
-- Fix `Cannot convert object to primitive value` error that was showing up
-  when attempting to report a missing property on an object.  
-  [@benjie](https://github.com/benjie) in [#3618](https://github.com/apollographql/apollo-client/pull/3618)
+- No changes.
 
-### Apollo Cache In-Memory (vNext)
+### Apollo Cache In-Memory (1.2.6)
 
 - Add `__typename` and `id` properties to `dataIdFromObject` parameter
-  (typescript)  
+  (typescript) <br/>
   [@jfurler](https://github.com/jfurler) in [#3641](https://github.com/apollographql/apollo-client/pull/3641)
+- Fixed an issue caused by `dataIdFromObject` considering returned 0 values to
+  be falsy, instead of being a valid ID, which lead to the store not being
+  updated properly in some cases. <br/>
+  [@hwillson](https://github.com/hwillson) in [#3711](https://github.com/apollographql/apollo-client/pull/3711)
+
+### Apollo Utilities (1.0.17)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.15)
+
+- Add support for arrays to `graphql-anywhere`'s filter utility. <br/>
+  [@jsweet314](https://github.com/jsweet314) in [#3591](https://github.com/apollographql/apollo-client/pull/3591)
+- Fix `Cannot convert object to primitive value` error that was showing up
+  when attempting to report a missing property on an object. <br/>
+  [@benjie](https://github.com/benjie) in [#3618](https://github.com/apollographql/apollo-client/pull/3618)
+
 
 ## 2.3.5 (June 19, 2018)
 
@@ -113,8 +170,8 @@
   variables: `ObservableQuery<TData, TVariables>`
   ([@excitement-engineer](https://github.com/excitement-engineer) in [#3140](https://github.com/apollographql/apollo-client/pull/3140))
 - Added optional generics to cache manipulation methods (typescript).
-  ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))  
-- Typescript improvements. Created a new `QueryOptions` interface that  
+  ([@mvestergaard](https://github.com/mvestergaard) in [#3541](https://github.com/apollographql/apollo-client/pull/3541))
+- Typescript improvements. Created a new `QueryOptions` interface that
   is now used by `ApolloClient.query` options, instead of the previous
   `WatchQueryOptions` interface. This helps reduce confusion (especially
   in the docs) that made it look like `ApolloClient.query` accepted
@@ -172,11 +229,11 @@
 - Fixed an issue involving `Object.setPrototypeOf()` not working on JSC
   (Android), by instead setting the `prototype` of `this` manually.
   ([@seklyza](https://github.com/seklyza) in [#3306](https://github.com/apollographql/apollo-client/pull/3306))
-- Added safeguards to make sure `QueryStore.initQuery` and   
+- Added safeguards to make sure `QueryStore.initQuery` and
   `QueryStore.markQueryResult` don't try to set the network status of a
   `fetchMoreForQueryId` query, if it does not exist in the store. This was
   happening when a query component was unmounted while a `fetchMore` was still
-  in flight.  
+  in flight.
   ([@conrad-vanl](https://github.com/conrad-vanl) in [#3367](https://github.com/apollographql/apollo-client/pull/3367), [@doomsower](https://github.com/doomsower) in [#3469](https://github.com/apollographql/apollo-client/pull/3469))
 
 ### Apollo Boost (0.1.7)

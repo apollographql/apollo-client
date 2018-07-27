@@ -43,6 +43,34 @@ const client = new ApolloClient({
 })
 ```
 
+Or if you're using `apollo-client` instead of `apollo-boost`, use `MeteorAccountsLink()`:
+
+```js
+import { ApolloClient } from 'apollo-client'
+import { InMemoryCache } from 'apollo-cache-inmemory'
+import { ApolloLink } from 'apollo-link'
+import { HttpLink } from 'apollo-link-http'
+import { MeteorAccountsLink } from 'meteor/apollo'
+
+const client = new ApolloClient({
+  link: ApolloLink.from([
+    new MeteorAccountsLink(),
+    new HttpLink({
+      uri: '/graphql'
+    })
+  ]),
+  cache: new InMemoryCache()
+})
+```
+
+If you want to change which header the token is stored in:
+
+```js
+MeteorAccountsLink({ headerName: 'meteor-login-token' })
+```
+
+(The default is `authorization`.)
+
 ### Server
 
 Set up the [Apollo server](https://www.apollographql.com/docs/apollo-server/):
@@ -74,6 +102,8 @@ WebApp.connectHandlers.use('/graphql', (req, res) => {
   }
 })
 ```
+
+Now when the client is logged in (ie has an unexpired Meteor login token in localStorage), your resolvers will have a `context.user` property with the user doc.
 
 ### IDE
 

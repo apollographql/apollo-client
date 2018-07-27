@@ -85,10 +85,17 @@ type ExecStoreQueryOptions = {
   fragmentMatcher: FragmentMatcher;
 };
 
+type ExecSelectionSetOptions = {
+  selectionSet: SelectionSetNode;
+  rootValue: any;
+  execContext: ExecContext;
+};
+
 export class StoreReader {
   constructor() {
     const {
       executeStoreQuery,
+      executeSelectionSet,
     } = this;
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
@@ -108,6 +115,28 @@ export class StoreReader {
             query,
             contextValue.store,
             JSON.stringify(variableValues),
+          );
+        }
+      }
+    });
+
+    this.executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
+      return executeSelectionSet.call(this, options);
+    }, {
+      makeCacheKey({
+        selectionSet,
+        rootValue,
+        execContext,
+      }: ExecSelectionSetOptions) {
+        if (execContext.contextValue.store instanceof DepTrackingCache) {
+          return defaultMakeCacheKey(
+            selectionSet,
+            execContext.contextValue.store,
+            JSON.stringify(execContext.variableValues),
+            // Unlike executeStoreQuery, executeSelectionSet can be called
+            // recursively on nested objects, so it's important to include the
+            // ID of the current parent object in the cache key.
+            rootValue.id,
           );
         }
       }
@@ -244,11 +273,194 @@ export class StoreReader {
       fragmentMatcher,
     };
 
-    return executeSelectionSet(
-      mainDefinition.selectionSet,
+    return this.executeSelectionSet({
+      selectionSet: mainDefinition.selectionSet,
       rootValue,
       execContext,
+    });
+  }
+
+  private executeSelectionSet({
+    selectionSet,
+    rootValue,
+    execContext,
+  }: ExecSelectionSetOptions): ExecResult {
+    const { fragmentMap, contextValue, variableValues: variables } = execContext;
+    const finalResult: ExecResult = {
+      result: {},
+    };
+
+    function handleMissing<T>(result: ExecResult<T>): T {
+      if (result.missing) {
+        finalResult.missing = finalResult.missing || [];
+        finalResult.missing.push(...result.missing);
+      }
+      return result.result;
+    }
+
+    selectionSet.selections.forEach(selection => {
+      if (!shouldInclude(selection, variables)) {
+        // Skip this entirely
+        return;
+      }
+
+      if (isField(selection)) {
+        const fieldResult = handleMissing(
+          this.executeField(selection, rootValue, execContext)
+        );
+
+        if (typeof fieldResult !== 'undefined') {
+          merge(finalResult.result, {
+            [resultKeyNameFromField(selection)]: fieldResult,
+          });
+        }
+
+      } else {
+        let fragment: InlineFragmentNode | FragmentDefinitionNode;
+
+        if (isInlineFragment(selection)) {
+          fragment = selection;
+        } else {
+          // This is a named fragment
+          fragment = fragmentMap[selection.name.value];
+
+          if (!fragment) {
+            throw new Error(`No fragment named ${selection.name.value}`);
+          }
+        }
+
+        const typeCondition = fragment.typeCondition.name.value;
+
+        const match = execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+        if (match) {
+          let fragmentExecResult = this.executeSelectionSet({
+            selectionSet: fragment.selectionSet,
+            rootValue,
+            execContext,
+          });
+
+          if (match === 'heuristic' && fragmentExecResult.missing) {
+            fragmentExecResult = {
+              ...fragmentExecResult,
+              missing: fragmentExecResult.missing.map(info => {
+                return { ...info, tolerable: true };
+              }),
+            };
+          }
+
+          merge(finalResult.result, handleMissing(fragmentExecResult));
+        }
+      }
+    });
+
+    return finalResult;
+  }
+
+  private executeField(
+    field: FieldNode,
+    rootValue: any,
+    execContext: ExecContext,
+  ): ExecResult {
+    const { variableValues: variables, contextValue } = execContext;
+    const fieldName = field.name.value;
+    const args = argumentsObjectFromField(field, variables);
+
+    const info: ExecInfo = {
+      resultKey: resultKeyNameFromField(field),
+      directives: getDirectiveInfoFromField(field, variables),
+    };
+
+    const readStoreResult = readStoreResolver(
+      fieldName,
+      rootValue,
+      args,
+      contextValue,
+      info,
     );
+
+    // Handle all scalar types here
+    if (!field.selectionSet) {
+      return readStoreResult;
+    }
+
+    // From here down, the field has a selection set, which means it's trying to
+    // query a GraphQLObjectType
+    if (readStoreResult.result == null) {
+      // Basically any field in a GraphQL response can be null, or missing
+      return readStoreResult;
+    }
+
+    function handleMissing<T>(res: ExecResult<T>): ExecResult<T> {
+      let missing: ExecResultMissingField[] = null;
+
+      if (readStoreResult.missing) {
+        missing = missing || [];
+        missing.push(...readStoreResult.missing);
+      }
+
+      if (res.missing) {
+        missing = missing || [];
+        missing.push(...res.missing);
+      }
+
+      return {
+        result: res.result,
+        missing,
+      };
+    }
+
+    if (Array.isArray(readStoreResult.result)) {
+      return handleMissing(this.executeSubSelectedArray(
+        field,
+        readStoreResult.result,
+        execContext,
+      ));
+    }
+
+    // Returned value is an object, and the query has a sub-selection. Recurse.
+    return handleMissing(this.executeSelectionSet({
+      selectionSet: field.selectionSet,
+      rootValue: readStoreResult.result,
+      execContext,
+    }));
+  }
+
+  private executeSubSelectedArray(
+    field: FieldNode,
+    result: any[],
+    execContext: ExecContext,
+  ): ExecResult {
+    let missing: ExecResultMissingField[] = null;
+
+    function handleMissing<T>(childResult: ExecResult<T>): T {
+      if (childResult.missing) {
+        missing = missing || [];
+        missing.push(...childResult.missing);
+      }
+
+      return childResult.result;
+    }
+
+    result = result.map(item => {
+      // null value in array
+      if (item === null) {
+        return null;
+      }
+
+      // This is a nested array, recurse
+      if (Array.isArray(item)) {
+        return handleMissing(this.executeSubSelectedArray(field, item, execContext));
+      }
+
+      // This is an object, run the selection set on it
+      return handleMissing(this.executeSelectionSet({
+        selectionSet: field.selectionSet,
+        rootValue: item,
+        execContext,
+      }));
+    });
+
+    return { result, missing };
   }
 }
 
@@ -334,202 +546,6 @@ function readStoreResolver(
 
 function defaultFragmentMatcher() {
   return true;
-}
-
-const executeSelectionSet = wrap(function _executeSelectionSet(
-  selectionSet: SelectionSetNode,
-  rootValue: any,
-  execContext: ExecContext,
-): ExecResult {
-  const { fragmentMap, contextValue, variableValues: variables } = execContext;
-  const finalResult: ExecResult = {
-    result: {},
-  };
-
-  function handleMissing<T>(result: ExecResult<T>): T {
-    if (result.missing) {
-      finalResult.missing = finalResult.missing || [];
-      finalResult.missing.push(...result.missing);
-    }
-    return result.result;
-  }
-
-  selectionSet.selections.forEach(selection => {
-    if (!shouldInclude(selection, variables)) {
-      // Skip this entirely
-      return;
-    }
-
-    if (isField(selection)) {
-      const fieldResult = handleMissing(executeField(selection, rootValue, execContext));
-
-      if (typeof fieldResult !== 'undefined') {
-        merge(finalResult.result, {
-          [resultKeyNameFromField(selection)]: fieldResult,
-        });
-      }
-
-    } else {
-      let fragment: InlineFragmentNode | FragmentDefinitionNode;
-
-      if (isInlineFragment(selection)) {
-        fragment = selection;
-      } else {
-        // This is a named fragment
-        fragment = fragmentMap[selection.name.value];
-
-        if (!fragment) {
-          throw new Error(`No fragment named ${selection.name.value}`);
-        }
-      }
-
-      const typeCondition = fragment.typeCondition.name.value;
-
-      const match = execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
-      if (match) {
-        let fragmentExecResult = executeSelectionSet(
-          fragment.selectionSet,
-          rootValue,
-          execContext,
-        );
-
-        if (match === 'heuristic' && fragmentExecResult.missing) {
-          fragmentExecResult = {
-            ...fragmentExecResult,
-            missing: fragmentExecResult.missing.map(info => {
-              return { ...info, tolerable: true };
-            }),
-          };
-        }
-
-        merge(finalResult.result, handleMissing(fragmentExecResult));
-      }
-    }
-  });
-
-  return finalResult;
-
-}, {
-  makeCacheKey(
-    selectionSet: SelectionSetNode,
-    rootValue: any,
-    context: ExecContext,
-  ) {
-    if (context.contextValue.store instanceof DepTrackingCache) {
-      return defaultMakeCacheKey(
-        selectionSet,
-        context.contextValue.store,
-        JSON.stringify(context.variableValues),
-        // Unlike executeStoreQuery, executeSelectionSet can be called
-        // recursively on nested objects, so it's important to include the
-        // ID of the current parent object in the cache key.
-        rootValue.id,
-      );
-    }
-  }
-});
-
-function executeField(
-  field: FieldNode,
-  rootValue: any,
-  execContext: ExecContext,
-): ExecResult {
-  const { variableValues: variables, contextValue } = execContext;
-  const fieldName = field.name.value;
-  const args = argumentsObjectFromField(field, variables);
-
-  const info: ExecInfo = {
-    resultKey: resultKeyNameFromField(field),
-    directives: getDirectiveInfoFromField(field, variables),
-  };
-
-  const readStoreResult = readStoreResolver(
-    fieldName,
-    rootValue,
-    args,
-    contextValue,
-    info,
-  );
-
-  // Handle all scalar types here
-  if (!field.selectionSet) {
-    return readStoreResult;
-  }
-
-  // From here down, the field has a selection set, which means it's trying to
-  // query a GraphQLObjectType
-  if (readStoreResult.result == null) {
-    // Basically any field in a GraphQL response can be null, or missing
-    return readStoreResult;
-  }
-
-  function handleMissing<T>(res: ExecResult<T>): ExecResult<T> {
-    let missing: ExecResultMissingField[] = null;
-
-    if (readStoreResult.missing) {
-      missing = missing || [];
-      missing.push(...readStoreResult.missing);
-    }
-
-    if (res.missing) {
-      missing = missing || [];
-      missing.push(...res.missing);
-    }
-
-    return {
-      result: res.result,
-      missing,
-    };
-  }
-
-  if (Array.isArray(readStoreResult.result)) {
-    return handleMissing(executeSubSelectedArray(
-      field,
-      readStoreResult.result,
-      execContext,
-    ));
-  }
-
-  // Returned value is an object, and the query has a sub-selection. Recurse.
-  return handleMissing(executeSelectionSet(
-    field.selectionSet,
-    readStoreResult.result,
-    execContext,
-  ));
-}
-
-function executeSubSelectedArray(
-  field: FieldNode,
-  result: any[],
-  execContext: ExecContext,
-): ExecResult {
-  let missing: ExecResultMissingField[] = null;
-
-  function handleMissing<T>(childResult: ExecResult<T>): T {
-    if (childResult.missing) {
-      missing = missing || [];
-      missing.push(...childResult.missing);
-    }
-
-    return childResult.result;
-  }
-
-  result = result.map(item => {
-    // null value in array
-    if (item === null) {
-      return null;
-    }
-
-    // This is a nested array, recurse
-    if (Array.isArray(item)) {
-      return handleMissing(executeSubSelectedArray(field, item, execContext));
-    }
-
-    // This is an object, run the selection set on it
-    return handleMissing(executeSelectionSet(field.selectionSet, item, execContext));
-  });
-
-  return { result, missing };
 }
 
 const hasOwn = Object.prototype.hasOwnProperty;

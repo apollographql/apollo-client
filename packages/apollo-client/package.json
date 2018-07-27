@@ -49,7 +49,7 @@
     "@types/zen-observable": "^0.8.0",
     "apollo-cache": "1.1.13-alpha.10",
     "apollo-link": "^1.0.0",
-    "apollo-link-dedup": "1.1.0-alpha.2",
+    "apollo-link-dedup": "alpha",
     "apollo-utilities": "1.0.17-alpha.10",
     "symbol-observable": "^1.0.2",
     "zen-observable": "^0.8.0"

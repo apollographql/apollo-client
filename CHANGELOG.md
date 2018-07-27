@@ -2,7 +2,7 @@
 
 ## 2.3.8 (July 26, 2018)
 
-### Apollo Client (2.3.7)
+### Apollo Client (vNext)
 
 - Adjusted the `graphql` peer dependency to cover explicit minor ranges.
   Since the ^ operator only covers any minor version if the major version

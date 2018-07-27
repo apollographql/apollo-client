@@ -71,6 +71,7 @@
       "tsx",
       "js",
       "json"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

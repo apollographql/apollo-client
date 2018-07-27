@@ -1,6 +1,6 @@
 # Issue Triage
 
-This document describes the process Apollo contributors use to organize issues. We use Github [issues](https://github.com/apollographql/apollo-client/issues) here to track bugs, and issues in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests) to track feature requests. Our goal is to maintain a list of issues that are relevant and well-defined (and [labeled](https://github.com/apollographql/apollo-client/labels)) such that a contributor can immediately begin working on the code for a fix or feature request. Contributors who want to dive in and write code aren't likely to prioritize working on issues that are ambiguous and have low impact.
+This document describes the process Apollo contributors use to organize issues. We use Github [issues](https://github.com/apollographql/apollo-client/issues) here to track bugs, and issues in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests) to track feature requests and discussions. Our goal is to maintain a list of issues that are relevant and well-defined (and [labeled](https://github.com/apollographql/apollo-client/labels)) such that a contributor can immediately begin working on the code for a fix or feature request. Contributors who want to dive in and write code aren't likely to prioritize working on issues that are ambiguous and have low impact.
 
 We would love to have more contributors who are willing to help out with triaging issues. You can begin by helping issue requesters create good reproductions and by confirming those reproductions on your own machine. It won't be long before the core maintainers notice your work and ask whether you'd like to be promoted to an issue maintainer.
 
@@ -35,7 +35,7 @@ The first step is in determining whether the issue is a bug, help question or fe
 
 ### Feature requests
 
-Apollo Client feature requests are managed in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests). Feature request triaging should happen there. Feature requests opened in this repository should be closed, with a message asking the original requestor to re-open the feature request in the FR repo.
+Apollo Client feature requests and discussions are managed in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests). Feature request triaging should happen there. Feature requests and/or discussions opened in this repository should be closed, with a message asking the original requestor to re-open the feature request / discussion in the FR repo.
 
 <h2 id="classification">Classification</h2>
 

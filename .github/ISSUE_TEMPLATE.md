@@ -5,7 +5,7 @@
 
   If you don't follow the template, your issue may end up being closed without anyone looking at it carefully, because it is not actionable for us without the information in this template.
 
-  **PLEASE NOTE:** Feature requests and non-bug related discussions no longer managed in this repo. Feature requests should be opened in https://github.com/apollographql/apollo-feature-requests.
+  **PLEASE NOTE:** Feature requests and non-bug related discussions are no longer managed in this repo. Feature requests should be opened in https://github.com/apollographql/apollo-feature-requests.
 -->
 
 **Intended outcome:**

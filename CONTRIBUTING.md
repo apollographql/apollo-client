@@ -43,9 +43,9 @@ For a small bug fix change (less than 20 lines of code changed), feel free to op
 
 ### Suggesting features
 
-Most of the features in Apollo Client came from suggestions by you, the community! We welcome any ideas about how to make Apollo  better for your use case. Head on over to the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests), and open up a new feature request issue with your details.
+Most of the features in Apollo Client came from suggestions by you, the community! We welcome any ideas about how to make Apollo  better for your use case. Head on over to the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests), and open up a new feature request / discussion issue with your details.
 
-**Note:** Feature Requests are no longer managed in this repo's issue tracker. Feature request based issues opened here will be closed.
+**Note:** Feature requests and non-bug related discussions are no longer managed in this repo's issue tracker. Feature request and/or discussions opened here will be closed.
 
 ## Big PRs
 

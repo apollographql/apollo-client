@@ -76,7 +76,43 @@ export type ExecResult<R = any> = {
   missing?: ExecResultMissingField[];
 };
 
+type ExecStoreQueryOptions = {
+  query: DocumentNode;
+  rootValue: IdValue;
+  contextValue: ReadStoreContext;
+  variableValues: VariableMap;
+  // Default matcher always matches all fragments
+  fragmentMatcher: FragmentMatcher;
+};
+
 export class StoreReader {
+  constructor() {
+    const {
+      executeStoreQuery,
+    } = this;
+
+    this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
+      return executeStoreQuery.call(this, options);
+    }, {
+      makeCacheKey({
+        query,
+        rootValue,
+        contextValue,
+        variableValues,
+      }: ExecStoreQueryOptions) {
+        // The result of executeStoreQuery can be safely cached only if the
+        // underlying store is capable of tracking dependencies and invalidating
+        // the cache when relevant data have changed.
+        if (contextValue.store instanceof DepTrackingCache) {
+          return defaultMakeCacheKey(
+            query,
+            contextValue.store,
+            JSON.stringify(variableValues),
+          );
+        }
+      }
+    });
+  }
   /**
    * Resolves the result of a query solely from the store (i.e. never hits the server).
    *
@@ -133,18 +169,18 @@ export class StoreReader {
       cacheRedirects: (config && config.cacheRedirects) || {},
     };
 
-    const execResult = executeStoreQuery(
+    const execResult = this.executeStoreQuery({
       query,
-      {
+      rootValue: {
         type: 'id',
         id: rootId,
         generated: true,
         typename: 'Query',
       },
-      context,
-      variables,
-      fragmentMatcherFunction,
-    );
+      contextValue: context,
+      variableValues: variables,
+      fragmentMatcher: fragmentMatcherFunction,
+    });
 
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
@@ -170,6 +206,49 @@ export class StoreReader {
       result: execResult.result,
       complete: !hasMissingFields,
     };
+  }
+
+  /**
+   * Based on graphql function from graphql-js:
+   *
+   * graphql(
+   *   schema: GraphQLSchema,
+   *   requestString: string,
+   *   rootValue?: ?any,
+   *   contextValue?: ?any,
+   *   variableValues?: ?{[key: string]: any},
+   *   operationName?: ?string
+   * ): Promise<GraphQLResult>
+   *
+   * The default export as of graphql-anywhere is sync as of 4.0,
+   * but below is an exported alternative that is async.
+   * In the 5.0 version, this will be the only export again
+   * and it will be async
+   *
+   */
+  private executeStoreQuery({
+    query,
+    rootValue,
+    contextValue,
+    variableValues,
+    // Default matcher always matches all fragments
+    fragmentMatcher = defaultFragmentMatcher,
+  }: ExecStoreQueryOptions): ExecResult {
+    const mainDefinition = getMainDefinition(query);
+    const fragments = getFragmentDefinitions(query);
+    const fragmentMap = createFragmentMap(fragments);
+    const execContext: ExecContext = {
+      fragmentMap,
+      contextValue,
+      variableValues,
+      fragmentMatcher,
+    };
+
+    return executeSelectionSet(
+      mainDefinition.selectionSet,
+      rootValue,
+      execContext,
+    );
   }
 }
 
@@ -252,66 +331,6 @@ function readStoreResolver(
     result: fieldValue,
   };
 }
-
-/* Based on graphql function from graphql-js:
- *
- * graphql(
- *   schema: GraphQLSchema,
- *   requestString: string,
- *   rootValue?: ?any,
- *   contextValue?: ?any,
- *   variableValues?: ?{[key: string]: any},
- *   operationName?: ?string
- * ): Promise<GraphQLResult>
- *
- * The default export as of graphql-anywhere is sync as of 4.0,
- * but below is an exported alternative that is async.
- * In the 5.0 version, this will be the only export again
- * and it will be async
- *
- */
-export const executeStoreQuery = wrap(function (
-  query: DocumentNode,
-  rootValue: IdValue,
-  contextValue: ReadStoreContext,
-  variableValues: VariableMap,
-  // Default matcher always matches all fragments
-  fragmentMatcher: FragmentMatcher = defaultFragmentMatcher,
-): ExecResult {
-  const mainDefinition = getMainDefinition(query);
-  const fragments = getFragmentDefinitions(query);
-  const fragmentMap = createFragmentMap(fragments);
-  const execContext: ExecContext = {
-    fragmentMap,
-    contextValue,
-    variableValues,
-    fragmentMatcher,
-  };
-
-  return executeSelectionSet(
-    mainDefinition.selectionSet,
-    rootValue,
-    execContext,
-  );
-}, {
-  makeCacheKey(
-    query: DocumentNode,
-    rootValue: IdValue,
-    context: ReadStoreContext,
-    variables: VariableMap,
-  ) {
-    // The result of executeStoreQuery can be safely cached only if the
-    // underlying store is capable of tracking dependencies and invalidating
-    // the cache when relevant data have changed.
-    if (context.store instanceof DepTrackingCache) {
-      return defaultMakeCacheKey(
-        query,
-        context.store,
-        JSON.stringify(variables),
-      );
-    }
-  }
-});
 
 function defaultFragmentMatcher() {
   return true;

@@ -12,6 +12,8 @@
   dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
   seen using `graphql` 0.12.x or 0.13.x.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3746](https://github.com/apollographql/apollo-client/pull/3746)
+- Documentation updates.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3750](https://github.com/apollographql/apollo-client/pull/3750)
 
 
 ## 2.3.7 (July 24, 2018)

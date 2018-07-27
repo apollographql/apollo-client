@@ -261,7 +261,7 @@ export class StoreReader {
     contextValue,
     variableValues,
     // Default matcher always matches all fragments
-    fragmentMatcher = defaultFragmentMatcher,
+    fragmentMatcher = () => true,
   }: ExecStoreQueryOptions): ExecResult {
     const mainDefinition = getMainDefinition(query);
     const fragments = getFragmentDefinitions(query);
@@ -542,10 +542,6 @@ function readStoreResolver(
   return {
     result: fieldValue,
   };
-}
-
-function defaultFragmentMatcher() {
-  return true;
 }
 
 const hasOwn = Object.prototype.hasOwnProperty;

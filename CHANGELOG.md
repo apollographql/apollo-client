@@ -1,5 +1,19 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## 2.3.8 (July 26, 2018)
+
+### Apollo Client (2.3.7)
+
+- Adjusted the `graphql` peer dependency to cover explicit minor ranges.
+  Since the ^ operator only covers any minor version if the major version
+  is not 0 (since a major version of 0 is technically considered development by
+  semver 2), the current ^0.11.0 || ^14.0.0 graphql range doesn't cover
+  0.12.* or 0.13.*. This fixes the `apollo-client@X has incorrect peer
+  dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
+  seen using `graphql` 0.12.x or 0.13.x.
+  [@hwillson](https://github.com/hwillson) in [#3746](https://github.com/apollographql/apollo-client/pull/3746)
+
+
 ## 2.3.7 (July 24, 2018)
 
 ### Apollo Client (2.3.7)

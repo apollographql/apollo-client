@@ -15,7 +15,7 @@ import {
   NormalizedCacheObject,
 } from './types';
 import { writeResultToStore } from './writeToStore';
-import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
+import { StoreReader } from './readFromStore';
 import { defaultNormalizedCacheFactory } from './depTrackingCache';
 import { record } from './recordingCache';
 const defaultConfig: ApolloReducerConfig = {
@@ -43,6 +43,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
   private typenameDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
+  private storeReader: StoreReader;
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -69,6 +70,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.addTypename = this.config.addTypename;
     this.data = defaultNormalizedCacheFactory();
+
+    this.storeReader = new StoreReader();
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -94,7 +97,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       ? defaultNormalizedCacheFactory(this.extract(true))
       : this.data;
 
-    return readQueryFromStore({
+    return this.storeReader.readQueryFromStore({
       store,
       query: this.transformDocument(query.query),
       variables: query.variables,
@@ -124,7 +127,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       ? defaultNormalizedCacheFactory(this.extract(true))
       : this.data;
 
-    return diffQueryAgainstStore({
+    return this.storeReader.diffQueryAgainstStore({
       store: store,
       query: this.transformDocument(query.query),
       variables: query.variables,

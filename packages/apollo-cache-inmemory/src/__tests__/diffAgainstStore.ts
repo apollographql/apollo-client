@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { toIdValue } from 'apollo-utilities';
 
 import { defaultNormalizedCacheFactory } from '../objectCache';
-import { diffQueryAgainstStore } from '../readFromStore';
+import { StoreReader } from '../readFromStore';
 import { writeQueryToStore } from '../writeToStore';
 import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 import { defaultDataIdFromObject } from '../inMemoryCache';
@@ -26,13 +26,15 @@ export function withError(func: Function, regex: RegExp) {
 }
 
 describe('diffing queries against the store', () => {
+  const reader = new StoreReader();
+
   it(
     'expects named fragments to return complete as true when diffd against ' +
       'the store',
     () => {
       const store = defaultNormalizedCacheFactory({});
 
-      const queryResult = diffQueryAgainstStore({
+      const queryResult = reader.diffQueryAgainstStore({
         store,
         query: gql`
           query foo {
@@ -64,7 +66,7 @@ describe('diffing queries against the store', () => {
     () => {
       const store = defaultNormalizedCacheFactory();
 
-      const queryResult = diffQueryAgainstStore({
+      const queryResult = reader.diffQueryAgainstStore({
         store,
         query: gql`
           {
@@ -125,7 +127,7 @@ describe('diffing queries against the store', () => {
     });
 
     expect(
-      diffQueryAgainstStore({
+      reader.diffQueryAgainstStore({
         store,
         query,
       }).complete,
@@ -169,7 +171,7 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const { complete } = diffQueryAgainstStore({
+    const { complete } = reader.diffQueryAgainstStore({
       store,
       query: secondQuery,
     });
@@ -201,7 +203,7 @@ describe('diffing queries against the store', () => {
       }
     `;
     return expect(() => {
-      diffQueryAgainstStore({
+      reader.diffQueryAgainstStore({
         store,
         query: unionQuery,
       });
@@ -244,7 +246,7 @@ describe('diffing queries against the store', () => {
           }
         }
       `;
-      const { complete } = diffQueryAgainstStore({
+      const { complete } = reader.diffQueryAgainstStore({
         store,
         query: unionQuery,
         returnPartialData: false,
@@ -294,7 +296,7 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const { complete } = diffQueryAgainstStore({
+    const { complete } = reader.diffQueryAgainstStore({
       store,
       query: unionQuery,
     });
@@ -342,7 +344,7 @@ describe('diffing queries against the store', () => {
       }
     `;
     expect(() => {
-      diffQueryAgainstStore({
+      reader.diffQueryAgainstStore({
         store,
         query: unionQuery,
         returnPartialData: false,
@@ -409,7 +411,7 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const simpleDiff = diffQueryAgainstStore({
+    const simpleDiff = reader.diffQueryAgainstStore({
       store,
       query: simpleQuery,
     });
@@ -420,7 +422,7 @@ describe('diffing queries against the store', () => {
       },
     });
 
-    const inlineDiff = diffQueryAgainstStore({
+    const inlineDiff = reader.diffQueryAgainstStore({
       store,
       query: inlineFragmentQuery,
     });
@@ -431,7 +433,7 @@ describe('diffing queries against the store', () => {
       },
     });
 
-    const namedDiff = diffQueryAgainstStore({
+    const namedDiff = reader.diffQueryAgainstStore({
       store,
       query: namedFragmentQuery,
     });
@@ -443,7 +445,7 @@ describe('diffing queries against the store', () => {
     });
 
     expect(function() {
-      diffQueryAgainstStore({
+      reader.diffQueryAgainstStore({
         store,
         query: simpleQuery,
         returnPartialData: false,
@@ -496,7 +498,7 @@ describe('diffing queries against the store', () => {
       dataIdFromObject,
     });
 
-    const { result } = diffQueryAgainstStore({
+    const { result } = reader.diffQueryAgainstStore({
       store,
       query,
     });
@@ -543,7 +545,7 @@ describe('diffing queries against the store', () => {
         c: { d: 2, e: { f: 3 } },
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -583,7 +585,7 @@ describe('diffing queries against the store', () => {
         c: { d: 20, e: { f: 3 } },
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -632,7 +634,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -664,7 +666,7 @@ describe('diffing queries against the store', () => {
         a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -711,7 +713,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -757,7 +759,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -842,7 +844,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -893,7 +895,7 @@ describe('diffing queries against the store', () => {
         d: { e: 50, f: { x: 6, y: 7, z: 8 } },
       };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query,
         previousResult,
@@ -957,7 +959,7 @@ describe('diffing queries against the store', () => {
 
       const config = { dataIdFromObject, cacheRedirects };
 
-      const { result } = diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore({
         store,
         query: itemQuery,
         previousResult,

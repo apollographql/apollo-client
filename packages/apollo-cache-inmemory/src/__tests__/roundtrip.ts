@@ -11,7 +11,7 @@ import { DepTrackingCache } from '../depTrackingCache';
 import {
   HeuristicFragmentMatcher,
   writeQueryToStore,
-  readQueryFromStore,
+  StoreReader,
 } from '../';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
@@ -30,13 +30,15 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     fragmentMatcherFunction,
   };
 
-  const reconstructedResult = readQueryFromStore(readOptions);
+  const reader = new StoreReader();
+
+  const reconstructedResult = reader.readQueryFromStore(readOptions);
   expect(reconstructedResult).toEqual(result);
 
   // Make sure the result is identical if we haven't written anything new
   // to the store. https://github.com/apollographql/apollo-client/pull/3394
   expect(store).toBeInstanceOf(DepTrackingCache);
-  expect(readQueryFromStore(readOptions)).toBe(reconstructedResult);
+  expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
 
   // Now make sure subtrees of the result are identical even after we write
   // an additional bogus field to the store.
@@ -50,7 +52,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     `,
   });
 
-  const deletedRootResult = readQueryFromStore(readOptions);
+  const deletedRootResult = reader.readQueryFromStore(readOptions);
   expect(deletedRootResult).toEqual(result);
 
   if (deletedRootResult === reconstructedResult) {

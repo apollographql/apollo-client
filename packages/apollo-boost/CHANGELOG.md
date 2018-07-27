@@ -1,5 +1,12 @@
 # CHANGELOG
 
+----
+
+**NOTE:** This changelog is no longer maintained. Changes are now tracked in
+the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+
+----
+
 ### vNext
 
 - Allow `fetch` to be given as a configuration option to ApolloBoost.

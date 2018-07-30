@@ -1,6 +1,6 @@
 ---
-name: 🤗 Questions/Discussions
-about: Questions/discussions are best posted in [Apollo's Slack](https://www.apollographql.com/slack) or on [StackOverflow](https://stackoverflow.com/questions/tagged/apollo-client).
+name: 🤗 Questions / Discussions
+about: Questions / discussions are best posted in Apollo's Slack or on StackOverflow.
 ---
 
 Need help or want to talk all things Apollo Client? Issues here are reserved

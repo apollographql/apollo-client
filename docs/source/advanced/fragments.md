@@ -211,8 +211,8 @@ fetch(`${YOUR_API_HOST}/graphql`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    variables: null,
-    operationName: null,
+    variables: {},
+    operationName: '',
     query: `
       {
         __schema {

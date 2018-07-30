@@ -164,7 +164,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   <dt>`fetch`: GlobalFetch['fetch']</dt>
   <dd>A [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) compatible API for making a request.</dd>  
   <dt>`cache`: ApolloCache</dt>
-  <dd>A custom instance of ApolloCache to be used. The default value is `InMemoryCache` from `apollo-cache-inmemory`. This option is quite useful for using a custom cache with `apollo-cache-persist`.</dd>
+  <dd>A custom instance of `ApolloCache` to be used. The default value is `InMemoryCache` from `apollo-cache-inmemory`. This option is quite useful for using a custom cache with `apollo-cache-persist`.</dd>
 </dl>
 
 <h2 id="next-steps">Next steps</h2>

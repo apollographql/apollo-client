@@ -236,6 +236,8 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>Provide a [mutation response](../features/optimistic-ui.html) before the result comes back from the server</dd>
   <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables} | string></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
+  <dt>`awaitRefetchQueries`: boolean</dt>
+  <dd>Queries refetched as part of `refetchQueries` are handled asynchronously, and are not waited on before the mutation is completed (resolved). Setting this to `true` will make sure refetched queries are completed before the mutation is considered done. `false` by default.</dd>
   <dt>`onCompleted`: (data: TData) => void</dt>
   <dd>A callback executed once your mutation successfully completes</dd>
   <dt>`onError`: (error: ApolloError) => void</dt>

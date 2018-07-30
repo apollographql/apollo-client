@@ -31,7 +31,7 @@ export function check(doc: DocumentNode, data: any): void {
     info: any,
   ) => {
     if (!{}.hasOwnProperty.call(root, info.resultKey)) {
-      throw new Error(`${info.resultKey} missing on ${root}`);
+      throw new Error(`${info.resultKey} missing on ${JSON.stringify(root)}`);
     }
     return root[info.resultKey];
   };

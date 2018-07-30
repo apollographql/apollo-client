@@ -9,7 +9,6 @@
   "prCreation": "not-pending",
   "automerge": "minor",
   "labels": [
-    "tooling",
     "dependencies"
   ],
   "assignees": [

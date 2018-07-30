@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.1.14",
+  "version": "4.1.15",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -39,14 +39,14 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "^1.0.16"
+    "apollo-utilities": "^1.0.17"
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.111",
-    "@types/node": "10.5.2",
+    "@types/lodash": "4.14.115",
+    "@types/node": "10.5.4",
     "@types/react": "16.0.34",
     "@types/react-dom": "16.0.4",
     "browserify": "15.2.0",
@@ -55,9 +55,9 @@
     "jest": "23.0.0",
     "react": "15.6.2",
     "react-dom": "15.6.2",
-    "rollup": "0.62.0",
+    "rollup": "0.63.4",
     "ts-jest": "20.0.14",
-    "tslint": "5.10.0",
+    "tslint": "5.11.0",
     "typescript": "2.9.2",
     "uglify": "0.1.5"
   },
@@ -71,6 +71,7 @@
       "tsx",
       "js",
       "json"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

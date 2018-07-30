@@ -12,15 +12,14 @@ If you're an advanced user who would like to configure Apollo Client from scratc
 First, let's install some packages!
 
 ```bash
-npm install apollo-boost react-apollo graphql-tag graphql --save
+npm install apollo-boost react-apollo graphql --save
 ```
 
 - `apollo-boost`: Package containing everything you need to set up Apollo Client
 - `react-apollo`: View layer integration for React
-- `graphql-tag`: Necessary for parsing your GraphQL queries
 - `graphql`: Also parses your GraphQL queries
 
-> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/add-react-to-a-new-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
+> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/create-a-new-react-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
 
 <h2 id="creating-client">Create a client</h2>
 
@@ -164,6 +163,8 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   <dd>Header key/value pairs to pass along with the request.</dd>
   <dt>`fetch`: GlobalFetch['fetch']</dt>
   <dd>A [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) compatible API for making a request.</dd>  
+  <dt>`cache`: ApolloCache</dt>
+  <dd>A custom instance of `ApolloCache` to be used. The default value is `InMemoryCache` from `apollo-cache-inmemory`. This option is quite useful for using a custom cache with `apollo-cache-persist`.</dd>
 </dl>
 
 <h2 id="next-steps">Next steps</h2>

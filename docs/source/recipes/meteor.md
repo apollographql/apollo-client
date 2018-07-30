@@ -152,7 +152,7 @@ The store is normalized by default with `__typename` + `_id` identifiers. See [s
 `createMeteorNetworkInterface(customNetworkInterface = {})`
 
 `customNetworkInterface` is an optional object that replaces fields of the default configuration:
-- `uri`: `Meteor.absoluteUrl('graphql')`, points to the default GraphQL server endpoint, such as http://locahost:3000/graphql or https://www.my-app.com/graphql.
+- `uri`: `Meteor.absoluteUrl('graphql')`, points to the default GraphQL server endpoint, such as http://localhost:3000/graphql or https://www.example.com/graphql.
 - `opts`: `{}`, additional [`FetchOptions`](https://github.github.io/fetch#options) passed to the [`NetworkInterface`](http://dev.apollodata.com/core/network.html#createNetworkInterface).
 - `useMeteorAccounts`: `true`, enable the Meteor User Accounts middleware to identify the user with every request thanks to her login token.
 - `batchingInterface`: `true`, use a [`BatchedNetworkInterface`](http://dev.apollodata.com/core/network.html#query-batching) by default instead of [`NetworkInterface`](http://dev.apollodata.com/core/network.html#network-interfaces).

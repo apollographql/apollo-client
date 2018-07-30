@@ -21,6 +21,16 @@ describe('config', () => {
     },
   };
 
+  it('warns about unsupported parameter', () => {
+    jest.spyOn(global.console, 'warn');
+
+    const client = new ApolloClient({
+      link: [],
+    });
+
+    expect(global.console.warn.mock.calls).toMatchSnapshot();
+  });
+
   it('allows you to pass in a custom fetcher', () => {
     const customFetcher = jest.fn(() =>
       Promise.resolve({

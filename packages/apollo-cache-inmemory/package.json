@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-inmemory",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -40,9 +40,9 @@
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache": "^1.1.12",
-    "apollo-utilities": "^1.0.16",
-    "graphql-anywhere": "^4.1.14"
+    "apollo-cache": "^1.1.13",
+    "apollo-utilities": "^1.0.17",
+    "graphql-anywhere": "^4.1.15"
   },
   "peerDependencies": {
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0"
@@ -50,16 +50,16 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.111",
+    "@types/lodash": "4.14.115",
     "browserify": "15.2.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
     "jest": "23.0.0",
     "lodash": "4.17.10",
     "rimraf": "2.6.2",
-    "rollup": "0.62.0",
+    "rollup": "0.63.4",
     "ts-jest": "20.0.14",
-    "tslint": "5.10.0",
+    "tslint": "5.11.0",
     "typescript": "2.9.2",
     "uglifyjs": "2.4.11"
   },
@@ -73,6 +73,7 @@
       "tsx",
       "js",
       "json"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

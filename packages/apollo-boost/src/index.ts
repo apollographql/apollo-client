@@ -28,8 +28,44 @@ export interface PresetConfig {
   cache?: ApolloCache<any>;
 }
 
+// Yes, these are the exact same as the `PresetConfig` interface. We're
+// defining these again so they can be used to verify that valid config
+// options are being used in the `DefaultClient` constructor, for clients
+// that aren't using Typescript. This duplication is unfortunate, and at
+// some point can likely be adjusted so these items are inferred from
+// the `PresetConfig` interface using a Typescript transform at compilation
+// time. Unfortunately, TS transforms with rollup don't appear to be quite
+// working properly, so this will have to be re-visited at some point.
+// For now, when updating the properties of the `PresetConfig` interface,
+// please also update this constant.
+const PRESET_CONFIG_KEYS = [
+  'request',
+  'uri',
+  'credentials',
+  'headers',
+  'fetch',
+  'fetchOptions',
+  'clientState',
+  'onError',
+  'cacheRedirects',
+  'cache',
+];
+
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
   constructor(config: PresetConfig = {}) {
+    if (config) {
+      const diff = Object.keys(config).filter(
+        key => PRESET_CONFIG_KEYS.indexOf(key) === -1,
+      );
+
+      if (diff.length > 0) {
+        console.warn(
+          'ApolloBoost was initialized with unsupported options: ' +
+            `${diff.join(' ')}`,
+        );
+      }
+    }
+
     const {
       request,
       uri,

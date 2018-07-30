@@ -120,7 +120,7 @@ export class ObservableQuery<
     return new Promise((resolve, reject) => {
       let subscription: Subscription;
       const observer: Observer<ApolloQueryResult<TData>> = {
-        next(result) {
+        next(result: ApolloQueryResult<TData>) {
           resolve(result);
 
           // Stop the query within the QueryManager if we can before
@@ -141,7 +141,7 @@ export class ObservableQuery<
             subscription.unsubscribe();
           }, 0);
         },
-        error(error) {
+        error(error: any) {
           reject(error);
         },
       };
@@ -346,29 +346,27 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore(
-    options: SubscribeToMoreOptions<TData, TVariables>,
-  ): () => void {
+  public subscribeToMore(options: SubscribeToMoreOptions<TData, TVariables>) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
         variables: options.variables,
       })
       .subscribe({
-        next: data => {
+        next: (subscriptionData: { data: TData }) => {
           if (options.updateQuery) {
             this.updateQuery((previous, { variables }) =>
               (options.updateQuery as UpdateQueryFn<TData, TVariables>)(
                 previous,
                 {
-                  subscriptionData: data as { data: TData },
+                  subscriptionData,
                   variables,
                 },
               ),
             );
           }
         },
-        error: err => {
+        error: (err: any) => {
           if (options.onError) {
             options.onError(err);
             return;

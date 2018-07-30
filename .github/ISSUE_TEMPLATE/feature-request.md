@@ -1,6 +1,6 @@
 ---
 name: 🚀 Feature Request
-about: Feature requests are managed in the Apollo Feature Request repo: https://github.com/apollographql/apollo-feature-request
+about: Feature requests are managed in the Apollo Feature Request repo (https://github.com/apollographql/apollo-feature-request).
 ---
 
 Thanks for your interest in helping make Apollo Client better!

@@ -37,6 +37,7 @@ sidebar_categories:
     - features/server-side-rendering
     - features/performance
     - features/developer-tooling
+    - features/defer-support
   Advanced:
     - advanced/boost-migration
     - advanced/subscriptions
@@ -54,7 +55,7 @@ sidebar_categories:
     - recipes/recompose
   Related Guides:
     - title: State Management
-      href: https://www.apollographql.com/docs/guides/state-mgmt.html
+      href: https://www.apollographql.com/docs/guides/state-management.html
     - title: Testing React Components
       href: https://www.apollographql.com/docs/guides/testing-react-components.html
     - title: Schema Design
@@ -72,3 +73,7 @@ redirects:
     docs/react/api/react-apollo.html#graphql-mutation-options
   /docs/react/recipes/simple-example.html:
     docs/react/essentials/get-started.html
+  /docs/react/api/apollo-client.html#FetchPolicy:
+    docs/react/api/react-apollo.html#graphql-config-options-fetchPolicy
+  /docs/react/api/apollo-client.html#ErrorPolicy:
+    docs/react/api/react-apollo.html#graphql-config-options-errorPolicy

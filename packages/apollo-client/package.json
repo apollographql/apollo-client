@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.3.5",
+  "version": "2.3.7",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -47,29 +47,29 @@
   "license": "MIT",
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
-    "apollo-cache": "^1.1.12",
+    "apollo-cache": "^1.1.13",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "^1.0.0",
-    "apollo-utilities": "^1.0.16",
+    "apollo-utilities": "^1.0.17",
     "symbol-observable": "^1.0.2",
     "zen-observable": "^0.8.0"
   },
   "peerDependencies": {
-    "graphql": "^0.11.0 || ^14.0.0"
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "devDependencies": {
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.112",
-    "@types/node": "10.5.2",
-    "apollo-cache-inmemory": "^1.2.5",
+    "@types/lodash": "4.14.115",
+    "@types/node": "10.5.4",
+    "apollo-cache-inmemory": "^1.2.6",
     "benchmark": "2.1.4",
     "browserify": "15.2.0",
     "bundlesize": "0.17.0",
     "danger": "1.1.0",
-    "flow-bin": "0.76.0",
+    "flow-bin": "0.77.0",
     "github": "12.1.0",
     "graphql": "14.0.0-rc.2",
     "graphql-tag": "2.9.2",
@@ -77,12 +77,12 @@
     "jest": "23.0.0",
     "lint-staged": "6.1.0",
     "lodash": "4.17.10",
-    "rollup": "0.62.0",
+    "rollup": "0.63.4",
     "rxjs": "6.2.2",
     "ts-jest": "20.0.14",
-    "tslint": "5.10.0",
+    "tslint": "5.11.0",
     "typescript": "2.9.2",
-    "uglify-js": "3.4.4",
+    "uglify-js": "3.4.6",
     "webpack": "3.12.0",
     "webpack-bundle-analyzer": "2.13.1"
   },
@@ -102,6 +102,7 @@
     ],
     "setupFiles": [
       "<rootDir>/scripts/tests.js"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

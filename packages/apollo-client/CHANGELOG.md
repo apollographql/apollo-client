@@ -1,8 +1,15 @@
 # CHANGELOG
 
+----
+
+**NOTE:** This changelog is no longer maintained. Changes are now tracked in
+the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+
+----
+
 ### vNext
 
-- Updated `graphql` `peerDependencies` to handle 14.x versions.  
+- Updated `graphql` `peerDependencies` to handle 14.x versions.
   [PR #3598](https://github.com/apollographql/apollo-client/pull/3598)
 
 ### 2.3.5
@@ -27,7 +34,7 @@
   [PR#3140](https://github.com/apollographql/apollo-client/pull/3140)
 - Added optional generics to cache manipulation methods (typescript).
   [PR #3541](https://github.com/apollographql/apollo-client/pull/3541)
-- Typescript improvements. Created a new `QueryOptions` interface that  
+- Typescript improvements. Created a new `QueryOptions` interface that
   is now used by `ApolloClient.query` options, instead of the previous
   `WatchQueryOptions` interface. This helps reduce confusion (especially
   in the docs) that made it look like `ApolloClient.query` accepted
@@ -49,7 +56,7 @@
   (Android), by instead setting the `prototype` of `this` manually.
   [Issue #3236](https://github.com/apollographql/apollo-client/issues/3236)
   [PR #3306](https://github.com/apollographql/apollo-client/pull/3306)
-- Added safeguards to make sure `QueryStore.initQuery` and   
+- Added safeguards to make sure `QueryStore.initQuery` and
   `QueryStore.markQueryResult` don't try to set the network status of a
   `fetchMoreForQueryId` query, if it does not exist in the store. This was
   happening when a query component was unmounted while a `fetchMore` was still

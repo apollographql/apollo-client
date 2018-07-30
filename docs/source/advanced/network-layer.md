@@ -30,7 +30,7 @@ const client = new ApolloClient({
 And if you needed to pass additional options to [`fetch`](https://github.github.io/fetch/):
 
 ```js
-import ApolloClient from 'apollo-client';
+import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 
 const link = new HttpLink({
@@ -52,7 +52,7 @@ Apollo Link is designed from day one to be easy to use middleware on your reques
 The following examples shows how you'd create a middleware. In both examples, we'll show how you would add an authentication token to the HTTP header of the requests being sent by the client.
 
 ```js
-import ApolloClient from 'apollo-client';
+import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 import { ApolloLink, concat } from 'apollo-link';
 
@@ -79,7 +79,7 @@ The above example shows the use of a single middleware joined with the HttpLink.
 The following example shows the use of multiple middlewares passed as an array:
 
 ```js
-import ApolloClient from 'apollo-client';
+import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 import { ApolloLink, from } from 'apollo-link';
 
@@ -133,7 +133,7 @@ Much like middlewares, Apollo Link was designed to make afterwares easy and powe
 The following example demonstrates how to implement an afterware function.
 
 ```js
-import ApolloClient from 'apollo-client';
+import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 import { onError } from 'apollo-link-error'
 

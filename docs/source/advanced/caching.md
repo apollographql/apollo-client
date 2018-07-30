@@ -267,7 +267,7 @@ mutate({
   //... insert comment mutation
   refetchQueries: [{
     query: gql`
-      query updateCache($repoName: String!) {
+      query UpdateCache($repoName: String!) {
         entry(repoFullName: $repoName) {
           id
           comments {
@@ -306,7 +306,7 @@ Using `update` gives you full control over the cache, allowing you to make chang
 import CommentAppQuery from '../queries/CommentAppQuery';
 
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(
       repoFullName: $repoFullName
       commentContent: $commentContent

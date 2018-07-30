@@ -120,7 +120,7 @@ export class ObservableQuery<
     return new Promise((resolve, reject) => {
       let subscription: Subscription;
       const observer: Observer<ApolloQueryResult<TData>> = {
-        next(result) {
+        next(result: ApolloQueryResult<TData>) {
           resolve(result);
 
           // Stop the query within the QueryManager if we can before
@@ -141,7 +141,7 @@ export class ObservableQuery<
             subscription.unsubscribe();
           }, 0);
         },
-        error(error) {
+        error(error: any) {
           reject(error);
         },
       };
@@ -242,6 +242,13 @@ export class ObservableQuery<
     this.isTornDown = false;
   }
 
+  /**
+   * Update the variables of this observable query, and fetch the new results.
+   * This method should be preferred over `setVariables` in most use cases.
+   *
+   * @param variables: The new set of variables. If there are missing variables,
+   * the previous values of those variables will be used.
+   */
   public refetch(variables?: TVariables): Promise<ApolloQueryResult<TData>> {
     const { fetchPolicy } = this.options;
     // early return if trying to read from cache during refetch
@@ -339,29 +346,27 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore(
-    options: SubscribeToMoreOptions<TData, TVariables>,
-  ): () => void {
+  public subscribeToMore(options: SubscribeToMoreOptions<TData, TVariables>) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
         variables: options.variables,
       })
       .subscribe({
-        next: data => {
+        next: (subscriptionData: { data: TData }) => {
           if (options.updateQuery) {
             this.updateQuery((previous, { variables }) =>
               (options.updateQuery as UpdateQueryFn<TData, TVariables>)(
                 previous,
                 {
-                  subscriptionData: data as { data: TData },
+                  subscriptionData,
                   variables,
                 },
               ),
             );
           }
         },
-        error: err => {
+        error: (err: any) => {
           if (options.onError) {
             options.onError(err);
             return;
@@ -415,14 +420,22 @@ export class ObservableQuery<
   }
 
   /**
+   * This is for *internal* use only. Most users should instead use `refetch`
+   * in order to be properly notified of results even when they come from cache.
+   *
    * Update the variables of this observable query, and fetch the new results
    * if they've changed. If you want to force new results, use `refetch`.
    *
-   * Note: if the variables have not changed, the promise will return the old
-   * results immediately, and the `next` callback will *not* fire.
+   * Note: the `next` callback will *not* fire if the variables have not changed
+   * or if the result is coming from cache.
    *
-   * Note: if the query is not active (there are no subscribers), the promise
-   * will return null immediately.
+   * Note: the promise will return the old results immediately if the variables
+   * have not changed.
+   *
+   * Note: the promise will return null immediately if the query is not active
+   * (there are no subscribers).
+   *
+   * @private
    *
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
@@ -432,7 +445,6 @@ export class ObservableQuery<
    * this will refetch)
    *
    * @param fetchResults: Option to ignore fetching results when updating variables
-   *
    */
   public setVariables(
     variables: TVariables,

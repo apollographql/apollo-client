@@ -1,5 +1,22 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## vNext
+
+### Apollo Client (vNext)
+
+- Adjusted the `graphql` peer dependency to cover explicit minor ranges.
+  Since the ^ operator only covers any minor version if the major version
+  is not 0 (since a major version of 0 is technically considered development by
+  semver 2), the current ^0.11.0 || ^14.0.0 graphql range doesn't cover
+  0.12.* or 0.13.*. This fixes the `apollo-client@X has incorrect peer
+  dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
+  seen using `graphql` 0.12.x or 0.13.x.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3746](https://github.com/apollographql/apollo-client/pull/3746)
+- Documentation updates.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3750](https://github.com/apollographql/apollo-client/pull/3750)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3754](https://github.com/apollographql/apollo-client/pull/3754)
+
+
 ## 2.3.7 (July 24, 2018)
 
 ### Apollo Client (2.3.7)
@@ -11,7 +28,7 @@
   caused by the typescript compiler getting confused at compile/publish time.
   `getQueryWithPreviousResult` return types are now excplicity identified,
   which helps Typescript avoid the local type reference. For more details,
-  see https://github.com/apollographql/apollo-client/issues/3729.
+  see https://github.com/apollographql/apollo-client/issues/3729.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3731](https://github.com/apollographql/apollo-client/pull/3731)
 
 ### Apollo Boost (0.1.12)

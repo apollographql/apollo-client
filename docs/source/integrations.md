@@ -13,7 +13,7 @@ React Apollo, unlike some other tools in the React ecosystem requires _no_ compl
 
 <h2 id="vue" title="Vue">Vue</h2>
 
-A [Vue.js](https://vuejs.org/) integration is maintained by Guillaume Chau. See the Github [repository](https://github.com/Akryum/vue-apollo) for more details.
+A [Vue.js](https://vuejs.org/) integration is maintained by Guillaume Chau ([@Akryum](https://github.com/Akryum)). See the Github [repository](https://github.com/Akryum/vue-apollo) for more details.
 
 <h2 id="angular" title="Angular">Angular</h2>
 
@@ -23,10 +23,10 @@ To use Apollo with the [Angular](https://angular.io) rendering library, see the 
 
 There are two [Ember](http://emberjs.com/) integrations available:
 
-* [ember-apollo-client](https://github.com/bgentry/ember-apollo-client) is maintained by Blake Gentry.
-* [ember-apollo](https://github.com/jlevycpa/ember-apollo) is maintained by Jeff Levy.
+* [ember-apollo-client](https://github.com/bgentry/ember-apollo-client) is maintained by Blake Gentry ([@bgentry](https://github.com/bgentry)).
+* [ember-apollo](https://github.com/jlevycpa/ember-apollo) is maintained by Jeff Levy ([@jlevycpa](https://github.com/jlevycpa)).
 
 <h2 id="web-components" title="Web Components">Web Components</h2>
 
-- **Polymer:** A [Polymer](https://www.polymer-project.org/) integration is maintained by Arun Kumar T K. See the Github [repository](https://github.com/aruntk/polymer-apollo) for more details.
-- **lit-apollo:** A set of custom-element base classes that extend from LitElement which let you easily compose front-end apps in a framework-agnostic way. [`lit-apollo`](https://github.com/bennypowers/lit-apollo) is maintained by Benny Powers.
+- **Polymer:** A [Polymer](https://www.polymer-project.org/) integration is maintained by Arun Kumar T K ([@aruntk](https://github.com/aruntk)). See the Github [repository](https://github.com/aruntk/polymer-apollo) for more details.
+- **lit-apollo:** A set of custom-element base classes that extend from LitElement which let you easily compose front-end apps in a framework-agnostic way. [`lit-apollo`](https://github.com/bennypowers/lit-apollo) is maintained by Benny Powers ([@bennypowers](https://github.com/bennypowers)).

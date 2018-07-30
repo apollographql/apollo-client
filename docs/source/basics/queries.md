@@ -63,7 +63,7 @@ For queries, the shape of the `data` prop is the following:
 There are a lot more methods as well, which you can read about [in the API docs for queries](#graphql-query-data). As an example, for a query like this:
 
 ```graphql
-query getUserAndLikes($id: ID!) {
+query GetUserAndLikes($id: ID!) {
   user(userId: $id) { name }
   likes(userId: $id) { count }
 }

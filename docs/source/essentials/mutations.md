@@ -20,7 +20,7 @@ import gql from "graphql-tag";
 import { Mutation } from "react-apollo";
 
 const ADD_TODO = gql`
-  mutation addTodo($type: String!) {
+  mutation AddTodo($type: String!) {
     addTodo(type: $type) {
       id
       type
@@ -117,7 +117,7 @@ Not every mutation requires an update function. If you're updating a single item
 
 ```jsx
 const UPDATE_TODO = gql`
-  mutation updateTodo($id: String!, $type: String!) {
+  mutation UpdateTodo($id: String!, $type: String!) {
     updateTodo(id: $id, type: $type) {
       id
       type

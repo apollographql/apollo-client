@@ -11,7 +11,7 @@ fragment NameParts on Person {
   lastName
 }
 
-query getPerson {
+query GetPerson {
   people(id: "7") {
     ...NameParts
     avatar(size: LARGE)
@@ -54,9 +54,9 @@ We put the fragment on `CommentsPage.fragments.comment` by convention, and use t
 
 When it's time to embed the fragment in a query, we simply use the `...Name` syntax in our GraphQL, and embed the fragment inside our query GraphQL document:
 
-```
+```js
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
       ...CommentsPageComment
     }

@@ -286,6 +286,8 @@ mutate({
 })
 ```
 
+Please note that if you call `refetchQueries` with an array of strings, then Apollo Client will look for any previously called queries that have the same names as the provided strings. It will then refetch those queries with their current variables.
+
 A very common way of using `refetchQueries` is to import queries defined for other components to make sure that those components will be updated:
 
 ```javascript

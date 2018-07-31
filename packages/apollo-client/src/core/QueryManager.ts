@@ -20,6 +20,7 @@ import {
   isProduction,
   maybeDeepFreeze,
   hasDirectives,
+  cloneDeep,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -1081,6 +1082,47 @@ export class QueryManager<TStore> {
     });
   }
 
+  /**
+   * Given a loadingState tree, update it with the patch by traversing its path
+   */
+  private updateLoadingState(
+    curLoadingState: Record<string, any>,
+    result: ExecutionPatchResult,
+  ) {
+    const path = result.path;
+    let index = 0;
+    const copy = cloneDeep(curLoadingState);
+    let curPointer = copy;
+    while (index < path.length) {
+      const key = path[index++];
+      if (curPointer && curPointer[key]) {
+        curPointer = curPointer[key];
+        if (index === path.length) {
+          // Reached the leaf node
+          if (Array.isArray(result.data)) {
+            // At the time of instantiating the loadingState from the query AST,
+            // we have no way of telling if a field is an array type. Therefore,
+            // once we receive a patch that has array data, we need to update the
+            // loadingState with an array with the appropriate number of elements.
+
+            const children = cloneDeep(curPointer!._children);
+            const childrenArray = [];
+            for (let i = 0; i < result.data.length; i++) {
+              childrenArray.push(children);
+            }
+            curPointer!._children = childrenArray;
+          }
+          curPointer!._loading = false;
+          break;
+        }
+        if (curPointer && curPointer!._children) {
+          curPointer = curPointer!._children;
+        }
+      }
+    }
+    return copy;
+  }
+
   // Takes a request id, query id, a query document and information associated with the query
   // and send it to the network interface. Returns
   // a promise for the result associated with that request.
@@ -1109,6 +1151,7 @@ export class QueryManager<TStore> {
 
     let resultFromStore: any;
     let errorsFromStore: any;
+    let curLoadingState: Record<string, any>;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, resolve, reject);
@@ -1138,20 +1181,23 @@ export class QueryManager<TStore> {
 
             // Initialize a tree of individual loading states for each deferred
             // field, when the initial response arrives.
-            let loadingState;
             if (isDeferred && !isPatch(result)) {
-              loadingState = this.initDeferredFieldLoadingStates(
+              curLoadingState = this.initFieldLevelLoadingStates(
                 document,
                 result,
               );
             }
 
-            // Provide some info about patches that get streamed in behind
-            // the scenes
-            // TODO: Remove this when out of alpha preview
             if (isDeferred && isPatch(result)) {
+              // TODO: Remove console.info when out of alpha
               console.info(
                 `Patch received for path ${JSON.stringify(result.path)}`,
+              );
+
+              // Update loadingState for every patch received, by traversing its path
+              curLoadingState = this.updateLoadingState(
+                curLoadingState,
+                result,
               );
             }
 
@@ -1160,7 +1206,7 @@ export class QueryManager<TStore> {
               result,
               fetchMoreForQueryId,
               isDeferred,
-              loadingState,
+              curLoadingState,
             );
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
@@ -1218,7 +1264,7 @@ export class QueryManager<TStore> {
             loading: false,
             networkStatus: NetworkStatus.ready,
             stale: false,
-            loadingState: {},
+            loadingState: curLoadingState,
           });
         },
       });
@@ -1306,9 +1352,9 @@ export class QueryManager<TStore> {
 
   /**
    * Given a DocumentNode, traverse the tree and initialize loading states for
-   * all deferred fields.
+   * all fields. Deferred fields are initialized with `_loading` set to true.
    */
-  private initDeferredFieldLoadingStates(
+  private initFieldLevelLoadingStates(
     doc: DocumentNode,
     result: ExecutionResult,
   ) {
@@ -1327,7 +1373,7 @@ export class QueryManager<TStore> {
       definition => definition.kind === Kind.OPERATION_DEFINITION,
     )[0]; // Take the first element since we do not support multiple operations
 
-    return (this.extractDeferredFieldsToTree(
+    return (this.createLoadingStateTree(
       operationDefinition as any,
       fragmentMap,
       result.data,
@@ -1341,7 +1387,7 @@ export class QueryManager<TStore> {
    * The actual data from the initial response is passed in so that we can
    * reference the query schema against the data, and handle arrays that we find.
    */
-  private extractDeferredFieldsToTree(
+  private createLoadingStateTree(
     selection: SelectionNode,
     fragmentMap: Record<string, any>,
     data: Record<string, any> | undefined,
@@ -1416,7 +1462,7 @@ export class QueryManager<TStore> {
     for (const childSelection of (selection as FieldNode).selectionSet!
       .selections) {
       if (childSelection.kind === Kind.INLINE_FRAGMENT) {
-        const subtree = this.extractDeferredFieldsToTree(
+        const subtree = this.createLoadingStateTree(
           childSelection,
           fragmentMap,
           data,
@@ -1433,7 +1479,7 @@ export class QueryManager<TStore> {
           childData = data[childName];
           isArray = Array.isArray(childData);
         }
-        const subtree = this.extractDeferredFieldsToTree(
+        const subtree = this.createLoadingStateTree(
           childSelection,
           fragmentMap,
           // Just pass in the first elem of array, all of them will have

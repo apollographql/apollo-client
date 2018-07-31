@@ -1,6 +1,6 @@
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { print } from 'graphql/language/printer';
-import { cloneDeep, isEqual } from 'apollo-utilities';
+import { isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
 import { ExecutionPatchResult, isPatch } from '../core/types';
@@ -124,7 +124,7 @@ export class QueryStore {
   ) {
     if (!this.store[queryId]) return;
 
-    // Set up loadingState if it is passed in by QueryManager for deferred queries
+    // Store loadingState along with a compacted version of it
     if (isDeferred && loadingState) {
       this.store[queryId].loadingState = loadingState;
       this.store[queryId].compactedLoadingState = this.compactLoadingStateTree(
@@ -132,45 +132,7 @@ export class QueryStore {
       );
     }
 
-    if (isPatch(result)) {
-      // Update loadingState for every patch received, by traversing its path
-      const path = (result as ExecutionPatchResult).path;
-      let index = 0;
-      const copy = cloneDeep(this.store[queryId].loadingState);
-      let curPointer = copy;
-      while (index < path.length) {
-        const key = path[index++];
-        if (curPointer && curPointer[key]) {
-          curPointer = curPointer[key];
-          if (index === path.length) {
-            // Reached the leaf node
-            if (Array.isArray(result.data)) {
-              // At the time of instantiating the loadingState from the query AST,
-              // we have no way of telling if a field is an array type. Therefore,
-              // once we receive a patch that has array data, we need to update the
-              // loadingState with an array with the appropriate number of elements.
-
-              const children = cloneDeep(curPointer!._children);
-              const childrenArray = [];
-              for (let i = 0; i < result.data.length; i++) {
-                childrenArray.push(children);
-              }
-              curPointer!._children = childrenArray;
-            }
-            curPointer!._loading = false;
-            break;
-          }
-          if (curPointer && curPointer!._children) {
-            curPointer = curPointer!._children;
-          }
-        }
-      }
-
-      this.store[queryId].loadingState = copy;
-      this.store[queryId].compactedLoadingState = this.compactLoadingStateTree(
-        copy,
-      );
-
+    if (isDeferred && isPatch(result)) {
       // Merge graphqlErrors from patch, if any
       if (result.errors) {
         const errors: GraphQLError[] = [];
@@ -182,7 +144,6 @@ export class QueryStore {
         });
         this.store[queryId].graphQLErrors = errors;
       }
-      return;
     }
 
     this.store[queryId].networkError = null;

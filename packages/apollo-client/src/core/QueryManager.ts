@@ -1129,7 +1129,7 @@ export class QueryManager<TStore> {
             // TODO: Remove this when out of alpha preview
             if (isDeferred && isPatch(result)) {
               console.info(
-                `Patch received: ${JSON.stringify(result, null, 2)}`,
+                `Patch received for path ${JSON.stringify(result.path)}`,
               );
             }
 
@@ -1137,6 +1137,7 @@ export class QueryManager<TStore> {
               queryId,
               result,
               fetchMoreForQueryId,
+              isDeferred,
               loadingState,
             );
 
@@ -1184,6 +1185,7 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
+          console.log('apollo client complete!');
           this.removeFetchQueryPromise(requestId);
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),

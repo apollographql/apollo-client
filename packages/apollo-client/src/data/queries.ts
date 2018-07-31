@@ -1,10 +1,9 @@
-import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
+import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { print } from 'graphql/language/printer';
-import { isEqual } from 'apollo-utilities';
+import { cloneDeep, isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
 import { ExecutionPatchResult, isPatch } from '../core/types';
-import { cloneDeep } from 'apollo-utilities';
 
 export type QueryStoreValue = {
   document: DocumentNode;
@@ -120,12 +119,13 @@ export class QueryStore {
     queryId: string,
     result: ExecutionResult | ExecutionPatchResult,
     fetchMoreForQueryId: string | undefined,
+    isDeferred: boolean,
     loadingState?: Record<string, any>,
   ) {
     if (!this.store[queryId]) return;
 
-    // Set up loadingState if it is passed in by QueryManager
-    if (loadingState) {
+    // Set up loadingState if it is passed in by QueryManager for deferred queries
+    if (isDeferred && loadingState) {
       this.store[queryId].loadingState = loadingState;
       this.store[queryId].compactedLoadingState = this.compactLoadingStateTree(
         loadingState,
@@ -189,7 +189,9 @@ export class QueryStore {
     this.store[queryId].graphQLErrors =
       result.errors && result.errors.length ? result.errors : [];
     this.store[queryId].previousVariables = null;
-    this.store[queryId].networkStatus = NetworkStatus.ready;
+    this.store[queryId].networkStatus = isDeferred
+      ? NetworkStatus.partial
+      : NetworkStatus.ready;
 
     // If we have a `fetchMoreForQueryId` then we need to update the network
     // status for that query. See the branch for query initialization for more

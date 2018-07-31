@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.4.0-alpha.12",
+  "version": "2.4.0-alpha.13",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -47,10 +47,10 @@
   "license": "MIT",
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
-    "apollo-cache": "1.1.13-alpha.12",
+    "apollo-cache": "1.1.13-alpha.13",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "alpha",
-    "apollo-utilities": "1.0.17-alpha.12",
+    "apollo-utilities": "1.0.17-alpha.13",
     "symbol-observable": "^1.0.2",
     "zen-observable": "^0.8.0"
   },
@@ -64,7 +64,7 @@
     "@types/jest": "22.2.3",
     "@types/lodash": "4.14.112",
     "@types/node": "10.5.2",
-    "apollo-cache-inmemory": "1.2.6-alpha.12",
+    "apollo-cache-inmemory": "1.2.6-alpha.13",
     "benchmark": "2.1.4",
     "browserify": "15.2.0",
     "bundlesize": "0.17.0",

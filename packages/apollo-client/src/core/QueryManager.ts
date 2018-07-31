@@ -396,7 +396,21 @@ export class QueryManager<TStore> {
       !shouldFetch || fetchPolicy === 'cache-and-network';
 
     if (shouldDispatchClientResult) {
-      this.queryStore.markQueryResultClient(queryId, !shouldFetch);
+      const query = this.queryStore.get(queryId);
+
+      // Initialize loadingState with the cached results if it is a deferred query
+      let loadingState;
+      if (hasDirectives(['defer'], query.document)) {
+        loadingState = this.initFieldLevelLoadingStates(query.document, {
+          data: storeResult,
+        });
+      }
+
+      this.queryStore.markQueryResultClient(
+        queryId,
+        !shouldFetch,
+        loadingState,
+      );
 
       this.invalidate(true, queryId, fetchMoreForQueryId);
 
@@ -1386,6 +1400,9 @@ export class QueryManager<TStore> {
    * FragmentSpread according to the fragment map that is passed in.
    * The actual data from the initial response is passed in so that we can
    * reference the query schema against the data, and handle arrays that we find.
+   * In the case where a partial result is passed in (might be retrieved from
+   * cache), it would set the `_loading` states depending on which fields are
+   * available.
    */
   private createLoadingStateTree(
     selection: SelectionNode,
@@ -1402,16 +1419,18 @@ export class QueryManager<TStore> {
       (!(selection as FieldNode).selectionSet ||
         (selection as FieldNode).selectionSet!.selections.length === 0);
 
+    const isLoaded = data !== undefined && data !== null;
     if (isLeaf) {
-      return hasDeferDirective ? { _loading: true } : true;
+      return hasDeferDirective ? { _loading: !isLoaded } : false;
     }
 
     const map: { _loading?: boolean; _children?: Record<string, any> } = {
-      _loading: hasDeferDirective ? true : undefined,
+      _loading: hasDeferDirective ? !isLoaded : false,
       _children: undefined,
     };
 
-    // Replace FragmentSpreads with its actual selectionSet
+    // Extract child selections, replacing FragmentSpreads with its actual selectionSet
+    const selections: SelectionNode[] = [];
     const expandedFragments: SelectionNode[] = [];
     (selection as FieldNode).selectionSet!.selections.forEach(
       childSelection => {
@@ -1420,19 +1439,16 @@ export class QueryManager<TStore> {
           fragmentMap[fragmentName].forEach((selection: SelectionNode) => {
             expandedFragments.push(selection);
           });
+        } else {
+          selections.push(childSelection);
         }
       },
-    );
-
-    // Remove FragmentSpreads
-    (selection as FieldNode).selectionSet!.selections = (selection as FieldNode).selectionSet!.selections.filter(
-      selection => selection.kind !== Kind.FRAGMENT_SPREAD,
     );
 
     // Add expanded FragmentSpreads to the current selection set
     expandedFragments.forEach(fragSelection => {
       const fragFieldName = (fragSelection as FieldNode).name.value;
-      const existingSelection = (selection as FieldNode).selectionSet!.selections.find(
+      const existingSelection = selections.find(
         selection =>
           selection.kind !== Kind.INLINE_FRAGMENT &&
           (selection as FieldNode).name.value === fragFieldName,
@@ -1455,22 +1471,23 @@ export class QueryManager<TStore> {
         }
       } else {
         // Add it to the selectionSet
-        (selection as FieldNode).selectionSet!.selections.push(fragSelection);
+        selections.push(fragSelection);
       }
     });
 
-    for (const childSelection of (selection as FieldNode).selectionSet!
-      .selections) {
+    // Initialize loadingState recursively for childSelections
+    for (const childSelection of selections) {
       if (childSelection.kind === Kind.INLINE_FRAGMENT) {
         const subtree = this.createLoadingStateTree(
           childSelection,
           fragmentMap,
           data,
         );
-        if (typeof subtree !== 'boolean') {
-          // Not a leaf node
-          map._children = Object.assign(map._children || {}, subtree._children);
-        }
+        // Inline fragment node cannot be a leaf node, must have children
+        map._children = Object.assign(
+          map._children || {},
+          (subtree as Record<string, any>)._children,
+        );
       } else {
         const childName = (childSelection as FieldNode).name.value;
         let childData;
@@ -1479,28 +1496,27 @@ export class QueryManager<TStore> {
           childData = data[childName];
           isArray = Array.isArray(childData);
         }
-        const subtree = this.createLoadingStateTree(
-          childSelection,
-          fragmentMap,
-          // Just pass in the first elem of array, all of them will have
-          // the same fields
-          isArray && childData.length !== 0 ? childData[0] : childData,
-        );
 
         if (!map._children) map._children = {};
         if (isArray) {
           // Make sure that the shape of loadingState matches the shape of the
           // data. If an array is returned for a field, the loadingState should
           // be initialized with the correct number of elements.
-          const subtreeArr = [];
-          for (let i = 0; i < childData.length; i++) {
-            if (typeof subtree !== 'boolean') {
-              subtreeArr.push(subtree._children);
-            }
-          }
+          const subtreeArr = childData.map((d: any) => {
+            const subtree = this.createLoadingStateTree(
+              childSelection,
+              fragmentMap,
+              d,
+            );
+            return typeof subtree === 'boolean' ? subtree : subtree._children;
+          });
           map._children[childName] = { _children: subtreeArr };
         } else {
-          map._children[childName] = subtree;
+          map._children[childName] = this.createLoadingStateTree(
+            childSelection,
+            fragmentMap,
+            childData,
+          );
         }
       }
     }

@@ -183,8 +183,20 @@ export class QueryStore {
     }
   }
 
-  public markQueryResultClient(queryId: string, complete: boolean) {
+  public markQueryResultClient(
+    queryId: string,
+    complete: boolean,
+    loadingState?: Record<string, any>,
+  ) {
     if (!this.store[queryId]) return;
+
+    // Store loadingState if it is passed in
+    if (loadingState) {
+      this.store[queryId].loadingState = loadingState;
+      this.store[queryId].compactedLoadingState = this.compactLoadingStateTree(
+        loadingState,
+      );
+    }
 
     this.store[queryId].networkError = null;
     this.store[queryId].previousVariables = null;

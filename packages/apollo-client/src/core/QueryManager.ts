@@ -44,6 +44,7 @@ import {
   QueryListener,
   ApolloQueryResult,
   FetchType,
+  OperationVariables,
   ExecutionPatchResult,
   isPatch,
 } from './types';
@@ -135,6 +136,7 @@ export class QueryManager<TStore> {
     optimisticResponse,
     updateQueries: updateQueriesByName,
     refetchQueries = [],
+    awaitRefetchQueries = false,
     update: updateWithProxyFn,
     errorPolicy = 'none',
     fetchPolicy,
@@ -205,6 +207,67 @@ export class QueryManager<TStore> {
         ...context,
         optimisticResponse,
       });
+
+      const completeMutation = async () => {
+        if (error) {
+          this.mutationStore.markMutationError(mutationId, error);
+        }
+
+        this.dataStore.markMutationComplete({
+          mutationId,
+          optimisticResponse,
+        });
+
+        this.broadcastQueries();
+
+        if (error) {
+          throw error;
+        }
+
+        // allow for conditional refetches
+        // XXX do we want to make this the only API one day?
+        if (typeof refetchQueries === 'function') {
+          refetchQueries = refetchQueries(storeResult as ExecutionResult);
+        }
+
+        const refetchQueryPromises: Promise<
+          ApolloQueryResult<any>[] | ApolloQueryResult<{}>
+        >[] = [];
+
+        for (const refetchQuery of refetchQueries) {
+          if (typeof refetchQuery === 'string') {
+            const promise = this.refetchQueryByName(refetchQuery);
+            if (promise) {
+              refetchQueryPromises.push(promise);
+            }
+            continue;
+          }
+
+          refetchQueryPromises.push(
+            this.query({
+              query: refetchQuery.query,
+              variables: refetchQuery.variables,
+              fetchPolicy: 'network-only',
+            }),
+          );
+        }
+
+        if (awaitRefetchQueries) {
+          await Promise.all(refetchQueryPromises);
+        }
+
+        this.setQuery(mutationId, () => ({ document: undefined }));
+        if (
+          errorPolicy === 'ignore' &&
+          storeResult &&
+          graphQLResultHasError(storeResult)
+        ) {
+          delete storeResult.errors;
+        }
+
+        return storeResult as FetchResult<T>;
+      };
+
       execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
@@ -228,6 +291,7 @@ export class QueryManager<TStore> {
           }
           storeResult = result as FetchResult<T>;
         },
+
         error: (err: Error) => {
           this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete({
@@ -243,54 +307,8 @@ export class QueryManager<TStore> {
             }),
           );
         },
-        complete: () => {
-          if (error) {
-            this.mutationStore.markMutationError(mutationId, error);
-          }
 
-          this.dataStore.markMutationComplete({
-            mutationId,
-            optimisticResponse,
-          });
-
-          this.broadcastQueries();
-
-          if (error) {
-            reject(error);
-            return;
-          }
-
-          // allow for conditional refetches
-          // XXX do we want to make this the only API one day?
-          if (typeof refetchQueries === 'function') {
-            refetchQueries = refetchQueries(storeResult as ExecutionResult);
-          }
-
-          if (refetchQueries) {
-            refetchQueries.forEach(refetchQuery => {
-              if (typeof refetchQuery === 'string') {
-                this.refetchQueryByName(refetchQuery);
-                return;
-              }
-
-              this.query({
-                query: refetchQuery.query,
-                variables: refetchQuery.variables,
-                fetchPolicy: 'network-only',
-              });
-            });
-          }
-
-          this.setQuery(mutationId, () => ({ document: undefined }));
-          if (
-            errorPolicy === 'ignore' &&
-            storeResult &&
-            graphQLResultHasError(storeResult)
-          ) {
-            delete storeResult.errors;
-          }
-          resolve(storeResult as FetchResult<T>);
-        },
+        complete: () => completeMutation().then(resolve, reject),
       });
     });
   }
@@ -1018,7 +1036,11 @@ export class QueryManager<TStore> {
 
   public getQueryWithPreviousResult<T>(
     queryIdOrObservable: string | ObservableQuery<T>,
-  ) {
+  ): {
+    previousResult: any;
+    variables: OperationVariables | undefined;
+    document: DocumentNode;
+  } {
     let observableQuery: ObservableQuery<T>;
     if (typeof queryIdOrObservable === 'string') {
       const { observableQuery: foundObserveableQuery } = this.getQuery(
@@ -1185,7 +1207,6 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
-          console.log('apollo client complete!');
           this.removeFetchQueryPromise(requestId);
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+----
+
+**NOTE:** This changelog is no longer maintained. Changes are now tracked in
+the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+
+----
+
 ### 1.0.16
 
 - Removed unnecessary whitespace from error message

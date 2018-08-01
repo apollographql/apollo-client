@@ -1240,6 +1240,76 @@ describe('ObservableQuery', () => {
         }
       });
     });
+
+    it('calls ObservableQuery.next even after hitting cache', done => {
+      // This query and variables are copied from react-apollo
+      const queryWithVars = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const variables1 = { first: 0 };
+
+      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+      const variables2 = { first: 1 };
+
+      const observable: ObservableQuery<any> = mockWatchQuery(
+        {
+          request: {
+            query: queryWithVars,
+            variables: variables1,
+          },
+          result: { data },
+        },
+        {
+          request: {
+            query: queryWithVars,
+            variables: variables2,
+          },
+          result: { data: data2 },
+        },
+        {
+          request: {
+            query: queryWithVars,
+            variables: variables1,
+          },
+          result: { data },
+        },
+      );
+
+      observable.setOptions({ fetchPolicy: 'cache-and-network' });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.data).toBeUndefined();
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 2) {
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.loading).toBe(false);
+          observable.refetch(variables2);
+        } else if (handleCount === 3) {
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 4) {
+          expect(stripSymbols(result.data)).toEqual(data2);
+          expect(result.loading).toBe(false);
+          observable.refetch(variables1);
+        } else if (handleCount === 5) {
+          expect(stripSymbols(result.data)).toEqual(data2);
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 6) {
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.loading).toBe(false);
+          done();
+        }
+      });
+    });
   });
 
   describe('currentResult', () => {

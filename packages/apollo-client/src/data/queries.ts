@@ -78,10 +78,7 @@ export class QueryStore {
       networkStatus = NetworkStatus.loading;
     }
 
-    let graphQLErrors: GraphQLError[] = [];
-    if (previousQuery && previousQuery.graphQLErrors) {
-      graphQLErrors = previousQuery.graphQLErrors;
-    }
+    const graphQLErrors: GraphQLError[] = [];
 
     // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
     // the store. We probably want a refetch action instead, because I suspect that if you refetch
@@ -91,7 +88,7 @@ export class QueryStore {
       variables: query.variables,
       previousVariables,
       networkError: null,
-      graphQLErrors: graphQLErrors,
+      graphQLErrors,
       networkStatus,
       metadata: query.metadata,
     };

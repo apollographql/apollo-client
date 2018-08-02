@@ -296,6 +296,93 @@ describe('QueryManager', () => {
     });
   });
 
+  it('should not have any graphql errors in the query store once a successful query is made for a given queryId', done => {
+    const query = gql`
+      query people($first: Int) {
+        allPeople(first: $first) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const queryOptions = {
+      errorPolicy: 'all',
+    };
+
+    const variables1 = {
+      first: 1,
+    };
+
+    const variables2 = {
+      first: 2,
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query, variables: variables1 },
+        result: {
+          errors: [
+            {
+              name: 'Name',
+              message: 'This is an error message.',
+            },
+          ],
+        },
+      },
+      {
+        request: { query, variables: variables2 },
+        result: {
+          data: {
+            allPeople: {
+              people: {
+                name: 'Ada Lovelace',
+              },
+            },
+          },
+        },
+      },
+    );
+
+    let setCount = 0;
+
+    const observer = {
+      next({ data, errors }) {
+        if (setCount === 0) {
+          const queryStoreItem = queryManager.queryStore.get('1');
+          expect(queryStoreItem.graphQLErrors[0]).toBeDefined();
+          setCount = 1;
+        } else {
+          const queryStoreItem = queryManager.queryStore.get('1');
+          expect(queryStoreItem.graphQLErrors[0]).toBeUndefined();
+          done();
+        }
+      },
+      error() {
+        return;
+      },
+    };
+
+    const finalOptions1 = assign(
+      { query, variables: variables1 },
+      queryOptions,
+    ) as WatchQueryOptions;
+
+    const handle = queryManager.watchQuery<any>(finalOptions1);
+
+    handle.subscribe({
+      next: wrap(done, observer.next!),
+      error: observer.error,
+    });
+
+    setTimeout(() => {
+      handle.setOptions({
+        variables: variables2,
+      });
+    }, 500);
+  });
+
   it('empty error array (handle non-spec-compliant server) #156', done => {
     assertWithObserver({
       done,

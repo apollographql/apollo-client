@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "apollo-boost" },
+    { "path": "apollo-cache" },
+    { "path": "apollo-cache-inmemory" },
+    { "path": "apollo-client" },
+    { "path": "apollo-utilities" },
+    { "path": "graphql-anywhere" }
+  ]
+}

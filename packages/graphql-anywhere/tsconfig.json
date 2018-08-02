@@ -1,9 +1,9 @@
 {
-  "extends": "../../tsconfig.base",
+  "extends": "../tsconfig.settings.json",
   "compilerOptions": {
-    "noImplicitAny": false,
     "rootDir": "src",
     "outDir": "lib",
+    "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "lib": ["es6", "dom", "es2017.object"]
   },

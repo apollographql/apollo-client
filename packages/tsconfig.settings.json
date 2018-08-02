@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "noImplicitAny": true,
-    "noUnusedParameters": false,
     "noUnusedLocals": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "removeComments": false,
-    "sourceMap": true,
-    "declaration": true,
+    "removeComments": true,
     "target": "es5",
     "module": "es2015"
   }
 }
+

@@ -192,16 +192,18 @@ export function getDefaultValues(
   ) {
     const defaultValues = definition.variableDefinitions
       .filter(({ defaultValue }) => defaultValue)
-      .map(({ variable, defaultValue }): { [key: string]: JsonValue } => {
-        const defaultValueObj: { [key: string]: JsonValue } = {};
-        valueToObjectRepresentation(
-          defaultValueObj,
-          variable.name,
-          defaultValue as ValueNode,
-        );
+      .map(
+        ({ variable, defaultValue }): { [key: string]: JsonValue } => {
+          const defaultValueObj: { [key: string]: JsonValue } = {};
+          valueToObjectRepresentation(
+            defaultValueObj,
+            variable.name,
+            defaultValue as ValueNode,
+          );
 
-        return defaultValueObj;
-      });
+          return defaultValueObj;
+        },
+      );
 
     return assign({}, ...defaultValues);
   }

@@ -143,6 +143,11 @@ export interface SubscriptionOptions<TVariables = OperationVariables> {
    * GraphQL document to that variable's value.
    */
   variables?: TVariables;
+
+  /**
+   * Specifies the {@link FetchPolicy} to be used for this subscription.
+   */
+  fetchPolicy?: FetchPolicy;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;

@@ -1028,23 +1028,36 @@ export class QueryManager<TStore> {
     if (newData) {
       return maybeDeepFreeze({ data: newData.result, partial: false });
     } else {
-      try {
-        // the query is brand new, so we read from the store to see if anything is there
-        const data = this.dataStore.getCache().read({
+      if (isDeferred) {
+        // For deferred queries, we actually want to use partial data
+        // since certain fields might still be streaming in.
+        // Setting returnPartialData to true so that
+        // an error does not get thrown if fields are missing.
+        const diffResult = this.dataStore.getCache().diff({
           query,
           variables,
           previousResult: lastResult ? lastResult.data : undefined,
           optimistic,
-          // Setting returnPartialData to true for deferred queries, so that
-          // an error does not get thrown if fields are missing.
-          // Returning {data: {}} will give us problems as it clobbers the
-          // data that we have already received.
-          returnPartialData: isDeferred,
+          returnPartialData: true,
         });
 
-        return maybeDeepFreeze({ data, partial: false });
-      } catch (e) {
-        return maybeDeepFreeze({ data: {}, partial: true });
+        return maybeDeepFreeze({
+          data: diffResult.result,
+          partial: !diffResult.complete,
+        });
+      } else {
+        try {
+          // the query is brand new, so we read from the store to see if anything is there
+          const data = this.dataStore.getCache().read({
+            query,
+            variables,
+            previousResult: lastResult ? lastResult.data : undefined,
+            optimistic,
+          });
+          return maybeDeepFreeze({ data, partial: false });
+        } catch (e) {
+          return maybeDeepFreeze({ data: {}, partial: true });
+        }
       }
     }
   }
@@ -1267,6 +1280,12 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
+          if (isDeferred) {
+            this.queryStore.markQueryComplete(queryId);
+            this.invalidate(true, queryId, fetchMoreForQueryId);
+            this.broadcastQueries();
+          }
+
           this.removeFetchQueryPromise(requestId);
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),

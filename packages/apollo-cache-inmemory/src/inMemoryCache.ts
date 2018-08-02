@@ -86,7 +86,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.data.toObject();
   }
 
-  public read<T>(query: Cache.DiffOptions): T | null {
+  public read<T>(query: Cache.ReadOptions): T | null {
     if (query.rootId && this.data.get(query.rootId) === undefined) {
       return null;
     }
@@ -99,7 +99,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
       previousResult: query.previousResult,
       config: this.config,
-      returnPartialData: query.returnPartialData,
     });
   }
 

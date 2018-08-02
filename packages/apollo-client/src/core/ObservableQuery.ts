@@ -1,10 +1,10 @@
 import {
   isEqual,
-  tryFunctionOrLogError,
   maybeDeepFreeze,
+  tryFunctionOrLogError,
 } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
+import { isNetworkRequestInFlight, NetworkStatus } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -14,12 +14,12 @@ import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, FetchType, OperationVariables } from './types';
 import {
-  ModifiableWatchQueryOptions,
-  WatchQueryOptions,
-  FetchMoreQueryOptions,
-  SubscribeToMoreOptions,
   ErrorPolicy,
+  FetchMoreQueryOptions,
+  ModifiableWatchQueryOptions,
+  SubscribeToMoreOptions,
   UpdateQueryFn,
+  WatchQueryOptions,
 } from './watchQueryOptions';
 
 import { QueryStoreValue } from '../data/queries';
@@ -221,6 +221,8 @@ export class ObservableQuery<
 
     if (queryStoreValue) {
       result.loadingState = queryStoreValue.compactedLoadingState;
+    } else {
+      result.loading = true;
     }
 
     if (!partial) {

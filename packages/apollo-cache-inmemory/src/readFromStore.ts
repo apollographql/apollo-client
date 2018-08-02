@@ -20,6 +20,7 @@ import {
   ReadStoreContext,
   DiffQueryAgainstStoreOptions,
   StoreObject,
+  ReadQueryOptions,
 } from './types';
 
 /**
@@ -48,13 +49,13 @@ export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
  * will be returned to preserve referential equality.
  */
 export function readQueryFromStore<QueryType>(
-  options: DiffQueryAgainstStoreOptions,
+  options: ReadQueryOptions,
 ): QueryType {
-  // Defaults returnPartialData to false unless true is passed in
-  // for a deferred query
+  const optsPatch = { returnPartialData: false };
+
   return diffQueryAgainstStore<QueryType>({
     ...options,
-    returnPartialData: options.returnPartialData || false,
+    ...optsPatch,
   }).result;
 }
 

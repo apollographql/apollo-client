@@ -115,6 +115,22 @@ export class QueryStore {
     }
   }
 
+  public markQueryComplete(queryId: string) {
+    if (!this.store[queryId]) return;
+    this.store[queryId].networkStatus = NetworkStatus.ready;
+  }
+
+  public updateLoadingState(
+    queryId: string,
+    loadingState: Record<string, any>,
+  ) {
+    if (!this.store[queryId]) return;
+    this.store[queryId].loadingState = loadingState;
+    this.store[queryId].compactedLoadingState = this.compactLoadingStateTree(
+      loadingState,
+    );
+  }
+
   public markQueryResult(
     queryId: string,
     result: ExecutionResult | ExecutionPatchResult,

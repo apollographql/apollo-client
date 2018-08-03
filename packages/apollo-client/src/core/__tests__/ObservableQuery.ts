@@ -1204,42 +1204,46 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy', done => {
-      const mockedResponses = [
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
-      ];
+    it(
+      'calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` ' +
+        'fetch policy',
+      done => {
+        const mockedResponses = [
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables: differentVariables },
+            result: { data: dataTwo },
+          },
+        ];
 
-      const queryManager = mockQueryManager(...mockedResponses);
-      const firstRequest = mockedResponses[0].request;
-      const observable = queryManager.watchQuery({
-        query: firstRequest.query,
-        variables: firstRequest.variables,
-        fetchPolicy: 'no-cache',
-      });
+        const queryManager = mockQueryManager(...mockedResponses);
+        const firstRequest = mockedResponses[0].request;
+        const observable = queryManager.watchQuery({
+          query: firstRequest.query,
+          variables: firstRequest.variables,
+          fetchPolicy: 'no-cache',
+        });
 
-      const origFetchQuery = queryManager.fetchQuery;
-      queryManager.fetchQuery = jest.fn(() =>
-        origFetchQuery.apply(queryManager, arguments),
-      );
+        const origFetchQuery = queryManager.fetchQuery;
+        queryManager.fetchQuery = jest.fn(() =>
+          origFetchQuery.apply(queryManager, arguments),
+        );
 
-      subscribeAndCount(done, observable, (handleCount, result) => {
-        if (handleCount === 1) {
-          observable.refetch(differentVariables);
-        } else if (handleCount === 3) {
-          expect(queryManager.fetchQuery.mock.calls[1][1].fetchPolicy).toEqual(
-            'no-cache',
-          );
-          done();
-        }
-      });
-    });
+        subscribeAndCount(done, observable, (handleCount, result) => {
+          if (handleCount === 1) {
+            observable.refetch(differentVariables);
+          } else if (handleCount === 2) {
+            expect(
+              queryManager.fetchQuery.mock.calls[1][1].fetchPolicy,
+            ).toEqual('no-cache');
+            done();
+          }
+        });
+      },
+    );
 
     it('calls ObservableQuery.next even after hitting cache', done => {
       // This query and variables are copied from react-apollo

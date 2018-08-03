@@ -6,7 +6,8 @@ import { stripSymbols } from 'apollo-utilities';
 import { withWarning } from '../util/wrap';
 
 import ApolloClient from '../';
-import { FetchPolicy } from '../core/watchQueryOptions';
+import { DefaultOptions } from '../ApolloClient';
+import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -2117,5 +2118,78 @@ describe('ApolloClient', () => {
         });
       },
     );
+  });
+
+  describe('defaultOptions', () => {
+    it(
+      'should set `defaultOptions` to an empty object if not provided in ' +
+        'the constructor',
+      () => {
+        const client = new ApolloClient({
+          link: ApolloLink.empty(),
+          cache: new InMemoryCache(),
+        });
+        expect(client.defaultOptions).toEqual({});
+      },
+    );
+
+    it('should set `defaultOptions` using options passed into the constructor', () => {
+      const defaultOptions: DefaultOptions = {
+        query: {
+          fetchPolicy: 'no-cache',
+        },
+      };
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        defaultOptions,
+      });
+      expect(client.defaultOptions).toEqual(defaultOptions);
+    });
+
+    it('should use default options (unless overridden) when querying', async () => {
+      const defaultOptions: DefaultOptions = {
+        query: {
+          fetchPolicy: 'no-cache',
+        },
+      };
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        defaultOptions,
+      });
+
+      client.initQueryManager();
+
+      let queryOptions: QueryOptions = {
+        query: gql`
+          {
+            a
+          }
+        `,
+      };
+      const _query = client.queryManager!.query;
+      client.queryManager!.query = options => {
+        queryOptions = options;
+        return _query(options);
+      };
+
+      try {
+        await client.query({
+          query: gql`
+            {
+              a
+            }
+          `,
+        });
+      } catch (error) {
+        // Swallow errors caused by mocking; not part of this test
+      }
+
+      expect(queryOptions.fetchPolicy).toEqual(
+        defaultOptions.query!.fetchPolicy,
+      );
+    });
   });
 });

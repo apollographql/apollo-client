@@ -19,6 +19,9 @@
 - Make sure using a `no-cache` fetch policy with subscriptions prevents data
   from being cached.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3773](https://github.com/apollographql/apollo-client/pull/3773)
+- Fixed an issue that sometimes caused empty query results, when using the
+  `no-cache` fetch policy.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3777](https://github.com/apollographql/apollo-client/pull/3777)
 - Documentation updates.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3750](https://github.com/apollographql/apollo-client/pull/3750)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3754](https://github.com/apollographql/apollo-client/pull/3754)  <br/>

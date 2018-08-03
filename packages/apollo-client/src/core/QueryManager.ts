@@ -549,8 +549,15 @@ export class QueryManager<TStore> {
           let isMissing: boolean;
 
           if (newData) {
-            // clear out the latest new data, since we're now using it
-            this.setQuery(queryId, () => ({ newData: null }));
+            // As long as we're using the cache, clear out the latest
+            // `newData`, since it will now become the current data. We need
+            // to keep the `newData` stored with the query when using
+            // `no-cache` since `getCurrentQueryResult` attemps to pull from
+            // `newData` first, following by trying the cache (which won't
+            // find a hit for `no-cache`).
+            if (fetchPolicy !== 'no-cache') {
+              this.setQuery(queryId, () => ({ newData: null }));
+            }
 
             data = newData.result;
             isMissing = !newData.complete || false;

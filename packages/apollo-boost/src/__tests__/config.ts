@@ -86,6 +86,21 @@ describe('config', () => {
       });
   });
 
+  it('allows you to pass a fn to customizeLinks links', () => {
+    let called;
+
+    const customizeLinks = (errorLink, requestHandler, stateLink, httpLink) => {
+      called = true;
+      return [errorLink, requestHandler, stateLink, httpLink];
+    };
+
+    const client = new ApolloClient({
+      customizeLinks,
+    });
+
+    expect(called).toEqual(true);
+  });
+
   it('throws if passed cache and cacheRedirects', () => {
     const cache = new InMemoryCache();
     const cacheRedirects = { Query: { foo: () => 'woo' } };

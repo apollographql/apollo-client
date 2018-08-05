@@ -14,6 +14,9 @@ the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/bl
   [PR #3590](https://github.com/apollographql/apollo-client/pull/3590)
 - The `apollo-boost` `ApolloClient` constructor warns about unsupported options.
   [PR #3551](https://github.com/apollographql/apollo-client/pull/3551)
+- Add `customizeLinks` as a configuration option to ApolloBoost
+- Export a couple more items to allow users to customise their apollo-boost client
+without installing additional dependencies
 
 ### 0.1.10
 

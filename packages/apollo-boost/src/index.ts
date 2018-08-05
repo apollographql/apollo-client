@@ -13,7 +13,7 @@ import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import ApolloClient from 'apollo-client';
 
-export { gql, InMemoryCache, HttpLink };
+export { gql, InMemoryCache, HttpLink, onError, withClientState };
 
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;
@@ -26,6 +26,12 @@ export interface PresetConfig {
   onError?: ErrorLink.ErrorHandler;
   cacheRedirects?: CacheResolverMap;
   cache?: ApolloCache<any>;
+  customizeLinks?: (
+    errorLink: ApolloLink,
+    requestHandler: ApolloLink | false,
+    stateLink: ApolloLink | false,
+    httpLink: ApolloLink,
+  ) => ApolloLink[];
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -49,6 +55,7 @@ const PRESET_CONFIG_KEYS = [
   'onError',
   'cacheRedirects',
   'cache',
+  'customizeLinks',
 ];
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
@@ -75,6 +82,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       fetchOptions,
       clientState,
       cacheRedirects,
+      customizeLinks,
       onError: errorCallback,
     } = config;
 
@@ -148,14 +156,12 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       headers: headers || {},
     });
 
-    const link = ApolloLink.from([
-      errorLink,
-      requestHandler,
-      stateLink,
-      httpLink,
-    ].filter(x => !!x) as ApolloLink[]);
+    let links = customizeLinks
+      ? customizeLinks(errorLink, requestHandler, stateLink, httpLink)
+      : [errorLink, requestHandler, stateLink, httpLink];
+    links = links.filter(x => !!x);
 
     // super hacky, we will fix the types eventually
-    super({ cache, link } as any);
+    super({ cache, link: ApolloLink.from(links as ApolloLink[]) } as any);
   }
 }

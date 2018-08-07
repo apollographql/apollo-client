@@ -54,7 +54,7 @@
     "ts-jest": "20.0.14",
     "tslint": "5.11.0",
     "typescript": "2.9.2",
-    "uglifyjs": "2.4.11"
+    "uglify-js": "^3.4.6"
   },
   "jest": {
     "transform": {

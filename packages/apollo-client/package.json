@@ -58,6 +58,7 @@
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "devDependencies": {
+    "@octokit/rest": "^15.9.5",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
@@ -70,7 +71,6 @@
     "bundlesize": "0.17.0",
     "danger": "1.1.0",
     "flow-bin": "0.77.0",
-    "github": "12.1.0",
     "graphql": "14.0.0-rc.2",
     "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",

@@ -2,7 +2,7 @@
 
 ## vNext
 
-- Fix typo in console.warn regarding fragment matching error message.
+
 
 ### Apollo Client (vNext)
 
@@ -37,6 +37,11 @@
   [@hwillson](https://github.com/hwillson) in [#3767](https://github.com/apollographql/apollo-client/pull/3767)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3774](https://github.com/apollographql/apollo-client/pull/3774)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3779](https://github.com/apollographql/apollo-client/pull/3779)
+
+### Apollo Cache In-Memory (vNext)
+
+- Fix typo in `console.warn` regarding fragment matching error message.  <br/>
+  [@combizs](https://github.com/combizs) in [#3701](https://github.com/apollographql/apollo-client/pull/3701)
 
 
 ## 2.3.7 (July 24, 2018)

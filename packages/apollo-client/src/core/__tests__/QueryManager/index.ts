@@ -4614,7 +4614,7 @@ describe('QueryManager', () => {
           });
         })
         .then(() => {
-          expect(cache.watches.length).toBe(0);
+          expect(cache.watches.size).toBe(0);
         });
     });
   });

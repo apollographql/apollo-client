@@ -70,7 +70,7 @@
     "browserify": "15.2.0",
     "bundlesize": "0.17.0",
     "danger": "1.1.0",
-    "flow-bin": "0.77.0",
+    "flow-bin": "0.78.0",
     "graphql": "14.0.0-rc.2",
     "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",

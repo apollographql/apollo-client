@@ -68,7 +68,7 @@ To see Apollo Client's caching in action, let's build our `DogPhoto` component. 
 
 ```jsx
 const GET_DOG_PHOTO = gql`
-  query dog($breed: String!) {
+  query Dog($breed: String!) {
     dog(breed: $breed) {
       id
       displayImage

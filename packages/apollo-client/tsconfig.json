@@ -10,9 +10,13 @@
     "strictNullChecks": true,
     "noUnusedParameters": true
   },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "**/__tests__/**/*",
+    "**/__mocks__/**/*"
+  ],
   "files": [
     "node_modules/typescript/lib/lib.es2015.d.ts",
-    "node_modules/typescript/lib/lib.dom.d.ts",
-    "src/index.ts"
+    "node_modules/typescript/lib/lib.dom.d.ts"
   ]
 }

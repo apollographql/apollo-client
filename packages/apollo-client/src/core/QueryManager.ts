@@ -549,8 +549,15 @@ export class QueryManager<TStore> {
           let isMissing: boolean;
 
           if (newData) {
-            // clear out the latest new data, since we're now using it
-            this.setQuery(queryId, () => ({ newData: null }));
+            // As long as we're using the cache, clear out the latest
+            // `newData`, since it will now become the current data. We need
+            // to keep the `newData` stored with the query when using
+            // `no-cache` since `getCurrentQueryResult` attemps to pull from
+            // `newData` first, following by trying the cache (which won't
+            // find a hit for `no-cache`).
+            if (fetchPolicy !== 'no-cache') {
+              this.setQuery(queryId, () => ({ newData: null }));
+            }
 
             data = newData.result;
             isMissing = !newData.complete || false;
@@ -859,29 +866,6 @@ export class QueryManager<TStore> {
     });
   }
 
-  private getObservableQueryPromises(
-    includeStandby?: boolean,
-  ): Promise<ApolloQueryResult<any>>[] {
-    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
-    this.queries.forEach(({ observableQuery }, queryId) => {
-      if (!observableQuery) return;
-      const fetchPolicy = observableQuery.options.fetchPolicy;
-
-      observableQuery.resetLastResults();
-      if (
-        fetchPolicy !== 'cache-only' &&
-        (includeStandby || fetchPolicy !== 'standby')
-      ) {
-        observableQueryPromises.push(observableQuery.refetch());
-      }
-
-      this.setQuery(queryId, () => ({ newData: null }));
-      this.invalidate(true, queryId);
-    });
-
-    return observableQueryPromises;
-  }
-
   public reFetchObservableQueries(
     includeStandby?: boolean,
   ): Promise<ApolloQueryResult<any>[]> {
@@ -913,6 +897,9 @@ export class QueryManager<TStore> {
     options: SubscriptionOptions,
   ): Observable<any> {
     const { query } = options;
+    const isCacheEnabled = !(
+      options.fetchPolicy && options.fetchPolicy === 'no-cache'
+    );
     const cache = this.dataStore.getCache();
     let transformedDoc = cache.transformDocument(query);
 
@@ -928,20 +915,25 @@ export class QueryManager<TStore> {
     return new Observable(observer => {
       observers.push(observer);
 
-      // If this is the first observer, actually initiate the network subscription
+      // If this is the first observer, actually initiate the network
+      // subscription.
       if (observers.length === 1) {
         const handler = {
           next: (result: FetchResult) => {
-            this.dataStore.markSubscriptionResult(
-              result,
-              transformedDoc,
-              variables,
-            );
-            this.broadcastQueries();
+            if (isCacheEnabled) {
+              this.dataStore.markSubscriptionResult(
+                result,
+                transformedDoc,
+                variables,
+              );
+              this.broadcastQueries();
+            }
 
-            // It's slightly awkward that the data for subscriptions doesn't come from the store.
+            // It's slightly awkward that the data for subscriptions doesn't
+            // come from the store.
             observers.forEach(obs => {
-              // XXX I'd prefer a different way to handle errors for subscriptions
+              // XXX I'd prefer a different way to handle errors for
+              // subscriptions.
               if (obs.next) obs.next(result);
             });
           },
@@ -1053,6 +1045,29 @@ export class QueryManager<TStore> {
           listener(this.queryStore.get(id), info.newData);
         });
     });
+  }
+
+  private getObservableQueryPromises(
+    includeStandby?: boolean,
+  ): Promise<ApolloQueryResult<any>>[] {
+    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (!observableQuery) return;
+      const fetchPolicy = observableQuery.options.fetchPolicy;
+
+      observableQuery.resetLastResults();
+      if (
+        fetchPolicy !== 'cache-only' &&
+        (includeStandby || fetchPolicy !== 'standby')
+      ) {
+        observableQueryPromises.push(observableQuery.refetch());
+      }
+
+      this.setQuery(queryId, () => ({ newData: null }));
+      this.invalidate(true, queryId);
+    });
+
+    return observableQueryPromises;
   }
 
   // Takes a request id, query id, a query document and information associated with the query

@@ -187,4 +187,26 @@ describe('GraphQL Subscriptions', () => {
       link.simulateResult(results[i]);
     }
   });
+
+  it('should not cache subscription data if a `no-cache` fetch policy is used', done => {
+    const link = mockObservableLink(sub1);
+    const cache = new InMemoryCache({ addTypename: false });
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    expect(cache.extract()).toEqual({});
+
+    options.fetchPolicy = 'no-cache';
+    const sub = client.subscribe(options).subscribe({
+      next() {
+        expect(cache.extract()).toEqual({});
+        sub.unsubscribe();
+        done();
+      },
+    });
+
+    link.simulateResult(results[0]);
+  });
 });

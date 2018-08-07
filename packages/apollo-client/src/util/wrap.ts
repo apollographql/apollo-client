@@ -1,6 +1,6 @@
 // I'm not sure why mocha doesn't provide something like this, you can't
 // always use promises
-export default (done: (...args) => void, cb: (...args: any[]) => any) => (
+export default (done: jest.DoneCallback, cb: (...args: any[]) => any) => (
   ...args: any[]
 ) => {
   try {

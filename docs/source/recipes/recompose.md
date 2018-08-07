@@ -191,7 +191,7 @@ const withData = compose(
   withState("pollInterval", "setPollInterval", DEFAULT_INTERVAL),
   graphql(
     gql`
-      query getMigrationStatus {
+      query GetMigrationStatus {
         activeMigration {
           name
           version

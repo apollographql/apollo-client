@@ -1,9 +1,9 @@
-import GithubAPI from 'github';
+import GithubAPI from '@octokit/rest';
 import { bsuite, groupPromises, log } from './util';
 import { thresholds } from './thresholds';
 
 export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
-  const github = eval('new require("github")()') as GithubAPI;
+  const github = eval('new require("@octokit/rest")()') as GithubAPI;
   const commitSHA =
     process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT || '';
 

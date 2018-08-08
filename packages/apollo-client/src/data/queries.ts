@@ -4,9 +4,11 @@ import { isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
 import { ExecutionPatchResult, isPatch } from '../core/types';
+import { hasDirectives } from 'apollo-utilities';
 
 export type QueryStoreValue = {
   document: DocumentNode;
+  isDeferred: boolean;
   variables: Object;
   previousVariables?: Object | null;
   networkStatus: NetworkStatus;
@@ -91,6 +93,9 @@ export class QueryStore {
     // before the initial fetch is done, you'll get an error.
     this.store[query.queryId] = {
       document: query.document,
+      isDeferred: query.document.definitions
+        ? hasDirectives(['defer'], query.document)
+        : false,
       variables: query.variables,
       previousVariables,
       networkError: null,

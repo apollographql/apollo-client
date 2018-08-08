@@ -400,7 +400,7 @@ export class QueryManager<TStore> {
 
       // Initialize loadingState with the cached results if it is a deferred query
       let loadingState;
-      if (hasDirectives(['defer'], query.document)) {
+      if (query.isDeferred) {
         loadingState = this.initFieldLevelLoadingStates(query.document, {
           data: storeResult,
         });
@@ -1104,6 +1104,18 @@ export class QueryManager<TStore> {
         // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
         .filter((x: QueryListener) => !!x)
         .forEach((listener: QueryListener) => {
+          if (info.newData) {
+            // Make sure that loadingState is updated for deferred queries
+            const queryStoreValue = this.queryStore.get(id);
+            if (queryStoreValue && queryStoreValue.isDeferred) {
+              this.queryStore.updateLoadingState(
+                id,
+                this.initFieldLevelLoadingStates(queryStoreValue.document, {
+                  data: info.newData.result,
+                }),
+              );
+            }
+          }
           listener(this.queryStore.get(id), info.newData);
         });
     });

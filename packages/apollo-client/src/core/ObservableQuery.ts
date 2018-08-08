@@ -23,6 +23,7 @@ import {
 } from './watchQueryOptions';
 
 import { QueryStoreValue } from '../data/queries';
+import { hasDirectives } from 'apollo-utilities';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
@@ -222,7 +223,12 @@ export class ObservableQuery<
     if (queryStoreValue) {
       result.loadingState = queryStoreValue.compactedLoadingState;
     } else {
-      result.loading = true;
+      if (hasDirectives(['defer'], this.options.query)) {
+        // Make sure that we have loadingState for deferred queries
+        // If the queryStore has not been initialized, set loading to true and
+        // wait for the next update.
+        result.loading = true;
+      }
     }
 
     if (!partial) {

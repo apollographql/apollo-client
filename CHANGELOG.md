@@ -4,6 +4,7 @@
 
 ### Apollo Client (vNext)
 
+- Added `@defer` support [#3686](https://github.com/apollographql/apollo-client/pull/3686)
 - Adjusted the `graphql` peer dependency to cover explicit minor ranges.
   Since the ^ operator only covers any minor version if the major version
   is not 0 (since a major version of 0 is technically considered development by

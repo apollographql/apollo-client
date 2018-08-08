@@ -48,7 +48,7 @@
     "@types/jest": "22.2.3",
     "apollo-utilities": "1.0.17-alpha.13",
     "browserify": "15.2.0",
-    "fetch-mock": "6.5.1",
+    "fetch-mock": "6.5.2",
     "graphql": "0.13.2",
     "jest": "23.0.0",
     "lodash": "4.17.10",
@@ -56,7 +56,7 @@
     "ts-jest": "20.0.14",
     "tslint": "5.11.0",
     "typescript": "2.9.2",
-    "uglifyjs": "2.4.11"
+    "uglify-js": "^3.4.6"
   },
   "jest": {
     "transform": {
@@ -68,6 +68,7 @@
       "tsx",
       "js",
       "json"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

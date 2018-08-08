@@ -1,5 +1,42 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## vNext
+
+### Apollo Client (vNext)
+
+- Adjusted the `graphql` peer dependency to cover explicit minor ranges.
+  Since the ^ operator only covers any minor version if the major version
+  is not 0 (since a major version of 0 is technically considered development by
+  semver 2), the current ^0.11.0 || ^14.0.0 graphql range doesn't cover
+  0.12.* or 0.13.*. This fixes the `apollo-client@X has incorrect peer
+  dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
+  seen using `graphql` 0.12.x or 0.13.x.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3746](https://github.com/apollographql/apollo-client/pull/3746)
+- Document `setVariables` internal API status.  <br/>
+  [@PowerKiKi](https://github.com/PowerKiKi) in [#3692](https://github.com/apollographql/apollo-client/pull/3692)
+- Corrected `ApolloClient.queryManager` typing as it may be `undefined`.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#3661](https://github.com/apollographql/apollo-client/pull/3661)
+- Make sure using a `no-cache` fetch policy with subscriptions prevents data
+  from being cached.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3773](https://github.com/apollographql/apollo-client/pull/3773)
+- Fixed an issue that sometimes caused empty query results, when using the
+  `no-cache` fetch policy.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3777](https://github.com/apollographql/apollo-client/pull/3777)
+- Documentation updates.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3750](https://github.com/apollographql/apollo-client/pull/3750)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3754](https://github.com/apollographql/apollo-client/pull/3754)  <br/>
+  [@TheMightyPenguin](https://github.com/TheMightyPenguin) in [#3725](https://github.com/apollographql/apollo-client/pull/3725)  <br/>
+  [@bennypowers](https://github.com/bennypowers) in [#3668](https://github.com/apollographql/apollo-client/pull/3668)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3762](https://github.com/apollographql/apollo-client/pull/3762)  <br/>
+  [@chentsulin](https://github.com/chentsulin) in [#3688](https://github.com/apollographql/apollo-client/pull/3688)  <br/>
+  [@chentsulin](https://github.com/chentsulin) in [#3687](https://github.com/apollographql/apollo-client/pull/3687)  <br/>
+  [@ardouglass](https://github.com/ardouglass) in [#3645](https://github.com/apollographql/apollo-client/pull/3645)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3764](https://github.com/apollographql/apollo-client/pull/3764)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3767](https://github.com/apollographql/apollo-client/pull/3767)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3774](https://github.com/apollographql/apollo-client/pull/3774)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3779](https://github.com/apollographql/apollo-client/pull/3779)
+
+
 ## 2.3.7 (July 24, 2018)
 
 ### Apollo Client (2.3.7)
@@ -11,7 +48,7 @@
   caused by the typescript compiler getting confused at compile/publish time.
   `getQueryWithPreviousResult` return types are now excplicity identified,
   which helps Typescript avoid the local type reference. For more details,
-  see https://github.com/apollographql/apollo-client/issues/3729.
+  see https://github.com/apollographql/apollo-client/issues/3729.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3731](https://github.com/apollographql/apollo-client/pull/3731)
 
 ### Apollo Boost (0.1.12)

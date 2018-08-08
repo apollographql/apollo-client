@@ -5,7 +5,7 @@ description: Optimize data loading with the @defer directive
 
 <h2 id="defer-setup">Setting up</h2>
 
-Note: `@defer` support is an experimental feature that is only available in the alpha preview of Apollo Server and Apollo Client.
+> Note: `@defer` support is an **experimental feature** that is only available in alpha versions of Apollo Server and Apollo Client.
 
 - On the server:
 
@@ -19,7 +19,7 @@ Note: `@defer` support is an experimental feature that is only available in the 
   ```
   Or if you are using Apollo Client:
   ```
-  npm install apollo-client@alpha apollo-cache-inmemory@alpha apollo-link-http@alpha apollo-link-error apollo-link
+  npm install apollo-client@alpha apollo-cache-inmemory@alpha apollo-link-http@alpha apollo-link-error apollo-link react-apollo@alpha
   ```
 
 <h2 id="defer">The `@defer` Directive</h2>
@@ -38,15 +38,19 @@ As an example, take a look at the following query that populates a NewsFeed page
 query NewsFeed {
   newsFeed {
     stories {
-      text
+      id
+      title
       comments {
+        id
         text
       }
     }
     recommendedForYou {
       story {
-        text
+        id
+        title
         comments {
+          id
           text
         }
       }
@@ -66,15 +70,19 @@ We can optimize the above query with `@defer`:
 query NewsFeed {
   newsFeed {
     stories {
-      text
+      id
+      title
       comments @defer {
+        id
         text
       }
     }
     recommendedForYou @defer {
       story {
-        text
+        id
+        title
         comments @defer {
+          id
           text
         }
       }
@@ -91,7 +99,7 @@ Once you have added `@defer`, Apollo Server will return an initial response with
 {
   "data": {
     "newsFeed": {
-      "stories": [{ "text": "...", "comments": null }],
+      "stories": [{ "id": "...", "title": "...", "comments": null }],
       "recommendedForYou": null
     }
   }
@@ -105,7 +113,9 @@ Once you have added `@defer`, Apollo Server will return an initial response with
   "data": [
     {
       "story": {
-        "text": "..."
+        "id": "...",
+        "title": "...",
+        "comments": null
       },
       "matchScore": 99
     }
@@ -176,12 +186,12 @@ You can use it in a React component like this:
   ```graphql
   fragment StoryDetail on Story {
     id
-    text
+    title
   }
   query {
     newsFeed {
       stories {
-        text @defer
+        title @defer
         ...StoryDetail
       }
     }
@@ -199,8 +209,61 @@ There is no additional setup for the transport required to use `@defer`. By defa
 
 `@defer` is one of those features that work best if used in moderation. If it is used too granularly (on many nested fields), the overhead of performing patching and re-rendering could be worse than just waiting for the full query to resolve. Try to limit `@defer` to fields that take a significantly longer time to load. This is super easy to figure out if you have Apollo Engine set up!
 
+<h2 id="defer-preloading">Preloading Data with `@defer`</h2>
+
+Another super useful pattern for using `@defer` is preloading data that will be required in subsequent views. For illustration, imagine that each story has a `text` field that takes a long time to load. `text` is not required when we load the newsfeed view - we only need it to show the story detail view, which makes a query like this:
+
+```graphql
+query StoryDetail($id: ID!) {
+  story(id: $id) {
+    id
+    title
+    text @defer
+    comments @defer {
+      id
+      text
+    }
+  }
+}
+```
+
+However, instead for waiting for the user to navigate to the story detail view before firing that query, we could add `text` as a deferred field when we first load the newsfeed. This will allow `text` to preload in the background for all the stories. 
+
+```graphql
+query NewsFeed {
+  newsFeed {
+    stories {
+      id
+      title
+      text @defer # Not needed now, but preload it first
+      comments @defer {
+        id
+        text
+      }
+    }
+  }
+}
+```
+
+Then, we will need to set up a [cache redirect](https://www.apollographql.com/docs/react/advanced/caching.html#cacheRedirect) to tell Apollo Client where to look for cached data for the `StoryDetail` query.
+
+```javascript
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cacheRedirects: {
+    Query: {
+      story: (_, { id }, { getCacheKey }) =>
+        getCacheKey({ __typename: 'Story', id }),
+    },
+  },
+});
+```
+
+Now, when the user navigates to each story detail view, it will load instantly as the data required is already fetched and stored in the cache. 
+  
+
 <h2 id="defer-servers">Use with other GraphQL servers</h2>
 
-If you are sending queries to a GraphQL server that does not support `@defer`, it is likely that the `@defer` directive is simply ignored, or a GraphQL validation error is thrown.
+If you are sending queries to a GraphQL server that does not support `@defer`, it is likely that the `@defer` directive is simply ignored, or a GraphQL validation error is thrown: `Unknown directive "defer"`
 
-If you would want to implement a GraphQL server that is able to interoperate with Apollo Client, please look at the documentation [here](https://github.com/apollographql/apollo-server/blob/defer-support/docs/source/defer-support.md).
+To implement a GraphQL server that will interoperate with Apollo Client for `@defer` support, please look at the [specification here](https://github.com/apollographql/apollo-server/blob/defer-support/docs/source/defer-support.md).

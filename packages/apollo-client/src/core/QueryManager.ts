@@ -1243,11 +1243,6 @@ export class QueryManager<TStore> {
             }
 
             if (isDeferred && isPatch(result)) {
-              // TODO: Remove console.info when out of alpha
-              console.info(
-                `Patch received for path ${JSON.stringify(result.path)}`,
-              );
-
               // Update loadingState for every patch received, by traversing its path
               curLoadingState = this.updateLoadingState(
                 curLoadingState,

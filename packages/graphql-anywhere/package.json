@@ -55,7 +55,7 @@
     "jest": "23.0.0",
     "react": "15.6.2",
     "react-dom": "15.6.2",
-    "rollup": "0.63.5",
+    "rollup": "0.64.1",
     "ts-jest": "20.0.14",
     "tslint": "5.11.0",
     "typescript": "2.9.2",

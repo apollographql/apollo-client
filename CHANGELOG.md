@@ -1,5 +1,13 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## vNext
+
+### Apollo Cache In-Memory (vNext)
+
+- Fix typo in `console.warn` regarding fragment matching error message.  <br/>
+  [@combizs](https://github.com/combizs) in [#3701](https://github.com/apollographql/apollo-client/pull/3701)
+
+
 ## 2.3.8 (August 9, 2018)
 
 ### Apollo Client (2.3.8)

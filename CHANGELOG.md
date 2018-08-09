@@ -36,6 +36,26 @@
   [@hwillson](https://github.com/hwillson) in [#3774](https://github.com/apollographql/apollo-client/pull/3774)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3779](https://github.com/apollographql/apollo-client/pull/3779)
 
+### Apollo Boost (0.1.13)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.7)
+
+- No changes.
+
+### Apollo Cache (1.1.14)
+
+- No changes.
+
+### Apollo Utilities (1.0.18)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.16)
+
+- No changes.
+
 
 ## 2.3.7 (July 24, 2018)
 

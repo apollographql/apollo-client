@@ -32,7 +32,17 @@ export type ApolloCurrentResult<T> = {
   networkStatus: NetworkStatus;
   error?: ApolloError;
   partial?: boolean;
-  loadingState?: Record<string, any>;
+  loadingState?: T | {};
+  // loadingState is exposed to the client for deferred queries, with a shape
+  // that mirrors that of the data, but instead of the leaf nodes being
+  // GraphQLOutputType, it is (undefined | boolean).
+  // Right now, we have not accounted for this difference, but I think it is
+  // still usable in the context of checking for the presence of a field.
+  //
+  // TODO: Additional work needs to be done in `apollo-codegen-core` to generate
+  // a separate type for the loadingState, which will then be passed in as
+  // follows - ApolloCurrentResult<T, LoadingStateType>
+  // Open issue here: https://github.com/apollographql/apollo-cli/issues/539
 };
 
 export interface FetchMoreOptions<

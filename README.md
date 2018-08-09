@@ -1,5 +1,4 @@
-# [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
-
+# [Apollo Client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack) [![Open Source Helpers](https://www.codetriage.com/apollographql/apollo-client/badges/users.svg)](https://www.codetriage.com/apollographql/apollo-client)
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
@@ -22,7 +21,10 @@ Get started on the [home page](http://apollographql.com/client), which has great
 ## Installation
 
 ```bash
-npm install apollo-client graphql-tag --save
+# installing the preset package
+npm install apollo-boost graphql-tag graphql --save
+# installing each piece independently
+npm install apollo-client apollo-cache-inmemory apollo-link-http graphql-tag graphql --save
 ```
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3+.
@@ -31,24 +33,22 @@ Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com
 
 ## Usage
 
-You get started by constructing an instance of the core class [`ApolloClient`][]. If you load `ApolloClient` from the [`apollo-client-preset`][] package, it will be configured with a few reasonable defaults such as our standard in-memory cache and a link to a GraphQL API at `/graphql`.
+You get started by constructing an instance of the core class [`ApolloClient`][]. If you load `ApolloClient` from the [`apollo-boost`][] package, it will be configured with a few reasonable defaults such as our standard in-memory cache and a link to a GraphQL API at `/graphql`.
 
 ```js
-import ApolloClient from 'apollo-client-preset';
+import ApolloClient from 'apollo-boost';
 
 const client = new ApolloClient();
 ```
 
 
-To point `ApolloClient` at a different URL, just create your own `HttpLink` instance, like so, replacing `https://graphql.example.com` with your GraphQL API's URL:
+To point `ApolloClient` at a different URL, add your GraphQL API's URL to the `uri` config property:
 
 ```js
-import { ApolloClient, HttpLink } from 'apollo-client-preset';
+import ApolloClient from 'apollo-boost';
 
 const client = new ApolloClient({
-  link: new HttpLink({
-    uri: 'https://graphql.example.com',
-  }),
+  uri: 'https://graphql.example.com'
 });
 ```
 
@@ -74,14 +74,13 @@ client.query({
 
 Now your client will be primed with some data in its cache. You can continue to make queries, or you can get your `client` instance to perform all sorts of advanced tasks on your GraphQL data. Such as [reactively watching queries with `watchQuery`][], [changing data on your server with `mutate`][], or [reading a fragment from your local cache with `readFragment`][].
 
-To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the [**`apollo-client` API reference**][].
+To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the [**`apollo-client` API reference**](https://www.apollographql.com/docs/react/api/apollo-client.html).
 
-[`ApolloClient`]: http://apollographql.com/docs/react
-[`apollo-client-preset`]: https://www.npmjs.com/package/apollo-client-preset
-[reactively watching queries with `watchQuery`]: http://apollographql.com/docs/react/reference/index.html#ApolloClient\.watchQuery
-[changing data on your server with `mutate`]: http://apollographql.com/docs/react/basics/mutations
-[reading a fragment from your local cache with `readFragment`]: https://www.apollographql.com/docs/react/basics/caching.html#readfragment
-[**`apollo-client` API reference**]: http://apollographql.com/docs/react/reference/index.html
+[`ApolloClient`]: https://www.apollographql.com/docs/react/api/apollo-client.html
+[`apollo-boost`]: https://www.apollographql.com/docs/react/essentials/get-started.html#apollo-boost
+[reactively watching queries with `watchQuery`]: https://www.apollographql.com/docs/react/api/apollo-client.html#ApolloClient.watchQuery
+[changing data on your server with `mutate`]: https://www.apollographql.com/docs/react/essentials/mutations.html
+[reading a fragment from your local cache with `readFragment`]: https://www.apollographql.com/docs/react/advanced/caching.html#direct
 
 ## Learn how to use Apollo Client with your favorite framework
 
@@ -92,7 +91,7 @@ To learn more about all of the features available to you through the `apollo-cli
 - [Polymer](https://github.com/aruntk/polymer-apollo)
 - [Meteor](http://apollographql.com/docs/react/recipes/meteor.html)
 - [Blaze](http://github.com/Swydo/blaze-apollo)
-- [Vanilla JS](http://apollographql.com/docs/react/reference)
+- [Vanilla JS](https://www.apollographql.com/docs/react/api/apollo-client.html)
 - [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
 ---
@@ -110,6 +109,7 @@ Running tests locally:
 ```
 # nvm use node
 npm install
+npm run build
 npm test
 ```
 

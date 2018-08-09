@@ -1,5 +1,6 @@
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
+import { stripSymbols } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler';
 import { QueryManager } from '../../core/QueryManager';
@@ -166,13 +167,68 @@ describe('QueryScheduler', () => {
     let subscription = observableQuery.subscribe({
       next(result) {
         timesFired += 1;
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
         subscription.unsubscribe();
       },
     });
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
+      done();
+    }, 100);
+  });
+
+  it('should register a query and return an observable that can adjust interval', done => {
+    const myQuery = gql`
+      query {
+        someAuthorAlias: author {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const data = [
+      { someAuthorAlias: { firstName: 'John', lastName: 'Smith' } },
+      { someAuthorAlias: { firstName: 'John', lastName: 'Doe' } },
+      // When the test passes, this one doesn't get delivered.
+      { someAuthorAlias: { firstName: 'Jane', lastName: 'Doe' } },
+    ];
+    const queryOptions = {
+      query: myQuery,
+      pollInterval: 20,
+    };
+    const link = mockSingleLink(
+      { request: queryOptions, result: { data: data[0] } },
+      { request: queryOptions, result: { data: data[1] } },
+      { request: queryOptions, result: { data: data[2] } },
+    );
+    const queryManager = new QueryManager({
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      link,
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    let timesFired = 0;
+    let observableQuery = scheduler.registerPollingQuery(queryOptions);
+    let subscription = observableQuery.subscribe({
+      next(result) {
+        expect(stripSymbols(result.data)).toEqual(data[timesFired]);
+        timesFired += 1;
+        if (timesFired === 1) {
+          observableQuery.startPolling(70);
+        }
+      },
+    });
+
+    setTimeout(() => {
+      // The observable should fire once when data[0] arrives and switch the
+      // pollInterval to 70, and fire one more time 70 later. If it still was
+      // polling at 20 ms (the condition which this is a regression test for) we
+      // will probably run out of links in the response, and definitely have
+      // timesFired end up greater than 2.
+      expect(timesFired).toEqual(2);
+      subscription.unsubscribe();
       done();
     }, 100);
   });
@@ -395,7 +451,7 @@ describe('QueryScheduler', () => {
     const subscription = observable.subscribe({
       next(result) {
         timesFired += 1;
-        expect(result.data).toEqual(data);
+        expect(stripSymbols(result.data)).toEqual(data);
         subscription.unsubscribe();
         expect(Object.keys(scheduler.registeredQueries).length).toEqual(0);
       },

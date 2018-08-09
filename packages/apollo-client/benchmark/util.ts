@@ -12,7 +12,8 @@ import * as Benchmark from 'benchmark';
 // be benchmarked. The `benchmark` function is similar to the `it` function within mocha;
 // it allows you to define a particular block of code to be benchmarked.
 
-const bsuite = new Benchmark.Suite();
+Benchmark.options.minSamples = 150;
+export const bsuite = new Benchmark.Suite();
 export type DoneFunction = () => void;
 
 export interface DescriptionObject {
@@ -165,6 +166,7 @@ export function runBenchmarks() {
       .on('cycle', (event: any) => {
         log('Mean time in ms: ', event.target.stats.mean * 1000);
         log(String(event.target));
+        log('');
       })
       .run({ async: false });
   });

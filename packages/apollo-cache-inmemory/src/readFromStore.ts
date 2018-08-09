@@ -8,8 +8,11 @@ import {
   getQueryDefinition,
   isJsonValue,
   isIdValue,
+  toIdValue,
   getStoreKeyName,
+  StoreValue,
 } from 'apollo-utilities';
+
 import { Cache } from 'apollo-cache';
 
 import {
@@ -17,6 +20,7 @@ import {
   IdValueWithPreviousResult,
   ReadStoreContext,
   DiffQueryAgainstStoreOptions,
+  StoreObject,
 } from './types';
 
 /**
@@ -65,25 +69,43 @@ const readStoreResolver: Resolver = (
   assertIdValue(idValue);
 
   const objId = idValue.id;
-  const obj = context.store[objId];
-  const storeKeyName = getStoreKeyName(fieldName, args, directives);
-  let fieldValue = (obj || {})[storeKeyName];
+  const obj = context.store.get(objId);
 
-  if (typeof fieldValue === 'undefined') {
+  let storeKeyName = fieldName;
+  if (args || directives) {
+    // We happen to know here that getStoreKeyName returns its first
+    // argument unmodified if there are no args or directives, so we can
+    // avoid calling the function at all in that case, as a small but
+    // important optimization to this frequently executed code.
+    storeKeyName = getStoreKeyName(storeKeyName, args, directives);
+  }
+
+  let fieldValue: StoreValue | string | void = void 0;
+
+  if (obj) {
+    fieldValue = obj[storeKeyName];
+
     if (
-      context.cacheResolvers &&
-      obj &&
+      typeof fieldValue === 'undefined' &&
+      context.cacheRedirects &&
       (obj.__typename || objId === 'ROOT_QUERY')
     ) {
       const typename = obj.__typename || 'Query';
 
       // Look for the type in the custom resolver map
-      const type = context.cacheResolvers[typename];
+      const type = context.cacheRedirects[typename];
       if (type) {
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];
         if (resolver) {
-          fieldValue = resolver(obj, args);
+          fieldValue = resolver(obj, args, {
+            getCacheKey(storeObj: StoreObject) {
+              return toIdValue({
+                id: context.dataIdFromObject(storeObj),
+                typename: storeObj.__typename,
+              });
+            },
+          });
         }
       }
     }
@@ -161,7 +183,8 @@ export function diffQueryAgainstStore<T>({
     // Global settings
     store,
     returnPartialData,
-    cacheResolvers: (config && config.cacheResolvers) || {},
+    dataIdFromObject: (config && config.dataIdFromObject) || null,
+    cacheRedirects: (config && config.cacheRedirects) || {},
     // Flag set during execution
     hasMissingField: false,
   };
@@ -185,7 +208,7 @@ export function diffQueryAgainstStore<T>({
   );
 
   return {
-    result,
+    result: result as T,
     complete: !context.hasMissingField,
   };
 }
@@ -272,9 +295,8 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
 
     const sameAsPreviousResult =
       // Confirm that we have the same keys in both the current result and the previous result.
-      Object.keys(idValue.previousResult).reduce(
-        (sameKeys, key) => sameKeys && currentResultKeys.indexOf(key) > -1,
-        true,
+      Object.keys(idValue.previousResult).every(
+        key => currentResultKeys.indexOf(key) > -1,
       ) &&
       // Perform a shallow comparison of the result fields with the previous result. If all of
       // the shallow fields are referentially equal to the fields of the previous result we can
@@ -293,11 +315,9 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
     }
   }
 
-  // Add the id to the result fields. It should be non-enumerable so users can’t see it without
-  // trying very hard.
   Object.defineProperty(resultFields, ID_KEY, {
     enumerable: false,
-    configurable: false,
+    configurable: true,
     writable: false,
     value: idValue.id,
   });

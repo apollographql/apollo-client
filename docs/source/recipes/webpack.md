@@ -1,5 +1,5 @@
 ---
-title: Webpack loader
+title: Loading queries with Webpack
 ---
 
 You can load GraphQL queries over `.graphql` files using Webpack. The package `graphql-tag` comes with a loader easy to setup and with some benefits:
@@ -54,7 +54,12 @@ export default graphql(currentUserQuery)(Profile)
 [FuseBox](http://fuse-box.org) can't use the Webpack loaders. To make the same transformation work in FuseBox, use [fuse-box-graphql-plugin](https://github.com/otothea/fuse-box-graphql-plugin).
 
 ## React native
-[React native](https://facebook.github.io/react-native/) can't use the Webpack loaders. To make the same transformation work in React native, use [babel-plugin-inline-import-graphql-ast](https://github.com/detrohutt/babel-plugin-inline-import-graphql-ast).
+
+[React native](https://facebook.github.io/react-native/) can't use the Webpack loaders. To make the same transformation work in React native, use [babel-plugin-import-graphql](https://github.com/detrohutt/babel-plugin-import-graphql).
+
+## Create-React-App
+
+[react-app-rewire-inline-import-graphql-ast](https://github.com/detrohutt/react-app-rewire-inline-import-graphql-ast/) is available for users of [create-react-app](https://github.com/facebook/create-react-app/) that would like to use graphql files without needing to eject the app first.
 
 ## Fragments
 

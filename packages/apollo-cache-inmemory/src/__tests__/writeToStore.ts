@@ -21,6 +21,8 @@ import {
   writeSelectionSetToStore,
 } from '../writeToStore';
 
+import { defaultNormalizedCacheFactory } from '../objectCache';
+
 import {
   HeuristicFragmentMatcher,
   IntrospectionFragmentMatcher,
@@ -65,7 +67,7 @@ describe('writing to the store', () => {
       writeQueryToStore({
         query,
         result: cloneDeep(result),
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: result,
     });
@@ -93,7 +95,7 @@ describe('writing to the store', () => {
       query,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         id: 'abcd',
         stringField: 'This is a string!',
@@ -127,7 +129,7 @@ describe('writing to the store', () => {
       query,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         id: 'abcd',
         'stringField({"arg":1})': 'The arg was 1!',
@@ -167,11 +169,11 @@ describe('writing to the store', () => {
       variables,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
-        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'numberField({"floatArg":3.14,"intArg":5})': 5,
         'stringField({"arg":"This is a string!"})': 'Heyo',
       },
     });
@@ -209,12 +211,44 @@ describe('writing to the store', () => {
       variables,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
-        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'numberField({"floatArg":3.14,"intArg":5})': 5,
         'stringField({"arg":"This is a default string!"})': 'Heyo',
+      },
+    });
+  });
+
+  it('properly normalizes a query with custom directives', () => {
+    const query = gql`
+      query {
+        id
+        firstName @include(if: true)
+        lastName @upperCase
+        birthDate @dateFormat(format: "DD-MM-YYYY")
+      }
+    `;
+
+    const result: any = {
+      id: 'abcd',
+      firstName: 'James',
+      lastName: 'BOND',
+      birthDate: '20-05-1940',
+    };
+
+    const normalized = writeQueryToStore({
+      result,
+      query,
+    });
+
+    expect(normalized.toObject()).toEqual({
+      ROOT_QUERY: {
+        id: 'abcd',
+        firstName: 'James',
+        'lastName@upperCase': 'BOND',
+        'birthDate@dateFormat({"format":"DD-MM-YYYY"})': '20-05-1940',
       },
     });
   });
@@ -253,7 +287,7 @@ describe('writing to the store', () => {
         query,
         result: cloneDeep(result),
         dataIdFromObject: getIdField,
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
@@ -297,7 +331,7 @@ describe('writing to the store', () => {
       writeQueryToStore({
         query,
         result: cloneDeep(result),
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
@@ -341,7 +375,7 @@ describe('writing to the store', () => {
       writeQueryToStore({
         query,
         result: cloneDeep(result),
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         'nestedObj({"arg":"val"})': {
@@ -396,7 +430,7 @@ describe('writing to the store', () => {
         query,
         result: cloneDeep(result),
         dataIdFromObject: getIdField,
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: result.nestedArray.map((obj: any) => ({
@@ -447,7 +481,7 @@ describe('writing to the store', () => {
         query,
         result: cloneDeep(result),
         dataIdFromObject: getIdField,
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
@@ -498,7 +532,7 @@ describe('writing to the store', () => {
       result: cloneDeep(result),
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.0` },
@@ -545,7 +579,7 @@ describe('writing to the store', () => {
       result: cloneDeep(result),
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
@@ -581,7 +615,7 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
@@ -619,7 +653,7 @@ describe('writing to the store', () => {
       result: cloneDeep(result),
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
@@ -666,7 +700,7 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         id: 'a',
         object1: {
@@ -741,7 +775,7 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         id: 'a',
         array1: [
@@ -831,7 +865,7 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    expect(normalized).toEqual({
+    expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         id: 'a',
         array1: [
@@ -915,7 +949,7 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    expect(store2).toEqual({
+    expect(store2.toObject()).toEqual({
       ROOT_QUERY: assign({}, result, result2),
     });
   });
@@ -948,7 +982,7 @@ describe('writing to the store', () => {
       writeQueryToStore({
         query,
         result: cloneDeep(result),
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: null,
@@ -977,7 +1011,7 @@ describe('writing to the store', () => {
       writeQueryToStore({
         query,
         result: cloneDeep(result),
-      }),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: {
         'people_one({"id":"5"})': {
@@ -1146,30 +1180,73 @@ describe('writing to the store', () => {
             selectionSet: def.selectionSet,
             result: cloneDeep(result),
             context: {
-              store: {},
+              storeFactory: defaultNormalizedCacheFactory,
+              store: defaultNormalizedCacheFactory(),
               variables,
               dataIdFromObject: () => '5',
             },
-          }),
+          }).toObject(),
         ).toEqual({
           '5': {
-            'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
-            },
-            'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
-            },
             id: 'id',
+            'some_mutation({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})': {
+              generated: false,
+              id: '5',
+              type: 'id',
+            },
+            'some_mutation_with_variables({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})': {
+              generated: false,
+              id: '5',
+              type: 'id',
+            },
           },
         });
       } else {
         throw 'No operation definition found';
       }
     });
+  });
+
+  it('should write to store if `dataIdFromObject` returns an ID of 0', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          id
+          __typename
+        }
+      }
+    `;
+    const data = {
+      author: {
+        id: 0,
+        __typename: 'Author',
+        firstName: 'John',
+      },
+    };
+    const expStore = defaultNormalizedCacheFactory({
+      ROOT_QUERY: {
+        author: {
+          id: 0,
+          typename: 'Author',
+          type: 'id',
+          generated: false,
+        },
+      },
+      0: {
+        id: data.author.id,
+        __typename: data.author.__typename,
+        firstName: data.author.firstName,
+      },
+    });
+
+    expect(
+      writeQueryToStore({
+        result: data,
+        query,
+        dataIdFromObject: () => 0,
+      }).toObject(),
+    ).toEqual(expStore.toObject());
   });
 
   describe('type escaping', () => {
@@ -1195,7 +1272,7 @@ describe('writing to the store', () => {
           lastName: 'Smith',
         },
       };
-      const expStore = {
+      const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           author: {
             type: 'id',
@@ -1204,13 +1281,13 @@ describe('writing to the store', () => {
           },
         },
         '$ROOT_QUERY.author': data.author,
-      };
+      });
       expect(
         writeQueryToStore({
           result: data,
           query,
-        }),
-      ).toEqual(expStore);
+        }).toObject(),
+      ).toEqual(expStore.toObject());
     });
 
     it('should correctly escape real ids', () => {
@@ -1230,12 +1307,13 @@ describe('writing to the store', () => {
           __typename: 'Author',
         },
       };
-      const expStore = {
+      const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           author: {
             type: 'id',
             id: dataIdFromObject(data.author),
             generated: false,
+            typename: 'Author',
           },
         },
         [dataIdFromObject(data.author)!]: {
@@ -1243,14 +1321,14 @@ describe('writing to the store', () => {
           id: data.author.id,
           __typename: data.author.__typename,
         },
-      };
+      });
       expect(
         writeQueryToStore({
           result: data,
           query,
           dataIdFromObject,
-        }),
-      ).toEqual(expStore);
+        }).toObject(),
+      ).toEqual(expStore.toObject());
     });
 
     it('should correctly escape json blobs', () => {
@@ -1272,12 +1350,13 @@ describe('writing to the store', () => {
           __typename: 'Author',
         },
       };
-      const expStore = {
+      const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           author: {
             type: 'id',
             id: dataIdFromObject(data.author),
             generated: false,
+            typename: 'Author',
           },
         },
         [dataIdFromObject(data.author)!]: {
@@ -1288,14 +1367,14 @@ describe('writing to the store', () => {
             json: data.author.info,
           },
         },
-      };
+      });
       expect(
         writeQueryToStore({
           result: data,
           query,
           dataIdFromObject,
-        }),
-      ).toEqual(expStore);
+        }).toObject(),
+      ).toEqual(expStore.toObject());
     });
   });
 
@@ -1304,6 +1383,7 @@ describe('writing to the store', () => {
       author: {
         firstName: 'John',
         lastName: 'Smith',
+        __typename: 'Author',
       },
     };
 
@@ -1325,6 +1405,7 @@ describe('writing to the store', () => {
         author {
           firstName
           lastName
+          __typename
         }
       }
     `;
@@ -1337,20 +1418,22 @@ describe('writing to the store', () => {
         }
       }
     `;
-    const expStoreWithoutId = {
+    const expStoreWithoutId = defaultNormalizedCacheFactory({
       '$ROOT_QUERY.author': {
         firstName: 'John',
         lastName: 'Smith',
+        __typename: 'Author',
       },
       ROOT_QUERY: {
         author: {
           type: 'id',
           id: '$ROOT_QUERY.author',
           generated: true,
+          typename: 'Author',
         },
       },
-    };
-    const expStoreWithId = {
+    });
+    const expStoreWithId = defaultNormalizedCacheFactory({
       Author__129: {
         firstName: 'John',
         lastName: 'Smith',
@@ -1362,22 +1445,124 @@ describe('writing to the store', () => {
           type: 'id',
           id: 'Author__129',
           generated: false,
+          typename: 'Author',
         },
       },
-    };
+    });
     const storeWithoutId = writeQueryToStore({
       result: dataWithoutId,
       query: queryWithoutId,
       dataIdFromObject,
     });
-    expect(storeWithoutId).toEqual(expStoreWithoutId);
+    expect(storeWithoutId.toObject()).toEqual(expStoreWithoutId.toObject());
     const storeWithId = writeQueryToStore({
       result: dataWithId,
       query: queryWithId,
       store: storeWithoutId,
       dataIdFromObject,
     });
-    expect(storeWithId).toEqual(expStoreWithId);
+    expect(storeWithId.toObject()).toEqual(expStoreWithId.toObject());
+  });
+
+  it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {
+    const dataWithPlaceholder = {
+      author: {
+        hello: 'Foo',
+        __typename: 'Placeholder',
+      },
+    };
+    const dataWithAuthor = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const dataIdFromObject = (object: any) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+      return undefined;
+    };
+    const query = gql`
+      query {
+        author {
+          ... on Author {
+            firstName
+            lastName
+            id
+            __typename
+          }
+          ... on Placeholder {
+            hello
+            __typename
+          }
+        }
+      }
+    `;
+    const expStoreWithPlaceholder = defaultNormalizedCacheFactory({
+      '$ROOT_QUERY.author': {
+        hello: 'Foo',
+        __typename: 'Placeholder',
+      },
+      ROOT_QUERY: {
+        author: {
+          type: 'id',
+          id: '$ROOT_QUERY.author',
+          generated: true,
+          typename: 'Placeholder',
+        },
+      },
+    });
+    const expStoreWithAuthor = defaultNormalizedCacheFactory({
+      Author__129: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+      ROOT_QUERY: {
+        author: {
+          type: 'id',
+          id: 'Author__129',
+          generated: false,
+          typename: 'Author',
+        },
+      },
+    });
+
+    // write the first object, without an ID, placeholder
+    const store = writeQueryToStore({
+      result: dataWithPlaceholder,
+      query,
+      dataIdFromObject,
+    });
+    expect(store.toObject()).toEqual(expStoreWithPlaceholder.toObject());
+
+    // replace with another one of different type with ID
+    writeQueryToStore({
+      result: dataWithAuthor,
+      query,
+      store,
+      dataIdFromObject,
+    });
+    expect(store.toObject()).toEqual(expStoreWithAuthor.toObject());
+
+    // and go back to the original:
+    writeQueryToStore({
+      result: dataWithPlaceholder,
+      query,
+      store,
+      dataIdFromObject,
+    });
+    // Author__129 will remain in the store,
+    // but will not be referenced by any of the fields,
+    // hence we combine, and in that very order
+    expect(store.toObject()).toEqual({
+      ...expStoreWithAuthor.toObject(),
+      ...expStoreWithPlaceholder.toObject(),
+    });
   });
 
   it('does not swallow errors other than field errors', () => {
@@ -1422,11 +1607,11 @@ describe('writing to the store', () => {
     const newStore = writeQueryToStore({
       query,
       result: cloneDeep(result),
-      store: assign({}, store) as NormalizedCache,
+      store: defaultNormalizedCacheFactory(store.toObject()),
     });
 
-    Object.keys(store).forEach(field => {
-      expect(store[field]).toEqual(newStore[field]);
+    Object.keys(store.toObject()).forEach(field => {
+      expect(store.get(field)).toEqual(newStore.get(field));
     });
   });
 
@@ -1458,7 +1643,7 @@ describe('writing to the store', () => {
         dataIdFromObject: getIdField,
       });
 
-      expect(newStore['1']).toEqual(result.todos[0]);
+      expect(newStore.get('1')).toEqual(result.todos[0]);
     });
 
     it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
@@ -1482,7 +1667,7 @@ describe('writing to the store', () => {
           fragmentMatcherFunction,
         });
 
-        expect(newStore['1']).toEqual(result.todos[0]);
+        expect(newStore.get('1')).toEqual(result.todos[0]);
       }, /Missing field description/);
     });
 
@@ -1547,7 +1732,7 @@ describe('writing to the store', () => {
           fragmentMatcherFunction,
         });
 
-        expect(newStore['1']).toEqual(result.todos[0]);
+        expect(newStore.get('1')).toEqual(result.todos[0]);
       }, /Missing field price/);
     });
 
@@ -1573,7 +1758,7 @@ describe('writing to the store', () => {
           fragmentMatcherFunction,
         });
 
-        expect(newStore['1']).toEqual(result.todos[0]);
+        expect(newStore.get('1')).toEqual(result.todos[0]);
       }, /Missing field __typename/);
     });
 
@@ -1589,7 +1774,7 @@ describe('writing to the store', () => {
         dataIdFromObject: getIdField,
       });
 
-      expect(newStore['ROOT_QUERY']).toEqual({ todos: null });
+      expect(newStore.get('ROOT_QUERY')).toEqual({ todos: null });
     });
     it('should not warn if a field is defered', () => {
       let originalWarn = console.warn;
@@ -1613,14 +1798,14 @@ describe('writing to the store', () => {
         fragmentMatcherFunction,
       });
 
-      expect(newStore['ROOT_QUERY']).toEqual({ id: 1 });
+      expect(newStore.get('ROOT_QUERY')).toEqual({ id: 1 });
       expect(console.warn).not.toBeCalled();
       console.warn = originalWarn;
     });
   });
 
   it('throws when trying to write an object without id that was previously queried with id', () => {
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign(
         {},
         {
@@ -1640,7 +1825,7 @@ describe('writing to the store', () => {
           stringField: 'This is a string!',
         },
       ) as StoreObject,
-    } as NormalizedCache;
+    });
 
     expect(() => {
       writeQueryToStore({
@@ -1652,7 +1837,7 @@ describe('writing to the store', () => {
           },
         },
         query: gql`
-          query {
+          query Failure {
             item {
               stringField
             }
@@ -1660,7 +1845,7 @@ describe('writing to the store', () => {
         `,
         dataIdFromObject: getIdField,
       });
-    }).toThrowError(/stringField(.|\n)*abcd/g);
+    }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
       writeResultToStore({
@@ -1685,7 +1870,7 @@ describe('writing to the store', () => {
   });
 
   it('properly handles the connection directive', () => {
-    const store: NormalizedCache = {};
+    const store = defaultNormalizedCacheFactory();
 
     writeQueryToStore({
       query: gql`
@@ -1723,7 +1908,7 @@ describe('writing to the store', () => {
       store,
     });
 
-    expect(store).toEqual({
+    expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         abc: [
           {
@@ -1735,6 +1920,201 @@ describe('writing to the store', () => {
       },
       'ROOT_QUERY.abc.0': {
         name: 'efgh',
+      },
+    });
+  });
+
+  it('should keep reference when type of mixed inlined field changes', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const query = gql`
+      query {
+        animals {
+          species {
+            name
+          }
+        }
+      }
+    `;
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Dog',
+              name: 'dog',
+            },
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'dog' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Dog',
+        },
+      },
+    });
+  });
+
+  it('should not keep reference when type of mixed inlined field changes to non-inlined field', () => {
+    const store = defaultNormalizedCacheFactory();
+
+    const dataIdFromObject = (object: any) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+      return undefined;
+    };
+
+    const query = gql`
+      query {
+        animals {
+          species {
+            id
+            name
+          }
+        }
+      }
+    `;
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
+          },
+        ],
+      },
+      dataIdFromObject,
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': { name: 'cat' },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: true,
+          id: '$ROOT_QUERY.animals.0.species',
+          type: 'id',
+          typename: 'Cat',
+        },
+      },
+    });
+
+    writeQueryToStore({
+      query,
+      result: {
+        animals: [
+          {
+            __typename: 'Animal',
+            species: {
+              id: 'dog-species',
+              __typename: 'Dog',
+              name: 'dog',
+            },
+          },
+        ],
+      },
+      dataIdFromObject,
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      '$ROOT_QUERY.animals.0.species': undefined,
+      'Dog__dog-species': {
+        id: 'dog-species',
+        name: 'dog',
+      },
+      ROOT_QUERY: {
+        animals: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.animals.0',
+            type: 'id',
+            typename: 'Animal',
+          },
+        ],
+      },
+      'ROOT_QUERY.animals.0': {
+        species: {
+          generated: false,
+          id: 'Dog__dog-species',
+          type: 'id',
+          typename: 'Dog',
+        },
       },
     });
   });

@@ -7,7 +7,6 @@ import {
   group,
   benchmark,
   afterEach,
-  runBenchmarks,
   DescriptionObject,
   dataIdFromObject,
 } from './util';
@@ -16,11 +15,13 @@ import { ApolloClient, ApolloQueryResult } from '../src/index';
 
 import { times, cloneDeep } from 'lodash';
 
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { Operation, ApolloLink, FetchResult, Observable } from 'apollo-link';
 
 import { print } from 'graphql/language/printer';
+
+import { collectAndReportBenchmarks } from './github-reporter';
 
 interface MockedResponse {
   request: Operation;
@@ -142,8 +143,24 @@ const createReservations = (count: number) => {
 };
 
 group(end => {
+  benchmark('baseline', done => {
+    let arr = Array.from({ length: 100 }, () => Math.random());
+    arr.sort();
+    done();
+  });
+  end();
+});
+
+group(end => {
+  const link = mockSingleLink({
+    request: { query: simpleQuery } as Operation,
+    result: simpleResult,
+  });
+
+  const cache = new InMemoryCache();
+
   benchmark('constructing an instance', done => {
-    new ApolloClient({ link: mockSingleLink(), cache: new InMemoryCache() });
+    new ApolloClient({ link, cache });
     done();
   });
   end();
@@ -190,8 +207,8 @@ group(end => {
   // the `meanTimes` structure can be used.
   const meanTimes: { [subscriberCount: string]: number } = {};
 
-  times(50, countR => {
-    const count = countR * 5;
+  times(4, countR => {
+    const count = 5 * Math.pow(4, countR);
     benchmark(
       {
         name: `write data and deliver update to ${count} subscribers`,
@@ -236,8 +253,8 @@ group(end => {
   end();
 });
 
-times(25, (countR: number) => {
-  const count = (countR + 1) * 10;
+times(4, (countR: number) => {
+  const count = 5 * Math.pow(4, countR);
   const query = gql`
     query($id: String) {
       author(id: $id) {
@@ -247,7 +264,6 @@ times(25, (countR: number) => {
       }
     }
   `;
-  const originalVariables = { id: 1 };
   const originalResult = {
     data: {
       author: {
@@ -259,78 +275,55 @@ times(25, (countR: number) => {
   };
 
   group(end => {
-    // construct a set of mocked responses that each
-    // returns an author with a different id (but the
-    // same name) so we can populate the cache.
-    const mockedResponses: MockedResponse[] = [];
+    const cache = new InMemoryCache({
+      dataIdFromObject: (obj: any) => {
+        if (obj.id && obj.__typename) {
+          return obj.__typename + obj.id;
+        }
+        return null;
+      },
+    });
+
+    // insert a bunch of stuff into the cache
     times(count, index => {
       const result = cloneDeep(originalResult);
       result.data.author.id = index;
 
-      const variables = cloneDeep(originalVariables);
-      variables.id = index;
-
-      mockedResponses.push({
-        // what am I doing here
-        request: ({ query, variables } as any) as Operation,
-        result,
+      return cache.writeQuery({
+        query,
+        variables: { id: index },
+        data: result.data as any,
       });
     });
 
-    const client = new ApolloClient({
-      link: mockSingleLink(...mockedResponses),
-      cache: new InMemoryCache({
-        dataIdFromObject: (obj: any) => {
-          if (obj.id && obj.__typename) {
-            return obj.__typename + obj.id;
-          }
-          return null;
-        },
-      }),
-    });
-
-    // insert a bunch of stuff into the cache
-    const promises = times(count, index => {
-      return client
-        .query({
+    benchmark(
+      {
+        name: `read single item from cache with ${count} items in cache`,
+        count,
+      },
+      done => {
+        const randomIndex = Math.floor(Math.random() * count);
+        cache.readQuery({
           query,
-          variables: { id: index },
-        })
-        .then(_ => {
-          return Promise.resolve({});
+          variables: { id: randomIndex },
         });
-    });
+        done();
+      },
+    );
 
-    const myBenchmark = benchmark;
-    // const myAfterEach = afterEach;
-    Promise.all(promises).then(() => {
-      myBenchmark(
-        {
-          name: `read single item from cache with ${count} items in cache`,
-          count,
-        },
-        done => {
-          const randomIndex = Math.floor(Math.random() * count);
-          client
-            .query({
-              query,
-              variables: { id: randomIndex },
-            })
-            .then(_ => {
-              done();
-            });
-        },
-      );
-
-      end();
-    });
+    end();
   });
 });
 
 // Measure the amount of time it takes to read a bunch of
 // objects from the cache.
-times(50, index => {
+times(4, index => {
   group(end => {
+    const cache = new InMemoryCache({
+      dataIdFromObject,
+      addTypename: false,
+    });
+
     const query = gql`
       query($id: String) {
         house(id: $id) {
@@ -342,53 +335,33 @@ times(50, index => {
       }
     `;
     const houseId = '12';
-    const reservationCount = index + 1;
+    const reservationCount = 5 * Math.pow(4, index);
     const reservations = createReservations(reservationCount);
 
     const variables = { id: houseId };
-    const result = {
+
+    cache.writeQuery({
+      query,
+      variables,
       data: {
         house: {
           reservations,
         },
       },
-    };
-
-    const client = new ApolloClient({
-      link: mockSingleLink({
-        request: ({ query, variables } as any) as Operation,
-        result,
-      }),
-      cache: new InMemoryCache({
-        dataIdFromObject,
-        addTypename: false,
-      }),
     });
 
-    const myBenchmark = benchmark;
-    client
-      .query({
-        query,
-        variables,
-      })
-      .then(() => {
-        myBenchmark(
-          `read result with ${reservationCount} items associated with the result`,
-          done => {
-            client
-              .query({
-                query,
-                variables,
-                fetchPolicy: 'cache-only',
-              })
-              .then(() => {
-                done();
-              });
-          },
-        );
+    benchmark(
+      `read result with ${reservationCount} items associated with the result`,
+      done => {
+        cache.readQuery({
+          query,
+          variables,
+        });
+        done();
+      },
+    );
 
-        end();
-      });
+    end();
   });
 });
 
@@ -396,9 +369,9 @@ times(50, index => {
 //
 // This test allows us to differentiate between the fixed cost of .query() and the fixed cost
 // of actually reading from the store.
-times(50, index => {
+times(4, index => {
   group(end => {
-    const reservationCount = index + 1;
+    const reservationCount = 5 * Math.pow(4, index);
 
     // Prime the cache.
     const query = gql`
@@ -414,49 +387,42 @@ times(50, index => {
     const variables = { id: '7' };
     const reservations = createReservations(reservationCount);
     const result = {
-      data: {
-        house: { reservations },
-      },
+      house: { reservations },
     };
-    const client = new ApolloClient({
-      link: mockSingleLink({
-        request: ({ query, variables } as any) as Operation,
-        result,
-      }),
-      cache: new InMemoryCache({
-        dataIdFromObject,
-        addTypename: false,
-      }),
+
+    const cache = new InMemoryCache({
+      dataIdFromObject,
+      addTypename: false,
     });
 
-    const myBenchmark = benchmark;
+    cache.write({
+      dataId: 'ROOT_QUERY',
+      query,
+      variables,
+      result,
+    });
 
     // We only keep track of the results so that V8 doesn't decide to just throw
     // away our cache read code.
-    const results: any[] = [];
-    client
-      .query({
-        query,
-        variables,
-      })
-      .then(() => {
-        myBenchmark(
-          `diff query against store with ${reservationCount} items`,
-          done => {
-            results.push(
-              client.queryManager.dataStore.getCache().diff({
-                query,
-                variables,
-                optimistic: false,
-              }),
-            );
-            done();
-          },
-        );
+    let results: any = null;
+    benchmark(
+      `diff query against store with ${reservationCount} items`,
+      done => {
+        results = cache.diff({
+          query,
+          variables,
+          optimistic: false,
+        });
+        done();
+      },
+    );
 
-        end();
-      });
+    end();
   });
 });
 
-runBenchmarks();
+if (process.env.DANGER_GITHUB_API_TOKEN) {
+  collectAndReportBenchmarks(true);
+} else {
+  collectAndReportBenchmarks(false);
+}

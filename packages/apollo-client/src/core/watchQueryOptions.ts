@@ -4,14 +4,15 @@ import { DataProxy } from 'apollo-cache';
 
 import { MutationQueryReducersMap } from './types';
 
-import { PureQueryOptions } from './types';
+import { PureQueryOptions, OperationVariables } from './types';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
  * - cache-first (default): return result from cache. Only fetch from network if cached result is not available.
- * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
- * - cache-only: return result from cache if avaiable, fail otherwise.
- * - network-only: return result from network, fail if network call doesn't succeed.
+ * - cache-and-network: return result from cache first (if it exists), then return network result once it's available.
+ * - cache-only: return result from cache if available, fail otherwise.
+ * - no-cache: return result from network, fail if network call doesn't succeed, don't save to cache
+ * - network-only: return result from network, fail if network call doesn't succeed, save to cache
  * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */
 
@@ -20,6 +21,7 @@ export type FetchPolicy =
   | 'cache-and-network'
   | 'network-only'
   | 'cache-only'
+  | 'no-cache'
   | 'standby';
 
 /**
@@ -32,20 +34,14 @@ export type FetchPolicy =
 export type ErrorPolicy = 'none' | 'ignore' | 'all';
 
 /**
- * We can change these options to an ObservableQuery
+ * Common options shared across all query interfaces.
  */
-export interface ModifiableWatchQueryOptions {
+export interface QueryBaseOptions<TVariables = OperationVariables> {
   /**
    * A map going from variable name to variable value, where the variables are used
    * within the GraphQL query.
    */
-  variables?: { [key: string]: any };
-
-  /**
-   * The time interval (in milliseconds) on which this query should be
-   * refetched from the server.
-   */
-  pollInterval?: number;
+  variables?: TVariables;
 
   /**
    * Specifies the {@link FetchPolicy} to be used for this query
@@ -58,25 +54,22 @@ export interface ModifiableWatchQueryOptions {
   errorPolicy?: ErrorPolicy;
 
   /**
-   * Wether or not to fetch results
+   * Whether or not to fetch results
    */
   fetchResults?: boolean;
-
-  /**
-   * Whether or not updates to the network status should trigger next on the observer of this query
-   */
-  notifyOnNetworkStatusChange?: boolean;
 }
 
 /**
- * The argument to a query
+ * Query options.
  */
-export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
+export interface QueryOptions<TVariables = OperationVariables>
+  extends QueryBaseOptions<TVariables> {
   /**
    * A GraphQL document that consists of a single query to be sent down to the
    * server.
    */
-  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a lot of tests.
+  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a
+  // lot of tests.
   query: DocumentNode;
 
   /**
@@ -91,27 +84,54 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
   context?: any;
 }
 
-export interface FetchMoreQueryOptions {
-  query?: DocumentNode;
-  variables?: { [key: string]: any };
+/**
+ * We can change these options to an ObservableQuery
+ */
+export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
+  extends QueryBaseOptions<TVariables> {
+  /**
+   * The time interval (in milliseconds) on which this query should be
+   * refetched from the server.
+   */
+  pollInterval?: number;
+
+  /**
+   * Whether or not updates to the network status should trigger next on the observer of this query
+   */
+  notifyOnNetworkStatusChange?: boolean;
 }
 
-export type UpdateQueryFn = (
-  previousQueryResult: Object,
-  options: {
-    subscriptionData: { data: any };
-    variables?: { [key: string]: any };
-  },
-) => Object;
+/**
+ * Watched query options.
+ */
+export interface WatchQueryOptions<TVariables = OperationVariables>
+  extends QueryOptions<TVariables>,
+    ModifiableWatchQueryOptions<TVariables> {}
 
-export type SubscribeToMoreOptions = {
+export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
+  query?: DocumentNode;
+  variables?: Pick<TVariables, K>;
+}
+
+export type UpdateQueryFn<TData = any, TVariables = OperationVariables> = (
+  previousQueryResult: TData,
+  options: {
+    subscriptionData: { data: TData };
+    variables?: TVariables;
+  },
+) => TData;
+
+export type SubscribeToMoreOptions<
+  TData = any,
+  TVariables = OperationVariables
+> = {
   document: DocumentNode;
-  variables?: { [key: string]: any };
-  updateQuery?: UpdateQueryFn;
+  variables?: TVariables;
+  updateQuery?: UpdateQueryFn<TData, TVariables>;
   onError?: (error: Error) => void;
 };
 
-export interface SubscriptionOptions {
+export interface SubscriptionOptions<TVariables = OperationVariables> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single subscription inside of it.
@@ -122,12 +142,20 @@ export interface SubscriptionOptions {
    * An object that maps from the name of a variable as used in the subscription
    * GraphQL document to that variable's value.
    */
-  variables?: { [key: string]: any };
+  variables?: TVariables;
+
+  /**
+   * Specifies the {@link FetchPolicy} to be used for this subscription.
+   */
+  fetchPolicy?: FetchPolicy;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
-export interface MutationBaseOptions<T = { [key: string]: any }> {
+export interface MutationBaseOptions<
+  T = { [key: string]: any },
+  TVariables = OperationVariables
+> {
   /**
    * An object that represents the result of this mutation that will be
    * optimistically stored before the server has actually returned a result.
@@ -158,6 +186,16 @@ export interface MutationBaseOptions<T = { [key: string]: any }> {
     | RefetchQueryDescription;
 
   /**
+   * By default, `refetchQueries` does not wait for the refetched queries to
+   * be completed, before resolving the mutation `Promise`. This ensures that
+   * query refetching does not hold up mutation response handling (query
+   * refetching is handled asynchronously). Set `awaitRefetchQueries` to
+   * `true` if you would like to wait for the refetched queries to complete,
+   * before the mutation can be marked as resolved.
+   */
+  awaitRefetchQueries?: boolean;
+
+  /**
    * A function which provides a {@link DataProxy} and the result of the
    * mutation to allow the user to update the store based on the results of the
    * mutation.
@@ -173,6 +211,12 @@ export interface MutationBaseOptions<T = { [key: string]: any }> {
    * methods directly on {@link ApolloClient} is that all of the writes are
    * batched together at the end of the update, and it allows for writes
    * generated by optimistic data to be rolled back.
+   *
+   * Note that since this function is intended to be used to update the
+   * store, it cannot be used with a `no-cache` fetch policy. If you're
+   * interested in performing some action after a mutation has completed,
+   * and you don't need to update the store, use the Promise returned from
+   * `client.mutate` instead.
    */
   update?: MutationUpdaterFn<T>;
 
@@ -185,16 +229,35 @@ export interface MutationBaseOptions<T = { [key: string]: any }> {
    * An object that maps from the name of a variable as used in the mutation
    * GraphQL document to that variable's value.
    */
-  variables?: any;
+  variables?: TVariables;
 }
 
-export interface MutationOptions<T = { [key: string]: any }>
-  extends MutationBaseOptions<T> {
+export interface MutationOptions<
+  T = { [key: string]: any },
+  TVariables = OperationVariables
+> extends MutationBaseOptions<T, TVariables> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single mutation inside of it.
    */
   mutation: DocumentNode;
+
+  /**
+   * The context to be passed to the link execution chain. This context will
+   * only be used with the mutation. It will not be used with
+   * `refetchQueries`. Refetched queries use the context they were
+   * initialized with (since the intitial context is stored as part of the
+   * `ObservableQuery` instance). If a specific context is needed when
+   * refetching queries, make sure it is configured (via the
+   * [`query` `context` option](/docs/react/api/apollo-client.html#ApolloClient.query))
+   * when the query is first initialized/run.
+   */
+  context?: any;
+
+  /**
+   * Specifies the {@link FetchPolicy} to be used for this query
+   */
+  fetchPolicy?: FetchPolicy;
 }
 
 // Add a level of indirection for `typedoc`.

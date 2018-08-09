@@ -6,6 +6,7 @@ import {
   OperationDefinitionNode,
   FragmentDefinitionNode,
 } from 'graphql';
+import { print } from 'graphql/language/printer';
 import { FragmentMatcher } from 'graphql-anywhere';
 
 import {
@@ -24,11 +25,16 @@ import {
   shouldInclude,
   storeKeyNameFromField,
   getQueryDefinition,
+  StoreValue,
+  toIdValue,
 } from 'apollo-utilities';
+
+import { defaultNormalizedCacheFactory, ObjectCache } from './objectCache';
 
 import {
   IdGetter,
   NormalizedCache,
+  NormalizedCacheFactory,
   ReadStoreContext,
   StoreObject,
 } from './types';
@@ -40,11 +46,9 @@ export class WriteError extends Error {
 export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
   // XXX A bit hacky maybe ...
   const enhancedError = new WriteError(
-    `Error writing result to store for query ${document.loc &&
-      document.loc.source &&
-      document.loc.source.body}`,
+    `Error writing result to store for query:\n ${print(document)}`,
   );
-  enhancedError.message += '/n' + error.message;
+  enhancedError.message += '\n' + error.message;
   enhancedError.stack = error.stack;
   return enhancedError;
 }
@@ -72,7 +76,8 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
 export function writeQueryToStore({
   result,
   query,
-  store = {} as NormalizedCache,
+  storeFactory = defaultNormalizedCacheFactory,
+  store = storeFactory(),
   variables,
   dataIdFromObject,
   fragmentMap = {} as FragmentMap,
@@ -81,6 +86,7 @@ export function writeQueryToStore({
   result: Object;
   query: DocumentNode;
   store?: NormalizedCache;
+  storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
@@ -97,6 +103,7 @@ export function writeQueryToStore({
       selectionSet: queryDefinition.selectionSet,
       context: {
         store,
+        storeFactory,
         processedData: {},
         variables,
         dataIdFromObject,
@@ -111,6 +118,7 @@ export function writeQueryToStore({
 
 export type WriteContext = {
   store: NormalizedCache;
+  storeFactory: NormalizedCacheFactory;
   processedData?: { [x: string]: FieldNode[] };
   variables?: any;
   dataIdFromObject?: IdGetter;
@@ -122,7 +130,8 @@ export function writeResultToStore({
   dataId,
   result,
   document,
-  store = {} as NormalizedCache,
+  storeFactory = defaultNormalizedCacheFactory,
+  store = storeFactory(),
   variables,
   dataIdFromObject,
   fragmentMatcherFunction,
@@ -131,6 +140,7 @@ export function writeResultToStore({
   result: any;
   document: DocumentNode;
   store?: NormalizedCache;
+  storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
   fragmentMatcherFunction?: FragmentMatcher;
@@ -149,6 +159,7 @@ export function writeResultToStore({
       selectionSet,
       context: {
         store,
+        storeFactory,
         processedData: {},
         variables,
         dataIdFromObject,
@@ -190,7 +201,7 @@ export function writeSelectionSetToStore({
             context,
           });
         } else {
-          // if this is a defered field we don't need to throw / wanr
+          // if this is a defered field we don't need to throw / warn
           const isDefered =
             selection.directives &&
             selection.directives.length &&
@@ -234,19 +245,21 @@ export function writeSelectionSetToStore({
         // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
         // Right now we have to pretend that we're passing in an idValue and that there's a store
         // on the context.
-        const idValue: IdValue = { type: 'id', id: 'self', generated: false };
+        const idValue = toIdValue({ id: 'self', typename: undefined });
         const fakeContext: ReadStoreContext = {
-          store: { self: result },
+          // NOTE: fakeContext always uses ObjectCache
+          // since this is only to ensure the return value of 'matches'
+          store: new ObjectCache({ self: result }),
           returnPartialData: false,
           hasMissingField: false,
-          cacheResolvers: {},
+          cacheRedirects: {},
         };
         matches = context.fragmentMatcherFunction(
           idValue,
           fragment.typeCondition.name.value,
           fakeContext,
         );
-        if (fakeContext.returnPartialData) {
+        if (!isProduction() && fakeContext.returnPartialData) {
           console.error('WARNING: heuristic fragment matching going on!');
         }
       }
@@ -276,8 +289,8 @@ function mergeWithGenerated(
   realKey: string,
   cache: NormalizedCache,
 ) {
-  const generated = cache[generatedKey];
-  const real = cache[realKey];
+  const generated = cache.get(generatedKey);
+  const real = cache.get(realKey);
 
   Object.keys(generated).forEach(key => {
     const value = generated[key];
@@ -285,8 +298,8 @@ function mergeWithGenerated(
     if (isIdValue(value) && isGeneratedId(value.id) && isIdValue(realValue)) {
       mergeWithGenerated(value.id, realValue.id, cache);
     }
-    delete cache[generatedKey];
-    cache[realKey] = { ...generated, ...real } as StoreObject;
+    cache.delete(generatedKey);
+    cache.set(realKey, { ...generated, ...real } as StoreObject);
   });
 }
 
@@ -325,7 +338,8 @@ function writeFieldToStore({
 }) {
   const { variables, dataIdFromObject, store } = context;
 
-  let storeValue: any;
+  let storeValue: StoreValue;
+  let storeObject: StoreObject;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables);
   // specifies if we need to merge existing keys in the store
@@ -375,7 +389,7 @@ function writeFieldToStore({
         );
       }
 
-      if (semanticId) {
+      if (semanticId || (typeof semanticId === 'number' && semanticId === 0)) {
         valueDataId = semanticId;
         generated = false;
       }
@@ -392,41 +406,64 @@ function writeFieldToStore({
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
     // This allows us to distinguish IDs from normal scalars.
-    storeValue = {
-      type: 'id',
-      id: valueDataId,
-      generated,
-    };
+    const typename = value.__typename;
+    storeValue = toIdValue({ id: valueDataId, typename }, generated);
 
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the
     // data from that id with the data we're about to write in the store.
-    if (store[dataId] && store[dataId][storeFieldName] !== storeValue) {
-      const escapedId = store[dataId][storeFieldName] as IdValue;
+    storeObject = store.get(dataId);
+    const escapedId =
+      storeObject && (storeObject[storeFieldName] as IdValue | undefined);
+    if (escapedId !== storeValue && isIdValue(escapedId)) {
+      const hadTypename = escapedId.typename !== undefined;
+      const hasTypename = typename !== undefined;
+      const typenameChanged =
+        hadTypename && hasTypename && escapedId.typename !== typename;
 
       // If there is already a real id in the store and the current id we
       // are dealing with is generated, we throw an error.
-      if (
-        isIdValue(storeValue) &&
-        storeValue.generated &&
-        isIdValue(escapedId) &&
-        !escapedId.generated
-      ) {
+      // One exception we allow is when the typename has changed, which occurs
+      // when schema defines a union, both with and without an ID in the same place.
+      // checks if we "lost" the read id
+      if (generated && !escapedId.generated && !typenameChanged) {
         throw new Error(
           `Store error: the application attempted to write an object with no provided id` +
-            ` but the store already contains an id of ${escapedId.id} for this object.`,
+            ` but the store already contains an id of ${escapedId.id} for this object. The selectionSet` +
+            ` that was trying to be written is:\n` +
+            print(field),
+        );
+      }
+      // checks if we "lost" the typename
+      if (hadTypename && !hasTypename) {
+        throw new Error(
+          `Store error: the application attempted to write an object with no provided typename` +
+            ` but the store already contains an object with typename of ${escapedId.typename} for the object of id ${escapedId.id}. The selectionSet` +
+            ` that was trying to be written is:\n` +
+            print(field),
         );
       }
 
-      if (isIdValue(escapedId) && escapedId.generated) {
+      if (escapedId.generated) {
         generatedKey = escapedId.id;
-        shouldMerge = true;
+        // We should only merge if it's an object of the same type,
+        // otherwise we should delete the generated object
+        if (typenameChanged) {
+          // Only delete the generated object when the old object was
+          // inlined, and the new object is not. This is indicated by
+          // the old id being generated, and the new id being real.
+          if (!generated) {
+            store.delete(generatedKey);
+          }
+        } else {
+          shouldMerge = true;
+        }
       }
     }
   }
 
   const newStoreObj = {
-    ...store[dataId],
+    ...store.get(dataId),
     [storeFieldName]: storeValue,
   } as StoreObject;
 
@@ -434,8 +471,9 @@ function writeFieldToStore({
     mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
   }
 
-  if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
-    store[dataId] = newStoreObj;
+  storeObject = store.get(dataId);
+  if (!storeObject || storeValue !== storeObject[storeFieldName]) {
+    store.set(dataId, newStoreObj);
   }
 }
 
@@ -476,12 +514,6 @@ function processArrayValue(
       });
     }
 
-    const idStoreValue: IdValue = {
-      type: 'id',
-      id: itemDataId,
-      generated,
-    };
-
-    return idStoreValue;
+    return toIdValue({ id: itemDataId, typename: item.__typename }, generated);
   });
 }

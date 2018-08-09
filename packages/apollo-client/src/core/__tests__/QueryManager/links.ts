@@ -5,6 +5,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
 import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
+import { stripSymbols } from 'apollo-utilities';
 
 // mocks
 import mockQueryManager from '../../../__mocks__/mockQueryManager';
@@ -56,9 +57,9 @@ describe('Link interactions', () => {
       expect(cache).toBeDefined();
       return forward(operation).map(result => {
         setTimeout(() => {
-          const cacheResult = cache.read({ query });
+          const cacheResult = stripSymbols(cache.read({ query }));
           expect(cacheResult).toEqual(initialData);
-          expect(cacheResult).toEqual(result.data);
+          expect(cacheResult).toEqual(stripSymbols(result.data));
           if (count === 1) {
             done();
           }
@@ -271,5 +272,108 @@ describe('Link interactions', () => {
 
     // fire off first result
     mockLink.simulateResult({ result: { data: initialData } });
+  });
+  it('includes passed context in the context for mutations', done => {
+    const mutation = gql`
+      mutation UpdateLuke {
+        people_one(id: 1) {
+          name
+          friends {
+            name
+          }
+        }
+      }
+    `;
+
+    const initialData = {
+      people_one: {
+        name: 'Luke Skywalker',
+        friends: [{ name: 'Leia Skywalker' }],
+      },
+    };
+
+    const evictionLink = (operation, forward) => {
+      const { planet } = operation.getContext();
+      expect(planet).toBe('Tatooine');
+      done();
+      return forward(operation);
+    };
+
+    const mockLink = new MockSubscriptionLink();
+    const link = ApolloLink.from([evictionLink, mockLink]);
+    const queryManager = new QueryManager({
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      link,
+    });
+
+    queryManager.mutate({ mutation, context: { planet: 'Tatooine' } });
+
+    // fire off first result
+    mockLink.simulateResult({ result: { data: initialData } });
+  });
+  it('includes getCacheKey function on the context for cache resolvers', async () => {
+    const query = gql`
+      {
+        books {
+          id
+          title
+        }
+      }
+    `;
+
+    const shouldHitCacheResolver = gql`
+      {
+        book(id: 1) {
+          title
+        }
+      }
+    `;
+
+    const bookData = {
+      books: [
+        { id: 1, title: 'Woo', __typename: 'Book' },
+        { id: 2, title: 'Foo', __typename: 'Book' },
+      ],
+    };
+
+    const link = new ApolloLink((operation, forward) => {
+      const { getCacheKey } = operation.getContext();
+      expect(getCacheKey).toBeDefined();
+      expect(getCacheKey({ id: 1, __typename: 'Book' })).toEqual('Book:1');
+      return Observable.of({ data: bookData });
+    });
+
+    const queryManager = new QueryManager({
+      link,
+      store: new DataStore(
+        new InMemoryCache({
+          cacheResolvers: {
+            Query: {
+              book: (_, { id }, context) => {
+                expect(context.getCacheKey).toBeDefined();
+                const cacheKey = context.getCacheKey({
+                  id,
+                  __typename: 'Book',
+                });
+                expect(cacheKey.id).toEqual(`Book:${id}`);
+                return cacheKey;
+              },
+            },
+          },
+        }),
+      ),
+    });
+
+    await queryManager.query({ query });
+
+    return queryManager
+      .query({ query: shouldHitCacheResolver })
+      .then(({ data }) => {
+        expect({
+          ...data,
+        }).toMatchObject({
+          book: { title: 'Woo', __typename: 'Book' },
+        });
+      });
   });
 });

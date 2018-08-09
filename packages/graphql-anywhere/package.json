@@ -1,20 +1,23 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.0.0",
+  "version": "4.1.16",
   "description": "Run GraphQL queries with no schema and just one resolver",
-  "main": "./lib/index.js",
+  "main": "./lib/bundle.umd.js",
+  "module": "./lib/index.js",
+  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
     "build": "tsc",
+    "postbuild": "npm run bundle",
+    "bundle": "rollup -c rollup.config.js && rollup -c rollup.async.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
-    "build:browser":
-      "browserify ./lib/index.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
-    "minify:browser":
-      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "repository": {
@@ -31,27 +34,31 @@
     "react"
   ],
   "author": "Sashko Stubailo <sashko@stubailo.com>",
+  "contributors": [
+    "James Burgess <jamesmillerburgess@gmail.com>"
+  ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "^1.0.0"
+    "apollo-utilities": "^1.0.18"
   },
   "devDependencies": {
-    "@types/graphql": "0.9.4",
+    "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "21.1.2",
-    "@types/lodash": "4.14.80",
-    "@types/node": "8.0.46",
-    "@types/react": "16.0.18",
-    "@types/react-dom": "16.0.2",
-    "browserify": "14.5.0",
-    "graphql": "0.11.7",
-    "graphql-tag": "2.4.2",
-    "jest": "20.0.4",
+    "@types/jest": "22.2.3",
+    "@types/lodash": "4.14.116",
+    "@types/node": "10.5.7",
+    "@types/react": "16.0.34",
+    "@types/react-dom": "16.0.4",
+    "browserify": "15.2.0",
+    "graphql": "0.13.2",
+    "graphql-tag": "2.9.2",
+    "jest": "23.0.0",
     "react": "15.6.2",
     "react-dom": "15.6.2",
+    "rollup": "0.64.1",
     "ts-jest": "20.0.14",
-    "tslint": "5.8.0",
-    "typescript": "2.5.2",
+    "tslint": "5.11.0",
+    "typescript": "2.9.2",
     "uglify": "0.1.5"
   },
   "jest": {
@@ -59,6 +66,12 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "testURL": "http://localhost"
   }
 }

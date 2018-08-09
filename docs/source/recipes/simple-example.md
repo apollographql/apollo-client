@@ -1,7 +1,74 @@
 ---
-title: "Small Example: Snack"
-description: A tiny app that implements one view from our GitHunt example app, that you can run and edit right from your browser.
+title: "Example app"
+description: Introducing Pupstagram, an example app with the latest features!
 ---
+
+Want to get started with Apollo Client? This page will guide you through your first GraphQL query with Apollo in less than ten minutes. For this example, we're going to be using:
+
+- [Launchpad](https://launchpad.graphql.com/nx9zvp49q7) for our GraphQL server
+- [CodeSandbox](https://codesandbox.io/s/r5qp83z0yq) for our example app, Pupstagram
+- Apollo Boost, our new zero-config way to start using Apollo
+
+<h2 id="query">Your first query</h2>
+
+First, install `apollo-boost`, `graphql` & `react-apollo`.
+
+```shell
+npm i apollo-boost graphql react-apollo -S
+```
+
+Next, create your client. Once you create your client, hook it up to your app by passing it to the `ApolloProvider` exported from `react-apollo`.
+
+```js
+import React from 'react';
+import { render } from 'react-dom';
+import ApolloClient from 'apollo-boost';
+import { ApolloProvider } from 'react-apollo';
+
+// Pass your GraphQL endpoint to uri
+const client = new ApolloClient({ uri: 'https://nx9zvp49q7.lp.gql.zone/graphql' });
+
+const ApolloApp = () => (
+  <ApolloProvider client={client}>
+    <App />
+  </ApolloProvider>
+);
+
+render(ApolloApp, document.getElementById('root'));
+```
+
+Awesome! Your ApolloClient is now connected to your app. Let's create our `<App />` component and make our first query:
+
+```js
+import React from 'react';
+import { gql } from 'apollo-boost';
+import { Query } from 'react-apollo';
+
+const GET_DOG = gql`
+  query {
+    dog(breed: "bulldog") {
+      id
+      breed
+      displayImage
+    }
+  }
+`
+
+const App = () => (
+  <Query query={GET_DOG}>
+    {({ loading, error, data }) => {
+      if (loading) return <div>Loading...</div>;
+      if (error) return <div>Error :(</div>;
+
+      return (
+        <Dog url={data.dog.displayImage} breed={data.dog.breed} />
+      )
+    }}
+  </Query>
+)
+```
+
+Time to celebrate! 🎉 You just made your first Query component. The Query component binds your GraphQL query to your UI so Apollo Client can take care of fetching your data, tracking loading & error states, and updating your UI via the `data` prop. Why don't you try experimenting with creating more Query components by forking our example app, [Pupstagram](https://codesandbox.io/s/r5qp83z0yq)?
 
 The easiest way to see what Apollo Client and GraphQL can do for you is to try them for yourself. Below is a simple example of a single React Native view that uses Apollo Client to talk to our hosted example app, GitHunt. We've embedded it in the page with the [Snack](https://blog.expo.io/sketch-a-playground-for-react-native-16b2401f44a2) editor from [Expo](https://expo.io/).
 
@@ -158,7 +225,7 @@ Now you've seen all of the code you need to build a React Native app that loads 
 
 Let's get you building your own app from scratch! You have two tutorials to go through, and we recommend doing them in the following order:
 
-1. [Full-Stack GraphQL + React tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc) by [Jonas Helfer](https://twitter.com/helferjs).
+1. [Full-Stack GraphQL + React tutorial](https://blog.apollographql.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc) by [Jonas Helfer](https://twitter.com/helferjs).
 2. [How to GraphQL](https://www.howtographql.com/react-apollo/0-introduction/) by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform.
 
 Have fun!

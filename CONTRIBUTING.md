@@ -12,7 +12,7 @@ Here are some ways to contribute to the project, from easiest to most difficult:
 * [Improving the documentation](#improving-the-documentation)
 * [Responding to issues](#responding-to-issues)
 * [Small bug fixes](#small-bug-fixes)
-* [Suggesting features](#feature-requests)
+* [Suggesting features](#suggesting-features)
 * [Big pull requests](#big-prs)
 
 ## Issues
@@ -31,7 +31,7 @@ Creating a good reproduction really helps contributors investigate and resolve y
 
 ### Improving the documentation
 
-Improving the documentation, examples, and other open source content can be the easiest way to contribute to the library. If you see a piece of content that can be better, open a PR with an improvement, no matter how small! If you would like to suggest a big change or major rewrite, we’d love to hear your ideas but please open an issue for discussion before writing the PR.
+Improving the documentation, examples, and other open source content can be the easiest way to contribute to the library. If you see a piece of content that can be better, open a PR with an improvement, no matter how small! If you would like to suggest a big change or major rewrite, we’d love to hear your ideas! Please open a feature request for discussion, over in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests), before writing the PR.
 
 ### Responding to issues
 
@@ -43,15 +43,9 @@ For a small bug fix change (less than 20 lines of code changed), feel free to op
 
 ### Suggesting features
 
-Most of the features in Apollo came from suggestions by you, the community! We welcome any ideas about how to make Apollo  better for your use case. Unless there is overwhelming demand for a feature, it might not get implemented immediately, but please include as much information as possible that will help people have a discussion about your proposal:
+Most of the features in Apollo Client came from suggestions by you, the community! We welcome any ideas about how to make Apollo  better for your use case. Head on over to the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests), and open up a new feature request / discussion issue with your details.
 
-1. **Use case:** What are you trying to accomplish, in specific terms? Often, there might already be a good way to do what you need and a new feature is unnecessary, but it’s hard to know without information about the specific use case.
-2. **Could this be a plugin?** In many cases, a feature might be too niche to be included in the core of a library, and is better implemented as a companion package. If there isn’t a way to extend the library to do what you want, could we add additional plugin APIs? It’s important to make the case for why a feature should be part of the core functionality of the library.
-3. **Is there a workaround?** Is this a more convenient way to do something that is already possible, or is there some blocker that makes a workaround unfeasible?
-
-Feature requests will be labeled as such, and we encourage using GitHub issues as a place to discuss new features and possible implementation designs. Please refrain from submitting a pull request to implement a proposed feature until there is consensus that it should be included. This way, you can avoid putting in work that can’t be merged in.
-
-Once there is a consensus on the need for a new feature, proceed as listed below under “Big PRs”.
+**Note:** Feature requests and non-bug related discussions are no longer managed in this repo's issue tracker. Feature request and/or discussions opened here will be closed.
 
 ## Big PRs
 
@@ -62,7 +56,7 @@ This includes:
 
 For significant changes to a repository, it’s important to settle on a design before starting on the implementation. This way, we can make sure that major improvements get the care and attention they deserve. Since big changes can be risky and might not always get merged, it’s good to reduce the amount of possible wasted effort by agreeing on an implementation design/plan first.
 
-1. **Open an issue.** Open an issue about your bug or feature, as described above.
+1. **Open an issue.** Open an issue about your bug in this repo, or about your feature request in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests).
 2. **Reach consensus.** Some contributors and community members should reach an agreement that this feature or bug is important, and that someone should work on implementing or fixing it.
 3. **Agree on intended behavior.** On the issue, reach an agreement about the desired behavior. In the case of a bug fix, it should be clear what it means for the bug to be fixed, and in the case of a feature, it should be clear what it will be like for developers to use the new feature.
 4. **Agree on implementation plan.** Write a plan for how this feature or bug fix should be implemented. What modules need to be added or rewritten? Should this be one pull request or multiple incremental improvements? Who is going to do each part?

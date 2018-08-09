@@ -8,11 +8,15 @@ import {
 
 import { print } from 'graphql/language/printer';
 
+interface MockApolloLink extends ApolloLink {
+  operation?: Operation;
+}
+
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
 export function mockSingleLink(
   ...mockedResponses: MockedResponse[]
-): ApolloLink {
+): MockApolloLink {
   return new MockLink(mockedResponses);
 }
 
@@ -40,6 +44,7 @@ export interface MockedSubscription {
 }
 
 export class MockLink extends ApolloLink {
+  public operation: Operation;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(mockedResponses: MockedResponse[]) {
@@ -60,6 +65,7 @@ export class MockLink extends ApolloLink {
   }
 
   public request(operation: Operation) {
+    this.operation = operation;
     const key = requestToKey(operation);
     const responses = this.mockedResponsesByKey[key];
     if (!responses || responses.length === 0) {

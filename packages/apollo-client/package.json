@@ -1,31 +1,28 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.0.1",
+  "version": "2.3.8",
   "description": "A simple yet functional GraphQL client.",
-  "main": "./lib/apollo.umd.js",
+  "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
-  "jsnext:main": "/lib/index.js",
+  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
     "test": "jest",
-    "benchmark":
-      "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
-    "benchmark:inspect":
-      "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
+    "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
+    "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run build && npm run build:browser",
     "type-check": "flow check",
     "build": "tsc",
     "build:benchmark": "tsc -p tsconfig.benchmark.json",
-    "build:browser":
-      "browserify ./lib/apollo.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link && npm run minify:browser",
-    "minify:browser":
-      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link --i apollo-link-dedup && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "watch": "tsc -w",
-    "bundle": "rollup -c",
+    "bundle": "rollup -c rollup.config.js",
     "postbuild": "npm run bundle",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "testonly": "jest",
@@ -49,53 +46,63 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "apollo-cache": "^1.0.0",
-    "apollo-link": "1.0.0",
-    "apollo-link-dedup": "1.0.0",
-    "apollo-utilities": "^1.0.0",
-    "symbol-observable": "^1.0.2"
+    "@types/zen-observable": "^0.8.0",
+    "apollo-cache": "^1.1.14",
+    "apollo-link": "^1.0.0",
+    "apollo-link-dedup": "^1.0.0",
+    "apollo-utilities": "^1.0.18",
+    "symbol-observable": "^1.0.2",
+    "zen-observable": "^0.8.0"
   },
   "peerDependencies": {
-    "graphql": "^0.11.0"
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "devDependencies": {
-    "@types/benchmark": "1.0.30",
-    "@types/graphql": "0.9.4",
+    "@octokit/rest": "^15.9.5",
+    "@types/benchmark": "1.0.31",
+    "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "21.1.2",
-    "@types/lodash": "4.14.80",
-    "@types/node": "8.0.46",
-    "@types/zen-observable": "0.5.3",
-    "apollo-cache-inmemory": "^1.0.0",
+    "@types/jest": "22.2.3",
+    "@types/lodash": "4.14.116",
+    "@types/node": "10.5.7",
+    "apollo-cache-inmemory": "^1.2.7",
     "benchmark": "2.1.4",
-    "browserify": "14.5.0",
-    "bundlesize": "0.15.3",
+    "browserify": "15.2.0",
+    "bundlesize": "0.17.0",
     "danger": "1.1.0",
-    "flow-bin": "0.57.2",
-    "graphql": "0.11.7",
-    "graphql-tag": "2.4.2",
+    "flow-bin": "0.78.0",
+    "graphql": "14.0.0-rc.2",
+    "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",
-    "jest": "20.0.4",
-    "lint-staged": "4.2.3",
-    "lodash": "4.17.4",
-    "rollup": "0.50.0",
-    "rxjs": "5.5.2",
+    "jest": "23.0.0",
+    "lint-staged": "6.1.0",
+    "lodash": "4.17.10",
+    "rollup": "0.64.1",
+    "rxjs": "6.2.2",
     "ts-jest": "20.0.14",
-    "tslint": "5.8.0",
-    "typescript": "2.4.2",
-    "uglify-js": "3.1.6",
-    "webpack": "3.7.1",
-    "webpack-bundle-analyzer": "2.8.3"
+    "tslint": "5.11.0",
+    "typescript": "2.9.2",
+    "uglify-js": "3.4.6",
+    "webpack": "3.12.0",
+    "webpack-bundle-analyzer": "2.13.1"
   },
   "optionalDependencies": {
-    "@types/async": "2.0.44"
+    "@types/async": "2.0.49"
   },
   "jest": {
     "transform": {
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "json"],
-    "setupFiles": ["<rootDir>/scripts/tests.js"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "setupFiles": [
+      "<rootDir>/scripts/tests.js"
+    ],
+    "testURL": "http://localhost"
   }
 }

@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 
 export namespace DataProxy {
-  export interface Query {
+  export interface Query<TVariables> {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
@@ -12,10 +12,10 @@ export namespace DataProxy {
     /**
      * Any variables that the GraphQL query may depend on.
      */
-    variables?: any;
+    variables?: TVariables;
   }
 
-  export interface Fragment {
+  export interface Fragment<TVariables> {
     /**
      * The root id to be used. This id should take the same form as the
      * value returned by your `dataIdFromObject` function. If a value with your
@@ -41,21 +41,33 @@ export namespace DataProxy {
     /**
      * Any variables that your GraphQL fragments depend on.
      */
-    variables?: any;
+    variables?: TVariables;
   }
 
-  export interface WriteQueryOptions extends Query {
+  export interface WriteQueryOptions<TData, TVariables>
+    extends Query<TVariables> {
     /**
      * The data you will be writing to the store.
      */
-    data: any;
+    data: TData;
   }
 
-  export interface WriteFragmentOptions extends Fragment {
+  export interface WriteFragmentOptions<TData, TVariables>
+    extends Fragment<TVariables> {
     /**
      * The data you will be writing to the store.
      */
-    data: any;
+    data: TData;
+  }
+
+  export interface WriteDataOptions<TData> {
+    /**
+     * The data you will be writing to the store.
+     * It also takes an optional id property.
+     * The id is used to write a fragment to an existing object in the store.
+     */
+    data: TData;
+    id?: string;
   }
 
   export type DiffResult<T> = {
@@ -74,30 +86,42 @@ export interface DataProxy {
   /**
    * Reads a GraphQL query from the root query id.
    */
-  readQuery<QueryType>(
-    options: DataProxy.Query,
+  readQuery<QueryType, TVariables = any>(
+    options: DataProxy.Query<TVariables>,
     optimistic?: boolean,
-  ): QueryType;
+  ): QueryType | null;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  readFragment<FragmentType>(
-    options: DataProxy.Fragment,
+  readFragment<FragmentType, TVariables = any>(
+    options: DataProxy.Fragment<TVariables>,
     optimistic?: boolean,
   ): FragmentType | null;
 
   /**
    * Writes a GraphQL query to the root query id.
    */
-  writeQuery(options: DataProxy.WriteQueryOptions): void;
+  writeQuery<TData = any, TVariables = any>(
+    options: DataProxy.WriteQueryOptions<TData, TVariables>,
+  ): void;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  writeFragment(options: DataProxy.WriteFragmentOptions): void;
+  writeFragment<TData = any, TVariables = any>(
+    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
+  ): void;
+
+  /**
+   * Sugar for writeQuery & writeFragment.
+   * Writes data to the store without passing in a query.
+   * If you supply an id, the data will be written as a fragment to an existing object.
+   * Otherwise, the data is written to the root of the store.
+   */
+  writeData<TData = any>(options: DataProxy.WriteDataOptions<TData>): void;
 }

@@ -8,14 +8,12 @@ Apollo Client uses the ultra flexible [Apollo Link](/docs/link) that includes se
 
 ## Cookie
 
-If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `{ credentials: 'same-origin' }` as shown below, if your backend server is the same domain or else `{ credentials: 'include' }` if your backend is a different domain. 
+If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `credentials: 'same-origin'` as shown below, if your backend server is the same domain or else `credentials: 'include'` if your backend is a different domain.
 
 ```js
 const link = createHttpLink({
   uri: '/graphql',
-  opts: {
-    credentials: 'same-origin',
-  },
+  credentials: 'same-origin'
 });
 
 const client = new ApolloClient({
@@ -26,7 +24,7 @@ const client = new ApolloClient({
 
 This option is simply passed through to the [`fetch` implementation](https://github.com/github/fetch) used by the HttpLink when sending the query.
 
-Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings, 
+Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings,
 ```js
 // enable cors
 var corsOptions = {
@@ -37,7 +35,7 @@ app.use(cors(corsOptions));
 ```
 ## Header
 
-Another common way to identify yourself when using HTTP is to send along an authorization header. Apollo Links make creating middlewares that lets you modify requests before they are sent to the server. It's easy to add an `authorization` header to every HTTP request. In this example, we'll pull the login token from `localStorage` every time a request is sent:
+Another common way to identify yourself when using HTTP is to send along an authorization header. It's easy to add an `authorization` header to every HTTP request by chaining together Apollo Links. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -56,7 +54,7 @@ const authLink = setContext((_, { headers }) => {
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : null,
+      authorization: token ? `Bearer ${token}` : "",
     }
   }
 });
@@ -67,66 +65,18 @@ const client = new ApolloClient({
 });
 ```
 
+Note that the above example is using `ApolloClient` from the `apollo-client` package. Headers can still be modified using `ApolloClient` from the `apollo-boost` package, but since `apollo-boost` doesn't allow the `HttpLink` instance it uses to be modified, headers have to be passed in as a config parameter. See the Apollo Boost [Configuration options](../essentials/get-started.html#configuration) section for more details.
+
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 
 <h2 id="login-logout">Reset store on logout</h2>
 
 Since Apollo caches all of your query results, it's important to get rid of them when the login state changes.
 
-The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. The component has to be wrapped in `withApollo` higher order component to have direct access to `Apolloclient` through props.
-
-Another option is to reload the page, which will have a similar effect.
+The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. Another option is to reload the page, which will have a similar effect.
 
 
 ```js
-import { withApollo, graphql } from 'react-apollo';
-import { ApolloClient } from 'apollo-client';
-import gql from 'graphql-tools';
-
-
-class Profile extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.logout = () => {
-      App.logout() // or whatever else your logout flow is
-      .then(() =>
-        props.client.resetStore()
-      )
-      .catch(err =>
-        console.error('Logout failed', err);
-      );
-    }
-  }
-
-  render() {
-    const { loading, currentUser } = this.props;
-
-    if (loading) {
-      return (
-        <p className="navbar-text navbar-right">
-          Loading...
-        </p>
-      );
-    } else if (currentUser) {
-      return (
-        <span>
-          <p className="navbar-text navbar-right">
-            {currentUser.login}
-            &nbsp;
-            <button onClick={this.logout}>Log out</button>
-          </p>
-        </span>
-      );
-    }
-    return (
-      <p className="navbar-text navbar-right">
-        <a href="/login/github">Log in with GitHub</a>
-      </p>
-    );
-  }
-}
-
 const PROFILE_QUERY = gql`
   query CurrentUserForLayout {
     currentUser {
@@ -136,10 +86,36 @@ const PROFILE_QUERY = gql`
   }
 `;
 
-export default withApollo(graphql(PROFILE_QUERY, {
-  options: { fetchPolicy: 'network-only' },
-  props: ({ data: { loading, currentUser } }) => ({
-    loading, currentUser,
-  }),
-})(Profile));
+const Profile = () => (
+  <Query query={PROFILE_QUERY} fetchPolicy="network-only">
+    {({ client, loading, data: { currentUser } }) => {
+      if (loading) {
+        return <p className="navbar-text navbar-right">Loading...</p>;
+      }
+      if (currentUser) {
+        return (
+          <span>
+            <p className="navbar-text navbar-right">
+              {currentUser.login}
+              &nbsp;
+              <button
+                onClick={() => {
+                  // call your auth logout code then reset store
+                  App.logout().then(() => client.resetStore());
+                }}
+              >
+                Log out
+              </button>
+            </p>
+          </span>
+        );
+      }
+      return (
+        <p className="navbar-text navbar-right">
+          <a href="/login/github">Log in with GitHub</a>
+        </p>
+      );
+    }}
+  </Query>
+);
 ```

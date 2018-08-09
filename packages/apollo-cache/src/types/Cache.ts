@@ -6,15 +6,17 @@ export namespace Cache {
     success: Boolean;
   }
 
-  export interface ReadOptions extends DataProxy.Query {
+  export interface ReadOptions<TVariables = any>
+    extends DataProxy.Query<TVariables> {
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
   }
 
-  export interface WriteOptions extends DataProxy.Query {
+  export interface WriteOptions<TResult = any, TVariables = any>
+    extends DataProxy.Query<TVariables> {
     dataId: string;
-    result: any;
+    result: TResult;
   }
 
   export interface DiffOptions extends ReadOptions {
@@ -25,12 +27,14 @@ export namespace Cache {
     callback: WatchCallback;
   }
 
-  export interface EvictOptions extends DataProxy.Query {
+  export interface EvictOptions<TVariables = any>
+    extends DataProxy.Query<TVariables> {
     rootId?: string;
   }
 
   export import DiffResult = DataProxy.DiffResult;
   export import WriteQueryOptions = DataProxy.WriteQueryOptions;
   export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
+  export import WriteDataOptions = DataProxy.WriteDataOptions;
   export import Fragment = DataProxy.Fragment;
 }

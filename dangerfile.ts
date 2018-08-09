@@ -3,10 +3,12 @@ import { includes } from 'lodash';
 import * as fs from 'fs';
 
 // Setup
-const pr = danger.github.pr;
-const commits = danger.github.commits;
+const github = danger.github;
+const pr = github.pr;
+const commits = github.commits;
 const modified = danger.git.modified_files;
 const bodyAndTitle = (pr.body + pr.title).toLowerCase();
+console.log(commits.map(({ sha }) => sha));
 
 // Custom modifiers for people submitting PRs to be able to say "skip this"
 const trivialPR = bodyAndTitle.includes('trivial');
@@ -23,8 +25,8 @@ const modifiedAppFiles = modified
 
 // Takes a list of file paths, and converts it into clickable links
 const linkableFiles = paths => {
-  const repoURL = danger.github.pr.head.repo.html_url;
-  const ref = danger.github.pr.head.ref;
+  const repoURL = pr.head.repo.html_url;
+  const ref = pr.head.ref;
   const links = paths.map(path => {
     return createLink(`${repoURL}/blob/${ref}/${path}`, path);
   });
@@ -56,8 +58,12 @@ const raiseIssueAboutPaths = (
   }
 };
 
-const authors = commits.map(x => x.author.login);
-const isBot = authors.some(x => ['greenkeeper', 'renovate'].indexOf(x) > -1);
+console.log('GitHub PR Username:', pr && pr.user && pr.user.login);
+
+const githubBotUsernames = ['greenkeeper', 'renovate[bot]'];
+
+const isBot =
+  pr && pr.user && pr.user.login && githubBotUsernames.includes(pr.user.login);
 
 // Rules
 if (!isBot) {
@@ -90,10 +96,7 @@ if (!isBot) {
 
   // Warn when there is a big PR
   const bigPRThreshold = 500;
-  if (
-    danger.github.pr.additions + danger.github.pr.deletions >
-    bigPRThreshold
-  ) {
+  if (github.pr.additions + github.pr.deletions > bigPRThreshold) {
     warn(':exclamation: Big PR');
   }
 
@@ -115,7 +118,4 @@ if (!isBot) {
     );
   });
   raiseIssueAboutPaths(fail, onlyTestFiles, 'an `only` was left in the test');
-
-  // Politely ask for their name in the authors file
-  message('Please add your name and email to the AUTHORS file (optional)');
 }

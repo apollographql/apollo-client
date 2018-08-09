@@ -87,7 +87,7 @@ describe('GraphQL Subscriptions', () => {
     const sub = client.subscribe(defaultOptions).subscribe({
       next(result) {
         count++;
-        expect(result).toEqual(results[0].result.data);
+        expect(result).toEqual(results[0].result);
 
         // Test unsubscribing
         if (count > 1) {
@@ -112,7 +112,7 @@ describe('GraphQL Subscriptions', () => {
     let count = 0;
     const sub = client.subscribe(options).subscribe({
       next(result) {
-        expect(result).toEqual(results[0].result.data);
+        expect(result).toEqual(results[0].result);
 
         // Test unsubscribing
         if (count > 1) {
@@ -141,7 +141,7 @@ describe('GraphQL Subscriptions', () => {
     // tslint:disable-next-line
     obs.subscribe({
       next(result) {
-        expect(result).toEqual(results[0].result.data);
+        expect(result).toEqual(results[0].result);
         counter++;
         if (counter === 2) {
           done();
@@ -153,7 +153,7 @@ describe('GraphQL Subscriptions', () => {
     // tslint:disable-next-line
     obs.subscribe({
       next(result) {
-        expect(result).toEqual(results[0].result.data);
+        expect(result).toEqual(results[0].result);
         counter++;
         if (counter === 2) {
           done();
@@ -175,7 +175,7 @@ describe('GraphQL Subscriptions', () => {
     // tslint:disable-next-line
     queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
-        expect(result).toEqual(results[numResults].result.data);
+        expect(result).toEqual(results[numResults].result);
         numResults++;
         if (numResults === 4) {
           done();
@@ -186,5 +186,27 @@ describe('GraphQL Subscriptions', () => {
     for (let i = 0; i < 4; i++) {
       link.simulateResult(results[i]);
     }
+  });
+
+  it('should not cache subscription data if a `no-cache` fetch policy is used', done => {
+    const link = mockObservableLink(sub1);
+    const cache = new InMemoryCache({ addTypename: false });
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    expect(cache.extract()).toEqual({});
+
+    options.fetchPolicy = 'no-cache';
+    const sub = client.subscribe(options).subscribe({
+      next() {
+        expect(cache.extract()).toEqual({});
+        sub.unsubscribe();
+        done();
+      },
+    });
+
+    link.simulateResult(results[0]);
   });
 });

@@ -1,5 +1,5 @@
 ---
-title: Precompilation with babel
+title: Compiling queries with Babel
 ---
 
 If you prefer co-locating your GraphQL queries in your Javascript files, you typically use the [graphql-tag](https://github.com/apollographql/graphql-tag) library to write them. That requires to process the query strings into a GraphQL AST, which will add to the startup time of your application, especially if you have many queries.
@@ -8,6 +8,8 @@ To avoid this runtime overhead, you can precompile your queries created with `gr
 
 1. Using [babel-plugin-graphql-tag](#using-babel-plugin-graphql-tag)
 2. Using [graphql-tag.macro](#using-graphql-tagmacro)
+
+If you prefer to keep your GraphQL code in separate files (`.graphql` or `.gql`) you can use [babel-plugin-import-graphql](https://github.com/detrohutt/babel-plugin-import-graphql). This plugin still uses `graphql-tag` under the hood, but transparently. You simply `import` your operations/fragments as if each were an export from your GraphQL file. This carries the same precompilation benefits as the above approaches.
 
 ## Using babel-plugin-graphql-tag
 
@@ -20,7 +22,7 @@ Install the plugin in your dev dependencies:
 npm install --save-dev babel-plugin-graphql-tag
 
 # or with yarn
-yarn add --save-dev babel-plugin-graphql-tag
+yarn add --dev babel-plugin-graphql-tag
 ```
 
 Then add the plugin in your `.babelrc` configuration file:
@@ -69,9 +71,52 @@ const query = gql`
 `;
 ```
 
+## Using babel-plugin-import-graphql
+
+Install the plugin in your dev dependencies:
+
+```
+# with npm
+npm install --save-dev babel-plugin-import-graphql
+
+# or with yarn
+yarn add --dev babel-plugin-import-graphql
+```
+
+Then add the plugin in your `.babelrc` configuration file:
+
+```
+{
+  "plugins": [
+    "import-graphql"
+  ]
+}
+```
+
+Now any `import` statements importing from a GraphQL file type will return a ready-to-use GraphQL DocumentNode object.
+
+```javascript
+import React, { Component } from 'react';
+import { graphql } from 'react-apollo';
+import myImportedQuery from './productsQuery.graphql';
+// or for files with multiple operations:
+// import { query1, query2 } from './queries.graphql';
+
+class QueryingComponent extends Component {
+  render() {
+    if (this.props.data.loading) return <h3>Loading...</h3>;
+    return <div>{`This is my data: ${this.props.data.queryName}`}</div>;
+  }
+}
+
+export default graphql(myImportedQuery)(QueryingComponent);
+```
+
 ## Fragments
 
-Both approaches work with fragments. You can have fragments defined in a different call to `gql` (either in the same file or in a different one). You can then include them into the main query using interpolation, like this:
+All of these approaches support the use of fragments.
+
+For the first two approaches, you can have fragments defined in a different call to `gql` (either in the same file or in a different one). You can then include them into the main query using interpolation, like this:
 
 ```js
 import gql from 'graphql-tag';
@@ -97,3 +142,5 @@ const query = gql`
   ${fragments.hello}
 `;
 ```
+
+With `babel-plugin-import-graphql`, you can just include your fragment in your GraphQL file along-side whatever uses it, or even import it from a separate file using the `#import` syntax. See the [README](https://github.com/detrohutt/babel-plugin-import-graphql) for more information.

@@ -1,16 +1,20 @@
 {
   "name": "apollo-cache",
-  "version": "1.0.0",
+  "version": "1.1.14",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
     "James Baxley <james@meteor.com>",
     "Jonas Helfer <jonas@helfer.email>",
-    "Sashko Stubailo <sashko@stubailo.com>"
+    "Sashko Stubailo <sashko@stubailo.com>",
+    "James Burgess <jamesmillerburgess@gmail.com>"
   ],
   "license": "MIT",
-  "main": "./lib/index.js",
+  "main": "./lib/bundle.umd.js",
+  "module": "./lib/index.js",
+  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"
@@ -22,40 +26,47 @@
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
-    "lint":
-      "tslint --type-check -p tsconfig.json src/*.ts && tslint --type-check -p tsconfig.json tests/*.ts",
+    "lint": "tslint --type-check -p tsconfig.json src/*.ts && tslint --type-check -p tsconfig.json tests/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
+    "postbuild": "npm run bundle",
+    "bundle": "rollup -c rollup.config.js",
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "build:browser":
-      "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser":
-      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser": "browserify ./lib/bundle.umd.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-utilities": "^1.0.0"
+    "apollo-utilities": "^1.0.18"
   },
   "devDependencies": {
-    "@types/graphql": "0.9.4",
-    "@types/jest": "21.1.2",
-    "browserify": "14.5.0",
-    "graphql": "0.11.7",
-    "graphql-tag": "2.4.2",
-    "jest": "20.0.4",
+    "@types/graphql": "0.12.7",
+    "@types/jest": "22.2.3",
+    "browserify": "15.2.0",
+    "graphql": "0.13.2",
+    "graphql-tag": "2.9.2",
+    "jest": "23.0.0",
     "rimraf": "2.6.2",
+    "rollup": "0.64.1",
+    "rollup-plugin-node-resolve": "3.3.0",
     "ts-jest": "20.0.14",
-    "tslint": "5.8.0",
-    "typescript": "2.5.2",
-    "uglifyjs": "2.4.11"
+    "tslint": "5.11.0",
+    "typescript": "2.9.2",
+    "uglify-js": "^3.4.6"
   },
   "jest": {
     "transform": {
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "testURL": "http://localhost"
   }
 }

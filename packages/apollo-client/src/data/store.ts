@@ -120,7 +120,7 @@ export class DataStore<TSerialized> {
     update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
   }) {
     // Incorporate the result from this mutation into the store
-    if (!mutation.result.errors) {
+    if (!graphQLResultHasError(mutation.result)) {
       const cacheWrites: Cache.WriteOptions[] = [];
       cacheWrites.push({
         result: mutation.result.data,

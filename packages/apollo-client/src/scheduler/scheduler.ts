@@ -116,10 +116,20 @@ export class QueryScheduler<TCacheShape> {
     this.intervalQueries[interval] = this.intervalQueries[
       interval
     ].filter(queryId => {
-      // If queryOptions can't be found from registeredQueries, it means that this queryId
-      // is no longer registered and should be removed from the list of queries firing on this
-      // interval.
-      if (!this.registeredQueries.hasOwnProperty(queryId)) {
+      // If queryOptions can't be found from registeredQueries or if it has a
+      // different interval, it means that this queryId is no longer registered
+      // and should be removed from the list of queries firing on this interval.
+      //
+      // We don't remove queries from intervalQueries immediately in
+      // stopPollingQuery so that we can keep the timer consistent when queries
+      // are removed and replaced, and to avoid quadratic behavior when stopping
+      // many queries.
+      if (
+        !(
+          this.registeredQueries.hasOwnProperty(queryId) &&
+          this.registeredQueries[queryId].pollInterval === interval
+        )
+      ) {
         return false;
       }
 

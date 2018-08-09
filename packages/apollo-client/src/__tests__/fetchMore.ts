@@ -237,6 +237,44 @@ describe('fetchMore on an observable query', () => {
     sub = null;
   }
 
+  it('triggers new result with new variables', () => {
+    latestResult = null;
+    return setup({
+      request: {
+        query,
+        variables: variablesMore,
+      },
+      result: resultMore,
+    })
+      .then(watchedQuery =>
+        watchedQuery.fetchMore({
+          // Rely on the fact that the original variables had limit: 10
+          variables: { start: 10 },
+          updateQuery: (prev, options) => {
+            expect(options.variables).toEqual(variablesMore);
+
+            const state = cloneDeep(prev) as any;
+            state.entry.comments = [
+              ...state.entry.comments,
+              ...(options.fetchMoreResult as any).entry.comments,
+            ];
+            return state;
+          },
+        }),
+      )
+      .then(data => {
+        // This is the server result
+        expect(data.data.entry.comments).toHaveLength(10);
+        expect(data.loading).toBe(false);
+        const comments = latestResult.data.entry.comments;
+        expect(comments).toHaveLength(20);
+        for (let i = 1; i <= 20; i++) {
+          expect(comments[i - 1].text).toEqual(`comment ${i}`);
+        }
+        unsetup();
+      });
+  });
+
   it('basic fetchMore results merging', () => {
     latestResult = null;
     return setup({
@@ -369,12 +407,13 @@ describe('fetchMore on an observable query', () => {
     });
   });
 
-  it('will get an error from `fetchMore` if thrown', done => {
+  it('will not get an error from `fetchMore` if thrown', done => {
+    const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
       { request: { query, variables }, result, delay: 5 },
       {
         request: { query, variables: variablesMore },
-        error: new Error('Uh, oh!'),
+        error: fetchMoreError,
         delay: 5,
       },
     );
@@ -397,48 +436,41 @@ describe('fetchMore on an observable query', () => {
           case 0:
             expect(networkStatus).toBe(NetworkStatus.ready);
             expect((data as any).entry.comments.length).toBe(10);
-            observable.fetchMore({
-              variables: { start: 10 },
-              updateQuery: (prev, options) => {
-                const state = cloneDeep(prev) as any;
-                state.entry.comments = [
-                  ...state.entry.comments,
-                  ...(options.fetchMoreResult as any).entry.comments,
-                ];
-                return state;
-              },
-            });
+            observable
+              .fetchMore({
+                variables: { start: 10 },
+                updateQuery: (prev, options) => {
+                  const state = cloneDeep(prev) as any;
+                  state.entry.comments = [
+                    ...state.entry.comments,
+                    ...(options.fetchMoreResult as any).entry.comments,
+                  ];
+                  return state;
+                },
+              })
+              .catch(e => {
+                expect(e.networkError).toBe(fetchMoreError);
+              });
             break;
           case 1:
             expect(networkStatus).toBe(NetworkStatus.fetchMore);
             expect((data as any).entry.comments.length).toBe(10);
             break;
           default:
-            done.fail(
-              new Error('`next` called when it wasn’t supposed to be.'),
-            );
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
+            done();
+            break;
         }
       },
-      error: error => {
-        try {
-          switch (count++) {
-            case 2:
-              expect(error.message).toBe('Network error: Uh, oh!');
-              done();
-              break;
-            default:
-              done.fail(
-                new Error('`error` called when it wasn’t supposed to be.'),
-              );
-          }
-        } catch (error) {
-          done.fail(error);
-        }
+      error: () => {
+        done.fail(new Error('`error` called when it wasn’t supposed to be.'));
       },
-      complete: () =>
+      complete: () => {
         done.fail(
           new Error('`complete` called when it wasn’t supposed to be.'),
-        ),
+        );
+      },
     });
   });
 });
@@ -635,12 +667,13 @@ describe('fetchMore on an observable query with connection', () => {
     });
   });
 
-  it('will get an error from `fetchMore` if thrown', done => {
+  it('will not get an error from `fetchMore` if thrown', done => {
+    const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
       { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
         request: { query: transformedQuery, variables: variablesMore },
-        error: new Error('Uh, oh!'),
+        error: fetchMoreError,
         delay: 5,
       },
     );
@@ -663,48 +696,40 @@ describe('fetchMore on an observable query with connection', () => {
           case 0:
             expect(networkStatus).toBe(NetworkStatus.ready);
             expect((data as any).entry.comments.length).toBe(10);
-            observable.fetchMore({
-              variables: { start: 10 },
-              updateQuery: (prev, options) => {
-                const state = cloneDeep(prev) as any;
-                state.entry.comments = [
-                  ...state.entry.comments,
-                  ...(options.fetchMoreResult as any).entry.comments,
-                ];
-                return state;
-              },
-            });
+            observable
+              .fetchMore({
+                variables: { start: 10 },
+                updateQuery: (prev, options) => {
+                  const state = cloneDeep(prev) as any;
+                  state.entry.comments = [
+                    ...state.entry.comments,
+                    ...(options.fetchMoreResult as any).entry.comments,
+                  ];
+                  return state;
+                },
+              })
+              .catch(e => {
+                expect(e.networkError).toBe(fetchMoreError);
+              });
             break;
           case 1:
             expect(networkStatus).toBe(NetworkStatus.fetchMore);
             expect((data as any).entry.comments.length).toBe(10);
             break;
           default:
-            done.fail(
-              new Error('`next` called when it wasn’t supposed to be.'),
-            );
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
+            done();
         }
       },
-      error: error => {
-        try {
-          switch (count++) {
-            case 2:
-              expect(error.message).toBe('Network error: Uh, oh!');
-              done();
-              break;
-            default:
-              done.fail(
-                new Error('`error` called when it wasn’t supposed to be.'),
-              );
-          }
-        } catch (error) {
-          done.fail(error);
-        }
+      error: () => {
+        done.fail(new Error('`error` called when it wasn’t supposed to be.'));
       },
-      complete: () =>
+      complete: () => {
         done.fail(
           new Error('`complete` called when it wasn’t supposed to be.'),
-        ),
+        );
+      },
     });
   });
 });

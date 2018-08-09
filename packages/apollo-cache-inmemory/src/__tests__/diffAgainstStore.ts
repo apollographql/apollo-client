@@ -1,9 +1,11 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
-import { toIdValue } from 'apollo-utilities';
+import { toIdValue, stripSymbols } from 'apollo-utilities';
 
+import { defaultNormalizedCacheFactory } from '../objectCache';
 import { diffQueryAgainstStore, ID_KEY } from '../readFromStore';
 import { writeQueryToStore } from '../writeToStore';
 import { HeuristicFragmentMatcher } from '../fragmentMatcher';
+import { defaultDataIdFromObject } from '../inMemoryCache';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
@@ -24,6 +26,84 @@ export function withError(func: Function, regex: RegExp) {
 }
 
 describe('diffing queries against the store', () => {
+  it(
+    'expects named fragments to return complete as true when diffd against ' +
+      'the store',
+    () => {
+      const store = defaultNormalizedCacheFactory({});
+
+      const queryResult = diffQueryAgainstStore({
+        store,
+        query: gql`
+          query foo {
+            ...root
+          }
+
+          fragment root on Query {
+            nestedObj {
+              innerArray {
+                id
+                someField
+              }
+            }
+          }
+        `,
+        fragmentMatcherFunction,
+        config: {
+          dataIdFromObject: defaultDataIdFromObject,
+        },
+      });
+
+      expect(queryResult.complete).toEqual(false);
+    },
+  );
+
+  it(
+    'expects inline fragments to return complete as true when diffd against ' +
+      'the store',
+    () => {
+      const store = defaultNormalizedCacheFactory();
+
+      const queryResult = diffQueryAgainstStore({
+        store,
+        query: gql`
+          {
+            ... on DummyQuery {
+              nestedObj {
+                innerArray {
+                  id
+                  otherField
+                }
+              }
+            }
+            ... on Query {
+              nestedObj {
+                innerArray {
+                  id
+                  someField
+                }
+              }
+            }
+            ... on DummyQuery2 {
+              nestedObj {
+                innerArray {
+                  id
+                  otherField2
+                }
+              }
+            }
+          }
+        `,
+        fragmentMatcherFunction,
+        config: {
+          dataIdFromObject: defaultDataIdFromObject,
+        },
+      });
+
+      expect(queryResult.complete).toEqual(false);
+    },
+  );
+
   it('returns nothing when the store is enough', () => {
     const query = gql`
       {
@@ -95,7 +175,7 @@ describe('diffing queries against the store', () => {
     });
 
     expect(complete).toBeTruthy();
-    expect(store['1']).toEqual(result.people_one);
+    expect(store.get('1')).toEqual(result.people_one);
   });
 
   it('does not swallow errors other than field errors', () => {
@@ -334,7 +414,7 @@ describe('diffing queries against the store', () => {
       query: simpleQuery,
     });
 
-    expect(simpleDiff.result).toEqual({
+    expect(stripSymbols(simpleDiff.result)).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -345,7 +425,7 @@ describe('diffing queries against the store', () => {
       query: inlineFragmentQuery,
     });
 
-    expect(inlineDiff.result).toEqual({
+    expect(stripSymbols(inlineDiff.result)).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -356,7 +436,7 @@ describe('diffing queries against the store', () => {
       query: namedFragmentQuery,
     });
 
-    expect(namedDiff.result).toEqual({
+    expect(stripSymbols(namedDiff.result)).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -417,7 +497,7 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    expect(result).toEqual(queryResult);
+    expect(stripSymbols(result)).toEqual(queryResult);
     expect(result[ID_KEY]).toBe('ROOT_QUERY');
     expect(result.a[0][ID_KEY]).toBe('a:1');
     expect(result.a[1][ID_KEY]).toBe('a:2');
@@ -508,7 +588,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).toEqual(previousResult.a);
       expect(result.c).not.toEqual(previousResult.c);
@@ -589,7 +669,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result.a[0]).toEqual(previousResult.a[0]);
       expect(result.a[1]).toEqual(previousResult.a[1]);
     });
@@ -682,7 +762,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).not.toEqual(previousResult.a);
       expect(result.a[0]).toEqual(previousResult.a[0]);
@@ -767,7 +847,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).not.toEqual(previousResult.a);
       expect(result.a[0]).toEqual(previousResult.a[2]);
@@ -818,7 +898,7 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      expect(result).toEqual(queryResult);
+      expect(stripSymbols(result)).toEqual(queryResult);
       expect(result).not.toEqual(previousResult);
       expect(result.a).toEqual(previousResult.a);
       expect(result.d).not.toEqual(previousResult.d);
@@ -867,13 +947,14 @@ describe('diffing queries against the store', () => {
         person: listResult.people[0],
       };
 
-      const cacheResolvers = {
+      const cacheRedirects = {
         Query: {
-          person: (_: any, args: any) => toIdValue(args['id']),
+          person: (_: any, args: any) =>
+            toIdValue({ id: args['id'], typename: 'Person' }),
         },
       };
 
-      const config = { dataIdFromObject, cacheResolvers };
+      const config = { dataIdFromObject, cacheRedirects };
 
       const { result } = diffQueryAgainstStore({
         store,

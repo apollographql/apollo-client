@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[
+  `writing to the store throws when trying to write an object without id that was previously queried with id 1`
+] = `
+"Error writing result to store for query:
+ query Failure {
+  item {
+    stringField
+  }
+}
+
+Store error: the application attempted to write an object with no provided id but the store already contains an id of abcd for this object. The selectionSet that was trying to be written is:
+item {
+  stringField
+}"
+`;

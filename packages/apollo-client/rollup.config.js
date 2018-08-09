@@ -1,20 +1,3 @@
-const globals = {};
+import build from '../../rollup.config';
 
-export default {
-  entry: 'lib/index.js',
-  dest: 'lib/apollo.umd.js',
-  format: 'umd',
-  sourceMap: true,
-  moduleName: 'apollo',
-  exports: 'named',
-  globals,
-  onwarn,
-};
-
-function onwarn(message) {
-  const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];
-
-  if (!suppressed.find(code => message.code === code)) {
-    return console.warn(message.message);
-  }
-}
+export default build('apollo.core');

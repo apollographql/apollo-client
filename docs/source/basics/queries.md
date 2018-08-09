@@ -63,7 +63,7 @@ For queries, the shape of the `data` prop is the following:
 There are a lot more methods as well, which you can read about [in the API docs for queries](#graphql-query-data). As an example, for a query like this:
 
 ```graphql
-query getUserAndLikes($id: ID!) {
+query GetUserAndLikes($id: ID!) {
   user(userId: $id) { name }
   likes(userId: $id) { count }
 }
@@ -230,7 +230,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 This style of usage leads to the greatest decoupling between your presentational component (`Profile`) and Apollo.
 
-<h2 title="API">API Reference</h2>
+<h2 title="API" id="api">API Reference</h2>
 
 <h3 id="graphql-query-data">`props.data`</h3>
 
@@ -309,9 +309,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 <h3 id="graphql-query-data-error">`data.error`</h3>
 
-If an error occurred then this property will be an instance of [`ApolloError`][]. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
-
-[`ApolloError`]: /docs/react/reference/index.html#ApolloError
+If an error occurred then this property will be an instance of `ApolloError`. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
 **Example:**
 
@@ -401,7 +399,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 <h3 id="graphql-query-data-fetchMore">`data.fetchMore(options)`</h3>
 
-The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
+The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](../features/pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
 
 `data.fetchMore` returns a promise that resolves once the query executed to fetch more data has resolved.
 
@@ -409,13 +407,13 @@ The `data.fetchMore` function takes a single `options` object argument. The `opt
 
 - `[query]`: This is an optional GraphQL document created with the `gql` GraphQL tag. If you specify a `query` then that query will be fetched when you call `data.fetchMore`. If you do not specify a `query`, then the query from your `graphql()` HOC will be used.
 - `[variables]`: The optional variables you may provide that will be used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`).
-- `updateQuery(previousResult, { fetchMoreResult, queryVariables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `queryVariables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `queryVariables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](pagination.html) recipe which has a full example.
+- `updateQuery(previousResult, { fetchMoreResult, variables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `variables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `variables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](../features/pagination.html) recipe which has a full example.
 
 **Example:**
 
 ```js
 data.fetchMore({
-  updateQuery: (previousResult, { fetchMoreResult, queryVariables }) => {
+  updateQuery: (previousResult, { fetchMoreResult, variables }) => {
     return {
       ...previousResult,
       // Add the new feed data to the end of the old feed data.
@@ -427,7 +425,7 @@ data.fetchMore({
 
 <h3 id="graphql-query-data-subscribeToMore">`data.subscribeToMore(options)`</h3>
 
-This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](http://dev.apollodata.com/react/receiving-updates.html#Subscriptions) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
+This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](../advanced/caching.html#Subscriptions) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
 
 This function returns an `unsubscribe` function handler which can be used to unsubscribe later.
 
@@ -435,7 +433,7 @@ A common practice is to wrap the `subscribeToMore` call within `componentWillRec
 
 - `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
-- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback. Alternatively, you could update the query using a [reducer](http://dev.apollodata.com/react/cache-updates.html#resultReducers) as part of the [options](http://dev.apollodata.com/react/queries.html#graphql-options) of your `graphql()` function.
+- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback. Alternatively, you could update the query using a [reducer](../advanced/caching.html#resultReducers) as part of the [options](../essentials/queries.html#graphql-options) of your `graphql()` function.
 - `[onError]`: An optional error callback.
 
 In order to update the query's store with the result of the subscription, you must specify either the `updateQuery` option in `subscribeToMore` or the `reducer` option in your `graphql()` function.
@@ -612,9 +610,9 @@ Valid `fetchPolicy` values are:
 - `network-only`: This fetch policy will *never* return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
 - `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()`][] and [`readFragment()`][] methods available to you on your [`ApolloClient`][] instance.
 
-[`readQuery()`]: cache#ApolloClient.readQuery
-[`readFragment()`]: cache#ApolloClient.readFragment
-[`ApolloClient`]: /docs/react
+[`readQuery()`]: ../api/apollo-client.html#ApolloClient.readQuery
+[`readFragment()`]: ../api/apollo-client.html#ApolloClient.readFragment
+[`ApolloClient`]: ../api/apollo-client.html
 
 **Example:**
 
@@ -626,12 +624,12 @@ export default graphql(gql`query { ... }`, {
 
 <h3 id="graphql-config-options-errorPolicy">`options.errorPolicy`</h3>
 
-The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside acutal data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
+The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
 
 Valid `errorPolicy` values are:
 
 - `none`: This is the default value where we treat GraphQL errors as runtime errors. Apollo will discard any data that came back with the request and render your component with an `error` prop.
-- `ignore`: Much like `none`, this causes Apollo to ignore any data from you server, but it also won't update your UI aside from setting the loading state back to false. 
+- `ignore`: Much like `none`, this causes Apollo to ignore any data from your server, but it also won't update your UI aside from setting the loading state back to false.
 - `all`: Selecting all means you want to be notified any time there are any GraphQL errors. It will render your component with any data from the request and any errors with their information. It is particularly helpful for server side rendering so your UI always shows something
 
 

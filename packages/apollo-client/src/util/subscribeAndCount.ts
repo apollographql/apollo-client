@@ -9,7 +9,7 @@ export default function subscribeAndCount(
 ): Subscription {
   let handleCount = 0;
   const subscription = observable.subscribe({
-    next: result => {
+    next(result: ApolloQueryResult<any>) {
       try {
         handleCount++;
         cb(handleCount, result);

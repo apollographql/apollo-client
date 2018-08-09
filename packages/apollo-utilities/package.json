@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -44,16 +44,16 @@
   "devDependencies": {
     "@types/graphql": "0.12.7",
     "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.115",
-    "@types/node": "10.5.6",
+    "@types/lodash": "4.14.116",
+    "@types/node": "10.5.7",
     "browserify": "15.2.0",
-    "flow-bin": "0.77.0",
+    "flow-bin": "0.78.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
     "jest": "23.0.0",
     "lodash": "4.17.10",
     "rimraf": "2.6.2",
-    "rollup": "0.63.5",
+    "rollup": "0.64.1",
     "ts-jest": "20.0.14",
     "tslint": "5.11.0",
     "typescript": "2.9.2",

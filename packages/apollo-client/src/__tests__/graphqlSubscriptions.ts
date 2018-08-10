@@ -209,4 +209,44 @@ describe('GraphQL Subscriptions', () => {
 
     link.simulateResult(results[0]);
   });
+
+  it('should throw an error if the result has errors on it', done => {
+    const link = mockObservableLink(sub1);
+    const cache = new InMemoryCache({ addTypename: false });
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    const sub = client.subscribe(options).subscribe({
+      next() {
+        fail('Should have hit the error block');
+        done();
+      },
+      error(error) {
+        expect(error).toMatchSnapshot();
+        done();
+      },
+    });
+
+    const errorResult = {
+      result: {
+        data: null,
+        errors: [
+          {
+            message: 'This is an error',
+            locations: [
+              {
+                column: 3,
+                line: 2,
+              },
+            ],
+            path: ['result'],
+          },
+        ],
+      },
+    };
+
+    link.simulateResult(errorResult);
+  });
 });

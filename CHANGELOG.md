@@ -6,8 +6,8 @@
 
 - Allow an `optimistic` param to be passed into `ApolloClient.readQuery` and
   `ApolloClient.readFragment`, that when set to `true`, will allow
-  optimistic results to be returned. Is `false` by default.
-  [#jay1337](https://github.com/jay1337) in [#2429](https://github.com/apollographql/apollo-client/pull/2429)
+  optimistic results to be returned. Is `false` by default.  <br/>
+  [@jay1337](https://github.com/jay1337) in [#2429](https://github.com/apollographql/apollo-client/pull/2429)
 
 ### Apollo Cache In-Memory (vNext)
 

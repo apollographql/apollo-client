@@ -622,6 +622,186 @@ describe('optimistic mutation results', () => {
           });
       });
     });
+
+    describe('Apollo Client readQuery/readFragment optimistic results', () => {
+      const todoListMutation = gql`
+        mutation createTodo {
+          # skipping arguments in the test since they don't matter
+          createTodo {
+            __typename
+            id
+            todos {
+              id
+              text
+              completed
+              __typename
+            }
+          }
+        }
+      `;
+
+      const todoListMutationResult = {
+        data: {
+          __typename: 'Mutation',
+          createTodo: {
+            __typename: 'TodoList',
+            id: '5',
+            todos: [
+              {
+                __typename: 'Todo',
+                id: '99',
+                text: 'This one was created with a mutation.',
+                completed: true,
+              },
+            ],
+          },
+        },
+      };
+
+      const todoListOptimisticResponse = {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'TodoList',
+          id: '5',
+          todos: [
+            {
+              __typename: 'Todo',
+              id: '99',
+              text: 'Optimistically generated',
+              completed: true,
+            },
+          ],
+        },
+      };
+
+      const todoListQuery = gql`
+        query todoList {
+          todoList(id: 5) {
+            __typename
+            id
+            todos {
+              id
+              __typename
+              text
+              completed
+            }
+          }
+        }
+      `;
+
+      it(
+        'should read the optimistic response of a mutation when making an ' +
+          'ApolloClient.readQuery() call, if the `optimistic` param is set to ' +
+          'true',
+        () => {
+          return setup({
+            request: { query: todoListMutation },
+            result: todoListMutationResult,
+          }).then(() => {
+            return client.mutate({
+              mutation: todoListMutation,
+              optimisticResponse: todoListOptimisticResponse,
+              update: (proxy, mResult: any) => {
+                const data = client.readQuery({ query: todoListQuery }, true);
+                expect(data.todoList.todos[0].text).toEqual(
+                  todoListOptimisticResponse.createTodo.todos[0].text,
+                );
+              },
+            });
+          });
+        },
+      );
+
+      it(
+        'should not read the optimistic response of a mutation when making ' +
+          'an ApolloClient.readQuery() call, if the `optimistic` param is set ' +
+          'to false',
+        () => {
+          return setup({
+            request: { query: todoListMutation },
+            result: todoListMutationResult,
+          }).then(() => {
+            return client.mutate({
+              mutation: todoListMutation,
+              optimisticResponse: todoListOptimisticResponse,
+              update: (proxy, mResult: any) => {
+                const incomingText = mResult.data.createTodo.todos[0].text;
+                const data = client.readQuery({ query: todoListQuery }, false);
+                expect(data.todoList.todos[0].text).toEqual(incomingText);
+              },
+            });
+          });
+        },
+      );
+
+      const todoListFragment = gql`
+        fragment todoList on TodoList {
+          todos {
+            id
+            text
+            completed
+            __typename
+          }
+        }
+      `;
+
+      it(
+        'should read the optimistic response of a mutation when making an ' +
+          'ApolloClient.readFragment() call, if the `optimistic` param is set ' +
+          'to true',
+        () => {
+          return setup({
+            request: { query: todoListMutation },
+            result: todoListMutationResult,
+          }).then(() => {
+            return client.mutate({
+              mutation: todoListMutation,
+              optimisticResponse: todoListOptimisticResponse,
+              update: (proxy, mResult: any) => {
+                const data: any = client.readFragment(
+                  {
+                    id: 'TodoList5',
+                    fragment: todoListFragment,
+                  },
+                  true,
+                );
+                expect(data.todos[0].text).toEqual(
+                  todoListOptimisticResponse.createTodo.todos[0].text,
+                );
+              },
+            });
+          });
+        },
+      );
+
+      it(
+        'should not read the optimistic response of a mutation when making ' +
+          'an ApolloClient.readFragment() call, if the `optimistic` param is ' +
+          'set to false',
+        () => {
+          return setup({
+            request: { query: todoListMutation },
+            result: todoListMutationResult,
+          }).then(() => {
+            return client.mutate({
+              mutation: todoListMutation,
+              optimisticResponse: todoListOptimisticResponse,
+              update: (proxy, mResult: any) => {
+                const incomingText = mResult.data.createTodo.todos[0].text;
+                const data: any = client.readFragment(
+                  {
+                    id: 'TodoList5',
+                    fragment: todoListFragment,
+                  },
+                  false,
+                );
+                expect(data.todos[0].text).toEqual(incomingText);
+              },
+            });
+          });
+        },
+      );
+    });
   });
 
   describe('passing a function to optimisticResponse', () => {

@@ -2,6 +2,13 @@
 
 ## vNext
 
+### Apollo Client (vNext)
+
+- Allow an `optimistic` param to be passed into `ApolloClient.readQuery` and
+  `ApolloClient.readFragment`, that when set to `true`, will allow
+  optimistic results to be returned. Is `false` by default.  <br/>
+  [@jay1337](https://github.com/jay1337) in [#2429](https://github.com/apollographql/apollo-client/pull/2429)
+
 ### Apollo Cache In-Memory (vNext)
 
 - Fix typo in `console.warn` regarding fragment matching error message.  <br/>

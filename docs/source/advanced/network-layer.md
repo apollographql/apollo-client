@@ -3,7 +3,7 @@ title: Network layer (Apollo Link)
 order: 110
 description: How to configure Apollo Client's network layer.
 ---
-Now that you have learned how to read and update your data, its helpful to know how to direct where your data comes from and where it goes! Apollo has a powerful way to manage your network layer using a library called [Apollo Link](/docs/link);
+Now that you have learned how to read and update your data, its helpful to know how to direct where your data comes from and where it goes! Apollo has a powerful way to manage your network layer using a library called [Apollo Link](/docs/link).
 
 <h2 id="network-interfaces">Apollo Link</h2>
 

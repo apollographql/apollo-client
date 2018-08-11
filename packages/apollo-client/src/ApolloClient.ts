@@ -42,8 +42,8 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export type ApolloClientOptions<TCacheShape> = {
-  link: ApolloLink;
-  cache: ApolloCache<TCacheShape>;
+  link?: ApolloLink;
+  cache?: ApolloCache<TCacheShape>;
   ssrMode?: boolean;
   ssrForceFetchDelay?: number;
   connectToDevTools?: boolean;

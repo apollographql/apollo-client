@@ -818,11 +818,11 @@ export class QueryManager<TStore> {
     const queryName = definition.name ? definition.name.value : null;
     this.setQuery(queryId, () => ({ observableQuery: null }));
     if (queryName) {
-      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter(
-        val => {
-          return !(observableQuery.queryId === val);
-        },
-      );
+      this.queryIdsByName[queryName] = this.queryIdsByName[
+        queryName
+      ].filter(val => {
+        return !(observableQuery.queryId === val);
+      });
     }
   }
 

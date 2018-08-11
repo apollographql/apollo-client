@@ -38,9 +38,7 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
     .map(definition => {
       if (definition.kind !== 'OperationDefinition') {
         throw new Error(
-          `Schema type definitions not allowed in queries. Found: "${
-            definition.kind
-          }"`,
+          `Schema type definitions not allowed in queries. Found: "${definition.kind}"`,
         );
       }
       return definition;
@@ -192,18 +190,16 @@ export function getDefaultValues(
   ) {
     const defaultValues = definition.variableDefinitions
       .filter(({ defaultValue }) => defaultValue)
-      .map(
-        ({ variable, defaultValue }): { [key: string]: JsonValue } => {
-          const defaultValueObj: { [key: string]: JsonValue } = {};
-          valueToObjectRepresentation(
-            defaultValueObj,
-            variable.name,
-            defaultValue as ValueNode,
-          );
+      .map(({ variable, defaultValue }): { [key: string]: JsonValue } => {
+        const defaultValueObj: { [key: string]: JsonValue } = {};
+        valueToObjectRepresentation(
+          defaultValueObj,
+          variable.name,
+          defaultValue as ValueNode,
+        );
 
-          return defaultValueObj;
-        },
-      );
+        return defaultValueObj;
+      });
 
     return assign({}, ...defaultValues);
   }

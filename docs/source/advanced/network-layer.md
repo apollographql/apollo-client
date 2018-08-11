@@ -3,7 +3,7 @@ title: Network layer (Apollo Link)
 order: 110
 description: How to configure Apollo Client's network layer.
 ---
-Now that you have learned how to read and update your data, its helpful to know how to direct where your data comes from and where it goes! Apollo has a powerful way to manage your network layer using a library called [Apollo Link](/docs/link);
+Now that you have learned how to read and update your data, its helpful to know how to direct where your data comes from and where it goes! Apollo has a powerful way to manage your network layer using a library called [Apollo Link](/docs/link).
 
 <h2 id="network-interfaces">Apollo Link</h2>
 
@@ -11,7 +11,7 @@ Apollo Client has a pluggable network interface layer, which can let you configu
 
 <h3 title="Using a link">Using a link</h3>
 
-To create a link to use with Apollo Client, you can install and import one from npm or create your own. We recommend using `apollo-link-http` for most setups!.
+To create a link to use with Apollo Client, you can install and import one from npm or create your own. We recommend using `apollo-link-http` for most setups.
 
 Here's how you would instantiate a new client with a custom endpoint URL using the HttpLink:
 

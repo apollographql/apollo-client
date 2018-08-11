@@ -294,11 +294,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * GraphQL query without making a network request. This method will start at
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
+   *
+   * @param optimistic Set to `true` to allow `readQuery` to return
+   * optimisic results. Is `false` by default.
    */
   public readQuery<T, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables>,
+    optimistic: boolean = false,
   ): T | null {
-    return this.initProxy().readQuery<T>(options);
+    return this.initProxy().readQuery<T>(options, optimistic);
   }
 
   /**
@@ -311,11 +315,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * with multiple fragments that represent what you are reading. If you pass
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
+   *
+   * @param optimistic Set to `true` to allow `readFragment` to return
+   * optimisic results. Is `false` by default.
    */
   public readFragment<T, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables>,
+    optimistic: boolean = false,
   ): T | null {
-    return this.initProxy().readFragment<T>(options);
+    return this.initProxy().readFragment<T>(options, optimistic);
   }
 
   /**

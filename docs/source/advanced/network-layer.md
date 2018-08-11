@@ -11,7 +11,7 @@ Apollo Client has a pluggable network interface layer, which can let you configu
 
 <h3 title="Using a link">Using a link</h3>
 
-To create a link to use with Apollo Client, you can install and import one from npm or create your own. We recommend using `apollo-link-http` for most setups!.
+To create a link to use with Apollo Client, you can install and import one from npm or create your own. We recommend using `apollo-link-http` for most setups.
 
 Here's how you would instantiate a new client with a custom endpoint URL using the HttpLink:
 

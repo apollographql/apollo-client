@@ -42,7 +42,7 @@
     "fast-json-stable-stringify": "^2.0.0"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.7",
+    "@types/graphql": "0.13.4",
     "@types/jest": "22.2.3",
     "@types/lodash": "4.14.116",
     "@types/node": "10.5.7",

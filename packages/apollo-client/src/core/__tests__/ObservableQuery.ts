@@ -333,41 +333,44 @@ describe('ObservableQuery', () => {
 
     // TODO: Something isn't quite right with this test. It's failing but not
     // for the right reasons.
-    it.skip('if query is refetched, and an error is returned, no other observer callbacks will be called', done => {
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { errors: [error] },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-      );
+    it.skip(
+      'if query is refetched, and an error is returned, no other observer callbacks will be called',
+      done => {
+        const observable: ObservableQuery<any> = mockWatchQuery(
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { errors: [error] },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+        );
 
-      let handleCount = 0;
-      observable.subscribe({
-        next: result => {
-          handleCount++;
-          if (handleCount === 1) {
-            expect(stripSymbols(result.data)).toEqual(dataOne);
+        let handleCount = 0;
+        observable.subscribe({
+          next: result => {
+            handleCount++;
+            if (handleCount === 1) {
+              expect(stripSymbols(result.data)).toEqual(dataOne);
+              observable.refetch();
+            } else if (handleCount === 3) {
+              throw new Error("next shouldn't fire after an error");
+            }
+          },
+          error: () => {
+            handleCount++;
+            expect(handleCount).toBe(2);
             observable.refetch();
-          } else if (handleCount === 3) {
-            throw new Error("next shouldn't fire after an error");
-          }
-        },
-        error: () => {
-          handleCount++;
-          expect(handleCount).toBe(2);
-          observable.refetch();
-          setTimeout(done, 25);
-        },
-      });
-    });
+            setTimeout(done, 25);
+          },
+        });
+      },
+    );
 
     it('does a network request if fetchPolicy becomes networkOnly', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(

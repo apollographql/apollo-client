@@ -818,11 +818,11 @@ export class QueryManager<TStore> {
     const queryName = definition.name ? definition.name.value : null;
     this.setQuery(queryId, () => ({ observableQuery: null }));
     if (queryName) {
-      this.queryIdsByName[queryName] = this.queryIdsByName[
-        queryName
-      ].filter(val => {
-        return !(observableQuery.queryId === val);
-      });
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter(
+        val => {
+          return !(observableQuery.queryId === val);
+        },
+      );
     }
   }
 
@@ -932,23 +932,24 @@ export class QueryManager<TStore> {
             // It's slightly awkward that the data for subscriptions doesn't
             // come from the store.
             observers.forEach(obs => {
-              if (result.errors) {
-                if (obs.error) {
-                  obs.error(
-                    new ApolloError({
-                      graphQLErrors: result.errors,
-                    }),
-                  );
-                }
-                return;
+              if (graphQLResultHasError(result) && obs.error) {
+                obs.error(
+                  new ApolloError({
+                    graphQLErrors: result.errors,
+                  }),
+                );
               }
 
-              if (obs.next) obs.next(result);
+              if (obs.next) {
+                obs.next(result);
+              }
             });
           },
           error: (error: Error) => {
             observers.forEach(obs => {
-              if (obs.error) obs.error(error);
+              if (obs.error) {
+                obs.error(error);
+              }
             });
           },
         };

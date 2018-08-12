@@ -210,24 +210,32 @@ describe('GraphQL Subscriptions', () => {
     link.simulateResult(results[0]);
   });
 
-  it('should throw an error if the result has errors on it', done => {
+  it('should throw an error if the result has errors on it', () => {
     const link = mockObservableLink(sub1);
-    const cache = new InMemoryCache({ addTypename: false });
-    const client = new ApolloClient({
+    const queryManager = new QueryManager({
       link,
-      cache,
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
     });
 
-    const sub = client.subscribe(options).subscribe({
-      next() {
-        fail('Should have hit the error block');
-        done();
-      },
-      error(error) {
-        expect(error).toMatchSnapshot();
-        done();
-      },
-    });
+    const obs = queryManager.startGraphQLSubscription(options);
+
+    const promises = [];
+    for (let i = 0; i < 2; i += 1) {
+      promises.push(
+        new Promise((resolve, reject) => {
+          obs.subscribe({
+            next(result) {
+              fail('Should have hit the error block');
+              reject();
+            },
+            error(error) {
+              expect(error).toMatchSnapshot();
+              resolve();
+            },
+          });
+        }),
+      );
+    }
 
     const errorResult = {
       result: {
@@ -248,5 +256,6 @@ describe('GraphQL Subscriptions', () => {
     };
 
     link.simulateResult(errorResult);
+    return Promise.all(promises);
   });
 });

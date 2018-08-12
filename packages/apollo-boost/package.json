@@ -44,7 +44,7 @@
     "graphql-tag": "^2.4.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.7",
+    "@types/graphql": "0.13.4",
     "@types/jest": "22.2.3",
     "apollo-utilities": "^1.0.18",
     "browserify": "15.2.0",

@@ -7,13 +7,15 @@ import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
 disableFragmentWarnings();
 
 describe('Cache', () => {
-  function createCache({
-    initialState,
-    config,
-  }: {
-    initialState?: any;
-    config?: ApolloReducerConfig;
-  } = {}): ApolloCache<NormalizedCache> {
+  function createCache(
+    {
+      initialState,
+      config,
+    }: {
+      initialState?: any;
+      config?: ApolloReducerConfig;
+    } = {},
+  ): ApolloCache<NormalizedCache> {
     return new InMemoryCache(
       config || { addTypename: false },
       // XXX this is the old format. The tests need to be updated but since it is mapped down

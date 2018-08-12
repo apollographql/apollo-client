@@ -4,6 +4,24 @@
 
 ### Apollo Client (vNext)
 
+- Allow an `optimistic` param to be passed into `ApolloClient.readQuery` and
+  `ApolloClient.readFragment`, that when set to `true`, will allow
+  optimistic results to be returned. Is `false` by default.  <br/>
+  [@jay1337](https://github.com/jay1337) in [#2429](https://github.com/apollographql/apollo-client/pull/2429)
+- Documentation updates.  <br/>
+  [@toolness](https://github.com/toolness) in [#3804](https://github.com/apollographql/apollo-client/pull/3804)  <br/>
+  [@pungggi](https://github.com/pungggi) in [#3798](https://github.com/apollographql/apollo-client/pull/3798)
+
+### Apollo Cache In-Memory (vNext)
+
+- Fix typo in `console.warn` regarding fragment matching error message.  <br/>
+  [@combizs](https://github.com/combizs) in [#3701](https://github.com/apollographql/apollo-client/pull/3701)
+
+
+## 2.3.8 (August 9, 2018)
+
+### Apollo Client (2.3.8)
+
 - Adjusted the `graphql` peer dependency to cover explicit minor ranges.
   Since the ^ operator only covers any minor version if the major version
   is not 0 (since a major version of 0 is technically considered development by
@@ -19,6 +37,9 @@
 - Make sure using a `no-cache` fetch policy with subscriptions prevents data
   from being cached.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3773](https://github.com/apollographql/apollo-client/pull/3773)
+- Fixed an issue that sometimes caused empty query results, when using the
+  `no-cache` fetch policy.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3777](https://github.com/apollographql/apollo-client/pull/3777)
 - Documentation updates.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3750](https://github.com/apollographql/apollo-client/pull/3750)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3754](https://github.com/apollographql/apollo-client/pull/3754)  <br/>
@@ -30,7 +51,28 @@
   [@ardouglass](https://github.com/ardouglass) in [#3645](https://github.com/apollographql/apollo-client/pull/3645)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3764](https://github.com/apollographql/apollo-client/pull/3764)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3767](https://github.com/apollographql/apollo-client/pull/3767)  <br/>
-  [@hwillson](https://github.com/hwillson) in [#3774](https://github.com/apollographql/apollo-client/pull/3774)
+  [@hwillson](https://github.com/hwillson) in [#3774](https://github.com/apollographql/apollo-client/pull/3774)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3779](https://github.com/apollographql/apollo-client/pull/3779)
+
+### Apollo Boost (0.1.13)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.7)
+
+- No changes.
+
+### Apollo Cache (1.1.14)
+
+- No changes.
+
+### Apollo Utilities (1.0.18)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.16)
+
+- No changes.
 
 
 ## 2.3.7 (July 24, 2018)

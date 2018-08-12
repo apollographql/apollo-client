@@ -78,7 +78,7 @@
     "lerna": "2.11.0",
     "lint-staged": "6.1.0",
     "pre-commit": "1.2.2",
-    "prettier": "1.14.0",
+    "prettier": "1.14.2",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-sourcemaps": "0.4.2",

@@ -58,7 +58,7 @@
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "devDependencies": {
-    "@octokit/rest": "^15.9.5",
+    "@octokit/rest": "15.9.5",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",

@@ -55,7 +55,8 @@
   "jest": {
     "transform": {
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
-    }
+    },
+    "testURL": "http://localhost"
   },
   "lint-staged": {
     "*.ts*": [
@@ -77,11 +78,11 @@
     "lerna": "2.11.0",
     "lint-staged": "6.1.0",
     "pre-commit": "1.2.2",
-    "prettier": "1.13.7",
+    "prettier": "1.14.2",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-sourcemaps": "0.4.2",
     "ts-jest": "20.0.14",
-    "typescript": "2.9.2"
+    "typescript": "3.0.1"
   }
 }

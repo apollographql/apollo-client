@@ -199,7 +199,7 @@ export function getStoreKeyName(
       (directives['connection']['filter'] as string[]).length > 0
     ) {
       const filterKeys = directives['connection']['filter']
-        ? (directives['connection']['filter'] as string[])
+        ? directives['connection']['filter'] as string[]
         : [];
       filterKeys.sort();
 
@@ -286,9 +286,9 @@ export function toIdValue(
   return {
     type: 'id',
     generated,
-    ...(typeof idConfig === 'string'
+    ...typeof idConfig === 'string'
       ? { id: idConfig, typename: undefined }
-      : idConfig),
+      : idConfig,
   };
 }
 

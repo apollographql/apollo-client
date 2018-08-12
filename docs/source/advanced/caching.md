@@ -267,7 +267,7 @@ mutate({
   //... insert comment mutation
   refetchQueries: [{
     query: gql`
-      query updateCache($repoName: String!) {
+      query UpdateCache($repoName: String!) {
         entry(repoFullName: $repoName) {
           id
           comments {
@@ -285,6 +285,8 @@ mutate({
   }],
 })
 ```
+
+Please note that if you call `refetchQueries` with an array of strings, then Apollo Client will look for any previously called queries that have the same names as the provided strings. It will then refetch those queries with their current variables.
 
 A very common way of using `refetchQueries` is to import queries defined for other components to make sure that those components will be updated:
 
@@ -306,7 +308,7 @@ Using `update` gives you full control over the cache, allowing you to make chang
 import CommentAppQuery from '../queries/CommentAppQuery';
 
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(
       repoFullName: $repoFullName
       commentContent: $commentContent

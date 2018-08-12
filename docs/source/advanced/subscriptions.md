@@ -65,7 +65,7 @@ Let's look at how to add support for this transport to Apollo Client.
 First, install the WebSocket Apollo Link (`apollo-link-ws`) from npm:
 
 ```shell
-npm install --save apollo-link-ws
+npm install --save apollo-link-ws subscriptions-transport-ws
 ```
 
 Then, initialize a GraphQL subscriptions transport link:

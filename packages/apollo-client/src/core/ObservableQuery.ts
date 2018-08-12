@@ -356,13 +356,13 @@ export class ObservableQuery<
         next: (subscriptionData: { data: TData }) => {
           if (options.updateQuery) {
             this.updateQuery((previous, { variables }) =>
-              (options.updateQuery as UpdateQueryFn<TData, TVariables>)(
-                previous,
-                {
-                  subscriptionData,
-                  variables,
-                },
-              ),
+              (options.updateQuery as UpdateQueryFn<
+                TData,
+                TVariables
+              >)(previous, {
+                subscriptionData,
+                variables,
+              }),
             );
           }
         },

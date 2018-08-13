@@ -929,18 +929,20 @@ export class QueryManager<TStore> {
               this.broadcastQueries();
             }
 
-            // It's slightly awkward that the data for subscriptions doesn't
-            // come from the store.
             observers.forEach(obs => {
+              // If an error exists and a `error` handler has been defined on
+              // the observer, call that `error` handler and make sure the
+              // `next` handler is skipped. If no `error` handler exists, we're
+              // still passing any errors that might occur into the `next`
+              // handler, to give that handler a chance to deal with the
+              // error (we're doing this for backwards compatibilty).
               if (graphQLResultHasError(result) && obs.error) {
                 obs.error(
                   new ApolloError({
                     graphQLErrors: result.errors,
                   }),
                 );
-              }
-
-              if (obs.next) {
+              } else if (obs.next) {
                 obs.next(result);
               }
             });

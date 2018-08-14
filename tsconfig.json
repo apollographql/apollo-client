@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": ".",
     "target": "es2015",
     "moduleResolution": "node",
     "declaration": true,

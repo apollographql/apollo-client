@@ -818,11 +818,11 @@ export class QueryManager<TStore> {
     const queryName = definition.name ? definition.name.value : null;
     this.setQuery(queryId, () => ({ observableQuery: null }));
     if (queryName) {
-      this.queryIdsByName[queryName] = this.queryIdsByName[
-        queryName
-      ].filter(val => {
-        return !(observableQuery.queryId === val);
-      });
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter(
+        val => {
+          return !(observableQuery.queryId === val);
+        },
+      );
     }
   }
 
@@ -929,17 +929,29 @@ export class QueryManager<TStore> {
               this.broadcastQueries();
             }
 
-            // It's slightly awkward that the data for subscriptions doesn't
-            // come from the store.
             observers.forEach(obs => {
-              // XXX I'd prefer a different way to handle errors for
-              // subscriptions.
-              if (obs.next) obs.next(result);
+              // If an error exists and a `error` handler has been defined on
+              // the observer, call that `error` handler and make sure the
+              // `next` handler is skipped. If no `error` handler exists, we're
+              // still passing any errors that might occur into the `next`
+              // handler, to give that handler a chance to deal with the
+              // error (we're doing this for backwards compatibilty).
+              if (graphQLResultHasError(result) && obs.error) {
+                obs.error(
+                  new ApolloError({
+                    graphQLErrors: result.errors,
+                  }),
+                );
+              } else if (obs.next) {
+                obs.next(result);
+              }
             });
           },
           error: (error: Error) => {
             observers.forEach(obs => {
-              if (obs.error) obs.error(error);
+              if (obs.error) {
+                obs.error(error);
+              }
             });
           },
         };

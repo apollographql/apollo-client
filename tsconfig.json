@@ -5,6 +5,7 @@
     "declaration": true,
     "noLib": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "removeComments": false
   }
 }

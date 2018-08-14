@@ -19,6 +19,10 @@
 - Fix typo in `console.warn` regarding fragment matching error message.  <br/>
   [@combizs](https://github.com/combizs) in [#3701](https://github.com/apollographql/apollo-client/pull/3701)
 
+### Apollo Client (vNext)
+
+- Add proper error handling for subscriptions <br/>
+  [@clayne11](https://github.com/clayne11) in [#3800](https://github.com/apollographql/apollo-client/pull/3800)
 
 ## 2.3.8 (August 9, 2018)
 

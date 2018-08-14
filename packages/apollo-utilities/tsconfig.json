@@ -4,7 +4,6 @@
     "rootDir": "./src",
     "outDir": "lib",
     "lib": ["es6", "dom", "es2017.object"],
-    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
   },
   "include": ["src/**/*.ts"],

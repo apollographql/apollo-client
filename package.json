@@ -3,9 +3,8 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "bootstrap": "lerna bootstrap",
+    "postinstall": "lerna run build",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
-    "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "jest --verbose",
     "benchmark": "cd packages/apollo-client && npm run benchmark",
@@ -56,9 +55,17 @@
     "transform": {
       ".(ts|tsx)": "ts-jest"
     },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
     "testURL": "http://localhost",
-    "projects": [
-      "<rootDir>/packages/*"
+    "testPathIgnorePatterns": [
+      "/npm/",
+      "/node_modules/"
     ]
   },
   "lint-staged": {

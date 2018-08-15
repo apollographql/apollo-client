@@ -7,21 +7,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run: npm run danger
 
   Docs:
@@ -30,21 +30,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run: cd docs && npm i && npm run build
 
   Filesize:
@@ -53,21 +53,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run: npm run filesize
 
   Apollo Client:
@@ -76,21 +76,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
           name: Jest suite
           command: npm run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
@@ -107,21 +107,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
           name: Jest suite
           command: npm run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
@@ -138,21 +138,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
           name: Jest suite
           command: npm run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
@@ -169,21 +169,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
           name: Jest suite
           command: npm run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
@@ -200,21 +200,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
           name: Jest suite
           command: npm run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
@@ -231,21 +231,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-          # When lock file changes, use increasingly general patterns to
-          # restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
       - run: npm --version
       - run: npm ci
       - save_cache:
-      key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      paths:
-          # This should cache the npm cache instead of node_modules, which is
-          # needed because npm ci actually removes node_modules before
-          # installing to guarantee a clean slate.
-          - ~/.npm
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
           name: Jest suite
           command: npm run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload

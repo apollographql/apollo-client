@@ -28,12 +28,12 @@
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
-      "maxSize": "6.2 kB"
+      "maxSize": "6.5 kB"
     },
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.min.js",
-      "maxSize": "12.5 kB"
+      "maxSize": "13.5 kB"
     },
     {
       "name": "apollo-boost",
@@ -43,7 +43,7 @@
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "5.2 kB"
+      "maxSize": "5.5 kB"
     },
     {
       "name": "graphql-anywhere",

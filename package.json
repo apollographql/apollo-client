@@ -17,7 +17,7 @@
     "type-check": "lerna run -- type-check",
     "coverage": "lerna run -- coverage",
     "coverage:upload": "codecov",
-    "danger": "danger run --verbose",
+    "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",
     "deploy": "lerna publish -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy"
   },
   "bundlesize": [

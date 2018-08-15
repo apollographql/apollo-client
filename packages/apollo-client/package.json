@@ -9,6 +9,7 @@
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
+    "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
@@ -24,10 +25,11 @@
     "watch": "tsc -w",
     "bundle": "rollup -c rollup.config.js",
     "postbuild": "npm run bundle",
-    "lint": "tslint -c ../../config/tslint.conf --type-check -p tsconfig.json src/*.ts",
+    "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "testonly": "jest",
     "preanalyze": "npm run build",
-    "analyze": "webpack -p --config analyze/webpack.config.js"
+    "analyze": "webpack -p --config analyze/webpack.config.js",
+    "clean": "rm -rf coverage/* && rm -rf lib/*"
   },
   "repository": {
     "type": "git",

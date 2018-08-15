@@ -8,6 +8,7 @@
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
+    "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "test": "jest",
     "build": "tsc",
@@ -15,10 +16,11 @@
     "bundle": "rollup -c rollup.config.js && rollup -c rollup.async.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
-    "lint": "tslint -c ../../config/tslint.conf --type-check -p tsconfig.json src/*.ts",
+    "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
     "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
-    "filesize": "npm run build:browser"
+    "filesize": "npm run build:browser",
+    "clean": "rm -rf coverage/* && rm -rf lib/*"
   },
   "repository": {
     "type": "git",

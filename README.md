@@ -99,7 +99,7 @@ To learn more about all of the features available to you through the `apollo-cli
 ## Contributing
 
 [![Build status](https://travis-ci.org/apollographql/apollo-client.svg?branch=master)](https://travis-ci.org/apollographql/apollo-client)
-[![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-client?branch=master)
+[![codecov](https://codecov.io/gh/apollographql/apollo-client/branch/master/graph/badge.svg)](https://codecov.io/gh/apollographql/apollo-client)
 
 [Read the Apollo Contributor Guidelines.](CONTRIBUTING.md)
 

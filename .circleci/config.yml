@@ -37,7 +37,7 @@ jobs:
             - npm-v2-{{ .Branch }}-
             - npm-v2-
       - run: npm --version
-      - run: npm ci
+      - run: cd docs && npm ci
       - save_cache:
           key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
@@ -45,7 +45,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run: cd docs && npm i && npm run build
+      - run: npm run build
 
   Filesize:
     docker:

@@ -91,15 +91,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run:
-          name: Jest suite with coverage
-          command: npm run coverage --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
+      - run: npm run test-ci
 
 workflows:
   version: 2

@@ -135,12 +135,12 @@ workflows:
   version: 2
   Build and Test:
     jobs:
-      - Danger
-      - Docs
-      - Filesize
+      #- Danger
+      #- Docs
+      #- Filesize
       - Apollo Client
-      - Apollo Boost
-      - Apollo Cache
-      - Apollo InMemory Cache
-      - Apollo Utilities
-      - GraphQL Anywhere
+      #- Apollo Boost
+      #- Apollo Cache
+      #- Apollo InMemory Cache
+      #- Apollo Utilities
+      #- GraphQL Anywhere

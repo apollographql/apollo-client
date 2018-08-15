@@ -108,4 +108,4 @@ workflows:
       - Danger
       - Docs
       - Filesize
-      - Apollo Client
+      - Apollo Client Monorepo

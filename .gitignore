@@ -43,11 +43,7 @@ npm
 # alm editor
 .alm
 
-# yarn
 yarn.lock
-
-# npm
-package-lock.json
 
 # docs
 db.json

@@ -11,7 +11,7 @@
     "benchmark": "cd packages/apollo-client && npm run benchmark",
     "prelint": "npm run lint-fix",
     "lint": "lerna run -- lint",
-    "lint-fix": "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+    "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
     "filesize": "lerna run -- filesize && bundlesize",
     "type-check": "lerna run -- type-check",
@@ -60,11 +60,11 @@
   },
   "lint-staged": {
     "*.ts*": [
-      "prettier --trailing-comma all --single-quote --write",
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
       "git add"
     ],
     "*.js*": [
-      "prettier --trailing-comma all --single-quote --write",
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
       "git add"
     ]
   },
@@ -87,7 +87,9 @@
     "typescript": "3.0.1"
   },
   "renovate": {
-    "extends": [":pinOnlyDevDependencies"],
+    "extends": [
+      ":pinOnlyDevDependencies"
+    ],
     "semanticCommits": true,
     "timezone": "America/Los_Angeles",
     "schedule": [
@@ -107,11 +109,15 @@
       "@jbaxleyiii",
       "@hwillson"
     ],
-    "pathRules": [{
-      "paths": ["docs/package.json"],
-      "extends": [
-        "apollo-docs"
-      ]
-    }]
+    "pathRules": [
+      {
+        "paths": [
+          "docs/package.json"
+        ],
+        "extends": [
+          "apollo-docs"
+        ]
+      }
+    ]
   }
 }

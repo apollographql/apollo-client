@@ -26,7 +26,7 @@
   "scripts": {
     "test": "jest",
     "coverage": "jest --coverage",
-    "lint": "tslint -p tsconfig.json src/*.ts",
+    "lint": "tslint -c ../../config/tslint.conf -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
     "postbuild": "npm run bundle",

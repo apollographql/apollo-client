@@ -23,7 +23,7 @@
   "scripts": {
     "test": "jest",
     "coverage": "jest --coverage",
-    "lint": "tslint --type-check -p tsconfig.json src/*.ts",
+    "lint": "tslint -c ../../config/tslint.conf --type-check -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
     "watch": "tsc -w -p .",

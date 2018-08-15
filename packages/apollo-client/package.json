@@ -24,7 +24,7 @@
     "watch": "tsc -w",
     "bundle": "rollup -c rollup.config.js",
     "postbuild": "npm run bundle",
-    "lint": "tslint --type-check -p tsconfig.json src/*.ts",
+    "lint": "tslint -c ../../config/tslint.conf --type-check -p tsconfig.json src/*.ts",
     "testonly": "jest",
     "preanalyze": "npm run build",
     "analyze": "webpack -p --config analyze/webpack.config.js"

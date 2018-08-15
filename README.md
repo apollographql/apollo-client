@@ -98,7 +98,7 @@ To learn more about all of the features available to you through the `apollo-cli
 
 ## Contributing
 
-[![Build status](https://travis-ci.org/apollographql/apollo-client.svg?branch=master)](https://travis-ci.org/apollographql/apollo-client)
+[![CircleCI](https://circleci.com/gh/apollographql/apollo-client.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-client)
 [![codecov](https://codecov.io/gh/apollographql/apollo-client/branch/master/graph/badge.svg)](https://codecov.io/gh/apollographql/apollo-client)
 
 [Read the Apollo Contributor Guidelines.](CONTRIBUTING.md)

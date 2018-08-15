@@ -106,9 +106,7 @@ To learn more about all of the features available to you through the `apollo-cli
 Running tests locally:
 
 ```
-# nvm use node
 npm install
-npm run build
 npm test
 ```
 

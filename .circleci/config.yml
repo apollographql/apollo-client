@@ -91,15 +91,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run:
-          name: Jest suite
-          command: npm run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
+      - run: npm test
 
   Apollo Boost:
     docker:
@@ -122,15 +114,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run:
-          name: Jest suite
-          command: npm run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
+      - run: npm test
 
   Apollo Cache:
     docker:
@@ -153,15 +137,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run:
-          name: Jest suite
-          command: npm run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
+      - run: npm test
 
   Apollo InMemory Cache:
     docker:
@@ -184,15 +160,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run:
-          name: Jest suite
-          command: npm run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
+      - run: npm test
 
   Apollo Utilities:
     docker:
@@ -215,15 +183,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run:
-          name: Jest suite
-          command: npm run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
+      - run: npm test
 
   GraphQL Anywhere:
     docker:
@@ -246,9 +206,32 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
+      - run: npm test
+
+  Code Coverage:
+    docker:
+      - image: circleci/node:10
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
+      - run: npm --version
+      - run: npm ci
+      - save_cache:
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
-          name: Jest suite
-          command: npm run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          name: Jest suite with coverage
+          command: npm run coverage --ci --testResultsProcessor=jest-junit && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
       - store_test_results:
@@ -260,12 +243,13 @@ workflows:
   version: 2
   Build and Test:
     jobs:
-      #- Danger
-      #- Docs
-      #- Filesize
+      - Danger
+      - Docs
+      - Filesize
       - Apollo Client
-      #- Apollo Boost
-      #- Apollo Cache
-      #- Apollo InMemory Cache
-      #- Apollo Utilities
-      #- GraphQL Anywhere
+      - Apollo Boost
+      - Apollo Cache
+      - Apollo InMemory Cache
+      - Apollo Utilities
+      - GraphQL Anywhere
+      - Code Coverage

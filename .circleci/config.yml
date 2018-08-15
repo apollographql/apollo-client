@@ -45,7 +45,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run: npm run build
+      - run: cd docs && npm run build
 
   Filesize:
     docker:

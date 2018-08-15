@@ -7,7 +7,7 @@
     "postinstall": "npm run bootstrap",
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
-    "test": "lerna run -- test",
+    "test": "jest --verbose",
     "benchmark": "cd packages/apollo-client && npm run benchmark",
     "prelint": "npm run lint-fix",
     "lint": "lerna run -- lint",
@@ -56,7 +56,10 @@
     "transform": {
       ".(ts|tsx)": "ts-jest"
     },
-    "testURL": "http://localhost"
+    "testURL": "http://localhost",
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
   },
   "lint-staged": {
     "*.ts*": [

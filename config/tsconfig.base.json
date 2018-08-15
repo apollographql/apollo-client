@@ -5,9 +5,10 @@
     "noUnusedLocals": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "removeComments": false,
+    "removeComments": true,
     "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "target": "es5",
     "module": "es2015"
   }

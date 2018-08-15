@@ -1,4 +1,5 @@
 {
+  "name": "apollo-client-monorepo",
   "private": true,
   "license": "MIT",
   "scripts": {

@@ -17,7 +17,7 @@ We would love to have more contributors who are willing to help out with triagin
 
 All issues follow the flow outlined below. Your job as an issue maintainer is to work with the requester and others within the community towards the goal of having an issue either become 'claimable' or closed. Read on for more details on the process.
 
-![Flowchart](IssueTriageFlow.png "Issue Lifecycle")
+![Flowchart](./docs/assets/IssueTriageFlow.png "Issue Lifecycle")
 
 The first step is in determining whether the issue is a bug, help question or feature request. Read on for more details.
 

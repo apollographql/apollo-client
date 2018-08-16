@@ -31,13 +31,12 @@
     "prebuild": "npm run clean",
     "build": "tsc -p .",
     "postbuild": "npm run bundle",
-    "bundle": "rollup -c rollup.config.js",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
-    "filesize": "npm run build && npm run build:browser"
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "filesize": "npm run minify"
   },
   "dependencies": {
     "apollo-utilities": "file:../apollo-utilities"

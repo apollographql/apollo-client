@@ -9,7 +9,9 @@
     "James Burgess <jamesmillerburgess@gmail.com>"
   ],
   "license": "MIT",
-  "main": "./lib/index.js",
+  "main": "./lib/index.umd.js",
+  "module": "./lib/index.js",
+  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "repository": {
@@ -27,12 +29,13 @@
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
+    "postbuild": "npm run bundle",
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser": "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
-    "filesize": "npm run build && npm run build:browser"
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "filesize": "npm run minify",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup-bundle.config.js"
   },
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",

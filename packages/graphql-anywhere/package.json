@@ -13,13 +13,12 @@
     "test": "jest",
     "build": "tsc",
     "postbuild": "npm run bundle",
-    "bundle": "rollup -c rollup.config.js && rollup -c rollup.async.config.js",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup.async.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
-    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
-    "filesize": "npm run build:browser",
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "filesize": "npm run minify",
     "clean": "rm -rf coverage/* && rm -rf lib/*"
   },
   "repository": {

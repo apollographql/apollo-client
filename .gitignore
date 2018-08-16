@@ -52,3 +52,5 @@ docs.json
 docs/public/*
 !docs/public/_redirects
 .idea/
+
+junit.xml

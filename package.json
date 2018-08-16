@@ -7,7 +7,7 @@
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "build": "lerna run build",
     "test": "jest --verbose",
-    "test-ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=jest-junit",
+    "test-ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "benchmark": "cd packages/apollo-client && npm run benchmark",
     "prelint": "npm run lint-fix",
     "lint": "lerna run lint",

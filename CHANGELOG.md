@@ -10,6 +10,9 @@
   [@jay1337](https://github.com/jay1337) in [#2429](https://github.com/apollographql/apollo-client/pull/2429)
 - Optimistic tests cleanup.  <br/>
   [@joshribakoff](https://github.com/joshribakoff) in [#3713](https://github.com/apollographql/apollo-client/pull/3713)
+- Make sure each package has its own `.npmignore`, so they're taken into
+  consideration when publishing via lerna.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3828](https://github.com/apollographql/apollo-client/pull/3828)
 - Documentation updates.  <br/>
   [@toolness](https://github.com/toolness) in [#3804](https://github.com/apollographql/apollo-client/pull/3804)  <br/>
   [@pungggi](https://github.com/pungggi) in [#3798](https://github.com/apollographql/apollo-client/pull/3798)  <br/>
@@ -29,7 +32,7 @@
 
 ### Apollo Client (vNext)
 
-- Add proper error handling for subscriptions <br/>
+- Add proper error handling for subscriptions  <br/>
   [@clayne11](https://github.com/clayne11) in [#3800](https://github.com/apollographql/apollo-client/pull/3800)
 
 ## 2.3.8 (August 9, 2018)

@@ -263,6 +263,10 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>The name of your component to be displayed in React DevTools. Defaults to 'Query'.</dd>
   <dt>`skip`: boolean</dt>
   <dd>If skip is true, the query will be skipped entirely.</dd>
+  <dt>`onCompleted`: (data: TData | {}) => void</dt>
+  <dd>A callback executed once your query successfully completes.</dd>
+  <dt>`onError`: (error: ApolloError) => void</dt>
+  <dd>A callback executed in the event of an error.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>

@@ -37,6 +37,7 @@ sidebar_categories:
     - features/server-side-rendering
     - features/performance
     - features/developer-tooling
+    - features/defer-support
   Advanced:
     - advanced/boost-migration
     - advanced/subscriptions
@@ -54,7 +55,7 @@ sidebar_categories:
     - recipes/recompose
   Related Guides:
     - title: State Management
-      href: https://www.apollographql.com/docs/guides/state-mgmt.html
+      href: https://www.apollographql.com/docs/guides/state-management.html
     - title: Testing React Components
       href: https://www.apollographql.com/docs/guides/testing-react-components.html
     - title: Schema Design

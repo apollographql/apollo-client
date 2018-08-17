@@ -67,7 +67,7 @@ const FeedData = ({ match }) => (
 
 [See this code in context in GitHunt.](https://github.com/apollographql/GitHunt-React/blob/e5d5dc3abcee7352f5d2e981ee559343e361d2e3/src/routes/FeedPage.js#L26-L68)
 
-As you can see, `fetchMore` is accessible through the render prop function. By default, `fetchMore` more will use the original `query`, so we just pass in new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.
+As you can see, `fetchMore` is accessible through the render prop function. By default, `fetchMore` will use the original `query`, so we just pass in new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.
 
 The above approach works great for limit/offset pagination. One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.
 

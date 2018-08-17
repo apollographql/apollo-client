@@ -9,7 +9,7 @@ This page assumes some familiarity with building GraphQL mutations. If you'd lik
 
 The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](./get-started.html) guide if you need help with either of those steps. Let's dive in!
 
-> If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/znl94y0vp) on CodeSandbox and our sample GraphQL server on [Launchpad](https://launchpad.graphql.com/8v9r9kpn7q). You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
+> If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/znl94y0vp) on CodeSandbox, and our sample GraphQL server on [Launchpad](https://launchpad.graphql.com/8v9r9kpn7q). You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
 
 <h2 id="basic">The Mutation component</h2>
 
@@ -20,7 +20,7 @@ import gql from "graphql-tag";
 import { Mutation } from "react-apollo";
 
 const ADD_TODO = gql`
-  mutation addTodo($type: String!) {
+  mutation AddTodo($type: String!) {
     addTodo(type: $type) {
       id
       type
@@ -117,7 +117,7 @@ Not every mutation requires an update function. If you're updating a single item
 
 ```jsx
 const UPDATE_TODO = gql`
-  mutation updateTodo($id: String!, $type: String!) {
+  mutation UpdateTodo($id: String!, $type: String!) {
     updateTodo(id: $id, type: $type) {
       id
       type
@@ -234,8 +234,10 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>If true, the `data` property on the render prop function will not update with the mutation result.</dd>
   <dt>`optimisticResponse`: Object</dt>
   <dd>Provide a [mutation response](../features/optimistic-ui.html) before the result comes back from the server</dd>
-  <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables}></dt>
+  <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables} | string></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
+  <dt>`awaitRefetchQueries`: boolean</dt>
+  <dd>Queries refetched as part of `refetchQueries` are handled asynchronously, and are not waited on before the mutation is completed (resolved). Setting this to `true` will make sure refetched queries are completed before the mutation is considered done. `false` by default.</dd>
   <dt>`onCompleted`: (data: TData) => void</dt>
   <dd>A callback executed once your mutation successfully completes</dd>
   <dt>`onError`: (error: ApolloError) => void</dt>

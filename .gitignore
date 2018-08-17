@@ -43,11 +43,7 @@ npm
 # alm editor
 .alm
 
-# yarn
 yarn.lock
-
-# npm
-package-lock.json
 
 # docs
 db.json
@@ -56,3 +52,5 @@ docs.json
 docs/public/*
 !docs/public/_redirects
 .idea/
+
+junit.xml

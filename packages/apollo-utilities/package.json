@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "1.0.19",
+  "version": "1.1.0-verify.4",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -24,40 +24,22 @@
   },
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
+    "prepare": "npm run lint && npm run build",
     "test": "jest",
     "coverage": "jest --coverage",
-    "lint": "tslint -p tsconfig.json src/*.ts",
+    "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
     "postbuild": "npm run bundle",
-    "bundle": "rollup -c rollup.config.js",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "watch": "tsc -w -p .",
-    "clean": "rimraf lib/* && rimraf coverage/*",
+    "clean": "rm -rf coverage/* && rm -rf lib/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
-    "filesize": "npm run build && npm run build:browser"
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "filesize": "npm run minify"
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.0.0"
-  },
-  "devDependencies": {
-    "@types/graphql": "0.12.7",
-    "@types/jest": "23.3.1",
-    "@types/lodash": "4.14.116",
-    "@types/node": "10.5.7",
-    "browserify": "15.2.0",
-    "flow-bin": "0.78.0",
-    "graphql": "0.13.2",
-    "graphql-tag": "2.9.2",
-    "jest": "23.5.0",
-    "lodash": "4.17.10",
-    "rimraf": "2.6.2",
-    "rollup": "0.64.1",
-    "ts-jest": "23.1.3",
-    "tslint": "5.11.0",
-    "typescript": "3.0.1",
-    "uglify-js": "3.4.7"
   },
   "jest": {
     "transform": {

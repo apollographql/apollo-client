@@ -1,4 +1,4 @@
-import * as Benchmark from 'benchmark';
+import Benchmark from 'benchmark';
 
 // This file implements utilities around benchmark.js that make it
 // easier to use for our benchmarking needs.

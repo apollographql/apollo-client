@@ -8,6 +8,8 @@ export const globals = {
   'apollo-link-dedup': 'apolloLink.dedup',
   'apollo-utilities': 'apollo.utilities',
   'graphql-anywhere': 'graphqlAnywhere',
+  'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
+  'apollo-boost': 'apollo.boost',
 };
 
 export default (name, override = {}) => {

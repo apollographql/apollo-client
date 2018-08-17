@@ -16,6 +16,7 @@ const globals = {
   'zen-observable': 'zenObservable',
   'fast-json-stable-stringify': 'stringify',
   'graphql-tag': 'gql',
+  'apollo-utilities': 'apolloUtilities',
 };
 
 export default {

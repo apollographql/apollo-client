@@ -74,7 +74,7 @@
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.0.4",
     "danger": "3.8.6",
-    "jest": "^23.5.0",
+    "jest": "23.5.0",
     "jest-junit": "5.1.0",
     "lerna": "2.11.0",
     "lint-staged": "6.1.0",

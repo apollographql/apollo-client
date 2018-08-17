@@ -2073,16 +2073,15 @@ describe('ApolloClient', () => {
           }
         `;
 
-        [
-          'network-only',
-          'cache-and-network',
-        ].forEach((fetchPolicy: FetchPolicy) => {
-          const observable = client.watchQuery({
-            query,
-            fetchPolicy,
-          });
-          expect(observable.options.fetchPolicy).toEqual('cache-first');
-        });
+        ['network-only', 'cache-and-network'].forEach(
+          (fetchPolicy: FetchPolicy) => {
+            const observable = client.watchQuery({
+              query,
+              fetchPolicy,
+            });
+            expect(observable.options.fetchPolicy).toEqual('cache-first');
+          },
+        );
       },
     );
 

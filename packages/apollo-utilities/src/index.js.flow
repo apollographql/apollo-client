@@ -20,15 +20,15 @@ import type {
 declare module 'apollo-utilities' {
   // storeUtils
   declare export interface IdValue {
-    type: 'id',
-    id: string,
-    generated: boolean,
-    typename: string | void,
+    type: 'id';
+    id: string;
+    generated: boolean;
+    typename: string | void;
   }
 
   declare export interface JsonValue {
-    type: 'json',
-    json: any,
+    type: 'json';
+    json: any;
   }
 
   declare export type ListValue = Array<?IdValue>;
@@ -154,7 +154,7 @@ declare module 'apollo-utilities' {
   ): OperationDefinitionNode | FragmentDefinitionNode;
 
   declare export interface FragmentMap {
-    [fragmentName: string]: FragmentDefinitionNode,
+    [fragmentName: string]: FragmentDefinitionNode;
   }
 
   declare export function createFragmentMap(

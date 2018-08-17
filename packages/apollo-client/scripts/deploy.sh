@@ -59,4 +59,4 @@ cp ../../LICENSE npm/
 # flow typings
 # cp -R flow-typed npm/
 
-cd npm && npm publish
+cd npm && npm publish --tag verify

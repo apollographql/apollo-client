@@ -1,3 +1,13 @@
-import build from '../../config/rollup.config';
+import build, { globals } from '../../config/rollup.config';
 
-export default build('apollo.core');
+const globalsOverride = {
+  ...globals,
+  'symbol-observable': '$$observable',
+  'graphql/language/printer': 'print',
+};
+
+export default build('apollo.core', {
+  output: {
+    globals: globalsOverride,
+  },
+});

@@ -1,3 +1,12 @@
-import build from '../../config/rollup.config';
+import build, { globals } from '../../config/rollup.config';
 
-export default build('apollo.cache.inmemory');
+const globalsOverride = {
+  ...globals,
+  'graphql/language/printer': 'print',
+};
+
+export default build('apollo.cache.inmemory', {
+  output: {
+    globals: globalsOverride,
+  },
+});

@@ -721,7 +721,7 @@ class SubscriptionComponent extends Component {
   };
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    if(!nextProps.data.loading) {
+    if (!nextProps.data.loading) {
       // Check for existing subscription
       if (prevState.unsubscribe) {
         // Only unsubscribe/update state if subscription variable has changed
@@ -735,7 +735,9 @@ class SubscriptionComponent extends Component {
         // Subscribe
         unsubscribe: nextProps.data.subscribeToMore({
           document: gql`subscription {...}`,
-          variables: { param: nextProps.subscriptionParam, },
+          variables: {
+            param: nextProps.subscriptionParam,
+          },
           updateQuery: (previousResult, { subscriptionData, variables }) => {
             // Perform updates on previousResult with subscriptionData
             return updatedResult;
@@ -754,7 +756,6 @@ class SubscriptionComponent extends Component {
   }
 }
 ```
-
 
 <h3 id="graphql-query-data-startPolling">`data.startPolling(interval)`</h3>
 

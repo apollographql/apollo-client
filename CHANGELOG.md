@@ -1,9 +1,19 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## vNext
+## 2.3.9 (August 17, 2018)
 
-### Apollo Client (vNext)
+### Apollo Client (2.3.9)
 
+- Add proper error handling for subscriptions. If you have defined an `error`
+  handler on your subscription observer, it will now be called when an error
+  comes back in a result, and the `next` handler will be skipped (similar to
+  how we're handling errors with mutations). Previously, the error was
+  just passed in the result to the `next` handler. If you don't have an
+  `error` handler defined, the previous functionality is maintained, meaning
+  the error is passed in the result, giving the next handler a chance to deal
+  with it. This should help address backwards compatibility (and is the reason
+  for the minor version bumo in this release).  <br/>
+  [@clayne11](https://github.com/clayne11) in [#3800](https://github.com/apollographql/apollo-client/pull/3800)
 - Allow an `optimistic` param to be passed into `ApolloClient.readQuery` and
   `ApolloClient.readFragment`, that when set to `true`, will allow
   optimistic results to be returned. Is `false` by default.  <br/>
@@ -25,15 +35,27 @@
   [@lorensr](https://github.com/lorensr) in [#3739](https://github.com/apollographql/apollo-client/pull/3739)  <br/>
   [@brainkim](https://github.com/brainkim) in [#3680](https://github.com/apollographql/apollo-client/pull/3680)
 
-### Apollo Cache In-Memory (vNext)
+### Apollo Cache In-Memory (1.2.8)
 
 - Fix typo in `console.warn` regarding fragment matching error message.  <br/>
   [@combizs](https://github.com/combizs) in [#3701](https://github.com/apollographql/apollo-client/pull/3701)
 
-### Apollo Client (vNext)
+### Apollo Boost (0.1.14)
 
-- Add proper error handling for subscriptions  <br/>
-  [@clayne11](https://github.com/clayne11) in [#3800](https://github.com/apollographql/apollo-client/pull/3800)
+- No changes.
+
+### Apollo Cache (1.1.15)
+
+- No changes.
+
+### Apollo Utilities (1.0.19)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.17)
+
+- No changes.
+
 
 ## 2.3.8 (August 9, 2018)
 

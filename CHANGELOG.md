@@ -1,8 +1,8 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## 2.3.9 (August 17, 2018)
+## 2.4.0 (August 17, 2018)
 
-### Apollo Client (2.3.9)
+### Apollo Client (2.4.0)
 
 - Add proper error handling for subscriptions. If you have defined an `error`
   handler on your subscription observer, it will now be called when an error

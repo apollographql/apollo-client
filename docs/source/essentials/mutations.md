@@ -276,7 +276,7 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 
 Learning how to build `Mutation` components to update your data is an important part of developing applications with Apollo Client. Now that you're well-versed in updating data, why not try executing client-side mutations with `apollo-link-state`? Here are some resources we think will help you level up your skills:
 
-- [Optimistic UI](../features/optimistic-ui.html): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
-- [Local state](./local-state.html): Manage your local state with Apollo by executing client-side mutations with `apollo-link-state`.
-- [Caching in Apollo](../advanced/caching.html): Dive deep into the Apollo cache and how it's normalized in our advanced guide on caching. Understanding the cache is helpful when writing your mutation's `update` function!
+- [Optimistic UI](../features/optimistic-ui.md): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
+- [Local state](./local-state.md): Manage your local state with Apollo by executing client-side mutations with `apollo-link-state`.
+- [Caching in Apollo](../advanced/caching.md): Dive deep into the Apollo cache and how it's normalized in our advanced guide on caching. Understanding the cache is helpful when writing your mutation's `update` function!
 - [Mutation component video by Sara Vieira](https://youtu.be/2SYa0F50Mb4): If you need a refresher or learn best by watching videos, check out this tutorial on `Mutation` components by Sara!

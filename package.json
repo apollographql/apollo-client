@@ -108,7 +108,7 @@
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",
-    "jest": "^23.5.0",
+    "jest": "23.5.0",
     "jest-junit": "5.1.0",
     "lerna": "3.0.5",
     "lint-staged": "7.2.2",

@@ -72,9 +72,11 @@ describe('client', () => {
     });
 
     expect(() => {
-      client.query(gql`{
+      client.query(gql`
+        {
           a
-        }` as any);
+        }
+      ` as any);
     }).toThrowError(
       'query option is required. You must specify your GraphQL document in the query option.',
     );
@@ -621,43 +623,40 @@ describe('client', () => {
     });
   });
 
-  xit(
-    'should pass a network error correctly on a query using an observable network interface with a warning',
-    done => {
-      withWarning(() => {
-        const query = gql`
-          query people {
-            allPeople(first: 1) {
-              people {
-                name
-              }
+  xit('should pass a network error correctly on a query using an observable network interface with a warning', done => {
+    withWarning(() => {
+      const query = gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
             }
           }
-        `;
+        }
+      `;
 
-        const networkError = new Error('Some kind of network error.');
+      const networkError = new Error('Some kind of network error.');
 
-        const link = ApolloLink.from([
-          () => {
-            return new Observable(_ => {
-              throw networkError;
-            });
-          },
-        ]);
+      const link = ApolloLink.from([
+        () => {
+          return new Observable(_ => {
+            throw networkError;
+          });
+        },
+      ]);
 
-        const client = new ApolloClient({
-          link,
-          cache: new InMemoryCache({ addTypename: false }),
-        });
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      });
 
-        client.query({ query }).catch((error: ApolloError) => {
-          expect(error.networkError).toBeDefined();
-          expect(error.networkError!.message).toEqual(networkError.message);
-          done();
-        });
-      }, /deprecated/);
-    },
-  );
+      client.query({ query }).catch((error: ApolloError) => {
+        expect(error.networkError).toBeDefined();
+        expect(error.networkError!.message).toEqual(networkError.message);
+        done();
+      });
+    }, /deprecated/);
+  });
 
   it('should pass a network error correctly on a query with apollo-link network interface', done => {
     const query = gql`

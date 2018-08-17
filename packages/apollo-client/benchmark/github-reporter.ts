@@ -64,10 +64,11 @@ export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
           } else {
             const normalizedMean = res[element].mean / res['baseline'].mean;
             if (normalizedMean > thresholds[element]) {
-              const perfDropMessage = `Performance drop detected for benchmark: "${element}", ${res[
-                element
-              ].mean} / ${res['baseline']
-                .mean} = ${normalizedMean} > ${thresholds[element]}`;
+              const perfDropMessage = `Performance drop detected for benchmark: "${element}", ${
+                res[element].mean
+              } / ${res['baseline'].mean} = ${normalizedMean} > ${
+                thresholds[element]
+              }`;
               console.error(perfDropMessage);
               if (message === '') {
                 message = `Performance drop detected for benchmark: "${element}"`;
@@ -75,10 +76,11 @@ export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
               }
             } else {
               console.log(
-                `No performance drop detected for benchmark: "${element}", ${res[
-                  element
-                ].mean} / ${res['baseline']
-                  .mean} = ${normalizedMean} <= ${thresholds[element]}`,
+                `No performance drop detected for benchmark: "${element}", ${
+                  res[element].mean
+                } / ${res['baseline'].mean} = ${normalizedMean} <= ${
+                  thresholds[element]
+                }`,
               );
             }
           }

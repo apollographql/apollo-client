@@ -113,43 +113,41 @@ export class QueryScheduler<TCacheShape> {
     // 1. remove queries that have stopped polling
     // 2. call fetchQueries for queries that are polling and not in flight.
     // TODO: refactor this to make it cleaner
-    this.intervalQueries[interval] = this.intervalQueries[
-      interval
-    ].filter(queryId => {
-      // If queryOptions can't be found from registeredQueries or if it has a
-      // different interval, it means that this queryId is no longer registered
-      // and should be removed from the list of queries firing on this interval.
-      //
-      // We don't remove queries from intervalQueries immediately in
-      // stopPollingQuery so that we can keep the timer consistent when queries
-      // are removed and replaced, and to avoid quadratic behavior when stopping
-      // many queries.
-      if (
-        !(
-          this.registeredQueries.hasOwnProperty(queryId) &&
-          this.registeredQueries[queryId].pollInterval === interval
-        )
-      ) {
-        return false;
-      }
+    this.intervalQueries[interval] = this.intervalQueries[interval].filter(
+      queryId => {
+        // If queryOptions can't be found from registeredQueries or if it has a
+        // different interval, it means that this queryId is no longer registered
+        // and should be removed from the list of queries firing on this interval.
+        //
+        // We don't remove queries from intervalQueries immediately in
+        // stopPollingQuery so that we can keep the timer consistent when queries
+        // are removed and replaced, and to avoid quadratic behavior when stopping
+        // many queries.
+        if (
+          !(
+            this.registeredQueries.hasOwnProperty(queryId) &&
+            this.registeredQueries[queryId].pollInterval === interval
+          )
+        ) {
+          return false;
+        }
 
-      // Don't fire this instance of the polling query is one of the instances is already in
-      // flight.
-      if (this.checkInFlight(queryId)) {
+        // Don't fire this instance of the polling query is one of the instances is already in
+        // flight.
+        if (this.checkInFlight(queryId)) {
+          return true;
+        }
+
+        const queryOptions = this.registeredQueries[queryId];
+        const pollingOptions = { ...queryOptions } as WatchQueryOptions;
+        pollingOptions.fetchPolicy = 'network-only';
+        // don't let unhandled rejections happen
+        this.fetchQuery<T>(queryId, pollingOptions, FetchType.poll).catch(
+          () => {},
+        );
         return true;
-      }
-
-      const queryOptions = this.registeredQueries[queryId];
-      const pollingOptions = { ...queryOptions } as WatchQueryOptions;
-      pollingOptions.fetchPolicy = 'network-only';
-      // don't let unhandled rejections happen
-      this.fetchQuery<T>(
-        queryId,
-        pollingOptions,
-        FetchType.poll,
-      ).catch(() => {});
-      return true;
-    });
+      },
+    );
 
     if (this.intervalQueries[interval].length === 0) {
       clearInterval(this.pollingTimers[interval]);

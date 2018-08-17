@@ -1,9 +1,9 @@
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 
 export class RecordingCache implements NormalizedCache {
-  constructor(private readonly data: NormalizedCacheObject = {}) {}
-
   private recordedData: NormalizedCacheObject = {};
+
+  constructor(private readonly data: NormalizedCacheObject = {}) {}
 
   public record(
     transaction: (recordingCache: RecordingCache) => void,

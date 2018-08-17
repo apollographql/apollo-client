@@ -271,7 +271,7 @@ First, let's look at an example of a mixed query. The `images` field comes from 
 
 ```js
 const GET_DOG = gql`
-  query getDogByBreed($breed: String!) {
+  query GetDogByBreed($breed: String!) {
     dog(breed: $breed) {
       images {
         url

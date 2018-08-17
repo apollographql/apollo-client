@@ -1,6 +1,5 @@
-// Removed import
-import { includes } from 'lodash';
-import * as fs from 'fs';
+const { includes } = require('lodash');
+const fs = require('fs');
 
 // Setup
 const github = danger.github;

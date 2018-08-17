@@ -55,7 +55,7 @@ export function observableToPromiseAndSubscription(
     };
 
     subscription = observable.subscribe({
-      next(result) {
+      next(result: ApolloQueryResult<any>) {
         const cb = cbs[cbIndex++];
         if (cb) {
           try {
@@ -68,7 +68,7 @@ export function observableToPromiseAndSubscription(
           reject(new Error(`Observable called more than ${cbs.length} times`));
         }
       },
-      error(error) {
+      error(error: Error) {
         const errorCb = errorCallbacks[errorIndex++];
         if (errorCb) {
           try {

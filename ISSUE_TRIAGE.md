@@ -1,6 +1,6 @@
 # Issue Triage
 
-This document describes the process Apollo contributors use to organize issues. We use Github [issues](https://github.com/apollographql/apollo-client/issues) to track bugs and feature requests. Our goal is to maintain a list of issues that are relevant and well-defined (and [labeled](https://github.com/apollographql/apollo-client/labels)) such that a contributor can immediately begin working on the code for a fix or feature request. Contributors who want to dive in and write code aren't likely to prioritize working on issues that are ambiguous and have low impact.
+This document describes the process Apollo contributors use to organize issues. We use Github [issues](https://github.com/apollographql/apollo-client/issues) here to track bugs, and issues in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests) to track feature requests and discussions. Our goal is to maintain a list of issues that are relevant and well-defined (and [labeled](https://github.com/apollographql/apollo-client/labels)) such that a contributor can immediately begin working on the code for a fix or feature request. Contributors who want to dive in and write code aren't likely to prioritize working on issues that are ambiguous and have low impact.
 
 We would love to have more contributors who are willing to help out with triaging issues. You can begin by helping issue requesters create good reproductions and by confirming those reproductions on your own machine. It won't be long before the core maintainers notice your work and ask whether you'd like to be promoted to an issue maintainer.
 
@@ -31,19 +31,11 @@ The first step is in determining whether the issue is a bug, help question or fe
 
 ### Help questions
 
-[Stack Overflow](http://stackoverflow.com/questions/tagged/apollo) and our [Slack channel](http://dev.apollodata.com/#slack) are the place to ask for help on using the framework. Close issues that are help requests and politely refer the author to the above locations.
+[Stack Overflow](http://stackoverflow.com/questions/tagged/apollo) and our [Slack channel](https://www.apollographql.com/slack) are the place to ask for help on using the framework. Close issues that are help requests and politely refer the author to the above locations.
 
 ### Feature requests
 
-1. For reasons described [here](CONTRIBUTING.md#feature-requests), we would prefer features to be built as separate packages. If the feature can clearly be built as a package, explain this to the requester and close the issue.
-> - If the feature could be built as a package and serves a particular need, encourage the user to contribute it themselves.
->- If the underlying issue could be better solved by existing technology, encourage them to seek help in the [Slack channel](http://dev.apollodata.com/#slack) or on [Stack Overflow](http://stackoverflow.com/questions/tagged/apollo).
-2. If you haven't closed the issue, add the `feature` label.
-3. If it's not possible to build the feature as a package (as you identified in step 1), explore whether creating hooks in core would make it possible to do so. If it would, redefine the issue as a request to create those hooks.
-4. Work with the requester and others in the community to build a clear specification for the feature and update the issue description accordingly.
-5. Finally, add the `confirmed` label and [classify](#classification) the issue.
-
-Core contributors may add the `help-wanted` label to feature requests. This indicates the feature is aligned with the project roadmap and a high-quality pull request will almost certainly be merged.
+Apollo Client feature requests and discussions are managed in the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests). Feature request triaging should happen there. Feature requests and/or discussions opened in this repository should be closed, with a message asking the original requestor to re-open the feature request / discussion in the FR repo.
 
 <h2 id="classification">Classification</h2>
 

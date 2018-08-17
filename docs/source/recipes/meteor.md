@@ -4,205 +4,133 @@ order: 152
 description: Specifics about using Apollo in your Meteor application.
 ---
 
-**Note: These docs are for using Meteor with the 1.0 version of Apollo Client. The 2.0 upgrade is still in progress and these docs will be updated when it is ready**
+There are two main ways to use Apollo in your Meteor app:
 
-The Apollo client and server tools are published on npm, which makes them available to all JavaScript applications, including those written with [Meteor](https://www.meteor.com/) 1.3 and above. When using Meteor with Apollo, you can use those npm packages directly, or you can use the [`apollo` Atmosphere package](https://github.com/apollostack/meteor-integration/), which simplifies things for you.
+- `meteor add swydo:ddp-apollo` provides a network Link that supports Meteor user accounts and subscriptions, all over DDP: [Documentation](https://github.com/Swydo/ddp-apollo)
+- `meteor add apollo` supports Meteor user accounts over HTTP, with documentation below.
 
-To install `apollo`, run these commands:
+## Compatibility
 
-```text
-meteor add apollo
-meteor npm install --save apollo-client graphql-server-express express graphql graphql-tools body-parser
-```
+meteor/apollo | apollo client | apollo server
+--- | --- | ---
+3.* | 2.* | 2.*
+2.* | 2.* | 1.*
+1.* | 1.* | 1.*
 
 ## Usage
 
-### Examples
-
-You can see this package in action in the [Apollo Meteor starter kit](https://github.com/apollostack/meteor-starter-kit).
+```sh
+meteor add apollo
+npm install graphql apollo-server-express apollo-boost
+```
 
 ### Client
 
-Connect to the Apollo server with [`meteorClientConfig`](#meteorClientConfig):
+Create your [ApolloClient](https://www.apollographql.com/docs/react/) instance:
 
 ```js
-import ApolloClient from 'apollo-client';
-import { meteorClientConfig } from 'meteor/apollo';
+import { Accounts } from 'meteor/accounts-base'
+import ApolloClient from 'apollo-boost'
 
-const client = new ApolloClient(meteorClientConfig());
+const client = new ApolloClient({
+  uri: '/graphql',
+  request: operation =>
+    operation.setContext(() => ({
+      headers: {
+        authorization: Accounts._storedLoginToken()
+      }
+    }))
+})
 ```
+
+Or if you're using `apollo-client` instead of `apollo-boost`, use `MeteorAccountsLink()`:
+
+```js
+import { ApolloClient } from 'apollo-client'
+import { InMemoryCache } from 'apollo-cache-inmemory'
+import { ApolloLink } from 'apollo-link'
+import { HttpLink } from 'apollo-link-http'
+import { MeteorAccountsLink } from 'meteor/apollo'
+
+const client = new ApolloClient({
+  link: ApolloLink.from([
+    new MeteorAccountsLink(),
+    new HttpLink({
+      uri: '/graphql'
+    })
+  ]),
+  cache: new InMemoryCache()
+})
+```
+
+If you want to change which header the token is stored in:
+
+```js
+MeteorAccountsLink({ headerName: 'meteor-login-token' })
+```
+
+(The default is `authorization`.)
 
 ### Server
 
-Create the following files:
-
-```bash
-/imports/api/schema.js         # a JavaScript file with the schema
-/imports/api/resolvers.js      # a JavaScript file with the Apollo resolvers
-```
-
-Define a simple [schema](http://dev.apollodata.com/tools/graphql-tools/generate-schema.html) under `schema.js`.
+Set up the [Apollo server](https://www.apollographql.com/docs/apollo-server/):
 
 ```js
+import { ApolloServer, gql } from 'apollo-server-express'
+import { WebApp } from 'meteor/webapp'
+import { getUser } from 'meteor/apollo'
 
-export const typeDefs = `
-type Query {
-  say: String
-}
-`;
-```
+import typeDefs from './schema'
+import resolvers from './resolvers'
 
-Define your first [resolver](http://dev.apollodata.com/tools/graphql-tools/resolvers.html) under `resolvers.js`.
-
-```js
-export const resolvers = {
-  Query: {
-    say(root, args, context) {
-      return 'hello world';
-    }
-  }
-}
-```
-
-Set up the Apollo server with [`createApolloServer`](#createApolloServer):
-
-```js
-import { createApolloServer } from 'meteor/apollo';
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
-
-import { typeDefs } from '/imports/api/schema';
-import { resolvers } from '/imports/api/resolvers';
-
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   resolvers,
-});
+  context: async ({ req }) => ({
+    user: await getUser(req.headers.authorization)
+  })
+})
 
-createApolloServer({
-  schema,
-});
+server.applyMiddleware({
+  app: WebApp.connectHandlers,
+  path: '/graphql'
+})
+
+WebApp.connectHandlers.use('/graphql', (req, res) => {
+  if (req.method === 'GET') {
+    res.end()
+  }
+})
 ```
 
-The [GraphiQL](https://github.com/graphql/graphiql) url by default is [http://localhost:3000/graphiql](http://localhost:3000/graphiql). You can now test your first query:
+Now when the client is logged in (ie has an unexpired Meteor login token in localStorage), your resolvers will have a `context.user` property with the user doc.
 
-```js
-{
-  say
-}
-```
+### IDE
 
+There are two options for using an IDE that will make authenticated GraphQL requests:
 
-
-Inside your resolvers, if the user is logged in, their id will be `context.userId` and their user doc will be `context.user`:
-
-```js
-export const resolvers = {
-  Query: {
-    user(root, args, context) {
-      // Only return the current user, for security
-      if (context.userId === args.id) {
-        return context.user;
-      }
-    },
-  },
-  User: ...
-}
-```
-
-### Query batching
-
-`meteor/apollo` gives you a `BatchedNetworkInterface` by default thanks to `createMeteorNetworkInterface`. This interface is meant to reduce significantly the number of requests sent to the server.
-
-In order to get the most out of it, you can attach a `dataloader` to every request to batch loading your queries (and cache them!).
-
-Here are some great resources to help you integrating query batching in your Meteor application:
-- About batched network interface:
-  - [Apollo Client documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), the official documentation explaining how it works and how to set it up.
-  - [Query batching in Apollo](https://blog.apollographql.com/query-batching-in-apollo-63acfd859862), an article from the Apollo blog with more in depth explanation.
-- About Dataloader:
-  - Apollo's [Graphql server documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), get to know how to setup `dataloader` in your server-side implementation.
-  - [Dataloader repository](https://github.com/facebook/dataloader), a detailed explanation of batching & caching processes, plus a bonus of a 30-minute source code walkthrough video.
-
-### Deployment
-
-It is _strongly_ recommended to explictly specify the `ROOT_URL` environment variable of your deployment. The configuration of the Apollo client and GraphQL server provided by this package depends on a configured `ROOT_URL`. Read more about that in the [Meteor Guide](https://guide.meteor.com/deployment.html#custom-deployment).
+- [Apollo devtools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm?hl=en-US) GraphiQL:
+  - Login to your app
+  - Open Apollo devtools to the GraphiQL section
+- [GraphQL Playground](https://github.com/prismagraphql/graphql-playground):
+  - Install with `brew cask install graphql-playground`
+  - Login to your app
+  - In the browser console, enter `localStorage.getItem('Meteor.loginToken')`
+  - Copy the string returned
+  - In Playground:
+    - At the top, enter `http://localhost:3000/graphql`
+    - Under HTTP HEADERS, enter `{ "authorization": "copied string" }`
 
 ### Typings
 
 Your Meteor apps may rely on static typings with TypeScript. If so, it is recommended to use the [ambient TypeScript definition for this Atmosphere package](https://github.com/KeithGillette/Apollo-GraphQL-Meteor-Integration-Typings).
 
-## API
-
-### meteorClientConfig
-
-`meteorClientConfig(customClientConfig = {})`
-
-The `customClientConfig` is an optional object that can have any [Apollo Client options](../api/apollo-client.html#ApolloClient.constructor).
-
-Defining a `customClientConfig` object extends or replaces fields of the default configuration provided by the package.
-
-The default configuration of the client is:
-- `networkInterface`: `createMeteorNetworkInterface()`, a pre-configured network interface. See below for more information.
-- `ssrMode`: `Meteor.isServer`, enable server-side rendering mode by default if used server-side.
-
-The store is normalized by default with `__typename` + `_id` identifiers. See [store normalization](http://dev.apollodata.com/core/how-it-works.html#normalize) section for more information.
-
-### createMeteorNetworkInterface
-
-`createMeteorNetworkInterface(customNetworkInterface = {})`
-
-`customNetworkInterface` is an optional object that replaces fields of the default configuration:
-- `uri`: `Meteor.absoluteUrl('graphql')`, points to the default GraphQL server endpoint, such as http://localhost:3000/graphql or https://www.example.com/graphql.
-- `opts`: `{}`, additional [`FetchOptions`](https://github.github.io/fetch#options) passed to the [`NetworkInterface`](http://dev.apollodata.com/core/network.html#createNetworkInterface).
-- `useMeteorAccounts`: `true`, enable the Meteor User Accounts middleware to identify the user with every request thanks to her login token.
-- `batchingInterface`: `true`, use a [`BatchedNetworkInterface`](http://dev.apollodata.com/core/network.html#query-batching) by default instead of [`NetworkInterface`](http://dev.apollodata.com/core/network.html#network-interfaces).
-- `batchInterval`: `10`, if the `batchingInterface` field is `true`, this field defines the batch interval to determine how long the network interface batches up queries before sending them to the server.
-
-Additionally, if the `useMeteorAccounts` is set to `true`, you can add to your `customNetworkInterface` a `loginToken` field while doing [server-side rendering](http://dev.apollodata.com/core/meteor.html#SSR) to handle the current user.
-
-`createMeteorNetworkInterface` example:
-
-```js
-import ApolloClient from 'apollo-client'
-import { createMeteorNetworkInterface, meteorClientConfig } from 'meteor/apollo';
-
-const networkInterface = createMeteorNetworkInterface({
-  // use a batched network interface instead of a classic network interface
-  batchingInterface: true,
-});
-
-const client = new ApolloClient(meteorClientConfig({ networkInterface }));
-```
-
-### createApolloServer
-
-`createApolloServer(customOptions = {}, customConfig = {})`
-
-`createApolloServer` is used to create and configure an Express GraphQL server.
-
-`customOptions` is an object that can have any [GraphQL Server `options`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlOptions), used to enhance the GraphQL server run thanks to [`graphqlExpress`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlExpress). Defining a `customOptions` object extends or replaces fields of the default configuration provided by the package:
-
-- `context`: `{}` is an object or a function returning an object that extends the context object being passed down to the resolvers.
-- `formatError`: a function used to format errors before returning them to clients.
-- `debug`: `Meteor.isDevelopment`, additional debug logging if execution errors occur in dev mode.
-
-*This is the object that should have a `schema` entry created by [`makeExecutableSchema`](http://dev.apollodata.com/core/meteor.html#Server).*
-
-`customConfig` is an optional object that can be used to replace the configuration of how the Express server itself runs:
-
-- `path`: [path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. This is the endpoint where the queries & mutations are sent. Default: `/graphql`.
-- `configServer`: a function that is given to the express server for further configuration. You can for instance enable CORS with `createApolloServer({}, {configServer: expressServer => expressServer.use(cors())})`
-- `graphiql`: whether to enable [GraphiQL](https://github.com/graphql/graphiql). Default: `true` in development and `false` in production.
-- `graphiqlPath`: path for GraphiQL. Default: `/graphiql` (note the _i_).
-- `graphiqlOptions`: [GraphiQL options](http://dev.apollodata.com/tools/apollo-server/graphiql.html#graphiqlOptions) Default: attempts to use `Meteor.loginToken` from localStorage to log you in.
-
-It will use the same port as your Meteor server. Don't put a route or static asset at the same path as the GraphQL route or the GraphiQL route if in use (again, defaults are `/graphql` and `/graphiql` respectively).
 
 ## Accounts
 
-You may still use the authentication based on DDP (Meteor's default data layer) and `apollo` will send the current user's login token to the GraphQL server with each request.
+The above solutions assume you're using Meteor's client-side accounts functions like `Accounts.createUser` and `Accounts.loginWith*`, which use Meteor DDP messages.
 
-If you want to use only GraphQL in your app you can use [nicolaslopezj:apollo-accounts](https://github.com/nicolaslopezj/meteor-apollo-accounts). This package uses the Meteor Accounts methods in GraphQL, it's compatible with the accounts you have saved in your database and you may use `nicolaslopezj:apollo-accounts` and Meteor's DDP accounts at the same time.
+If you want to instead only use GraphQL in your app, you can use [nicolaslopezj:apollo-accounts](https://github.com/nicolaslopezj/meteor-apollo-accounts). This package uses the Meteor Accounts methods in GraphQL, and it's compatible with the accounts you have saved in your database (and you could use `nicolaslopezj:apollo-accounts` and Meteor's DDP accounts at the same time).
 
 If you are relying on the current user in your queries, you'll want to [clear the store when the current user state changes](http://dev.apollodata.com/react/auth.html#login-logout). To do so, use `client.resetStore()` in the `Meteor.logout` callback:
 
@@ -225,7 +153,8 @@ There are two additional configurations that you need to keep in mind when using
 
 The idea is that you need to let Meteor to finally render the html you can just provide it extra `body` and or `head` for the html and Meteor will append it, otherwise CSS/JS and or other merged html content that Meteor serve by default (including your application main .js file) will be missing.
 
-Here is a full working example:
+Here is a full working example using `apollo@2.*` (outdated):
+
 ```
 meteor add apollo webapp
 meteor npm install --save react react-dom apollo-client redux react-apollo react-router react-helmet express isomorphic-fetch
@@ -318,46 +247,6 @@ app.use((req, res, next) => {
 WebApp.connectHandlers.use(Meteor.bindEnvironment(app));
 ```
 
-## Apollo Engine
-
-Here's a minimal example of [Apollo Engine](https://www.apollographql.com/engine/) integration:
-
-```js
-import { createApolloServer } from 'meteor/apollo';
-import { Engine } from 'apollo-engine';
-
-import executableSchema from 'schema.js';
-
-const PORT = process.env.PORT || 3000;
-
-// Initialize Apollo Engine
-const engine = new Engine({
-  engineConfig: {
-    apiKey: 'your_apollo_engine_api_key',
-    logging: {
-      level: 'DEBUG', // DEBUG, INFO, WARN or ERROR
-    },
-  },
-  graphqlPort: PORT,
-  endpoint: '/graphql',
-});
-
-createApolloServer(req => ({
-  schema: executableSchema,
-  context: {},
-  tracing: true,
-  cacheControl: true,
-}), {
-  configServer: (graphQLServer) => {
-    graphQLServer.use(engine.expressMiddleware());
-    // Any other config server stuff
-  },
-});
-
-// Start apollo engine
-engine.start();
-```
-
 ## Importing `.graphql` files
 
 An easy way to work with GraphQL is by importing `.graphql` files directly using the `import` syntax.
@@ -414,9 +303,12 @@ Template.hello.helpers({
 
 ## Subscriptions
 
+*This section uses the outdated `apollo@2.*` API.*
+
 You can also use GraphQL subscriptions with your Meteor app if you need to. The following code gives an example of a complete configuration that enables all the features of subscriptions in addition to base GraphQL.
 
 ### Client
+
 ```js
 import { ApolloClient } from 'apollo-client';
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';

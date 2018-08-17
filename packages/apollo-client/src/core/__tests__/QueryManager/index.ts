@@ -4618,4 +4618,46 @@ describe('QueryManager', () => {
         });
     });
   });
+
+  describe('`no-cache` handling', () => {
+    it(
+      'should return a query result (if one exists) when a `no-cache` ' +
+        'fetch policy is used',
+      done => {
+        const query = gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `;
+
+        const data = {
+          author: {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+        };
+
+        const queryManager = createQueryManager({
+          link: mockSingleLink({
+            request: { query },
+            result: { data },
+          }),
+        });
+
+        const observable = queryManager.watchQuery<any>({
+          query,
+          fetchPolicy: 'no-cache',
+        });
+        observableToPromise({ observable }, result => {
+          expect(stripSymbols(result.data)).toEqual(data);
+          const currentResult = queryManager.getCurrentQueryResult(observable);
+          expect(currentResult.data).toEqual(data);
+          done();
+        });
+      },
+    );
+  });
 });

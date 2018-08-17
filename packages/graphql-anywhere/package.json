@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.2.0-verify.3",
+  "version": "4.2.0-verify.4",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",

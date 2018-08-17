@@ -174,8 +174,10 @@ With upcoming versions of React (starting in React 16.3), there is a new version
 const MyClient = () => (
   <ApolloConsumer>
     {(client) => (
-      <h1>The current cache is:</h1>
-      <pre>{client.extract()}</pre>
+      <div>
+        <h1>The current cache is:</h1>
+        <pre>{client.extract()}</pre>
+      </div>
     )}
   </ApolloConsumer>
 )

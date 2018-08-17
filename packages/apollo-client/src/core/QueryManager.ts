@@ -518,6 +518,11 @@ export class QueryManager<TStore> {
             networkError: queryStoreValue.networkError,
           });
           previouslyHadError = true;
+          // newData should be set to null for errored responses too so that
+          // next queries subscribe to the observer
+          if (fetchPolicy !== 'no-cache') {
+            this.setQuery(queryId, () => ({ newData: null }));
+          }
           if (observer.error) {
             try {
               observer.error(apolloError);

@@ -1376,50 +1376,49 @@ describe('optimistic mutation results', () => {
       });
 
       // we have to actually subscribe to the query to be able to update it
-      return new Promise(resolve => {
+      await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
           next(res) {
             resolve(res);
           },
         });
-      })
-        .then(() => {
-          let firstTime = true;
-          let before = new Date();
-          const promise = client.mutate({
-            mutation,
-            optimisticResponse,
-            update: (proxy, mResult: any) => {
-              const after = new Date();
-              const duration = after - before;
-              if (firstTime) {
-                expect(duration < 300).toBe(true);
-                firstTime = false;
-              } else {
-                expect(duration > 300).toBe(true);
-              }
-              let data = proxy.readQuery({ query });
+      });
 
-              data.todoList.todos = [
-                mResult.data.createTodo,
-                ...data.todoList.todos,
-              ];
-              proxy.writeQuery({
-                query,
-                data,
-              });
-            },
+      let firstTime = true;
+      let before = new Date();
+      const promise = client.mutate({
+        mutation,
+        optimisticResponse,
+        update: (proxy, mResult: any) => {
+          const after = new Date();
+          const duration = after - before;
+          if (firstTime) {
+            expect(duration < 300).toBe(true);
+            firstTime = false;
+          } else {
+            expect(duration > 300).toBe(true);
+          }
+          let data = proxy.readQuery({ query });
+
+          data.todoList.todos = [
+            mResult.data.createTodo,
+            ...data.todoList.todos,
+          ];
+          proxy.writeQuery({
+            query,
+            data,
           });
+        },
+      });
 
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-          expect((dataInStore['Todo99'] as any).text).toBe(
-            'Optimistically generated',
-          );
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+      expect((dataInStore['Todo99'] as any).text).toBe(
+        'Optimistically generated',
+      );
 
-          return promise;
-        })
+      await promise
         .then(() => {
           return client.query({ query });
         })

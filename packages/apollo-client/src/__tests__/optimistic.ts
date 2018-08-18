@@ -1538,10 +1538,10 @@ describe('optimistic mutation results', () => {
       );
     });
 
-    it('two mutations, one fails', () => {
+    it('two mutations, one fails', async () => {
       expect.assertions(10);
       let subscriptionHandle: Subscription;
-      return setup(
+      await setup(
         {
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
@@ -1557,95 +1557,92 @@ describe('optimistic mutation results', () => {
           // same order as before, otherwise the store can end up in an inconsistent state.
           // delay: 50,
         },
-      )
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          const update = (proxy: any, mResult: any) => {
-            const data: any = proxy.readFragment({
-              id: 'TodoList5',
-              fragment: gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `,
-            });
+      );
 
-            proxy.writeFragment({
-              data: {
-                ...data,
-                todos: [mResult.data.createTodo, ...data.todos],
-              },
-              id: 'TodoList5',
-              fragment: gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `,
-            });
-          };
-          const promise = client
-            .mutate({
-              mutation,
-              optimisticResponse,
-              update,
-            })
-            .catch(err => {
-              // it is ok to fail here
-              expect(err).toBeInstanceOf(Error);
-              expect(err.message).toBe('Network error: forbidden (test error)');
-              return null;
-            });
-
-          const promise2 = client.mutate({
-            mutation,
-            optimisticResponse: optimisticResponse2,
-            update,
-          });
-
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
-          expect((dataInStore['Todo99'] as any).text).toBe(
-            'Optimistically generated',
-          );
-          expect((dataInStore['Todo66'] as any).text).toBe(
-            'Optimistically generated 2',
-          );
-
-          return Promise.all([promise, promise2]);
-        })
-        .then(() => {
-          subscriptionHandle.unsubscribe();
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-          expect(dataInStore).toHaveProperty('Todo66');
-          expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66', 'Todo'),
-          );
-          expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-            realIdValue('Todo99', 'Todo'),
-          );
+      // we have to actually subscribe to the query to be able to update it
+      await new Promise(resolve => {
+        const handle = client.watchQuery({ query });
+        subscriptionHandle = handle.subscribe({
+          next(res) {
+            resolve(res);
+          },
         });
+      });
+
+      const update = (proxy: any, mResult: any) => {
+        const data: any = proxy.readFragment({
+          id: 'TodoList5',
+          fragment: gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `,
+        });
+
+        proxy.writeFragment({
+          data: {
+            ...data,
+            todos: [mResult.data.createTodo, ...data.todos],
+          },
+          id: 'TodoList5',
+          fragment: gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `,
+        });
+      };
+      const promise = client
+        .mutate({
+          mutation,
+          optimisticResponse,
+          update,
+        })
+        .catch(err => {
+          // it is ok to fail here
+          expect(err).toBeInstanceOf(Error);
+          expect(err.message).toBe('Network error: forbidden (test error)');
+          return null;
+        });
+
+      const promise2 = client.mutate({
+        mutation,
+        optimisticResponse: optimisticResponse2,
+        update,
+      });
+
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
+      expect((dataInStore['Todo99'] as any).text).toBe(
+        'Optimistically generated',
+      );
+      expect((dataInStore['Todo66'] as any).text).toBe(
+        'Optimistically generated 2',
+      );
+
+      await Promise.all([promise, promise2]);
+
+      subscriptionHandle.unsubscribe();
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+      expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+      expect(dataInStore).toHaveProperty('Todo66');
+      expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+        realIdValue('Todo66', 'Todo'),
+      );
+      expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+        realIdValue('Todo99', 'Todo'),
+      );
     });
 
     it('will handle dependent updates', done => {

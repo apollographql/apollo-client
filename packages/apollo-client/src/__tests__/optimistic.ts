@@ -1925,7 +1925,7 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
 
-  it('can post a new comment', () => {
+  it('can post a new comment', async () => {
     expect.assertions(1);
     const mutationVariables = {
       repoFullName: 'org/repo',
@@ -1933,39 +1933,35 @@ describe('optimistic mutation - githunt comments', () => {
     };
 
     let subscriptionHandle: Subscription;
-    return setup({
+    await setup({
       request: {
         query: addTypenameToDocument(mutation),
         variables: mutationVariables,
       },
       result: mutationResult,
-    })
-      .then(() => {
-        // we have to actually subscribe to the query to be able to update it
-        return new Promise(resolve => {
-          const handle = client.watchQuery({ query, variables });
-          subscriptionHandle = handle.subscribe({
-            next(res) {
-              resolve(res);
-            },
-          });
-        });
-      })
-      .then(() => {
-        return client.mutate({
-          mutation,
-          optimisticResponse,
-          variables: mutationVariables,
-          updateQueries,
-        });
-      })
-      .then(() => {
-        return client.query({ query, variables });
-      })
-      .then((newResult: any) => {
-        subscriptionHandle.unsubscribe();
-        expect(newResult.data.entry.comments.length).toBe(2);
+    });
+
+    // we have to actually subscribe to the query to be able to update it
+    await new Promise(resolve => {
+      const handle = client.watchQuery({ query, variables });
+      subscriptionHandle = handle.subscribe({
+        next(res) {
+          resolve(res);
+        },
       });
+    });
+
+    await client.mutate({
+      mutation,
+      optimisticResponse,
+      variables: mutationVariables,
+      updateQueries,
+    });
+
+    const newResult: any = await client.query({ query, variables });
+
+    subscriptionHandle.unsubscribe();
+    expect(newResult.data.entry.comments.length).toBe(2);
   });
 });
 

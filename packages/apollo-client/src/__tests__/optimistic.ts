@@ -1366,25 +1366,24 @@ describe('optimistic mutation results', () => {
       },
     };
 
-    it('will insert a single item to the beginning', () => {
+    it('will insert a single item to the beginning', async () => {
       expect.assertions(6);
       let subscriptionHandle: Subscription;
-      return setup({
+      await setup({
         request: { query: mutation },
         delay: 300,
         result: mutationResult,
+      });
+
+      // we have to actually subscribe to the query to be able to update it
+      return new Promise(resolve => {
+        const handle = client.watchQuery({ query });
+        subscriptionHandle = handle.subscribe({
+          next(res) {
+            resolve(res);
+          },
+        });
       })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
         .then(() => {
           let firstTime = true;
           let before = new Date();

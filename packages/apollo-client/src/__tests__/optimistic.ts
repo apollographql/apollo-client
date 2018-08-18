@@ -1645,8 +1645,8 @@ describe('optimistic mutation results', () => {
       );
     });
 
-    it('will handle dependent updates', done => {
-      expect.assertions(5);
+    it('will handle dependent updates', async () => {
+      expect.assertions(1);
       link = mockSingleLink(
         {
           request: { query },
@@ -1727,69 +1727,51 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      const defaultTodos = stripSymbols(result.data.todoList.todos);
       let count = 0;
 
-      client.watchQuery({ query }).subscribe({
-        next: (value: any) => {
-          const todos = stripSymbols(value.data.todoList.todos);
-          switch (count++) {
-            case 0:
-              expect(defaultTodos).toEqual(todos);
-              twoMutations();
-              break;
-            case 1:
-              expect([
-                customOptimisticResponse1.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 2:
-              expect([
-                customOptimisticResponse2.createTodo,
-                customOptimisticResponse1.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 3:
-              expect([
-                customOptimisticResponse2.createTodo,
-                mutationResult.data.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 4:
-              expect([
-                mutationResult2.data.createTodo,
-                mutationResult.data.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              done();
-              break;
-            default:
-              done.fail(new Error('Next should not have been called again.'));
-          }
-        },
-        error: error => done.fail(error),
+      const promise = from(client.watchQuery({ query }))
+        .pipe(
+          map(value => stripSymbols(value.data.todoList.todos)),
+          take(5),
+          toArray(),
+        )
+        .toPromise();
+
+      await new Promise(setTimeout);
+
+      client.mutate({
+        mutation,
+        optimisticResponse: customOptimisticResponse1,
+        update,
       });
 
-      function twoMutations() {
-        client
-          .mutate({
-            mutation,
-            optimisticResponse: customOptimisticResponse1,
-            update,
-          })
-          .catch(error => done.fail(error));
+      client.mutate({
+        mutation,
+        optimisticResponse: customOptimisticResponse2,
+        update,
+      });
 
-        client
-          .mutate({
-            mutation,
-            optimisticResponse: customOptimisticResponse2,
-            update,
-          })
-          .catch(error => done.fail(error));
-      }
+      const responses = await promise;
+      const defaultTodos = stripSymbols(result.data.todoList.todos);
+      expect(responses).toEqual([
+        defaultTodos,
+        [customOptimisticResponse1.createTodo, ...defaultTodos],
+        [
+          customOptimisticResponse2.createTodo,
+          customOptimisticResponse1.createTodo,
+          ...defaultTodos,
+        ],
+        [
+          customOptimisticResponse2.createTodo,
+          mutationResult.data.createTodo,
+          ...defaultTodos,
+        ],
+        [
+          mutationResult2.data.createTodo,
+          mutationResult.data.createTodo,
+          ...defaultTodos,
+        ],
+      ]);
     });
   });
 });

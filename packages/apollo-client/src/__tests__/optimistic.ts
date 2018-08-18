@@ -1417,21 +1417,17 @@ describe('optimistic mutation results', () => {
       expect((dataInStore['Todo99'] as any).text).toBe(
         'Optimistically generated',
       );
+      await promise;
+      await client.query({ query }).then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+        // There should be one more todo item than before
+        expect(newResult.data.todoList.todos.length).toBe(4);
 
-      await promise
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(4);
-
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
-            'This one was created with a mutation.',
-          );
-        });
+        // Since we used `prepend` it should be at the front
+        expect(newResult.data.todoList.todos[0].text).toBe(
+          'This one was created with a mutation.',
+        );
+      });
     });
 
     it('two array insert like mutations', () => {

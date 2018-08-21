@@ -159,6 +159,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>An object containing all of the variables your subscription needs to execute</dd>
   <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
+  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
+  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
 </dl>
 
 <h3 id="render-prop">Render prop function</h3>

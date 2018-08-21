@@ -296,7 +296,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * use `readFragment`.
    *
    * @param optimistic Set to `true` to allow `readQuery` to return
-   * optimisic results. Is `false` by default.
+   * optimistic results. Is `false` by default.
    */
   public readQuery<T, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables>,
@@ -317,7 +317,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * `fragmentName`.
    *
    * @param optimistic Set to `true` to allow `readFragment` to return
-   * optimisic results. Is `false` by default.
+   * optimistic results. Is `false` by default.
    */
   public readFragment<T, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables>,

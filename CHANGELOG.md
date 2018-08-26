@@ -2,10 +2,41 @@
 
 ## vNext
 
-### Apollo Client (2.4.1)
+### Apollo Client (vNext)
+
+- `mutate`'s `refetchQueries` option now allows queries to include a custom
+  `context` option. This `context` will be used when refetching the query.
+  For example:
+
+  ```js
+  context = {
+    headers: {
+      token: 'some auth token',
+    },
+  };
+  client.mutate({
+    mutation: UPDATE_CUSTOMER_MUTATION,
+    variables: {
+      userId: user.id,
+      firstName,
+      ...
+    },
+    refetchQueries: [{
+      query: CUSTOMER_MESSAGES_QUERY,
+      variables: { userId: user.id },
+      context,
+    }],
+    context,
+  });
+  ```
+
+  The `CUSTOMER_MESSAGES_QUERY` above will be refetched using `context`.
+  Normally queries are refetched using the original context they were first
+  started with, but this provides a way to override the context, if needed.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3852](https://github.com/apollographql/apollo-client/pull/3852)
 
 - Documentation updates.  <br/>
-  [@hwillson](https://github.com/hwillson) in [#](https://github.com/apollographql/apollo-client/pull/)
+  [@hwillson](https://github.com/hwillson) in [#3841](https://github.com/apollographql/apollo-client/pull/3841)
 
 
 ## 2.4.0 (August 17, 2018)

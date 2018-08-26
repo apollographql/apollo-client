@@ -234,13 +234,17 @@ export class QueryManager<TStore> {
             continue;
           }
 
-          refetchQueryPromises.push(
-            this.query({
-              query: refetchQuery.query,
-              variables: refetchQuery.variables,
-              fetchPolicy: 'network-only',
-            }),
-          );
+          const queryOptions: QueryOptions = {
+            query: refetchQuery.query,
+            variables: refetchQuery.variables,
+            fetchPolicy: 'network-only',
+          };
+
+          if (refetchQuery.context) {
+            queryOptions.context = refetchQuery.context;
+          }
+
+          refetchQueryPromises.push(this.query(queryOptions));
         }
 
         if (awaitRefetchQueries) {

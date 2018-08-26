@@ -33,7 +33,7 @@
   The `CUSTOMER_MESSAGES_QUERY` above will be refetched using `context`.
   Normally queries are refetched using the original context they were first
   started with, but this provides a way to override the context, if needed.  <br/>
-  [@hwillson](https://github.com/hwillson) in [#](https://github.com/apollographql/apollo-client/pull/)
+  [@hwillson](https://github.com/hwillson) in [#3852](https://github.com/apollographql/apollo-client/pull/3852)
 
 - Documentation updates.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3841](https://github.com/apollographql/apollo-client/pull/3841)

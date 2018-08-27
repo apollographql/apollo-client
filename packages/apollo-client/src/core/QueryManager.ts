@@ -420,6 +420,12 @@ export class QueryManager<TStore> {
           // Initial fetch with cache-and-network policy should return result from cache even
           // when following network request fails
           // It will be returned below from cache
+
+          this.queryStore.markQueryResultClient(queryId, true);
+          this.invalidate(true, queryId, fetchMoreForQueryId);
+          this.broadcastQueries();
+          this.removeFetchQueryPromise(requestId);
+
           return Promise.resolve<ExecutionResult>({ data: storeResult });
         } else {
           const { lastRequestId } = this.getQuery(queryId);

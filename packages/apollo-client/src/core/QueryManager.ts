@@ -327,6 +327,7 @@ export class QueryManager<TStore> {
     const query = cache.transformDocument(options.query);
 
     let storeResult: any;
+    let storeResultComplete: boolean;
     let needToFetch: boolean =
       fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
 
@@ -348,6 +349,7 @@ export class QueryManager<TStore> {
       // If we're in here, only fetch if we have missing fields
       needToFetch = !complete || fetchPolicy === 'cache-and-network';
       storeResult = result;
+      storeResultComplete = !!complete;
     }
 
     let shouldFetch =
@@ -409,6 +411,22 @@ export class QueryManager<TStore> {
         // through the store like watchQuery observers do
         if (isApolloError(error)) {
           throw error;
+        } else if (
+          fetchType !== FetchType.refetch &&
+          fetchPolicy === 'cache-and-network' &&
+          storeResultComplete &&
+          storeResult
+        ) {
+          // Initial fetch with cache-and-network policy should return result from cache even
+          // when following network request fails
+          // It will be returned below from cache
+
+          this.queryStore.markQueryResultClient(queryId, true);
+          this.invalidate(true, queryId, fetchMoreForQueryId);
+          this.broadcastQueries();
+          this.removeFetchQueryPromise(requestId);
+
+          return Promise.resolve<ExecutionResult>({ data: storeResult });
         } else {
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {

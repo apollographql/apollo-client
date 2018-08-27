@@ -420,7 +420,7 @@ export class QueryManager<TStore> {
           // Initial fetch with cache-and-network policy should return result from cache even
           // when following network request fails
           // It will be returned below from cache
-          return Promise.resolve(storeResult);
+          return Promise.resolve<ExecutionResult>({ data: storeResult });
         } else {
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {

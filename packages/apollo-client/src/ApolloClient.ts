@@ -117,8 +117,16 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       `);
     }
 
-    // remove apollo-client supported directives
-    this.link = supportedDirectives.concat(link);
+    this.link = ApolloLink.from([
+      // remove apollo-client supported directives
+      supportedDirectives,
+      // inject apollo-client to operation
+      new ApolloLink((operation: Operation, forward: NextLink) => {
+        operation.client = this;
+        return forward(operation);
+      }),
+      link,
+    ]);
     this.cache = cache;
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;

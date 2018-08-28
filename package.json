@@ -102,7 +102,7 @@
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.0.4",
-    "danger": "3.8.6",
+    "danger": "3.8.8",
     "fetch-mock": "6.5.2",
     "flow-bin": "0.79.1",
     "graphql": "0.13.2",

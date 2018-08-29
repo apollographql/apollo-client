@@ -535,7 +535,7 @@ Sometimes, you may want to reset the store entirely, such as [when a user logs o
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {
-  props: ({ data: { loading, currentUser }, client }) => ({
+  props: ({ data: { loading, currentUser }, ownProps: { client }}) => ({
     loading,
     currentUser,
     resetOnLogout: async () => client.resetStore(),

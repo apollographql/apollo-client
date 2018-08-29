@@ -28,11 +28,12 @@ Great, now that you have all the dependencies you need, let's create your Apollo
 In our `index.js` file, let's import `ApolloClient` from `apollo-boost` and add the endpoint for our GraphQL server to the `uri` property of the client config object.
 
 ```js
-import ApolloClient from "apollo-boost";
+import { ApolloClient, HttpLink, InMemoryCache } from 'apollo-boost'
 
 const client = new ApolloClient({
-  uri: "https://w5xlvm3vzz.lp.gql.zone/graphql"
-});
+  link: new HttpLink({ uri: 'https://w5xlvm3vzz.lp.gql.zone/graphql' }),
+  cache: new InMemoryCache()
+})
 ```
 
 That's it! Now your client is ready to start fetching data. Before we hook up Apollo Client to React, let's try sending a query with plain JavaScript first. In the same `index.js` file, try calling `client.query()`. Remember to first import the `gql` function for parsing your query string into a query document.

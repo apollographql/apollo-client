@@ -54,3 +54,6 @@ docs/public/*
 .idea/
 
 junit.xml
+
+packages/package-lock.json
+packages/yarn.lock

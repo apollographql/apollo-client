@@ -39,7 +39,8 @@
     "filesize": "npm run minify"
   },
   "dependencies": {
-    "fast-json-stable-stringify": "^2.0.0"
+    "fast-json-stable-stringify": "^2.0.0",
+    "fclone": "^1.0.11"
   },
   "jest": {
     "transform": {

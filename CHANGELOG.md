@@ -1,5 +1,15 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## vNext
+
+### Apollo Utilities (vNext)
+
+- Replace the custom `cloneDeep` implementation with
+  [`fclone`](https://www.npmjs.com/package/fclone), to avoid crashing when
+  encountering circular references.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3881](https://github.com/apollographql/apollo-client/pull/3881)
+
+
 ## 2.4.1 (August 26, 2018)
 
 ### Apollo Client (2.4.1)

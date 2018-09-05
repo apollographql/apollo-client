@@ -591,6 +591,9 @@ export class Foo extends Component {
 export default withApollo(Foo);
 ```
 
+If you want to clear the store but don't want to refetch active queries, use
+`client.clearStore()` instead of `client.resetStore()`.
+
 <h3 id="server">Server side rendering</h3>
 
 First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache. (The `.replace()` is necessary to prevent script injection attacks)

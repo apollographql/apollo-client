@@ -11,7 +11,6 @@ import {
   getOperationName,
   getQueryDefinition,
   isProduction,
-  maybeDeepFreeze,
   hasDirectives,
 } from 'apollo-utilities';
 
@@ -628,7 +627,7 @@ export class QueryManager<TStore> {
 
             if (isDifferentResult || previouslyHadError) {
               try {
-                observer.next(maybeDeepFreeze(resultFromStore));
+                observer.next(resultFromStore);
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
                 setTimeout(() => {
@@ -998,7 +997,7 @@ export class QueryManager<TStore> {
     const { newData } = this.getQuery(observableQuery.queryId);
     // XXX test this
     if (newData) {
-      return maybeDeepFreeze({ data: newData.result, partial: false });
+      return { data: newData.result, partial: false };
     } else {
       try {
         // the query is brand new, so we read from the store to see if anything is there
@@ -1009,9 +1008,9 @@ export class QueryManager<TStore> {
           optimistic,
         });
 
-        return maybeDeepFreeze({ data, partial: false });
+        return { data, partial: false };
       } catch (e) {
-        return maybeDeepFreeze({ data: {}, partial: true });
+        return { data: {}, partial: true };
       }
     }
   }

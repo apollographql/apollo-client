@@ -943,43 +943,6 @@ describe('QueryManager', () => {
       .then(result => expect(stripSymbols(result.data)).toEqual(data2));
   });
 
-  it('returns frozen results from refetch', () => {
-    const request = {
-      query: gql`
-        {
-          people_one(id: 1) {
-            name
-          }
-        }
-      `,
-    };
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
-
-    const queryManager = mockRefetch({
-      request,
-      firstResult: { data: data1 },
-      secondResult: { data: data2 },
-    });
-
-    const handle = queryManager.watchQuery<any>(request);
-    handle.subscribe({});
-
-    return handle.refetch().then(result => {
-      expect(stripSymbols(result.data)).toEqual(data2);
-      expect(() => ((result.data as any).stuff = 'awful')).toThrow();
-    });
-  });
-
   it('allows you to refetch queries with new variables', () => {
     const query = gql`
       {
@@ -1272,24 +1235,6 @@ describe('QueryManager', () => {
         expect(stripSymbols(observable.currentResult().data)).toEqual(data);
         done();
       },
-    });
-  });
-
-  it('deepFreezes results in development mode', () => {
-    const query = gql`
-      {
-        stuff
-      }
-    `;
-    const data = { stuff: 'wonderful' };
-    const queryManager = mockQueryManager({
-      request: { query },
-      result: { data },
-    });
-
-    return queryManager.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
-      expect(() => ((result.data as any).stuff = 'awful')).toThrow();
     });
   });
 

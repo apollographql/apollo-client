@@ -5,7 +5,7 @@
 ### Apollo Client (vNext)
 
 - Apollo Client no longer deep freezes query results.
-  [@hwillson](https://github.com/hwillson) in [#](https://github.com/apollographql/apollo-client/pull/)
+  [@hwillson](https://github.com/hwillson) in [#3883](https://github.com/apollographql/apollo-client/pull/3883)
 
 ### Apollo Utilities (vNext)
 

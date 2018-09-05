@@ -9,7 +9,7 @@
 - A new `clearStore` method has been added, that will remove all data from
   the store. Unlike `resetStore`, it will not refetch active queries after
   removing store data.
-  [@hwillson](https://github.com/hwillson) in [#](https://github.com/apollographql/apollo-client/pull/)
+  [@hwillson](https://github.com/hwillson) in [#3885](https://github.com/apollographql/apollo-client/pull/3885)
 
 ### Apollo Utilities (vNext)
 

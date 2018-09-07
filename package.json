@@ -117,7 +117,7 @@
     "prettier": "1.14.2",
     "react": "15.6.2",
     "react-dom": "15.6.2",
-    "rollup": "0.65.0",
+    "rollup": "0.65.2",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "3.4.0",
     "rollup-plugin-sourcemaps": "0.4.2",

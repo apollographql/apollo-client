@@ -25,47 +25,31 @@
   },
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
+    "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "test": "jest",
-    "lint": "tslint --type-check -p tsconfig.json src/*.ts",
+    "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
     "postbuild": "npm run bundle",
-    "bundle": "rollup -c rollup.config.js",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "watch": "tsc -w -p .",
-    "clean": "rimraf coverage/* && rimraf lib/*",
+    "clean": "rm -rf coverage/* && rm -rf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser": "browserify ./lib/bundle.umd.js --i apollo-cache --i apollo-utilities --i graphql -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
-    "filesize": "npm run build:browser"
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "filesize": "npm run minify"
   },
   "dependencies": {
-    "apollo-cache": "^1.1.13",
-    "apollo-utilities": "^1.0.17",
+    "apollo-cache": "file:../apollo-cache",
+    "apollo-utilities": "file:../apollo-utilities",
     "optimism": "^0.6.5"
   },
   "peerDependencies": {
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0"
   },
-  "devDependencies": {
-    "@types/graphql": "0.12.7",
-    "@types/jest": "22.2.3",
-    "@types/lodash": "4.14.115",
-    "browserify": "15.2.0",
-    "graphql": "0.13.2",
-    "graphql-tag": "2.9.2",
-    "jest": "23.0.0",
-    "lodash": "4.17.10",
-    "rimraf": "2.6.2",
-    "rollup": "0.63.5",
-    "ts-jest": "20.0.14",
-    "tslint": "5.11.0",
-    "typescript": "2.9.2",
-    "uglify-js": "^3.4.6"
-  },
   "jest": {
     "transform": {
-      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      ".(ts|tsx)": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
     "moduleFileExtensions": [

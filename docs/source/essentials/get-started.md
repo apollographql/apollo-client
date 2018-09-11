@@ -35,10 +35,12 @@ const client = new ApolloClient({
 });
 ```
 
-That's it! Now your client is ready to start fetching data. Before we hook up Apollo Client to React, let's try sending a query with plain JavaScript first. In the same `index.js` file, try calling `client.query()`. Remember to import the `gql` function for parsing your query string into a query document.
+That's it! Now your client is ready to start fetching data. Before we hook up Apollo Client to React, let's try sending a query with plain JavaScript first. In the same `index.js` file, try calling `client.query()`. Remember to first import the `gql` function for parsing your query string into a query document.
 
 ```js
 import gql from "graphql-tag";
+
+...
 
 client
   .query({

@@ -1,10 +1,6 @@
 {
+  "extends": "./config/tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2015",
-    "moduleResolution": "node",
-    "declaration": true,
-    "noLib": true,
-    "allowSyntheticDefaultImports": true,
-    "removeComments": false
+    "noLib": true
   }
 }

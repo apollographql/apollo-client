@@ -167,6 +167,8 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
   <dd>Any errors returned from the mutation</dd>
   <dt>`called`: boolean</dt>
   <dd>A boolean indicating if the mutate function has been called</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>Your `ApolloClient` instance. Useful for invoking cache methods outside the context of the update function, such as `client.writeData` and `client.readQuery`.</dd>
 </dl>
 
 <h2 id="subscription" title="Subscription">`Subscription`</h2>
@@ -184,6 +186,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>An object containing all of the variables your subscription needs to execute</dd>
   <dt>`shouldResubscribe`: boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
+  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
+  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>
@@ -700,7 +704,7 @@ This function will set up a subscription, triggering updates whenever the server
 
 This function returns an `unsubscribe` function handler which can be used to unsubscribe later.
 
-A common practice is to wrap the `subscribeToMore` call within `componentWillReceiveProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can attach it to the component instance. See the example for more details.
+A common practice is to wrap the `subscribeToMore` call within `getDerivedStateFromProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can add it to component state. See the example for more details.
 
 - `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
@@ -713,34 +717,47 @@ In order to update the query's store with the result of the subscription, you mu
 
 ```js
 class SubscriptionComponent extends Component {
-  componentWillReceiveProps(nextProps) {
-    if(!nextProps.data.loading) {
+  state = {
+    subscriptionParam: null,
+    unsubscribe: null,
+  };
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (!nextProps.data.loading) {
       // Check for existing subscription
-      if (this.unsubscribe) {
-        // Check if props have changed and, if necessary, stop the subscription
-        if (this.props.subscriptionParam !== nextProps.subscriptionParam) {
-          this.unsubscribe();
-        } else {
-          return;
+      if (prevState.unsubscribe) {
+        // Only unsubscribe/update state if subscription variable has changed
+        if (prevState.subscriptionParam === nextProps.subscriptionParam) {
+          return null;
         }
+        prevState.unsubscribe();
       }
 
-      // Subscribe
-      this.unsubscribe = nextProps.data.subscribeToMore({
-        document: gql`subscription {...}`,
-        updateQuery: (previousResult, { subscriptionData, variables }) => {
-          // Perform updates on previousResult with subscriptionData
-          return updatedResult;
-        }
-      });
+      return {
+        // Subscribe
+        unsubscribe: nextProps.data.subscribeToMore({
+          document: gql`subscription {...}`,
+          variables: {
+            param: nextProps.subscriptionParam,
+          },
+          updateQuery: (previousResult, { subscriptionData, variables }) => {
+            // Perform updates on previousResult with subscriptionData
+            return updatedResult;
+          },
+        }),
+        // Store subscriptionParam in state for next update
+        subscriptionParam: nextProps.subscriptionParam,
+      };
     }
+
+    return null;
   }
+
   render() {
     ...
   }
 }
 ```
-
 
 <h3 id="graphql-query-data-startPolling">`data.startPolling(interval)`</h3>
 

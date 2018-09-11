@@ -1,5 +1,5 @@
 // externals
-import * as Rx from 'rxjs';
+import Rx from 'rxjs';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';

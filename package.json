@@ -1,82 +1,164 @@
 {
+  "name": "apollo-client-monorepo",
   "private": true,
   "license": "MIT",
   "scripts": {
-    "bootstrap": "lerna bootstrap",
+    "postinstall": "lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
-    "postinstall": "npm run bootstrap",
-    "postbootstrap": "npm run build",
-    "build": "lerna run -- build",
-    "test": "lerna run -- test",
+    "build": "lerna run build",
+    "test": "jest --verbose",
+    "test-ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "benchmark": "cd packages/apollo-client && npm run benchmark",
     "prelint": "npm run lint-fix",
-    "lint": "lerna run -- lint",
-    "lint-fix": "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+    "lint": "lerna run lint",
+    "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
-    "filesize": "lerna run -- filesize && bundlesize",
-    "type-check": "lerna run -- type-check",
-    "coverage": "lerna run -- coverage",
+    "filesize": "lerna run filesize && bundlesize",
+    "coverage": "jest --verbose --coverage",
     "coverage:upload": "codecov",
-    "danger": "danger run --verbose",
-    "deploy": "lerna publish -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy"
+    "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",
+    "deploy": "lerna publish -m \"chore: Publish\" && cd packages/apollo-client && npm run deploy",
+    "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"lib\" -exec rm -rf '{}' +"
   },
   "bundlesize": [
     {
       "name": "apollo-cache",
       "path": "./packages/apollo-cache/lib/bundle.min.js",
-      "maxSize": "1.2 kB"
+      "maxSize": "1 kB"
     },
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
-      "maxSize": "6.2 kB"
+      "maxSize": "5.25 kB"
     },
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.min.js",
-      "maxSize": "12.5 kB"
+      "maxSize": "10 kB"
     },
     {
       "name": "apollo-boost",
       "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "36 kB"
+      "maxSize": "22 kB"
     },
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "5.2 kB"
+      "maxSize": "4.25 kB"
     },
     {
       "name": "graphql-anywhere",
       "path": "./packages/graphql-anywhere/lib/bundle.min.js",
-      "maxSize": "1.7 kB"
+      "maxSize": "1.25 kB"
     }
   ],
   "jest": {
     "transform": {
-      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      ".(ts|tsx)": "ts-jest"
     },
-    "testURL": "http://localhost"
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "testURL": "http://localhost",
+    "testPathIgnorePatterns": [
+      "/npm/",
+      "/node_modules/"
+    ]
   },
   "lint-staged": {
-    "*.ts*": ["prettier --trailing-comma all --single-quote --write"],
-    "*.js*": ["prettier --trailing-comma all --single-quote --write"]
+    "*.ts*": [
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
+    ],
+    "*.js*": [
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
+    ]
   },
   "pre-commit": "lint-staged",
+  "dependencies": {
+    "apollo-boost": "file:packages/apollo-boost",
+    "apollo-cache": "file:packages/apollo-cache",
+    "apollo-cache-inmemory": "file:packages/apollo-cache-inmemory",
+    "apollo-client": "file:packages/apollo-client",
+    "apollo-utilities": "file:packages/apollo-utilities",
+    "graphql-anywhere": "file:packages/graphql-anywhere"
+  },
   "devDependencies": {
+    "@octokit/rest": "15.11.1",
+    "@types/benchmark": "1.0.31",
+    "@types/graphql": "0.12.7",
+    "@types/isomorphic-fetch": "0.0.34",
+    "@types/jest": "23.3.2",
+    "@types/lodash": "4.14.116",
+    "@types/node": "10.9.4",
+    "@types/react": "16.0.34",
+    "@types/react-dom": "16.0.4",
+    "benchmark": "2.1.4",
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
-    "codecov": "3.0.4",
-    "danger": "1.2.0",
-    "jest-junit": "4.0.0",
-    "lerna": "2.11.0",
-    "lint-staged": "6.1.0",
+    "codecov": "3.1.0",
+    "danger": "3.9.0",
+    "fetch-mock": "6.5.2",
+    "flow-bin": "0.80.0",
+    "graphql": "0.13.2",
+    "graphql-tag": "2.9.2",
+    "isomorphic-fetch": "2.2.1",
+    "jest": "23.5.0",
+    "jest-junit": "5.1.0",
+    "lerna": "3.3.0",
+    "lint-staged": "7.2.2",
+    "lodash": "4.17.10",
     "pre-commit": "1.2.2",
-    "prettier": "1.14.0",
+    "prettier": "1.14.2",
+    "react": "15.6.2",
+    "react-dom": "15.6.2",
+    "rollup": "0.65.2",
     "rollup-plugin-local-resolve": "1.0.7",
-    "rollup-plugin-node-resolve": "3.3.0",
+    "rollup-plugin-node-resolve": "3.4.0",
     "rollup-plugin-sourcemaps": "0.4.2",
-    "ts-jest": "20.0.14",
-    "typescript": "2.9.2"
+    "rxjs": "6.3.2",
+    "ts-jest": "23.1.4",
+    "tslint": "5.11.0",
+    "typescript": "3.0.3",
+    "uglify-js": "3.4.9",
+    "webpack": "3.12.0",
+    "webpack-bundle-analyzer": "2.13.1"
+  },
+  "renovate": {
+    "extends": [
+      ":pinOnlyDevDependencies"
+    ],
+    "semanticCommits": true,
+    "timezone": "America/Los_Angeles",
+    "schedule": [
+      "after 10pm and before 5am on every weekday"
+    ],
+    "rebaseStalePrs": true,
+    "prCreation": "not-pending",
+    "automerge": "minor",
+    "labels": [
+      "dependencies"
+    ],
+    "assignees": [
+      "@jbaxleyiii",
+      "@hwillson"
+    ],
+    "reviewers": [
+      "@jbaxleyiii",
+      "@hwillson"
+    ],
+    "pathRules": [
+      {
+        "paths": [
+          "docs/package.json"
+        ],
+        "extends": [
+          "apollo-docs"
+        ]
+      }
+    ]
   }
 }

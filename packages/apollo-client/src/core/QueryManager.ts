@@ -11,7 +11,6 @@ import {
   getOperationName,
   getQueryDefinition,
   isProduction,
-  maybeDeepFreeze,
   hasDirectives,
 } from 'apollo-utilities';
 
@@ -234,13 +233,17 @@ export class QueryManager<TStore> {
             continue;
           }
 
-          refetchQueryPromises.push(
-            this.query({
-              query: refetchQuery.query,
-              variables: refetchQuery.variables,
-              fetchPolicy: 'network-only',
-            }),
-          );
+          const queryOptions: QueryOptions = {
+            query: refetchQuery.query,
+            variables: refetchQuery.variables,
+            fetchPolicy: 'network-only',
+          };
+
+          if (refetchQuery.context) {
+            queryOptions.context = refetchQuery.context;
+          }
+
+          refetchQueryPromises.push(this.query(queryOptions));
         }
 
         if (awaitRefetchQueries) {
@@ -624,7 +627,7 @@ export class QueryManager<TStore> {
 
             if (isDifferentResult || previouslyHadError) {
               try {
-                observer.next(maybeDeepFreeze(resultFromStore));
+                observer.next(resultFromStore);
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
                 setTimeout(() => {
@@ -929,17 +932,29 @@ export class QueryManager<TStore> {
               this.broadcastQueries();
             }
 
-            // It's slightly awkward that the data for subscriptions doesn't
-            // come from the store.
             observers.forEach(obs => {
-              // XXX I'd prefer a different way to handle errors for
-              // subscriptions.
-              if (obs.next) obs.next(result);
+              // If an error exists and a `error` handler has been defined on
+              // the observer, call that `error` handler and make sure the
+              // `next` handler is skipped. If no `error` handler exists, we're
+              // still passing any errors that might occur into the `next`
+              // handler, to give that handler a chance to deal with the
+              // error (we're doing this for backwards compatibilty).
+              if (graphQLResultHasError(result) && obs.error) {
+                obs.error(
+                  new ApolloError({
+                    graphQLErrors: result.errors,
+                  }),
+                );
+              } else if (obs.next) {
+                obs.next(result);
+              }
             });
           },
           error: (error: Error) => {
             observers.forEach(obs => {
-              if (obs.error) obs.error(error);
+              if (obs.error) {
+                obs.error(error);
+              }
             });
           },
         };
@@ -982,7 +997,7 @@ export class QueryManager<TStore> {
     const { newData } = this.getQuery(observableQuery.queryId);
     // XXX test this
     if (newData) {
-      return maybeDeepFreeze({ data: newData.result, partial: false });
+      return { data: newData.result, partial: false };
     } else {
       try {
         // the query is brand new, so we read from the store to see if anything is there
@@ -993,9 +1008,9 @@ export class QueryManager<TStore> {
           optimistic,
         });
 
-        return maybeDeepFreeze({ data, partial: false });
+        return { data, partial: false };
       } catch (e) {
-        return maybeDeepFreeze({ data: {}, partial: true });
+        return { data: {}, partial: true };
       }
     }
   }

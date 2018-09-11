@@ -4,6 +4,151 @@
 
 ### Apollo Client (vNext)
 
+- Apollo Client no longer deep freezes query results.
+  [@hwillson](https://github.com/hwillson) in [#3883](https://github.com/apollographql/apollo-client/pull/3883)
+- A new `clearStore` method has been added, that will remove all data from
+  the store. Unlike `resetStore`, it will not refetch active queries after
+  removing store data.
+  [@hwillson](https://github.com/hwillson) in [#3885](https://github.com/apollographql/apollo-client/pull/3885)
+
+### Apollo Utilities (vNext)
+
+- Replace the custom `cloneDeep` implementation with
+  [`fclone`](https://www.npmjs.com/package/fclone), to avoid crashing when
+  encountering circular references.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3881](https://github.com/apollographql/apollo-client/pull/3881)
+
+
+## 2.4.1 (August 26, 2018)
+
+### Apollo Client (2.4.1)
+
+- `mutate`'s `refetchQueries` option now allows queries to include a custom
+  `context` option. This `context` will be used when refetching the query.
+  For example:
+
+  ```js
+  context = {
+    headers: {
+      token: 'some auth token',
+    },
+  };
+  client.mutate({
+    mutation: UPDATE_CUSTOMER_MUTATION,
+    variables: {
+      userId: user.id,
+      firstName,
+      ...
+    },
+    refetchQueries: [{
+      query: CUSTOMER_MESSAGES_QUERY,
+      variables: { userId: user.id },
+      context,
+    }],
+    context,
+  });
+  ```
+
+  The `CUSTOMER_MESSAGES_QUERY` above will be refetched using `context`.
+  Normally queries are refetched using the original context they were first
+  started with, but this provides a way to override the context, if needed.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3852](https://github.com/apollographql/apollo-client/pull/3852)
+
+- Documentation updates.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3841](https://github.com/apollographql/apollo-client/pull/3841)
+
+### Apollo Boost (0.1.15)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo Cache (1.1.16)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo Cache In-Memory (1.2.9)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo Utilities (1.0.20)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo GraphQL Anywhere (4.1.18)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+
+## 2.4.0 (August 17, 2018)
+
+### Apollo Client (2.4.0)
+
+- Add proper error handling for subscriptions. If you have defined an `error`
+  handler on your subscription observer, it will now be called when an error
+  comes back in a result, and the `next` handler will be skipped (similar to
+  how we're handling errors with mutations). Previously, the error was
+  just passed in the result to the `next` handler. If you don't have an
+  `error` handler defined, the previous functionality is maintained, meaning
+  the error is passed in the result, giving the next handler a chance to deal
+  with it. This should help address backwards compatibility (and is the reason
+  for the minor version bumo in this release).  <br/>
+  [@clayne11](https://github.com/clayne11) in [#3800](https://github.com/apollographql/apollo-client/pull/3800)
+- Allow an `optimistic` param to be passed into `ApolloClient.readQuery` and
+  `ApolloClient.readFragment`, that when set to `true`, will allow
+  optimistic results to be returned. Is `false` by default.  <br/>
+  [@jay1337](https://github.com/jay1337) in [#2429](https://github.com/apollographql/apollo-client/pull/2429)
+- Optimistic tests cleanup.  <br/>
+  [@joshribakoff](https://github.com/joshribakoff) in [#3713](https://github.com/apollographql/apollo-client/pull/3713)
+- Make sure each package has its own `.npmignore`, so they're taken into
+  consideration when publishing via lerna.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3828](https://github.com/apollographql/apollo-client/pull/3828)
+- Documentation updates.  <br/>
+  [@toolness](https://github.com/toolness) in [#3804](https://github.com/apollographql/apollo-client/pull/3804)  <br/>
+  [@pungggi](https://github.com/pungggi) in [#3798](https://github.com/apollographql/apollo-client/pull/3798)  <br/>
+  [@lorensr](https://github.com/lorensr) in [#3748](https://github.com/apollographql/apollo-client/pull/3748)  <br/>
+  [@joshribakoff](https://github.com/joshribakoff) in [#3730](https://github.com/apollographql/apollo-client/pull/3730)  <br/>
+  [@yalamber](https://github.com/yalamber) in [#3819](https://github.com/apollographql/apollo-client/pull/3819)  <br/>
+  [@pschreibs85](https://github.com/pschreibs85) in [#3812](https://github.com/apollographql/apollo-client/pull/3812)  <br/>
+  [@msreekm](https://github.com/msreekm) in [#3808](https://github.com/apollographql/apollo-client/pull/3808)  <br/>
+  [@kamaltmo](https://github.com/kamaltmo) in [#3806](https://github.com/apollographql/apollo-client/pull/3806)  <br/>
+  [@lorensr](https://github.com/lorensr) in [#3739](https://github.com/apollographql/apollo-client/pull/3739)  <br/>
+  [@brainkim](https://github.com/brainkim) in [#3680](https://github.com/apollographql/apollo-client/pull/3680)
+
+### Apollo Cache In-Memory (1.2.8)
+
+- Fix typo in `console.warn` regarding fragment matching error message.  <br/>
+  [@combizs](https://github.com/combizs) in [#3701](https://github.com/apollographql/apollo-client/pull/3701)
+
+### Apollo Boost (0.1.14)
+
+- No changes.
+
+### Apollo Cache (1.1.15)
+
+- No changes.
+
+### Apollo Utilities (1.0.19)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.17)
+
+- No changes.
+
+
+## 2.3.8 (August 9, 2018)
+
+### Apollo Client (2.3.8)
+
 - Adjusted the `graphql` peer dependency to cover explicit minor ranges.
   Since the ^ operator only covers any minor version if the major version
   is not 0 (since a major version of 0 is technically considered development by
@@ -35,6 +180,26 @@
   [@hwillson](https://github.com/hwillson) in [#3767](https://github.com/apollographql/apollo-client/pull/3767)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3774](https://github.com/apollographql/apollo-client/pull/3774)  <br/>
   [@hwillson](https://github.com/hwillson) in [#3779](https://github.com/apollographql/apollo-client/pull/3779)
+
+### Apollo Boost (0.1.13)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.7)
+
+- No changes.
+
+### Apollo Cache (1.1.14)
+
+- No changes.
+
+### Apollo Utilities (1.0.18)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.16)
+
+- No changes.
 
 
 ## 2.3.7 (July 24, 2018)

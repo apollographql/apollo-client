@@ -261,10 +261,12 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>Pass in false to skip your query during server-side rendering.</dd>
   <dt>`displayName`: string</dt>
   <dd>The name of your component to be displayed in React DevTools. Defaults to 'Query'.</dd>
-  <dt>`delay`: boolean</dt>
-  <dd>If `delay` is true, the `Query` component will not fetch the query on mount although its children will still render. Use `delay` with `load` in the render prop function to manually fire the query.</dd>
   <dt>`skip`: boolean</dt>
   <dd>If skip is true, the query will be skipped entirely.</dd>
+  <dt>`onCompleted`: (data: TData | {}) => void</dt>
+  <dd>A callback executed once your query successfully completes.</dd>
+  <dt>`onError`: (error: ApolloError) => void</dt>
+  <dd>A callback executed in the event of an error.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
@@ -288,8 +290,6 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
   <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
   <dd>A function that enables [pagination](../features/pagination.html) for your query</dd>
-  <dt>`load`: () => void</dt>
-  <dd>A function to manually fetch the query instead of fetching when the component mounts. Use with the `delay` prop on the `Query` component. Useful for prefetching data</dd>
   <dt>`startPolling`: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
   <dt>`stopPolling`: () => void</dt>

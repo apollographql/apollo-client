@@ -123,6 +123,10 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
 
     const obj = context.store.get(idValue.id);
 
+    if (obj && idValue.id === 'ROOT_QUERY') {
+      return true;
+    }
+      
     if (!obj) {
       return false;
     }

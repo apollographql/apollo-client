@@ -1,8 +1,8 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## vNext
+## Apollo Client (2.4.2)
 
-### Apollo Client (vNext)
+### Apollo Client (2.4.2)
 
 - Apollo Client no longer deep freezes query results.
   [@hwillson](https://github.com/hwillson) in [#3883](https://github.com/apollographql/apollo-client/pull/3883)
@@ -11,12 +11,28 @@
   removing store data.
   [@hwillson](https://github.com/hwillson) in [#3885](https://github.com/apollographql/apollo-client/pull/3885)
 
-### Apollo Utilities (vNext)
+### Apollo Utilities (1.0.21)
 
 - Replace the custom `cloneDeep` implementation with
   [`fclone`](https://www.npmjs.com/package/fclone), to avoid crashing when
   encountering circular references.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3881](https://github.com/apollographql/apollo-client/pull/3881)
+
+### Apollo Boost (0.1.16)
+
+- No changes.
+
+### Apollo Cache (1.1.17)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.10)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.19)
+
+- No changes.
 
 
 ## 2.4.1 (August 26, 2018)

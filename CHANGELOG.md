@@ -18,6 +18,22 @@
   encountering circular references.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3881](https://github.com/apollographql/apollo-client/pull/3881)
 
+### Apollo Boost (0.1.16)
+
+- No changes.
+
+### Apollo Cache (1.1.17)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.10)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.19)
+
+- No changes.
+
 
 ## 2.4.1 (August 26, 2018)
 

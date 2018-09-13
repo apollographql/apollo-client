@@ -112,7 +112,7 @@
     "jest-junit": "5.1.0",
     "lerna": "3.3.0",
     "lint-staged": "7.2.2",
-    "lodash": "4.17.10",
+    "lodash": "4.17.11",
     "pre-commit": "1.2.2",
     "prettier": "1.14.2",
     "react": "15.6.2",

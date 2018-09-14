@@ -18,7 +18,11 @@ import { writeResultToStore } from './writeToStore';
 
 import { StoreReader } from './readFromStore';
 import { defaultNormalizedCacheFactory, DepTrackingCache } from './depTrackingCache';
-import { wrap, defaultMakeCacheKey } from "./optimism";
+import {
+  wrap,
+  defaultMakeCacheKey,
+  OptimisticWrapperFunction,
+} from "./optimism";
 
 import { record } from './recordingCache';
 const defaultConfig: ApolloReducerConfig = {
@@ -313,7 +317,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   protected broadcastWatches() {
     if (!this.silenceBroadcast) {
-      this.watches.forEach(this.maybeBroadcastWatch, this);
+      const optimistic = this.optimistic.length > 0;
+      this.watches.forEach((c: Cache.WatchOptions) => {
+        this.maybeBroadcastWatch(c);
+        if (optimistic) {
+          // If we're broadcasting optimistic data, make sure we rebroadcast
+          // the real data once we're no longer in an optimistic state.
+          (this.maybeBroadcastWatch as OptimisticWrapperFunction<
+            (c: Cache.WatchOptions) => void
+          >).dirty(c);
+        }
+      });
     }
   }
 

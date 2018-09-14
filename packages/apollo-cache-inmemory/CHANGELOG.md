@@ -7,6 +7,13 @@ the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/bl
 
 ----
 
+### 1.3.0
+
+- Optimize repeated `apollo-cache-inmemory` reads by caching partial query
+  results. As a consequence, watched queries will not be rebroadcast unless the
+  data have changed.
+  [PR #3394](https://github.com/apollographql/apollo-client/pull/3394)
+
 ### 1.2.5
 
 - No changes.

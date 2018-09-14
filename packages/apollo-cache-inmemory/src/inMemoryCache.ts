@@ -14,9 +14,10 @@ import {
   NormalizedCache,
   NormalizedCacheObject,
 } from './types';
-import { writeResultToStore } from './writeToStore';
 
 import { StoreReader } from './readFromStore';
+import { StoreWriter } from './writeToStore';
+
 import { defaultNormalizedCacheFactory, DepTrackingCache } from './depTrackingCache';
 import {
   wrap,
@@ -51,6 +52,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private addTypename: boolean;
   private typenameDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
+  private storeWriter: StoreWriter;
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -79,6 +81,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.data = defaultNormalizedCacheFactory();
 
     this.storeReader = new StoreReader();
+    this.storeWriter = new StoreWriter();
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
@@ -147,7 +150,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public write(write: Cache.WriteOptions): void {
-    writeResultToStore({
+    this.storeWriter.writeResultToStore({
       dataId: write.dataId,
       result: write.result,
       variables: write.variables,

@@ -3,7 +3,7 @@ import { toIdValue } from 'apollo-utilities';
 
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { StoreReader } from '../readFromStore';
-import { writeQueryToStore } from '../writeToStore';
+import { StoreWriter } from '../writeToStore';
 import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 import { defaultDataIdFromObject } from '../inMemoryCache';
 
@@ -27,6 +27,7 @@ export function withError(func: Function, regex: RegExp) {
 
 describe('diffing queries against the store', () => {
   const reader = new StoreReader();
+  const writer = new StoreWriter();
 
   it(
     'expects named fragments to return complete as true when diffd against ' +
@@ -121,7 +122,7 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    const store = writeQueryToStore({
+    const store = writer.writeQueryToStore({
       result,
       query,
     });
@@ -155,7 +156,7 @@ describe('diffing queries against the store', () => {
 
     const getIdField = ({ id }: { id: string }) => id;
 
-    const store = writeQueryToStore({
+    const store = writer.writeQueryToStore({
       result,
       query: firstQuery,
       dataIdFromObject: getIdField,
@@ -193,7 +194,7 @@ describe('diffing queries against the store', () => {
         powers: 'the force',
       },
     };
-    const store = writeQueryToStore({
+    const store = writer.writeQueryToStore({
       result: firstResult,
       query: firstQuery,
     });
@@ -228,7 +229,7 @@ describe('diffing queries against the store', () => {
           lastName: 'Smith',
         },
       };
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         result: firstResult,
         query: firstQuery,
       });
@@ -274,7 +275,7 @@ describe('diffing queries against the store', () => {
         lastName: 'Smith',
       },
     };
-    const store = writeQueryToStore({
+    const store = writer.writeQueryToStore({
       result: firstResult,
       query: firstQuery,
     });
@@ -321,7 +322,7 @@ describe('diffing queries against the store', () => {
         lastName: 'Smith',
       },
     };
-    const store = writeQueryToStore({
+    const store = writer.writeQueryToStore({
       result: firstResult,
       query: firstQuery,
     });
@@ -371,7 +372,7 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    const store = writeQueryToStore({
+    const store = writer.writeQueryToStore({
       result: firstResult,
       query: firstQuery,
     });
@@ -492,7 +493,7 @@ describe('diffing queries against the store', () => {
       return id;
     }
 
-    const store = writeQueryToStore({
+    const store = writer.writeQueryToStore({
       query,
       result: queryResult,
       dataIdFromObject,
@@ -535,7 +536,7 @@ describe('diffing queries against the store', () => {
         c: { d: 2, e: { f: 3 } },
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
       });
@@ -575,7 +576,7 @@ describe('diffing queries against the store', () => {
         c: { d: 2, e: { f: 3 } },
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
       });
@@ -621,7 +622,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
       });
@@ -657,7 +658,7 @@ describe('diffing queries against the store', () => {
         a: [{ b: 1.1 }, { b: 1.2 }],
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
       });
@@ -700,7 +701,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
       });
@@ -746,7 +747,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
       });
@@ -819,7 +820,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
         dataIdFromObject: ({ id }: { id: string }) => id,
@@ -885,7 +886,7 @@ describe('diffing queries against the store', () => {
         d: { e: 5, f: { x: 6, y: 7, z: 8 } },
       };
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query,
         result: queryResult,
       });
@@ -940,7 +941,7 @@ describe('diffing queries against the store', () => {
 
       const dataIdFromObject = (obj: any) => obj.id;
 
-      const store = writeQueryToStore({
+      const store = writer.writeQueryToStore({
         query: listQuery,
         result: listResult,
         dataIdFromObject,

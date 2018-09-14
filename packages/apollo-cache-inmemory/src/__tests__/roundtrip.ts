@@ -10,14 +10,17 @@ import { DepTrackingCache } from '../depTrackingCache';
 
 import {
   HeuristicFragmentMatcher,
-  writeQueryToStore,
   StoreReader,
+  StoreWriter,
 } from '../';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const store = writeQueryToStore({
+  const reader = new StoreReader();
+  const writer = new StoreWriter();
+
+  const store = writer.writeQueryToStore({
     result,
     query,
     variables,
@@ -30,8 +33,6 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     fragmentMatcherFunction,
   };
 
-  const reader = new StoreReader();
-
   const reconstructedResult = reader.readQueryFromStore(readOptions);
   expect(reconstructedResult).toEqual(result);
 
@@ -42,7 +43,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
 
   // Now make sure subtrees of the result are identical even after we write
   // an additional bogus field to the store.
-  writeQueryToStore({
+  writer.writeQueryToStore({
     store,
     result: { oyez: 1234 },
     query: gql`

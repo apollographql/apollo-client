@@ -87,7 +87,7 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.11.1",
+    "@octokit/rest": "15.11.2",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
@@ -106,11 +106,11 @@
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",
-    "jest": "23.5.0",
+    "jest": "23.6.0",
     "jest-junit": "5.1.0",
     "lerna": "3.3.0",
     "lint-staged": "7.2.2",
-    "lodash": "4.17.10",
+    "lodash": "4.17.11",
     "pre-commit": "1.2.2",
     "prettier": "1.14.2",
     "react": "15.6.2",

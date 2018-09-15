@@ -620,7 +620,6 @@ To get started, simply pass your Apollo Cache and a storage provider to `persist
 
 > Note: The `persistCache` method is async and returns a `Promise`.
 
-
 ```js
 import { AsyncStorage } from 'react-native';
 import { InMemoryCache } from 'apollo-cache-inmemory';

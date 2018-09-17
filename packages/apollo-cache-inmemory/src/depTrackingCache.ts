@@ -13,6 +13,9 @@ export class DepTrackingCache implements NormalizedCache {
       dataId: string,
     ) => this.data[dataId], {
       disposable: true,
+      makeCacheKey(dataId: string) {
+        return dataId;
+      }
     });
   }
 

@@ -5,7 +5,8 @@
 ### Apollo Client (vNext)
 
 - Documentation updates.  <br/>
-  [@shanonvl](https://github.com/shanonvl) in [#3925](https://github.com/apollographql/apollo-client/pull/3925)
+  [@shanonvl](https://github.com/shanonvl) in [#3925](https://github.com/apollographql/apollo-client/pull/3925)  <br/>
+  [@ojh102](https://github.com/ojh102) in [#3920](https://github.com/apollographql/apollo-client/pull/3920)
 
 
 ## Apollo Client (2.4.2)

@@ -14,6 +14,7 @@
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
     "test": "jest",
+    "test:watch": "jest --watch",
     "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run minify",
@@ -49,8 +50,11 @@
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
     "apollo-cache": "file:../apollo-cache",
+    "apollo-cache-inmemory": "file:../apollo-cache-inmemory",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "^1.0.0",
+    "apollo-link-error": "^1.1.0",
+    "apollo-link-http": "^1.5.4",
     "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
     "zen-observable": "^0.8.0"

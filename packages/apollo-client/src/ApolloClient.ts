@@ -16,9 +16,7 @@ import {
 import { QueryManager } from './core/QueryManager';
 import { ApolloQueryResult, OperationVariables } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
-
 import { Observable } from './util/Observable';
-
 import {
   QueryBaseOptions,
   QueryOptions,
@@ -28,10 +26,9 @@ import {
   ModifiableWatchQueryOptions,
   MutationBaseOptions,
 } from './core/watchQueryOptions';
-
 import { DataStore } from './data/store';
-
 import { version } from './version';
+import Defaults from './core/Defaults';
 
 export interface DefaultOptions {
   watchQuery?: ModifiableWatchQueryOptions;
@@ -42,13 +39,16 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export type ApolloClientOptions<TCacheShape> = {
-  link: ApolloLink;
-  cache: ApolloCache<TCacheShape>;
+  uri?: string;
+  link?: ApolloLink;
+  cache?: ApolloCache<TCacheShape>;
   ssrMode?: boolean;
   ssrForceFetchDelay?: number;
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  request?: (operation: Operation) => Promise<void>;
+  disableDefaults?: boolean;
 };
 
 const supportedDirectives = new ApolloLink(
@@ -72,6 +72,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
+  public options: ApolloClientOptions<TCacheShape> = {};
   public defaultOptions: DefaultOptions = {};
 
   private devToolsHookCb: Function;
@@ -95,7 +96,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
-
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
       link,
@@ -107,20 +107,22 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       defaultOptions,
     } = options;
 
-    if (!link || !cache) {
+    const defaults = new Defaults(options);
+    const activeLink = link || defaults.getLink();
+    const activeCache = cache || defaults.getCache();
+
+    if (!activeLink || !activeCache) {
       throw new Error(`
-        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
-        This is part of the required upgrade when migrating from Apollo Client 1.0 to Apollo Client 2.0.
+        In order to initialize Apollo Client, you must specify link & cache
+        properties on the config object.
         For more information, please visit:
-          https://www.apollographql.com/docs/react/basics/setup.html
-        to help you get started.
+        https://www.apollographql.com/docs/react/basics/setup.html
       `);
     }
 
-    // remove apollo-client supported directives
-    this.link = supportedDirectives.concat(link);
-    this.cache = cache;
-    this.store = new DataStore(cache);
+    this.link = supportedDirectives.concat(activeLink);
+    this.cache = activeCache;
+    this.store = new DataStore(this.cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;

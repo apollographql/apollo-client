@@ -476,9 +476,10 @@ class MyContainerComponent extends Component {
     return (
       <MyGraphQLComponent
         ref={component => {
-          assert(component.getWrappedInstance() instanceof MyComponent);
+          const wrappedInstance = component.getWrappedInstance();
+          assert(wrappedInstance instanceof MyComponent);
           // We can call methods on the component class instance.
-          component.saySomething();
+          wrappedInstance.saySomething();
         }}
       />
     );

@@ -2192,4 +2192,31 @@ describe('ApolloClient', () => {
       );
     });
   });
+
+  describe('clearStore', () => {
+    it('should remove all data from the store', async () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      client.writeQuery({
+        data: { a: 1 },
+        query: gql`
+          {
+            a
+          }
+        `,
+      });
+
+      expect(client.cache.data.data).toEqual({
+        ROOT_QUERY: {
+          a: 1,
+        },
+      });
+
+      await client.clearStore();
+      expect(client.cache.data.data).toEqual({});
+    });
+  });
 });

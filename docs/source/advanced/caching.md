@@ -591,6 +591,9 @@ export class Foo extends Component {
 export default withApollo(Foo);
 ```
 
+If you want to clear the store but don't want to refetch active queries, use
+`client.clearStore()` instead of `client.resetStore()`.
+
 <h3 id="server">Server side rendering</h3>
 
 First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache. (The `.replace()` is necessary to prevent script injection attacks)
@@ -615,6 +618,8 @@ If you would like to persist and rehydrate your Apollo Cache from a storage prov
 
 To get started, simply pass your Apollo Cache and a storage provider to `persistCache`. By default, the contents of your Apollo Cache will be immediately restored asynchronously, and persisted upon every write to the cache with a short configurable debounce interval.
 
+> Note: The `persistCache` method is async and returns a `Promise`.
+
 ```js
 import { AsyncStorage } from 'react-native';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -625,9 +630,10 @@ const cache = new InMemoryCache();
 persistCache({
   cache,
   storage: AsyncStorage,
-});
+}).then(() => {
+  // Continue setting up Apollo as usual.
+})
 
-// Continue setting up Apollo as usual.
 ```
 
 For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).

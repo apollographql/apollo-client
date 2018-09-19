@@ -447,6 +447,17 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * Remove all data from the store. Unlike `resetStore`, `clearStore` will
+   * not refetch any active queries.
+   */
+  public clearStore(): Promise<void | null> {
+    const { queryManager } = this;
+    return Promise.resolve().then(
+      () => (queryManager ? queryManager.clearStore() : Promise.resolve(null)),
+    );
+  }
+
+  /**
    * Allows callbacks to be registered that are executed with the store is reset.
    * onResetStore returns an unsubscribe function for removing your registered callbacks.
    */

@@ -9,6 +9,11 @@
   [@ojh102](https://github.com/ojh102) in [#3920](https://github.com/apollographql/apollo-client/pull/3920)  <br/>
   [@Bkucera](https://github.com/Bkucera) in [#3919](https://github.com/apollographql/apollo-client/pull/3919)
 
+### Apollo GraphQL Anywhere (vNext)
+
+- Make `graphql-anywhere` `filter` function generic (typescript).  <br/>
+  [@minznerjosh](https://github.com/minznerjosh) in [#3929](https://github.com/apollographql/apollo-client/pull/3929)
+
 
 ## Apollo Client (2.4.2)
 

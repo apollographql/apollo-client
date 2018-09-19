@@ -4,6 +4,9 @@
 
 ### Apollo Client (vNext)
 
+- Add additional checks to make sure we don't try to set the network status
+  of queries in the store, when the store doesn't exist.  <br/>
+  [@i6mi6](https://github.com/i6mi6) in [#3914](https://github.com/apollographql/apollo-client/pull/3914)
 - Documentation updates.  <br/>
   [@shanonvl](https://github.com/shanonvl) in [#3925](https://github.com/apollographql/apollo-client/pull/3925)  <br/>
   [@ojh102](https://github.com/ojh102) in [#3920](https://github.com/apollographql/apollo-client/pull/3920)  <br/>

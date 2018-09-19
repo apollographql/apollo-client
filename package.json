@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "postinstall": "lerna run prepare",
+    "postinstall": "lerna exec -- npm install && lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "build": "lerna run build",
     "test": "jest --verbose",
@@ -39,7 +39,7 @@
     {
       "name": "apollo-boost",
       "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "22 kB"
+      "maxSize": "35 kB"
     },
     {
       "name": "apollo-utilities",

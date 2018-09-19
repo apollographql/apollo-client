@@ -1,8 +1,27 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## vNext
+## Apollo Client (vNext)
 
 ### Apollo Client (vNext)
+
+- Add additional checks to make sure we don't try to set the network status
+  of queries in the store, when the store doesn't exist.  <br/>
+  [@i6mi6](https://github.com/i6mi6) in [#3914](https://github.com/apollographql/apollo-client/pull/3914)
+- Documentation updates.  <br/>
+  [@shanonvl](https://github.com/shanonvl) in [#3925](https://github.com/apollographql/apollo-client/pull/3925)  <br/>
+  [@ojh102](https://github.com/ojh102) in [#3920](https://github.com/apollographql/apollo-client/pull/3920)  <br/>
+  [@Bkucera](https://github.com/Bkucera) in [#3919](https://github.com/apollographql/apollo-client/pull/3919)  <br/>
+  [@j4chou](https://github.com/j4chou) in [#3915](https://github.com/apollographql/apollo-client/pull/3915)
+
+### Apollo GraphQL Anywhere (vNext)
+
+- Make `graphql-anywhere` `filter` function generic (typescript).  <br/>
+  [@minznerjosh](https://github.com/minznerjosh) in [#3929](https://github.com/apollographql/apollo-client/pull/3929)
+
+
+## Apollo Client (2.4.2)
+
+### Apollo Client (2.4.2)
 
 - Apollo Client no longer deep freezes query results.
   [@hwillson](https://github.com/hwillson) in [#3883](https://github.com/apollographql/apollo-client/pull/3883)
@@ -11,12 +30,28 @@
   removing store data.
   [@hwillson](https://github.com/hwillson) in [#3885](https://github.com/apollographql/apollo-client/pull/3885)
 
-### Apollo Utilities (vNext)
+### Apollo Utilities (1.0.21)
 
 - Replace the custom `cloneDeep` implementation with
   [`fclone`](https://www.npmjs.com/package/fclone), to avoid crashing when
   encountering circular references.  <br/>
   [@hwillson](https://github.com/hwillson) in [#3881](https://github.com/apollographql/apollo-client/pull/3881)
+
+### Apollo Boost (0.1.16)
+
+- No changes.
+
+### Apollo Cache (1.1.17)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.10)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.19)
+
+- No changes.
 
 
 ## 2.4.1 (August 26, 2018)

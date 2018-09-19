@@ -618,6 +618,8 @@ If you would like to persist and rehydrate your Apollo Cache from a storage prov
 
 To get started, simply pass your Apollo Cache and a storage provider to `persistCache`. By default, the contents of your Apollo Cache will be immediately restored asynchronously, and persisted upon every write to the cache with a short configurable debounce interval.
 
+> Note: The `persistCache` method is async and returns a `Promise`.
+
 ```js
 import { AsyncStorage } from 'react-native';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -628,9 +630,10 @@ const cache = new InMemoryCache();
 persistCache({
   cache,
   storage: AsyncStorage,
-});
+}).then(() => {
+  // Continue setting up Apollo as usual.
+})
 
-// Continue setting up Apollo as usual.
 ```
 
 For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).

@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "postinstall": "lerna run prepare",
+    "postinstall": "lerna exec -- npm install && lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "build": "lerna run build",
     "test": "jest --verbose",
@@ -39,7 +39,7 @@
     {
       "name": "apollo-boost",
       "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "22 kB"
+      "maxSize": "35 kB"
     },
     {
       "name": "apollo-utilities",
@@ -110,7 +110,7 @@
     "isomorphic-fetch": "2.2.1",
     "jest": "23.6.0",
     "jest-junit": "5.1.0",
-    "lerna": "3.3.0",
+    "lerna": "3.4.0",
     "lint-staged": "7.2.2",
     "lodash": "4.17.11",
     "pre-commit": "1.2.2",
@@ -127,7 +127,7 @@
     "typescript": "3.0.3",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",
-    "webpack-bundle-analyzer": "2.13.1"
+    "webpack-bundle-analyzer": "3.0.2"
   },
   "renovate": {
     "extends": [

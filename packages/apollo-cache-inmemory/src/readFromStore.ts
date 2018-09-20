@@ -39,7 +39,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import { wrap, defaultMakeCacheKey } from './optimism';
+import { wrap, CacheKeyNode } from './optimism';
 export { OptimisticWrapperFunction } from './optimism';
 
 import { DepTrackingCache } from './depTrackingCache';
@@ -92,11 +92,14 @@ type ExecSelectionSetOptions = {
 };
 
 export class StoreReader {
-  constructor() {
+  constructor(
+    private rootCacheKeyNode = new CacheKeyNode,
+  ) {
+    const reader = this;
     const {
       executeStoreQuery,
       executeSelectionSet,
-    } = this;
+    } = reader;
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
       return executeStoreQuery.call(this, options);
@@ -111,7 +114,7 @@ export class StoreReader {
         // underlying store is capable of tracking dependencies and invalidating
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
-          return defaultMakeCacheKey(
+          return reader.rootCacheKeyNode.lookup(
             query,
             contextValue.store,
             JSON.stringify(variableValues),
@@ -129,7 +132,7 @@ export class StoreReader {
         execContext,
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
-          return defaultMakeCacheKey(
+          return reader.rootCacheKeyNode.lookup(
             selectionSet,
             execContext.contextValue.store,
             JSON.stringify(execContext.variableValues),

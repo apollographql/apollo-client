@@ -14,15 +14,33 @@ export type OptimisticWrapOptions = {
   makeCacheKey?(...args: any[]): any;
 };
 
-const {
-  wrap,
-  defaultMakeCacheKey,
-}: {
+const { wrap }: {
   wrap<T>(
     originalFunction: T,
     options?: OptimisticWrapOptions,
   ): OptimisticWrapperFunction<T>;
-  defaultMakeCacheKey(...args: any[]): any;
 } = require('optimism'); // tslint:disable-line
 
-export { wrap, defaultMakeCacheKey };
+export { wrap };
+
+export class CacheKeyNode {
+  private children: Map<any, CacheKeyNode> | null = null;
+  private key: object | null = null;
+
+  lookup(...args: any[]) {
+    return this.lookupArray(args);
+  }
+
+  lookupArray(array: any[]) {
+    let node: CacheKeyNode = this;
+    array.forEach(value => {
+      node = node.getOrCreate(value);
+    });
+    return node.key || (node.key = Object.create(null));
+  }
+
+  getOrCreate(value: any) {
+    const map = this.children || (this.children = new Map);
+    return map.get(value) || map.set(value, new CacheKeyNode).get(value);
+  }
+}

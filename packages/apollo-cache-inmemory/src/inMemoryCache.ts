@@ -19,11 +19,7 @@ import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 
 import { defaultNormalizedCacheFactory, DepTrackingCache } from './depTrackingCache';
-import {
-  wrap,
-  defaultMakeCacheKey,
-  OptimisticWrapperFunction,
-} from "./optimism";
+import { wrap, CacheKeyNode, OptimisticWrapperFunction } from './optimism';
 
 import { record } from './recordingCache';
 const defaultConfig: ApolloReducerConfig = {
@@ -53,6 +49,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private typenameDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+  private rootCacheKeyNode = new CacheKeyNode();
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -80,7 +77,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.addTypename = this.config.addTypename;
     this.data = defaultNormalizedCacheFactory();
 
-    this.storeReader = new StoreReader();
+    this.storeReader = new StoreReader(this.rootCacheKeyNode);
     this.storeWriter = new StoreWriter();
 
     const cache = this;
@@ -106,7 +103,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         if (cache.data instanceof DepTrackingCache) {
           // Return a cache key (thus enabling caching) only if we're currently
           // using a data store that can track cache dependencies.
-          return defaultMakeCacheKey(
+          return cache.rootCacheKeyNode.lookup(
             c.query,
             JSON.stringify(c.variables),
           );

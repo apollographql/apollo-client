@@ -46,7 +46,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected optimistic: OptimisticStoreItem[] = [];
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
-  private typenameDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
+  private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
   private rootCacheKeyNode = new CacheKeyNode();

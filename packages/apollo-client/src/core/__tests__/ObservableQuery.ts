@@ -905,39 +905,6 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('returns results that are frozen in development mode', done => {
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
-      );
-      const nop = () => {
-        return 1;
-      };
-      const sub = observable.subscribe({ next: nop });
-
-      observable.setVariables(differentVariables).then(result2 => {
-        expect(stripSymbols(result2.data)).toEqual(dataTwo);
-        try {
-          (result2.data as any).stuff = 'awful';
-          done.fail(
-            new Error(
-              'results from setVariables should be frozen in development mode',
-            ),
-          );
-        } catch (e) {
-          done();
-        } finally {
-          sub.unsubscribe();
-        }
-      });
-    });
-
     it('does not perform a query when unsubscribed if variables change', () => {
       // Note: no responses, will throw if a query is made
       const queryManager = mockQueryManager();

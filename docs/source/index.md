@@ -37,7 +37,7 @@ Most of this sites documentation examples are written using React, but Apollo Cl
   - [lit-apollo](./integrations.html#web-components)
 - Native mobile
   - [Native iOS with Swift](/docs/ios)
-  - [Native Android with Java](https://github.com/apollographql/apollo-android)
+  - [Native Android with Java](/docs/android)
 
 <h2 id="graphql-servers">Just using GraphQL?</h2>
 

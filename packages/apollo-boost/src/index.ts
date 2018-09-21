@@ -11,12 +11,12 @@ import { onError, ErrorLink } from 'apollo-link-error';
 import { ApolloCache } from 'apollo-cache';
 import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
-import ApolloClient from 'apollo-client';
+import ApolloClient, { ApolloClientDefaultOptions } from 'apollo-client';
 
 export { gql, InMemoryCache, HttpLink };
 
 export interface PresetConfig {
-  defaultOptions?: ApolloClient.DefaultOptions,
+  defaultOptions?: ApolloClientDefaultOptions,
   request?: (operation: Operation) => Promise<void>;
   uri?: string;
   credentials?: string;

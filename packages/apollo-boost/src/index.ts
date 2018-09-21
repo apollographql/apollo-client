@@ -16,6 +16,7 @@ import ApolloClient from 'apollo-client';
 export { gql, InMemoryCache, HttpLink };
 
 export interface PresetConfig {
+  defaultOptions?: ApolloClient.DefaultOptions,
   request?: (operation: Operation) => Promise<void>;
   uri?: string;
   credentials?: string;
@@ -39,6 +40,7 @@ export interface PresetConfig {
 // For now, when updating the properties of the `PresetConfig` interface,
 // please also update this constant.
 const PRESET_CONFIG_KEYS = [
+  'defaultOptions',
   'request',
   'uri',
   'credentials',
@@ -68,6 +70,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     const {
       request,
+      defaultOptions = {},
       uri,
       credentials,
       headers,
@@ -156,6 +159,6 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
     ].filter(x => !!x) as ApolloLink[]);
 
     // super hacky, we will fix the types eventually
-    super({ cache, link } as any);
+    super({ cache, defaultOptions, link } as any);
   }
 }

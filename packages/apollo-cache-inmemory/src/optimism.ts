@@ -23,24 +23,24 @@ const { wrap }: {
 
 export { wrap };
 
-export class CacheKeyNode {
-  private children: Map<any, CacheKeyNode> | null = null;
-  private key: object | null = null;
+export class CacheKeyNode<KeyType = object> {
+  private children: Map<any, CacheKeyNode<KeyType>> | null = null;
+  private key: KeyType | null = null;
 
-  lookup(...args: any[]) {
+  lookup(...args: any[]): KeyType {
     return this.lookupArray(args);
   }
 
-  lookupArray(array: any[]) {
-    let node: CacheKeyNode = this;
+  lookupArray(array: any[]): KeyType {
+    let node: CacheKeyNode<KeyType> = this;
     array.forEach(value => {
       node = node.getOrCreate(value);
     });
     return node.key || (node.key = Object.create(null));
   }
 
-  getOrCreate(value: any) {
+  getOrCreate(value: any): CacheKeyNode<KeyType> {
     const map = this.children || (this.children = new Map);
-    return map.get(value) || map.set(value, new CacheKeyNode).get(value);
+    return map.get(value) || map.set(value, new CacheKeyNode<KeyType>()).get(value);
   }
 }

@@ -38,7 +38,7 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-utilities": "^1.0.13-2"
+    "apollo-utilities": "1.0.21-0"
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",

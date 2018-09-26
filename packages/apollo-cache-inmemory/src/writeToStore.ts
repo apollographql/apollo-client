@@ -60,7 +60,27 @@ export type WriteContext = {
   readonly fragmentMatcherFunction?: FragmentMatcher;
 };
 
+type StoreWriterOptions = {
+  addTypename?: boolean;
+};
+
+const TYPENAME_FIELD: FieldNode = {
+  kind: 'Field',
+  name: {
+    kind: 'Name',
+    value: '__typename',
+  },
+};
+
 export class StoreWriter {
+  private addTypename: boolean;
+
+  constructor({
+    addTypename = false,
+  }: StoreWriterOptions = {}) {
+    this.addTypename = addTypename;
+  }
+
   /**
    * Writes the result of a query to the store.
    *
@@ -141,6 +161,7 @@ export class StoreWriter {
           fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
           fragmentMatcherFunction,
         },
+        parentKind: operationDefinition.kind,
       });
     } catch (e) {
       throw enhanceErrorWithDocument(e, document);
@@ -152,13 +173,16 @@ export class StoreWriter {
     dataId,
     selectionSet,
     context,
+    parentKind,
   }: {
     dataId: string;
     result: any;
     selectionSet: SelectionSetNode;
     context: WriteContext;
+    parentKind: string;
   }): NormalizedCache {
     const { variables, store, fragmentMap } = context;
+    let didWriteTypename = false;
 
     selectionSet.selections.forEach(selection => {
       if (!shouldInclude(selection, variables)) {
@@ -168,6 +192,10 @@ export class StoreWriter {
       if (isField(selection)) {
         const resultFieldKey: string = resultKeyNameFromField(selection);
         const value: any = result[resultFieldKey];
+
+        if (resultFieldKey === "__typename") {
+          didWriteTypename = true;
+        }
 
         if (typeof value !== 'undefined') {
           this.writeFieldToStore({
@@ -244,10 +272,26 @@ export class StoreWriter {
             selectionSet: fragment.selectionSet,
             dataId,
             context,
+            parentKind: fragment.kind,
           });
         }
       }
     });
+
+    if (! didWriteTypename &&
+        this.addTypename &&
+        // Analogous to the isRoot parameter that addTypenameToDocument passes
+        // to addTypenameToSelectionSet to avoid adding __typename to the root
+        // query operation's selection set.
+        parentKind !== "OperationDefinition" &&
+        typeof result.__typename === "string") {
+      this.writeFieldToStore({
+        dataId,
+        value: result.__typename,
+        field: TYPENAME_FIELD,
+        context,
+      });
+    }
 
     return store;
   }
@@ -287,6 +331,7 @@ export class StoreWriter {
         generatedId,
         field.selectionSet,
         context,
+        field.kind,
       );
     } else {
       // It's an object
@@ -327,6 +372,7 @@ export class StoreWriter {
           result: value,
           selectionSet: field.selectionSet,
           context,
+          parentKind: field.kind,
         });
       }
 
@@ -405,6 +451,7 @@ export class StoreWriter {
     generatedId: string,
     selectionSet: SelectionSetNode,
     context: WriteContext,
+    parentKind: string,
   ): any[] {
     return value.map((item: any, index: any) => {
       if (item === null) {
@@ -414,7 +461,13 @@ export class StoreWriter {
       let itemDataId = `${generatedId}.${index}`;
 
       if (Array.isArray(item)) {
-        return this.processArrayValue(item, itemDataId, selectionSet, context);
+        return this.processArrayValue(
+          item,
+          itemDataId,
+          selectionSet,
+          context,
+          parentKind,
+        );
       }
 
       let generated = true;
@@ -434,6 +487,7 @@ export class StoreWriter {
           result: item,
           selectionSet,
           context,
+          parentKind,
         });
       }
 

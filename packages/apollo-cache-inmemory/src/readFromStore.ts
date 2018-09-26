@@ -37,6 +37,7 @@ import {
   FragmentDefinitionNode,
   InlineFragmentNode,
   SelectionSetNode,
+  SelectionNode,
 } from 'graphql';
 
 import { wrap, CacheKeyNode } from './optimism';
@@ -89,20 +90,33 @@ type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
   rootValue: any;
   execContext: ExecContext;
+  parentKind: string;
+};
+
+type StoreReaderOptions = {
+  addTypename?: boolean;
+  cacheKeyRoot?: CacheKeyNode;
 };
 
 export class StoreReader {
-  constructor(
-    private rootCacheKeyNode = new CacheKeyNode,
-  ) {
+  private addTypename: boolean;
+  private cacheKeyRoot: CacheKeyNode;
+
+  constructor({
+    addTypename = false,
+    cacheKeyRoot = new CacheKeyNode,
+  }: StoreReaderOptions = {}) {
     const reader = this;
     const {
       executeStoreQuery,
       executeSelectionSet,
     } = reader;
 
+    reader.addTypename = addTypename;
+    reader.cacheKeyRoot = cacheKeyRoot;
+
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
-      return executeStoreQuery.call(this, options);
+      return executeStoreQuery.call(reader, options);
     }, {
       makeCacheKey({
         query,
@@ -114,7 +128,7 @@ export class StoreReader {
         // underlying store is capable of tracking dependencies and invalidating
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
-          return reader.rootCacheKeyNode.lookup(
+          return reader.cacheKeyRoot.lookup(
             query,
             contextValue.store,
             JSON.stringify(variableValues),
@@ -124,7 +138,7 @@ export class StoreReader {
     });
 
     this.executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
-      return executeSelectionSet.call(this, options);
+      return executeSelectionSet.call(reader, options);
     }, {
       makeCacheKey({
         selectionSet,
@@ -132,7 +146,7 @@ export class StoreReader {
         execContext,
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
-          return reader.rootCacheKeyNode.lookup(
+          return reader.cacheKeyRoot.lookup(
             selectionSet,
             execContext.contextValue.store,
             JSON.stringify(execContext.variableValues),
@@ -280,6 +294,7 @@ export class StoreReader {
       selectionSet: mainDefinition.selectionSet,
       rootValue,
       execContext,
+      parentKind: mainDefinition.kind,
     });
   }
 
@@ -287,11 +302,14 @@ export class StoreReader {
     selectionSet,
     rootValue,
     execContext,
+    parentKind,
   }: ExecSelectionSetOptions): ExecResult {
     const { fragmentMap, contextValue, variableValues: variables } = execContext;
     const finalResult: ExecResult = {
       result: {},
     };
+
+    let didReadTypename = false;
 
     function handleMissing<T>(result: ExecResult<T>): T {
       if (result.missing) {
@@ -301,7 +319,7 @@ export class StoreReader {
       return result.result;
     }
 
-    selectionSet.selections.forEach(selection => {
+    const handleSelection = (selection: SelectionNode) => {
       if (!shouldInclude(selection, variables)) {
         // Skip this entirely
         return;
@@ -312,9 +330,14 @@ export class StoreReader {
           this.executeField(selection, rootValue, execContext)
         );
 
+        const keyName = resultKeyNameFromField(selection);
+        if (keyName === "__typename") {
+          didReadTypename = true;
+        }
+
         if (typeof fieldResult !== 'undefined') {
           merge(finalResult.result, {
-            [resultKeyNameFromField(selection)]: fieldResult,
+            [keyName]: fieldResult,
           });
         }
 
@@ -340,6 +363,7 @@ export class StoreReader {
             selectionSet: fragment.selectionSet,
             rootValue,
             execContext,
+            parentKind: fragment.kind,
           });
 
           if (match === 'heuristic' && fragmentExecResult.missing) {
@@ -354,7 +378,24 @@ export class StoreReader {
           merge(finalResult.result, handleMissing(fragmentExecResult));
         }
       }
-    });
+    };
+
+    selectionSet.selections.forEach(handleSelection);
+
+    if (! didReadTypename &&
+        this.addTypename &&
+        // Analogous to the isRoot parameter that addTypenameToDocument passes
+        // to addTypenameToSelectionSet to avoid adding __typename to the root
+        // query operation's selection set.
+        parentKind !== "OperationDefinition") {
+      handleSelection({
+        kind: "Field",
+        name: {
+          kind: "Name",
+          value: "__typename",
+        },
+      });
+    }
 
     return finalResult;
   }
@@ -425,6 +466,7 @@ export class StoreReader {
       selectionSet: field.selectionSet,
       rootValue: readStoreResult.result,
       execContext,
+      parentKind: field.kind,
     }));
   }
 
@@ -460,6 +502,7 @@ export class StoreReader {
         selectionSet: field.selectionSet,
         rootValue: item,
         execContext,
+        parentKind: field.kind,
       }));
     });
 

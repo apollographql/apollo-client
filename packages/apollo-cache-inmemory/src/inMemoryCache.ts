@@ -49,7 +49,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
-  private rootCacheKeyNode = new CacheKeyNode();
+  private cacheKeyRoot = new CacheKeyNode();
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -77,8 +77,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.addTypename = this.config.addTypename;
     this.data = defaultNormalizedCacheFactory();
 
-    this.storeReader = new StoreReader(this.rootCacheKeyNode);
-    this.storeWriter = new StoreWriter();
+    this.storeReader = new StoreReader({
+      addTypename: this.config.addTypename,
+      cacheKeyRoot: this.cacheKeyRoot,
+    });
+
+    this.storeWriter = new StoreWriter({
+      addTypename: this.config.addTypename,
+    });
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
@@ -103,7 +109,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         if (cache.data instanceof DepTrackingCache) {
           // Return a cache key (thus enabling caching) only if we're currently
           // using a data store that can track cache dependencies.
-          return cache.rootCacheKeyNode.lookup(
+          return cache.cacheKeyRoot.lookup(
             c.query,
             JSON.stringify(c.variables),
           );
@@ -137,7 +143,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     return this.storeReader.readQueryFromStore({
       store,
-      query: this.transformDocument(query.query),
+      query: query.query,
       variables: query.variables,
       rootId: query.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
@@ -151,7 +157,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       dataId: write.dataId,
       result: write.result,
       variables: write.variables,
-      document: this.transformDocument(write.query),
+      document: write.query,
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
@@ -167,7 +173,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     return this.storeReader.diffQueryAgainstStore({
       store: store,
-      query: this.transformDocument(query.query),
+      query: query.query,
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
@@ -282,8 +288,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
-      query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: getFragmentQueryDocument(
+        options.fragment,
+        options.fragmentName,
       ),
       variables: options.variables,
       rootId: options.id,
@@ -297,7 +304,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
-      query: this.transformDocument(options.query),
+      query: options.query,
       variables: options.variables,
     });
   }
@@ -308,8 +315,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: options.id,
       result: options.data,
-      query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: getFragmentQueryDocument(
+        options.fragment,
+        options.fragmentName,
       ),
       variables: options.variables,
     });

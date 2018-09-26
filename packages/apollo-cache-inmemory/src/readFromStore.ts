@@ -44,6 +44,7 @@ import { wrap, CacheKeyNode } from './optimism';
 export { OptimisticWrapperFunction } from './optimism';
 
 import { DepTrackingCache } from './depTrackingCache';
+import { QueryKeyMaker } from './queryKeyMaker';
 
 export type VariableMap = { [name: string]: any };
 
@@ -54,6 +55,7 @@ export type FragmentMatcher = (
 ) => boolean | 'heuristic';
 
 type ExecContext = {
+  query: DocumentNode;
   fragmentMap: FragmentMap;
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
@@ -101,6 +103,7 @@ type StoreReaderOptions = {
 export class StoreReader {
   private addTypename: boolean;
   private cacheKeyRoot: CacheKeyNode;
+  private keyMaker: QueryKeyMaker;
 
   constructor({
     addTypename = false,
@@ -114,6 +117,7 @@ export class StoreReader {
 
     reader.addTypename = addTypename;
     reader.cacheKeyRoot = cacheKeyRoot;
+    reader.keyMaker = new QueryKeyMaker(cacheKeyRoot);
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
       return executeStoreQuery.call(reader, options);
@@ -129,7 +133,7 @@ export class StoreReader {
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
           return reader.cacheKeyRoot.lookup(
-            query,
+            reader.keyMaker.forQuery(query).lookupQuery(query),
             contextValue.store,
             JSON.stringify(variableValues),
           );
@@ -147,7 +151,7 @@ export class StoreReader {
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
           return reader.cacheKeyRoot.lookup(
-            selectionSet,
+            reader.keyMaker.forQuery(execContext.query).lookupSelectionSet(selectionSet),
             execContext.contextValue.store,
             JSON.stringify(execContext.variableValues),
             // Unlike executeStoreQuery, executeSelectionSet can be called
@@ -159,6 +163,7 @@ export class StoreReader {
       }
     });
   }
+
   /**
    * Resolves the result of a query solely from the store (i.e. never hits the server).
    *
@@ -284,6 +289,7 @@ export class StoreReader {
     const fragments = getFragmentDefinitions(query);
     const fragmentMap = createFragmentMap(fragments);
     const execContext: ExecContext = {
+      query,
       fragmentMap,
       contextValue,
       variableValues,

@@ -439,7 +439,7 @@ export class StoreWriter {
     }
 
     storeObject = store.get(dataId);
-    if (!storeObject || storeValue !== storeObject[storeFieldName]) {
+    if (!storeObject || !isEqual(storeValue, storeObject[storeFieldName])) {
       store.set(dataId, {
         ...storeObject,
         [storeFieldName]: storeValue,

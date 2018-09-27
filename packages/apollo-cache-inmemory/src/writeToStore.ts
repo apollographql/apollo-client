@@ -25,6 +25,7 @@ import {
   storeKeyNameFromField,
   StoreValue,
   toIdValue,
+  isEqual,
 } from 'apollo-utilities';
 
 import { ObjectCache } from './objectCache';
@@ -509,19 +510,37 @@ function mergeWithGenerated(
   generatedKey: string,
   realKey: string,
   cache: NormalizedCache,
-) {
+): boolean {
+  if (generatedKey === realKey) {
+    return false;
+  }
+
   const generated = cache.get(generatedKey);
   const real = cache.get(realKey);
+  let madeChanges = false;
 
   Object.keys(generated).forEach(key => {
     const value = generated[key];
     const realValue = real[key];
-    if (isIdValue(value) && isGeneratedId(value.id) && isIdValue(realValue)) {
-      mergeWithGenerated(value.id, realValue.id, cache);
+
+    if (isIdValue(value) &&
+        isGeneratedId(value.id) &&
+        isIdValue(realValue) &&
+        ! isEqual(value, realValue) &&
+        mergeWithGenerated(value.id, realValue.id, cache)) {
+      madeChanges = true;
     }
-    cache.delete(generatedKey);
-    cache.set(realKey, { ...generated, ...real } as StoreObject);
   });
+
+  cache.delete(generatedKey);
+  const newRealValue = { ...generated, ...real };
+
+  if (isEqual(newRealValue, real)) {
+    return madeChanges;
+  }
+
+  cache.set(realKey, newRealValue);
+  return true;
 }
 
 function isDataProcessed(

@@ -68,7 +68,7 @@ type ExecInfo = {
 };
 
 export type ExecResultMissingField = {
-  objectId: string;
+  object: StoreObject;
   fieldName: string;
   tolerable: boolean;
 };
@@ -241,9 +241,11 @@ export class StoreReader {
       execResult.missing.forEach(info => {
         if (info.tolerable) return;
         throw new Error(
-          `Can't find field ${info.fieldName} on object (${info.objectId}) ${
-            JSON.stringify(store.get(info.objectId), null, 2)
-          }.`
+          `Can't find field ${info.fieldName} on object ${JSON.stringify(
+            info.object,
+            null,
+            2,
+          )}.`,
         );
       });
     }
@@ -316,6 +318,13 @@ export class StoreReader {
       result: {},
     };
 
+    const object: StoreObject = contextValue.store.get(rootValue.id);
+
+    const typename =
+      (object && object.__typename) ||
+      (rootValue.id === 'ROOT_QUERY' && 'Query') ||
+      void 0;
+
     let didReadTypename = false;
 
     function handleMissing<T>(result: ExecResult<T>): T {
@@ -334,7 +343,7 @@ export class StoreReader {
 
       if (isField(selection)) {
         const fieldResult = handleMissing(
-          this.executeField(selection, rootValue, execContext)
+          this.executeField(object, typename, selection, execContext),
         );
 
         const keyName = resultKeyNameFromField(selection);
@@ -408,8 +417,9 @@ export class StoreReader {
   }
 
   private executeField(
+    object: StoreObject,
+    typename: string | void,
     field: FieldNode,
-    rootValue: any,
     execContext: ExecContext,
   ): ExecResult {
     const { variableValues: variables, contextValue } = execContext;
@@ -422,8 +432,9 @@ export class StoreReader {
     };
 
     const readStoreResult = readStoreResolver(
+      object,
+      typename,
       fieldName,
-      rootValue,
       args,
       contextValue,
       info,
@@ -530,17 +541,13 @@ that is directly manipulating the store; please file an issue.`);
 }
 
 function readStoreResolver(
+  object: StoreObject,
+  typename: string | void,
   fieldName: string,
-  idValue: IdValue,
   args: any,
   context: ReadStoreContext,
   { resultKey, directives }: ExecInfo,
 ): ExecResult<StoreValue> {
-  assertIdValue(idValue);
-
-  const objId = idValue.id;
-  const obj = context.store.get(objId);
-
   let storeKeyName = fieldName;
   if (args || directives) {
     // We happen to know here that getStoreKeyName returns its first
@@ -552,23 +559,21 @@ function readStoreResolver(
 
   let fieldValue: StoreValue | void = void 0;
 
-  if (obj) {
-    fieldValue = obj[storeKeyName];
+  if (object) {
+    fieldValue = object[storeKeyName];
 
     if (
       typeof fieldValue === 'undefined' &&
       context.cacheRedirects &&
-      (obj.__typename || objId === 'ROOT_QUERY')
+      typeof typename === 'string'
     ) {
-      const typename = obj.__typename || 'Query';
-
       // Look for the type in the custom resolver map
       const type = context.cacheRedirects[typename];
       if (type) {
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];
         if (resolver) {
-          fieldValue = resolver(obj, args, {
+          fieldValue = resolver(object, args, {
             getCacheKey(storeObj: StoreObject) {
               return toIdValue({
                 id: context.dataIdFromObject(storeObj),
@@ -585,7 +590,7 @@ function readStoreResolver(
     return {
       result: fieldValue,
       missing: [{
-        objectId: objId,
+        object,
         fieldName: storeKeyName,
         tolerable: false,
       }],

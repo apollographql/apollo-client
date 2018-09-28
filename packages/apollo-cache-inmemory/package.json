@@ -40,8 +40,8 @@
     "filesize": "npm run minify"
   },
   "dependencies": {
-    "apollo-cache": "^1.1.16",
-    "apollo-utilities": "^1.0.20",
+    "apollo-cache": "file:../apollo-cache",
+    "apollo-utilities": "file:../apollo-utilities",
     "optimism": "^0.6.6"
   },
   "peerDependencies": {

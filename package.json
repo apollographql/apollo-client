@@ -87,7 +87,7 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.12.0",
+    "@octokit/rest": "15.12.1",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
@@ -119,7 +119,7 @@
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "3.4.0",
     "rollup-plugin-sourcemaps": "0.4.2",
-    "rxjs": "6.3.2",
+    "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
     "tslint": "5.11.0",
     "typescript": "3.0.3",

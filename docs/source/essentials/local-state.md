@@ -178,7 +178,7 @@ const Todo = ({ id, completed, text }) => (
 
 First, we create a GraphQL mutation that takes the todo's id we want to toggle as its only argument. We indicate that this is a local mutation by marking the field with a `@client` directive. This will tell `apollo-link-state` to call our `toggleTodo` mutation resolver in order to resolve the field. Then, we create a `Mutation` component just as we would for a remote mutation. Finally, pass in your GraphQL mutation to your component and trigger it from within the UI in your render prop function.
 
-If you'd like to see an example of a local mutation adding a todo to a list, check out the `TodoList` component in the [CodeSandbox](https://codesandbox.io/s/github/apollographql/apollo-link-state/tree/master/examples/todo).
+If you'd like to see an example of a local mutation adding a todo to a list, check out the `TodoForm` component in the [CodeSandbox](https://codesandbox.io/s/github/apollographql/apollo-link-state/tree/master/examples/todo).
 
 <h2 id="queries">Querying local data</h2>
 

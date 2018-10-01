@@ -127,6 +127,7 @@ export class StoreReader {
         rootValue,
         contextValue,
         variableValues,
+        fragmentMatcher,
       }: ExecStoreQueryOptions) {
         // The result of executeStoreQuery can be safely cached only if the
         // underlying store is capable of tracking dependencies and invalidating
@@ -135,6 +136,7 @@ export class StoreReader {
           return reader.cacheKeyRoot.lookup(
             reader.keyMaker.forQuery(query).lookupQuery(query),
             contextValue.store,
+            fragmentMatcher,
             JSON.stringify(variableValues),
             rootValue.id,
           );
@@ -154,6 +156,7 @@ export class StoreReader {
           return reader.cacheKeyRoot.lookup(
             reader.keyMaker.forQuery(execContext.query).lookupSelectionSet(selectionSet),
             execContext.contextValue.store,
+            execContext.fragmentMatcher,
             JSON.stringify(execContext.variableValues),
             rootValue.id,
           );
@@ -281,7 +284,7 @@ export class StoreReader {
     contextValue,
     variableValues,
     // Default matcher always matches all fragments
-    fragmentMatcher = () => true,
+    fragmentMatcher = defaultFragmentMatcher,
   }: ExecStoreQueryOptions): ExecResult {
     const mainDefinition = getMainDefinition(query);
     const fragments = getFragmentDefinitions(query);
@@ -512,6 +515,10 @@ export class StoreReader {
 
     return { result, missing };
   }
+}
+
+function defaultFragmentMatcher() {
+  return true;
 }
 
 export function assertIdValue(idValue: IdValue) {

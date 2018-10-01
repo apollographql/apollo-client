@@ -136,6 +136,7 @@ export class StoreReader {
             reader.keyMaker.forQuery(query).lookupQuery(query),
             contextValue.store,
             JSON.stringify(variableValues),
+            rootValue.id,
           );
         }
       }
@@ -154,9 +155,6 @@ export class StoreReader {
             reader.keyMaker.forQuery(execContext.query).lookupSelectionSet(selectionSet),
             execContext.contextValue.store,
             JSON.stringify(execContext.variableValues),
-            // Unlike executeStoreQuery, executeSelectionSet can be called
-            // recursively on nested objects, so it's important to include the
-            // ID of the current parent object in the cache key.
             rootValue.id,
           );
         }

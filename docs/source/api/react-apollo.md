@@ -190,6 +190,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
   <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
   <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>

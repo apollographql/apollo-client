@@ -1,3 +1,6 @@
+// Make builtins like Map and Set safe to use with non-extensible objects.
+import './fixPolyfills';
+
 import { DocumentNode } from 'graphql';
 
 import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';

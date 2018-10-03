@@ -15,7 +15,7 @@
   [@billfienberg](https://github.com/billfienberg) in [#3886](https://github.com/apollographql/apollo-client/pull/3886)  <br/>
   [@TLadd](https://github.com/TLadd) in [#3884](https://github.com/apollographql/apollo-client/pull/3884)
 
-### Apollo Cache In-Memory (1.3.2)
+### Apollo Cache In-Memory (1.3.3)
 
 - Optimize repeated `apollo-cache-inmemory` reads by caching partial query
   results, for substantial performance improvements. As a consequence, watched

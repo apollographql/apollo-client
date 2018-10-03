@@ -178,6 +178,69 @@ describe('QueryManager', () => {
     return mockQueryManager(...args);
   };
 
+  it('subsequent queries should register to observer after an errored query #3780', done => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '1',
+      },
+    };
+    const request2 = {
+      query: gql`
+        query fetchLeia($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '2',
+      },
+    };
+    const graphQLErrors = [new Error('GraphQL error')];
+    const data2 = {
+      people_one: {
+        name: 'Leia Skywalker',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request,
+        result: { errors: graphQLErrors },
+        delay: 10,
+      },
+      {
+        request: request2,
+        result: { data: data2 },
+        delay: 100,
+      }
+    );
+
+    const ob1 = queryManager.watchQuery(request);
+    const ob2 = queryManager.watchQuery(request2);
+
+    let finishCount = 0;
+    ob1.subscribe({
+      error: (result) => {
+        console.log(result.graphQLErrors);
+        expect(result.graphQLErrors).toEqual(graphQLErrors);
+        finishCount++;
+      },
+    });
+    ob2.subscribe(result => {
+      expect(stripSymbols(result.data)).toEqual(data2);
+      expect(finishCount).toBe(1);
+      done();
+    });
+  });
+
   it('handles GraphQL errors', done => {
     assertWithObserver({
       done,

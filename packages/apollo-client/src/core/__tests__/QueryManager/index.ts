@@ -179,26 +179,21 @@ describe('QueryManager', () => {
   };
 
   it('subsequent queries should register to observer after an errored query #3780', done => {
+    const query = gql`
+            query fetchLuke($id: String) {
+              people_one(id: $id) {
+                name
+              }
+            }
+          `,
     const request = {
-      query: gql`
-        query fetchLuke($id: String) {
-          people_one(id: $id) {
-            name
-          }
-        }
-      `,
+      query,
       variables: {
         id: '1',
       },
     };
     const request2 = {
-      query: gql`
-        query fetchLeia($id: String) {
-          people_one(id: $id) {
-            name
-          }
-        }
-      `,
+      query,
       variables: {
         id: '2',
       },
@@ -229,7 +224,6 @@ describe('QueryManager', () => {
     let finishCount = 0;
     ob1.subscribe({
       error: (result) => {
-        console.log(result.graphQLErrors);
         expect(result.graphQLErrors).toEqual(graphQLErrors);
         finishCount++;
       },

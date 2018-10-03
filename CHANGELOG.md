@@ -1,5 +1,137 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client (vNext)
+
+### Apollo Client (vNext)
+
+- Add additional checks to make sure we don't try to set the network status
+  of queries in the store, when the store doesn't exist.  <br/>
+  [@i6mi6](https://github.com/i6mi6) in [#3914](https://github.com/apollographql/apollo-client/pull/3914)
+- Documentation updates.  <br/>
+  [@shanonvl](https://github.com/shanonvl) in [#3925](https://github.com/apollographql/apollo-client/pull/3925)  <br/>
+  [@ojh102](https://github.com/ojh102) in [#3920](https://github.com/apollographql/apollo-client/pull/3920)  <br/>
+  [@Bkucera](https://github.com/Bkucera) in [#3919](https://github.com/apollographql/apollo-client/pull/3919)  <br/>
+  [@j4chou](https://github.com/j4chou) in [#3915](https://github.com/apollographql/apollo-client/pull/3915)  <br/>
+  [@billfienberg](https://github.com/billfienberg) in [#3886](https://github.com/apollographql/apollo-client/pull/3886)  <br/>
+  [@TLadd](https://github.com/TLadd) in [#3884](https://github.com/apollographql/apollo-client/pull/3884)
+
+### Apollo Cache In-Memory (1.3.0)
+
+- Optimize repeated `apollo-cache-inmemory` reads by caching partial query
+  results, for substantial performance improvements. As a consequence, watched
+  queries will not be rebroadcast unless the data have changed.
+  [PR #3394](https://github.com/apollographql/apollo-client/pull/3394)
+
+### Apollo GraphQL Anywhere (vNext)
+
+- Make `graphql-anywhere` `filter` function generic (typescript).  <br/>
+  [@minznerjosh](https://github.com/minznerjosh) in [#3929](https://github.com/apollographql/apollo-client/pull/3929)
+
+
+## Apollo Client (2.4.2)
+
+### Apollo Client (2.4.2)
+
+- Apollo Client no longer deep freezes query results.
+  [@hwillson](https://github.com/hwillson) in [#3883](https://github.com/apollographql/apollo-client/pull/3883)
+- A new `clearStore` method has been added, that will remove all data from
+  the store. Unlike `resetStore`, it will not refetch active queries after
+  removing store data.
+  [@hwillson](https://github.com/hwillson) in [#3885](https://github.com/apollographql/apollo-client/pull/3885)
+
+### Apollo Utilities (1.0.21)
+
+- Replace the custom `cloneDeep` implementation with
+  [`fclone`](https://www.npmjs.com/package/fclone), to avoid crashing when
+  encountering circular references.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3881](https://github.com/apollographql/apollo-client/pull/3881)
+
+### Apollo Boost (0.1.16)
+
+- No changes.
+
+### Apollo Cache (1.1.17)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.2.10)
+
+- No changes.
+
+### Apollo GraphQL Anywhere (4.1.19)
+
+- No changes.
+
+
+## 2.4.1 (August 26, 2018)
+
+### Apollo Client (2.4.1)
+
+- `mutate`'s `refetchQueries` option now allows queries to include a custom
+  `context` option. This `context` will be used when refetching the query.
+  For example:
+
+  ```js
+  context = {
+    headers: {
+      token: 'some auth token',
+    },
+  };
+  client.mutate({
+    mutation: UPDATE_CUSTOMER_MUTATION,
+    variables: {
+      userId: user.id,
+      firstName,
+      ...
+    },
+    refetchQueries: [{
+      query: CUSTOMER_MESSAGES_QUERY,
+      variables: { userId: user.id },
+      context,
+    }],
+    context,
+  });
+  ```
+
+  The `CUSTOMER_MESSAGES_QUERY` above will be refetched using `context`.
+  Normally queries are refetched using the original context they were first
+  started with, but this provides a way to override the context, if needed.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3852](https://github.com/apollographql/apollo-client/pull/3852)
+
+- Documentation updates.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#3841](https://github.com/apollographql/apollo-client/pull/3841)
+
+### Apollo Boost (0.1.15)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo Cache (1.1.16)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo Cache In-Memory (1.2.9)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo Utilities (1.0.20)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+### Apollo GraphQL Anywhere (4.1.18)
+
+- Various internal infrastructure changes related to building, bundling,
+  testing, etc.
+  [@hwillson](https://github.com/hwillson) in [#3817](https://github.com/apollographql/apollo-client/pull/3817)
+
+
 ## 2.4.0 (August 17, 2018)
 
 ### Apollo Client (2.4.0)

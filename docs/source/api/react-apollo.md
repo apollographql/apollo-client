@@ -83,6 +83,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed in the event of an error.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+  <dt>`partialRefetch`: boolean</dt>
+  <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). `false` by default.</dd>
 </dl>
 
 <h3 id="query-render-prop">Render prop function</h3>
@@ -186,6 +188,10 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>An object containing all of the variables your subscription needs to execute</dd>
   <dt>`shouldResubscribe`: boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
+  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
+  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>
@@ -474,9 +480,10 @@ class MyContainerComponent extends Component {
     return (
       <MyGraphQLComponent
         ref={component => {
-          assert(component.getWrappedInstance() instanceof MyComponent);
+          const wrappedInstance = component.getWrappedInstance();
+          assert(wrappedInstance instanceof MyComponent);
           // We can call methods on the component class instance.
-          component.saySomething();
+          wrappedInstance.saySomething();
         }}
       />
     );
@@ -486,7 +493,7 @@ class MyContainerComponent extends Component {
 
 <h3 id="graphql-config-alias">`config.alias`</h3>
 
-By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more then one higher order components and you look at the [React Devtools][].
+By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more than one higher order component and you look at the [React Devtools][].
 
 [React Devtools]: https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434
 

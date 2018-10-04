@@ -463,11 +463,15 @@ export class QueryManager<TStore> {
     if (isClient) {
       const localResolver = this.prepareLocalStateResolver(query);
       if (localResolver) {
-        return graphql(localResolver, query, {}, context, variables).then(
-          localResult => {
-            data: localResult;
-          },
-        ) as Promise<any>;
+        return graphql(
+          localResolver,
+          query,
+          {},
+          { ...context, cache },
+          variables,
+        ).then(localResult => {
+          data: localResult;
+        }) as Promise<any>;
       }
     }
 

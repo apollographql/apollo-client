@@ -39,6 +39,8 @@ node -e "\
   var apolloCacheVersion = apolloCachePackage.version; \
   var apolloUtilitiesPackage = require('../apollo-utilities/package.json'); \
   var apolloUtilitiesVersion = apolloUtilitiesPackage.version; \
+  var graphqlAnywherePackage = require('../graphql-anywhere/package.json'); \
+  var graphqlAnywhereVersion = graphqlAnywherePackage.version; \
   var package = require('./package.json'); \
   delete package.babel; \
   delete package.jest; \
@@ -51,6 +53,7 @@ node -e "\
   package.typings = 'index.d.ts'; \
   package.dependencies['apollo-cache'] = apolloCacheVersion; \
   package.dependencies['apollo-utilities'] = apolloUtilitiesVersion; \
+  package.dependencies['graphql-anywhere'] = graphqlAnywhereVersion; \
   var origVersion = 'local';
   var fs = require('fs'); \
   fs.writeFileSync('./npm/version.js', 'exports.version = \"' + package.version + '\"'); \

@@ -14,7 +14,12 @@ import {
 } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
-import { ApolloQueryResult, OperationVariables } from './core/types';
+import {
+  ApolloQueryResult,
+  OperationVariables,
+  LocalStateInitializers,
+  LocalStateResolvers,
+} from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 
 import { Observable } from './util/Observable';
@@ -95,7 +100,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
-
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
       link,
@@ -185,6 +189,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
     this.version = version;
   }
+
   /**
    * This watches the cache store of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
@@ -505,6 +510,20 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
+  }
+
+  /**
+   * TODO.
+   */
+  public addLocalStateInitializers(initializers: LocalStateInitializers = {}) {
+    this.initQueryManager().addLocalStateInitializers(initializers);
+  }
+
+  /**
+   * TODO.
+   */
+  public addLocalStateResolvers(resolvers: LocalStateResolvers = {}) {
+    this.initQueryManager().addLocalStateResolvers(resolvers);
   }
 
   /**

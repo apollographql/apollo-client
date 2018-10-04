@@ -27,6 +27,8 @@ import {
   ExecOptions,
 } from './graphql';
 
+export { Resolver, ExecInfo };
+
 /* Based on graphql function from graphql-js:
  *
  * graphql(

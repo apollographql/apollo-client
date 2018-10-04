@@ -1,5 +1,10 @@
 import { execute, ApolloLink, FetchResult } from 'apollo-link';
-import { ExecutionResult, DocumentNode } from 'graphql';
+import {
+  ExecutionResult,
+  DocumentNode,
+  OperationDefinitionNode,
+} from 'graphql';
+import { graphql, Resolver } from 'graphql-anywhere/lib/graphql-async';
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
 import { Cache } from 'apollo-cache';
@@ -10,8 +15,10 @@ import {
   getOperationDefinition,
   getOperationName,
   getQueryDefinition,
+  getMainDefinition,
   isProduction,
   hasDirectives,
+  mergeDeep,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -19,6 +26,8 @@ import { QueryScheduler } from '../scheduler/scheduler';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 
 import { Observer, Subscription, Observable } from '../util/Observable';
+import { removeClientSetsFromDocument } from '../util/removeClientSetsFromDocument';
+import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
 
 import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
@@ -37,6 +46,8 @@ import {
   ApolloQueryResult,
   FetchType,
   OperationVariables,
+  LocalStateInitializers,
+  LocalStateResolvers,
 } from './types';
 import { graphQLResultHasError } from 'apollo-utilities';
 
@@ -97,6 +108,12 @@ export class QueryManager<TStore> {
   // generally used to refetches for refetchQueries and to update mutation results through
   // updateQueries.
   private queryIdsByName: { [queryName: string]: string[] } = {};
+
+  // TODO
+  private localStateInitializers: LocalStateInitializers = {};
+
+  // TODO
+  private localStateResolvers: LocalStateResolvers = {};
 
   constructor({
     link,
@@ -262,8 +279,32 @@ export class QueryManager<TStore> {
         return storeResult as FetchResult<T>;
       };
 
-      execute(this.link, operation).subscribe({
-        next: (result: ExecutionResult) => {
+      let clientQuery: DocumentNode | null = null;
+      let serverQuery;
+
+      if (hasDirectives(['client'], operation.query)) {
+        clientQuery = operation.query;
+        serverQuery = removeClientSetsFromDocument(operation.query);
+      } else {
+        serverQuery = operation.query;
+      }
+
+      if (serverQuery) {
+        operation.query = serverQuery;
+      }
+
+      const obs: Observable<FetchResult> = serverQuery
+        ? execute(this.link, operation)
+        : Observable.of({
+            data: {},
+          });
+
+      let complete = false;
+      let handlingNext = false;
+      obs.subscribe({
+        next: async (result: ExecutionResult) => {
+          handlingNext = true;
+
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
             error = new ApolloError({
               graphQLErrors: result.errors,
@@ -273,20 +314,44 @@ export class QueryManager<TStore> {
 
           this.mutationStore.markMutationResult(mutationId);
 
+          let updatedResult = result;
+          if (clientQuery) {
+            const localResolver = this.prepareLocalStateResolver(clientQuery);
+            if (localResolver) {
+              const { context, variables } = operation;
+              const localResult = await graphql(
+                localResolver,
+                clientQuery,
+                result.data,
+                context,
+                variables,
+              );
+              if (localResult) {
+                updatedResult.data = localResult;
+              }
+            }
+          }
+
           if (fetchPolicy !== 'no-cache') {
             this.dataStore.markMutationResult({
               mutationId,
-              result,
+              result: updatedResult,
               document: mutation,
               variables: variables || {},
               updateQueries: generateUpdateQueriesInfo(),
               update: updateWithProxyFn,
             });
           }
-          storeResult = result as FetchResult<T>;
+
+          storeResult = updatedResult as FetchResult<T>;
+
+          handlingNext = false;
+          if (complete) {
+            completeMutation().then(resolve, reject);
+          }
         },
 
-        error: (err: Error) => {
+        error(err: Error) {
           this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete({
             mutationId,
@@ -302,7 +367,12 @@ export class QueryManager<TStore> {
           );
         },
 
-        complete: () => completeMutation().then(resolve, reject),
+        complete() {
+          if (!handlingNext) {
+            completeMutation().then(resolve, reject);
+          }
+          complete = true;
+        },
       });
     });
   }
@@ -320,6 +390,7 @@ export class QueryManager<TStore> {
       variables = {},
       metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
+      context,
     } = options;
     const cache = this.dataStore.getCache();
 
@@ -349,8 +420,14 @@ export class QueryManager<TStore> {
       storeResult = result;
     }
 
+    const isClient = hasDirectives(['client'], query);
+    const serverQuery = isClient ? removeClientSetsFromDocument(query) : query;
+
     let shouldFetch =
-      needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
+      serverQuery !== null &&
+      needToFetch &&
+      fetchPolicy !== 'cache-only' &&
+      fetchPolicy !== 'standby';
 
     // we need to check to see if this is an operation that uses the @live directive
     if (hasDirectives(['live'], query)) shouldFetch = true;
@@ -383,6 +460,17 @@ export class QueryManager<TStore> {
 
     this.broadcastQueries();
 
+    if (isClient) {
+      const localResolver = this.prepareLocalStateResolver(query);
+      if (localResolver) {
+        return graphql(localResolver, query, {}, context, variables).then(
+          localResult => {
+            data: localResult;
+          },
+        ) as Promise<any>;
+      }
+    }
+
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult =
@@ -400,7 +488,7 @@ export class QueryManager<TStore> {
       const networkResult = this.fetchRequest({
         requestId,
         queryId,
-        document: query,
+        document: serverQuery!,
         options,
         fetchMoreForQueryId,
       }).catch(error => {
@@ -1062,6 +1150,29 @@ export class QueryManager<TStore> {
     });
   }
 
+  public addLocalStateInitializers(initializers: LocalStateInitializers = {}) {
+    this.localStateInitializers = {
+      ...this.localStateInitializers,
+      ...initializers,
+    };
+
+    // TODO: This is temporary. We'll make sure initializers only run when
+    // the cache doesn't already have content, and we won't re-run existing
+    // intializers when new initializers are added.
+    const cache = this.dataStore.getCache();
+    Object.keys(initializers).forEach(field => {
+      const initializer = initializers[field];
+      const result = initializer();
+      if (result) {
+        cache.writeData({ data: { [field]: result } });
+      }
+    });
+  }
+
+  public addLocalStateResolvers(resolvers: LocalStateResolvers = {}) {
+    this.localStateResolvers = mergeDeep(this.localStateResolvers, resolvers);
+  }
+
   private getObservableQueryPromises(
     includeStandby?: boolean,
   ): Promise<ApolloQueryResult<any>>[] {
@@ -1281,5 +1392,43 @@ export class QueryManager<TStore> {
         },
       },
     };
+  }
+
+  private prepareLocalStateResolver(query: DocumentNode | null) {
+    let resolver: Resolver | null = null;
+
+    if (!query) {
+      return resolver;
+    }
+
+    const definition = getMainDefinition(query);
+    const definitionOperation = (<OperationDefinitionNode>definition).operation;
+    const type = definitionOperation
+      ? capitalizeFirstLetter(definitionOperation)
+      : 'Query';
+
+    const resolvers = this.localStateResolvers;
+    const resolverMap = resolvers[type];
+
+    if (resolverMap) {
+      resolver = (
+        fieldName: string,
+        rootValue: any = {},
+        args: any,
+        context: any,
+        info: any,
+      ) => {
+        // TODO: review graphql aliasing support
+
+        const resolve = resolverMap[fieldName];
+        if (resolve) {
+          return resolve(rootValue, args, context, info);
+        }
+
+        return rootValue[fieldName];
+      };
+    }
+
+    return resolver;
   }
 }

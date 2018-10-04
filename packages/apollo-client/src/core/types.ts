@@ -43,3 +43,20 @@ export type MutationQueryReducer<T> = (
 export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
+
+// TODO
+export interface LocalStateInitializers {
+  [field: string]: () => any;
+}
+
+// TODO
+export interface LocalStateResolvers {
+  [key: string]: {
+    [field: string]: (
+      rootValue: any,
+      args: any,
+      context: any,
+      info: any,
+    ) => any;
+  };
+}

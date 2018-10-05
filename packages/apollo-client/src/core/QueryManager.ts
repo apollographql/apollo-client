@@ -1132,23 +1132,40 @@ export class QueryManager<TStore> {
     });
   }
 
+  // Run (and store for future reference) the incoming initializer functions.
+  // Initializers for the same field that have the exact same function value,
+  // are only run (and stored) once.
+  //
+  // NOTE: Initializers do not currently check to see if data already exists
+  // in the cache, before writing to the cache. This means existing data
+  // can be overwritten. We might decide to query into the cache first to
+  // see if any previous data exists before overwritting it, but TBD.
   public addLocalStateInitializers(initializers: LocalStateInitializers = {}) {
-    this.localStateInitializers = {
-      ...this.localStateInitializers,
-      ...initializers,
-    };
+    if (!initializers) {
+      throw new Error('Invalid/missing initializers');
+    }
 
-    // TODO: This is temporary. We'll make sure initializers only run when
-    // the cache doesn't already have content, and we won't re-run existing
-    // intializers when new initializers are added.
+    const newInitializers: LocalStateInitializers = {};
     const cache = this.dataStore.getCache();
-    Object.keys(initializers).forEach(field => {
-      const initializer = initializers[field];
-      const result = initializer(cache);
-      if (result) {
-        cache.writeData({ data: { [field]: result } });
+    Object.keys(initializers).forEach(fieldName => {
+      const newInitializer = initializers[fieldName];
+      const existingInitializer = this.localStateInitializers[fieldName];
+      if (
+        !existingInitializer ||
+        existingInitializer.toString() !== newInitializer.toString()
+      ) {
+        newInitializers[fieldName] = newInitializer;
+        const result = newInitializer(cache);
+        if (result) {
+          cache.writeData({ data: { [fieldName]: result } });
+        }
       }
     });
+
+    this.localStateInitializers = {
+      ...this.localStateInitializers,
+      ...newInitializers,
+    };
   }
 
   public addLocalStateResolvers(resolvers: LocalStateResolvers = {}) {

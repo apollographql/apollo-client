@@ -15,12 +15,16 @@
   [@billfienberg](https://github.com/billfienberg) in [#3886](https://github.com/apollographql/apollo-client/pull/3886)  <br/>
   [@TLadd](https://github.com/TLadd) in [#3884](https://github.com/apollographql/apollo-client/pull/3884)
 
-### Apollo Cache In-Memory (1.3.0)
+### Apollo Cache In-Memory (1.3.3)
 
 - Optimize repeated `apollo-cache-inmemory` reads by caching partial query
   results, for substantial performance improvements. As a consequence, watched
   queries will not be rebroadcast unless the data have changed.
   [PR #3394](https://github.com/apollographql/apollo-client/pull/3394)
+
+- Include root ID and fragment matcher in `StoreReader#executeStoreQuery`
+  and `#executeSelectionSet` cache keys.
+  [PR #3964](https://github.com/apollographql/apollo-client/pull/3964)
 
 ### Apollo GraphQL Anywhere (vNext)
 

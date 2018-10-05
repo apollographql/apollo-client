@@ -37,7 +37,6 @@ import {
   FragmentDefinitionNode,
   InlineFragmentNode,
   SelectionSetNode,
-  SelectionNode,
 } from 'graphql';
 
 import { wrap, CacheKeyNode } from './optimism';
@@ -68,7 +67,7 @@ type ExecInfo = {
 };
 
 export type ExecResultMissingField = {
-  objectId: string;
+  object: StoreObject;
   fieldName: string;
   tolerable: boolean;
 };
@@ -92,41 +91,31 @@ type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
   rootValue: any;
   execContext: ExecContext;
-  parentKind: string;
-};
-
-type StoreReaderOptions = {
-  addTypename?: boolean;
-  cacheKeyRoot?: CacheKeyNode;
 };
 
 export class StoreReader {
-  private addTypename: boolean;
-  private cacheKeyRoot: CacheKeyNode;
   private keyMaker: QueryKeyMaker;
 
-  constructor({
-    addTypename = false,
-    cacheKeyRoot = new CacheKeyNode,
-  }: StoreReaderOptions = {}) {
+  constructor(
+    private cacheKeyRoot = new CacheKeyNode,
+  ) {
     const reader = this;
     const {
       executeStoreQuery,
       executeSelectionSet,
     } = reader;
 
-    reader.addTypename = addTypename;
-    reader.cacheKeyRoot = cacheKeyRoot;
     reader.keyMaker = new QueryKeyMaker(cacheKeyRoot);
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
-      return executeStoreQuery.call(reader, options);
+      return executeStoreQuery.call(this, options);
     }, {
       makeCacheKey({
         query,
         rootValue,
         contextValue,
         variableValues,
+        fragmentMatcher,
       }: ExecStoreQueryOptions) {
         // The result of executeStoreQuery can be safely cached only if the
         // underlying store is capable of tracking dependencies and invalidating
@@ -135,14 +124,16 @@ export class StoreReader {
           return reader.cacheKeyRoot.lookup(
             reader.keyMaker.forQuery(query).lookupQuery(query),
             contextValue.store,
+            fragmentMatcher,
             JSON.stringify(variableValues),
+            rootValue.id,
           );
         }
       }
     });
 
     this.executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
-      return executeSelectionSet.call(reader, options);
+      return executeSelectionSet.call(this, options);
     }, {
       makeCacheKey({
         selectionSet,
@@ -153,10 +144,8 @@ export class StoreReader {
           return reader.cacheKeyRoot.lookup(
             reader.keyMaker.forQuery(execContext.query).lookupSelectionSet(selectionSet),
             execContext.contextValue.store,
+            execContext.fragmentMatcher,
             JSON.stringify(execContext.variableValues),
-            // Unlike executeStoreQuery, executeSelectionSet can be called
-            // recursively on nested objects, so it's important to include the
-            // ID of the current parent object in the cache key.
             rootValue.id,
           );
         }
@@ -240,9 +229,11 @@ export class StoreReader {
       execResult.missing.forEach(info => {
         if (info.tolerable) return;
         throw new Error(
-          `Can't find field ${info.fieldName} on object (${info.objectId}) ${
-            JSON.stringify(store.get(info.objectId), null, 2)
-          }.`
+          `Can't find field ${info.fieldName} on object ${JSON.stringify(
+            info.object,
+            null,
+            2,
+          )}.`,
         );
       });
     }
@@ -283,7 +274,7 @@ export class StoreReader {
     contextValue,
     variableValues,
     // Default matcher always matches all fragments
-    fragmentMatcher = () => true,
+    fragmentMatcher = defaultFragmentMatcher,
   }: ExecStoreQueryOptions): ExecResult {
     const mainDefinition = getMainDefinition(query);
     const fragments = getFragmentDefinitions(query);
@@ -300,7 +291,6 @@ export class StoreReader {
       selectionSet: mainDefinition.selectionSet,
       rootValue,
       execContext,
-      parentKind: mainDefinition.kind,
     });
   }
 
@@ -308,14 +298,18 @@ export class StoreReader {
     selectionSet,
     rootValue,
     execContext,
-    parentKind,
   }: ExecSelectionSetOptions): ExecResult {
     const { fragmentMap, contextValue, variableValues: variables } = execContext;
     const finalResult: ExecResult = {
       result: {},
     };
 
-    let didReadTypename = false;
+    const object: StoreObject = contextValue.store.get(rootValue.id);
+
+    const typename =
+      (object && object.__typename) ||
+      (rootValue.id === 'ROOT_QUERY' && 'Query') ||
+      void 0;
 
     function handleMissing<T>(result: ExecResult<T>): T {
       if (result.missing) {
@@ -325,7 +319,7 @@ export class StoreReader {
       return result.result;
     }
 
-    const handleSelection = (selection: SelectionNode) => {
+    selectionSet.selections.forEach(selection => {
       if (!shouldInclude(selection, variables)) {
         // Skip this entirely
         return;
@@ -333,17 +327,12 @@ export class StoreReader {
 
       if (isField(selection)) {
         const fieldResult = handleMissing(
-          this.executeField(selection, rootValue, execContext)
+          this.executeField(object, typename, selection, execContext),
         );
-
-        const keyName = resultKeyNameFromField(selection);
-        if (keyName === "__typename") {
-          didReadTypename = true;
-        }
 
         if (typeof fieldResult !== 'undefined') {
           merge(finalResult.result, {
-            [keyName]: fieldResult,
+            [resultKeyNameFromField(selection)]: fieldResult,
           });
         }
 
@@ -369,7 +358,6 @@ export class StoreReader {
             selectionSet: fragment.selectionSet,
             rootValue,
             execContext,
-            parentKind: fragment.kind,
           });
 
           if (match === 'heuristic' && fragmentExecResult.missing) {
@@ -384,31 +372,15 @@ export class StoreReader {
           merge(finalResult.result, handleMissing(fragmentExecResult));
         }
       }
-    };
-
-    selectionSet.selections.forEach(handleSelection);
-
-    if (! didReadTypename &&
-        this.addTypename &&
-        // Analogous to the isRoot parameter that addTypenameToDocument passes
-        // to addTypenameToSelectionSet to avoid adding __typename to the root
-        // query operation's selection set.
-        parentKind !== "OperationDefinition") {
-      handleSelection({
-        kind: "Field",
-        name: {
-          kind: "Name",
-          value: "__typename",
-        },
-      });
-    }
+    });
 
     return finalResult;
   }
 
   private executeField(
+    object: StoreObject,
+    typename: string | void,
     field: FieldNode,
-    rootValue: any,
     execContext: ExecContext,
   ): ExecResult {
     const { variableValues: variables, contextValue } = execContext;
@@ -421,8 +393,9 @@ export class StoreReader {
     };
 
     const readStoreResult = readStoreResolver(
+      object,
+      typename,
       fieldName,
-      rootValue,
       args,
       contextValue,
       info,
@@ -472,7 +445,6 @@ export class StoreReader {
       selectionSet: field.selectionSet,
       rootValue: readStoreResult.result,
       execContext,
-      parentKind: field.kind,
     }));
   }
 
@@ -508,12 +480,15 @@ export class StoreReader {
         selectionSet: field.selectionSet,
         rootValue: item,
         execContext,
-        parentKind: field.kind,
       }));
     });
 
     return { result, missing };
   }
+}
+
+function defaultFragmentMatcher() {
+  return true;
 }
 
 export function assertIdValue(idValue: IdValue) {
@@ -525,17 +500,13 @@ that is directly manipulating the store; please file an issue.`);
 }
 
 function readStoreResolver(
+  object: StoreObject,
+  typename: string | void,
   fieldName: string,
-  idValue: IdValue,
   args: any,
   context: ReadStoreContext,
   { resultKey, directives }: ExecInfo,
 ): ExecResult<StoreValue> {
-  assertIdValue(idValue);
-
-  const objId = idValue.id;
-  const obj = context.store.get(objId);
-
   let storeKeyName = fieldName;
   if (args || directives) {
     // We happen to know here that getStoreKeyName returns its first
@@ -547,23 +518,21 @@ function readStoreResolver(
 
   let fieldValue: StoreValue | void = void 0;
 
-  if (obj) {
-    fieldValue = obj[storeKeyName];
+  if (object) {
+    fieldValue = object[storeKeyName];
 
     if (
       typeof fieldValue === 'undefined' &&
       context.cacheRedirects &&
-      (obj.__typename || objId === 'ROOT_QUERY')
+      typeof typename === 'string'
     ) {
-      const typename = obj.__typename || 'Query';
-
       // Look for the type in the custom resolver map
       const type = context.cacheRedirects[typename];
       if (type) {
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];
         if (resolver) {
-          fieldValue = resolver(obj, args, {
+          fieldValue = resolver(object, args, {
             getCacheKey(storeObj: StoreObject) {
               return toIdValue({
                 id: context.dataIdFromObject(storeObj),
@@ -580,7 +549,7 @@ function readStoreResolver(
     return {
       result: fieldValue,
       missing: [{
-        objectId: objId,
+        object,
         fieldName: storeKeyName,
         tolerable: false,
       }],

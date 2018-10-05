@@ -390,7 +390,6 @@ export class QueryManager<TStore> {
       variables = {},
       metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
-      context,
     } = options;
     const cache = this.dataStore.getCache();
 
@@ -420,14 +419,8 @@ export class QueryManager<TStore> {
       storeResult = result;
     }
 
-    const isClient = hasDirectives(['client'], query);
-    const serverQuery = isClient ? removeClientSetsFromDocument(query) : query;
-
     let shouldFetch =
-      serverQuery !== null &&
-      needToFetch &&
-      fetchPolicy !== 'cache-only' &&
-      fetchPolicy !== 'standby';
+      needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
 
     // we need to check to see if this is an operation that uses the @live directive
     if (hasDirectives(['live'], query)) shouldFetch = true;
@@ -460,21 +453,6 @@ export class QueryManager<TStore> {
 
     this.broadcastQueries();
 
-    if (isClient) {
-      const localResolver = this.prepareLocalStateResolver(query);
-      if (localResolver) {
-        return graphql(
-          localResolver,
-          query,
-          {},
-          { ...context, cache },
-          variables,
-        ).then(localResult => {
-          data: localResult;
-        }) as Promise<any>;
-      }
-    }
-
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult =
@@ -492,7 +470,7 @@ export class QueryManager<TStore> {
       const networkResult = this.fetchRequest({
         requestId,
         queryId,
-        document: serverQuery!,
+        document: query,
         options,
         fetchMoreForQueryId,
       }).catch(error => {
@@ -1166,7 +1144,7 @@ export class QueryManager<TStore> {
     const cache = this.dataStore.getCache();
     Object.keys(initializers).forEach(field => {
       const initializer = initializers[field];
-      const result = initializer();
+      const result = initializer(cache);
       if (result) {
         cache.writeData({ data: { [field]: result } });
       }
@@ -1217,27 +1195,64 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
-    const operation = this.buildOperationForLink(document, variables, {
-      ...context,
-      // TODO: Should this be included for all entry points via
-      // buildOperationForLink?
-      forceFetch: !this.queryDeduplication,
-    });
+
+    let clientQuery: DocumentNode | null = null;
+    let serverQuery;
+
+    if (hasDirectives(['client'], document)) {
+      clientQuery = document;
+      serverQuery = removeClientSetsFromDocument(document);
+    } else {
+      serverQuery = document;
+    }
+
+    let obs: Observable<FetchResult>;
+    if (serverQuery) {
+      const operation = this.buildOperationForLink(serverQuery, variables, {
+        ...context,
+        // TODO: Should this be included for all entry points via
+        // buildOperationForLink?
+        forceFetch: !this.queryDeduplication,
+      });
+      obs = execute(this.deduplicator, operation);
+    } else {
+      obs = Observable.of({
+        data: {},
+      });
+    }
 
     let resultFromStore: any;
     let errorsFromStore: any;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, resolve, reject);
-      const subscription = execute(this.deduplicator, operation).subscribe({
-        next: (result: ExecutionResult) => {
+      const subscription = obs.subscribe({
+        next: async (result: ExecutionResult) => {
+          let updatedResult = result;
+
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
+            if (clientQuery) {
+              const localResolver = this.prepareLocalStateResolver(clientQuery);
+              if (localResolver) {
+                const localResult = await graphql(
+                  localResolver,
+                  clientQuery,
+                  result.data,
+                  { ...context, cache: this.dataStore.getCache() },
+                  variables,
+                );
+                if (localResult) {
+                  updatedResult.data = localResult;
+                }
+              }
+            }
+
             if (fetchPolicy !== 'no-cache') {
               try {
                 this.dataStore.markQueryResult(
-                  result,
+                  updatedResult,
                   document,
                   variables,
                   fetchMoreForQueryId,
@@ -1249,13 +1264,13 @@ export class QueryManager<TStore> {
               }
             } else {
               this.setQuery(queryId, () => ({
-                newData: { result: result.data, complete: true },
+                newData: { result: updatedResult.data, complete: true },
               }));
             }
 
             this.queryStore.markQueryResult(
               queryId,
-              result,
+              updatedResult,
               fetchMoreForQueryId,
             );
 
@@ -1264,21 +1279,21 @@ export class QueryManager<TStore> {
             this.broadcastQueries();
           }
 
-          if (result.errors && errorPolicy === 'none') {
+          if (updatedResult.errors && errorPolicy === 'none') {
             reject(
               new ApolloError({
-                graphQLErrors: result.errors,
+                graphQLErrors: updatedResult.errors,
               }),
             );
             return;
           } else if (errorPolicy === 'all') {
-            errorsFromStore = result.errors;
+            errorsFromStore = updatedResult.errors;
           }
 
           if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
             // We don't write fetchMore results to the store because this would overwrite
             // the original result in case an @connection directive is used.
-            resultFromStore = result.data;
+            resultFromStore = updatedResult.data;
           } else {
             try {
               // ensure result is combined with data already in store

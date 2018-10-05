@@ -4,7 +4,7 @@ import {
   DocumentNode,
   OperationDefinitionNode,
 } from 'graphql';
-import { graphql, Resolver } from 'graphql-anywhere/lib/graphql-async';
+import { graphqlAsync as graphql, Resolver } from 'graphql-anywhere';
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
 import { Cache } from 'apollo-cache';

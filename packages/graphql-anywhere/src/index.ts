@@ -1,6 +1,7 @@
 export { filter, check, propType } from './utilities';
 
 export {
+  graphql,
   Resolver,
   VariableMap,
   ResultMapper,
@@ -10,5 +11,4 @@ export {
   ExecOptions,
 } from './graphql';
 
-import { graphql } from './graphql';
-export default graphql;
+export { graphqlAsync } from './graphqlAsync';

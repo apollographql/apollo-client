@@ -27,8 +27,6 @@ import {
   ExecOptions,
 } from './graphql';
 
-export { Resolver, ExecInfo };
-
 /* Based on graphql function from graphql-js:
  *
  * graphql(
@@ -45,7 +43,7 @@ export { Resolver, ExecInfo };
  * In the 5.0 version, this will be the only export again
  * and it will be async
  */
-export function graphql(
+export function graphqlAsync(
   resolver: Resolver,
   document: DocumentNode,
   rootValue?: any,

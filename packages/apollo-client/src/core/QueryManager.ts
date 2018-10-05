@@ -1150,15 +1150,18 @@ export class QueryManager<TStore> {
     Object.keys(initializers).forEach(fieldName => {
       const newInitializer = initializers[fieldName];
       const existingInitializer = this.localStateInitializers[fieldName];
+
       if (
-        !existingInitializer ||
-        existingInitializer.toString() !== newInitializer.toString()
+        existingInitializer &&
+        existingInitializer.toString() === newInitializer.toString()
       ) {
-        newInitializers[fieldName] = newInitializer;
-        const result = newInitializer(cache);
-        if (result) {
-          cache.writeData({ data: { [fieldName]: result } });
-        }
+        return;
+      }
+
+      newInitializers[fieldName] = newInitializer;
+      const result = newInitializer(cache);
+      if (result) {
+        cache.writeData({ data: { [fieldName]: result } });
       }
     });
 

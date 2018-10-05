@@ -13,7 +13,7 @@ npm install apollo-boost react-apollo graphql --save
 ```js
 import React from 'react';
 import { AppRegistry } from 'react-native';
-import { ApolloClient } from 'apollo-client';
+import { ApolloClient } from 'apollo-boost';
 import { ApolloProvider } from 'react-apollo';
 
 // Create the client as outlined in the setup guide

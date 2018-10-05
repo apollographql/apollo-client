@@ -3,6 +3,7 @@ import { DocumentNode, SelectionSetNode, FragmentSpreadNode, FragmentDefinitionN
 import { QueryDocumentKeys } from "graphql/language/visitor";
 
 const CIRCULAR = Object.create(null);
+const objToStr = Object.prototype.toString;
 
 export class QueryKeyMaker {
   private perQueryKeyMakers = new Map<DocumentNode, PerQueryKeyMaker>();
@@ -99,7 +100,7 @@ class PerQueryKeyMaker {
   private lookupArray(array: any[]): object {
     const elements = array.map(this.lookupAny, this);
     return this.cacheKeyRoot.lookup(
-      Array.prototype,
+      objToStr.call(array),
       this.cacheKeyRoot.lookupArray(elements),
     );
   }
@@ -108,7 +109,7 @@ class PerQueryKeyMaker {
     const keys = safeSortedKeys(object);
     const values = keys.map(key => this.lookupAny(object[key]));
     return this.cacheKeyRoot.lookup(
-      Object.getPrototypeOf(object),
+      objToStr.call(object),
       this.cacheKeyRoot.lookupArray(keys),
       this.cacheKeyRoot.lookupArray(values),
     );

@@ -28,6 +28,10 @@
   [PR #3964](https://github.com/apollographql/apollo-client/pull/3964)
   [React Native PR #21492 (pending)](https://github.com/facebook/react-native/pull/21492)
 
+- The `apollo-cache-inmemory` package now allows `graphql@^14.0.0` as a
+  peer dependency.
+  [Issue #3978](https://github.com/apollographql/apollo-client/issues/3978)
+
 ### Apollo GraphQL Anywhere (vNext)
 
 - Make `graphql-anywhere` `filter` function generic (typescript).  <br/>

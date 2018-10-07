@@ -54,6 +54,10 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  localState?: {
+    initializers?: LocalStateInitializers;
+    resolvers?: LocalStateResolvers;
+  };
 };
 
 const supportedDirectives = new ApolloLink(
@@ -109,6 +113,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
+      localState,
     } = options;
 
     if (!link || !cache) {
@@ -188,6 +193,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       }
     }
     this.version = version;
+
+    if (localState) {
+      // Run provided local state initializers.
+      this.addLocalStateInitializers(localState.initializers);
+
+      // Prepare provided local state resolvers.
+      this.addLocalStateResolvers(localState.resolvers);
+    }
   }
 
   /**

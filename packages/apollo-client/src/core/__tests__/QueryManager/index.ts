@@ -2336,6 +2336,87 @@ describe('QueryManager', () => {
     // We have an unhandled error warning from the `subscribe` above, which has no `error` cb
   });
 
+  it('does not return incomplete data when two queries for the same item are executed', () => {
+    const queryA = gql`
+      query queryA {
+        person(id: "abc") {
+          __typename
+          id
+          firstName
+          lastName
+        }
+      }
+    `;
+    const queryB = gql`
+      query queryB {
+        person(id: "abc") {
+          __typename
+          id
+          lastName
+          age
+        }
+      }
+    `;
+    const dataA = {
+      person: {
+        __typename: 'Person',
+        id: 'abc',
+        firstName: 'Luke',
+        lastName: 'Skywalker',
+      },
+    };
+    const dataB = {
+      person: {
+        __typename: 'Person',
+        id: 'abc',
+        lastName: 'Skywalker',
+        age: '32',
+      },
+    };
+    const queryManager = new QueryManager<NormalizedCacheObject>({
+      link: mockSingleLink(
+        { request: { query: queryA }, result: { data: dataA } },
+        { request: { query: queryB }, result: { data: dataB }, delay: 20 },
+      ),
+      store: new DataStore(new InMemoryCache({})),
+      ssrMode: true,
+    });
+
+    const observableA = queryManager.watchQuery({
+      query: queryA,
+    });
+    const observableB = queryManager.watchQuery({
+      query: queryB,
+    });
+
+    return Promise.all([
+      observableToPromise({ observable: observableA }, () => {
+        expect(
+          stripSymbols(queryManager.getCurrentQueryResult(observableA)),
+        ).toEqual({
+          data: dataA,
+          partial: false,
+        });
+        expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
+          data: {},
+          partial: true,
+        });
+      }),
+      observableToPromise({ observable: observableB }, () => {
+        expect(
+          stripSymbols(queryManager.getCurrentQueryResult(observableA)),
+        ).toEqual({
+          data: dataA,
+          partial: false,
+        });
+        expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
+          data: dataB,
+          partial: false,
+        });
+      }),
+    ]);
+  });
+
   describe('polling queries', () => {
     it('allows you to poll queries', () => {
       const query = gql`

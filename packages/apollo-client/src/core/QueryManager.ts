@@ -996,7 +996,7 @@ export class QueryManager<TStore> {
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
     // XXX test this
-    if (newData) {
+    if (newData && newData.complete) {
       return { data: newData.result, partial: false };
     } else {
       try {

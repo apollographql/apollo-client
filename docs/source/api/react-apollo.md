@@ -83,6 +83,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed in the event of an error.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+  <dt>`partialRefetch`: boolean</dt>
+  <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). `false` by default.</dd>
 </dl>
 
 <h3 id="query-render-prop">Render prop function</h3>
@@ -188,6 +190,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
   <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
   <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>

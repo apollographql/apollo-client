@@ -171,6 +171,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           // Only for Chrome
           if (
             window.navigator &&
+            window.navigator.userAgent &&
             window.navigator.userAgent.indexOf('Chrome') > -1
           ) {
             // tslint:disable-next-line

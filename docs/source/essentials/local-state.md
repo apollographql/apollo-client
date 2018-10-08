@@ -90,7 +90,7 @@ const GET_VISIBILITY_FILTER = gql`
   }
 `;
 
-// Remember to set a initial value for visibilityFilter with defaults
+// Remember to set an initial value for visibilityFilter with defaults
 const FilterLink = ({ filter, children }) => (
   <Query query={GET_VISIBILITY_FILTER}>
     {({ data, client }) => (

@@ -113,21 +113,22 @@ export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   variables?: Pick<TVariables, K>;
 }
 
-export type UpdateQueryFn<TData = any, TVariables = OperationVariables> = (
+export type UpdateQueryFn<TData = any, TVariables = OperationVariables, TSubscriptionData = TData> = (
   previousQueryResult: TData,
   options: {
-    subscriptionData: { data: TData };
+    subscriptionData: { data: TSubscriptionData };
     variables?: TVariables;
   },
 ) => TData;
 
 export type SubscribeToMoreOptions<
   TData = any,
-  TVariables = OperationVariables
+  TVariables = OperationVariables,
+  TSubscriptionData = TData
 > = {
   document: DocumentNode;
   variables?: TVariables;
-  updateQuery?: UpdateQueryFn<TData, TVariables>;
+  updateQuery?: UpdateQueryFn<TData, TVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
 };
 

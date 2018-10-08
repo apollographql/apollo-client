@@ -13,7 +13,7 @@
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
-    "test": "jest",
+    "test": "tsc -p tsconfig.test.json --noEmit && jest",
     "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run minify",

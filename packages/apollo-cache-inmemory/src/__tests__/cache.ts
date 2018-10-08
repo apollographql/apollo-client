@@ -1,6 +1,7 @@
 import { ApolloCache } from 'apollo-cache';
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
+import _ from 'lodash';
 
 import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
 
@@ -258,7 +259,7 @@ describe('Cache', () => {
         },
       };
 
-      const preQueryCopy = { ...args };
+      const preQueryCopy = _.cloneDeep(args);
 
       expect(stripSymbols(proxy.readQuery(args))).toEqual({ a: 1, b: 2 });
 

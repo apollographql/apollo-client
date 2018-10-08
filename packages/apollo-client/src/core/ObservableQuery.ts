@@ -1,8 +1,4 @@
-import {
-  isEqual,
-  tryFunctionOrLogError,
-  maybeDeepFreeze,
-} from 'apollo-utilities';
+import { isEqual, tryFunctionOrLogError } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
@@ -286,7 +282,7 @@ export class ObservableQuery<
 
     return this.queryManager
       .fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
-      .then(result => maybeDeepFreeze(result));
+      .then(result => result as ApolloQueryResult<TData>);
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -479,7 +475,7 @@ export class ObservableQuery<
           ...this.options,
           variables: this.variables,
         } as WatchQueryOptions)
-        .then(result => maybeDeepFreeze(result));
+        .then(result => result as ApolloQueryResult<TData>);
     }
   }
 

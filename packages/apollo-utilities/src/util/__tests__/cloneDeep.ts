@@ -52,4 +52,19 @@ describe('cloneDeep', () => {
     expect(clonedValue3[0]).toEqual(value3[0]);
     expect(clonedValue3[1]).toEqual(value3[1]);
   });
+
+  it('should not attempt to follow circular references', () => {
+    const someObject = {
+      prop1: 'value1',
+      anotherObject: null,
+    };
+    const anotherObject = {
+      someObject,
+    };
+    someObject.anotherObject = anotherObject;
+    let chk;
+    expect(() => {
+      chk = cloneDeep(someObject);
+    }).not.toThrow();
+  });
 });

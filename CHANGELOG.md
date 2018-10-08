@@ -15,6 +15,23 @@
   [@billfienberg](https://github.com/billfienberg) in [#3886](https://github.com/apollographql/apollo-client/pull/3886)  <br/>
   [@TLadd](https://github.com/TLadd) in [#3884](https://github.com/apollographql/apollo-client/pull/3884)
 
+### Apollo Cache In-Memory (1.3.5)
+
+- Optimize repeated `apollo-cache-inmemory` reads by caching partial query
+  results, for substantial performance improvements. As a consequence, watched
+  queries will not be rebroadcast unless the data have changed.
+  [PR #3394](https://github.com/apollographql/apollo-client/pull/3394)
+
+- Include root ID and fragment matcher function in cache keys computed by
+  `StoreReader#executeStoreQuery` and `executeSelectionSet`, and work
+  around bugs in the React Native `Map` and `Set` polyfills.
+  [PR #3964](https://github.com/apollographql/apollo-client/pull/3964)
+  [React Native PR #21492 (pending)](https://github.com/facebook/react-native/pull/21492)
+
+- The `apollo-cache-inmemory` package now allows `graphql@^14.0.0` as a
+  peer dependency.
+  [Issue #3978](https://github.com/apollographql/apollo-client/issues/3978)
+
 ### Apollo GraphQL Anywhere (vNext)
 
 - Make `graphql-anywhere` `filter` function generic (typescript).  <br/>

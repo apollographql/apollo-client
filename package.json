@@ -97,7 +97,7 @@
     "@types/lodash": "4.14.116",
     "@types/node": "10.11.0",
     "@types/react": "16.4.14",
-    "@types/react-dom": "16.0.7",
+    "@types/react-dom": "16.0.8",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
@@ -124,7 +124,7 @@
     "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
     "tslint": "5.11.0",
-    "typescript": "3.0.3",
+    "typescript": "3.1.1",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",
     "webpack-bundle-analyzer": "3.0.2"
@@ -145,11 +145,9 @@
       "dependencies"
     ],
     "assignees": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "reviewers": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "pathRules": [

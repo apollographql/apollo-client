@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-inmemory",
-  "version": "1.3.0",
+  "version": "1.3.5",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -45,7 +45,7 @@
     "optimism": "^0.6.6"
   },
   "peerDependencies": {
-    "graphql": "0.11.7 || ^0.12.0 || ^0.13.0"
+    "graphql": "0.11.7 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "jest": {
     "transform": {

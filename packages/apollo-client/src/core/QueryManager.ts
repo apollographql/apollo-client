@@ -1249,8 +1249,13 @@ export class QueryManager<TStore> {
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, resolve, reject);
-      const subscription = obs.subscribe({
+
+      let complete = false;
+      let handlingNext = false;
+
+      const subscriber = {
         next: async (result: ExecutionResult) => {
+          handlingNext = true;
           let updatedResult = result;
 
           // default the lastRequestId to 1
@@ -1334,6 +1339,11 @@ export class QueryManager<TStore> {
               // tslint:disable-next-line
             } catch (e) {}
           }
+
+          handlingNext = false;
+          if (complete) {
+            subscriber.complete();
+          }
         },
         error: (error: ApolloError) => {
           this.removeFetchQueryPromise(requestId);
@@ -1344,20 +1354,25 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
-          this.removeFetchQueryPromise(requestId);
-          this.setQuery(queryId, ({ subscriptions }) => ({
-            subscriptions: subscriptions.filter(x => x !== subscription),
-          }));
+          if (!handlingNext) {
+            this.removeFetchQueryPromise(requestId);
+            this.setQuery(queryId, ({ subscriptions }) => ({
+              subscriptions: subscriptions.filter(x => x !== subscription),
+            }));
 
-          resolve({
-            data: resultFromStore,
-            errors: errorsFromStore,
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            stale: false,
-          });
+            resolve({
+              data: resultFromStore,
+              errors: errorsFromStore,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              stale: false,
+            });
+          }
+          complete = true;
         },
-      });
+      };
+
+      const subscription = obs.subscribe(subscriber);
 
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),

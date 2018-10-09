@@ -327,7 +327,10 @@ export class QueryManager<TStore> {
                 variables,
               );
               if (localResult) {
-                updatedResult.data = localResult;
+                updatedResult.data = {
+                  ...updatedResult.data,
+                  ...localResult,
+                };
               }
             }
           }
@@ -1160,7 +1163,7 @@ export class QueryManager<TStore> {
 
       newInitializers[fieldName] = newInitializer;
       const result = newInitializer(cache);
-      if (result) {
+      if (result !== null) {
         cache.writeData({ data: { [fieldName]: result } });
       }
     });
@@ -1263,8 +1266,12 @@ export class QueryManager<TStore> {
                   { ...context, cache: this.dataStore.getCache() },
                   variables,
                 );
+
                 if (localResult) {
-                  updatedResult.data = localResult;
+                  updatedResult.data = {
+                    ...updatedResult.data,
+                    ...localResult,
+                  };
                 }
               }
             }
@@ -1449,24 +1456,41 @@ export class QueryManager<TStore> {
     const resolvers = this.localStateResolvers;
     const resolverMap = resolvers[type];
 
-    if (resolverMap) {
-      resolver = (
-        fieldName: string,
-        rootValue: any = {},
-        args: any,
-        context: any,
-        info: any,
-      ) => {
-        // TODO: review graphql aliasing support
+    resolver = (
+      fieldName: string,
+      rootValue: any = {},
+      args: any,
+      context: any,
+      info: any,
+    ) => {
+      // TODO: review graphql aliasing support
 
+      // If a local resolver function is defined, run it and return the
+      // outcome.
+      if (resolverMap) {
         const resolve = resolverMap[fieldName];
         if (resolve) {
           return resolve(rootValue, args, context, info);
         }
+      }
 
+      // If a local resolver function isn't found, check to see if the
+      // field has a matching entry in the passed in `rootValue` data.
+      if (Object.prototype.hasOwnProperty.call(rootValue, fieldName)) {
         return rootValue[fieldName];
-      };
-    }
+      }
+
+      // If the above checks fail, check the cache to see if the specified
+      // local field has a cache entry.
+      const cache = this.dataStore.getCache();
+      const cacheContents: {
+        ROOT_QUERY?: {
+          [key: string]: any;
+        };
+      } = cache.extract();
+      const rootQuery = cacheContents.ROOT_QUERY;
+      return rootQuery ? rootQuery[fieldName] : undefined;
+    };
 
     return resolver;
   }

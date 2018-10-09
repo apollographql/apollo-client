@@ -171,6 +171,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           // Only for Chrome
           if (
             window.navigator &&
+            window.navigator.userAgent &&
             window.navigator.userAgent.indexOf('Chrome') > -1
           ) {
             // tslint:disable-next-line
@@ -444,6 +445,17 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           ? this.queryManager.reFetchObservableQueries()
           : Promise.resolve(null);
       });
+  }
+
+  /**
+   * Remove all data from the store. Unlike `resetStore`, `clearStore` will
+   * not refetch any active queries.
+   */
+  public clearStore(): Promise<void | null> {
+    const { queryManager } = this;
+    return Promise.resolve().then(
+      () => (queryManager ? queryManager.clearStore() : Promise.resolve(null)),
+    );
   }
 
   /**

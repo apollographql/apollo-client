@@ -73,7 +73,7 @@ The server can use that header to authenticate the user and attach it to the Gra
 
 Since Apollo caches all of your query results, it's important to get rid of them when the login state changes.
 
-The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. Another option is to reload the page, which will have a similar effect.
+The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. If you just want the store to be cleared and don't want to refetch active queries, use `client.clearStore()` instead. Another option is to reload the page, which will have a similar effect.
 
 
 ```js

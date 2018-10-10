@@ -29,7 +29,7 @@
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
-      "maxSize": "5.25 kB"
+      "maxSize": "6.75 kB"
     },
     {
       "name": "apollo-client",
@@ -89,42 +89,42 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.11.2",
+    "@octokit/rest": "15.13.0",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "23.3.2",
     "@types/lodash": "4.14.116",
-    "@types/node": "10.9.4",
-    "@types/react": "16.4.14",
-    "@types/react-dom": "16.0.7",
+    "@types/node": "10.11.0",
+    "@types/react": "16.4.16",
+    "@types/react-dom": "16.0.9",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.1.0",
-    "danger": "4.0.1",
-    "fetch-mock": "6.5.2",
-    "flow-bin": "0.81.0",
+    "danger": "4.4.6",
+    "fetch-mock": "7.0.7",
+    "flow-bin": "0.82.0",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
     "isomorphic-fetch": "2.2.1",
     "jest": "23.6.0",
     "jest-junit": "5.1.0",
     "lerna": "3.4.0",
-    "lint-staged": "7.2.2",
+    "lint-staged": "7.3.0",
     "lodash": "4.17.11",
     "pre-commit": "1.2.2",
-    "prettier": "1.14.2",
+    "prettier": "1.14.3",
     "react": "16.5.2",
     "react-dom": "16.5.2",
-    "rollup": "0.66.0",
+    "rollup": "0.66.2",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "3.4.0",
     "rollup-plugin-sourcemaps": "0.4.2",
-    "rxjs": "6.3.2",
+    "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
     "tslint": "5.11.0",
-    "typescript": "3.0.3",
+    "typescript": "3.1.1",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",
     "webpack-bundle-analyzer": "3.0.2"
@@ -145,11 +145,9 @@
       "dependencies"
     ],
     "assignees": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "reviewers": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "pathRules": [

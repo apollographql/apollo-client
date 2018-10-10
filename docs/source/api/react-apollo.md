@@ -83,6 +83,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed in the event of an error.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+  <dt>`partialRefetch`: boolean</dt>
+  <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
 </dl>
 
 <h3 id="query-render-prop">Render prop function</h3>
@@ -188,6 +190,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
   <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
   <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>
@@ -847,7 +851,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
 
 **Example:**
 
@@ -961,6 +965,20 @@ export default graphql(gql`query { ... }`, {
 <h3 id="graphql-config-options-context">`options.context`</h3>
 With the flexiblity and power of [Apollo Link](/docs/link) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](/docs/link/overview.html#context)
 
+<h3 id="graphql-config-options-partialRefetch">`partialRefetch`</h3>
+
+If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss).
+
+The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.
+
+**Example:**
+
+```js
+export default graphql(gql`query { ... }`, {
+  options: { partialRefetch: true },
+})(MyComponent);
+```
+
 <h2 id="graphql-mutation-options" title="graphql() mutation options">`graphql() options for mutations`</h2>
 
 <h3 id="graphql-mutation-mutate">`props.mutate`</h3>
@@ -1000,7 +1018,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
 
 The properties accepted in this options object may also be accepted by the [`props.mutate`](#graphql-mutation-mutate) function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
 

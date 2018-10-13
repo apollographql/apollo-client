@@ -1131,8 +1131,14 @@ export class QueryManager<TStore> {
     });
   }
 
-  public addResolvers(resolvers: Resolvers = {}) {
-    this.resolvers = mergeDeep(this.resolvers, resolvers);
+  public addResolvers(resolvers: Resolvers | Resolvers[]) {
+    if (Array.isArray(resolvers)) {
+      resolvers.forEach(resolverGroup => {
+        this.resolvers = mergeDeep(this.resolvers, resolverGroup);
+      });
+    } else {
+      this.resolvers = mergeDeep(this.resolvers, resolvers);
+    }
   }
 
   private getObservableQueryPromises(

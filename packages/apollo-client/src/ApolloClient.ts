@@ -55,8 +55,10 @@ export type ApolloClientOptions<TCacheShape> = {
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
   localState?: {
-    initializers?: StoreInitializers<TCacheShape>;
-    resolvers?: Resolvers;
+    initializers?:
+      | StoreInitializers<TCacheShape>
+      | StoreInitializers<TCacheShape>[];
+    resolvers?: Resolvers | Resolvers[];
   };
 };
 
@@ -198,11 +200,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.version = version;
 
     if (localState) {
-      // Run provided local state initializers.
-      this.initializeStore(localState.initializers);
+      if (localState.initializers) {
+        // Run provided local state initializers.
+        this.initializeStore(localState.initializers);
+      }
 
-      // Prepare provided local state resolvers.
-      this.addResolvers(localState.resolvers);
+      if (localState.resolvers) {
+        // Prepare provided local state resolvers.
+        this.addResolvers(localState.resolvers);
+      }
     }
   }
 
@@ -536,15 +542,28 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   // in the cache, before writing to the cache. This means existing data
   // can be overwritten. We might decide to query into the cache first to
   // see if any previous data exists before overwritting it, but TBD.
-  public initializeStore(initializers: StoreInitializers<TCacheShape> = {}) {
+  public initializeStore(
+    initializers:
+      | StoreInitializers<TCacheShape>
+      | StoreInitializers<TCacheShape>[],
+  ) {
     if (!initializers) {
       throw new Error('Invalid/missing initializers');
     }
 
+    let incomingInitializers: StoreInitializers<TCacheShape> = {};
+    if (Array.isArray(initializers)) {
+      initializers.forEach(initializerGroup => {
+        incomingInitializers = { ...incomingInitializers, ...initializerGroup };
+      });
+    } else {
+      incomingInitializers = initializers;
+    }
+
     const newInitializers: StoreInitializers<TCacheShape> = {};
     const initializerPromises: Promise<void>[] = [];
-    Object.keys(initializers).forEach(fieldName => {
-      const newInitializer = initializers[fieldName];
+    Object.keys(incomingInitializers).forEach(fieldName => {
+      const newInitializer = incomingInitializers[fieldName];
       const existingInitializer = this.storeInitializers[fieldName];
 
       if (
@@ -575,7 +594,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * TODO.
    */
-  public addResolvers(resolvers: Resolvers = {}) {
+  public addResolvers(resolvers: Resolvers | Resolvers[]) {
     this.initQueryManager().addResolvers(resolvers);
   }
 

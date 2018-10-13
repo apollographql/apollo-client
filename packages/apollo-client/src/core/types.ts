@@ -1,6 +1,7 @@
 import { FetchResult } from 'apollo-link';
 import { DocumentNode, GraphQLError } from 'graphql';
 
+import ApolloClient from '../ApolloClient';
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
 
@@ -46,12 +47,12 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
 };
 
 // TODO
-export interface LocalStateInitializers {
-  [field: string]: (cache: any) => any;
+export interface StoreInitializers<TCacheShape> {
+  [field: string]: (client: ApolloClient<TCacheShape>) => any;
 }
 
 // TODO
-export interface LocalStateResolvers {
+export interface Resolvers {
   [key: string]: {
     [field: string]: (
       rootValue: any,

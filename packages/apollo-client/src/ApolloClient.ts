@@ -17,8 +17,8 @@ import { QueryManager } from './core/QueryManager';
 import {
   ApolloQueryResult,
   OperationVariables,
-  LocalStateInitializers,
-  LocalStateResolvers,
+  StoreInitializers,
+  Resolvers,
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 
@@ -55,8 +55,8 @@ export type ApolloClientOptions<TCacheShape> = {
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
   localState?: {
-    initializers?: LocalStateInitializers;
-    resolvers?: LocalStateResolvers;
+    initializers?: StoreInitializers<TCacheShape>;
+    resolvers?: Resolvers;
   };
 };
 
@@ -87,6 +87,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
+
+  // TODO
+  private storeInitializers: StoreInitializers<TCacheShape> = {};
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -196,10 +199,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     if (localState) {
       // Run provided local state initializers.
-      this.addLocalStateInitializers(localState.initializers);
+      this.initializeStore(localState.initializers);
 
       // Prepare provided local state resolvers.
-      this.addLocalStateResolvers(localState.resolvers);
+      this.addResolvers(localState.resolvers);
     }
   }
 
@@ -525,18 +528,55 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     return this.initProxy().restore(serializedState);
   }
 
-  /**
-   * TODO.
-   */
-  public addLocalStateInitializers(initializers: LocalStateInitializers = {}) {
-    this.initQueryManager().addLocalStateInitializers(initializers);
+  // Run (and store for future reference) the incoming initializer functions.
+  // Initializers for the same field that have the exact same function value,
+  // are only run (and stored) once.
+  //
+  // NOTE: Initializers do not currently check to see if data already exists
+  // in the cache, before writing to the cache. This means existing data
+  // can be overwritten. We might decide to query into the cache first to
+  // see if any previous data exists before overwritting it, but TBD.
+  public initializeStore(initializers: StoreInitializers<TCacheShape> = {}) {
+    if (!initializers) {
+      throw new Error('Invalid/missing initializers');
+    }
+
+    const newInitializers: StoreInitializers<TCacheShape> = {};
+    const initializerPromises: Promise<void>[] = [];
+    Object.keys(initializers).forEach(fieldName => {
+      const newInitializer = initializers[fieldName];
+      const existingInitializer = this.storeInitializers[fieldName];
+
+      if (
+        existingInitializer &&
+        existingInitializer.toString() === newInitializer.toString()
+      ) {
+        return;
+      }
+
+      newInitializers[fieldName] = newInitializer;
+      initializerPromises.push(
+        Promise.resolve(newInitializer(this)).then(result => {
+          if (result !== null) {
+            this.cache.writeData({ data: { [fieldName]: result } });
+          }
+        }),
+      );
+    });
+
+    this.storeInitializers = {
+      ...this.storeInitializers,
+      ...newInitializers,
+    };
+
+    return Promise.all(initializerPromises);
   }
 
   /**
    * TODO.
    */
-  public addLocalStateResolvers(resolvers: LocalStateResolvers = {}) {
-    this.initQueryManager().addLocalStateResolvers(resolvers);
+  public addResolvers(resolvers: Resolvers = {}) {
+    this.initQueryManager().addResolvers(resolvers);
   }
 
   /**

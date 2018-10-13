@@ -46,8 +46,7 @@ import {
   ApolloQueryResult,
   FetchType,
   OperationVariables,
-  LocalStateInitializers,
-  LocalStateResolvers,
+  Resolvers,
 } from './types';
 import { graphQLResultHasError } from 'apollo-utilities';
 
@@ -110,10 +109,7 @@ export class QueryManager<TStore> {
   private queryIdsByName: { [queryName: string]: string[] } = {};
 
   // TODO
-  private localStateInitializers: LocalStateInitializers = {};
-
-  // TODO
-  private localStateResolvers: LocalStateResolvers = {};
+  private resolvers: Resolvers = {};
 
   constructor({
     link,
@@ -316,11 +312,11 @@ export class QueryManager<TStore> {
 
           let updatedResult = result;
           if (clientQuery) {
-            const localResolver = this.prepareLocalStateResolver(clientQuery);
-            if (localResolver) {
+            const resolver = this.prepareResolver(clientQuery);
+            if (resolver) {
               const { context, variables } = operation;
               const localResult = await graphql(
-                localResolver,
+                resolver,
                 clientQuery,
                 result.data,
                 context,
@@ -1135,47 +1131,8 @@ export class QueryManager<TStore> {
     });
   }
 
-  // Run (and store for future reference) the incoming initializer functions.
-  // Initializers for the same field that have the exact same function value,
-  // are only run (and stored) once.
-  //
-  // NOTE: Initializers do not currently check to see if data already exists
-  // in the cache, before writing to the cache. This means existing data
-  // can be overwritten. We might decide to query into the cache first to
-  // see if any previous data exists before overwritting it, but TBD.
-  public addLocalStateInitializers(initializers: LocalStateInitializers = {}) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const newInitializers: LocalStateInitializers = {};
-    const cache = this.dataStore.getCache();
-    Object.keys(initializers).forEach(fieldName => {
-      const newInitializer = initializers[fieldName];
-      const existingInitializer = this.localStateInitializers[fieldName];
-
-      if (
-        existingInitializer &&
-        existingInitializer.toString() === newInitializer.toString()
-      ) {
-        return;
-      }
-
-      newInitializers[fieldName] = newInitializer;
-      const result = newInitializer(cache);
-      if (result !== null) {
-        cache.writeData({ data: { [fieldName]: result } });
-      }
-    });
-
-    this.localStateInitializers = {
-      ...this.localStateInitializers,
-      ...newInitializers,
-    };
-  }
-
-  public addLocalStateResolvers(resolvers: LocalStateResolvers = {}) {
-    this.localStateResolvers = mergeDeep(this.localStateResolvers, resolvers);
+  public addResolvers(resolvers: Resolvers = {}) {
+    this.resolvers = mergeDeep(this.resolvers, resolvers);
   }
 
   private getObservableQueryPromises(
@@ -1262,10 +1219,10 @@ export class QueryManager<TStore> {
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
             if (clientQuery) {
-              const localResolver = this.prepareLocalStateResolver(clientQuery);
-              if (localResolver) {
+              const resolver = this.prepareResolver(clientQuery);
+              if (resolver) {
                 const localResult = await graphql(
-                  localResolver,
+                  resolver,
                   clientQuery,
                   result.data,
                   { ...context, cache: this.dataStore.getCache() },
@@ -1455,7 +1412,7 @@ export class QueryManager<TStore> {
     };
   }
 
-  private prepareLocalStateResolver(query: DocumentNode | null) {
+  private prepareResolver(query: DocumentNode | null) {
     let resolver: Resolver | null = null;
 
     if (!query) {
@@ -1468,7 +1425,7 @@ export class QueryManager<TStore> {
       ? capitalizeFirstLetter(definitionOperation)
       : 'Query';
 
-    const resolvers = this.localStateResolvers;
+    const { resolvers } = this;
     const resolverMap = resolvers[type];
 
     resolver = (

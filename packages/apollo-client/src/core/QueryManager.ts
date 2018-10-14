@@ -129,7 +129,6 @@ export class QueryManager<TStore> {
     this.queryDeduplication = queryDeduplication;
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
-
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
@@ -1231,7 +1230,7 @@ export class QueryManager<TStore> {
                   resolver,
                   clientQuery,
                   result.data,
-                  { ...context, cache: this.dataStore.getCache() },
+                  context,
                   variables,
                 );
 
@@ -1434,6 +1433,9 @@ export class QueryManager<TStore> {
     const { resolvers } = this;
     const resolverMap = resolvers[type];
 
+    const cache = this.dataStore.getCache();
+    const { query: queryFn, mutate: mutateFn } = this;
+
     resolver = (
       fieldName: string,
       rootValue: any = {},
@@ -1441,12 +1443,21 @@ export class QueryManager<TStore> {
       context: any,
       info: any,
     ) => {
+      // Make sure the context has access to the cache and query/mutate
+      // functions.
+      const updatedContext = {
+        ...context,
+        cache,
+        query: queryFn,
+        mutate: mutateFn,
+      };
+
       // If a local resolver function is defined, run it and return the
       // outcome.
       if (resolverMap) {
         const resolve = resolverMap[fieldName];
         if (resolve) {
-          return resolve(rootValue, args, context, info);
+          return resolve(rootValue, args, updatedContext, info);
         }
       }
 
@@ -1458,7 +1469,6 @@ export class QueryManager<TStore> {
 
       // If the above checks fail, check the cache to see if the specified
       // local field has a cache entry.
-      const cache = this.dataStore.getCache();
       const cacheContents: {
         ROOT_QUERY?: {
           [key: string]: any;

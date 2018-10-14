@@ -282,7 +282,10 @@ export class ObservableQuery<
 
     return this.queryManager
       .fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
-      .then(result => result as ApolloQueryResult<TData>);
+      .then(result => result as ApolloQueryResult<TData>)
+      // `fetchQuery` returns a Promise. In case of a failure it should be caught or else the
+      // console will show an `Uncaught (in promise)` message. Ignore the error for now.
+      .catch(() => undefined);
   }
 
   public fetchMore<K extends keyof TVariables>(

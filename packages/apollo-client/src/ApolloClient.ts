@@ -201,7 +201,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     if (localState) {
       if (localState.initializers) {
-        // Run provided local state initializers.
+        // Run provided local state initializers (run synchronously).
         this.initializeStore(localState.initializers);
       }
 
@@ -542,6 +542,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   // in the cache, before writing to the cache. This means existing data
   // can be overwritten. We might decide to query into the cache first to
   // see if any previous data exists before overwritting it, but TBD.
+  //
+  // TODO: Create a separate class for initializer handling ...
   public initializeStore(
     initializers:
       | StoreInitializers<TCacheShape>
@@ -551,42 +553,43 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       throw new Error('Invalid/missing initializers');
     }
 
-    let incomingInitializers: StoreInitializers<TCacheShape> = {};
-    if (Array.isArray(initializers)) {
-      initializers.forEach(initializerGroup => {
-        incomingInitializers = { ...incomingInitializers, ...initializerGroup };
-      });
-    } else {
-      incomingInitializers = initializers;
+    const mergedInitializers = this.mergeInitializers(initializers);
+
+    this.runAndStoreInitializers(
+      mergedInitializers,
+      (fieldName: string, initializer: any) => {
+        const result = initializer(this);
+        if (result !== null) {
+          this.cache.writeData({ data: { [fieldName]: result } });
+        }
+      },
+    );
+  }
+
+  public initializeStoreAsync(
+    initializers:
+      | StoreInitializers<TCacheShape>
+      | StoreInitializers<TCacheShape>[],
+  ) {
+    if (!initializers) {
+      throw new Error('Invalid/missing initializers');
     }
 
-    const newInitializers: StoreInitializers<TCacheShape> = {};
+    const mergedInitializers = this.mergeInitializers(initializers);
+
     const initializerPromises: Promise<void>[] = [];
-    Object.keys(incomingInitializers).forEach(fieldName => {
-      const newInitializer = incomingInitializers[fieldName];
-      const existingInitializer = this.storeInitializers[fieldName];
-
-      if (
-        existingInitializer &&
-        existingInitializer.toString() === newInitializer.toString()
-      ) {
-        return;
-      }
-
-      newInitializers[fieldName] = newInitializer;
-      initializerPromises.push(
-        Promise.resolve(newInitializer(this)).then(result => {
-          if (result !== null) {
-            this.cache.writeData({ data: { [fieldName]: result } });
-          }
-        }),
-      );
-    });
-
-    this.storeInitializers = {
-      ...this.storeInitializers,
-      ...newInitializers,
-    };
+    this.runAndStoreInitializers(
+      mergedInitializers,
+      (fieldName: string, initializer: any) => {
+        initializerPromises.push(
+          Promise.resolve(initializer(this)).then(result => {
+            if (result !== null) {
+              this.cache.writeData({ data: { [fieldName]: result } });
+            }
+          }),
+        );
+      },
+    );
 
     return Promise.all(initializerPromises);
   }
@@ -609,5 +612,49 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       this.proxy = this.cache;
     }
     return this.proxy;
+  }
+
+  // TODO
+  private mergeInitializers(
+    initializers:
+      | StoreInitializers<TCacheShape>
+      | StoreInitializers<TCacheShape>[],
+  ) {
+    let mergedInitializers: StoreInitializers<TCacheShape> = {};
+    if (Array.isArray(initializers)) {
+      initializers.forEach(initializerGroup => {
+        mergedInitializers = { ...mergedInitializers, ...initializerGroup };
+      });
+    } else {
+      mergedInitializers = initializers;
+    }
+    return mergedInitializers;
+  }
+
+  // TODO
+  private runAndStoreInitializers(
+    initializers: StoreInitializers<TCacheShape>,
+    runAndStoreFunc: (fieldName: string, initializer: any) => any,
+  ) {
+    const newInitializers: StoreInitializers<TCacheShape> = {};
+    Object.keys(initializers).forEach(fieldName => {
+      const newInitializer = initializers[fieldName];
+      const existingInitializer = this.storeInitializers[fieldName];
+
+      if (
+        existingInitializer &&
+        existingInitializer.toString() === newInitializer.toString()
+      ) {
+        return;
+      }
+
+      newInitializers[fieldName] = newInitializer;
+      runAndStoreFunc(fieldName, newInitializer);
+    });
+
+    this.storeInitializers = {
+      ...this.storeInitializers,
+      ...newInitializers,
+    };
   }
 }

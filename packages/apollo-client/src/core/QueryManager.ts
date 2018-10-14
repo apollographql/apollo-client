@@ -1441,8 +1441,6 @@ export class QueryManager<TStore> {
       context: any,
       info: any,
     ) => {
-      // TODO: review graphql aliasing support
-
       // If a local resolver function is defined, run it and return the
       // outcome.
       if (resolverMap) {

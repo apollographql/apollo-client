@@ -15,7 +15,9 @@
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
-  "sideEffects": false,
+  "sideEffects": [
+    "./lib/fixPolyfills.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"

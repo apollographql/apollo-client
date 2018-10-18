@@ -1340,9 +1340,9 @@ This will only be able to provide access to your client if there is an [`<Apollo
 **Example:**
 
 ```js
-export default withApollo(MyComponent);
-
 function MyComponent({ client }) {
   console.log(client);
 }
+
+export default withApollo(MyComponent);
 ```

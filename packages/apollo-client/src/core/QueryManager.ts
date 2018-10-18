@@ -980,6 +980,8 @@ export class QueryManager<TStore> {
       options.variables,
     );
 
+    let updatedVariables = variables;
+    let localResult: any;
     let sub: Subscription;
     let observers: Observer<any>[] = [];
 
@@ -991,11 +993,20 @@ export class QueryManager<TStore> {
       if (observers.length === 1) {
         const handler = {
           next: (result: FetchResult) => {
+            let updatedResult = result;
+
+            if (localResult) {
+              updatedResult.data = {
+                ...updatedResult.data,
+                ...localResult,
+              };
+            }
+
             if (isCacheEnabled) {
               this.dataStore.markSubscriptionResult(
-                result,
+                updatedResult,
                 transformedDoc,
-                variables,
+                updatedVariables,
               );
               this.broadcastQueries();
             }
@@ -1007,14 +1018,14 @@ export class QueryManager<TStore> {
               // still passing any errors that might occur into the `next`
               // handler, to give that handler a chance to deal with the
               // error (we're doing this for backwards compatibilty).
-              if (graphQLResultHasError(result) && obs.error) {
+              if (graphQLResultHasError(updatedResult) && obs.error) {
                 obs.error(
                   new ApolloError({
-                    graphQLErrors: result.errors,
+                    graphQLErrors: updatedResult.errors,
                   }),
                 );
               } else if (obs.next) {
-                obs.next(result);
+                obs.next(updatedResult);
               }
             });
           },
@@ -1027,10 +1038,27 @@ export class QueryManager<TStore> {
           },
         };
 
-        // TODO: Should subscriptions also accept a `context` option to pass
-        // through to links?
-        const operation = this.buildOperationForLink(transformedDoc, variables);
-        sub = execute(this.link, operation).subscribe(handler);
+        (async () => {
+          if (hasDirectives(['client'], transformedDoc)) {
+            localResult = await this.runClientQuery(transformedDoc, variables);
+            updatedVariables = this.prepareClientVariables(
+              transformedDoc,
+              localResult,
+              variables,
+            );
+          }
+
+          const serverQuery = removeClientSetsFromDocument(transformedDoc);
+          if (serverQuery) {
+            const operation = this.buildOperationForLink(
+              serverQuery,
+              updatedVariables,
+            );
+            sub = execute(this.link, operation).subscribe(handler);
+          } else {
+            sub = Observable.of({ data: {} }).subscribe(handler);
+          }
+        })();
       }
 
       return () => {
@@ -1473,7 +1501,7 @@ export class QueryManager<TStore> {
             selections.forEach(selection => {
               const field = selection as FieldNode;
               const directiveInfo = getDirectiveInfoFromField(field, {});
-              if (directiveInfo.client) {
+              if (directiveInfo && directiveInfo.client) {
                 let value = localResult[field.name.value];
                 if (value.json) {
                   value = value.json;

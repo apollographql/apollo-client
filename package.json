@@ -96,7 +96,7 @@
     "@types/jest": "23.3.5",
     "@types/lodash": "4.14.117",
     "@types/node": "10.12.0",
-    "@types/react": "16.4.16",
+    "@types/react": "16.4.18",
     "@types/react-dom": "16.0.9",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.0",

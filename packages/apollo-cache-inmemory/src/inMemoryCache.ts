@@ -1,3 +1,6 @@
+// Make builtins like Map and Set safe to use with non-extensible objects.
+import './fixPolyfills';
+
 import { DocumentNode } from 'graphql';
 
 import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
@@ -77,14 +80,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.addTypename = this.config.addTypename;
     this.data = defaultNormalizedCacheFactory();
 
-    this.storeReader = new StoreReader({
-      addTypename: this.config.addTypename,
-      cacheKeyRoot: this.cacheKeyRoot,
-    });
-
-    this.storeWriter = new StoreWriter({
-      addTypename: this.config.addTypename,
-    });
+    this.storeReader = new StoreReader(this.cacheKeyRoot);
+    this.storeWriter = new StoreWriter();
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
@@ -143,7 +140,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     return this.storeReader.readQueryFromStore({
       store,
-      query: query.query,
+      query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
@@ -157,7 +154,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       dataId: write.dataId,
       result: write.result,
       variables: write.variables,
-      document: write.query,
+      document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
@@ -173,7 +170,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     return this.storeReader.diffQueryAgainstStore({
       store: store,
-      query: query.query,
+      query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
@@ -288,9 +285,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
-      query: getFragmentQueryDocument(
-        options.fragment,
-        options.fragmentName,
+      query: this.transformDocument(
+        getFragmentQueryDocument(options.fragment, options.fragmentName),
       ),
       variables: options.variables,
       rootId: options.id,
@@ -304,7 +300,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
-      query: options.query,
+      query: this.transformDocument(options.query),
       variables: options.variables,
     });
   }
@@ -315,9 +311,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: options.id,
       result: options.data,
-      query: getFragmentQueryDocument(
-        options.fragment,
-        options.fragmentName,
+      query: this.transformDocument(
+        getFragmentQueryDocument(options.fragment, options.fragmentName),
       ),
       variables: options.variables,
     });

@@ -1,13 +1,13 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, Cache, DataProxy } from 'apollo-cache';
-
-import { QueryStoreValue } from '../data/queries';
 import {
   getOperationName,
   tryFunctionOrLogError,
   graphQLResultHasError,
 } from 'apollo-utilities';
-import { MutationQueryReducer } from '../core/types';
+
+import { QueryStoreValue } from '../data/queries';
+import { MutationQueryReducer, StoreInitializers } from '../core/types';
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -24,6 +24,7 @@ export interface DataWrite {
 
 export class DataStore<TSerialized> {
   private cache: ApolloCache<TSerialized>;
+  private firedInitializers: string[] = [];
 
   constructor(initialCache: ApolloCache<TSerialized>) {
     this.cache = initialCache;
@@ -209,5 +210,93 @@ export class DataStore<TSerialized> {
 
   public reset(): Promise<void> {
     return this.cache.reset();
+  }
+
+  // TODO ...
+  //
+  // Run (and store for future reference) the incoming initializer functions.
+  // Initializers for the same field that have the exact same function value,
+  // are only run (and stored) once.
+  //
+  // NOTE: Initializers do not currently check to see if data already exists
+  // in the cache, before writing to the cache. This means existing data
+  // can be overwritten. We might decide to query into the cache first to
+  // see if any previous data exists before overwritting it, but TBD.
+  public initialize(
+    initializers:
+      | StoreInitializers<TSerialized>
+      | StoreInitializers<TSerialized>[],
+  ) {
+    if (!initializers) {
+      throw new Error('Invalid/missing initializers');
+    }
+
+    const mergedInitializers = this.mergeInitializers(initializers);
+
+    const initializerPromises: Promise<void>[] = [];
+    this.runInitializers(
+      mergedInitializers,
+      (fieldName: string, initializer: any) => {
+        initializerPromises.push(
+          Promise.resolve(initializer(this)).then(result => {
+            if (result !== null) {
+              this.cache.writeData({ data: { [fieldName]: result } });
+            }
+          }),
+        );
+      },
+    );
+
+    return Promise.all(initializerPromises);
+  }
+
+  public initializeSync(
+    initializers:
+      | StoreInitializers<TSerialized>
+      | StoreInitializers<TSerialized>[],
+  ) {
+    if (!initializers) {
+      throw new Error('Invalid/missing initializers');
+    }
+
+    const mergedInitializers = this.mergeInitializers(initializers);
+
+    this.runInitializers(
+      mergedInitializers,
+      (fieldName: string, initializer: any) => {
+        const result = initializer(this);
+        if (result !== null) {
+          this.cache.writeData({ data: { [fieldName]: result } });
+        }
+      },
+    );
+  }
+
+  private mergeInitializers(
+    initializers:
+      | StoreInitializers<TSerialized>
+      | StoreInitializers<TSerialized>[],
+  ) {
+    let mergedInitializers: StoreInitializers<TSerialized> = {};
+    if (Array.isArray(initializers)) {
+      initializers.forEach(initializerGroup => {
+        mergedInitializers = { ...mergedInitializers, ...initializerGroup };
+      });
+    } else {
+      mergedInitializers = initializers;
+    }
+    return mergedInitializers;
+  }
+
+  private runInitializers(
+    initializers: StoreInitializers<TSerialized>,
+    runFunc: (fieldName: string, initializer: any) => any,
+  ) {
+    Object.keys(initializers).forEach(fieldName => {
+      if (this.firedInitializers.indexOf(fieldName) < 0) {
+        runFunc(fieldName, initializers[fieldName]);
+        this.firedInitializers.push(fieldName);
+      }
+    });
   }
 }

@@ -88,9 +88,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
 
-  // TODO
-  private storeInitializers: StoreInitializers<TCacheShape> = {};
-
   /**
    * Constructs an instance of {@link ApolloClient}.
    *
@@ -200,7 +197,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     if (storeInitializers) {
       // Run provided local state initializers (run synchronously).
-      this.initializeStoreSync(storeInitializers);
+      this.store.initializeSync(storeInitializers);
     }
 
     if (resolvers) {
@@ -531,42 +528,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     return this.initProxy().restore(serializedState);
   }
 
-  // Run (and store for future reference) the incoming initializer functions.
-  // Initializers for the same field that have the exact same function value,
-  // are only run (and stored) once.
-  //
-  // NOTE: Initializers do not currently check to see if data already exists
-  // in the cache, before writing to the cache. This means existing data
-  // can be overwritten. We might decide to query into the cache first to
-  // see if any previous data exists before overwritting it, but TBD.
-  //
-  // TODO: Create a separate class for initializer handling ...
+  /**
+   * TODO.
+   */
   public initializeStore(
     initializers:
       | StoreInitializers<TCacheShape>
       | StoreInitializers<TCacheShape>[],
   ) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const mergedInitializers = this.mergeInitializers(initializers);
-
-    const initializerPromises: Promise<void>[] = [];
-    this.runAndStoreInitializers(
-      mergedInitializers,
-      (fieldName: string, initializer: any) => {
-        initializerPromises.push(
-          Promise.resolve(initializer(this)).then(result => {
-            if (result !== null) {
-              this.cache.writeData({ data: { [fieldName]: result } });
-            }
-          }),
-        );
-      },
-    );
-
-    return Promise.all(initializerPromises);
+    this.store.initialize(initializers);
   }
 
   /**
@@ -574,28 +544,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
     this.initQueryManager().addResolvers(resolvers);
-  }
-
-  private initializeStoreSync(
-    initializers:
-      | StoreInitializers<TCacheShape>
-      | StoreInitializers<TCacheShape>[],
-  ) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const mergedInitializers = this.mergeInitializers(initializers);
-
-    this.runAndStoreInitializers(
-      mergedInitializers,
-      (fieldName: string, initializer: any) => {
-        const result = initializer(this);
-        if (result !== null) {
-          this.cache.writeData({ data: { [fieldName]: result } });
-        }
-      },
-    );
   }
 
   /**
@@ -609,52 +557,5 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       this.proxy = this.cache;
     }
     return this.proxy;
-  }
-
-  // TODO
-  private mergeInitializers(
-    initializers:
-      | StoreInitializers<TCacheShape>
-      | StoreInitializers<TCacheShape>[],
-  ) {
-    let mergedInitializers: StoreInitializers<TCacheShape> = {};
-    if (Array.isArray(initializers)) {
-      initializers.forEach(initializerGroup => {
-        mergedInitializers = { ...mergedInitializers, ...initializerGroup };
-      });
-    } else {
-      mergedInitializers = initializers;
-    }
-    return mergedInitializers;
-  }
-
-  // TODO
-  // We might not need to store the initializers here, just that they were
-  // already run so we don't run them again. Then again, we might want to
-  // automatically re-run initializers on reset/clear store ...
-  private runAndStoreInitializers(
-    initializers: StoreInitializers<TCacheShape>,
-    runAndStoreFunc: (fieldName: string, initializer: any) => any,
-  ) {
-    const newInitializers: StoreInitializers<TCacheShape> = {};
-    Object.keys(initializers).forEach(fieldName => {
-      const newInitializer = initializers[fieldName];
-      const existingInitializer = this.storeInitializers[fieldName];
-
-      if (
-        existingInitializer &&
-        existingInitializer.toString() === newInitializer.toString()
-      ) {
-        return;
-      }
-
-      newInitializers[fieldName] = newInitializer;
-      runAndStoreFunc(fieldName, newInitializer);
-    });
-
-    this.storeInitializers = {
-      ...this.storeInitializers,
-      ...newInitializers,
-    };
   }
 }

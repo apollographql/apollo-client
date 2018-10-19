@@ -54,12 +54,10 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
-  localState?: {
-    initializers?:
-      | StoreInitializers<TCacheShape>
-      | StoreInitializers<TCacheShape>[];
-    resolvers?: Resolvers | Resolvers[];
-  };
+  storeInitializers?:
+    | StoreInitializers<TCacheShape>
+    | StoreInitializers<TCacheShape>[];
+  resolvers?: Resolvers | Resolvers[];
 };
 
 const supportedDirectives = new ApolloLink(
@@ -118,7 +116,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
-      localState,
+      storeInitializers,
+      resolvers,
     } = options;
 
     if (!link || !cache) {
@@ -199,16 +198,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
     this.version = version;
 
-    if (localState) {
-      if (localState.initializers) {
-        // Run provided local state initializers (run synchronously).
-        this.initializeStore(localState.initializers);
-      }
+    if (storeInitializers) {
+      // Run provided local state initializers (run synchronously).
+      this.initializeStoreSync(storeInitializers);
+    }
 
-      if (localState.resolvers) {
-        // Prepare provided local state resolvers.
-        this.addResolvers(localState.resolvers);
-      }
+    if (resolvers) {
+      // Prepare provided local state resolvers.
+      this.addResolvers(resolvers);
     }
   }
 
@@ -555,28 +552,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     const mergedInitializers = this.mergeInitializers(initializers);
 
-    this.runAndStoreInitializers(
-      mergedInitializers,
-      (fieldName: string, initializer: any) => {
-        const result = initializer(this);
-        if (result !== null) {
-          this.cache.writeData({ data: { [fieldName]: result } });
-        }
-      },
-    );
-  }
-
-  public initializeStoreAsync(
-    initializers:
-      | StoreInitializers<TCacheShape>
-      | StoreInitializers<TCacheShape>[],
-  ) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const mergedInitializers = this.mergeInitializers(initializers);
-
     const initializerPromises: Promise<void>[] = [];
     this.runAndStoreInitializers(
       mergedInitializers,
@@ -599,6 +574,28 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
     this.initQueryManager().addResolvers(resolvers);
+  }
+
+  private initializeStoreSync(
+    initializers:
+      | StoreInitializers<TCacheShape>
+      | StoreInitializers<TCacheShape>[],
+  ) {
+    if (!initializers) {
+      throw new Error('Invalid/missing initializers');
+    }
+
+    const mergedInitializers = this.mergeInitializers(initializers);
+
+    this.runAndStoreInitializers(
+      mergedInitializers,
+      (fieldName: string, initializer: any) => {
+        const result = initializer(this);
+        if (result !== null) {
+          this.cache.writeData({ data: { [fieldName]: result } });
+        }
+      },
+    );
   }
 
   /**
@@ -632,6 +629,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   // TODO
+  // We might not need to store the initializers here, just that they were
+  // already run so we don't run them again. Then again, we might want to
+  // automatically re-run initializers on reset/clear store ...
   private runAndStoreInitializers(
     initializers: StoreInitializers<TCacheShape>,
     runAndStoreFunc: (fieldName: string, initializer: any) => any,

@@ -339,20 +339,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // This method is wrapped in the constructor so that it will be called only
   // if the data that would be broadcast has changed.
   private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    const previousResult = c.previousResult && c.previousResult();
-
-    const newData = this.diff({
+    c.callback(this.diff({
       query: c.query,
       variables: c.variables,
-      previousResult,
+      previousResult: c.previousResult && c.previousResult(),
       optimistic: c.optimistic,
-    });
-
-    if (previousResult &&
-        previousResult === newData.result) {
-      return;
-    }
-
-    c.callback(newData);
+    }));
   }
 }

@@ -259,10 +259,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (this.addTypename) {
       let result = this.typenameDocumentCache.get(document);
       if (!result) {
-        this.typenameDocumentCache.set(
-          document,
-          (result = addTypenameToDocument(document)),
-        );
+        result = addTypenameToDocument(document);
+        this.typenameDocumentCache.set(document, result);
+        // If someone calls transformDocument and then mistakenly passes the
+        // result back into an API that also calls transformDocument, make sure
+        // we don't keep creating new query documents.
+        this.typenameDocumentCache.set(result, result);
       }
       return result;
     }

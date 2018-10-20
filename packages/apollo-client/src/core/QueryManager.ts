@@ -454,12 +454,9 @@ export class QueryManager<TStore> {
     // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult =
       !shouldFetch || fetchPolicy === 'cache-and-network';
-
     if (shouldDispatchClientResult) {
       this.queryStore.markQueryResultClient(queryId, !shouldFetch);
-
       this.invalidate(true, queryId, fetchMoreForQueryId);
-
       this.broadcastQueries();
     }
 
@@ -1428,7 +1425,7 @@ export class QueryManager<TStore> {
       : 'Query';
 
     const { resolvers } = this;
-    const resolverMap = resolvers[type];
+    let resolverMap = resolvers[type];
 
     const cache = this.dataStore.getCache();
     const { query: queryFn, mutate: mutateFn } = this;
@@ -1454,14 +1451,15 @@ export class QueryManager<TStore> {
       if (resolverMap) {
         const resolve = resolverMap[fieldName];
         if (resolve) {
-          return resolve(rootValue, args, updatedContext, info);
+          if (typeof resolve === 'function') {
+            return resolve(rootValue, args, updatedContext, info);
+          } else {
+            // If the resolver stored in the resolver map isn't a function
+            // then we'll reset the resolver map to point to the next
+            // level in the resolver map, to accommodate nested resolvers.
+            resolverMap = resolve;
+          }
         }
-      }
-
-      // If a local resolver function isn't found, check to see if the
-      // field has a matching entry in the passed in `rootValue` data.
-      if (Object.prototype.hasOwnProperty.call(rootValue, fieldName)) {
-        return rootValue[fieldName];
       }
 
       // If the above checks fail, check the cache to see if the specified
@@ -1470,9 +1468,26 @@ export class QueryManager<TStore> {
         ROOT_QUERY?: {
           [key: string]: any;
         };
+        [key: string]: any;
       } = cache.extract();
+
+      // If a matching field value was stored in the root of the cache,
+      // return that value.
       const rootQuery = cacheContents.ROOT_QUERY;
-      return rootQuery ? rootQuery[fieldName] : undefined;
+      if (rootQuery && rootQuery[fieldName] && !rootQuery[fieldName].id) {
+        return rootQuery[fieldName];
+      }
+
+      let value;
+      if (Object.keys(rootValue).length === 0) {
+        value = cacheContents[`$ROOT_QUERY.${fieldName}`];
+      } else if (rootValue[fieldName]) {
+        value = rootValue[fieldName];
+      } else {
+        const id = rootValue.id;
+        value = cacheContents[id][fieldName];
+      }
+      return value;
     };
 
     return resolver;

@@ -1,4 +1,4 @@
-import { isEqual, tryFunctionOrLogError } from 'apollo-utilities';
+import { isEqual, tryFunctionOrLogError, cloneDeep } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
@@ -201,7 +201,7 @@ export class ObservableQuery<
     }
 
     const result = {
-      data,
+      data: cloneDeep(data),
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     } as ApolloQueryResult<TData>;
@@ -215,8 +215,7 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      const stale = false;
-      this.lastResult = { ...result, stale };
+      this.lastResult = { ...result, stale: false };
     }
 
     return { ...result, partial } as ApolloCurrentResult<TData>;
@@ -586,7 +585,7 @@ export class ObservableQuery<
 
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
-        this.lastResult = result;
+        this.lastResult = cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

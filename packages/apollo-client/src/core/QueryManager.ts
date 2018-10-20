@@ -12,6 +12,7 @@ import {
   getQueryDefinition,
   isProduction,
   hasDirectives,
+  isEqual,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -609,10 +610,7 @@ export class QueryManager<TStore> {
               resultFromStore &&
               lastResult.networkStatus === resultFromStore.networkStatus &&
               lastResult.stale === resultFromStore.stale &&
-              // We can do a strict equality check here because we include a `previousResult`
-              // with `readQueryFromStore`. So if the results are the same they will be
-              // referentially equal.
-              lastResult.data === resultFromStore.data
+              isEqual(lastResult.data, resultFromStore.data)
             );
 
             if (isDifferentResult || previouslyHadError) {

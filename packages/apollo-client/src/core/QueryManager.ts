@@ -12,6 +12,7 @@ import {
   getQueryDefinition,
   isProduction,
   hasDirectives,
+  isEqual,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -53,16 +54,6 @@ export interface QueryInfo {
   subscriptions: Subscription[];
   cancel?: (() => void);
 }
-
-const defaultQueryInfo = {
-  listeners: [],
-  invalidated: false,
-  document: null,
-  newData: null,
-  lastRequestId: null,
-  observableQuery: null,
-  subscriptions: [],
-};
 
 export interface QueryPromise {
   resolve: (result: ApolloQueryResult<any>) => void;
@@ -619,10 +610,7 @@ export class QueryManager<TStore> {
               resultFromStore &&
               lastResult.networkStatus === resultFromStore.networkStatus &&
               lastResult.stale === resultFromStore.stale &&
-              // We can do a strict equality check here because we include a `previousResult`
-              // with `readQueryFromStore`. So if the results are the same they will be
-              // referentially equal.
-              lastResult.data === resultFromStore.data
+              isEqual(lastResult.data, resultFromStore.data)
             );
 
             if (isDifferentResult || previouslyHadError) {
@@ -1231,7 +1219,15 @@ export class QueryManager<TStore> {
   }
 
   private getQuery(queryId: string) {
-    return this.queries.get(queryId) || { ...defaultQueryInfo };
+    return this.queries.get(queryId) || {
+      listeners: [],
+      invalidated: false,
+      document: null,
+      newData: null,
+      lastRequestId: null,
+      observableQuery: null,
+      subscriptions: [],
+    };
   }
 
   private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {

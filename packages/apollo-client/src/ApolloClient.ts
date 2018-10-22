@@ -6,7 +6,7 @@ import {
   GraphQLRequest,
   execute,
 } from 'apollo-link';
-import { ExecutionResult } from 'graphql';
+import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
 import {
   isProduction,
@@ -50,13 +50,6 @@ export type ApolloClientOptions<TCacheShape> = {
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
 };
-
-const supportedDirectives = new ApolloLink(
-  (operation: Operation, forward: NextLink) => {
-    operation.query = removeConnectionDirectiveFromDocument(operation.query);
-    return forward(operation);
-  },
-);
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -116,6 +109,20 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         to help you get started.
       `);
     }
+
+    const supportedCache = new Map<DocumentNode, DocumentNode>();
+    const supportedDirectives = new ApolloLink(
+      (operation: Operation, forward: NextLink) => {
+        let result = supportedCache.get(operation.query);
+        if (! result) {
+          result = removeConnectionDirectiveFromDocument(operation.query);
+          supportedCache.set(operation.query, result);
+          supportedCache.set(result, result);
+        }
+        operation.query = result;
+        return forward(operation);
+      },
+    );
 
     // remove apollo-client supported directives
     this.link = supportedDirectives.concat(link);

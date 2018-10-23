@@ -401,31 +401,15 @@ export class StoreReader {
       info,
     );
 
-    function handleMissing<T>(res: ExecResult<T>): ExecResult<T> {
-      let missing: ExecResultMissingField[] = null;
-
-      if (readStoreResult.missing) {
-        missing = missing || [];
-        missing.push(...readStoreResult.missing);
-      }
-
-      if (res.missing) {
-        missing = missing || [];
-        missing.push(...res.missing);
-      }
-
-      return {
-        result: res.result,
-        missing,
-      };
-    }
-
     if (Array.isArray(readStoreResult.result)) {
-      return handleMissing(this.executeSubSelectedArray(
-        field,
-        readStoreResult.result,
-        execContext,
-      ));
+      return this.combineExecResults(
+        readStoreResult,
+        this.executeSubSelectedArray(
+          field,
+          readStoreResult.result,
+          execContext,
+        ),
+      );
     }
 
     // Handle all scalar types here
@@ -442,11 +426,30 @@ export class StoreReader {
     }
 
     // Returned value is an object, and the query has a sub-selection. Recurse.
-    return handleMissing(this.executeSelectionSet({
-      selectionSet: field.selectionSet,
-      rootValue: readStoreResult.result,
-      execContext,
-    }));
+    return this.combineExecResults(
+      readStoreResult,
+      this.executeSelectionSet({
+        selectionSet: field.selectionSet,
+        rootValue: readStoreResult.result,
+        execContext,
+      }),
+    );
+  }
+
+  private combineExecResults<T>(
+    ...execResults: ExecResult<T>[]
+  ): ExecResult<T> {
+    let missing: ExecResultMissingField[] = null;
+    execResults.forEach(execResult => {
+      if (execResult.missing) {
+        missing = missing || [];
+        missing.push(...execResult.missing);
+      }
+    });
+    return {
+      result: execResults.pop().result,
+      missing,
+    };
   }
 
   private executeSubSelectedArray(

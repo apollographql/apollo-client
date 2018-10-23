@@ -2,7 +2,12 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Client (2.4.3)
+### Apollo Utilities (1.0.23)
+
+- Discard property accessor functions in `cloneDeep` helper, to fix
+  [issue #4034](https://github.com/apollographql/apollo-client/issues/4034).
+
+## Apollo Client (2.4.3)
 
 - Add additional checks to make sure we don't try to set the network status
   of queries in the store, when the store doesn't exist.  <br/>

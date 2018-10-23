@@ -32,7 +32,12 @@ function cloneDeepHelper<T>(val: T, seen: Map<any, any>): T {
     if (typeof Object.getOwnPropertyDescriptor === "function") {
       const handleKey = function (key: string | symbol) {
         const desc = Object.getOwnPropertyDescriptor(val, key);
+        // If the property is backed by a getter function, this code turns it
+        // into a simple value property, though other descriptor properties like
+        // enumerable, writable, and configurable will be preserved.
         desc.value = cloneDeepHelper((val as any)[key], seen);
+        if (desc.get) delete desc.get;
+        if (desc.set) delete desc.set;
         Object.defineProperty(copy, key, desc);
       };
       Object.getOwnPropertyNames(val).forEach(handleKey);

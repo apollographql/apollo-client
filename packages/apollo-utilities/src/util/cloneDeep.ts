@@ -36,8 +36,8 @@ function cloneDeepHelper<T>(val: T, seen: Map<any, any>): T {
         // into a simple value property, though other descriptor properties like
         // enumerable, writable, and configurable will be preserved.
         desc.value = cloneDeepHelper((val as any)[key], seen);
-        if (desc.get) delete desc.get;
-        if (desc.set) delete desc.set;
+        delete desc.get;
+        delete desc.set;
         Object.defineProperty(copy, key, desc);
       };
       Object.getOwnPropertyNames(val).forEach(handleKey);

@@ -401,18 +401,6 @@ export class StoreReader {
       info,
     );
 
-    // Handle all scalar types here
-    if (!field.selectionSet) {
-      return readStoreResult;
-    }
-
-    // From here down, the field has a selection set, which means it's trying to
-    // query a GraphQLObjectType
-    if (readStoreResult.result == null) {
-      // Basically any field in a GraphQL response can be null, or missing
-      return readStoreResult;
-    }
-
     function handleMissing<T>(res: ExecResult<T>): ExecResult<T> {
       let missing: ExecResultMissingField[] = null;
 
@@ -438,6 +426,19 @@ export class StoreReader {
         readStoreResult.result,
         execContext,
       ));
+    }
+
+    // Handle all scalar types here
+    if (!field.selectionSet) {
+      assertSelectionSetForIdValue(field, readStoreResult.result);
+      return readStoreResult;
+    }
+
+    // From here down, the field has a selection set, which means it's trying to
+    // query a GraphQLObjectType
+    if (readStoreResult.result == null) {
+      // Basically any field in a GraphQL response can be null, or missing
+      return readStoreResult;
     }
 
     // Returned value is an object, and the query has a sub-selection. Recurse.
@@ -476,14 +477,33 @@ export class StoreReader {
       }
 
       // This is an object, run the selection set on it
-      return handleMissing(this.executeSelectionSet({
-        selectionSet: field.selectionSet,
-        rootValue: item,
-        execContext,
-      }));
+      if (field.selectionSet) {
+        return handleMissing(this.executeSelectionSet({
+          selectionSet: field.selectionSet,
+          rootValue: item,
+          execContext,
+        }));
+      }
+
+      assertSelectionSetForIdValue(field, item);
+
+      return item;
     });
 
     return { result, missing };
+  }
+}
+
+function assertSelectionSetForIdValue(
+  field: FieldNode,
+  value: any,
+) {
+  if (!field.selectionSet && isIdValue(value)) {
+    throw new Error(
+      `Missing selection set for object of type ${
+        value.typename
+      } returned for query field ${field.name.value}`
+    );
   }
 }
 

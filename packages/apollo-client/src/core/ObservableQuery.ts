@@ -175,6 +175,7 @@ export class ObservableQuery<
       };
     }
 
+    /*
     // Variables might have been added dynamically at query time, when
     // using `@client(as: "varname")` for example. When this happens, the
     // variables have been updated in the query store, but not updated on
@@ -187,6 +188,7 @@ export class ObservableQuery<
         queryStoreValue.variables,
       );
     }
+*/
 
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
 

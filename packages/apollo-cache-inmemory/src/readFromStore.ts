@@ -192,7 +192,7 @@ export class StoreReader {
     query,
     variables,
     previousResult,
-    returnPartialData = true,
+    returnPartialData = false,
     rootId = 'ROOT_QUERY',
     fragmentMatcherFunction,
     config,

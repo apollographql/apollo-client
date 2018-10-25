@@ -4,6 +4,7 @@ import {
   DocumentNode,
   OperationDefinitionNode,
   FieldNode,
+  SelectionNode,
 } from 'graphql';
 import { graphqlAsync as graphql, Resolver } from 'graphql-anywhere';
 import { print } from 'graphql/language/printer';
@@ -22,6 +23,7 @@ import {
   mergeDeep,
   getDirectivesFromDocument,
   getDirectiveInfoFromField,
+  flattenSelections,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -135,7 +137,6 @@ export class QueryManager<TStore> {
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
-  // public async mutate<T>({
   public async mutate<T>({
     mutation,
     variables,
@@ -192,30 +193,21 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    // let updatedVariables = variables;
-    // let localResult: any;
-
-    // if (hasDirectives(['client'], mutation)) {
-    //   localResult = await this.runClientQuery(mutation, variables);
-    //   updatedVariables = this.prepareClientVariables(
-    //     mutation,
-    //     localResult,
-    //     variables,
-    //   );
-    // }
+    const updatedVariables: OperationVariables = await this.includeClientExportVariables(
+      mutation,
+      variables,
+    );
 
     this.mutationStore.initMutation(
       mutationId,
       mutationString,
-      variables,
-      // updatedVariables,
+      updatedVariables,
     );
 
     this.dataStore.markMutationInit({
       mutationId,
       document: mutation,
-      variables: variables || {},
-      // variables: updatedVariables || {},
+      variables: updatedVariables || {},
       updateQueries: generateUpdateQueriesInfo(),
       update: updateWithProxyFn,
       optimisticResponse,
@@ -227,8 +219,7 @@ export class QueryManager<TStore> {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
 
-      // const operation = this.buildOperationForLink(mutation, updatedVariables, {
-      const operation = this.buildOperationForLink(mutation, variables, {
+      const operation = this.buildOperationForLink(mutation, updatedVariables, {
         ...context,
         optimisticResponse,
       });
@@ -307,10 +298,9 @@ export class QueryManager<TStore> {
         serverQuery = operation.query;
       }
 
-      // const serverQuery = removeClientSetsFromDocument(operation.query);
-      // if (serverQuery) {
-      //   operation.query = serverQuery;
-      // }
+      if (serverQuery) {
+        operation.query = serverQuery;
+      }
 
       const obs: Observable<FetchResult> = serverQuery
         ? execute(this.link, operation)
@@ -321,7 +311,6 @@ export class QueryManager<TStore> {
       let complete = false;
       let handlingNext = false;
       obs.subscribe({
-        // next: (result: ExecutionResult) => {
         next: async (result: ExecutionResult) => {
           handlingNext = true;
 
@@ -333,14 +322,7 @@ export class QueryManager<TStore> {
           }
 
           this.mutationStore.markMutationResult(mutationId);
-
           let updatedResult = result;
-          // if (localResult) {
-          //   updatedResult.data = {
-          //     ...updatedResult.data,
-          //     ...localResult,
-          //   };
-          // }
 
           if (clientQuery) {
             const resolver = this.prepareResolver(clientQuery);
@@ -367,8 +349,7 @@ export class QueryManager<TStore> {
               mutationId,
               result: updatedResult,
               document: mutation,
-              // variables: updatedVariables || {},
-              variables: variables || {},
+              variables: updatedVariables || {},
               updateQueries: generateUpdateQueriesInfo(),
               update: updateWithProxyFn,
             });
@@ -399,8 +380,6 @@ export class QueryManager<TStore> {
         },
 
         complete() {
-          // completeMutation().then(resolve, reject);
-
           if (!handlingNext) {
             completeMutation().then(resolve, reject);
           }
@@ -410,8 +389,7 @@ export class QueryManager<TStore> {
     });
   }
 
-  // public async fetchQuery<T>(
-  public fetchQuery<T>(
+  public async fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
     fetchType?: FetchType,
@@ -429,19 +407,14 @@ export class QueryManager<TStore> {
 
     const query = cache.transformDocument(options.query);
 
-    // let updatedVariables: OperationVariables = variables;
-    // let updatedOptions: WatchQueryOptions = { ...options };
-    // let localResult: any;
-
-    // if (hasDirectives(['client'], query)) {
-    //   localResult = await this.runClientQuery(query, variables);
-    //   updatedVariables = this.prepareClientVariables(
-    //     query,
-    //     localResult,
-    //     variables,
-    //   );
-    //   updatedOptions.variables = updatedVariables;
-    // }
+    const updatedVariables: OperationVariables = await this.includeClientExportVariables(
+      query,
+      variables,
+    );
+    const updatedOptions: WatchQueryOptions = {
+      ...options,
+      ...{ variables: updatedVariables },
+    };
 
     let storeResult: any;
     let needToFetch: boolean =
@@ -457,8 +430,7 @@ export class QueryManager<TStore> {
     ) {
       const { complete, result } = this.dataStore.getCache().diff({
         query,
-        // variables: updatedVariables,
-        variables,
+        variables: updatedVariables,
         returnPartialData: true,
         optimistic: false,
       });
@@ -477,8 +449,7 @@ export class QueryManager<TStore> {
     const requestId = this.generateRequestId();
 
     // set up a watcher to listen to cache updates
-    // const cancel = this.updateQueryWatch(queryId, query, updatedOptions);
-    const cancel = this.updateQueryWatch(queryId, query, options);
+    const cancel = this.updateQueryWatch(queryId, query, updatedOptions);
 
     // Initialize query in store with unique requestId
     this.setQuery(queryId, () => ({
@@ -494,8 +465,7 @@ export class QueryManager<TStore> {
       queryId,
       document: query,
       storePreviousVariables: shouldFetch,
-      // variables: updatedVariables,
-      variables,
+      variables: updatedVariables,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
       metadata,
@@ -519,10 +489,8 @@ export class QueryManager<TStore> {
         requestId,
         queryId,
         document: query,
-        // options: updatedOptions,
-        options,
+        options: updatedOptions,
         fetchMoreForQueryId,
-        // localResult,
       }).catch(error => {
         // This is for the benefit of `refetch` promises, which currently don't get their errors
         // through the store like watchQuery observers do
@@ -1033,7 +1001,6 @@ export class QueryManager<TStore> {
     );
 
     let updatedVariables = variables;
-    let localResult: any;
     let sub: Subscription;
     let observers: Observer<any>[] = [];
 
@@ -1043,15 +1010,37 @@ export class QueryManager<TStore> {
       // If this is the first observer, actually initiate the network
       // subscription.
       if (observers.length === 1) {
+        let clientQuery: DocumentNode | null = null;
+        let serverQuery;
+        if (hasDirectives(['client'], transformedDoc)) {
+          clientQuery = transformedDoc;
+          serverQuery = removeClientSetsFromDocument(transformedDoc);
+        } else {
+          serverQuery = transformedDoc;
+        }
+
         const handler = {
-          next: (result: FetchResult) => {
+          next: async (result: FetchResult) => {
             let updatedResult = result;
 
-            if (localResult) {
-              updatedResult.data = {
-                ...updatedResult.data,
-                ...localResult,
-              };
+            if (clientQuery) {
+              const resolver = this.prepareResolver(clientQuery);
+              if (resolver) {
+                const localResult = await graphql(
+                  resolver,
+                  clientQuery,
+                  result.data,
+                  {},
+                  variables,
+                );
+
+                if (localResult) {
+                  updatedResult.data = {
+                    ...updatedResult.data,
+                    ...localResult,
+                  };
+                }
+              }
             }
 
             if (isCacheEnabled) {
@@ -1091,16 +1080,11 @@ export class QueryManager<TStore> {
         };
 
         (async () => {
-          if (hasDirectives(['client'], transformedDoc)) {
-            localResult = await this.runClientQuery(transformedDoc, variables);
-            updatedVariables = this.prepareClientVariables(
-              transformedDoc,
-              localResult,
-              variables,
-            );
-          }
+          const updatedVariables: OperationVariables = await this.includeClientExportVariables(
+            transformedDoc,
+            variables,
+          );
 
-          const serverQuery = removeClientSetsFromDocument(transformedDoc);
           if (serverQuery) {
             const operation = this.buildOperationForLink(
               serverQuery,
@@ -1253,21 +1237,14 @@ export class QueryManager<TStore> {
     document,
     options,
     fetchMoreForQueryId,
-  }: // localResult,
-  {
+  }: {
     requestId: number;
     queryId: string;
     document: DocumentNode;
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
-    localResult?: any;
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
-
-    // let serverQuery;
-    // if (document) {
-    //   serverQuery = removeClientSetsFromDocument(document);
-    // }
 
     let clientQuery: DocumentNode | null = null;
     let serverQuery;
@@ -1299,7 +1276,6 @@ export class QueryManager<TStore> {
       let handlingNext = true;
 
       const subscriber = {
-        // next: (result: ExecutionResult) => {
         next: async (result: ExecutionResult) => {
           handlingNext = true;
           let updatedResult = result;
@@ -1307,13 +1283,6 @@ export class QueryManager<TStore> {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
-            // if (localResult) {
-            //   updatedResult.data = {
-            //     ...updatedResult.data,
-            //     ...localResult,
-            //   };
-            // }
-
             if (clientQuery) {
               const resolver = this.prepareResolver(clientQuery);
               if (resolver) {
@@ -1522,8 +1491,6 @@ export class QueryManager<TStore> {
       : 'Query';
 
     const { resolvers } = this;
-    // let resolverMap = resolvers[type];
-
     const cache = this.dataStore.getCache();
     const { query: queryFn, mutate: mutateFn } = this;
 
@@ -1555,90 +1522,72 @@ export class QueryManager<TStore> {
 
       // If a local resolver function isn't found, check to see if the
       // field has a matching entry in the passed in `rootValue` data.
-      if (Object.prototype.hasOwnProperty.call(rootValue, fieldName)) {
+      if (rootValue[fieldName]) {
         return rootValue[fieldName];
       }
 
+      const rootValueKey = Object.keys(rootValue)[0];
+      if (rootValueKey && rootValue[rootValueKey][fieldName]) {
+        return rootValue[rootValueKey][fieldName];
+      }
+
       // If the above checks fail, check the cache to see if the specified
-      // local field has a cache entry.
+      // local field has a single value cache entry in the root.
       const fieldQuery = queryFromPojo({ [fieldName]: fieldName });
-      const result = cache.readQuery({ query: fieldQuery });
-      return result;
-
-      // const cacheContents: {
-      //   ROOT_QUERY?: {
-      //     [key: string]: any;
-      //   };
-      // } = cache.extract();
-      // const rootQuery = cacheContents.ROOT_QUERY;
-      // return rootQuery ? rootQuery[fieldName] : undefined;
-
-      /*
-      // If the above checks fail, check the cache to see if the specified
-      // local field has a cache entry.
-      const cacheContents: {
-        // ROOT_QUERY?: {
-        //   [key: string]: any;
-        // };
-        [key: string]: any;
-      } = cache.extract();
-
-      // If a matching field value was stored in the root of the cache,
-      // return that value.
-      const rootQuery = cacheContents.ROOT_QUERY;
-      if (rootQuery && rootQuery[fieldName] && !rootQuery[fieldName].id) {
-        return rootQuery[fieldName];
+      try {
+        const result: { [key: string]: any } | null = cache.readQuery({
+          query: fieldQuery,
+        });
+        if (result) {
+          return result[fieldName];
+        }
+      } catch (error) {
+        return undefined;
       }
-
-      let value;
-      if (Object.keys(rootValue).length === 0) {
-        value = cacheContents.ROOT_QUERY[`$ROOT_QUERY.${fieldName}({})`];
-      } else if (rootValue[fieldName]) {
-        value = rootValue[fieldName];
-      } else {
-        const id = rootValue.id;
-        value = cacheContents[id][fieldName];
-      }
-      return value;
-*/
     };
 
     return resolver;
   }
 
-  private prepareClientVariables(
+  private async includeClientExportVariables(
     document: DocumentNode,
-    localResult: any,
     variables: OperationVariables = {},
   ) {
     let clientVariables: { [fieldName: string]: string } = {};
 
-    if (document && localResult) {
+    if (document) {
       const clientDirectiveOnlyDoc = getDirectivesFromDocument(
         [{ name: 'client' }],
         document,
       );
       if (clientDirectiveOnlyDoc) {
-        clientDirectiveOnlyDoc.definitions.forEach(definition => {
-          if (
-            (definition.kind === 'OperationDefinition' ||
-              definition.kind === 'FragmentDefinition') &&
-            definition.selectionSet
-          ) {
-            const { selections } = definition.selectionSet;
-            selections.forEach(selection => {
-              const field = selection as FieldNode;
-              const directiveInfo = getDirectiveInfoFromField(field, {});
-              if (directiveInfo && directiveInfo.client) {
-                let value = localResult[field.name.value];
-                if (value.json) {
-                  value = value.json;
-                }
-                clientVariables[directiveInfo.client.as] = value;
+        const localResult = await this.runDocumentThroughLocalResolvers(
+          clientDirectiveOnlyDoc,
+          variables,
+        );
+        clientDirectiveOnlyDoc.definitions
+          .filter(
+            (definition: OperationDefinitionNode) =>
+              definition.selectionSet && definition.selectionSet.selections,
+          )
+          .map(x => flattenSelections(x as any))
+          .reduce((selections, selected) => selections.concat(selected), [])
+          .filter(
+            (selection: SelectionNode) =>
+              selection.directives && selection.directives.length > 0,
+          )
+          .forEach((field: FieldNode) => {
+            const directiveInfo = getDirectiveInfoFromField(field, {});
+            if (directiveInfo && directiveInfo.export) {
+              let value =
+                localResult[field.name.value] ||
+                localResult[Object.keys(localResult)[0]][field.name.value];
+              if (value.json) {
+                value = value.json;
               }
-            });
-          }
-        });
+              clientVariables[directiveInfo.export.as] = value;
+            }
+          });
       }
     }
 
@@ -1649,7 +1598,7 @@ export class QueryManager<TStore> {
   }
 
   // TODO
-  private async runClientQuery(
+  private async runDocumentThroughLocalResolvers(
     clientQuery: DocumentNode | null,
     variables?: OperationVariables,
   ) {

@@ -7,7 +7,7 @@
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
     "noUnusedParameters": true,
-    "lib": ["es2015", "dom"]
+    "lib": ["es2015", "dom", "es2017"]
   },
   "include": ["src/**/*.ts"],
   "exclude": [

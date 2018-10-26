@@ -9,7 +9,7 @@ import {
 import { graphqlAsync as graphql, Resolver } from 'graphql-anywhere';
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
-import { Cache, queryFromPojo } from 'apollo-cache';
+import { Cache } from 'apollo-cache';
 import {
   assign,
   getDefaultValues,
@@ -1492,6 +1492,7 @@ export class QueryManager<TStore> {
 
     const { resolvers } = this;
     const cache = this.dataStore.getCache();
+    const cacheData: any = cache.extract();
     const { query: queryFn, mutate: mutateFn } = this;
 
     resolver = (
@@ -1501,8 +1502,49 @@ export class QueryManager<TStore> {
       context: any,
       info: any,
     ) => {
+      const { resultKey } = info;
+
+      // To add a bit of flexibility, we'll try resolving data in root value
+      // objects, as well as an object pointed to by the first root
+      // value property (if it exists). This means we're resolving using
+      // { property1: '', property2: '', ... } objects, as well as
+      // { someField: { property1: '', property2: '', ... } } objects.
+      let childRootValue: { [key: string]: any } = {};
+      let rootValueKey = Object.keys(rootValue)[0];
+      if (rootValueKey) {
+        childRootValue = rootValue[rootValueKey];
+      }
+
+      let normalNode =
+        rootValue[fieldName] !== undefined
+          ? rootValue[fieldName]
+          : childRootValue[fieldName];
+      let aliasedNode =
+        rootValue[resultKey] !== undefined
+          ? rootValue[resultKey]
+          : childRootValue[resultKey];
+
+      const aliasUsed = resultKey !== fieldName;
+      const field = aliasUsed ? resultKey : fieldName;
+
+      // If a field value is found and it's a cache "type" node, we'll extract
+      // the cache ID, look the value up in the cache, then set that value
+      // as the resolved value.
+      if (normalNode && normalNode.type && normalNode.type === 'id') {
+        normalNode = cacheData[normalNode.id];
+      }
+      if (aliasedNode && aliasedNode.type && aliasedNode.type === 'id') {
+        aliasedNode = cacheData[aliasedNode.id];
+      }
+
+      // If we were able to find a matching field in the root value (or
+      // its children), return that value as the resolved value.
+      if (normalNode !== undefined || aliasedNode !== undefined) {
+        return aliasedNode || normalNode;
+      }
+
       // Make sure the context has access to the cache and query/mutate
-      // functions.
+      // functions, so resolvers can use them.
       const updatedContext = {
         ...context,
         cache,
@@ -1514,36 +1556,22 @@ export class QueryManager<TStore> {
       // outcome.
       const resolverMap = resolvers[(rootValue as any).__typename || type];
       if (resolverMap) {
-        const resolve = resolverMap[fieldName];
+        const resolve = resolverMap[field];
         if (resolve) {
           return resolve(rootValue, args, updatedContext, info);
         }
       }
 
-      // If a local resolver function isn't found, check to see if the
-      // field has a matching entry in the passed in `rootValue` data.
-      if (rootValue[fieldName]) {
-        return rootValue[fieldName];
-      }
-
-      const rootValueKey = Object.keys(rootValue)[0];
-      if (rootValueKey && rootValue[rootValueKey][fieldName]) {
-        return rootValue[rootValueKey][fieldName];
-      }
-
-      // If the above checks fail, check the cache to see if the specified
-      // local field has a single value cache entry in the root.
-      const fieldQuery = queryFromPojo({ [fieldName]: fieldName });
-      try {
-        const result: { [key: string]: any } | null = cache.readQuery({
-          query: fieldQuery,
-        });
-        if (result) {
-          return result[fieldName];
-        }
-      } catch (error) {
-        return undefined;
-      }
+      // Fallback to checking the cache for a matching field. If a simple
+      // value is found in the root of the cache, return that value. If a
+      // "type" node is found, get its ID, then find and return that value
+      // from the cache.
+      const cacheValue = cacheData['ROOT_QUERY'][field];
+      const result =
+        cacheValue && cacheValue.typename
+          ? cacheData[cacheValue.id]
+          : cacheValue;
+      return result;
     };
 
     return resolver;

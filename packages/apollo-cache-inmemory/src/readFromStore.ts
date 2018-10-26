@@ -401,8 +401,20 @@ export class StoreReader {
       info,
     );
 
+    if (Array.isArray(readStoreResult.result)) {
+      return this.combineExecResults(
+        readStoreResult,
+        this.executeSubSelectedArray(
+          field,
+          readStoreResult.result,
+          execContext,
+        ),
+      );
+    }
+
     // Handle all scalar types here
     if (!field.selectionSet) {
+      assertSelectionSetForIdValue(field, readStoreResult.result);
       return readStoreResult;
     }
 
@@ -413,39 +425,31 @@ export class StoreReader {
       return readStoreResult;
     }
 
-    function handleMissing<T>(res: ExecResult<T>): ExecResult<T> {
-      let missing: ExecResultMissingField[] = null;
-
-      if (readStoreResult.missing) {
-        missing = missing || [];
-        missing.push(...readStoreResult.missing);
-      }
-
-      if (res.missing) {
-        missing = missing || [];
-        missing.push(...res.missing);
-      }
-
-      return {
-        result: res.result,
-        missing,
-      };
-    }
-
-    if (Array.isArray(readStoreResult.result)) {
-      return handleMissing(this.executeSubSelectedArray(
-        field,
-        readStoreResult.result,
-        execContext,
-      ));
-    }
-
     // Returned value is an object, and the query has a sub-selection. Recurse.
-    return handleMissing(this.executeSelectionSet({
-      selectionSet: field.selectionSet,
-      rootValue: readStoreResult.result,
-      execContext,
-    }));
+    return this.combineExecResults(
+      readStoreResult,
+      this.executeSelectionSet({
+        selectionSet: field.selectionSet,
+        rootValue: readStoreResult.result,
+        execContext,
+      }),
+    );
+  }
+
+  private combineExecResults<T>(
+    ...execResults: ExecResult<T>[]
+  ): ExecResult<T> {
+    let missing: ExecResultMissingField[] = null;
+    execResults.forEach(execResult => {
+      if (execResult.missing) {
+        missing = missing || [];
+        missing.push(...execResult.missing);
+      }
+    });
+    return {
+      result: execResults.pop().result,
+      missing,
+    };
   }
 
   private executeSubSelectedArray(
@@ -476,14 +480,33 @@ export class StoreReader {
       }
 
       // This is an object, run the selection set on it
-      return handleMissing(this.executeSelectionSet({
-        selectionSet: field.selectionSet,
-        rootValue: item,
-        execContext,
-      }));
+      if (field.selectionSet) {
+        return handleMissing(this.executeSelectionSet({
+          selectionSet: field.selectionSet,
+          rootValue: item,
+          execContext,
+        }));
+      }
+
+      assertSelectionSetForIdValue(field, item);
+
+      return item;
     });
 
     return { result, missing };
+  }
+}
+
+function assertSelectionSetForIdValue(
+  field: FieldNode,
+  value: any,
+) {
+  if (!field.selectionSet && isIdValue(value)) {
+    throw new Error(
+      `Missing selection set for object of type ${
+        value.typename
+      } returned for query field ${field.name.value}`
+    );
   }
 }
 

@@ -115,7 +115,7 @@
     "lodash": "4.17.11",
     "pre-commit": "1.2.2",
     "prettier": "1.14.3",
-    "react": "16.5.2",
+    "react": "16.6.0",
     "react-dom": "16.6.0",
     "rollup": "0.66.6",
     "rollup-plugin-local-resolve": "1.0.7",

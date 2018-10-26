@@ -2,10 +2,28 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Utilities (1.0.23)
+## Apollo Client (2.4.4)
+
+### Apollo Utilities (1.0.24)
 
 - Discard property accessor functions in `cloneDeep` helper, to fix
   [issue #4034](https://github.com/apollographql/apollo-client/issues/4034).
+
+- Unconditionally remove `cloneDeep` property accessors.
+  [PR #4039](https://github.com/apollographql/apollo-client/pull/4039)
+
+- Avoid copying non-enumerable and/or `Symbol` keys in `cloneDeep`.
+  [PR #4052](https://github.com/apollographql/apollo-client/pull/4052)
+
+### Apollo Cache In-Memory (1.3.7)
+
+- Throw when querying non-scalar objects without a selection set.
+  [Issue #4025](https://github.com/apollographql/apollo-client/issues/4025)
+  [PR #4038](https://github.com/apollographql/apollo-client/pull/4038)
+
+- Work around spec non-compliance of `Map#set` and `Set#add` in IE11.
+  [Issue #4024](https://github.com/apollographql/apollo-client/issues/4024)
+  [PR #4012](https://github.com/apollographql/apollo-client/pull/4012)
 
 ## Apollo Client (2.4.3)
 

@@ -19,7 +19,7 @@
     "meteor-theme-hexo": "1.0.16",
     "poke-site": "1.3.1",
     "start-server-and-test": "1.7.5",
-    "typedoc": "0.9.0",
+    "typedoc": "0.13.0",
     "typescript": "3.1.3"
   },
   "scripts": {

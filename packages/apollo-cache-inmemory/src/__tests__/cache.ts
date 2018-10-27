@@ -1,7 +1,7 @@
 import { ApolloCache } from 'apollo-cache';
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
-import _ from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
 
@@ -246,7 +246,7 @@ describe('Cache', () => {
         },
       });
 
-      const args = {
+      const options = {
         query: gql`
           query($literal: Boolean, $value: Int) {
             a: field(literal: true, value: 42)
@@ -259,11 +259,9 @@ describe('Cache', () => {
         },
       };
 
-      const preQueryCopy = _.cloneDeep(args);
-
-      expect(stripSymbols(proxy.readQuery(args))).toEqual({ a: 1, b: 2 });
-
-      expect(preQueryCopy).toEqual(args);
+      const preQueryCopy = cloneDeep(options);
+      expect(stripSymbols(proxy.readQuery(options))).toEqual({ a: 1, b: 2 });
+      expect(preQueryCopy).toEqual(options);
     });
   });
 

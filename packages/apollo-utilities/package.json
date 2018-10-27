@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "1.0.21",
+  "version": "1.0.24",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -39,8 +39,7 @@
     "filesize": "npm run minify"
   },
   "dependencies": {
-    "fast-json-stable-stringify": "^2.0.0",
-    "fclone": "^1.0.11"
+    "fast-json-stable-stringify": "^2.0.0"
   },
   "jest": {
     "transform": {

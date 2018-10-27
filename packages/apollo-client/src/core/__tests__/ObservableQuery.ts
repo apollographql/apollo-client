@@ -324,8 +324,7 @@ describe('ObservableQuery', () => {
           const current = observable.currentResult();
           expect(stripSymbols(current.data)).toEqual(data);
           const secondCurrent = observable.currentResult();
-          // ensure ref equality
-          expect(current.data).toBe(secondCurrent.data);
+          expect(current.data).toEqual(secondCurrent.data);
           done();
         }
       });

@@ -970,4 +970,59 @@ describe('diffing queries against the store', () => {
       expect(result).toEqual(previousResult);
     });
   });
+
+  describe('malformed queries', () => {
+    it('throws for non-scalar query fields without selection sets', () => {
+      // Issue #4025, fixed by PR #4038.
+
+      const validQuery = gql`
+        query getMessageList {
+          messageList {
+            id
+            __typename
+            message
+          }
+        }
+      `;
+
+      const invalidQuery = gql`
+        query getMessageList {
+          # This field needs a selection set because its value is an array
+          # of non-scalar objects.
+          messageList
+        }
+      `;
+
+      const store = writer.writeQueryToStore({
+        query: validQuery,
+        result: {
+          messageList: [{
+            id: 1,
+            __typename: "Message",
+            message: "hi"
+          }, {
+            id: 2,
+            __typename: "Message",
+            message: "hello"
+          }, {
+            id: 3,
+            __typename: "Message",
+            message: "hey"
+          }]
+        }
+      });
+
+      try {
+        reader.diffQueryAgainstStore({
+          store,
+          query: invalidQuery,
+        });
+        throw new Error('should have thrown');
+      } catch (e) {
+        expect(e.message).toEqual(
+          'Missing selection set for object of type Message returned for query field messageList'
+        );
+      }
+    });
+  });
 });

@@ -2,6 +2,11 @@
 
 ## Apollo Client (vNext)
 
+### Apollo Client (vNext)
+
+- Optimistic tests cleanup. <br/>
+  [@joshribakoff](https://github.com/joshribakoff) in [#3834](https://github.com/apollographql/apollo-client/pull/3834)
+
 ## Apollo Client (2.4.4)
 
 ### Apollo Utilities (1.0.24)

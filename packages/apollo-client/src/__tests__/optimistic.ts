@@ -1366,80 +1366,74 @@ describe('optimistic mutation results', () => {
       },
     };
 
-    it('will insert a single item to the beginning', () => {
+    it('will insert a single item to the beginning', async () => {
       expect.assertions(6);
       let subscriptionHandle: Subscription;
-      return setup({
+      await setup({
         request: { query: mutation },
         delay: 300,
         result: mutationResult,
-      })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          let firstTime = true;
-          let before = new Date();
-          const promise = client.mutate({
-            mutation,
-            optimisticResponse,
-            update: (proxy, mResult: any) => {
-              const after = new Date();
-              const duration = after - before;
-              if (firstTime) {
-                expect(duration < 300).toBe(true);
-                firstTime = false;
-              } else {
-                expect(duration > 300).toBe(true);
-              }
-              let data = proxy.readQuery({ query });
+      });
 
-              data.todoList.todos = [
-                mResult.data.createTodo,
-                ...data.todoList.todos,
-              ];
-              proxy.writeQuery({
-                query,
-                data,
-              });
-            },
-          });
-
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-          expect((dataInStore['Todo99'] as any).text).toBe(
-            'Optimistically generated',
-          );
-
-          return promise;
-        })
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(4);
-
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
-            'This one was created with a mutation.',
-          );
+      // we have to actually subscribe to the query to be able to update it
+      await new Promise(resolve => {
+        const handle = client.watchQuery({ query });
+        subscriptionHandle = handle.subscribe({
+          next(res) {
+            resolve(res);
+          },
         });
+      });
+
+      let firstTime = true;
+      let before = new Date();
+      const promise = client.mutate({
+        mutation,
+        optimisticResponse,
+        update: (proxy, mResult: any) => {
+          const after = new Date();
+          const duration = after - before;
+          if (firstTime) {
+            expect(duration < 300).toBe(true);
+            firstTime = false;
+          } else {
+            expect(duration > 300).toBe(true);
+          }
+          let data = proxy.readQuery({ query });
+
+          data.todoList.todos = [
+            mResult.data.createTodo,
+            ...data.todoList.todos,
+          ];
+          proxy.writeQuery({
+            query,
+            data,
+          });
+        },
+      });
+
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+      expect((dataInStore['Todo99'] as any).text).toBe(
+        'Optimistically generated',
+      );
+      await promise;
+      await client.query({ query }).then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+        // There should be one more todo item than before
+        expect(newResult.data.todoList.todos.length).toBe(4);
+
+        // Since we used `prepend` it should be at the front
+        expect(newResult.data.todoList.todos[0].text).toBe(
+          'This one was created with a mutation.',
+        );
+      });
     });
 
-    it('two array insert like mutations', () => {
+    it('two array insert like mutations', async () => {
       expect.assertions(9);
       let subscriptionHandle: Subscription;
-      return setup(
+      await setup(
         {
           request: { query: mutation },
           result: mutationResult,
@@ -1449,113 +1443,105 @@ describe('optimistic mutation results', () => {
           result: mutationResult2,
           delay: 50,
         },
-      )
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
+      );
+
+      // we have to actually subscribe to the query to be able to update it
+      await new Promise(resolve => {
+        const handle = client.watchQuery({ query });
+        subscriptionHandle = handle.subscribe({
+          next(res) {
+            resolve(res);
+          },
+        });
+      });
+
+      const update = (proxy: any, mResult: any) => {
+        const data: any = proxy.readFragment({
+          id: 'TodoList5',
+          fragment: gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `,
+        });
+
+        proxy.writeFragment({
+          data: {
+            ...data,
+            todos: [mResult.data.createTodo, ...data.todos],
+          },
+          id: 'TodoList5',
+          fragment: gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `,
+        });
+      };
+      const promise = client
+        .mutate({
+          mutation,
+          optimisticResponse,
+          update,
         })
-        .then(() => {
-          const update = (proxy: any, mResult: any) => {
-            const data: any = proxy.readFragment({
-              id: 'TodoList5',
-              fragment: gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `,
-            });
-
-            proxy.writeFragment({
-              data: {
-                ...data,
-                todos: [mResult.data.createTodo, ...data.todos],
-              },
-              id: 'TodoList5',
-              fragment: gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `,
-            });
-          };
-          const promise = client
-            .mutate({
-              mutation,
-              optimisticResponse,
-              update,
-            })
-            .then(res => {
-              const currentDataInStore = (client.cache as InMemoryCache).extract(
-                true,
-              );
-              expect(
-                (currentDataInStore['TodoList5'] as any).todos.length,
-              ).toBe(5);
-              expect((currentDataInStore['Todo99'] as any).text).toBe(
-                'This one was created with a mutation.',
-              );
-              expect((currentDataInStore['Todo66'] as any).text).toBe(
-                'Optimistically generated 2',
-              );
-              return res;
-            });
-
-          const promise2 = client.mutate({
-            mutation,
-            optimisticResponse: optimisticResponse2,
-            update,
-          });
-
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
-          expect((dataInStore['Todo99'] as any).text).toBe(
-            'Optimistically generated',
+        .then(res => {
+          const currentDataInStore = (client.cache as InMemoryCache).extract(
+            true,
           );
-          expect((dataInStore['Todo66'] as any).text).toBe(
-            'Optimistically generated 2',
-          );
-
-          return Promise.all([promise, promise2]);
-        })
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(5);
-
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
-            'Second mutation.',
-          );
-          expect(newResult.data.todoList.todos[1].text).toBe(
+          expect((currentDataInStore['TodoList5'] as any).todos.length).toBe(5);
+          expect((currentDataInStore['Todo99'] as any).text).toBe(
             'This one was created with a mutation.',
           );
+          expect((currentDataInStore['Todo66'] as any).text).toBe(
+            'Optimistically generated 2',
+          );
+          return res;
         });
+
+      const promise2 = client.mutate({
+        mutation,
+        optimisticResponse: optimisticResponse2,
+        update,
+      });
+
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
+      expect((dataInStore['Todo99'] as any).text).toBe(
+        'Optimistically generated',
+      );
+      expect((dataInStore['Todo66'] as any).text).toBe(
+        'Optimistically generated 2',
+      );
+
+      await Promise.all([promise, promise2]);
+
+      const newResult: any = await client.query({ query });
+
+      subscriptionHandle.unsubscribe();
+      // There should be one more todo item than before
+      expect(newResult.data.todoList.todos.length).toBe(5);
+
+      // Since we used `prepend` it should be at the front
+      expect(newResult.data.todoList.todos[0].text).toBe('Second mutation.');
+      expect(newResult.data.todoList.todos[1].text).toBe(
+        'This one was created with a mutation.',
+      );
     });
 
-    it('two mutations, one fails', () => {
+    it('two mutations, one fails', async () => {
       expect.assertions(10);
       let subscriptionHandle: Subscription;
-      return setup(
+      await setup(
         {
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
@@ -1571,99 +1557,96 @@ describe('optimistic mutation results', () => {
           // same order as before, otherwise the store can end up in an inconsistent state.
           // delay: 50,
         },
-      )
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          const update = (proxy: any, mResult: any) => {
-            const data: any = proxy.readFragment({
-              id: 'TodoList5',
-              fragment: gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `,
-            });
+      );
 
-            proxy.writeFragment({
-              data: {
-                ...data,
-                todos: [mResult.data.createTodo, ...data.todos],
-              },
-              id: 'TodoList5',
-              fragment: gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `,
-            });
-          };
-          const promise = client
-            .mutate({
-              mutation,
-              optimisticResponse,
-              update,
-            })
-            .catch(err => {
-              // it is ok to fail here
-              expect(err).toBeInstanceOf(Error);
-              expect(err.message).toBe('Network error: forbidden (test error)');
-              return null;
-            });
-
-          const promise2 = client.mutate({
-            mutation,
-            optimisticResponse: optimisticResponse2,
-            update,
-          });
-
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
-          expect((dataInStore['Todo99'] as any).text).toBe(
-            'Optimistically generated',
-          );
-          expect((dataInStore['Todo66'] as any).text).toBe(
-            'Optimistically generated 2',
-          );
-
-          return Promise.all([promise, promise2]);
-        })
-        .then(() => {
-          subscriptionHandle.unsubscribe();
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
-          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-          expect(dataInStore).toHaveProperty('Todo66');
-          expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66', 'Todo'),
-          );
-          expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-            realIdValue('Todo99', 'Todo'),
-          );
+      // we have to actually subscribe to the query to be able to update it
+      await new Promise(resolve => {
+        const handle = client.watchQuery({ query });
+        subscriptionHandle = handle.subscribe({
+          next(res) {
+            resolve(res);
+          },
         });
+      });
+
+      const update = (proxy: any, mResult: any) => {
+        const data: any = proxy.readFragment({
+          id: 'TodoList5',
+          fragment: gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `,
+        });
+
+        proxy.writeFragment({
+          data: {
+            ...data,
+            todos: [mResult.data.createTodo, ...data.todos],
+          },
+          id: 'TodoList5',
+          fragment: gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `,
+        });
+      };
+      const promise = client
+        .mutate({
+          mutation,
+          optimisticResponse,
+          update,
+        })
+        .catch(err => {
+          // it is ok to fail here
+          expect(err).toBeInstanceOf(Error);
+          expect(err.message).toBe('Network error: forbidden (test error)');
+          return null;
+        });
+
+      const promise2 = client.mutate({
+        mutation,
+        optimisticResponse: optimisticResponse2,
+        update,
+      });
+
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
+      expect((dataInStore['Todo99'] as any).text).toBe(
+        'Optimistically generated',
+      );
+      expect((dataInStore['Todo66'] as any).text).toBe(
+        'Optimistically generated 2',
+      );
+
+      await Promise.all([promise, promise2]);
+
+      subscriptionHandle.unsubscribe();
+      const dataInStore = (client.cache as InMemoryCache).extract(true);
+      expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+      expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+      expect(dataInStore).toHaveProperty('Todo66');
+      expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+        realIdValue('Todo66', 'Todo'),
+      );
+      expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+        realIdValue('Todo99', 'Todo'),
+      );
     });
 
-    it('will handle dependent updates', done => {
-      expect.assertions(5);
+    it('will handle dependent updates', async () => {
+      expect.assertions(1);
       link = mockSingleLink(
         {
           request: { query },
@@ -1744,69 +1727,51 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      const defaultTodos = stripSymbols(result.data.todoList.todos);
       let count = 0;
 
-      client.watchQuery({ query }).subscribe({
-        next: (value: any) => {
-          const todos = stripSymbols(value.data.todoList.todos);
-          switch (count++) {
-            case 0:
-              expect(defaultTodos).toEqual(todos);
-              twoMutations();
-              break;
-            case 1:
-              expect([
-                customOptimisticResponse1.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 2:
-              expect([
-                customOptimisticResponse2.createTodo,
-                customOptimisticResponse1.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 3:
-              expect([
-                customOptimisticResponse2.createTodo,
-                mutationResult.data.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              break;
-            case 4:
-              expect([
-                mutationResult2.data.createTodo,
-                mutationResult.data.createTodo,
-                ...defaultTodos,
-              ]).toEqual(todos);
-              done();
-              break;
-            default:
-              done.fail(new Error('Next should not have been called again.'));
-          }
-        },
-        error: error => done.fail(error),
+      const promise = from(client.watchQuery({ query }))
+        .pipe(
+          map(value => stripSymbols(value.data.todoList.todos)),
+          take(5),
+          toArray(),
+        )
+        .toPromise();
+
+      await new Promise(setTimeout);
+
+      client.mutate({
+        mutation,
+        optimisticResponse: customOptimisticResponse1,
+        update,
       });
 
-      function twoMutations() {
-        client
-          .mutate({
-            mutation,
-            optimisticResponse: customOptimisticResponse1,
-            update,
-          })
-          .catch(error => done.fail(error));
+      client.mutate({
+        mutation,
+        optimisticResponse: customOptimisticResponse2,
+        update,
+      });
 
-        client
-          .mutate({
-            mutation,
-            optimisticResponse: customOptimisticResponse2,
-            update,
-          })
-          .catch(error => done.fail(error));
-      }
+      const responses = await promise;
+      const defaultTodos = stripSymbols(result.data.todoList.todos);
+      expect(responses).toEqual([
+        defaultTodos,
+        [customOptimisticResponse1.createTodo, ...defaultTodos],
+        [
+          customOptimisticResponse2.createTodo,
+          customOptimisticResponse1.createTodo,
+          ...defaultTodos,
+        ],
+        [
+          customOptimisticResponse2.createTodo,
+          mutationResult.data.createTodo,
+          ...defaultTodos,
+        ],
+        [
+          mutationResult2.data.createTodo,
+          mutationResult.data.createTodo,
+          ...defaultTodos,
+        ],
+      ]);
     });
   });
 });
@@ -1960,7 +1925,7 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
 
-  it('can post a new comment', () => {
+  it('can post a new comment', async () => {
     expect.assertions(1);
     const mutationVariables = {
       repoFullName: 'org/repo',
@@ -1968,39 +1933,35 @@ describe('optimistic mutation - githunt comments', () => {
     };
 
     let subscriptionHandle: Subscription;
-    return setup({
+    await setup({
       request: {
         query: addTypenameToDocument(mutation),
         variables: mutationVariables,
       },
       result: mutationResult,
-    })
-      .then(() => {
-        // we have to actually subscribe to the query to be able to update it
-        return new Promise(resolve => {
-          const handle = client.watchQuery({ query, variables });
-          subscriptionHandle = handle.subscribe({
-            next(res) {
-              resolve(res);
-            },
-          });
-        });
-      })
-      .then(() => {
-        return client.mutate({
-          mutation,
-          optimisticResponse,
-          variables: mutationVariables,
-          updateQueries,
-        });
-      })
-      .then(() => {
-        return client.query({ query, variables });
-      })
-      .then((newResult: any) => {
-        subscriptionHandle.unsubscribe();
-        expect(newResult.data.entry.comments.length).toBe(2);
+    });
+
+    // we have to actually subscribe to the query to be able to update it
+    await new Promise(resolve => {
+      const handle = client.watchQuery({ query, variables });
+      subscriptionHandle = handle.subscribe({
+        next(res) {
+          resolve(res);
+        },
       });
+    });
+
+    await client.mutate({
+      mutation,
+      optimisticResponse,
+      variables: mutationVariables,
+      updateQueries,
+    });
+
+    const newResult: any = await client.query({ query, variables });
+
+    subscriptionHandle.unsubscribe();
+    expect(newResult.data.entry.comments.length).toBe(2);
   });
 });
 

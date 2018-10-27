@@ -6,6 +6,8 @@
 
 - Optimistic tests cleanup. <br/>
   [@joshribakoff](https://github.com/joshribakoff) in [#3834](https://github.com/apollographql/apollo-client/pull/3834)
+- Documentation updates.  <br/>
+  [@chentsulin](https://github.com/chentsulin) in [#3840](https://github.com/apollographql/apollo-client/pull/3840)
 
 ### Apollo Cache (vNext)
 

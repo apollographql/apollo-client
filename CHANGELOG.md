@@ -7,6 +7,11 @@
 - Optimistic tests cleanup. <br/>
   [@joshribakoff](https://github.com/joshribakoff) in [#3834](https://github.com/apollographql/apollo-client/pull/3834)
 
+### Apollo Cache (vNext)
+
+- Add `readQuery` test to make sure options aren't mutated.  <br/>
+  [@CarloPalinckx](https://github.com/CarloPalinckx) in [#3838](https://github.com/apollographql/apollo-client/pull/3838)
+
 ## Apollo Client (2.4.4)
 
 ### Apollo Utilities (1.0.24)

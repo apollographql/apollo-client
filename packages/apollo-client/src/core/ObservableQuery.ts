@@ -1,8 +1,4 @@
-import {
-  isEqual,
-  tryFunctionOrLogError,
-  maybeDeepFreeze,
-} from 'apollo-utilities';
+import { isEqual, tryFunctionOrLogError, cloneDeep } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
@@ -205,7 +201,7 @@ export class ObservableQuery<
     }
 
     const result = {
-      data,
+      data: cloneDeep(data),
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     } as ApolloQueryResult<TData>;
@@ -219,8 +215,7 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      const stale = false;
-      this.lastResult = { ...result, stale };
+      this.lastResult = { ...result, stale: false };
     }
 
     return { ...result, partial } as ApolloCurrentResult<TData>;
@@ -286,7 +281,7 @@ export class ObservableQuery<
 
     return this.queryManager
       .fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
-      .then(result => maybeDeepFreeze(result));
+      .then(result => result as ApolloQueryResult<TData>);
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -346,17 +341,17 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore(options: SubscribeToMoreOptions<TData, TVariables>) {
+  public subscribeToMore<TSubscriptionData = TData>(options: SubscribeToMoreOptions<TData, TVariables, TSubscriptionData>) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
         variables: options.variables,
       })
       .subscribe({
-        next: (subscriptionData: { data: TData }) => {
+        next: (subscriptionData: { data: TSubscriptionData }) => {
           if (options.updateQuery) {
             this.updateQuery((previous, { variables }) =>
-              (options.updateQuery as UpdateQueryFn<TData, TVariables>)(
+              (options.updateQuery as UpdateQueryFn<TData, TVariables, TSubscriptionData>)(
                 previous,
                 {
                   subscriptionData,
@@ -479,7 +474,7 @@ export class ObservableQuery<
           ...this.options,
           variables: this.variables,
         } as WatchQueryOptions)
-        .then(result => maybeDeepFreeze(result));
+        .then(result => result as ApolloQueryResult<TData>);
     }
   }
 
@@ -590,7 +585,7 @@ export class ObservableQuery<
 
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
-        this.lastResult = result;
+        this.lastResult = cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

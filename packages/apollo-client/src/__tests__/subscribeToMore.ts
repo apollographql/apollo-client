@@ -25,68 +25,42 @@ describe('subscribeToMore', () => {
   const result = {
     data: {
       entry: {
-        value: 1,
+        value: '1',
       },
     },
   };
 
-  const req1 = { request: { query }, result };
+  const req1 = { request: { query } as Operation, result };
 
   const results = ['Dahivat Pandya', 'Amanda Liu'].map(name => ({
     result: { data: { name } },
     delay: 10,
   }));
 
-  const sub1 = {
-    request: {
-      query: gql`
-        subscription newValues {
-          name
-        }
-      `,
-    },
-  };
-
   const results2 = [
     { result: { data: { name: 'Amanda Liu' } }, delay: 10 },
     { error: new Error('You cant touch this'), delay: 10 },
   ];
-
-  const sub2 = {
-    request: {
-      query: gql`
-        subscription newValues {
-          name
-        }
-      `,
-    },
-  };
 
   const results3 = [
     { error: new Error('You cant touch this'), delay: 10 },
     { result: { data: { name: 'Amanda Liu' } }, delay: 10 },
   ];
 
-  const sub3 = {
-    request: {
-      query: gql`
-        subscription newValues {
-          name
-        }
-      `,
-    },
-  };
-
   const result4 = {
     data: {
-      entry: [{ value: 1 }, { value: 2 }],
+      entry: [{ value: '1' }, { value: '2' }],
     },
   };
-  const req4 = { request: { query }, result: result4 };
+  const req4 = { request: { query } as Operation, result: result4 };
+
+  interface SubscriptionData {
+    name: string
+  }
 
   it('triggers new result from subscription data', done => {
     let latestResult: any = null;
-    const wSLink = mockObservableLink(sub1);
+    const wSLink = mockObservableLink();
     const httpLink = mockSingleLink(req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
@@ -97,7 +71,7 @@ describe('subscribeToMore', () => {
       link,
     });
 
-    const obsHandle = client.watchQuery({ query });
+    const obsHandle = client.watchQuery<typeof req1['result']['data']>({ query });
 
     const sub = obsHandle.subscribe({
       next(queryResult) {
@@ -106,7 +80,7 @@ describe('subscribeToMore', () => {
       },
     });
 
-    obsHandle.subscribeToMore({
+    obsHandle.subscribeToMore<SubscriptionData>({
       document: gql`
         subscription newValues {
           name
@@ -136,7 +110,7 @@ describe('subscribeToMore', () => {
 
   it('calls error callback on error', done => {
     let latestResult: any = null;
-    const wSLink = mockObservableLink(sub2);
+    const wSLink = mockObservableLink();
     const httpLink = mockSingleLink(req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
@@ -148,7 +122,7 @@ describe('subscribeToMore', () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    const obsHandle = client.watchQuery({
+    const obsHandle = client.watchQuery<typeof req1['result']['data']>({
       query,
     });
     const sub = obsHandle.subscribe({
@@ -160,7 +134,7 @@ describe('subscribeToMore', () => {
 
     let errorCount = 0;
 
-    obsHandle.subscribeToMore({
+    obsHandle.subscribeToMore<SubscriptionData>({
       document: gql`
         subscription newValues {
           name
@@ -195,7 +169,7 @@ describe('subscribeToMore', () => {
   it('prints unhandled subscription errors to the console', done => {
     let latestResult: any = null;
 
-    const wSLink = mockObservableLink(sub3);
+    const wSLink = mockObservableLink();
     const httpLink = mockSingleLink(req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
@@ -237,7 +211,7 @@ describe('subscribeToMore', () => {
     setTimeout(() => {
       sub.unsubscribe();
       expect(stripSymbols(latestResult)).toEqual({
-        data: { entry: { value: 1 } },
+        data: { entry: { value: '1' } },
         loading: false,
         networkStatus: 7,
         stale: false,
@@ -255,7 +229,7 @@ describe('subscribeToMore', () => {
 
   it('should not corrupt the cache (#3062)', async done => {
     let latestResult: any = null;
-    const wSLink = mockObservableLink(sub1);
+    const wSLink = mockObservableLink();
     const httpLink = mockSingleLink(req4);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
@@ -287,7 +261,7 @@ describe('subscribeToMore', () => {
       link,
     });
 
-    const obsHandle = client.watchQuery({ query });
+    const obsHandle = client.watchQuery<typeof req4['result']['data']>({ query });
 
     const sub = obsHandle.subscribe({
       next(queryResult) {
@@ -296,8 +270,8 @@ describe('subscribeToMore', () => {
       },
     });
 
-    let nextMutation = '';
-    obsHandle.subscribeToMore({
+    let nextMutation: {value: string};
+    obsHandle.subscribeToMore<SubscriptionData>({
       document: gql`
         subscription createdEntry {
           name
@@ -311,23 +285,23 @@ describe('subscribeToMore', () => {
       },
     });
 
-    const wait = dur => new Promise(resolve => setTimeout(resolve, dur));
+    const wait = (dur: any) => new Promise(resolve => setTimeout(resolve, dur));
 
     for (let i = 0; i < 2; i++) {
       // init optimistic mutation
-      let data = client.cache.readQuery({ query }, false);
+      let data = client.cache.readQuery<typeof req4['result']['data']>({ query }, false);
       client.cache.recordOptimisticTransaction(proxy => {
         nextMutation = { value: results[i].result.data.name };
         proxy.writeQuery({
-          data: { entry: [...data.entry, nextMutation] },
+          data: { entry: [...(data && data.entry || []), nextMutation] },
           query,
         });
-      }, i);
+      }, i.toString());
       // on slow networks, subscription can happen first
       wSLink.simulateResult(results[i]);
       await wait(results[i].delay + 1);
       // complete mutation
-      client.cache.removeOptimistic(i);
+      client.cache.removeOptimistic(i.toString());
       // note: we don't complete mutation with performTransaction because a real example would detect duplicates
     }
     sub.unsubscribe();

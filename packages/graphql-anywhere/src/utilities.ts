@@ -2,7 +2,10 @@ import { DocumentNode } from 'graphql';
 
 import { graphql } from './graphql';
 
-export function filter(doc: DocumentNode, data: any): any {
+export function filter<FD = any, D extends FD = any>(
+  doc: DocumentNode,
+  data: D,
+): FD {
   const resolver = (
     fieldName: string,
     root: any,

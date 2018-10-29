@@ -1,6 +1,7 @@
 import { ApolloCache } from 'apollo-cache';
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
+import { cloneDeep } from 'lodash';
 
 import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
 
@@ -200,6 +201,7 @@ describe('Cache', () => {
         ),
       ).toEqual({ a: 1, b: 2 });
     });
+
     it('will read some data from the store with null variables', () => {
       const proxy = createCache({
         initialState: {
@@ -228,6 +230,38 @@ describe('Cache', () => {
           }),
         ),
       ).toEqual({ a: 1 });
+    });
+
+    it('should not mutate arguments passed in', () => {
+      const proxy = createCache({
+        initialState: {
+          apollo: {
+            data: {
+              ROOT_QUERY: {
+                'field({"literal":true,"value":42})': 1,
+                'field({"literal":false,"value":42})': 2,
+              },
+            },
+          },
+        },
+      });
+
+      const options = {
+        query: gql`
+          query($literal: Boolean, $value: Int) {
+            a: field(literal: true, value: 42)
+            b: field(literal: $literal, value: $value)
+          }
+        `,
+        variables: {
+          literal: false,
+          value: 42,
+        },
+      };
+
+      const preQueryCopy = cloneDeep(options);
+      expect(stripSymbols(proxy.readQuery(options))).toEqual({ a: 1, b: 2 });
+      expect(preQueryCopy).toEqual(options);
     });
   });
 

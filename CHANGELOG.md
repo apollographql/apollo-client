@@ -4,6 +4,42 @@
 
 ### Apollo Client (vNext)
 
+- Optimistic tests cleanup. <br/>
+  [@joshribakoff](https://github.com/joshribakoff) in [#3834](https://github.com/apollographql/apollo-client/pull/3834)
+- Documentation updates.  <br/>
+  [@chentsulin](https://github.com/chentsulin) in [#3840](https://github.com/apollographql/apollo-client/pull/3840)  <br/>
+  [@lorensr](https://github.com/lorensr) in [#3844](https://github.com/apollographql/apollo-client/pull/3844)
+
+### Apollo Cache (vNext)
+
+- Add `readQuery` test to make sure options aren't mutated.  <br/>
+  [@CarloPalinckx](https://github.com/CarloPalinckx) in [#3838](https://github.com/apollographql/apollo-client/pull/3838)
+
+## Apollo Client (2.4.4)
+
+### Apollo Utilities (1.0.24)
+
+- Discard property accessor functions in `cloneDeep` helper, to fix
+  [issue #4034](https://github.com/apollographql/apollo-client/issues/4034).
+
+- Unconditionally remove `cloneDeep` property accessors.
+  [PR #4039](https://github.com/apollographql/apollo-client/pull/4039)
+
+- Avoid copying non-enumerable and/or `Symbol` keys in `cloneDeep`.
+  [PR #4052](https://github.com/apollographql/apollo-client/pull/4052)
+
+### Apollo Cache In-Memory (1.3.7)
+
+- Throw when querying non-scalar objects without a selection set.
+  [Issue #4025](https://github.com/apollographql/apollo-client/issues/4025)
+  [PR #4038](https://github.com/apollographql/apollo-client/pull/4038)
+
+- Work around spec non-compliance of `Map#set` and `Set#add` in IE11.
+  [Issue #4024](https://github.com/apollographql/apollo-client/issues/4024)
+  [PR #4012](https://github.com/apollographql/apollo-client/pull/4012)
+
+## Apollo Client (2.4.3)
+
 - Add additional checks to make sure we don't try to set the network status
   of queries in the store, when the store doesn't exist.  <br/>
   [@i6mi6](https://github.com/i6mi6) in [#3914](https://github.com/apollographql/apollo-client/pull/3914)
@@ -15,7 +51,13 @@
   [@billfienberg](https://github.com/billfienberg) in [#3886](https://github.com/apollographql/apollo-client/pull/3886)  <br/>
   [@TLadd](https://github.com/TLadd) in [#3884](https://github.com/apollographql/apollo-client/pull/3884)
 
-### Apollo Cache In-Memory (1.3.5)
+- The `ObservableQuery` class now makes a deep clone of `lastResult` when
+  first received, so that the `isDifferentResult` logic will not be
+  confused if the result object is modified later.
+  [Issue #3992](https://github.com/apollographql/apollo-client/issues/3992)
+  [PR #4032](https://github.com/apollographql/apollo-client/pull/4032/commits/e66027c5341dc7aaf71ee7ffcba1305b9a553525)
+
+### Apollo Cache In-Memory (1.3.6)
 
 - Optimize repeated `apollo-cache-inmemory` reads by caching partial query
   results, for substantial performance improvements. As a consequence, watched
@@ -32,11 +74,33 @@
   peer dependency.
   [Issue #3978](https://github.com/apollographql/apollo-client/issues/3978)
 
-### Apollo GraphQL Anywhere (vNext)
+- The `apollo-cache-inmemory` package now correctly broadcasts changes
+  even when the new data is `===` to the old data, since the contents of
+  the data object may have changed.
+  [Issue #3992](https://github.com/apollographql/apollo-client/issues/3992)
+  [PR #4032](https://github.com/apollographql/apollo-client/pull/4032/commits/d6a673fbc1444e115e90cc9e4c7fa3fc67bb7e56)
+
+### Apollo GraphQL Anywhere (4.1.20)
 
 - Make `graphql-anywhere` `filter` function generic (typescript).  <br/>
   [@minznerjosh](https://github.com/minznerjosh) in [#3929](https://github.com/apollographql/apollo-client/pull/3929)
 
+### Apollo Utilities (1.0.22)
+
+- The `fclone` package has been replaced with a custom `cloneDeep`
+  implementation that is tolerant of cycles, symbol properties, and
+  non-enumerable properties.
+  [PR #4032](https://github.com/apollographql/apollo-client/pull/4032/commits/78e2ad89f950da2829f49c7876f968adb2bc1302)
+
+### Apollo Boost (0.1.17)
+
+- Remove duplicate InMemoryCache export for Babel 6 compatibility.
+  [Issue #3910](https://github.com/apollographql/apollo-client/issues/3910)
+  [PR #3932](https://github.com/apollographql/apollo-client/pull/3932)
+
+### Apollo Cache (1.1.18)
+
+- No changes.
 
 ## Apollo Client (2.4.2)
 

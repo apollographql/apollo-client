@@ -7,6 +7,7 @@ import {
   FieldNode,
   DirectiveNode,
   FragmentDefinitionNode,
+  ExecutableDefinitionNode,
 } from 'graphql';
 
 import { cloneDeep } from './util/cloneDeep';
@@ -153,11 +154,10 @@ export function removeDirectivesFromDocument(
   doc: DocumentNode,
 ): DocumentNode | null {
   const docClone = cloneDeep(doc);
-
-  docClone.definitions.forEach((definition: DefinitionNode) => {
+  docClone.definitions.forEach((definition: ExecutableDefinitionNode) => {
     removeDirectivesFromSelectionSet(
       directives,
-      (definition as OperationDefinitionNode).selectionSet,
+      (definition as ExecutableDefinitionNode).selectionSet,
     );
   });
   const operation = getOperationDefinitionOrDie(docClone);

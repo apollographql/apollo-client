@@ -1527,22 +1527,6 @@ export class QueryManager<TStore> {
       const aliasUsed = resultKey !== fieldName;
       const field = aliasUsed ? resultKey : fieldName;
 
-      // If a field value is found and it's a cache "type" node, we'll extract
-      // the cache ID, look the value up in the cache, then set that value
-      // as the resolved value.
-      if (normalNode && normalNode.type && normalNode.type === 'id') {
-        normalNode = cacheData[normalNode.id];
-      }
-      if (aliasedNode && aliasedNode.type && aliasedNode.type === 'id') {
-        aliasedNode = cacheData[aliasedNode.id];
-      }
-
-      // If we were able to find a matching field in the root value (or
-      // its children), return that value as the resolved value.
-      if (normalNode !== undefined || aliasedNode !== undefined) {
-        return aliasedNode || normalNode;
-      }
-
       // Make sure the context has access to the cache and query/mutate
       // functions, so resolvers can use them.
       const updatedContext = {
@@ -1560,6 +1544,22 @@ export class QueryManager<TStore> {
         if (resolve) {
           return resolve(rootValue, args, updatedContext, info);
         }
+      }
+
+      // If a field value is found and it's a cache "type" node, we'll extract
+      // the cache ID, look the value up in the cache, then set that value
+      // as the resolved value.
+      if (normalNode && normalNode.type && normalNode.type === 'id') {
+        normalNode = cacheData[normalNode.id];
+      }
+      if (aliasedNode && aliasedNode.type && aliasedNode.type === 'id') {
+        aliasedNode = cacheData[aliasedNode.id];
+      }
+
+      // If we were able to find a matching field in the root value (or
+      // its children), return that value as the resolved value.
+      if (normalNode !== undefined || aliasedNode !== undefined) {
+        return aliasedNode || normalNode;
       }
 
       // Fallback to checking the cache for a matching field. If a simple

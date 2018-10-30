@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [

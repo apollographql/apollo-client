@@ -247,6 +247,7 @@ export class ObservableQuery<
 
   public resetLastResults(): void {
     delete this.lastResult;
+    delete this.lastResultSnapshot;
     delete this.lastError;
     this.isTornDown = false;
   }

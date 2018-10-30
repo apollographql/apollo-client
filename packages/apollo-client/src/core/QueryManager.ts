@@ -12,7 +12,6 @@ import {
   getQueryDefinition,
   isProduction,
   hasDirectives,
-  isEqual,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -605,15 +604,9 @@ export class QueryManager<TStore> {
           }
 
           if (observer.next) {
-            const isDifferentResult = !(
-              lastResult &&
-              resultFromStore &&
-              lastResult.networkStatus === resultFromStore.networkStatus &&
-              lastResult.stale === resultFromStore.stale &&
-              isEqual(lastResult.data, resultFromStore.data)
-            );
-
-            if (isDifferentResult || previouslyHadError) {
+            if (previouslyHadError ||
+                !observableQuery ||
+                observableQuery.isDifferentFromLastResult(resultFromStore)) {
               try {
                 observer.next(resultFromStore);
               } catch (e) {

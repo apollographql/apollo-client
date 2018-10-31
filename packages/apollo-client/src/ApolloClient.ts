@@ -71,6 +71,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
+  private clearStoreCallbacks: Array<() => Promise<any>> = [];
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -114,7 +115,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     const supportedDirectives = new ApolloLink(
       (operation: Operation, forward: NextLink) => {
         let result = supportedCache.get(operation.query);
-        if (! result) {
+        if (!result) {
           result = removeConnectionDirectiveFromDocument(operation.query);
           supportedCache.set(operation.query, result);
           supportedCache.set(result, result);
@@ -460,9 +461,12 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public clearStore(): Promise<void | null> {
     const { queryManager } = this;
-    return Promise.resolve().then(
-      () => (queryManager ? queryManager.clearStore() : Promise.resolve(null)),
-    );
+    return Promise.resolve()
+      .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())))
+      .then(
+        () =>
+          queryManager ? queryManager.clearStore() : Promise.resolve(null),
+      );
   }
 
   /**
@@ -474,6 +478,18 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.resetStoreCallbacks.push(cb);
     return () => {
       this.resetStoreCallbacks = this.resetStoreCallbacks.filter(c => c !== cb);
+    };
+  }
+
+  /**
+   * Allows callbacks to be registered that are executed with the store is cleared.
+   * onClearStore returns an unsubscribe function for removing your registered callbacks.
+   */
+
+  public onClearStore(cb: () => Promise<any>): () => void {
+    this.clearStoreCallbacks.push(cb);
+    return () => {
+      this.clearStoreCallbacks = this.clearStoreCallbacks.filter(c => c !== cb);
     };
   }
 

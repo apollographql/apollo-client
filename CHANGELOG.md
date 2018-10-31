@@ -2,18 +2,34 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Client (vNext)
+## Apollo Client (2.4.5)
 
-- Optimistic tests cleanup. <br/>
-  [@joshribakoff](https://github.com/joshribakoff) in [#3834](https://github.com/apollographql/apollo-client/pull/3834)
-- Documentation updates.  <br/>
-  [@chentsulin](https://github.com/chentsulin) in [#3840](https://github.com/apollographql/apollo-client/pull/3840)  <br/>
-  [@lorensr](https://github.com/lorensr) in [#3844](https://github.com/apollographql/apollo-client/pull/3844)
+- Optimistic tests cleanup.
+  [PR #3834](https://github.com/apollographql/apollo-client/pull/3834) by
+  [@joshribakoff](https://github.com/joshribakoff)
 
-### Apollo Cache (vNext)
+- Documentation updates.
+  [PR #3840](https://github.com/apollographql/apollo-client/pull/3840) by
+  [@chentsulin](https://github.com/chentsulin) and
+  [PR #3844](https://github.com/apollographql/apollo-client/pull/3844) by
+  [@lorensr](https://github.com/lorensr)
 
-- Add `readQuery` test to make sure options aren't mutated.  <br/>
-  [@CarloPalinckx](https://github.com/CarloPalinckx) in [#3838](https://github.com/apollographql/apollo-client/pull/3838)
+- Implement `ObservableQuery#isDifferentFromLastResult` to fix
+  [Issue #4054](https://github.com/apollographql/apollo-client/issues/4054) and
+  [Issue #4031](https://github.com/apollographql/apollo-client/issues/4031).
+  [PR #4069](https://github.com/apollographql/apollo-client/pull/4069)
+
+### Apollo Cache (1.1.20)
+
+- Add `readQuery` test to make sure options aren't mutated.
+  [@CarloPalinckx](https://github.com/CarloPalinckx) in
+  [#3838](https://github.com/apollographql/apollo-client/pull/3838)
+
+### Apollo Utilities (1.0.25)
+
+- Fix `apollo-utilities` `isEqual` bug due to missing `hasOwnProperty`
+  check. [PR #4072](https://github.com/apollographql/apollo-client/pull/4072)
+  by [@samkline](https://github.com/samkline)
 
 ## Apollo Client (2.4.4)
 

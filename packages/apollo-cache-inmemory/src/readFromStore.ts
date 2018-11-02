@@ -304,6 +304,8 @@ export class StoreReader {
       result: {},
     };
 
+    const objectsToMerge: { [key: string]: any }[] = [];
+
     const object: StoreObject = contextValue.store.get(rootValue.id);
 
     const typename =
@@ -331,7 +333,7 @@ export class StoreReader {
         );
 
         if (typeof fieldResult !== 'undefined') {
-          merge(finalResult.result, {
+          objectsToMerge.push({
             [resultKeyNameFromField(selection)]: fieldResult,
           });
         }
@@ -369,10 +371,14 @@ export class StoreReader {
             };
           }
 
-          merge(finalResult.result, handleMissing(fragmentExecResult));
+          objectsToMerge.push(handleMissing(fragmentExecResult));
         }
       }
     });
+
+    // Perform a single merge at the end so that we can avoid making more
+    // defensive shallow copies than necessary.
+    merge(finalResult.result, objectsToMerge);
 
     return finalResult;
   }
@@ -592,28 +598,66 @@ const hasOwn = Object.prototype.hasOwnProperty;
 
 function merge(
   target: { [key: string]: any },
-  source: { [key: string]: any },
+  sources: { [key: string]: any }[]
 ) {
-  if (source !== null && typeof source === 'object' &&
-      // Due to result caching, it's possible that source and target will
-      // be === at some point in the tree, which means we can stop early.
-      source !== target) {
+  const pastCopies: any[] = [];
+  sources.forEach(source => {
+    mergeHelper(target, source, pastCopies);
+  });
+  return target;
+}
 
+function mergeHelper(
+  target: { [key: string]: any },
+  source: { [key: string]: any },
+  pastCopies: any[],
+) {
+  if (source !== null && typeof source === 'object') {
     // In case the target has been frozen, make an extensible copy so that
     // we can merge properties into the copy.
     if (Object.isExtensible && !Object.isExtensible(target)) {
-      target = { ...target };
+      target = shallowCopyForMerge(target, pastCopies);
     }
 
     Object.keys(source).forEach(sourceKey => {
-      const sourceVal = source[sourceKey];
-      if (!hasOwn.call(target, sourceKey)) {
-        target[sourceKey] = sourceVal;
+      const sourceValue = source[sourceKey];
+      if (hasOwn.call(target, sourceKey)) {
+        const targetValue = target[sourceKey];
+        if (sourceValue !== targetValue) {
+          // When there is a key collision, we need to make a shallow copy of
+          // target[sourceKey] so the merge does not modify any source objects.
+          // To avoid making unnecessary copies, we use a simple array to track
+          // past copies, instead of a Map, since the number of copies should
+          // be relatively small, and some Map polyfills modify their keys.
+          target[sourceKey] = mergeHelper(
+            shallowCopyForMerge(targetValue, pastCopies),
+            sourceValue,
+            pastCopies,
+          );
+        }
       } else {
-        target[sourceKey] = merge(target[sourceKey], sourceVal);
+        // If there is no collision, the target can safely share memory with
+        // the source, and the recursion can terminate here.
+        target[sourceKey] = sourceValue;
       }
     });
   }
 
   return target;
+}
+
+function shallowCopyForMerge<T>(value: T, pastCopies: any[]): T {
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    pastCopies.indexOf(value) < 0
+  ) {
+    if (Array.isArray(value)) {
+      value = (value as any).slice(0);
+    } else {
+      value = { ...(value as any) };
+    }
+    pastCopies.push(value);
+  }
+  return value;
 }

@@ -6,6 +6,7 @@ import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 import { defaultDataIdFromObject } from '../inMemoryCache';
+import { NormalizedCache } from '../types';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
@@ -1023,6 +1024,106 @@ describe('diffing queries against the store', () => {
           'Missing selection set for object of type Message returned for query field messageList'
         );
       }
+    });
+  });
+
+  describe('issue #4081', () => {
+    it('should not return results containing cycles', () => {
+      const company = {
+        __typename: 'Company',
+        id: 1,
+        name: 'Apollo',
+        users: [],
+      };
+
+      company.users.push({
+        __typename: 'User',
+        id: 1,
+        name: 'Ben',
+        company,
+      }, {
+        __typename: 'User',
+        id: 2,
+        name: 'James',
+        company,
+      });
+
+      const query = gql`
+        query Query {
+          user {
+            ...UserFragment
+            company {
+              users {
+                ...UserFragment
+              }
+            }
+          }
+        }
+
+        fragment UserFragment on User {
+          id
+          name
+          company {
+            id
+            name
+          }
+        }
+      `;
+
+      function check(store: NormalizedCache) {
+        const { result } = reader.diffQueryAgainstStore({ store, query });
+
+        // This JSON.stringify call has the side benefit of verifying that the
+        // result does not have any cycles.
+        const json = JSON.stringify(result);
+
+        company.users.forEach(user => {
+          expect(json).toContain(JSON.stringify(user.name));
+        });
+
+        expect(result).toEqual({
+          user: {
+            id: 1,
+            name: 'Ben',
+            company: {
+              id: 1,
+              name: 'Apollo',
+              users: [{
+                id: 1,
+                name: 'Ben',
+                company: {
+                  id: 1,
+                  name: 'Apollo',
+                },
+              }, {
+                id: 2,
+                name: 'James',
+                company: {
+                  id: 1,
+                  name: 'Apollo',
+                },
+              }],
+            },
+          },
+        });
+      }
+
+      // Check first using generated IDs.
+      check(writer.writeQueryToStore({
+        query,
+        result: {
+          user: company.users[0],
+        },
+      }));
+
+      // Now check with __typename-specific IDs.
+      check(writer.writeQueryToStore({
+        dataIdFromObject: defaultDataIdFromObject,
+        query,
+        result: {
+          user: company.users[0],
+        },
+      }));
     });
   });
 });

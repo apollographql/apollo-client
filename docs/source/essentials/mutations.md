@@ -20,7 +20,7 @@ import gql from "graphql-tag";
 import { Mutation } from "react-apollo";
 
 const ADD_TODO = gql`
-  mutation AddTodo($type: String!) {
+  mutation addTodo($type: String!) {
     addTodo(type: $type) {
       id
       type

@@ -2,10 +2,6 @@
 
 ## Apollo Client (vNext)
 
-## Apollo Client (2.4.6)
-
-- No changes.
-
 ### Apollo Cache In-Memory (1.3.9)
 
 - Avoid modifying source objects when merging cache results.

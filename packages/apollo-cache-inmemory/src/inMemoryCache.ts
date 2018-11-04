@@ -21,7 +21,10 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 
-import { defaultNormalizedCacheFactory, DepTrackingCache } from './depTrackingCache';
+import {
+  defaultNormalizedCacheFactory,
+  DepTrackingCache,
+} from './depTrackingCache';
 import { wrap, CacheKeyNode, OptimisticWrapperFunction } from './optimism';
 
 import { record } from './recordingCache';
@@ -85,34 +88,37 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
-    this.maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
-      return maybeBroadcastWatch.call(this, c);
-    }, {
-      makeCacheKey(c: Cache.WatchOptions) {
-        if (c.optimistic && cache.optimistic.length > 0) {
-          // If we're reading optimistic data, it doesn't matter if this.data
-          // is a DepTrackingCache, since it will be ignored.
-          return;
-        }
+    this.maybeBroadcastWatch = wrap(
+      (c: Cache.WatchOptions) => {
+        return maybeBroadcastWatch.call(this, c);
+      },
+      {
+        makeCacheKey(c: Cache.WatchOptions) {
+          if (c.optimistic && cache.optimistic.length > 0) {
+            // If we're reading optimistic data, it doesn't matter if this.data
+            // is a DepTrackingCache, since it will be ignored.
+            return;
+          }
 
-        if (c.previousResult) {
-          // If a previousResult was provided, assume the caller would prefer
-          // to compare the previous data to the new data to determine whether
-          // to broadcast, so we should disable caching by returning here, to
-          // give maybeBroadcastWatch a chance to do that comparison.
-          return;
-        }
+          if (c.previousResult) {
+            // If a previousResult was provided, assume the caller would prefer
+            // to compare the previous data to the new data to determine whether
+            // to broadcast, so we should disable caching by returning here, to
+            // give maybeBroadcastWatch a chance to do that comparison.
+            return;
+          }
 
-        if (cache.data instanceof DepTrackingCache) {
-          // Return a cache key (thus enabling caching) only if we're currently
-          // using a data store that can track cache dependencies.
-          return cache.cacheKeyRoot.lookup(
-            c.query,
-            JSON.stringify(c.variables),
-          );
-        }
-      }
-    });
+          if (cache.data instanceof DepTrackingCache) {
+            // Return a cache key (thus enabling caching) only if we're currently
+            // using a data store that can track cache dependencies.
+            return cache.cacheKeyRoot.lookup(
+              c.query,
+              JSON.stringify(c.variables),
+            );
+          }
+        },
+      },
+    );
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -129,24 +135,28 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.data.toObject();
   }
 
-  public read<T>(query: Cache.ReadOptions): T | null {
+  public read<T>(query: Cache.ReadOptions, refetch?: Function): T | null {
     if (query.rootId && this.data.get(query.rootId) === undefined) {
       return null;
     }
 
-    const store = (query.optimistic && this.optimistic.length)
-      ? defaultNormalizedCacheFactory(this.extract(true))
-      : this.data;
+    const store =
+      query.optimistic && this.optimistic.length
+        ? defaultNormalizedCacheFactory(this.extract(true))
+        : this.data;
 
-    return this.storeReader.readQueryFromStore({
-      store,
-      query: this.transformDocument(query.query),
-      variables: query.variables,
-      rootId: query.rootId,
-      fragmentMatcherFunction: this.config.fragmentMatcher.match,
-      previousResult: query.previousResult,
-      config: this.config,
-    });
+    return this.storeReader.readQueryFromStore(
+      {
+        store,
+        query: this.transformDocument(query.query),
+        variables: query.variables,
+        rootId: query.rootId,
+        fragmentMatcherFunction: this.config.fragmentMatcher.match,
+        previousResult: query.previousResult,
+        config: this.config,
+      },
+      refetch,
+    );
   }
 
   public write(write: Cache.WriteOptions): void {
@@ -164,9 +174,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
-    const store = (query.optimistic && this.optimistic.length)
-      ? defaultNormalizedCacheFactory(this.extract(true))
-      : this.data;
+    const store =
+      query.optimistic && this.optimistic.length
+        ? defaultNormalizedCacheFactory(this.extract(true))
+        : this.data;
 
     return this.storeReader.diffQueryAgainstStore({
       store: store,
@@ -339,11 +350,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // This method is wrapped in the constructor so that it will be called only
   // if the data that would be broadcast has changed.
   private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    c.callback(this.diff({
-      query: c.query,
-      variables: c.variables,
-      previousResult: c.previousResult && c.previousResult(),
-      optimistic: c.optimistic,
-    }));
+    c.callback(
+      this.diff({
+        query: c.query,
+        variables: c.variables,
+        previousResult: c.previousResult && c.previousResult(),
+        optimistic: c.optimistic,
+      }),
+    );
   }
 }

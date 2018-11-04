@@ -11,6 +11,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // core API
   public abstract read<T, TVariables = any>(
     query: Cache.ReadOptions<TVariables>,
+    refetch?: Function,
   ): T | null;
   public abstract write<TResult = any, TVariables = any>(
     write: Cache.WriteOptions<TResult, TVariables>,

@@ -604,9 +604,11 @@ export class QueryManager<TStore> {
           }
 
           if (observer.next) {
-            if (previouslyHadError ||
-                !observableQuery ||
-                observableQuery.isDifferentFromLastResult(resultFromStore)) {
+            if (
+              previouslyHadError ||
+              !observableQuery ||
+              observableQuery.isDifferentFromLastResult(resultFromStore)
+            ) {
               try {
                 observer.next(resultFromStore);
               } catch (e) {
@@ -981,13 +983,26 @@ export class QueryManager<TStore> {
       return { data: newData.result, partial: false };
     } else {
       try {
-        // the query is brand new, so we read from the store to see if anything is there
-        const data = this.dataStore.getCache().read({
+        const queryOptions: QueryOptions = {
           query,
           variables,
-          previousResult: lastResult ? lastResult.data : undefined,
-          optimistic,
-        });
+          fetchPolicy: 'network-only',
+        };
+        const needRefetch =
+          lastResult && lastResult.data && !lastResult.loading;
+        const refetch = needRefetch
+          ? this.query.bind(this, queryOptions)
+          : () => {};
+        // the query is brand new, so we read from the store to see if anything is there
+        const data = this.dataStore.getCache().read(
+          {
+            query,
+            variables,
+            previousResult: lastResult ? lastResult.data : undefined,
+            optimistic,
+          },
+          refetch,
+        );
 
         return { data, partial: false };
       } catch (e) {
@@ -1212,15 +1227,17 @@ export class QueryManager<TStore> {
   }
 
   private getQuery(queryId: string) {
-    return this.queries.get(queryId) || {
-      listeners: [],
-      invalidated: false,
-      document: null,
-      newData: null,
-      lastRequestId: null,
-      observableQuery: null,
-      subscriptions: [],
-    };
+    return (
+      this.queries.get(queryId) || {
+        listeners: [],
+        invalidated: false,
+        document: null,
+        newData: null,
+        lastRequestId: null,
+        observableQuery: null,
+        subscriptions: [],
+      }
+    );
   }
 
   private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {

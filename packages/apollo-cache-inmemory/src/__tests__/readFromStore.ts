@@ -582,6 +582,36 @@ describe('reading from the store', () => {
     }).toThrowError(/field missingField on object/);
   });
 
+  it('throws on a missing field and call refetch callback', done => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    } as StoreObject;
+
+    const store = defaultNormalizedCacheFactory({ ROOT_QUERY: result });
+
+    const refetch = () => {
+      done();
+    };
+
+    expect(() => {
+      reader.readQueryFromStore(
+        {
+          store,
+          query: gql`
+            {
+              stringField
+              missingField
+            }
+          `,
+        },
+        refetch,
+      );
+    }).toThrowError(/field missingField on object/);
+  });
+
   it('runs a nested query where the reference is null', () => {
     const result: any = {
       id: 'abcd',

@@ -7,7 +7,7 @@ import {
 } from 'apollo-utilities';
 
 import { QueryStoreValue } from '../data/queries';
-import { MutationQueryReducer, StoreInitializers } from '../core/types';
+import { MutationQueryReducer, Initializers } from '../core/types';
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -223,9 +223,7 @@ export class DataStore<TSerialized> {
   // can be overwritten. We might decide to query into the cache first to
   // see if any previous data exists before overwritting it, but TBD.
   public initialize(
-    initializers:
-      | StoreInitializers<TSerialized>
-      | StoreInitializers<TSerialized>[],
+    initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
   ) {
     if (!initializers) {
       throw new Error('Invalid/missing initializers');
@@ -251,9 +249,7 @@ export class DataStore<TSerialized> {
   }
 
   public initializeSync(
-    initializers:
-      | StoreInitializers<TSerialized>
-      | StoreInitializers<TSerialized>[],
+    initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
   ) {
     if (!initializers) {
       throw new Error('Invalid/missing initializers');
@@ -273,11 +269,9 @@ export class DataStore<TSerialized> {
   }
 
   private mergeInitializers(
-    initializers:
-      | StoreInitializers<TSerialized>
-      | StoreInitializers<TSerialized>[],
+    initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
   ) {
-    let mergedInitializers: StoreInitializers<TSerialized> = {};
+    let mergedInitializers: Initializers<TSerialized> = {};
     if (Array.isArray(initializers)) {
       initializers.forEach(initializerGroup => {
         mergedInitializers = { ...mergedInitializers, ...initializerGroup };
@@ -289,7 +283,7 @@ export class DataStore<TSerialized> {
   }
 
   private runInitializers(
-    initializers: StoreInitializers<TSerialized>,
+    initializers: Initializers<TSerialized>,
     runFunc: (fieldName: string, initializer: any) => any,
   ) {
     Object.keys(initializers).forEach(fieldName => {

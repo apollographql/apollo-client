@@ -17,7 +17,7 @@ import { QueryManager } from './core/QueryManager';
 import {
   ApolloQueryResult,
   OperationVariables,
-  StoreInitializers,
+  Initializers,
   Resolvers,
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
@@ -49,14 +49,12 @@ let hasSuggestedDevtools = false;
 export type ApolloClientOptions<TCacheShape> = {
   link: ApolloLink;
   cache: ApolloCache<TCacheShape>;
-  ssrMode?: boolean;
   ssrForceFetchDelay?: number;
+  ssrMode?: boolean;
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
-  storeInitializers?:
-    | StoreInitializers<TCacheShape>
-    | StoreInitializers<TCacheShape>[];
+  initializers?: Initializers<TCacheShape> | Initializers<TCacheShape>[];
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
 };
@@ -114,7 +112,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
-      storeInitializers,
+      initializers,
       resolvers,
       typeDefs,
     } = options;
@@ -198,9 +196,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     this.version = version;
 
-    if (storeInitializers) {
+    if (initializers) {
       // Run provided local state initializers (run synchronously).
-      this.store.initializeSync(storeInitializers);
+      this.store.initializeSync(initializers);
     }
 
     if (resolvers) {
@@ -209,6 +207,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     if (typeDefs) {
+      // Set local schema type definitions.
       this.setTypeDefs(typeDefs);
     }
   }
@@ -538,10 +537,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * TODO.
    */
-  public initializeStore(
-    initializers:
-      | StoreInitializers<TCacheShape>
-      | StoreInitializers<TCacheShape>[],
+  public runInitializers(
+    initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
   ) {
     this.store.initialize(initializers);
   }

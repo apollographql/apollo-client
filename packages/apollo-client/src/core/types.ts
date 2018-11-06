@@ -46,12 +46,10 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
 
-// TODO
-export interface StoreInitializers<TCacheShape> {
+export interface Initializers<TCacheShape> {
   [field: string]: (client: ApolloClient<TCacheShape>) => any;
 }
 
-// TODO
 export interface Resolvers {
   [key: string]: {
     [field: string]: (

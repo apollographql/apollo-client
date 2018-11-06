@@ -1211,6 +1211,10 @@ export class QueryManager<TStore> {
     }
   }
 
+  public getResolvers() {
+    return this.resolvers;
+  }
+
   public setTypeDefs(
     typeDefs: string | string[] | DocumentNode | DocumentNode[],
   ) {

@@ -553,6 +553,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.initQueryManager().addResolvers(resolvers);
   }
 
+  public getResolvers() {
+    return this.initQueryManager().getResolvers();
+  }
+
   /**
    * TODO.
    */

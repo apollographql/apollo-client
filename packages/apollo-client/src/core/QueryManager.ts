@@ -113,10 +113,10 @@ export class QueryManager<TStore> {
   // updateQueries.
   private queryIdsByName: { [queryName: string]: string[] } = {};
 
-  // TODO
+  // A map of local resolvers by field/type name.
   private resolvers: Resolvers = {};
 
-  // TODO
+  // Local schema type definitions.
   private typeDefs: string | string[] | DocumentNode | DocumentNode[];
 
   constructor({
@@ -1621,6 +1621,9 @@ export class QueryManager<TStore> {
         document,
       );
 
+      // TODO: Do we also want to filter the remaining document set by
+      // @export? Might not be necessary.
+
       if (clientDirectiveOnlyDoc) {
         const localResult = await this.resolveDocumentLocally(
           clientDirectiveOnlyDoc,
@@ -1659,7 +1662,6 @@ export class QueryManager<TStore> {
     };
   }
 
-  // TODO
   private async resolveDocumentLocally(
     clientQuery: DocumentNode | null,
     variables?: OperationVariables,

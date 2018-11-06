@@ -535,27 +535,31 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * TODO.
+   * Run one or many initializer functions, that can be used to put the
+   * cache into a desired state.
    */
   public runInitializers(
     initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
   ) {
-    this.store.initialize(initializers);
+    this.store.initialize(initializers, this);
   }
 
   /**
-   * TODO.
+   * Register local resolvers.
    */
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
     this.initQueryManager().addResolvers(resolvers);
   }
 
+  /**
+   * Get all registered local resolvers.
+   */
   public getResolvers() {
     return this.initQueryManager().getResolvers();
   }
 
   /**
-   * TODO.
+   * Set the local schema type definitions.
    */
   public setTypeDefs(
     typeDefs: string | string[] | DocumentNode | DocumentNode[],
@@ -563,6 +567,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.initQueryManager().setTypeDefs(typeDefs);
   }
 
+  /**
+   * Get local schema type definitions.
+   */
   public getTypeDefs():
     | string
     | string[]

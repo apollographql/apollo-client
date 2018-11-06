@@ -8,6 +8,7 @@ import {
 
 import { QueryStoreValue } from '../data/queries';
 import { MutationQueryReducer, Initializers } from '../core/types';
+import ApolloClient from '..';
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -212,11 +213,13 @@ export class DataStore<TSerialized> {
     return this.cache.reset();
   }
 
-  // TODO ...
+  // Run the incoming initializer functions, asynchronously. Initializers that
+  // have already been run are tracked against the initializer field name, to
+  // prevent them from being run a second time.
   //
-  // Run (and store for future reference) the incoming initializer functions.
-  // Initializers for the same field that have the exact same function value,
-  // are only run (and stored) once.
+  // Initializer functions are passed a reference to the current
+  // `ApolloClient` instance, to get access to the cache (or any other
+  // `ApolloClient` properties/functions).
   //
   // NOTE: Initializers do not currently check to see if data already exists
   // in the cache, before writing to the cache. This means existing data
@@ -224,6 +227,7 @@ export class DataStore<TSerialized> {
   // see if any previous data exists before overwritting it, but TBD.
   public initialize(
     initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
+    client: ApolloClient<TSerialized>,
   ) {
     if (!initializers) {
       throw new Error('Invalid/missing initializers');
@@ -236,7 +240,7 @@ export class DataStore<TSerialized> {
       mergedInitializers,
       (fieldName: string, initializer: any) => {
         initializerPromises.push(
-          Promise.resolve(initializer(this)).then(result => {
+          Promise.resolve(initializer(client)).then(result => {
             if (result !== null) {
               this.cache.writeData({ data: { [fieldName]: result } });
             }
@@ -248,6 +252,7 @@ export class DataStore<TSerialized> {
     return Promise.all(initializerPromises);
   }
 
+  // Run incoming intializer functions, synchronously.
   public initializeSync(
     initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
   ) {

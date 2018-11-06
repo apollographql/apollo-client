@@ -116,6 +116,9 @@ export class QueryManager<TStore> {
   // TODO
   private resolvers: Resolvers = {};
 
+  // TODO
+  private typeDefs: string | string[] | DocumentNode | DocumentNode[];
+
   constructor({
     link,
     queryDeduplication = false,
@@ -193,9 +196,10 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    const updatedVariables: OperationVariables = await this.includeClientExportVariables(
+    const updatedVariables: OperationVariables = await this.prepareClientExportVariables(
       mutation,
       variables,
+      context,
     );
 
     this.mutationStore.initMutation(
@@ -402,14 +406,16 @@ export class QueryManager<TStore> {
       variables = {},
       metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
+      context = {},
     } = options;
     const cache = this.dataStore.getCache();
 
     const query = cache.transformDocument(options.query);
 
-    const updatedVariables: OperationVariables = await this.includeClientExportVariables(
+    const updatedVariables: OperationVariables = await this.prepareClientExportVariables(
       query,
       variables,
+      context,
     );
     const updatedOptions: WatchQueryOptions = {
       ...options,
@@ -1080,7 +1086,7 @@ export class QueryManager<TStore> {
         };
 
         (async () => {
-          const updatedVariables: OperationVariables = await this.includeClientExportVariables(
+          const updatedVariables: OperationVariables = await this.prepareClientExportVariables(
             transformedDoc,
             variables,
           );
@@ -1205,6 +1211,16 @@ export class QueryManager<TStore> {
     }
   }
 
+  public setTypeDefs(
+    typeDefs: string | string[] | DocumentNode | DocumentNode[],
+  ) {
+    this.typeDefs = typeDefs;
+  }
+
+  public getTypeDefs(): string | string[] | DocumentNode | DocumentNode[] {
+    return this.typeDefs;
+  }
+
   private getObservableQueryPromises(
     includeStandby?: boolean,
   ): Promise<ApolloQueryResult<any>>[] {
@@ -1256,13 +1272,16 @@ export class QueryManager<TStore> {
     }
 
     let obs: Observable<FetchResult>;
+    let updatedContext = {};
     if (serverQuery) {
       const operation = this.buildOperationForLink(serverQuery, variables, {
         ...context,
         forceFetch: !this.queryDeduplication,
       });
+      updatedContext = operation.context;
       obs = execute(this.deduplicator, operation);
     } else {
+      updatedContext = this.contextCopyWithCache(context);
       obs = Observable.of({ data: {} });
     }
 
@@ -1290,7 +1309,7 @@ export class QueryManager<TStore> {
                   resolver,
                   clientQuery,
                   result.data,
-                  context,
+                  updatedContext,
                   variables,
                 );
 
@@ -1452,32 +1471,36 @@ export class QueryManager<TStore> {
     extraContext?: any,
   ) {
     const cache = this.dataStore.getCache();
-
     return {
       query: cache.transformForLink
         ? cache.transformForLink(document)
         : document,
       variables,
       operationName: getOperationName(document) || undefined,
-      context: {
-        ...extraContext,
-        cache,
-        // getting an entry's cache key is useful for cacheResolvers & state-link
-        getCacheKey: (obj: { __typename: string; id: string | number }) => {
-          if ((cache as any).config) {
-            // on the link, we just want the id string, not the full id value from toIdValue
-            return (cache as any).config.dataIdFromObject(obj);
-          } else {
-            throw new Error(
-              'To use context.getCacheKey, you need to use a cache that has a configurable dataIdFromObject, like apollo-cache-inmemory.',
-            );
-          }
-        },
+      context: this.contextCopyWithCache(extraContext),
+    };
+  }
+
+  private contextCopyWithCache(context = {}) {
+    const cache = this.dataStore.getCache();
+    return {
+      ...context,
+      cache,
+      // Getting an entry's cache key is useful for local state resolvers.
+      getCacheKey: (obj: { __typename: string; id: string | number }) => {
+        if ((cache as any).config) {
+          return (cache as any).config.dataIdFromObject(obj);
+        } else {
+          throw new Error(
+            'To use context.getCacheKey, you need to use a cache that has ' +
+              'a configurable dataIdFromObject, like apollo-cache-inmemory.',
+          );
+        }
       },
     };
   }
 
-  private prepareResolver(query: DocumentNode | null) {
+  private prepareResolver(query: DocumentNode | null, readOnly = false) {
     let resolver: Resolver | null = null;
 
     if (!query) {
@@ -1486,9 +1509,13 @@ export class QueryManager<TStore> {
 
     const definition = getMainDefinition(query);
     const definitionOperation = (<OperationDefinitionNode>definition).operation;
-    const type = definitionOperation
+    let type: string | null = definitionOperation
       ? capitalizeFirstLetter(definitionOperation)
       : 'Query';
+
+    if (readOnly && type === 'Mutation') {
+      type = null;
+    }
 
     const { resolvers } = this;
     const cache = this.dataStore.getCache();
@@ -1577,9 +1604,10 @@ export class QueryManager<TStore> {
     return resolver;
   }
 
-  private async includeClientExportVariables(
+  private async prepareClientExportVariables(
     document: DocumentNode,
     variables: OperationVariables = {},
+    context = {},
   ) {
     let clientVariables: { [fieldName: string]: string } = {};
 
@@ -1588,10 +1616,12 @@ export class QueryManager<TStore> {
         [{ name: 'client' }],
         document,
       );
+
       if (clientDirectiveOnlyDoc) {
-        const localResult = await this.runDocumentThroughLocalResolvers(
+        const localResult = await this.resolveDocumentLocally(
           clientDirectiveOnlyDoc,
           variables,
+          context,
         );
         clientDirectiveOnlyDoc.definitions
           .filter(
@@ -1626,15 +1656,23 @@ export class QueryManager<TStore> {
   }
 
   // TODO
-  private async runDocumentThroughLocalResolvers(
+  private async resolveDocumentLocally(
     clientQuery: DocumentNode | null,
     variables?: OperationVariables,
+    context = {},
   ) {
     let localResult: any;
     if (clientQuery) {
-      const resolver = this.prepareResolver(clientQuery);
+      const resolver = this.prepareResolver(clientQuery, true);
       if (resolver) {
-        localResult = await graphql(resolver, clientQuery, {}, {}, variables);
+        const updatedContext = this.contextCopyWithCache(context);
+        localResult = await graphql(
+          resolver,
+          clientQuery,
+          {},
+          updatedContext,
+          variables,
+        );
       }
     }
     return localResult;

@@ -6,7 +6,7 @@ import {
   GraphQLRequest,
   execute,
 } from 'apollo-link';
-import { ExecutionResult } from 'graphql';
+import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
 import {
   isProduction,
@@ -58,6 +58,7 @@ export type ApolloClientOptions<TCacheShape> = {
     | StoreInitializers<TCacheShape>
     | StoreInitializers<TCacheShape>[];
   resolvers?: Resolvers | Resolvers[];
+  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
 };
 
 const supportedDirectives = new ApolloLink(
@@ -115,6 +116,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       defaultOptions,
       storeInitializers,
       resolvers,
+      typeDefs,
     } = options;
 
     if (!link || !cache) {
@@ -193,6 +195,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         }
       }
     }
+
     this.version = version;
 
     if (storeInitializers) {
@@ -203,6 +206,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     if (resolvers) {
       // Prepare provided local state resolvers.
       this.addResolvers(resolvers);
+    }
+
+    if (typeDefs) {
+      this.setTypeDefs(typeDefs);
     }
   }
 
@@ -544,6 +551,24 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
     this.initQueryManager().addResolvers(resolvers);
+  }
+
+  /**
+   * TODO.
+   */
+  public setTypeDefs(
+    typeDefs: string | string[] | DocumentNode | DocumentNode[],
+  ) {
+    this.initQueryManager().setTypeDefs(typeDefs);
+  }
+
+  public getTypeDefs():
+    | string
+    | string[]
+    | DocumentNode
+    | DocumentNode[]
+    | undefined {
+    return this.queryManager ? this.queryManager.getTypeDefs() : undefined;
   }
 
   /**

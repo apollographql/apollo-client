@@ -1,4 +1,4 @@
-import { isEqual, tryFunctionOrLogError } from 'apollo-utilities';
+import { isEqual, tryFunctionOrLogError, cloneDeep } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
@@ -77,6 +77,7 @@ export class ObservableQuery<
   private subscriptionHandles: Subscription[];
 
   private lastResult: ApolloQueryResult<TData>;
+  private lastResultSnapshot: ApolloQueryResult<TData>;
   private lastError: ApolloError;
 
   constructor({
@@ -215,11 +216,23 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      const stale = false;
-      this.lastResult = { ...result, stale };
+      this.lastResult = { ...result, stale: false };
+      this.lastResultSnapshot = cloneDeep(this.lastResult);
     }
 
     return { ...result, partial } as ApolloCurrentResult<TData>;
+  }
+
+  // Compares newResult to the snapshot we took of this.lastResult when it was
+  // first received.
+  public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
+    const { lastResultSnapshot: snapshot } = this;
+    return !(
+      snapshot && newResult &&
+      snapshot.networkStatus === newResult.networkStatus &&
+      snapshot.stale === newResult.stale &&
+      isEqual(snapshot.data, newResult.data)
+    );
   }
 
   // Returns the last result that observer.next was called with. This is not the same as
@@ -234,6 +247,7 @@ export class ObservableQuery<
 
   public resetLastResults(): void {
     delete this.lastResult;
+    delete this.lastResultSnapshot;
     delete this.lastError;
     this.isTornDown = false;
   }
@@ -587,6 +601,7 @@ export class ObservableQuery<
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
         this.lastResult = result;
+        this.lastResultSnapshot = cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

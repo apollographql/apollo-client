@@ -13,7 +13,7 @@
     "test": "jest",
     "build": "tsc",
     "postbuild": "npm run bundle",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup.async.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",

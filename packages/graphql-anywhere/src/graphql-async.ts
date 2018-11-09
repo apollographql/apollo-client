@@ -20,30 +20,25 @@ import {
 
 import {
   merge,
-  Resolver,
   VariableMap,
   ExecContext,
   ExecInfo,
   ExecOptions,
 } from './graphql';
 
-/* Based on graphql function from graphql-js:
- *
- * graphql(
- *   schema: GraphQLSchema,
- *   requestString: string,
- *   rootValue?: ?any,
- *   contextValue?: ?any,
- *   variableValues?: ?{[key: string]: any},
- *   operationName?: ?string
- * ): Promise<GraphQLResult>
- *
- * The default export as of graphql-anywhere is sync as of 4.0,
- * but below is an exported alternative that is async.
- * In the 5.0 version, this will be the only export again
- * and it will be async
+export type Resolver = (
+  fieldName: string,
+  rootValue: any,
+  args: any,
+  context: any,
+  info: ExecInfo,
+) => any;
+
+/*
+ * A light weight client side asynchronous graphql handling function, based
+ * on `graphql-js`.
  */
-export function graphqlAsync(
+export function graphql(
   resolver: Resolver,
   document: DocumentNode,
   rootValue?: any,

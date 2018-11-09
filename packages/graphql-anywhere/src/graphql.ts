@@ -34,6 +34,7 @@ export type ResultMapper = (
   values: { [fieldName: string]: any },
   rootValue: any,
 ) => any;
+
 export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
@@ -60,21 +61,8 @@ export type ExecOptions = {
   fragmentMatcher?: FragmentMatcher;
 };
 
-/* Based on graphql function from graphql-js:
- *
- * graphql(
- *   schema: GraphQLSchema,
- *   requestString: string,
- *   rootValue?: ?any,
- *   contextValue?: ?any,
- *   variableValues?: ?{[key: string]: any},
- *   operationName?: ?string
- * ): Promise<GraphQLResult>
- *
- * The default export as of graphql-anywhere is sync as of 4.0,
- * but below is an exported alternative that is async.
- * In the 5.0 version, this will be the only export again
- * and it will be async
+/*
+ * A light weight client side graphql handling function, based on `graphql-js`.
  */
 export function graphql(
   resolver: Resolver,

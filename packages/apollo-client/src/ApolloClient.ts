@@ -197,7 +197,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.version = version;
 
     if (initializers) {
-      // Run provided local state initializers (run synchronously).
+      // Run (synchronously) provided local state initializers.
       this.store.initializeSync(initializers);
     }
 
@@ -535,8 +535,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * Run one or many initializer functions, that can be used to put the
-   * cache into a desired state.
+   * Run one or many initializer functions to put the cache into a desired
+   * state.
    */
   public runInitializers(
     initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],

@@ -144,7 +144,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
-This is expecially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
+This is especially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
 
 ```javascript
 import React from "react";

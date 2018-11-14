@@ -1609,29 +1609,29 @@ export class QueryManager<TStore> {
     return resolver;
   }
 
+  // To support `@client @export(as: "someVar")` syntax, we'll first resolve
+  // @client @export fields locally, then pass the resolved values back to be
+  // used alongside the original operation variables.
   private async prepareClientExportVariables(
     document: DocumentNode,
     variables: OperationVariables = {},
     context = {},
   ) {
-    let clientVariables: { [fieldName: string]: string } = {};
+    let exportedVariables: { [fieldName: string]: string } = {};
 
     if (document) {
-      const clientDirectiveOnlyDoc = getDirectivesFromDocument(
-        [{ name: 'client' }],
+      const exportDirectiveOnlyDoc = getDirectivesFromDocument(
+        [{ name: 'export' }],
         document,
       );
 
-      // TODO: Do we also want to filter the remaining document set by
-      // @export? Might not be necessary.
-
-      if (clientDirectiveOnlyDoc) {
+      if (exportDirectiveOnlyDoc) {
         const localResult = await this.resolveDocumentLocally(
-          clientDirectiveOnlyDoc,
+          exportDirectiveOnlyDoc,
           variables,
           context,
         );
-        clientDirectiveOnlyDoc.definitions
+        exportDirectiveOnlyDoc.definitions
           .filter(
             (definition: OperationDefinitionNode) =>
               definition.selectionSet && definition.selectionSet.selections,
@@ -1651,7 +1651,7 @@ export class QueryManager<TStore> {
               if (value.json) {
                 value = value.json;
               }
-              clientVariables[directiveInfo.export.as] = value;
+              exportedVariables[directiveInfo.export.as] = value;
             }
           });
       }
@@ -1659,7 +1659,7 @@ export class QueryManager<TStore> {
 
     return {
       ...variables,
-      ...clientVariables,
+      ...exportedVariables,
     };
   }
 

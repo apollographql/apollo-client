@@ -1,6 +1,6 @@
 .gitignore
 CHANGELOG.md
 design.md
-rollup.config.js
+rollup.*.js
 tsconfig.json
 tslint.json

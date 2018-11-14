@@ -1,6 +1,6 @@
 import ApolloClient, { gql, InMemoryCache } from '../';
 import { stripSymbols } from 'apollo-utilities';
-import * as fetchMock from 'fetch-mock';
+import fetchMock from 'fetch-mock';
 
 global.fetch = jest.fn(() =>
   Promise.resolve({ json: () => Promise.resolve({}) }),

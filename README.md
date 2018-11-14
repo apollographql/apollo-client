@@ -98,18 +98,15 @@ To learn more about all of the features available to you through the `apollo-cli
 
 ## Contributing
 
-[![Build status](https://travis-ci.org/apollographql/apollo-client.svg?branch=master)](https://travis-ci.org/apollographql/apollo-client)
-[![Build status](https://ci.appveyor.com/api/projects/status/ajdf70delshw2ire/branch/master?svg=true)](https://ci.appveyor.com/project/stubailo/apollo-client/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-client?branch=master)
+[![CircleCI](https://circleci.com/gh/apollographql/apollo-client.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-client)
+[![codecov](https://codecov.io/gh/apollographql/apollo-client/branch/master/graph/badge.svg)](https://codecov.io/gh/apollographql/apollo-client)
 
 [Read the Apollo Contributor Guidelines.](CONTRIBUTING.md)
 
 Running tests locally:
 
 ```
-# nvm use node
 npm install
-npm run build
 npm test
 ```
 

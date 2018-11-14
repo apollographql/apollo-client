@@ -1,0 +1,13 @@
+scripts
+test
+typings
+.gitignore
+.travis.yml
+ambient.d.ts
+CHANGELOG.md
+design.md
+Gruntfile.js
+tsconfig.json
+tslint.json
+typings.json
+config

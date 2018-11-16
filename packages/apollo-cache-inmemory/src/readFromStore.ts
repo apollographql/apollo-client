@@ -150,7 +150,7 @@ export class StoreReader {
             rootValue.id,
           );
         }
-        return false;
+        return;
       }
     });
   }

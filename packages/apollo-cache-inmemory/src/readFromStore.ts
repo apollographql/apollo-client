@@ -129,7 +129,7 @@ export class StoreReader {
             rootValue.id,
           );
         }
-        return true;
+        return;
       }
     });
 

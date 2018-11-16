@@ -213,7 +213,7 @@ The render prop function that you pass to the `children` prop of `Subscription` 
 import { MockedProvider } from "react-apollo/test-utils";
 ```
 
-The Mocked provider is a test-utility that allows you to created a mocked version of the `ApolloProvider ` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
+The Mocked provider is a test-utility that allows you to create a mocked version of the `ApolloProvider ` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
 
 The `<MockedProvider />` component takes the following props:
 

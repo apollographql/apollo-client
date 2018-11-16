@@ -129,6 +129,7 @@ export class StoreReader {
             rootValue.id,
           );
         }
+        return;
       }
     });
 
@@ -149,6 +150,7 @@ export class StoreReader {
             rootValue.id,
           );
         }
+        return;
       }
     });
   }

@@ -914,7 +914,7 @@ export default graphql(gql`query { ... }`, {
 
 <h3 id="graphql-config-options-errorPolicy">`options.errorPolicy`</h3>
 
-The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
+The error policy is an option which allows you to specify how you want your component to handle errors that can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
 
 Valid `errorPolicy` values are:
 

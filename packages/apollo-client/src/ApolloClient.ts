@@ -93,8 +93,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param defaultOptions Used to set application wide defaults for the
    *                       options supplied to `watchQuery`, `query`, or
    *                       `mutate`.
+   *
+   * @param name A custom name that can be used to represent this client, when
+   *             using Apollo Engine's client awareness features.
+   *
+   * @param version A custom version that can be used to represent this client,
+   *                when using Apollo Engine's client awareness features.
    */
-
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
       link,

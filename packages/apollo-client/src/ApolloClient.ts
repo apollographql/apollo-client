@@ -49,6 +49,8 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  name?: string;
+  version?: string;
 };
 
 /**
@@ -71,6 +73,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
+  private clientAwareness: { [key: string]: string } = {};
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -98,6 +101,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
+      name: clientAwarenessName,
+      version: clientAwarenessVersion,
     } = options;
 
     if (!link || !cache) {
@@ -114,7 +119,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     const supportedDirectives = new ApolloLink(
       (operation: Operation, forward: NextLink) => {
         let result = supportedCache.get(operation.query);
-        if (! result) {
+        if (!result) {
           result = removeConnectionDirectiveFromDocument(operation.query);
           supportedCache.set(operation.query, result);
           supportedCache.set(result, result);
@@ -191,7 +196,16 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         }
       }
     }
+
     this.version = version;
+
+    if (clientAwarenessName) {
+      this.clientAwareness.name = clientAwarenessName;
+    }
+
+    if (clientAwarenessVersion) {
+      this.clientAwareness.version = clientAwarenessVersion;
+    }
   }
   /**
    * This watches the cache store of the query according to the options specified and
@@ -402,6 +416,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         store: this.store,
         queryDeduplication: this.queryDeduplication,
         ssrMode: this.ssrMode,
+        clientAwareness: this.clientAwareness,
         onBroadcast: () => {
           if (this.devToolsHookCb) {
             this.devToolsHookCb({
@@ -460,8 +475,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public clearStore(): Promise<void | null> {
     const { queryManager } = this;
-    return Promise.resolve().then(
-      () => (queryManager ? queryManager.clearStore() : Promise.resolve(null)),
+    return Promise.resolve().then(() =>
+      queryManager ? queryManager.clearStore() : Promise.resolve(null),
     );
   }
 

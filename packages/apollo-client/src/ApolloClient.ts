@@ -90,6 +90,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
+   * @param defaultOptions Used to set application wide defaults for the
+   *                       options supplied to `watchQuery`, `query`, or
+   *                       `mutate`.
    */
 
   constructor(options: ApolloClientOptions<TCacheShape>) {

@@ -35,7 +35,6 @@ sidebar_categories:
     - features/pagination
     - features/optimistic-ui
     - features/server-side-rendering
-    - features/performance
     - features/developer-tooling
     - features/defer-support
   Advanced:
@@ -46,34 +45,24 @@ sidebar_categories:
     - advanced/fragments
   Recipes:
     - recipes/authentication
-    - recipes/2.0-migration
+    - recipes/testing
     - recipes/static-typing
+    - recipes/performance
     - recipes/react-native
     - recipes/babel
     - recipes/webpack
     - recipes/meteor
     - recipes/recompose
-  Related Guides:
-    - title: State Management
-      href: https://www.apollographql.com/docs/guides/state-management.html
-    - title: Testing React Components
-      href: https://www.apollographql.com/docs/guides/testing-react-components.html
-    - title: Schema Design
-      href: https://www.apollographql.com/docs/guides/schema-design.html
+    - recipes/2.0-migration
   API:
     - api/apollo-client
     - api/react-apollo
 
 redirects:
-  /docs/react/essentials/get-started.html#api:
-    docs/react/api/react-apollo.html
-  /docs/react/essentials/queries.html#api:
-    docs/react/api/react-apollo.html#graphql-query-options
-  /docs/react/basics/mutations.html#api:
-    docs/react/api/react-apollo.html#graphql-mutation-options
-  /docs/react/recipes/simple-example.html:
-    docs/react/essentials/get-started.html
-  /docs/react/api/apollo-client.html#FetchPolicy:
-    docs/react/api/react-apollo.html#graphql-config-options-fetchPolicy
-  /docs/react/api/apollo-client.html#ErrorPolicy:
-    docs/react/api/react-apollo.html#graphql-config-options-errorPolicy
+  /docs/react/essentials/get-started.html#api: docs/react/api/react-apollo.html
+  /docs/react/essentials/queries.html#api: docs/react/api/react-apollo.html#graphql-query-options
+  /docs/react/basics/mutations.html#api: docs/react/api/react-apollo.html#graphql-mutation-options
+  /docs/react/recipes/simple-example.html: docs/react/essentials/get-started.html
+  /docs/react/api/apollo-client.html#FetchPolicy: docs/react/api/react-apollo.html#graphql-config-options-fetchPolicy
+  /docs/react/api/apollo-client.html#ErrorPolicy: docs/react/api/react-apollo.html#graphql-config-options-errorPolicy
+  /docs/react/features/performance.html: /docs/react/recipes/performance.html

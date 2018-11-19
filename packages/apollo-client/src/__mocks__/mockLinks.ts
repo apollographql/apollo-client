@@ -20,10 +20,8 @@ export function mockSingleLink(
   return new MockLink(mockedResponses);
 }
 
-export function mockObservableLink(
-  mockedSubscription: MockedSubscription,
-): MockSubscriptionLink {
-  return new MockSubscriptionLink(mockedSubscription);
+export function mockObservableLink(): MockSubscriptionLink {
+  return new MockSubscriptionLink();
 }
 
 export interface MockedResponse {
@@ -84,14 +82,17 @@ export class MockLink extends ApolloLink {
     }
 
     return new Observable<FetchResult>(observer => {
-      let timer = setTimeout(() => {
-        if (error) {
-          observer.error(error);
-        } else {
-          if (result) observer.next(result);
-          observer.complete();
-        }
-      }, delay ? delay : 0);
+      let timer = setTimeout(
+        () => {
+          if (error) {
+            observer.error(error);
+          } else {
+            if (result) observer.next(result);
+            observer.complete();
+          }
+        },
+        delay ? delay : 0,
+      );
 
       return () => {
         clearTimeout(timer);
@@ -118,6 +119,7 @@ export class MockSubscriptionLink extends ApolloLink {
         unsubscribe: () => {
           this.unsubscribers.forEach(x => x());
         },
+        closed: false,
       };
     });
   }
@@ -131,11 +133,11 @@ export class MockSubscriptionLink extends ApolloLink {
     }, result.delay || 0);
   }
 
-  public onSetup(listener): void {
+  public onSetup(listener: any): void {
     this.setups = this.setups.concat([listener]);
   }
 
-  public onUnsubscribe(listener): void {
+  public onUnsubscribe(listener: any): void {
     this.unsubscribers = this.unsubscribers.concat([listener]);
   }
 }

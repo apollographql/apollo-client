@@ -6,6 +6,7 @@ import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 import { defaultDataIdFromObject } from '../inMemoryCache';
+import { NormalizedCache } from '../types';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
@@ -489,7 +490,7 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    function dataIdFromObject({ id }: { id: string}) {
+    function dataIdFromObject({ id }: { id: string }) {
       return id;
     }
 
@@ -968,6 +969,175 @@ describe('diffing queries against the store', () => {
       });
 
       expect(result).toEqual(previousResult);
+    });
+  });
+
+  describe('malformed queries', () => {
+    it('throws for non-scalar query fields without selection sets', () => {
+      // Issue #4025, fixed by PR #4038.
+
+      const validQuery = gql`
+        query getMessageList {
+          messageList {
+            id
+            __typename
+            message
+          }
+        }
+      `;
+
+      const invalidQuery = gql`
+        query getMessageList {
+          # This field needs a selection set because its value is an array
+          # of non-scalar objects.
+          messageList
+        }
+      `;
+
+      const store = writer.writeQueryToStore({
+        query: validQuery,
+        result: {
+          messageList: [
+            {
+              id: 1,
+              __typename: 'Message',
+              message: 'hi',
+            },
+            {
+              id: 2,
+              __typename: 'Message',
+              message: 'hello',
+            },
+            {
+              id: 3,
+              __typename: 'Message',
+              message: 'hey',
+            },
+          ],
+        },
+      });
+
+      try {
+        reader.diffQueryAgainstStore({
+          store,
+          query: invalidQuery,
+        });
+        throw new Error('should have thrown');
+      } catch (e) {
+        expect(e.message).toEqual(
+          'Missing selection set for object of type Message returned for query field messageList',
+        );
+      }
+    });
+  });
+
+  describe('issue #4081', () => {
+    it('should not return results containing cycles', () => {
+      const company = {
+        __typename: 'Company',
+        id: 1,
+        name: 'Apollo',
+        users: [],
+      };
+
+      company.users.push(
+        {
+          __typename: 'User',
+          id: 1,
+          name: 'Ben',
+          company,
+        },
+        {
+          __typename: 'User',
+          id: 2,
+          name: 'James',
+          company,
+        },
+      );
+
+      const query = gql`
+        query Query {
+          user {
+            ...UserFragment
+            company {
+              users {
+                ...UserFragment
+              }
+            }
+          }
+        }
+
+        fragment UserFragment on User {
+          id
+          name
+          company {
+            id
+            name
+          }
+        }
+      `;
+
+      function check(store: NormalizedCache) {
+        const { result } = reader.diffQueryAgainstStore({ store, query });
+
+        // This JSON.stringify call has the side benefit of verifying that the
+        // result does not have any cycles.
+        const json = JSON.stringify(result);
+
+        company.users.forEach(user => {
+          expect(json).toContain(JSON.stringify(user.name));
+        });
+
+        expect(result).toEqual({
+          user: {
+            id: 1,
+            name: 'Ben',
+            company: {
+              id: 1,
+              name: 'Apollo',
+              users: [
+                {
+                  id: 1,
+                  name: 'Ben',
+                  company: {
+                    id: 1,
+                    name: 'Apollo',
+                  },
+                },
+                {
+                  id: 2,
+                  name: 'James',
+                  company: {
+                    id: 1,
+                    name: 'Apollo',
+                  },
+                },
+              ],
+            },
+          },
+        });
+      }
+
+      // Check first using generated IDs.
+      check(
+        writer.writeQueryToStore({
+          query,
+          result: {
+            user: company.users[0],
+          },
+        }),
+      );
+
+      // Now check with __typename-specific IDs.
+      check(
+        writer.writeQueryToStore({
+          dataIdFromObject: defaultDataIdFromObject,
+          query,
+          result: {
+            user: company.users[0],
+          },
+        }),
+      );
     });
   });
 });

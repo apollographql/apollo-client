@@ -1,8 +1,6 @@
 declare function require(id: string): any;
 
-export type OptimisticWrapperFunction<
-  T = (...args: any[]) => any,
-> = T & {
+export type OptimisticWrapperFunction<T = (...args: any[]) => any> = T & {
   // The .dirty(...) method of an optimistic function takes exactly the same
   // parameter types as the original function.
   dirty: T;
@@ -14,7 +12,9 @@ export type OptimisticWrapOptions = {
   makeCacheKey?(...args: any[]): any;
 };
 
-const { wrap }: {
+const {
+  wrap,
+}: {
   wrap<T>(
     originalFunction: T,
     options?: OptimisticWrapOptions,
@@ -40,7 +40,11 @@ export class CacheKeyNode<KeyType = object> {
   }
 
   getOrCreate(value: any): CacheKeyNode<KeyType> {
-    const map = this.children || (this.children = new Map);
-    return map.get(value) || map.set(value, new CacheKeyNode<KeyType>()).get(value);
+    const map = this.children || (this.children = new Map());
+    let node = map.get(value);
+    if (!node) {
+      map.set(value, (node = new CacheKeyNode<KeyType>()));
+    }
+    return node;
   }
 }

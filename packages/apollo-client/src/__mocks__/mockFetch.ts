@@ -72,10 +72,13 @@ export class MockFetch {
       throw new Error(`Mocked fetch response should contain a result.`);
     }
 
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve(result);
-      }, delay ? delay : 0);
+    return new Promise(resolve => {
+      setTimeout(
+        () => {
+          resolve(result);
+        },
+        delay ? delay : 0,
+      );
     });
   }
 

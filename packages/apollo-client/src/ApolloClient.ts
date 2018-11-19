@@ -59,13 +59,6 @@ export type ApolloClientOptions<TCacheShape> = {
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
 };
 
-const supportedDirectives = new ApolloLink(
-  (operation: Operation, forward: NextLink) => {
-    operation.query = removeConnectionDirectiveFromDocument(operation.query);
-    return forward(operation);
-  },
-);
-
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -127,6 +120,20 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       `);
     }
 
+    const supportedCache = new Map<DocumentNode, DocumentNode>();
+    const supportedDirectives = new ApolloLink(
+      (operation: Operation, forward: NextLink) => {
+        let result = supportedCache.get(operation.query);
+        if (!result) {
+          result = removeConnectionDirectiveFromDocument(operation.query);
+          supportedCache.set(operation.query, result);
+          supportedCache.set(result, result);
+        }
+        operation.query = result;
+        return forward(operation);
+      },
+    );
+
     // remove apollo-client supported directives
     this.link = supportedDirectives.concat(link);
     this.cache = cache;
@@ -181,6 +188,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           // Only for Chrome
           if (
             window.navigator &&
+            window.navigator.userAgent &&
             window.navigator.userAgent.indexOf('Chrome') > -1
           ) {
             // tslint:disable-next-line
@@ -323,7 +331,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * use `readFragment`.
    *
    * @param optimistic Set to `true` to allow `readQuery` to return
-   * optimisic results. Is `false` by default.
+   * optimistic results. Is `false` by default.
    */
   public readQuery<T, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables>,
@@ -344,7 +352,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * `fragmentName`.
    *
    * @param optimistic Set to `true` to allow `readFragment` to return
-   * optimisic results. Is `false` by default.
+   * optimistic results. Is `false` by default.
    */
   public readFragment<T, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables>,
@@ -355,7 +363,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * Writes some data in the shape of the provided GraphQL query directly to
-   * the store. This method will start at the root query. To start at a a
+   * the store. This method will start at the root query. To start at a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
   public writeQuery<TData = any, TVariables = OperationVariables>(
@@ -479,8 +487,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public clearStore(): Promise<void | null> {
     const { queryManager } = this;
-    return Promise.resolve().then(
-      () => (queryManager ? queryManager.clearStore() : Promise.resolve(null)),
+    return Promise.resolve().then(() =>
+      queryManager ? queryManager.clearStore() : Promise.resolve(null),
     );
   }
 

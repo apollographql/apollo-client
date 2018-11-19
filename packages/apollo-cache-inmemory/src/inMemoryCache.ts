@@ -1,3 +1,6 @@
+// Make builtins like Map and Set safe to use with non-extensible objects.
+import './fixPolyfills';
+
 import { DocumentNode } from 'graphql';
 
 import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
@@ -18,7 +21,10 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 
-import { defaultNormalizedCacheFactory, DepTrackingCache } from './depTrackingCache';
+import {
+  defaultNormalizedCacheFactory,
+  DepTrackingCache,
+} from './depTrackingCache';
 import { wrap, CacheKeyNode, OptimisticWrapperFunction } from './optimism';
 
 import { record } from './recordingCache';
@@ -77,45 +83,42 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.addTypename = this.config.addTypename;
     this.data = defaultNormalizedCacheFactory();
 
-    this.storeReader = new StoreReader({
-      addTypename: this.config.addTypename,
-      cacheKeyRoot: this.cacheKeyRoot,
-    });
-
-    this.storeWriter = new StoreWriter({
-      addTypename: this.config.addTypename,
-    });
+    this.storeReader = new StoreReader(this.cacheKeyRoot);
+    this.storeWriter = new StoreWriter();
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
-    this.maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
-      return maybeBroadcastWatch.call(this, c);
-    }, {
-      makeCacheKey(c: Cache.WatchOptions) {
-        if (c.optimistic && cache.optimistic.length > 0) {
-          // If we're reading optimistic data, it doesn't matter if this.data
-          // is a DepTrackingCache, since it will be ignored.
-          return;
-        }
+    this.maybeBroadcastWatch = wrap(
+      (c: Cache.WatchOptions) => {
+        return maybeBroadcastWatch.call(this, c);
+      },
+      {
+        makeCacheKey(c: Cache.WatchOptions) {
+          if (c.optimistic && cache.optimistic.length > 0) {
+            // If we're reading optimistic data, it doesn't matter if this.data
+            // is a DepTrackingCache, since it will be ignored.
+            return;
+          }
 
-        if (c.previousResult) {
-          // If a previousResult was provided, assume the caller would prefer
-          // to compare the previous data to the new data to determine whether
-          // to broadcast, so we should disable caching by returning here, to
-          // give maybeBroadcastWatch a chance to do that comparison.
-          return;
-        }
+          if (c.previousResult) {
+            // If a previousResult was provided, assume the caller would prefer
+            // to compare the previous data to the new data to determine whether
+            // to broadcast, so we should disable caching by returning here, to
+            // give maybeBroadcastWatch a chance to do that comparison.
+            return;
+          }
 
-        if (cache.data instanceof DepTrackingCache) {
-          // Return a cache key (thus enabling caching) only if we're currently
-          // using a data store that can track cache dependencies.
-          return cache.cacheKeyRoot.lookup(
-            c.query,
-            JSON.stringify(c.variables),
-          );
-        }
-      }
-    });
+          if (cache.data instanceof DepTrackingCache) {
+            // Return a cache key (thus enabling caching) only if we're currently
+            // using a data store that can track cache dependencies.
+            return cache.cacheKeyRoot.lookup(
+              c.query,
+              JSON.stringify(c.variables),
+            );
+          }
+        },
+      },
+    );
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -137,13 +140,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return null;
     }
 
-    const store = (query.optimistic && this.optimistic.length)
-      ? defaultNormalizedCacheFactory(this.extract(true))
-      : this.data;
+    const store =
+      query.optimistic && this.optimistic.length
+        ? defaultNormalizedCacheFactory(this.extract(true))
+        : this.data;
 
     return this.storeReader.readQueryFromStore({
       store,
-      query: query.query,
+      query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
@@ -157,7 +161,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       dataId: write.dataId,
       result: write.result,
       variables: write.variables,
-      document: write.query,
+      document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
@@ -167,13 +171,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
-    const store = (query.optimistic && this.optimistic.length)
-      ? defaultNormalizedCacheFactory(this.extract(true))
-      : this.data;
+    const store =
+      query.optimistic && this.optimistic.length
+        ? defaultNormalizedCacheFactory(this.extract(true))
+        : this.data;
 
     return this.storeReader.diffQueryAgainstStore({
       store: store,
-      query: query.query,
+      query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
@@ -262,10 +267,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (this.addTypename) {
       let result = this.typenameDocumentCache.get(document);
       if (!result) {
-        this.typenameDocumentCache.set(
-          document,
-          (result = addTypenameToDocument(document)),
-        );
+        result = addTypenameToDocument(document);
+        this.typenameDocumentCache.set(document, result);
+        // If someone calls transformDocument and then mistakenly passes the
+        // result back into an API that also calls transformDocument, make sure
+        // we don't keep creating new query documents.
+        this.typenameDocumentCache.set(result, result);
       }
       return result;
     }
@@ -288,9 +295,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
-      query: getFragmentQueryDocument(
-        options.fragment,
-        options.fragmentName,
+      query: this.transformDocument(
+        getFragmentQueryDocument(options.fragment, options.fragmentName),
       ),
       variables: options.variables,
       rootId: options.id,
@@ -304,7 +310,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
-      query: options.query,
+      query: this.transformDocument(options.query),
       variables: options.variables,
     });
   }
@@ -315,9 +321,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: options.id,
       result: options.data,
-      query: getFragmentQueryDocument(
-        options.fragment,
-        options.fragmentName,
+      query: this.transformDocument(
+        getFragmentQueryDocument(options.fragment, options.fragmentName),
       ),
       variables: options.variables,
     });
@@ -342,20 +347,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // This method is wrapped in the constructor so that it will be called only
   // if the data that would be broadcast has changed.
   private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    const previousResult = c.previousResult && c.previousResult();
-
-    const newData = this.diff({
-      query: c.query,
-      variables: c.variables,
-      previousResult,
-      optimistic: c.optimistic,
-    });
-
-    if (previousResult &&
-        previousResult === newData.result) {
-      return;
-    }
-
-    c.callback(newData);
+    c.callback(
+      this.diff({
+        query: c.query,
+        variables: c.variables,
+        previousResult: c.previousResult && c.previousResult(),
+        optimistic: c.optimistic,
+      }),
+    );
   }
 }

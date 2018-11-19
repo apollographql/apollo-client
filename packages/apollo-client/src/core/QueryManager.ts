@@ -1505,6 +1505,8 @@ export class QueryManager<TStore> {
     };
   }
 
+  // Prepare and return a local resolver function, that can be used to
+  // resolve @client fields.
   private prepareResolver(query: DocumentNode | null, readOnly = false) {
     let resolver: Resolver | null = null;
 
@@ -1663,6 +1665,10 @@ export class QueryManager<TStore> {
     };
   }
 
+  // Run the specified query + variables through locally defined
+  // query resolvers. The query is resolved using local resolvers (and
+  // the cache) only; no external data (e.g. data coming back from a
+  // remote graphql query) is used.
   private async resolveDocumentLocally(
     clientQuery: DocumentNode | null,
     variables?: OperationVariables,

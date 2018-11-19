@@ -6,6 +6,8 @@ import {
 } from 'graphql';
 import { checkDocument, removeDirectivesFromDocument } from 'apollo-utilities';
 
+// Return a clone of the incoming document that excludes fields / selection
+// sets that include an @client directive.
 export function removeClientSetsFromDocument(
   query: DocumentNode,
 ): DocumentNode | null {

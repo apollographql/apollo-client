@@ -95,10 +95,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    *                       `mutate`.
    *
    * @param name A custom name that can be used to represent this client, when
-   *             using Apollo Engine's client awareness features.
+   *             using Apollo client awareness features.
    *
    * @param version A custom version that can be used to represent this client,
-   *                when using Apollo Engine's client awareness features.
+   *                when using Apollo client awareness features.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {

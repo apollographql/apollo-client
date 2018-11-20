@@ -14,7 +14,7 @@ The Apollo Client constructor takes a small number of options, of which two are 
 - `ssrForceFetchDelay`: determines the time interval before Apollo Client force fetchs queries after a server side render.
 - `connectToDevTools`: This argument allows the [Apollo Client Devtools](../features/developer-tooling.html) to connect to your application's Apollo Client. You can set this to be `true` to use the tools in production (they are on by default in dev mode).
 - `queryDeduplication`: If set to false, this argument will force a query to still be sent to the server even if a query with identical parameters (query, variables, operationName) is already in flight.
-- `name`: A unique identifying client name that can be used to represent connections made using this instance of Apollo Client. Apollo Server leverages this property as part of its [Client Awareness](/docs/apollo-server/v2/features/metrics.html#Client-Awareness) functionality.
+- `name`: A unique client name that can be used to identify connections made using this instance of Apollo Client. Apollo Server leverages this property as part of its [Client Awareness](/docs/apollo-server/v2/features/metrics.html#Client-Awareness) functionality.
 - `version`: A unique client version that can be used to represent connections made using this instance of Apollo Client. Apollo Server leverages this property as part of its [Client Awareness](/docs/apollo-server/v2/features/metrics.html#Client-Awareness) functionality.
 - `defaultOptions`: If you want to set application wide defaults for the options supplied to `watchQuery`, `query`, or `mutate`, you can pass them as a `defaultOptions` object. An example object looks like this:
 

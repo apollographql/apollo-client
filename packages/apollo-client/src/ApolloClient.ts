@@ -97,7 +97,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param name A custom name that can be used to identify this client, when
    *             using Apollo client awareness features.
    *
-   * @param version A custom version that can be used to represent this client,
+   * @param version A custom version that can be used to identify this client,
    *                when using Apollo client awareness features.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {

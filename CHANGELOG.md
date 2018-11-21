@@ -1,8 +1,8 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (vNext)
+## Apollo Client (2.4.7)
 
-### Apollo Client (vNext)
+### Apollo Client (2.4.7)
 
 - The `ApolloClient` constructor has been updated to accept `name` and
   `version` params, that can be used to support Apollo Server [Client Awareness](https://www.apollographql.com/docs/apollo-server/v2/features/metrics.html#Client-Awareness)
@@ -10,6 +10,27 @@
   defined Apollo Link chain, and are then ultimately sent out as custom
   headers with outgoing requests.  <br/>
   [@hwillson](https://github.com/hwillson) in [#4154](https://github.com/apollographql/apollo-client/pull/4154)
+
+### Apollo Boost (0.1.22)
+
+- No changes.
+
+### Apollo Cache (1.1.21)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.3.11)
+
+- No changes.
+
+### Apollo Utilities (1.0.26)
+
+- No changes.
+
+### Graphql Anywhere (4.1.23)
+
+- No changes.
+
 
 ## Apollo Client (2.4.6)
 

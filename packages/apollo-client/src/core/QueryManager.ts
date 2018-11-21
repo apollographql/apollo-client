@@ -68,7 +68,7 @@ export class QueryManager<TStore> {
 
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
-  private clientAwareness: { [key: string]: string } = {};
+  private clientAwareness: Record<string, string> = {};
 
   private onBroadcast: () => void;
 
@@ -102,7 +102,7 @@ export class QueryManager<TStore> {
     store: DataStore<TStore>;
     onBroadcast?: () => void;
     ssrMode?: boolean;
-    clientAwareness?: { [key: string]: string };
+    clientAwareness?: Record<string, string>;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);

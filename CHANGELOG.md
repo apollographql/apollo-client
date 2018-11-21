@@ -9,7 +9,7 @@
   functionality. These client awareness properties are passed into the
   defined Apollo Link chain, and are then ultimately sent out as custom
   headers with outgoing requests.  <br/>
-  [@hwillson](https://github.com/hwillson) in [#TODO]()
+  [@hwillson](https://github.com/hwillson) in [#4154](https://github.com/apollographql/apollo-client/pull/4154)
 
 ## Apollo Client (2.4.6)
 

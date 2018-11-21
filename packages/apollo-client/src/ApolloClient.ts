@@ -73,7 +73,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
-  private clientAwareness: { [key: string]: string } = {};
+  private clientAwareness: Record<string, string> = {};
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -95,10 +95,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    *                       `mutate`.
    *
    * @param name A custom name that can be used to identify this client, when
-   *             using Apollo client awareness features.
+   *             using Apollo client awareness features. E.g. "iOS".
    *
    * @param version A custom version that can be used to identify this client,
-   *                when using Apollo client awareness features.
+   *                when using Apollo client awareness features. This is the
+   *                version of your client, which you may want to increment on
+   *                new builds. This is NOT the version of Apollo Client that
+   *                you are using.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {

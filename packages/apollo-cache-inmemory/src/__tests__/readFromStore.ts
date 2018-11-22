@@ -656,6 +656,34 @@ describe('reading from the store', () => {
     });
   });
 
+  it('preserves referential integrity of simple array values', () => {
+    const simpleArray = ['one', 'two', 'three', ['four', 'five']];
+    const result: any = { simpleArray };
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
+        simpleArray: {
+          type: 'json',
+          json: result.simpleArray,
+        } as JsonValue,
+      }) as StoreObject,
+    });
+
+    const queryResult = reader.readQueryFromStore({
+      store,
+      query: gql`
+        {
+          simpleArray
+        }
+      `,
+    });
+
+    const resultArray = (queryResult as any).simpleArray;
+
+    // simpleArray in the result should be the exact same object as the original
+    expect(resultArray).toBe(simpleArray); // must use 'toBe'
+  });
+
   it('runs an array of non-objects with null', () => {
     const result: any = {
       id: 'abcd',

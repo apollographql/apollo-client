@@ -469,11 +469,13 @@ function mergeWithGenerated(
     const value = generated[key];
     const realValue = real[key];
 
-    if (isIdValue(value) &&
-        isGeneratedId(value.id) &&
-        isIdValue(realValue) &&
-        ! isEqual(value, realValue) &&
-        mergeWithGenerated(value.id, realValue.id, cache)) {
+    if (
+      isIdValue(value) &&
+      isGeneratedId(value.id) &&
+      isIdValue(realValue) &&
+      !isEqual(value, realValue) &&
+      mergeWithGenerated(value.id, realValue.id, cache)
+    ) {
       madeChanges = true;
     }
   });

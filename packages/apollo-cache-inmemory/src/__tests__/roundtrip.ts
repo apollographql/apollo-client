@@ -8,11 +8,7 @@ import { withWarning } from './writeToStore';
 
 import { DepTrackingCache } from '../depTrackingCache';
 
-import {
-  HeuristicFragmentMatcher,
-  StoreReader,
-  StoreWriter,
-} from '../';
+import { HeuristicFragmentMatcher, StoreReader, StoreWriter } from '../';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 

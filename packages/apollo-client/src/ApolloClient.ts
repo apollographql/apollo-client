@@ -57,6 +57,8 @@ export type ApolloClientOptions<TCacheShape> = {
   initializers?: Initializers<TCacheShape> | Initializers<TCacheShape>[];
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+  name?: string;
+  version?: string;
 };
 
 /**
@@ -79,6 +81,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
+  private clientAwareness: Record<string, string> = {};
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -95,6 +98,18 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
+   * @param defaultOptions Used to set application wide defaults for the
+   *                       options supplied to `watchQuery`, `query`, or
+   *                       `mutate`.
+   *
+   * @param name A custom name that can be used to identify this client, when
+   *             using Apollo client awareness features. E.g. "iOS".
+   *
+   * @param version A custom version that can be used to identify this client,
+   *                when using Apollo client awareness features. This is the
+   *                version of your client, which you may want to increment on
+   *                new builds. This is NOT the version of Apollo Client that
+   *                you are using.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
@@ -108,6 +123,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       initializers,
       resolvers,
       typeDefs,
+      name: clientAwarenessName,
+      version: clientAwarenessVersion,
     } = options;
 
     if (!link || !cache) {
@@ -203,6 +220,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     this.version = version;
+
+    if (clientAwarenessName) {
+      this.clientAwareness.name = clientAwarenessName;
+    }
+
+    if (clientAwarenessVersion) {
+      this.clientAwareness.version = clientAwarenessVersion;
+    }
 
     if (initializers) {
       // Run (synchronously) provided local state initializers.
@@ -429,6 +454,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         store: this.store,
         queryDeduplication: this.queryDeduplication,
         ssrMode: this.ssrMode,
+        clientAwareness: this.clientAwareness,
         onBroadcast: () => {
           if (this.devToolsHookCb) {
             this.devToolsHookCb({

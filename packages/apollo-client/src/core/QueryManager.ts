@@ -84,6 +84,7 @@ export class QueryManager<TStore> {
 
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
+  private clientAwareness: Record<string, string> = {};
 
   private onBroadcast: () => void;
 
@@ -116,18 +117,21 @@ export class QueryManager<TStore> {
     store,
     onBroadcast = () => undefined,
     ssrMode = false,
+    clientAwareness = {},
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
     store: DataStore<TStore>;
     onBroadcast?: () => void;
     ssrMode?: boolean;
+    clientAwareness?: Record<string, string>;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
     this.queryDeduplication = queryDeduplication;
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
+    this.clientAwareness = clientAwareness;
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
@@ -1495,6 +1499,7 @@ export class QueryManager<TStore> {
           );
         }
       },
+      clientAwareness: this.clientAwareness,
     };
   }
 

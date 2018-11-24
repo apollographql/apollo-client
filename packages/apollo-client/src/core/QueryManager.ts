@@ -6,7 +6,7 @@ import {
   FieldNode,
   SelectionNode,
 } from 'graphql';
-import { graphql, Resolver } from 'graphql-anywhere/lib/graphql-async';
+import graphql, { Resolver } from 'graphql-anywhere';
 
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
@@ -22,7 +22,6 @@ import {
   isProduction,
   hasDirectives,
   mergeDeep,
-  getDirectivesFromDocument,
   getDirectiveInfoFromField,
   flattenSelections,
 } from 'apollo-utilities';
@@ -135,7 +134,7 @@ export class QueryManager<TStore> {
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
-  public async mutate<T>({
+  public mutate<T>({
     mutation,
     variables,
     optimisticResponse,
@@ -191,7 +190,7 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    const updatedVariables: OperationVariables = await this.prepareClientExportVariables(
+    const updatedVariables: OperationVariables = this.prepareClientExportVariables(
       mutation,
       variables,
       context,
@@ -307,12 +306,9 @@ export class QueryManager<TStore> {
             data: {},
           });
 
-      let complete = false;
-      let handlingNext = false;
+      const self = this;
       obs.subscribe({
-        next: async (result: ExecutionResult) => {
-          handlingNext = true;
-
+        next: (result: ExecutionResult) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
             error = new ApolloError({
               graphQLErrors: result.errors,
@@ -320,14 +316,14 @@ export class QueryManager<TStore> {
             return;
           }
 
-          this.mutationStore.markMutationResult(mutationId);
+          self.mutationStore.markMutationResult(mutationId);
           let updatedResult = result;
 
           if (clientQuery) {
-            const resolver = this.prepareResolver(clientQuery);
+            const resolver = self.prepareResolver(clientQuery);
             if (resolver) {
               const { context, variables } = operation;
-              const localResult = await graphql(
+              const localResult = graphql(
                 resolver,
                 clientQuery,
                 result.data,
@@ -344,7 +340,7 @@ export class QueryManager<TStore> {
           }
 
           if (fetchPolicy !== 'no-cache') {
-            this.dataStore.markMutationResult({
+            self.dataStore.markMutationResult({
               mutationId,
               result: updatedResult,
               document: mutation,
@@ -355,22 +351,17 @@ export class QueryManager<TStore> {
           }
 
           storeResult = updatedResult as FetchResult<T>;
-
-          handlingNext = false;
-          if (complete) {
-            completeMutation().then(resolve, reject);
-          }
         },
 
         error(err: Error) {
-          this.mutationStore.markMutationError(mutationId, err);
-          this.dataStore.markMutationComplete({
+          self.mutationStore.markMutationError(mutationId, err);
+          self.dataStore.markMutationComplete({
             mutationId,
             optimisticResponse,
           });
-          this.broadcastQueries();
+          self.broadcastQueries();
 
-          this.setQuery(mutationId, () => ({ document: undefined }));
+          self.setQuery(mutationId, () => ({ document: undefined }));
           reject(
             new ApolloError({
               networkError: err,
@@ -379,16 +370,13 @@ export class QueryManager<TStore> {
         },
 
         complete() {
-          if (!handlingNext) {
-            completeMutation().then(resolve, reject);
-          }
-          complete = true;
+          completeMutation().then(resolve, reject);
         },
       });
     });
   }
 
-  public async fetchQuery<T>(
+  public fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
     fetchType?: FetchType,
@@ -406,8 +394,7 @@ export class QueryManager<TStore> {
     const cache = this.dataStore.getCache();
 
     const query = cache.transformDocument(options.query);
-
-    const updatedVariables: OperationVariables = await this.prepareClientExportVariables(
+    const updatedVariables: OperationVariables = this.prepareClientExportVariables(
       query,
       variables,
       context,
@@ -994,7 +981,6 @@ export class QueryManager<TStore> {
       options.variables,
     );
 
-    let updatedVariables = variables;
     let sub: Subscription;
     let observers: Observer<any>[] = [];
 
@@ -1014,13 +1000,13 @@ export class QueryManager<TStore> {
         }
 
         const handler = {
-          next: async (result: FetchResult) => {
+          next: (result: FetchResult) => {
             let updatedResult = result;
 
             if (clientQuery) {
               const resolver = this.prepareResolver(clientQuery);
               if (resolver) {
-                const localResult = await graphql(
+                const localResult = graphql(
                   resolver,
                   clientQuery,
                   result.data,
@@ -1073,22 +1059,19 @@ export class QueryManager<TStore> {
           },
         };
 
-        (async () => {
-          const updatedVariables: OperationVariables = await this.prepareClientExportVariables(
-            transformedDoc,
-            variables,
+        const updatedVariables: OperationVariables = this.prepareClientExportVariables(
+          transformedDoc,
+          variables,
+        );
+        if (serverQuery) {
+          const operation = this.buildOperationForLink(
+            serverQuery,
+            updatedVariables,
           );
-
-          if (serverQuery) {
-            const operation = this.buildOperationForLink(
-              serverQuery,
-              updatedVariables,
-            );
-            sub = execute(this.link, operation).subscribe(handler);
-          } else {
-            sub = Observable.of({ data: {} }).subscribe(handler);
-          }
-        })();
+          sub = execute(this.link, operation).subscribe(handler);
+        } else {
+          sub = Observable.of({ data: {} }).subscribe(handler);
+        }
       }
 
       return () => {
@@ -1255,7 +1238,7 @@ export class QueryManager<TStore> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
 
     let clientQuery: DocumentNode | null = null;
-    let serverQuery;
+    let serverQuery: DocumentNode | null = null;
     if (hasDirectives(['client'], document)) {
       clientQuery = document;
       serverQuery = removeClientSetsFromDocument(document);
@@ -1263,32 +1246,28 @@ export class QueryManager<TStore> {
       serverQuery = document;
     }
 
-    let obs: Observable<FetchResult>;
-    let updatedContext = {};
-    if (serverQuery) {
-      const operation = this.buildOperationForLink(serverQuery, variables, {
-        ...context,
-        forceFetch: !this.queryDeduplication,
-      });
-      updatedContext = operation.context;
-      obs = execute(this.deduplicator, operation);
-    } else {
-      updatedContext = this.contextCopyWithCache(context);
-      obs = Observable.of({ data: {} });
-    }
-
     let resultFromStore: any;
     let errorsFromStore: any;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+      let obs: Observable<FetchResult>;
+      let updatedContext = {};
+      if (serverQuery) {
+        const operation = this.buildOperationForLink(serverQuery, variables, {
+          ...context,
+          forceFetch: !this.queryDeduplication,
+        });
+        updatedContext = operation.context;
+        obs = execute(this.deduplicator, operation);
+      } else {
+        updatedContext = this.contextCopyWithCache(context);
+        obs = Observable.of({ data: {} });
+      }
+
       this.addFetchQueryPromise<T>(requestId, resolve, reject);
 
-      let complete = false;
-      let handlingNext = true;
-
       const subscriber = {
-        next: async (result: ExecutionResult) => {
-          handlingNext = true;
+        next: (result: ExecutionResult) => {
           let updatedResult = result;
 
           // default the lastRequestId to 1
@@ -1297,7 +1276,7 @@ export class QueryManager<TStore> {
             if (clientQuery) {
               const resolver = this.prepareResolver(clientQuery);
               if (resolver) {
-                const localResult = await graphql(
+                const localResult = graphql(
                   resolver,
                   clientQuery,
                   result.data,
@@ -1372,11 +1351,6 @@ export class QueryManager<TStore> {
               // tslint:disable-next-line
             } catch (e) {}
           }
-
-          handlingNext = false;
-          if (complete) {
-            subscriber.complete();
-          }
         },
         error: (error: ApolloError) => {
           this.removeFetchQueryPromise(requestId);
@@ -1387,21 +1361,18 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
-          if (!handlingNext) {
-            this.removeFetchQueryPromise(requestId);
-            this.setQuery(queryId, ({ subscriptions }) => ({
-              subscriptions: subscriptions.filter(x => x !== subscription),
-            }));
+          this.removeFetchQueryPromise(requestId);
+          this.setQuery(queryId, ({ subscriptions }) => ({
+            subscriptions: subscriptions.filter(x => x !== subscription),
+          }));
 
-            resolve({
-              data: resultFromStore,
-              errors: errorsFromStore,
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              stale: false,
-            });
-          }
-          complete = true;
+          resolve({
+            data: resultFromStore,
+            errors: errorsFromStore,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
         },
       };
 
@@ -1612,49 +1583,42 @@ export class QueryManager<TStore> {
   // To support `@client @export(as: "someVar")` syntax, we'll first resolve
   // @client @export fields locally, then pass the resolved values back to be
   // used alongside the original operation variables.
-  private async prepareClientExportVariables(
+  private prepareClientExportVariables(
     document: DocumentNode,
     variables: OperationVariables = {},
     context = {},
   ) {
     let exportedVariables: { [fieldName: string]: string } = {};
 
-    if (document) {
-      const exportDirectiveOnlyDoc = getDirectivesFromDocument(
-        [{ name: 'export' }],
+    if (document && hasDirectives(['export'], document)) {
+      const localResult = this.resolveDocumentLocally(
         document,
+        variables,
+        context,
       );
-
-      if (exportDirectiveOnlyDoc) {
-        const localResult = await this.resolveDocumentLocally(
-          exportDirectiveOnlyDoc,
-          variables,
-          context,
-        );
-        exportDirectiveOnlyDoc.definitions
-          .filter(
-            (definition: OperationDefinitionNode) =>
-              definition.selectionSet && definition.selectionSet.selections,
-          )
-          .map(x => flattenSelections(x as any))
-          .reduce((selections, selected) => selections.concat(selected), [])
-          .filter(
-            (selection: SelectionNode) =>
-              selection.directives && selection.directives.length > 0,
-          )
-          .forEach((field: FieldNode) => {
-            const directiveInfo = getDirectiveInfoFromField(field, {});
-            if (directiveInfo && directiveInfo.export) {
-              let value =
-                localResult[field.name.value] ||
-                localResult[Object.keys(localResult)[0]][field.name.value];
-              if (value.json) {
-                value = value.json;
-              }
-              exportedVariables[directiveInfo.export.as] = value;
+      document.definitions
+        .filter(
+          (definition: OperationDefinitionNode) =>
+            definition.selectionSet && definition.selectionSet.selections,
+        )
+        .map(x => flattenSelections(x as any))
+        .reduce((selections, selected) => selections.concat(selected), [])
+        .filter(
+          (selection: SelectionNode) =>
+            selection.directives && selection.directives.length > 0,
+        )
+        .forEach((field: FieldNode) => {
+          const directiveInfo = getDirectiveInfoFromField(field, {});
+          if (directiveInfo && directiveInfo.export) {
+            let value =
+              localResult[field.name.value] ||
+              localResult[Object.keys(localResult)[0]][field.name.value];
+            if (value.json) {
+              value = value.json;
             }
-          });
-      }
+            exportedVariables[directiveInfo.export.as] = value;
+          }
+        });
     }
 
     return {
@@ -1667,7 +1631,7 @@ export class QueryManager<TStore> {
   // query resolvers. The query is resolved using local resolvers (and
   // the cache) only; no external data (e.g. data coming back from a
   // remote graphql query) is used.
-  private async resolveDocumentLocally(
+  private resolveDocumentLocally(
     clientQuery: DocumentNode | null,
     variables?: OperationVariables,
     context = {},
@@ -1677,7 +1641,7 @@ export class QueryManager<TStore> {
       const resolver = this.prepareResolver(clientQuery, true);
       if (resolver) {
         const updatedContext = this.contextCopyWithCache(context);
-        localResult = await graphql(
+        localResult = graphql(
           resolver,
           clientQuery,
           {},

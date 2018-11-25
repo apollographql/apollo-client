@@ -4,7 +4,10 @@ import { introspectionQuery } from 'graphql/utilities';
 
 import ApolloClient from '../..';
 import { ApolloCache } from 'apollo-cache';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import {
+  InMemoryCache,
+  IntrospectionFragmentMatcher,
+} from 'apollo-cache-inmemory';
 import { ApolloLink, Observable } from 'apollo-link';
 
 describe('General functionality', () => {
@@ -168,6 +171,70 @@ describe('General functionality', () => {
             expect(count).toBe(2);
           }),
       );
+  });
+
+  it('should work with a custom fragment matcher', () => {
+    const query = gql`
+      {
+        foo {
+          ... on Bar {
+            bar @client
+          }
+          ... on Baz {
+            baz @client
+          }
+        }
+      }
+    `;
+
+    const link = new ApolloLink(() =>
+      Observable.of({
+        data: { foo: [{ __typename: 'Bar' }, { __typename: 'Baz' }] },
+      }),
+    );
+
+    const resolvers = {
+      Bar: {
+        bar: () => 'Bar',
+      },
+      Baz: {
+        baz: () => 'Baz',
+      },
+    };
+
+    const fragmentMatcher = (
+      { __typename }: { __typename: string },
+      typeCondition: string,
+    ) => __typename === typeCondition;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        fragmentMatcher: new IntrospectionFragmentMatcher({
+          introspectionQueryResultData: {
+            __schema: {
+              types: [
+                {
+                  kind: 'UnionTypeDefinition',
+                  name: 'Foo',
+                  possibleTypes: [{ name: 'Bar' }, { name: 'Baz' }],
+                },
+              ],
+            },
+          },
+        }),
+      }),
+      link,
+      resolvers,
+      fragmentMatcher,
+    });
+
+    interface Data {
+      food: object[];
+    }
+
+    return client.query({ query }).then(({ data }: { data: Data }) => {
+      expect(data).toMatchObject({ foo: [{ bar: 'Bar' }, { baz: 'Baz' }] });
+    });
   });
 });
 

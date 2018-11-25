@@ -6,7 +6,7 @@ import {
   FieldNode,
   SelectionNode,
 } from 'graphql';
-import graphql, { Resolver } from 'graphql-anywhere';
+import graphql, { Resolver, FragmentMatcher } from 'graphql-anywhere';
 
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
@@ -109,6 +109,9 @@ export class QueryManager<TStore> {
 
   // Local schema type definitions.
   private typeDefs: string | string[] | DocumentNode | DocumentNode[];
+
+  // Local state custom fragment matcher.
+  private fragmentMatcher: FragmentMatcher;
 
   constructor({
     link,
@@ -329,6 +332,7 @@ export class QueryManager<TStore> {
                 result.data,
                 context,
                 variables,
+                { fragmentMatcher: this.fragmentMatcher },
               );
               if (localResult) {
                 updatedResult.data = {
@@ -1012,6 +1016,7 @@ export class QueryManager<TStore> {
                   result.data,
                   {},
                   variables,
+                  { fragmentMatcher: this.fragmentMatcher },
                 );
 
                 if (localResult) {
@@ -1196,6 +1201,10 @@ export class QueryManager<TStore> {
     return this.typeDefs;
   }
 
+  public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
+    this.fragmentMatcher = fragmentMatcher;
+  }
+
   private getObservableQueryPromises(
     includeStandby?: boolean,
   ): Promise<ApolloQueryResult<any>>[] {
@@ -1282,6 +1291,7 @@ export class QueryManager<TStore> {
                   result.data,
                   updatedContext,
                   variables,
+                  { fragmentMatcher: this.fragmentMatcher },
                 );
 
                 if (localResult) {

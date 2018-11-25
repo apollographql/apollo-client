@@ -12,6 +12,7 @@ import {
   isProduction,
   removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
+import { FragmentMatcher } from 'graphql-anywhere';
 
 import { QueryManager } from './core/QueryManager';
 import {
@@ -57,6 +58,7 @@ export type ApolloClientOptions<TCacheShape> = {
   initializers?: Initializers<TCacheShape> | Initializers<TCacheShape>[];
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+  fragmentMatcher?: FragmentMatcher;
   name?: string;
   version?: string;
 };
@@ -123,6 +125,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       initializers,
       resolvers,
       typeDefs,
+      fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
     } = options;
@@ -242,6 +245,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     if (typeDefs) {
       // Set local schema type definitions.
       this.setTypeDefs(typeDefs);
+    }
+
+    if (fragmentMatcher) {
+      // Set custom local state fragment matcher.
+      this.setFragmentMatcher(fragmentMatcher);
     }
   }
 
@@ -611,6 +619,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     | DocumentNode[]
     | undefined {
     return this.queryManager ? this.queryManager.getTypeDefs() : undefined;
+  }
+
+  /**
+   * Set a custom local state fragment matcher.
+   */
+  public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
+    this.initQueryManager().setFragmentMatcher(fragmentMatcher);
   }
 
   /**

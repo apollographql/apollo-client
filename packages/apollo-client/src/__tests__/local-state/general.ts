@@ -1,10 +1,175 @@
 import gql from 'graphql-tag';
-import { DocumentNode } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
+import { introspectionQuery } from 'graphql/utilities';
 
 import ApolloClient from '../..';
 import { ApolloCache } from 'apollo-cache';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloLink, Observable } from 'apollo-link';
+
+describe('General functionality', () => {
+  it('should not impact normal non-@client use', () => {
+    const query = gql`
+      {
+        field
+      }
+    `;
+
+    interface Data {
+      field: number;
+    }
+
+    const link = new ApolloLink(() => Observable.of({ data: { field: 1 } }));
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Query: {
+          count: () => 0,
+        },
+      },
+    });
+
+    return client.query({ query }).then(({ data }: { data: Data }) => {
+      expect({ ...data }).toMatchObject({ field: 1 });
+    });
+  });
+
+  it('should not interfere with server introspection queries', () => {
+    const query = gql`
+      ${introspectionQuery}
+    `;
+
+    const link = new ApolloLink(() =>
+      Observable.of({ errors: [{ message: 'no introspection result found' }] }),
+    );
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Query: {
+          count: () => 0,
+        },
+      },
+    });
+
+    return client
+      .query({ query })
+      .then(() => {
+        throw new global.Error('should not call');
+      })
+      .catch((error: GraphQLError) =>
+        expect(error.message).toMatch(/no introspection/),
+      );
+  });
+
+  it('should support returning default values from resolvers', () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      resolvers: {
+        Query: {
+          field: () => 1,
+        },
+      },
+    });
+
+    interface Data {
+      field: number;
+    }
+
+    return client.query({ query }).then(({ data }: { data: Data }) => {
+      expect({ ...data }).toMatchObject({ field: 1 });
+    });
+  });
+
+  it('should cache data for future lookups', () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
+
+    let count = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      resolvers: {
+        Query: {
+          field: () => {
+            count += 1;
+            return 1;
+          },
+        },
+      },
+    });
+
+    interface Data {
+      field: number;
+    }
+
+    return client
+      .query({ query })
+      .then(({ data }: { data: Data }) => {
+        expect({ ...data }).toMatchObject({ field: 1 });
+        expect(count).toBe(1);
+      })
+      .then(() =>
+        client.query({ query }).then(({ data }: { data: Data }) => {
+          expect({ ...data }).toMatchObject({ field: 1 });
+          expect(count).toBe(1);
+        }),
+      );
+  });
+
+  it('should honour `fetchPolicy` settings', () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
+
+    let count = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      resolvers: {
+        Query: {
+          field: () => {
+            count += 1;
+            return 1;
+          },
+        },
+      },
+    });
+
+    interface Data {
+      field: number;
+    }
+
+    return client
+      .query({ query })
+      .then(({ data }: { data: Data }) => {
+        expect({ ...data }).toMatchObject({ field: 1 });
+        expect(count).toBe(1);
+      })
+      .then(() =>
+        client
+          .query({ query, fetchPolicy: 'network-only' })
+          .then(({ data }: { data: Data }) => {
+            expect({ ...data }).toMatchObject({ field: 1 });
+            expect(count).toBe(2);
+          }),
+      );
+  });
+});
 
 describe('Sample apps', () => {
   it('should support a simple counter app using local state', done => {

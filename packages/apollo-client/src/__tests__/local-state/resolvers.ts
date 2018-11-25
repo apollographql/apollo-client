@@ -54,7 +54,7 @@ const assertWithObserver = ({
   });
 };
 
-describe('Basic', () => {
+describe('Basic resolver capabilities', () => {
   it('should run resolvers for @client queries', done => {
     const query = gql`
       query Test {

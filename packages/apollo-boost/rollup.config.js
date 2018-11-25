@@ -5,7 +5,6 @@ const globals = {
   'apollo-cache-inmemory': 'apolloCacheInMemory',
   'apollo-link': 'apolloLink.core',
   'apollo-link-http': 'apolloLinkHttp',
-  'apollo-link-state': 'apolloLinkState',
   'apollo-link-error': 'apolloLinkError',
   'graphql-tag': 'graphqlTag',
 };

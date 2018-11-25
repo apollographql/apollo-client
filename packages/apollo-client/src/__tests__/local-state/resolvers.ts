@@ -2,11 +2,11 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 
-import mockQueryManager from '../../../../__mocks__/mockQueryManager';
-import { Observer } from '../../../../util/Observable';
-import wrap from '../../../../util/wrap';
-import { ApolloQueryResult, Resolvers } from '../../../types';
-import { WatchQueryOptions } from '../../../watchQueryOptions';
+import mockQueryManager from '../../__mocks__/mockQueryManager';
+import { Observer } from '../../util/Observable';
+import wrap from '../../util/wrap';
+import { ApolloQueryResult, Resolvers } from '../../core/types';
+import { WatchQueryOptions } from '../../core/watchQueryOptions';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
@@ -22,12 +22,12 @@ const assertWithObserver = ({
   delay,
   observer,
 }: {
-  done: () => void;
+  done: jest.DoneCallback;
   resolvers?: Resolvers;
   query: DocumentNode;
   serverQuery?: DocumentNode;
-  variables?: Object;
-  queryOptions?: Object;
+  variables?: object;
+  queryOptions?: object;
   error?: Error;
   serverResult?: ExecutionResult;
   delay?: number;
@@ -203,7 +203,7 @@ describe('Basic', () => {
         foo: () => ({ __typename: 'Foo' }),
       },
       Foo: {
-        bar: (data, { id }) => id,
+        bar: (data: any, { id }: { id: number }) => id,
       },
     };
 
@@ -239,7 +239,7 @@ describe('Basic', () => {
         foo: () => ({ __typename: 'Foo' }),
       },
       Foo: {
-        bar: (data, _, { id }) => id,
+        bar: (data: any, _: any, { id }: { id: number }) => id,
       },
     };
 

@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`General use should write the result of initiailizer functions to the cache 1`] = `
+Object {
+  "$ROOT_QUERY.foo": Object {
+    "__typename": "Bar",
+    "bar": false,
+  },
+  "ROOT_QUERY": Object {
+    "foo": Object {
+      "generated": true,
+      "id": "$ROOT_QUERY.foo",
+      "type": "id",
+      "typename": "Bar",
+    },
+  },
+}
+`;

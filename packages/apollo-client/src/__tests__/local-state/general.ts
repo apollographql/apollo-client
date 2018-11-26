@@ -18,10 +18,6 @@ describe('General functionality', () => {
       }
     `;
 
-    interface Data {
-      field: number;
-    }
-
     const link = new ApolloLink(() => Observable.of({ data: { field: 1 } }));
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -33,7 +29,7 @@ describe('General functionality', () => {
       },
     });
 
-    return client.query({ query }).then(({ data }: { data: Data }) => {
+    return client.query({ query }).then(({ data }) => {
       expect({ ...data }).toMatchObject({ field: 1 });
     });
   });
@@ -43,9 +39,8 @@ describe('General functionality', () => {
       ${introspectionQuery}
     `;
 
-    const link = new ApolloLink(() =>
-      Observable.of({ errors: [{ message: 'no introspection result found' }] }),
-    );
+    const error = new GraphQLError('no introspection result found');
+    const link = new ApolloLink(() => Observable.of({ errors: [error] }));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -84,11 +79,7 @@ describe('General functionality', () => {
       },
     });
 
-    interface Data {
-      field: number;
-    }
-
-    return client.query({ query }).then(({ data }: { data: Data }) => {
+    return client.query({ query }).then(({ data }) => {
       expect({ ...data }).toMatchObject({ field: 1 });
     });
   });
@@ -114,18 +105,14 @@ describe('General functionality', () => {
       },
     });
 
-    interface Data {
-      field: number;
-    }
-
     return client
       .query({ query })
-      .then(({ data }: { data: Data }) => {
+      .then(({ data }) => {
         expect({ ...data }).toMatchObject({ field: 1 });
         expect(count).toBe(1);
       })
       .then(() =>
-        client.query({ query }).then(({ data }: { data: Data }) => {
+        client.query({ query }).then(({ data }) => {
           expect({ ...data }).toMatchObject({ field: 1 });
           expect(count).toBe(1);
         }),
@@ -153,20 +140,16 @@ describe('General functionality', () => {
       },
     });
 
-    interface Data {
-      field: number;
-    }
-
     return client
       .query({ query })
-      .then(({ data }: { data: Data }) => {
+      .then(({ data }) => {
         expect({ ...data }).toMatchObject({ field: 1 });
         expect(count).toBe(1);
       })
       .then(() =>
         client
           .query({ query, fetchPolicy: 'network-only' })
-          .then(({ data }: { data: Data }) => {
+          .then(({ data }) => {
             expect({ ...data }).toMatchObject({ field: 1 });
             expect(count).toBe(2);
           }),
@@ -228,13 +211,177 @@ describe('General functionality', () => {
       fragmentMatcher,
     });
 
-    interface Data {
-      food: object[];
-    }
-
-    return client.query({ query }).then(({ data }: { data: Data }) => {
+    return client.query({ query }).then(({ data }) => {
       expect(data).toMatchObject({ foo: [{ bar: 'Bar' }, { baz: 'Baz' }] });
     });
+  });
+});
+
+describe('Cache manipulation', () => {
+  it(
+    'should be able to query @client fields and the cache without defining ' +
+      'local resolvers',
+    () => {
+      const query = gql`
+        {
+          field @client
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      cache.writeQuery({ query, data: { field: 'yo' } });
+
+      interface Data {
+        field: string;
+      }
+
+      client
+        .query({ query })
+        .then(({ data }) => expect({ ...data }).toMatchObject({ field: 'yo' }));
+    },
+  );
+
+  it('should be able to write to the cache using a local mutation', () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
+
+    const mutation = gql`
+      mutation start {
+        start @client
+      }
+    `;
+
+    const resolvers = {
+      Mutation: {
+        start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
+          cache.writeQuery({ query, data: { field: 1 } });
+          return { start: true };
+        },
+      },
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      resolvers,
+    });
+
+    return client
+      .mutate({ mutation })
+      .then(() => client.query({ query }))
+      .then(({ data }) => {
+        expect({ ...data }).toMatchObject({ field: 1 });
+      });
+  });
+
+  it(
+    'should be able to write to the cache with a local mutation and have ' +
+      'things rerender automatically',
+    done => {
+      const query = gql`
+        {
+          field @client
+        }
+      `;
+
+      const mutation = gql`
+        mutation start {
+          start @client
+        }
+      `;
+
+      const resolvers = {
+        Query: {
+          field: () => 0,
+        },
+        Mutation: {
+          start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
+            cache.writeQuery({ query, data: { field: 1 } });
+            return { start: true };
+          },
+        },
+      };
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+        resolvers,
+      });
+
+      let count = 0;
+      client.watchQuery({ query }).subscribe({
+        next: ({ data }) => {
+          count++;
+          if (count === 1) {
+            expect({ ...data }).toMatchObject({ field: 0 });
+            client.mutate({ mutation });
+          }
+
+          if (count === 2) {
+            expect({ ...data }).toMatchObject({ field: 1 });
+            done();
+          }
+        },
+      });
+    },
+  );
+
+  it('should support writing to the cache with a local mutation using variables', () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
+
+    const mutation = gql`
+      mutation start($id: ID!) {
+        start(field: $id) @client {
+          field
+        }
+      }
+    `;
+
+    const resolvers = {
+      Mutation: {
+        start: (
+          _1: any,
+          variables: { field: string },
+          { cache }: { cache: ApolloCache<any> },
+        ) => {
+          cache.writeQuery({ query, data: { field: variables.field } });
+          return {
+            __typename: 'Field',
+            field: variables.field,
+          };
+        },
+      },
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      resolvers,
+    });
+
+    return client
+      .mutate({ mutation, variables: { id: '1234' } })
+      .then(({ data }) => {
+        expect({ ...data }).toEqual({
+          start: { field: '1234', __typename: 'Field' },
+        });
+      })
+      .then(() => client.query({ query }))
+      .then(({ data }) => {
+        expect({ ...data }).toMatchObject({ field: '1234' });
+      });
   });
 });
 
@@ -366,7 +513,7 @@ describe('Sample apps', () => {
 
     const update = (
       query: DocumentNode,
-      updater: (todos: Todo[], variables: Todo) => any,
+      updater: (todos, variables) => any,
     ) => {
       return (
         result: {},
@@ -418,4 +565,441 @@ describe('Sample apps', () => {
       },
     });
   });
+});
+
+describe('Reset/clear store', () => {
+  it('should allow initializers to be called after the store is reset', done => {
+    const mutation = gql`
+      mutation foo {
+        foo @client
+      }
+    `;
+
+    const query = gql`
+      {
+        foo @client
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const initializers = {
+      foo: () => 'bar',
+    };
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+      initializers,
+      resolvers: {
+        Mutation: {
+          foo: (_, $, { cache }) => {
+            cache.writeData({ data: { foo: 'woo' } });
+            return null;
+          },
+        },
+      },
+    });
+
+    client.onResetStore(() =>
+      Promise.resolve(client.runInitializers(initializers)),
+    );
+
+    client
+      .query({ query })
+      .then(({ data }) => {
+        expect({ ...data }).toMatchObject({ foo: 'bar' });
+      })
+      .catch(done.fail);
+
+    client
+      .mutate({ mutation })
+      .then(() => client.query({ query }))
+      .then(({ data }) => {
+        expect({ ...data }).toMatchObject({ foo: 'woo' });
+      })
+      // Should be default after this reset call
+      .then(() => client.resetStore())
+      .then(() => client.query({ query }))
+      .then(({ data }) => {
+        expect({ ...data }).toMatchObject({ foo: 'bar' });
+        done();
+      })
+      .catch(done.fail);
+  });
+
+  it(
+    'should return initializer data after the store is reset, the ' +
+      'initializers are re-run, and Query resolver is specified',
+    done => {
+      const counterQuery = gql`
+        query {
+          counter @client
+        }
+      `;
+
+      const plusMutation = gql`
+        mutation plus {
+          plus @client
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const initializers = {
+        counter: () => 10,
+      };
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+        resolvers: {
+          Mutation: {
+            plus: (_, __, { cache }) => {
+              const { counter } = cache.readQuery({ query: counterQuery });
+              const data = {
+                counter: counter + 1,
+              };
+              cache.writeData({ data });
+              return null;
+            },
+          },
+        },
+        initializers,
+      });
+
+      let checkedCount = [10, 11, 12, 10];
+      const componentObservable = client.watchQuery({ query: counterQuery });
+      componentObservable.subscribe({
+        next: ({ data }) => {
+          try {
+            expect(data).toMatchObject({ counter: checkedCount.shift() });
+          } catch (e) {
+            done.fail(e);
+          }
+        },
+        error: done.fail,
+        complete: done.fail,
+      });
+
+      client.onResetStore(() =>
+        Promise.resolve(client.runInitializers(initializers)),
+      );
+
+      client
+        .mutate({ mutation: plusMutation })
+        .then(() => {
+          expect(cache.readQuery({ query: counterQuery })).toMatchObject({
+            counter: 11,
+          });
+          expect(client.query({ query: counterQuery })).resolves.toMatchObject({
+            data: { counter: 11 },
+          });
+        })
+        .then(() => client.mutate({ mutation: plusMutation }))
+        .then(() => {
+          expect(cache.readQuery({ query: counterQuery })).toMatchObject({
+            counter: 12,
+          });
+          expect(client.query({ query: counterQuery })).resolves.toMatchObject({
+            data: { counter: 12 },
+          });
+        })
+        .then(() => client.resetStore() as Promise<null>)
+        .then(() => {
+          expect(client.query({ query: counterQuery }))
+            .resolves.toMatchObject({ data: { counter: 10 } })
+            .then(() => {
+              expect(checkedCount.length).toBe(0);
+              done();
+            });
+        })
+        .catch(done.fail);
+    },
+  );
+
+  it('should return a Query result via resolver after the store has been reset', async () => {
+    const counterQuery = gql`
+      query {
+        counter @client
+      }
+    `;
+
+    const plusMutation = gql`
+      mutation plus {
+        plus @client
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const initializers = {
+      counter: () => 10,
+    };
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+      resolvers: {
+        Query: {
+          counter: () => 0,
+        },
+        Mutation: {
+          plus: (_, __, { cache }) => {
+            const { counter } = cache.readQuery({ query: counterQuery });
+            const data = {
+              counter: counter + 1,
+            };
+            cache.writeData({ data });
+            return null;
+          },
+        },
+      },
+      initializers,
+    });
+
+    await client.mutate({ mutation: plusMutation });
+    expect(cache.readQuery({ query: counterQuery })).toMatchObject({
+      counter: 11,
+    });
+
+    await client.mutate({ mutation: plusMutation });
+    expect(cache.readQuery({ query: counterQuery })).toMatchObject({
+      counter: 12,
+    });
+    await expect(client.query({ query: counterQuery })).resolves.toMatchObject({
+      data: { counter: 12 },
+    });
+
+    (client.resetStore() as Promise<null>)
+      .then(() => {
+        expect(client.query({ query: counterQuery }))
+          .resolves.toMatchObject({ data: { counter: 0 } })
+          .catch(fail);
+      })
+      .catch(fail);
+  });
+
+  it(
+    'should return default data from the cache in a Query resolver after ' +
+      'the store has been reset, and intializers have been re-run',
+    async () => {
+      const counterQuery = gql`
+        query {
+          counter @client
+        }
+      `;
+
+      const plusMutation = gql`
+        mutation plus {
+          plus @client
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const initializers = {
+        counter: () => 10,
+      };
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+        resolvers: {
+          Query: {
+            counter: () => {
+              return (cache.readQuery({ query: counterQuery }) as any).counter;
+            },
+          },
+          Mutation: {
+            plus: (_, __, { cache }) => {
+              const { counter } = cache.readQuery({ query: counterQuery });
+              const data = {
+                counter: counter + 1,
+              };
+              cache.writeData({ data });
+              return null;
+            },
+          },
+        },
+        initializers,
+      });
+
+      client.onResetStore(() =>
+        Promise.resolve(client.runInitializers(initializers)),
+      );
+
+      await client.mutate({ mutation: plusMutation });
+      await client.mutate({ mutation: plusMutation });
+      expect(cache.readQuery({ query: counterQuery })).toMatchObject({
+        counter: 12,
+      });
+      const result = await client.query({ query: counterQuery });
+      expect(result).toMatchObject({
+        data: { counter: 12 },
+      });
+
+      let called = false;
+      const componentObservable = client.watchQuery({ query: counterQuery });
+
+      const unsub = componentObservable.subscribe({
+        next: ({ data }) => {
+          try {
+            if (called) {
+              expect(data).toMatchObject({ counter: 10 });
+            }
+            called = true;
+          } catch (e) {
+            fail(e);
+          }
+        },
+        error: fail,
+        complete: fail,
+      });
+
+      const makeTerminatingCheck = (body, done) => {
+        return (...args) => {
+          try {
+            body(...args);
+            done();
+          } catch (error) {
+            fail(error);
+          }
+        };
+      };
+
+      try {
+        await client.resetStore();
+      } catch (error) {
+        // Do nothing
+      }
+
+      expect(client.query({ query: counterQuery }))
+        .resolves.toMatchObject({ data: { counter: 10 } })
+        .then(
+          makeTerminatingCheck(
+            () => {
+              unsub.unsubscribe();
+            },
+            () => {
+              expect(called);
+            },
+          ),
+        )
+        .catch(fail);
+    },
+  );
+
+  it(
+    'should not find data in the cache via a Query resolver if the store ' +
+      'is reset and initializers are not re-run',
+    done => {
+      const counterQuery = gql`
+        query {
+          counter @client
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const initializers = {
+        counter: () => 10,
+      };
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+        resolvers: {
+          Query: {
+            counter: () => {
+              try {
+                return (cache.readQuery({ query: counterQuery }) as any)
+                  .counter;
+              } catch (error) {
+                try {
+                  expect(error.message).toMatch(/field counter/);
+                } catch (e) {
+                  done.fail(e);
+                }
+                unsub.unsubscribe();
+                done();
+              }
+              return -1; // to remove warning from in-memory-cache
+            },
+          },
+        },
+        initializers,
+      });
+
+      const componentObservable = client.watchQuery({ query: counterQuery });
+
+      const unsub = componentObservable.subscribe({
+        next: ({ data }) => done.fail,
+        error: done.fail,
+        complete: done.fail,
+      });
+
+      client.resetStore() as Promise<null>;
+    },
+  );
+
+  it(
+    "should warn when an initializer created default value can't be found " +
+      "in the cache, and a matching Query resolver can't be found",
+    async done => {
+      const counterQuery = gql`
+        query {
+          counter @client
+        }
+      `;
+
+      const plusMutation = gql`
+        mutation plus {
+          plus @client
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const initializers = {
+        counter: () => 10,
+      };
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+        resolvers: {
+          Query: {
+            counter: () => {},
+          },
+          Mutation: {
+            plus: (_, __, { cache }) => {
+              const { counter } = cache.readQuery({ query: counterQuery });
+              const data = {
+                counter: counter + 1,
+              };
+              cache.writeData({ data });
+              return null;
+            },
+          },
+        },
+        initializers,
+      });
+
+      let realWarn = console.warn;
+      console.warn = message => {
+        unsub.unsubscribe();
+        console.warn = realWarn;
+        done();
+      };
+
+      await client.mutate({ mutation: plusMutation });
+
+      const componentObservable = client.watchQuery({ query: counterQuery });
+
+      let calledOnce = true;
+      const unsub = componentObservable.subscribe({
+        next: data => {
+          try {
+            expect(calledOnce);
+            calledOnce = false;
+          } catch (e) {
+            done.fail(e);
+          }
+        },
+        error: done.fail,
+        complete: done.fail,
+      });
+
+      client.resetStore();
+    },
+  );
 });

@@ -33,6 +33,7 @@ import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';
 import { removeClientSetsFromDocument } from '../util/removeClientSetsFromDocument';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
+import { normalizeTypeDefs } from '../util/normalizeTypeDefs';
 
 import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
@@ -1466,7 +1467,15 @@ export class QueryManager<TStore> {
 
   private contextCopyWithCache(context = {}) {
     const cache = this.dataStore.getCache();
-    return {
+
+    let schemas: object[] = [];
+    if (this.typeDefs) {
+      const directives = 'directive @client on FIELD';
+      const definition = normalizeTypeDefs(this.typeDefs);
+      schemas = schemas.concat([{ definition, directives }]);
+    }
+
+    const newContext = {
       ...context,
       cache,
       // Getting an entry's cache key is useful for local state resolvers.
@@ -1481,7 +1490,10 @@ export class QueryManager<TStore> {
         }
       },
       clientAwareness: this.clientAwareness,
+      schemas,
     };
+
+    return newContext;
   }
 
   // Prepare and return a local resolver function, that can be used to

@@ -1579,12 +1579,23 @@ export class QueryManager<TStore> {
       // value is found in the root of the cache, return that value. If a
       // "type" node is found, get its ID, then find and return that value
       // from the cache.
-      const cacheValue = cacheData['ROOT_QUERY'][field];
-      const result =
-        cacheValue && cacheValue.typename
-          ? cacheData[cacheValue.id]
-          : cacheValue;
-      return result;
+      const rootQuery = cacheData['ROOT_QUERY'];
+      if (rootQuery) {
+        const cacheValue = rootQuery[field];
+        const result =
+          cacheValue && cacheValue.typename
+            ? cacheData[cacheValue.id]
+            : cacheValue;
+        return result;
+      }
+
+      // If we're here, the store has been reset. Let callers know that
+      // initializers will have to be re-run, to get the cache back into a
+      // default state.
+      throw new Error(
+        'The store has been reset and is in an empty state. Consider ' +
+          're-running your initializers to prep the cache with defaults.',
+      );
     };
 
     return resolver;

@@ -210,6 +210,9 @@ export class DataStore<TSerialized> {
   }
 
   public reset(): Promise<void> {
+    // Allow initializers to be called again after a store reset.
+    this.firedInitializers = [];
+
     return this.cache.reset();
   }
 

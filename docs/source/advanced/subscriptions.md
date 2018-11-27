@@ -135,8 +135,8 @@ const DontReadTheComments = ({ repoFullName }) => (
     subscription={COMMENTS_SUBSCRIPTION}
     variables={{ repoFullName }}
   >
-    {({ data: { commentAdded }, loading }) => (
-      <h4>New comment: {!loading && commentAdded.content}</h4>
+    {({ data, loading }) => (
+      <h4>New comment: {!loading && data.commentAdded.content}</h4>
     )}
   </Subscription>
 );

@@ -120,3 +120,8 @@ If you're getting booted up as a contributor, here are some discussions you shou
 1. [Idea for pagination handling](https://github.com/apollostack/apollo-client/issues/26)
 1. [Discussion about interaction with Redux and domain vs. client state](https://github.com/apollostack/apollo-client/issues/98)
 1. [Long conversation about different client options, before this repo existed](https://github.com/apollostack/apollo/issues/1)
+
+## Maintainers
+
+- [@benjamn](https://github.com/benjamn) (Apollo)
+- [@hwillson](https://github.com/hwillson) (Apollo)

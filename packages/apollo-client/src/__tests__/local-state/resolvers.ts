@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloLink } from 'apollo-link';
+import { ApolloLink, Observable } from 'apollo-link';
 
 import ApolloClient from '../..';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
@@ -265,7 +265,7 @@ describe('Basic resolver capabilities', () => {
   });
 });
 
-describe('Writing cache data', () => {
+describe('Writing cache data from resolvers', () => {
   it('should let you write to the cache with a mutation', () => {
     const query = gql`
       {
@@ -475,6 +475,159 @@ describe('Writing cache data', () => {
           expect(data.obj.field.__typename).toEqual('Field');
         })
         .catch(e => console.log(e));
+    },
+  );
+});
+
+describe('Resolving field aliases', () => {
+  it('should run resolvers for missing client queries with aliased field', done => {
+    // expect.assertions(1);
+    const query = gql`
+      query Aliased {
+        foo @client {
+          bar
+        }
+        baz: bar {
+          foo
+        }
+      }
+    `;
+
+    const link = new ApolloLink(() =>
+      // Each link is responsible for implementing their own aliasing so it
+      // returns baz not bar
+      Observable.of({ data: { baz: { foo: true, __typename: 'Baz' } } }),
+    );
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true, __typename: 'Foo' }),
+        },
+      },
+    });
+
+    client.query({ query }).then(({ data }) => {
+      try {
+        expect(data).toEqual({
+          foo: { bar: true, __typename: 'Foo' },
+          baz: { foo: true, __typename: 'Baz' },
+        });
+      } catch (e) {
+        done.fail(e);
+        return;
+      }
+      done();
+    }, done.fail);
+  });
+
+  it(
+    'should run resolvers for client queries when aliases are in use on ' +
+      'the @client-tagged node',
+    done => {
+      const aliasedQuery = gql`
+        query Test {
+          fie: foo @client {
+            bar
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+        resolvers: {
+          Query: {
+            foo: () => ({ bar: true, __typename: 'Foo' }),
+            fie: () => {
+              done.fail(
+                "Called the resolver using the alias' name, instead of " +
+                  'the correct resolver name.',
+              );
+            },
+          },
+        },
+      });
+
+      client.query({ query: aliasedQuery }).then(({ data }) => {
+        expect(data).toEqual({ fie: { bar: true, __typename: 'Foo' } });
+        done();
+      }, done.fail);
+    },
+  );
+
+  it('should respect aliases for *nested fields* on the @client-tagged node', done => {
+    const aliasedQuery = gql`
+      query Test {
+        fie: foo @client {
+          fum: bar
+        }
+        baz: bar {
+          foo
+        }
+      }
+    `;
+
+    const link = new ApolloLink(() =>
+      Observable.of({ data: { baz: { foo: true, __typename: 'Baz' } } }),
+    );
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true, __typename: 'Foo' }),
+          fie: () => {
+            done.fail(
+              "Called the resolver using the alias' name, instead of " +
+                'the correct resolver name.',
+            );
+          },
+        },
+      },
+    });
+
+    client.query({ query: aliasedQuery }).then(({ data }) => {
+      expect(data).toEqual({
+        fie: { fum: true, __typename: 'Foo' },
+        baz: { foo: true, __typename: 'Baz' },
+      });
+      done();
+    }, done.fail);
+  });
+
+  it(
+    'should pull initialized values for aliased fields tagged with @client ' +
+      'from the cache',
+    () => {
+      const query = gql`
+        {
+          fie: foo @client {
+            bar
+          }
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+        initializers: {
+          foo: () => ({
+            bar: 'yo',
+            __typename: 'Foo',
+          }),
+        },
+      });
+
+      return client.query({ query }).then(({ data }) => {
+        expect({ ...data }).toMatchObject({
+          fie: { bar: 'yo', __typename: 'Foo' },
+        });
+      });
     },
   );
 });

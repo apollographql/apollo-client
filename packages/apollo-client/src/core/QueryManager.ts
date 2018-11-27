@@ -1550,7 +1550,7 @@ export class QueryManager<TStore> {
           : childRootValue[resultKey];
 
       const aliasUsed = resultKey !== fieldName;
-      const field = aliasUsed ? resultKey : fieldName;
+      const field = aliasUsed ? fieldName : resultKey;
 
       // Make sure the context has access to the cache and query/mutate
       // functions, so resolvers can use them.

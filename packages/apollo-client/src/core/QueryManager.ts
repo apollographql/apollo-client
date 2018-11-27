@@ -327,14 +327,21 @@ export class QueryManager<TStore> {
             const resolver = self.prepareResolver(clientQuery);
             if (resolver) {
               const { context, variables } = operation;
-              const localResult = graphql(
-                resolver,
-                clientQuery,
-                result.data,
-                context,
-                variables,
-                { fragmentMatcher: this.fragmentMatcher },
-              );
+              let localResult;
+              try {
+                localResult = graphql(
+                  resolver,
+                  clientQuery,
+                  result.data,
+                  context,
+                  variables,
+                  { fragmentMatcher: this.fragmentMatcher },
+                );
+              } catch (error) {
+                reject(error);
+                return;
+              }
+
               if (localResult) {
                 updatedResult.data = {
                   ...updatedResult.data,
@@ -1286,14 +1293,20 @@ export class QueryManager<TStore> {
             if (clientQuery) {
               const resolver = this.prepareResolver(clientQuery);
               if (resolver) {
-                const localResult = graphql(
-                  resolver,
-                  clientQuery,
-                  result.data,
-                  updatedContext,
-                  variables,
-                  { fragmentMatcher: this.fragmentMatcher },
-                );
+                let localResult;
+                try {
+                  localResult = graphql(
+                    resolver,
+                    clientQuery,
+                    result.data,
+                    updatedContext,
+                    variables,
+                    { fragmentMatcher: this.fragmentMatcher },
+                  );
+                } catch (error) {
+                  reject(error);
+                  return;
+                }
 
                 if (localResult) {
                   updatedResult.data = {

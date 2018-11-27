@@ -1003,3 +1003,168 @@ describe('Reset/clear store', () => {
     },
   );
 });
+
+describe('Combining client and server state', () => {
+  it('should merge remote and local state', done => {
+    const query = gql`
+      query list {
+        list(name: "my list") {
+          items {
+            id
+            name
+            isDone
+            isSelected @client
+          }
+        }
+      }
+    `;
+
+    const data = {
+      list: {
+        __typename: 'List',
+        items: [
+          { __typename: 'ListItem', id: 1, name: 'first', isDone: true },
+          { __typename: 'ListItem', id: 2, name: 'second', isDone: false },
+        ],
+      },
+    };
+
+    const link = new ApolloLink(() => Observable.of({ data }));
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Mutation: {
+          toggleItem: async (_, { id }, { cache }) => {
+            id = `ListItem:${id}`;
+            const fragment = gql`
+              fragment item on ListItem {
+                __typename
+                isSelected
+              }
+            `;
+            const previous = cache.readFragment({ fragment, id });
+            const data = {
+              ...previous,
+              isSelected: !previous.isSelected,
+            };
+            await cache.writeFragment({
+              id,
+              fragment,
+              data,
+            });
+
+            return data;
+          },
+        },
+        ListItem: {
+          isSelected: (source, args, context) => {
+            expect(source.name).toBeDefined();
+            // List items default to an unselected state
+            return false;
+          },
+        },
+      },
+    });
+
+    const observer = client.watchQuery({ query });
+
+    let count = 0;
+    const sub = observer.subscribe({
+      next: response => {
+        if (count === 0) {
+          const initial = { ...data };
+          initial.list.items = initial.list.items.map(x => ({
+            ...x,
+            isSelected: false,
+          }));
+          expect(response.data).toMatchObject(initial);
+        }
+        if (count === 1) {
+          expect(response.data.list.items[0].isSelected).toBe(true);
+          expect(response.data.list.items[1].isSelected).toBe(false);
+          done();
+        }
+        count++;
+      },
+      error: done.fail,
+    });
+    const variables = { id: 1 };
+    const mutation = gql`
+      mutation SelectItem($id: Int!) {
+        toggleItem(id: $id) @client
+      }
+    `;
+    // After initial result, toggle the state of one of the items
+    setTimeout(() => {
+      client.mutate({ mutation, variables });
+    }, 10);
+  });
+
+  it('should correctly propagate an error from a client resolver', async done => {
+    const data = {
+      list: {
+        __typename: 'List',
+        items: [
+          { __typename: 'ListItem', id: 1, name: 'first', isDone: true },
+          { __typename: 'ListItem', id: 2, name: 'second', isDone: false },
+        ],
+      },
+    };
+
+    const link = new ApolloLink(() => Observable.of({ data }));
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Query: {
+          hasBeenIllegallyTouched: (_, _v, _c) => {
+            throw new Error('Illegal Query Operation Occurred');
+          },
+        },
+
+        Mutation: {
+          touchIllegally: (_, _v, _c) => {
+            throw new Error('Illegal Mutation Operation Occurred');
+          },
+        },
+      },
+    });
+
+    const variables = { id: 1 };
+    const query = gql`
+      query hasBeenIllegallyTouched($id: Int!) {
+        hasBeenIllegallyTouched(id: $id) @client
+      }
+    `;
+    const mutation = gql`
+      mutation SelectItem($id: Int!) {
+        touchIllegally(id: $id) @client
+      }
+    `;
+
+    try {
+      await client.query({ query, variables });
+      done.fail('Should have thrown!');
+    } catch (e) {
+      // Test Passed!
+      expect(() => {
+        throw e;
+      }).toThrowErrorMatchingSnapshot();
+    }
+
+    try {
+      await client.mutate({ mutation, variables });
+      done.fail('Should have thrown!');
+    } catch (e) {
+      // Test Passed!
+      expect(() => {
+        throw e;
+      }).toThrowErrorMatchingSnapshot();
+    }
+
+    done();
+  });
+});

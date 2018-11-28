@@ -11,9 +11,9 @@ import {
   FragmentSpreadNode,
   VariableDefinitionNode,
   VariableNode,
-} from "graphql";
+} from 'graphql';
 
-import { cloneDeep } from "./util/cloneDeep";
+import { cloneDeep } from './util/cloneDeep';
 
 import {
   checkDocument,
@@ -21,7 +21,7 @@ import {
   getFragmentDefinitions,
   createFragmentMap,
   FragmentMap,
-} from "./getFromAST";
+} from './getFromAST';
 
 export type RemoveNodeConfig<N> = {
   name?: string;
@@ -47,16 +47,16 @@ export type RemoveVariableDefinitionConfig = RemoveNodeConfig<
 >;
 
 const TYPENAME_FIELD: FieldNode = {
-  kind: "Field",
+  kind: 'Field',
   name: {
-    kind: "Name",
-    value: "__typename",
+    kind: 'Name',
+    value: '__typename',
   },
 };
 
 function isNotEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
-  fragments: FragmentMap
+  fragments: FragmentMap,
 ): Boolean {
   // keep selections that are still valid
   return (
@@ -67,16 +67,16 @@ function isNotEmpty(
         (
           selectionSet &&
           // look into fragments to verify they should stay
-          selectionSet.kind === "FragmentSpread" &&
+          selectionSet.kind === 'FragmentSpread' &&
           // see if the fragment in the map is valid (recursively)
           !isNotEmpty(fragments[selectionSet.name.value], fragments)
-        )
+        ),
     ).length > 0
   );
 }
 
 function getDirectiveMatcher(
-  directives: (RemoveDirectiveConfig | GetDirectiveConfig)[]
+  directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
 ) {
   return function directiveMatcher(directive: DirectiveNode): Boolean {
     return directives.some(
@@ -84,21 +84,21 @@ function getDirectiveMatcher(
         if (dir.name && dir.name === directive.name.value) return true;
         if (dir.test && dir.test(directive)) return true;
         return false;
-      }
+      },
     );
   };
 }
 
 function addTypenameToSelectionSet(
   selectionSet: SelectionSetNode,
-  isRoot = false
+  isRoot = false,
 ) {
   if (selectionSet.selections) {
     if (!isRoot) {
       const alreadyHasThisField = selectionSet.selections.some(selection => {
         return (
-          selection.kind === "Field" &&
-          (selection as FieldNode).name.value === "__typename"
+          selection.kind === 'Field' &&
+          (selection as FieldNode).name.value === '__typename'
         );
       });
 
@@ -109,14 +109,14 @@ function addTypenameToSelectionSet(
 
     selectionSet.selections.forEach(selection => {
       // Must not add __typename if we're inside an introspection query
-      if (selection.kind === "Field") {
+      if (selection.kind === 'Field') {
         if (
-          selection.name.value.lastIndexOf("__", 0) !== 0 &&
+          selection.name.value.lastIndexOf('__', 0) !== 0 &&
           selection.selectionSet
         ) {
           addTypenameToSelectionSet(selection.selectionSet);
         }
-      } else if (selection.kind === "InlineFragment") {
+      } else if (selection.kind === 'InlineFragment') {
         if (selection.selectionSet) {
           addTypenameToSelectionSet(selection.selectionSet);
         }
@@ -129,12 +129,12 @@ function getSelectionsMatchingDirectiveFromSelectionSet(
   directives: GetDirectiveConfig[],
   selectionSet: SelectionSetNode,
   invert: boolean = false,
-  fieldsOnly: boolean = false
+  fieldsOnly: boolean = false,
 ): SelectionNode[] {
   return selectionSet.selections
     .map(selection => {
       if (
-        selection.kind !== "Field" ||
+        selection.kind !== 'Field' ||
         !(selection as FieldNode) ||
         !selection.directives
       ) {
@@ -160,23 +160,23 @@ function getSelectionsMatchingDirectiveFromSelectionSet(
 
 function removeDirectivesFromSelectionSet(
   directives: RemoveDirectiveConfig[],
-  selectionSet: SelectionSetNode
+  selectionSet: SelectionSetNode,
 ): SelectionSetNode {
   if (!selectionSet.selections) return selectionSet;
   // if any of the directives are set to remove this selectionSet, remove it
   const agressiveRemove = directives.some(
-    (dir: RemoveDirectiveConfig) => dir.remove
+    (dir: RemoveDirectiveConfig) => dir.remove,
   );
 
   selectionSet.selections = getSelectionsMatchingDirectiveFromSelectionSet(
     directives,
     selectionSet,
-    agressiveRemove
+    agressiveRemove,
   );
 
   selectionSet.selections.forEach(selection => {
     if (
-      (selection.kind === "Field" || selection.kind === "InlineFragment") &&
+      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
       selection.selectionSet
     ) {
       removeDirectivesFromSelectionSet(directives, selection.selectionSet);
@@ -188,123 +188,130 @@ function removeDirectivesFromSelectionSet(
 
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
-  doc: DocumentNode
+  doc: DocumentNode,
 ): DocumentNode | null {
-  try {
-    let docClone = cloneDeep(doc);
-    let removedArguments: RemoveArgumentsConfig[] = [];
-    let removedFragments: RemoveFragmentSpreadConfig[] = [];
-    const aggressiveRemove = directives.some(directive => directive.remove);
+  let docClone = cloneDeep(doc);
+  let removedArguments: RemoveArgumentsConfig[] = [];
+  let removedFragments: RemoveFragmentSpreadConfig[] = [];
+  const aggressiveRemove = directives.some(directive => directive.remove);
 
-    docClone.definitions.forEach((definition: DefinitionNode) => {
-      const operationDefinition = definition as OperationDefinitionNode;
-      const originalSelectionSet = cloneDeep(operationDefinition.selectionSet);
+  docClone.definitions.forEach((definition: DefinitionNode) => {
+    const operationDefinition = definition as OperationDefinitionNode;
+    const originalSelectionSet = cloneDeep(operationDefinition.selectionSet);
 
-      const newSelectionSet = removeDirectivesFromSelectionSet(
-        directives,
-        operationDefinition.selectionSet
+    const newSelectionSet = removeDirectivesFromSelectionSet(
+      directives,
+      operationDefinition.selectionSet,
+    );
+
+    if (aggressiveRemove && !!docClone) {
+      const matchingSelections = getSelectionsMatchingDirectiveFromSelectionSet(
+        directives.map(config => ({
+          name: config.name,
+          test: config.test,
+        })),
+        originalSelectionSet,
       );
 
-      if (aggressiveRemove && !!docClone) {
-        const matchingSelections = getSelectionsMatchingDirectiveFromSelectionSet(
-          directives.map(config => ({
-            name: config.name,
-            test: config.test,
-          })),
-          originalSelectionSet
-        );
+      const remainingArguments = getAllArgumentsFromSelectionSet(
+        newSelectionSet,
+      );
 
-        const remainingArguments = getAllArgumentsFromSelectionSet(
-          newSelectionSet
-        )
-
-        removedArguments = [
-          ...removedArguments,
-          ...matchingSelections
-            .map(getAllArgumentsFromSelection)
-            .reduce(
-              (allArguments, selectionArguments) => [
-                ...allArguments,
-                ...selectionArguments,
-              ],
-              []
-            )
-            .filter(
-              removedArg =>
-                !remainingArguments.some(
-                  remainingArg => {
-                    if (remainingArg.value.kind !== 'Variable' || !(remainingArg.value as VariableNode)) return false
-                    if (removedArg.value.kind !== 'Variable' || !(removedArg.value as VariableNode)) return false
-                    return remainingArg.value.name.value === removedArg.value.name.value
-                  }
+      removedArguments = [
+        ...removedArguments,
+        ...matchingSelections
+          .map(getAllArgumentsFromSelection)
+          .reduce(
+            (allArguments, selectionArguments) => [
+              ...allArguments,
+              ...selectionArguments,
+            ],
+            [],
+          )
+          .filter(
+            removedArg =>
+              !remainingArguments.some(remainingArg => {
+                if (
+                  remainingArg.value.kind !== 'Variable' ||
+                  !(remainingArg.value as VariableNode)
                 )
-            )
-            .map(argument => {
-              if (argument.value.kind !== 'Variable' || !(argument.value as VariableNode)) return null
-              return {
-                name: argument.value.name.value,
-                remove: aggressiveRemove,
-              }
-            }).filter(node => !!node),
-        ];
-
-        const remainingFragmentSpreads = getAllFragmentSpreadsFromSelectionSet(
-          newSelectionSet
-        );
-
-        removedFragments = [
-          ...removedFragments,
-          ...matchingSelections
-            .map(getAllFragmentSpreadsFromSelection)
-            .reduce(
-              (allFragments, selectionFragments) => [
-                ...allFragments,
-                ...selectionFragments,
-              ],
-              []
-            )
-            .filter(
-              removedFragment =>
-                !remainingFragmentSpreads.some(
-                  remainingFragment =>
-                    remainingFragment.name.value === removedFragment.name.value
+                  return false;
+                if (
+                  removedArg.value.kind !== 'Variable' ||
+                  !(removedArg.value as VariableNode)
                 )
+                  return false;
+                return (
+                  remainingArg.value.name.value === removedArg.value.name.value
+                );
+              }),
+          )
+          .map(argument => {
+            if (
+              argument.value.kind !== 'Variable' ||
+              !(argument.value as VariableNode)
             )
-            .map(fragment => ({
-              name: fragment.name.value,
+              return null;
+            return {
+              name: argument.value.name.value,
               remove: aggressiveRemove,
-            })),
-        ];
-      }
-    });
+            };
+          })
+          .filter(node => !!node),
+      ];
 
+      const remainingFragmentSpreads = getAllFragmentSpreadsFromSelectionSet(
+        newSelectionSet,
+      );
+
+      removedFragments = [
+        ...removedFragments,
+        ...matchingSelections
+          .map(getAllFragmentSpreadsFromSelection)
+          .reduce(
+            (allFragments, selectionFragments) => [
+              ...allFragments,
+              ...selectionFragments,
+            ],
+            [],
+          )
+          .filter(
+            removedFragment =>
+              !remainingFragmentSpreads.some(
+                remainingFragment =>
+                  remainingFragment.name.value === removedFragment.name.value,
+              ),
+          )
+          .map(fragment => ({
+            name: fragment.name.value,
+            remove: aggressiveRemove,
+          })),
+      ];
+    }
+  });
+
+  if (!docClone) {
+    return null;
+  }
+
+  if (removedFragments.length > 0) {
+    docClone = removeFragmentSpreadFromDocument(removedFragments, docClone);
     if (!docClone) {
       return null;
     }
-
-    if (removedFragments.length > 0) {
-      docClone = removeFragmentSpreadFromDocument(removedFragments, docClone);
-      if (!docClone) {
-        return null;
-      }
-    }
-
-
-    if (removedArguments.length > 0) {
-      docClone = removeArgumentsFromDocument(removedArguments, docClone);
-      if (!docClone) {
-        return null;
-      }
-    }
-
-    const operation = getOperationDefinitionOrDie(docClone);
-    const fragments = createFragmentMap(getFragmentDefinitions(docClone));
-
-    return isNotEmpty(operation, fragments) ? docClone : null;
-  } catch (e) {
-    console.log("Caught an error inside of removeDirectivesFromDocument = ", e);
-    throw e;
   }
+
+  if (removedArguments.length > 0) {
+    docClone = removeArgumentsFromDocument(removedArguments, docClone);
+    if (!docClone) {
+      return null;
+    }
+  }
+
+  const operation = getOperationDefinitionOrDie(docClone);
+  const fragments = createFragmentMap(getFragmentDefinitions(docClone));
+
+  return isNotEmpty(operation, fragments) ? docClone : null;
 }
 
 export function addTypenameToDocument(doc: DocumentNode) {
@@ -312,10 +319,10 @@ export function addTypenameToDocument(doc: DocumentNode) {
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
-    const isRoot = definition.kind === "OperationDefinition";
+    const isRoot = definition.kind === 'OperationDefinition';
     addTypenameToSelectionSet(
       (definition as OperationDefinitionNode).selectionSet,
-      isRoot
+      isRoot,
     );
   });
   return docClone;
@@ -323,15 +330,15 @@ export function addTypenameToDocument(doc: DocumentNode) {
 
 const connectionRemoveConfig = {
   test: (directive: DirectiveNode) => {
-    const willRemove = directive.name.value === "connection";
+    const willRemove = directive.name.value === 'connection';
     if (willRemove) {
       if (
         !directive.arguments ||
-        !directive.arguments.some(arg => arg.name.value === "key")
+        !directive.arguments.some(arg => arg.name.value === 'key')
       ) {
         console.warn(
-          "Removing an @connection directive even though it does not have a key. " +
-            "You may want to use the key parameter to specify a store key."
+          'Removing an @connection directive even though it does not have a key. ' +
+            'You may want to use the key parameter to specify a store key.',
         );
       }
     }
@@ -342,32 +349,25 @@ const connectionRemoveConfig = {
 
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   checkDocument(doc);
-  let docClone;
-  try {
-    docClone = removeDirectivesFromDocument([connectionRemoveConfig], doc);
-  } catch (err) {
-    console.error("Caught an error in removeDirectivesFromDocument = ", err);
-    throw err;
-  }
-  return docClone;
+  return removeDirectivesFromDocument([connectionRemoveConfig], doc);
 }
 
 function hasDirectivesInSelectionSet(
   directives: GetDirectiveConfig[],
   selectionSet: SelectionSetNode,
-  nestedCheck = true
+  nestedCheck = true,
 ): boolean {
   return filterSelectionSet(selectionSet, selection =>
-    hasDirectivesInSelection(directives, selection, nestedCheck)
+    hasDirectivesInSelection(directives, selection, nestedCheck),
   );
 }
 
 function hasDirectivesInSelection(
   directives: GetDirectiveConfig[],
   selection: SelectionNode,
-  nestedCheck = true
+  nestedCheck = true,
 ): boolean {
-  if (selection.kind !== "Field" || !(selection as FieldNode)) {
+  if (selection.kind !== 'Field' || !(selection as FieldNode)) {
     return true;
   }
 
@@ -384,14 +384,14 @@ function hasDirectivesInSelection(
       hasDirectivesInSelectionSet(
         directives,
         selection.selectionSet,
-        nestedCheck
+        nestedCheck,
       ))
   );
 }
 
 function getDirectivesFromSelectionSet(
   directives: GetDirectiveConfig[],
-  selectionSet: SelectionSetNode
+  selectionSet: SelectionSetNode,
 ) {
   selectionSet.selections = selectionSet.selections
     .filter(selection => {
@@ -402,12 +402,12 @@ function getDirectivesFromSelectionSet(
         return selection;
       }
       if (
-        (selection.kind === "Field" || selection.kind === "InlineFragment") &&
+        (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
         selection.selectionSet
       ) {
         selection.selectionSet = getDirectivesFromSelectionSet(
           directives,
-          selection.selectionSet
+          selection.selectionSet,
         );
       }
 
@@ -419,19 +419,19 @@ function getDirectivesFromSelectionSet(
 export function getDirectivesFromDocument(
   directives: GetDirectiveConfig[],
   doc: DocumentNode,
-  includeAllFragments = false
+  includeAllFragments = false,
 ): DocumentNode | null {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
   docClone.definitions = docClone.definitions.map(definition => {
     if (
-      (definition.kind === "OperationDefinition" ||
-        (definition.kind === "FragmentDefinition" && !includeAllFragments)) &&
+      (definition.kind === 'OperationDefinition' ||
+        (definition.kind === 'FragmentDefinition' && !includeAllFragments)) &&
       definition.selectionSet
     ) {
       definition.selectionSet = getDirectivesFromSelectionSet(
         directives,
-        definition.selectionSet
+        definition.selectionSet,
       );
     }
     return definition;
@@ -445,7 +445,11 @@ export function getDirectivesFromDocument(
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
   return (argument: ArgumentNode): Boolean => {
     return config.some((config: RemoveArgumentsConfig) => {
-      if (argument.value.kind !== 'Variable' || !(argument.value as VariableNode)) return false
+      if (
+        argument.value.kind !== 'Variable' ||
+        !(argument.value as VariableNode)
+      )
+        return false;
       if (!argument.value.name) return false;
       if (config.name === argument.value.name.value) return true;
       if (config.test && config.test(argument)) return true;
@@ -457,20 +461,20 @@ function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
 function hasArgumentsInSelectionSet(
   config: RemoveArgumentsConfig[],
   selectionSet: SelectionSetNode,
-  nestedCheck: boolean = false
+  nestedCheck: boolean = false,
 ): boolean {
   return filterSelectionSet(selectionSet, selection =>
-    hasArgumentsInSelection(config, selection, nestedCheck)
+    hasArgumentsInSelection(config, selection, nestedCheck),
   );
 }
 
 function hasArgumentsInSelection(
   config: RemoveArgumentsConfig[],
   selection: SelectionNode,
-  nestedCheck: boolean = false
+  nestedCheck: boolean = false,
 ): boolean {
   // Selection is a FragmentSpread or InlineFragment, ignore (include it)...
-  if (selection.kind !== "Field" || !(selection as FieldNode)) {
+  if (selection.kind !== 'Field' || !(selection as FieldNode)) {
     return true;
   }
 
@@ -487,7 +491,7 @@ function hasArgumentsInSelection(
 }
 
 function getAllArgumentsFromSelectionSet(
-  selectionSet: SelectionSetNode
+  selectionSet: SelectionSetNode,
 ): ArgumentNode[] {
   return selectionSet.selections
     .map(getAllArgumentsFromSelection)
@@ -497,9 +501,9 @@ function getAllArgumentsFromSelectionSet(
 }
 
 function getAllArgumentsFromSelection(
-  selection: SelectionNode
+  selection: SelectionNode,
 ): ArgumentNode[] {
-  if (selection.kind !== "Field" || !(selection as FieldNode)) {
+  if (selection.kind !== 'Field' || !(selection as FieldNode)) {
     return [];
   }
 
@@ -508,7 +512,7 @@ function getAllArgumentsFromSelection(
 
 export function removeArgumentsFromDocument(
   config: RemoveArgumentsConfig[],
-  query: DocumentNode
+  query: DocumentNode,
 ): DocumentNode | null {
   const docClone = cloneDeep(query);
 
@@ -524,7 +528,7 @@ export function removeArgumentsFromDocument(
     removeArgumentsFromSelectionSet(config, operationDefinition.selectionSet);
     removeArgumentsFromOperationDefinition(
       removeVariableConfig,
-      operationDefinition
+      operationDefinition,
     );
   });
 
@@ -535,12 +539,12 @@ export function removeArgumentsFromDocument(
 
 function removeArgumentsFromOperationDefinition(
   config: RemoveVariableDefinitionConfig[],
-  definition: OperationDefinitionNode
+  definition: OperationDefinitionNode,
 ): OperationDefinitionNode {
   if (!definition.variableDefinitions) return definition;
   // if any of the config is set to remove this argument, remove it
   const aggressiveRemove = config.some(
-    (config: RemoveVariableDefinitionConfig) => config.remove
+    (config: RemoveVariableDefinitionConfig) => config.remove,
   );
 
   let remove: boolean;
@@ -557,7 +561,7 @@ function removeArgumentsFromOperationDefinition(
       }
 
       return shouldKeep;
-    }
+    },
   );
 
   return definition;
@@ -565,19 +569,18 @@ function removeArgumentsFromOperationDefinition(
 
 function removeArgumentsFromSelectionSet(
   config: RemoveArgumentsConfig[],
-  selectionSet: SelectionSetNode
+  selectionSet: SelectionSetNode,
 ): SelectionSetNode {
-
   if (!selectionSet.selections) return selectionSet;
   // if any of the config is set to remove this selectionSet, remove it
   const aggressiveRemove = config.some(
-    (config: RemoveArgumentsConfig) => config.remove
+    (config: RemoveArgumentsConfig) => config.remove,
   );
 
   selectionSet.selections = selectionSet.selections
     .map(selection => {
       if (
-        selection.kind !== "Field" ||
+        selection.kind !== 'Field' ||
         !(selection as FieldNode) ||
         !selection.arguments
       ) {
@@ -601,7 +604,7 @@ function removeArgumentsFromSelectionSet(
 
   selectionSet.selections.forEach(selection => {
     if (
-      (selection.kind === "Field" || selection.kind === "InlineFragment") &&
+      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
       selection.selectionSet
     ) {
       removeArgumentsFromSelectionSet(config, selection.selectionSet);
@@ -613,10 +616,10 @@ function removeArgumentsFromSelectionSet(
 
 function hasFragmentSpreadInSelection(
   config: RemoveFragmentSpreadConfig[],
-  selection: SelectionNode
+  selection: SelectionNode,
 ): boolean {
   if (
-    selection.kind !== "FragmentSpread" ||
+    selection.kind !== 'FragmentSpread' ||
     !(selection as FragmentSpreadNode)
   ) {
     return false;
@@ -631,14 +634,14 @@ function hasFragmentSpreadInSelection(
 
 export function removeFragmentSpreadFromDocument(
   config: RemoveFragmentSpreadConfig[],
-  query: DocumentNode
+  query: DocumentNode,
 ): DocumentNode | null {
   const docClone = cloneDeep(query);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
     removeFragmentSpreadFromSelectionSet(
       config,
-      (definition as OperationDefinitionNode).selectionSet
+      (definition as OperationDefinitionNode).selectionSet,
     );
   });
 
@@ -646,7 +649,7 @@ export function removeFragmentSpreadFromDocument(
     config
       .filter(config => !!config.name)
       .map(config => ({ name: config.name })),
-    docClone.definitions
+    docClone.definitions,
   );
 
   const operation = getOperationDefinitionOrDie(docClone);
@@ -656,11 +659,11 @@ export function removeFragmentSpreadFromDocument(
 
 function removeFragmentSpreadFromDefinitions(
   config: RemoveFragmentDefinitionConfig[],
-  definitions: DefinitionNode[]
+  definitions: DefinitionNode[],
 ): DefinitionNode[] {
   return definitions.filter(definition => {
     if (
-      definition.kind !== "FragmentDefinition" ||
+      definition.kind !== 'FragmentDefinition' ||
       !(definition as FragmentDefinitionNode)
     ) {
       return true;
@@ -676,17 +679,17 @@ function removeFragmentSpreadFromDefinitions(
 
 function removeFragmentSpreadFromSelectionSet(
   config: RemoveFragmentSpreadConfig[],
-  selectionSet: SelectionSetNode
+  selectionSet: SelectionSetNode,
 ): SelectionSetNode {
   if (!selectionSet.selections) return selectionSet;
 
   selectionSet.selections = selectionSet.selections.filter(
-    selection => !hasFragmentSpreadInSelection(config, selection)
+    selection => !hasFragmentSpreadInSelection(config, selection),
   );
 
   selectionSet.selections.forEach(selection => {
     if (
-      (selection.kind === "Field" || selection.kind === "InlineFragment") &&
+      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
       selection.selectionSet
     ) {
       removeFragmentSpreadFromSelectionSet(config, selection.selectionSet);
@@ -697,7 +700,7 @@ function removeFragmentSpreadFromSelectionSet(
 }
 
 function getAllFragmentSpreadsFromSelectionSet(
-  selectionSet: SelectionSetNode
+  selectionSet: SelectionSetNode,
 ): FragmentSpreadNode[] {
   return selectionSet.selections
     .map(getAllFragmentSpreadsFromSelection)
@@ -706,20 +709,20 @@ function getAllFragmentSpreadsFromSelectionSet(
         ...allFragments,
         ...selectionFragments,
       ],
-      []
+      [],
     );
 }
 
 function getAllFragmentSpreadsFromSelection(
-  selection: SelectionNode
+  selection: SelectionNode,
 ): FragmentSpreadNode[] {
   if (
-    (selection.kind === "Field" || selection.kind === "InlineFragment") &&
+    (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
     selection.selectionSet
   ) {
     return getAllFragmentSpreadsFromSelectionSet(selection.selectionSet);
   } else if (
-    selection.kind === "FragmentSpread" &&
+    selection.kind === 'FragmentSpread' &&
     (selection as FragmentSpreadNode)
   ) {
     return [selection];
@@ -730,7 +733,7 @@ function getAllFragmentSpreadsFromSelection(
 
 function filterSelectionSet(
   selectionSet: SelectionSetNode,
-  filter: (node: SelectionNode) => boolean
+  filter: (node: SelectionNode) => boolean,
 ) {
   if (!(selectionSet && selectionSet.selections)) {
     return false;

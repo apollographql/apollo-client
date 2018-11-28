@@ -1,5 +1,3 @@
-import sourcemaps from 'rollup-plugin-sourcemaps';
-
 export const globals = {
   // Apollo
   'apollo-client': 'apollo.core',
@@ -29,14 +27,13 @@ export default (name, override = {}) => {
       format: 'umd',
       name,
       exports: 'named',
-      sourcemap: true,
       globals,
     },
     config.output,
   );
 
   config.plugins = config.plugins || [];
-  config.plugins.push(sourcemaps());
+
   return config;
 };
 

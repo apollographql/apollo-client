@@ -1,6 +1,8 @@
-.gitignore
-CHANGELOG.md
-design.md
-rollup.config.js
-tsconfig.json
-tslint.json
+# Ignore everything
+*
+
+# Keep which files?
+!lib/**/*
+
+!package.json
+!CHANGELOG.md

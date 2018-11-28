@@ -1,8 +1,11 @@
-.gitignore
-CHANGELOG.md
-DESIGN.md
-rollup.config.js
-tsconfig.*.json
-tslint.json
-AUTHORS
-ROADMAP.md
+# Ignore everything
+*
+
+# Keep which files?
+!lib/**/*
+
+!package.json
+!AUTHORS
+!CHANGELOG.md
+!ROADMAP.md
+!README.md

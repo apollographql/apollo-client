@@ -1,7 +1,10 @@
-.gitignore
-CHANGELOG.md
-rollup.*.js
-tsconfig.json
-tslint.json
-Gruntfile.js
-.travis.yml
+# Ignore everything
+*
+
+# Keep which files?
+!lib/**/*
+
+!package.json
+!LICENSE
+!CHANGELOG.md
+!README.md

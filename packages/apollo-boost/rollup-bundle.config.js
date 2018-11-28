@@ -1,4 +1,3 @@
-import sourcemaps from 'rollup-plugin-sourcemaps';
 import resolve from 'rollup-plugin-node-resolve';
 
 function onwarn(message) {
@@ -25,11 +24,11 @@ export default {
   output: {
     file: 'lib/bundle.umd.js',
     format: 'umd',
-    sourcemap: true,
+    sourcemap: false,
     name: 'apollo.boost',
     globals,
     exports: 'named',
   },
   external: Object.keys(globals),
-  plugins: [resolve(), sourcemaps()],
+  plugins: [resolve()],
 };

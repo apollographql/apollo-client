@@ -1530,7 +1530,6 @@ export class QueryManager<TStore> {
 
     const { resolvers } = this;
     const cache = this.dataStore.getCache();
-    const cacheData: any = cache.extract();
     const { query: queryFn, mutate: mutateFn } = this;
 
     resolver = (
@@ -1584,43 +1583,11 @@ export class QueryManager<TStore> {
         }
       }
 
-      // If a field value is found and it's a cache "type" node, we'll extract
-      // the cache ID, look the value up in the cache, then set that value
-      // as the resolved value.
-      if (normalNode && normalNode.type && normalNode.type === 'id') {
-        normalNode = cacheData[normalNode.id];
-      }
-      if (aliasedNode && aliasedNode.type && aliasedNode.type === 'id') {
-        aliasedNode = cacheData[aliasedNode.id];
-      }
-
-      // If we were able to find a matching field in the root value (or
-      // its children), return that value as the resolved value.
+      // If we were able to find a matching field in the root value, return
+      // that value as the resolved value.
       if (normalNode !== undefined || aliasedNode !== undefined) {
         return aliasedNode || normalNode;
       }
-
-      // Fallback to checking the cache for a matching field. If a simple
-      // value is found in the root of the cache, return that value. If a
-      // "type" node is found, get its ID, then find and return that value
-      // from the cache.
-      const rootQuery = cacheData['ROOT_QUERY'];
-      if (rootQuery) {
-        const cacheValue = rootQuery[field];
-        const result =
-          cacheValue && cacheValue.typename
-            ? cacheData[cacheValue.id]
-            : cacheValue;
-        return result;
-      }
-
-      // If we're here, the store has been reset. Let callers know that
-      // initializers will have to be re-run, to get the cache back into a
-      // default state.
-      throw new Error(
-        'The store has been reset and is in an empty state. Consider ' +
-          're-running your initializers to prep the cache with defaults.',
-      );
     };
 
     return resolver;

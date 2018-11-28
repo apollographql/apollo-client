@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "apollo-hexo-config": "1.0.8",
-    "chexo": "1.0.5",
+    "chexo": "1.0.7",
     "hexo": "3.8.0",
     "hexo-browsersync": "0.3.0",
     "hexo-prism-plus": "1.1.0",

@@ -549,10 +549,10 @@ function removeArgumentsFromOperationDefinition(
 
   let remove: boolean;
   definition.variableDefinitions = definition.variableDefinitions.filter(
-    definition => {
+    aDefinition => {
       const shouldKeep = !config.some(aConfig => {
-        if (aConfig.name === definition.variable.name.value) return true;
-        if (aConfig.test && aConfig.test(definition)) return true;
+        if (aConfig.name === aDefinition.variable.name.value) return true;
+        if (aConfig.test && aConfig.test(aDefinition)) return true;
         return false;
       });
 

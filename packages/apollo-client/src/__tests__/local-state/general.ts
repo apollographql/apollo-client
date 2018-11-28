@@ -236,10 +236,6 @@ describe('Cache manipulation', () => {
 
       cache.writeQuery({ query, data: { field: 'yo' } });
 
-      interface Data {
-        field: string;
-      }
-
       client
         .query({ query })
         .then(({ data }) => expect({ ...data }).toMatchObject({ field: 'yo' }));
@@ -933,7 +929,7 @@ describe('Reset/clear store', () => {
     },
   );
 
-  it(
+  xit(
     "should warn when an initializer created default value can't be found " +
       "in the cache, and a matching Query resolver can't be found",
     async done => {
@@ -1004,7 +1000,7 @@ describe('Reset/clear store', () => {
   );
 });
 
-describe('Combining client and server state', () => {
+describe('Combining client and server state/operations', () => {
   it('should merge remote and local state', done => {
     const query = gql`
       query list {
@@ -1166,5 +1162,181 @@ describe('Combining client and server state', () => {
     }
 
     done();
+  });
+
+  it('should handle a simple query with both server and client fields', done => {
+    const query = gql`
+      query GetCount {
+        count @client
+        lastCount
+      }
+    `;
+    const cache = new InMemoryCache();
+
+    const link = new ApolloLink(operation => {
+      expect(operation.operationName).toBe('GetCount');
+      return Observable.of({ data: { lastCount: 1 } });
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link,
+      initializers: {
+        count: () => 0,
+      },
+    });
+
+    client.watchQuery({ query }).subscribe({
+      next: ({ data }) => {
+        expect({ ...data }).toMatchObject({ count: 0, lastCount: 1 });
+        done();
+      },
+    });
+  });
+
+  it('should support nested quering of both server and client fields', done => {
+    const query = gql`
+      query GetUser {
+        user {
+          firstName @client
+          lastName
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const link = new ApolloLink(operation => {
+      expect(operation.operationName).toBe('GetUser');
+      return Observable.of({
+        data: { user: { lastName: 'Doe', __typename: 'User' } },
+      });
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link,
+      initializers: {
+        user() {
+          return {
+            __typename: 'User',
+            firstName: 'John',
+          };
+        },
+      },
+    });
+
+    client.watchQuery({ query }).subscribe({
+      next: ({ data }: any) => {
+        const { user } = data;
+        try {
+          expect(user).toMatchObject({
+            firstName: 'John',
+            lastName: 'Doe',
+            __typename: 'User',
+          });
+        } catch (e) {
+          done.fail(e);
+        }
+        done();
+      },
+    });
+  });
+
+  it('should combine both server and client mutations', done => {
+    const query = gql`
+      query SampleQuery {
+        count @client
+        user {
+          firstName
+        }
+      }
+    `;
+
+    const mutation = gql`
+      mutation SampleMutation {
+        incrementCount @client
+        updateUser(firstName: "Harry") {
+          firstName
+        }
+      }
+    `;
+
+    const counterQuery = gql`
+      {
+        count @client
+      }
+    `;
+
+    const userQuery = gql`
+      {
+        user {
+          firstName
+        }
+      }
+    `;
+
+    let watchCount = 0;
+    const link = new ApolloLink(operation => {
+      if (operation.operationName === 'SampleQuery') {
+        return Observable.of({
+          data: { user: { __typename: 'User', firstName: 'John' } },
+        });
+      }
+      if (operation.operationName === 'SampleMutation') {
+        return Observable.of({
+          data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
+        });
+      }
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link,
+      initializers: {
+        count: () => 0,
+      },
+      resolvers: {
+        Mutation: {
+          incrementCount: (_, __, { cache }) => {
+            const { count } = cache.readQuery({ query: counterQuery });
+            const data = { count: count + 1 };
+            cache.writeData({ data });
+            return null;
+          },
+        },
+      },
+    });
+
+    client.watchQuery({ query }).subscribe({
+      next: ({ data }: any) => {
+        if (watchCount === 0) {
+          expect(data.count).toEqual(0);
+          expect({ ...data.user }).toMatchObject({
+            __typename: 'User',
+            firstName: 'John',
+          });
+          watchCount += 1;
+          client.mutate({
+            mutation,
+            update: (proxy, { data: { updateUser } }) => {
+              proxy.writeQuery({
+                query: userQuery,
+                data: {
+                  user: { ...updateUser },
+                },
+              });
+            },
+          });
+        } else {
+          expect(data.count).toEqual(1);
+          expect({ ...data.user }).toMatchObject({
+            __typename: 'User',
+            firstName: 'Harry',
+          });
+          done();
+        }
+      },
+    });
   });
 });

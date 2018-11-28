@@ -153,10 +153,6 @@ describe('Basic resolver capabilities', () => {
     `;
 
     const serverQuery = gql`
-      fragment client on ClientData {
-        bar
-        __typename
-      }
       query Mixed {
         bar {
           baz

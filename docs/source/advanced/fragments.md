@@ -11,7 +11,7 @@ fragment NameParts on Person {
   lastName
 }
 
-query getPerson {
+query GetPerson {
   people(id: "7") {
     ...NameParts
     avatar(size: LARGE)
@@ -54,9 +54,9 @@ We put the fragment on `CommentsPage.fragments.comment` by convention, and use t
 
 When it's time to embed the fragment in a query, we simply use the `...Name` syntax in our GraphQL, and embed the fragment inside our query GraphQL document:
 
-```
+```js
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
       ...CommentsPageComment
     }
@@ -172,7 +172,7 @@ Will make the contents of `someFragment.graphql` available to the current file. 
 
 <h2 id="fragment-matcher">Fragments on unions and interfaces</h2>
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration.html).
 
 By default, Apollo Client doesn't require any knowledge of the GraphQL schema, which means it's very easy to set up and works with any server and supports even the largest schemas. However, as your usage of Apollo and GraphQL becomes more sophisticated, you may start using fragments on interfaces or unions. Here's an example of a query that uses fragments on an interface:
 
@@ -211,6 +211,7 @@ fetch(`${YOUR_API_HOST}/graphql`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
+    variables: {},
     query: `
       {
         __schema {

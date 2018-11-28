@@ -30,9 +30,16 @@ cp bundle.umd.js ../npm/ && cp bundle.umd.js.map ../npm/
 # Back to the root directory
 cd ../
 
-# Ensure a vanilla package.json before deploying so other tools do not interpret
-# The built output as requiring any further transformation.
-node -e "var package = require('./package.json'); \
+# Ensure a vanilla package.json before deploying so other tools do not
+# interpret the built output as requiring any further transformation.
+# Also make sure that "file:.." based dependency references are replaced
+# with actual version numbers.
+node -e "\
+  var apolloCachePackage = require('../apollo-cache/package.json'); \
+  var apolloCacheVersion = apolloCachePackage.version; \
+  var apolloUtilitiesPackage = require('../apollo-utilities/package.json'); \
+  var apolloUtilitiesVersion = apolloUtilitiesPackage.version; \
+  var package = require('./package.json'); \
   delete package.babel; \
   delete package.jest; \
   delete package.private; \
@@ -42,21 +49,17 @@ node -e "var package = require('./package.json'); \
   package.module = 'index.js'; \
   package['jsnext:main'] = 'index.js'; \
   package.typings = 'index.d.ts'; \
+  package.dependencies['apollo-cache'] = apolloCacheVersion; \
+  package.dependencies['apollo-utilities'] = apolloUtilitiesVersion; \
   var origVersion = 'local';
   var fs = require('fs'); \
   fs.writeFileSync('./npm/version.js', 'exports.version = \"' + package.version + '\"'); \
   fs.writeFileSync('./npm/package.json', JSON.stringify(package, null, 2)); \
   fs.writeFileSync('./src/version.ts', 'export const version = \'' + origVersion + '\';');
-  "
-
+"
 
 # Copy few more files to ./npm
 cp ../../README.md npm/
 cp ../../LICENSE npm/
-# please keep this in sync with the filename used in package.main
-# cp src/index.js.flow npm/
-# cp src/index.js.flow npm/apollo.umd.js.flow
-# flow typings
-# cp -R flow-typed npm/
 
 cd npm && npm publish

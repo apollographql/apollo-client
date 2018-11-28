@@ -9,6 +9,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
 import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
+import { stripSymbols } from 'apollo-utilities';
 
 import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
@@ -77,8 +78,10 @@ describe('Subscription lifecycles', () => {
         }
         if (count === 2) {
           expect(result.loading).toBe(false);
-          expect(result.data).toEqual(initialData);
-          expect(observable.currentResult().data).toEqual(initialData);
+          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(stripSymbols(observable.currentResult().data)).toEqual(
+            initialData,
+          );
 
           // step 2, recycle it
           observable.setOptions({
@@ -100,7 +103,7 @@ describe('Subscription lifecycles', () => {
             const recyled = resubscribe();
             const currentResult = recyled.currentResult();
             expect(recyled.isTornDown).toEqual(false);
-            expect(currentResult.data).toEqual(initialData);
+            expect(stripSymbols(currentResult.data)).toEqual(initialData);
             done();
           }, 10);
         }

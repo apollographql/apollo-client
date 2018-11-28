@@ -174,7 +174,7 @@ And you have two Views:
 
 The query for the Series Overview would look like the following:
 ```graphql
-query seriesOverviewData {
+query SeriesOverviewData {
   series {
     id
     title
@@ -186,7 +186,7 @@ query seriesOverviewData {
 
 The queries for the Series DetailView would look like this:
 ```graphql
-query seriesDetailData($seriesId: Int!) {
+query SeriesDetailData($seriesId: Int!) {
   oneSeries(id: $seriesId) {
     id
     title
@@ -197,7 +197,7 @@ query seriesDetailData($seriesId: Int!) {
 ```
 
 ```graphql
-query seriesEpisodes($seriesId: Int!) {
+query SeriesEpisodes($seriesId: Int!) {
   oneSeries(id: $seriesId) {
     id
     episodes {
@@ -234,7 +234,7 @@ const client = new ApolloClient({
 A component for the second view that implements the two queries could look like this:
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`
-  query seriesDetailData($seriesId: Int!) {
+  query SeriesDetailData($seriesId: Int!) {
     oneSeries(id: $seriesId) {
       id
       title
@@ -245,7 +245,7 @@ const QUERY_SERIES_DETAIL_VIEW = gql`
 `;
 
 const QUERY_SERIES_EPISODES = gql`
-  query seriesEpisodes($seriesId: Int!) {
+  query SeriesEpisodes($seriesId: Int!) {
     oneSeries(id: $seriesId) {
       id
       episodes {

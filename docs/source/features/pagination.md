@@ -67,7 +67,7 @@ const FeedData = ({ match }) => (
 
 [See this code in context in GitHunt.](https://github.com/apollographql/GitHunt-React/blob/e5d5dc3abcee7352f5d2e981ee559343e361d2e3/src/routes/FeedPage.js#L26-L68)
 
-As you can see, `fetchMore` is accessible through the render prop function. By default, `fetchMore` more will use the original `query`, so we just pass in new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.
+As you can see, `fetchMore` is accessible through the render prop function. By default, `fetchMore` will use the original `query`, so we just pass in new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.
 
 The above approach works great for limit/offset pagination. One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.
 
@@ -143,17 +143,15 @@ The following example specifies a request of 10 items at a time and that results
 const CommentsQuery = gql`
   query Comments($cursor: String) {
     Comments(first: 10, after: $cursor) {
-      comments {
-        edges {
-          node {
-            author
-            text
-          }
+      edges {
+        node {
+          author
+          text
         }
-        pageInfo {
-          endCursor
-          hasNextPage
-        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
       }
     }
   }
@@ -161,7 +159,7 @@ const CommentsQuery = gql`
 
 const CommentsWithData = () => (
   <Query query={CommentsQuery}>
-    {({ data: { comments }, loading, fetchMore }) => (
+    {({ data: { Comments: comments }, loading, fetchMore }) => (
       <Comments
         entries={comments || []}
         onLoadMore={() =>
@@ -196,7 +194,8 @@ const CommentsWithData = () => (
 
 <h2 id="connection-directive">The `@connection` directive</h2>
 When using paginated queries, results from accumulated queries can be hard to find in the store, as the parameters passed to the query are used to determine the default store key but are usually not known outside the piece of code that executes the query. This is problematic for imperative store updates, as there is no stable store key for updates to target. To direct Apollo Client to use a stable store key for paginated queries, you can use the optional `@connection` directive to specify a store key for parts of your queries. For example, if we wanted to have a stable store key for the feed query earlier, we could adjust our query to use the `@connection` directive:
-```
+
+```js
 const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
     currentUser {
@@ -210,4 +209,4 @@ const FEED_QUERY = gql`
 `;
 ```
 
-This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use of imperative store updates. In this example, we also use the `@connection` directive's optional `filter` argument, which allows us to include some arguments of the query in the store key. In this case, we want to include the `type` query argument in the store key, which results in multiple store values that accumulate pages from each type of feed.
+This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use for imperative store updates. In this example, we also use the `@connection` directive's optional `filter` argument, which allows us to include some arguments of the query in the store key. In this case, we want to include the `type` query argument in the store key, which results in multiple store values that accumulate pages from each type of feed.

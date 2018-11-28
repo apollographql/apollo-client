@@ -6,7 +6,7 @@ import {
   GraphQLRequest,
   execute,
 } from 'apollo-link';
-import { ExecutionResult } from 'graphql';
+import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
 import {
   isProduction,
@@ -14,12 +14,14 @@ import {
 } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
-import { ApolloQueryResult } from './core/types';
+import { ApolloQueryResult, OperationVariables } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 
 import { Observable } from './util/Observable';
 
 import {
+  QueryBaseOptions,
+  QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
@@ -33,7 +35,7 @@ import { version } from './version';
 
 export interface DefaultOptions {
   watchQuery?: ModifiableWatchQueryOptions;
-  query?: ModifiableWatchQueryOptions;
+  query?: QueryBaseOptions;
   mutate?: MutationBaseOptions;
 }
 
@@ -47,14 +49,9 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  name?: string;
+  version?: string;
 };
-
-const supportedDirectives = new ApolloLink(
-  (operation: Operation, forward: NextLink) => {
-    operation.query = removeConnectionDirectiveFromDocument(operation.query);
-    return forward(operation);
-  },
-);
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -66,7 +63,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
-  public queryManager: QueryManager<TCacheShape>;
+  public queryManager: QueryManager<TCacheShape> | undefined;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
@@ -76,6 +73,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
+  private clientAwareness: Record<string, string> = {};
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -92,8 +90,19 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
+   * @param defaultOptions Used to set application wide defaults for the
+   *                       options supplied to `watchQuery`, `query`, or
+   *                       `mutate`.
+   *
+   * @param name A custom name that can be used to identify this client, when
+   *             using Apollo client awareness features. E.g. "iOS".
+   *
+   * @param version A custom version that can be used to identify this client,
+   *                when using Apollo client awareness features. This is the
+   *                version of your client, which you may want to increment on
+   *                new builds. This is NOT the version of Apollo Client that
+   *                you are using.
    */
-
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
       link,
@@ -103,6 +112,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
+      name: clientAwarenessName,
+      version: clientAwarenessVersion,
     } = options;
 
     if (!link || !cache) {
@@ -114,6 +125,20 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         to help you get started.
       `);
     }
+
+    const supportedCache = new Map<DocumentNode, DocumentNode>();
+    const supportedDirectives = new ApolloLink(
+      (operation: Operation, forward: NextLink) => {
+        let result = supportedCache.get(operation.query);
+        if (!result) {
+          result = removeConnectionDirectiveFromDocument(operation.query);
+          supportedCache.set(operation.query, result);
+          supportedCache.set(result, result);
+        }
+        operation.query = result;
+        return forward(operation);
+      },
+    );
 
     // remove apollo-client supported directives
     this.link = supportedDirectives.concat(link);
@@ -167,7 +192,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
           typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
         ) {
           // Only for Chrome
-          if (window.navigator && window.navigator.userAgent.indexOf('Chrome') > -1) {
+          if (
+            window.navigator &&
+            window.navigator.userAgent &&
+            window.navigator.userAgent.indexOf('Chrome') > -1
+          ) {
             // tslint:disable-next-line
             console.debug(
               'Download the Apollo DevTools ' +
@@ -178,55 +207,74 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         }
       }
     }
+
     this.version = version;
+
+    if (clientAwarenessName) {
+      this.clientAwareness.name = clientAwarenessName;
+    }
+
+    if (clientAwarenessVersion) {
+      this.clientAwareness.version = clientAwarenessVersion;
+    }
   }
   /**
-   * This watches the results of the query according to the options specified and
+   * This watches the cache store of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
-   * receive updated results through a GraphQL observer.
+   * receive updated results through a GraphQL observer when the cache store changes.
    * <p /><p />
    * Note that this method is not an implementation of GraphQL subscriptions. Rather,
    * it uses Apollo's store in order to reactively deliver updates to your query results.
    * <p /><p />
-   * For example, suppose you call watchQuery on a GraphQL query that fetches an person's
-   * first name and last name and this person has a particular object identifer, provided by
+   * For example, suppose you call watchQuery on a GraphQL query that fetches a person's
+   * first and last name and this person has a particular object identifer, provided by
    * dataIdFromObject. Later, a different query fetches that same person's
-   * first and last name and his/her first name has now changed. Then, any observers associated
+   * first and last name and the first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.
+   * <p /><p />
+   * Note that if the cache does not change, the subscriber will *not* be notified.
    * <p /><p />
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
-   *
    */
-  public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
-    this.initQueryManager();
-
+  public watchQuery<T, TVariables = OperationVariables>(
+    options: WatchQueryOptions<TVariables>,
+  ): ObservableQuery<T> {
     if (this.defaultOptions.watchQuery) {
-      options = { ...this.defaultOptions.watchQuery, ...options };
+      options = {
+        ...this.defaultOptions.watchQuery,
+        ...options,
+      } as WatchQueryOptions<TVariables>;
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
-    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
+    if (
+      this.disableNetworkFetches &&
+      (options.fetchPolicy === 'network-only' ||
+        options.fetchPolicy === 'cache-and-network')
+    ) {
+      options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.queryManager.watchQuery<T>(options);
+    return this.initQueryManager().watchQuery<T>(options);
   }
 
   /**
-   * This resolves a single query according to the options specified and returns a
-   * {@link Promise} which is either resolved with the resulting data or rejected
-   * with an error.
+   * This resolves a single query according to the options specified and
+   * returns a {@link Promise} which is either resolved with the resulting data
+   * or rejected with an error.
    *
-   * @param options An object of type {@link WatchQueryOptions} that allows us to describe
-   * how this query should be treated e.g. whether it is a polling query, whether it should hit the
+   * @param options An object of type {@link QueryOptions} that allows us to
+   * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
-    this.initQueryManager();
-
+  public query<T, TVariables = OperationVariables>(
+    options: QueryOptions<TVariables>,
+  ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
-      options = { ...this.defaultOptions.query, ...options };
+      options = { ...this.defaultOptions.query, ...options } as QueryOptions<
+        TVariables
+      >;
     }
 
     if (options.fetchPolicy === 'cache-and-network') {
@@ -235,12 +283,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       );
     }
 
-    // XXX Overwriting options is probably not the best way to do this long term...
+    // XXX Overwriting options is probably not the best way to do this long
+    // term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options = { ...options, fetchPolicy: 'cache-first' } as WatchQueryOptions;
+      options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.queryManager.query<T>(options);
+    return this.initQueryManager().query<T>(options);
   }
 
   /**
@@ -250,24 +299,27 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(options: MutationOptions<T>): Promise<FetchResult<T>> {
-    this.initQueryManager();
-
+  public mutate<T, TVariables = OperationVariables>(
+    options: MutationOptions<T, TVariables>,
+  ): Promise<FetchResult<T>> {
     if (this.defaultOptions.mutate) {
-      options = { ...this.defaultOptions.mutate, ...options };
+      options = {
+        ...this.defaultOptions.mutate,
+        ...options,
+      } as MutationOptions<T, TVariables>;
     }
 
-    return this.queryManager.mutate<T>(options);
+    return this.initQueryManager().mutate<T>(options);
   }
 
   /**
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe<T=any>(options: SubscriptionOptions): Observable<T> {
-    this.initQueryManager();
-
-    return this.queryManager.startGraphQLSubscription(options);
+  public subscribe<T = any, TVariables = OperationVariables>(
+    options: SubscriptionOptions<TVariables>,
+  ): Observable<T> {
+    return this.initQueryManager().startGraphQLSubscription(options);
   }
 
   /**
@@ -275,9 +327,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * GraphQL query without making a network request. This method will start at
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
+   *
+   * @param optimistic Set to `true` to allow `readQuery` to return
+   * optimistic results. Is `false` by default.
    */
-  public readQuery<T>(options: DataProxy.Query): T | null {
-    return this.initProxy().readQuery<T>(options);
+  public readQuery<T, TVariables = OperationVariables>(
+    options: DataProxy.Query<TVariables>,
+    optimistic: boolean = false,
+  ): T | null {
+    return this.initProxy().readQuery<T>(options, optimistic);
   }
 
   /**
@@ -290,19 +348,27 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * with multiple fragments that represent what you are reading. If you pass
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
+   *
+   * @param optimistic Set to `true` to allow `readFragment` to return
+   * optimistic results. Is `false` by default.
    */
-  public readFragment<T>(options: DataProxy.Fragment): T | null {
-    return this.initProxy().readFragment<T>(options);
+  public readFragment<T, TVariables = OperationVariables>(
+    options: DataProxy.Fragment<TVariables>,
+    optimistic: boolean = false,
+  ): T | null {
+    return this.initProxy().readFragment<T>(options, optimistic);
   }
 
   /**
    * Writes some data in the shape of the provided GraphQL query directly to
-   * the store. This method will start at the root query. To start at a a
+   * the store. This method will start at the root query. To start at a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
-  public writeQuery(options: DataProxy.WriteQueryOptions): void {
+  public writeQuery<TData = any, TVariables = OperationVariables>(
+    options: DataProxy.WriteQueryOptions<TData, TVariables>,
+  ): void {
     const result = this.initProxy().writeQuery(options);
-    this.queryManager.broadcastQueries();
+    this.initQueryManager().broadcastQueries();
     return result;
   }
 
@@ -317,9 +383,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public writeFragment(options: DataProxy.WriteFragmentOptions): void {
+  public writeFragment<TData = any, TVariables = OperationVariables>(
+    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
+  ): void {
     const result = this.initProxy().writeFragment(options);
-    this.queryManager.broadcastQueries();
+    this.initQueryManager().broadcastQueries();
     return result;
   }
 
@@ -333,9 +401,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * Since you aren't passing in a query to check the shape of the data,
    * you must pass in an object that conforms to the shape of valid GraphQL data.
    */
-  public writeData(options: DataProxy.WriteDataOptions): void {
+  public writeData<TData = any>(
+    options: DataProxy.WriteDataOptions<TData>,
+  ): void {
     const result = this.initProxy().writeData(options);
-    this.queryManager.broadcastQueries();
+    this.initQueryManager().broadcastQueries();
     return result;
   }
 
@@ -350,27 +420,33 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * This initializes the query manager that tracks queries and the cache
    */
-  public initQueryManager() {
-    if (this.queryManager) return;
-
-    this.queryManager = new QueryManager({
-      link: this.link,
-      store: this.store,
-      queryDeduplication: this.queryDeduplication,
-      ssrMode: this.ssrMode,
-      onBroadcast: () => {
-        if (this.devToolsHookCb) {
-          this.devToolsHookCb({
-            action: {},
-            state: {
-              queries: this.queryManager.queryStore.getStore(),
-              mutations: this.queryManager.mutationStore.getStore(),
-            },
-            dataWithOptimisticResults: this.cache.extract(true),
-          });
-        }
-      },
-    });
+  public initQueryManager(): QueryManager<TCacheShape> {
+    if (!this.queryManager) {
+      this.queryManager = new QueryManager({
+        link: this.link,
+        store: this.store,
+        queryDeduplication: this.queryDeduplication,
+        ssrMode: this.ssrMode,
+        clientAwareness: this.clientAwareness,
+        onBroadcast: () => {
+          if (this.devToolsHookCb) {
+            this.devToolsHookCb({
+              action: {},
+              state: {
+                queries: this.queryManager
+                  ? this.queryManager.queryStore.getStore()
+                  : {},
+                mutations: this.queryManager
+                  ? this.queryManager.mutationStore.getStore()
+                  : {},
+              },
+              dataWithOptimisticResults: this.cache.extract(true),
+            });
+          }
+        },
+      });
+    }
+    return this.queryManager;
   }
 
   /**
@@ -398,10 +474,21 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       })
       .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
       .then(() => {
-        return this.queryManager
+        return this.queryManager && this.queryManager.reFetchObservableQueries
           ? this.queryManager.reFetchObservableQueries()
           : Promise.resolve(null);
       });
+  }
+
+  /**
+   * Remove all data from the store. Unlike `resetStore`, `clearStore` will
+   * not refetch any active queries.
+   */
+  public clearStore(): Promise<void | null> {
+    const { queryManager } = this;
+    return Promise.resolve().then(() =>
+      queryManager ? queryManager.clearStore() : Promise.resolve(null),
+    );
   }
 
   /**

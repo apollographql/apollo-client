@@ -1,32 +1,34 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.3.2-2",
+  "version": "2.4.7",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
   "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
+  "sideEffects": false,
   "scripts": {
+    "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
-    "test": "jest",
+    "test": "tsc -p tsconfig.test.json --noEmit && jest",
     "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
-    "filesize": "npm run build && npm run build:browser",
+    "filesize": "npm run minify",
     "type-check": "flow check",
     "build": "tsc",
     "build:benchmark": "tsc -p tsconfig.benchmark.json",
-    "build:browser": "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link --i apollo-link-dedup && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
     "watch": "tsc -w",
-    "bundle": "rollup -c rollup.config.js",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "postbuild": "npm run bundle",
-    "lint": "tslint --type-check -p tsconfig.json src/*.ts",
+    "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "testonly": "jest",
     "preanalyze": "npm run build",
-    "analyze": "webpack -p --config analyze/webpack.config.js"
+    "analyze": "webpack -p --config analyze/webpack.config.js",
+    "clean": "rm -rf coverage/* && rm -rf lib/*"
   },
   "repository": {
     "type": "git",
@@ -45,52 +47,23 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/zen-observable": "^0.5.3",
-    "apollo-cache": "^1.1.9-2",
+    "@types/zen-observable": "^0.8.0",
+    "apollo-cache": "file:../apollo-cache",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "^1.0.0",
-    "apollo-utilities": "1.0.21-0",
+    "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
     "zen-observable": "^0.8.0"
   },
   "peerDependencies": {
-    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"
-  },
-  "devDependencies": {
-    "@types/benchmark": "1.0.31",
-    "@types/graphql": "0.12.7",
-    "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "21.1.10",
-    "@types/lodash": "4.14.108",
-    "@types/node": "8.10.15",
-    "apollo-cache-inmemory": "^1.2.2-2",
-    "benchmark": "2.1.4",
-    "browserify": "15.2.0",
-    "bundlesize": "0.17.0",
-    "danger": "1.1.0",
-    "flow-bin": "0.72.0",
-    "github": "12.1.0",
-    "graphql": "0.13.2",
-    "graphql-tag": "2.9.2",
-    "isomorphic-fetch": "2.2.1",
-    "jest": "20.0.4",
-    "lint-staged": "6.1.0",
-    "lodash": "4.17.10",
-    "rollup": "0.58.2",
-    "rxjs": "5.5.10",
-    "ts-jest": "20.0.14",
-    "tslint": "5.10.0",
-    "typescript": "2.4.2",
-    "uglify-js": "3.3.25",
-    "webpack": "3.12.0",
-    "webpack-bundle-analyzer": "2.12.0"
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "optionalDependencies": {
-    "@types/async": "2.0.49"
+    "@types/async": "2.0.50"
   },
   "jest": {
     "transform": {
-      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      ".(ts|tsx)": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
     "moduleFileExtensions": [
@@ -101,6 +74,7 @@
     ],
     "setupFiles": [
       "<rootDir>/scripts/tests.js"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

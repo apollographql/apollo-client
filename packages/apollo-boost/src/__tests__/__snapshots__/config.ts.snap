@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`config warns about unsupported parameter 1`] = `
+Array [
+  Array [
+    "ApolloBoost was initialized with unsupported options: link",
+  ],
+]
+`;

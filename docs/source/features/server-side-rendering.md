@@ -56,11 +56,11 @@ In order to render your application on the server, you need to handle a HTTP req
 
 We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
 
-1. When [creating an Apollo Client instance](../basics/setup.html) on the server, you'll need to set up you network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
+1. When [creating an Apollo Client instance](../basics/setup.html) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
 
 2. Since you only want to fetch each query result once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid repeated force-fetching.
 
-3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](auth.html).
+3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](../recipes/authentication.html).
 
 Once you put that all together, you'll end up with initialization code that looks like this:
 
@@ -209,7 +209,7 @@ function Html({ content, state }) {
   return (
     <html>
       <body>
-        <div id="content" dangerouslySetInnerHTML={{ __html: content }} />
+        <div id="root" dangerouslySetInnerHTML={{ __html: content }} />
         <script dangerouslySetInnerHTML={{
           __html: `window.__APOLLO_STATE__=${JSON.stringify(state).replace(/</g, '\\u003c')};`,
         }} />

@@ -9,6 +9,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
 import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
+import { stripSymbols } from 'apollo-utilities';
 
 import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
@@ -62,13 +63,13 @@ describe('Live queries', () => {
       next: result => {
         count++;
         if (count === 1) {
-          expect(result.data).toEqual(initialData);
+          expect(stripSymbols(result.data)).toEqual(initialData);
           setTimeout(() => {
             link.simulateResult({ result: { data: laterData } });
           }, 10);
         }
         if (count === 2) {
-          expect(result.data).toEqual(laterData);
+          expect(stripSymbols(result.data)).toEqual(laterData);
           done();
         }
       },
@@ -129,7 +130,7 @@ describe('Live queries', () => {
       const sub = observable.subscribe(result => {
         count++;
         if (count === 2) {
-          expect(result.data).toEqual(laterData);
+          expect(stripSymbols(result.data)).toEqual(laterData);
           done();
         }
       });
@@ -148,7 +149,7 @@ describe('Live queries', () => {
     const sub = observable.subscribe(result => {
       count++;
       if (count === 1) {
-        expect(result.data).toEqual(initialData);
+        expect(stripSymbols(result.data)).toEqual(initialData);
 
         // data1 => unsubscribe
         sub.unsubscribe();
@@ -213,7 +214,7 @@ describe('Live queries', () => {
       const sub = observable.subscribe(result => {
         count++;
         if (count === 2) {
-          expect(result.data).toEqual(laterData);
+          expect(stripSymbols(result.data)).toEqual(laterData);
           sub.unsubscribe();
           expect(cleanedupTimes).toBe(2);
           expect(createNetworkTimes).toBe(2);
@@ -235,7 +236,7 @@ describe('Live queries', () => {
     const sub = observable.subscribe(result => {
       count++;
       if (count === 1) {
-        expect(result.data).toEqual(initialData);
+        expect(stripSymbols(result.data)).toEqual(initialData);
 
         // data1 => unsubscribe
         sub.unsubscribe();

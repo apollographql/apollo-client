@@ -121,11 +121,11 @@ const query = gql`
 `;
 ```
 
-For more information about using fragments, checkout the [guide](../features/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
+For more information about using fragments, checkout the [guide](../advanced/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
 
 <h2 id="connecting-data">Requesting data</h2>
 
-Apollo Client makes it super easy to request data using GraphQL. You can [read](./queries.html), [update](./mutations.html), and even [subscribe](../features/subscriptions.html) to whatever information your app needs using the client directly, or integrating it with your components.
+Apollo Client makes it super easy to request data using GraphQL. You can [read](./queries.html), [update](./mutations.html), and even [subscribe](../advanced/subscriptions.html) to whatever information your app needs using the client directly, or integrating it with your components.
 
 <h3 id="basic-operations">Basic Operations</h3>
 If you want to see how easy it is to fetch data from a GraphQL server with Apollo, you can use the `query` method on your client. It is as easy as this:
@@ -173,8 +173,8 @@ At this point you are ready to start building something with Apollo! Checkout th
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.
 
 - `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more information about creating links, read the [docs](/docs/link).
-- `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more information read the [cache docs](./caching.html).
-- `ssrMode`: When using the client for [server side rendering](../recipes/server-side-rendering.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
+- `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more information read the [cache docs](../advanced/caching.html).
+- `ssrMode`: When using the client for [server side rendering](../features/server-side-rendering.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
 - `ssrForceFetchDelay`: determines the time interval before Apollo Client force fetchs queries after a server side render.
 - `connectToDevTools`: This argument allows the [Apollo Client Devtools](../features/developer-tooling.html) to connect to your application's Apollo Client. You can set this to be `true` to use the tools in production (they are on by default in dev mode).
 - `queryDeduplication`: If set to false, this argument will force a query to still be sent to the server even if a query with identical parameters (query, variables, operationName) is already in flight.
@@ -279,7 +279,7 @@ The `graphql()` function will only be able to provide access to your GraphQL dat
 
 [`ApolloClient`]: #ApolloClient
 
-The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](./queries.html), a [mutation](./mutations.html), or a [subscription](../features/subscriptions.html). Go to the appropriate API documentation for more information about the functionality and available options for each type.
+The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](./queries.html), a [mutation](./mutations.html), or a [subscription](../advanced/subscriptions.html). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
 Before we look into the specific behaviors of each operation, let us look at the `config` object.
 
@@ -485,12 +485,12 @@ import { compose } from 'react-apollo';
 
 For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`](#graphql), [`withApollo()`](#withApollo), or [Redux `connect()`][] enhancers. This should clean up your code when you use multiple enhancers. [Redux][] also exports a `compose` function, and so does [Recompose][] so you may choose to use the function from whichever library feels most appropriate.
 
-An important note is that `compose()` executes the last enhancer _first_ and works its way backwards through the list of enhancers. To illustrate calling three functions like this: `funcC(funcB(funcA(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`. If this does not make sense to you consider using [`flowRight()` from Lodash][] which otherwise has the same behavior.
+Important to note is that `compose()` executes the last enhancer _first_, working its way backwards through the list of enhancers. To illustrate, calling three functions like  `funcC(funcB(funcA(component)))` is equivalent to calling `compose()` like `compose(funcC, funcB, funcA)(component)`. For more information, see the [Lodash `flowRight()`] docs (as `compose` is just an alias for `flowRight`).
 
 [Redux `connect()`]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
 [Redux]: http://redux.js.org/
 [Recompose]: https://github.com/acdlite/recompose
-[`flowRight()` from Lodash]: https://lodash.com/docs/4.17.4#flowRight
+[Lodash `flowRight()`]: https://lodash.com/docs/4.17.4#flowRight
 
 **Example:**
 

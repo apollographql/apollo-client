@@ -9,7 +9,7 @@ GraphQL subscriptions are a way to push data from the server to the clients that
 
 A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration.html).
 
 <h2 id="overview">Overview</h2>
 
@@ -65,7 +65,7 @@ Let's look at how to add support for this transport to Apollo Client.
 First, install the WebSocket Apollo Link (`apollo-link-ws`) from npm:
 
 ```shell
-npm install --save apollo-link-ws
+npm install --save apollo-link-ws subscriptions-transport-ws
 ```
 
 Then, initialize a GraphQL subscriptions transport link:
@@ -157,8 +157,12 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
   <dt>`variables`: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your subscription needs to execute</dd>
-  <dt>`shouldResubscribe`: boolean</dt>
-  <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
+  <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>
+  <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
+  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
+  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
 </dl>
 
 <h3 id="render-prop">Render prop function</h3>

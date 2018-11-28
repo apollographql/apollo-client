@@ -8,18 +8,20 @@ import {
 
 import { print } from 'graphql/language/printer';
 
+interface MockApolloLink extends ApolloLink {
+  operation?: Operation;
+}
+
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
 export function mockSingleLink(
   ...mockedResponses: MockedResponse[]
-): ApolloLink {
+): MockApolloLink {
   return new MockLink(mockedResponses);
 }
 
-export function mockObservableLink(
-  mockedSubscription: MockedSubscription,
-): MockSubscriptionLink {
-  return new MockSubscriptionLink(mockedSubscription);
+export function mockObservableLink(): MockSubscriptionLink {
+  return new MockSubscriptionLink();
 }
 
 export interface MockedResponse {
@@ -40,6 +42,7 @@ export interface MockedSubscription {
 }
 
 export class MockLink extends ApolloLink {
+  public operation: Operation;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(mockedResponses: MockedResponse[]) {
@@ -60,6 +63,7 @@ export class MockLink extends ApolloLink {
   }
 
   public request(operation: Operation) {
+    this.operation = operation;
     const key = requestToKey(operation);
     const responses = this.mockedResponsesByKey[key];
     if (!responses || responses.length === 0) {
@@ -112,6 +116,7 @@ export class MockSubscriptionLink extends ApolloLink {
         unsubscribe: () => {
           this.unsubscribers.forEach(x => x());
         },
+        closed: false
       };
     });
   }
@@ -125,11 +130,11 @@ export class MockSubscriptionLink extends ApolloLink {
     }, result.delay || 0);
   }
 
-  public onSetup(listener): void {
+  public onSetup(listener: any): void {
     this.setups = this.setups.concat([listener]);
   }
 
-  public onUnsubscribe(listener): void {
+  public onUnsubscribe(listener: any): void {
     this.unsubscribers = this.unsubscribers.concat([listener]);
   }
 }

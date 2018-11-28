@@ -1,9 +1,9 @@
-import GithubAPI from 'github';
+import GithubAPI from '@octokit/rest';
 import { bsuite, groupPromises, log } from './util';
 import { thresholds } from './thresholds';
 
 export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
-  const github = eval('new require("github")()') as GithubAPI;
+  const github = eval('new require("@octokit/rest")()') as GithubAPI;
   const commitSHA =
     process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT || '';
 
@@ -26,29 +26,29 @@ export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
   Promise.all(groupPromises)
     .then(() => {
       log('Running benchmarks.');
-      return new Promise<{ [name: string]: { mean: number; moe: number } }>(
-        resolve => {
-          const retMap: { [name: string]: { mean: number; moe: number } } = {};
+      return new Promise<{
+        [name: string]: { mean: number; moe: number };
+      }>(resolve => {
+        const retMap: { [name: string]: { mean: number; moe: number } } = {};
 
-          bsuite
-            .on('error', (error: any) => {
-              log('Error: ', error);
-            })
-            .on('cycle', (event: any) => {
-              retMap[event.target.name] = {
-                mean: event.target.stats.mean * 1000,
-                moe: event.target.stats.moe * 1000,
-              };
-              log('Mean time in ms: ', event.target.stats.mean * 1000);
-              log(String(event.target));
-              log('');
-            })
-            .on('complete', (_: any) => {
-              resolve(retMap);
-            })
-            .run({ async: false });
-        },
-      );
+        bsuite
+          .on('error', (error: any) => {
+            log('Error: ', error);
+          })
+          .on('cycle', (event: any) => {
+            retMap[event.target.name] = {
+              mean: event.target.stats.mean * 1000,
+              moe: event.target.stats.moe * 1000,
+            };
+            log('Mean time in ms: ', event.target.stats.mean * 1000);
+            log(String(event.target));
+            log('');
+          })
+          .on('complete', (_: any) => {
+            resolve(retMap);
+          })
+          .run({ async: false });
+      });
     })
     .then(res => {
       let message = '';

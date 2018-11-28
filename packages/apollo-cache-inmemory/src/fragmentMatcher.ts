@@ -29,8 +29,12 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     idValue: IdValue,
     typeCondition: string,
     context: ReadStoreContext,
-  ): boolean {
+  ): boolean | 'heuristic' {
     const obj = context.store.get(idValue.id);
+
+    if (!obj && idValue.id === 'ROOT_QUERY') {
+      return true;
+    }
 
     if (!obj) {
       return false;
@@ -59,8 +63,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
         }
       }
 
-      context.returnPartialData = true;
-      return true;
+      return 'heuristic';
     }
 
     if (obj.__typename === typeCondition) {
@@ -73,15 +76,15 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
     // difference, so we warn the user, but still try to match it (backcompat).
     warnOnceInDevelopment(
-      `You are using the simple (heuristic) fragment matcher, but your queries contain union or interface types.
-     Apollo Client will not be able to able to accurately map fragments.` +
-        `To make this error go away, use the IntrospectionFragmentMatcher as described in the docs: ` +
-        `https://www.apollographql.com/docs/react/recipes/fragment-matching.html`,
+      'You are using the simple (heuristic) fragment matcher, but your ' +
+        'queries contain union or interface types. Apollo Client will not be ' +
+        'able to accurately map fragments. To make this error go away, use ' +
+        'the `IntrospectionFragmentMatcher` as described in the docs: ' +
+        'https://www.apollographql.com/docs/react/recipes/fragment-matching.html',
       'error',
     );
 
-    context.returnPartialData = true;
-    return true;
+    return 'heuristic';
   }
 }
 

@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GraphQL Subscriptions should throw an error if the result has errors on it 1`] = `[Error: GraphQL error: This is an error]`;
+
+exports[`GraphQL Subscriptions should throw an error if the result has errors on it 2`] = `[Error: GraphQL error: This is an error]`;

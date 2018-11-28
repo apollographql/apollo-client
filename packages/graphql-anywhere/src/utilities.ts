@@ -2,7 +2,10 @@ import { DocumentNode } from 'graphql';
 
 import { graphql } from './graphql';
 
-export function filter(doc: DocumentNode, data: any): any {
+export function filter<FD = any, D extends FD = any>(
+  doc: DocumentNode,
+  data: D,
+): FD {
   const resolver = (
     fieldName: string,
     root: any,
@@ -13,7 +16,9 @@ export function filter(doc: DocumentNode, data: any): any {
     return root[info.resultKey];
   };
 
-  return graphql(resolver, doc, data);
+  return Array.isArray(data)
+    ? data.map(dataObj => graphql(resolver, doc, dataObj))
+    : graphql(resolver, doc, data);
 }
 
 // TODO: we should probably make check call propType and then throw,
@@ -29,7 +34,7 @@ export function check(doc: DocumentNode, data: any): void {
     info: any,
   ) => {
     if (!{}.hasOwnProperty.call(root, info.resultKey)) {
-      throw new Error(`${info.resultKey} missing on ${root}`);
+      throw new Error(`${info.resultKey} missing on ${JSON.stringify(root)}`);
     }
     return root[info.resultKey];
   };

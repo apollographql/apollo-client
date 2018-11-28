@@ -7,6 +7,8 @@ export {
   ApolloCurrentResult,
 } from './core/ObservableQuery';
 export {
+  QueryBaseOptions,
+  QueryOptions,
   WatchQueryOptions,
   MutationOptions,
   SubscriptionOptions,

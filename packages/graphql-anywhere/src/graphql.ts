@@ -75,7 +75,6 @@ export type ExecOptions = {
  * but below is an exported alternative that is async.
  * In the 5.0 version, this will be the only export again
  * and it will be async
- * 
  */
 export function graphql(
   resolver: Resolver,

@@ -22,15 +22,3 @@
 
 - [ ] If this PR is a new feature, please reference an issue where a consensus about the design was reached (not necessary for small changes)
 - [ ] Make sure all of the significant new logic is covered by tests
-- [ ] If this was a change that affects the external API used in GitHunt-React, update GitHunt-React and post a link to the PR in the discussion.
-
-<!--**Pull Request Labels**
-
-While not necessary, you can help organize our pull requests by labeling this issue when you open it.  To add a label automatically, simply [x] mark the appropriate box below:
-
-- [ ] feature
-- [ ] blocking
-- [ ] docs
-
-To add a label not listed above, simply place `/label another-label-name` on a line by itself.
--->

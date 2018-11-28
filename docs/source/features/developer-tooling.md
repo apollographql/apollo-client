@@ -33,7 +33,7 @@ Make requests against either your app’s GraphQL server or the Apollo Client ca
 
 ![Store Inspector](../assets/devtools/apollo-client-devtools/apollo-devtools-store.png)
 
-View the state of your client-side cache as a tree and inspect every object inside. Visualize the [mental model](https://dev-blog.apollodata.com/the-concepts-of-graphql-bc68bd819be3) of the Apollo cache. Search for specific keys and values in the store and see the path to those keys highlighted.
+View the state of your client-side cache as a tree and inspect every object inside. Visualize the [mental model](https://blog.apollographql.com/the-concepts-of-graphql-bc68bd819be3) of the Apollo cache. Search for specific keys and values in the store and see the path to those keys highlighted.
 
 ![Watched Query Inspector](../assets/devtools/apollo-client-devtools/apollo-devtools-queries.png)
 

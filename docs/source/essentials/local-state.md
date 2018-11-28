@@ -62,9 +62,9 @@ import Link from './Link';
 
 const FilterLink = ({ filter, children }) => (
   <ApolloConsumer>
-    {cache => (
+    {client => (
       <Link
-        onClick={() => cache.writeData({ data: { visibilityFilter: filter } })}
+        onClick={() => client.writeData({ data: { visibilityFilter: filter } })}
       >
         {children}
       </Link>
@@ -73,7 +73,7 @@ const FilterLink = ({ filter, children }) => (
 );
 ```
 
-The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [new React context API](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md). From the client instance, you can directly call `cache.writeData` and pass in the data you'd like to write to the cache.
+The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [new React context API](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md). From the client instance, you can directly call `client.writeData` and pass in the data you'd like to write to the cache.
 
 What if we want to immediately subscribe to the data we just wrote to the cache? Let's create an `active` property on the link that marks the link's filter as active if it's the same as the current `visibilityFilter` in the cache. To immediately subscribe to a client-side mutation, wrap it in a `Query` component instead of an `ApolloConsumer` component. The `Query` component also has the client instance exposed on its render prop function.
 
@@ -90,7 +90,7 @@ const GET_VISIBILITY_FILTER = gql`
   }
 `;
 
-// Remember to set a initial value for visibilityFilter with defaults
+// Remember to set an initial value for visibilityFilter with defaults
 const FilterLink = ({ filter, children }) => (
   <Query query={GET_VISIBILITY_FILTER}>
     {({ data, client }) => (
@@ -178,7 +178,7 @@ const Todo = ({ id, completed, text }) => (
 
 First, we create a GraphQL mutation that takes the todo's id we want to toggle as its only argument. We indicate that this is a local mutation by marking the field with a `@client` directive. This will tell `apollo-link-state` to call our `toggleTodo` mutation resolver in order to resolve the field. Then, we create a `Mutation` component just as we would for a remote mutation. Finally, pass in your GraphQL mutation to your component and trigger it from within the UI in your render prop function.
 
-If you'd like to see an example of a local mutation adding a todo to a list, check out the `TodoList` component in the [CodeSandbox](https://codesandbox.io/s/github/apollographql/apollo-link-state/tree/master/examples/todo).
+If you'd like to see an example of a local mutation adding a todo to a list, check out the `TodoForm` component in the [CodeSandbox](https://codesandbox.io/s/github/apollographql/apollo-link-state/tree/master/examples/todo).
 
 <h2 id="queries">Querying local data</h2>
 
@@ -271,7 +271,7 @@ First, let's look at an example of a mixed query. The `images` field comes from 
 
 ```js
 const GET_DOG = gql`
-  query getDogByBreed($breed: String!) {
+  query GetDogByBreed($breed: String!) {
     dog(breed: $breed) {
       images {
         url
@@ -322,11 +322,11 @@ const Detail = ({ match: { params: { breed, id } } }) => (
 );
 ```
 
-<h2 id="queries">Next steps</h2>
+<h2 id="next-steps">Next steps</h2>
 
 Managing your local data with Apollo Client can simplify your state management code since the Apollo cache is your single source of truth for all data in your application. If you'd like to learn more about `apollo-link-state`, check out:
 
 - [`apollo-link-state` docs](/docs/link/links/state.html): Dive deeper into the concepts we just learned, such as resolvers and mixed queries, by taking a look at the `apollo-link-state` docs.
-- [The future of state management](https://dev-blog.apollodata.com/the-future-of-state-management-dd410864cae2): Read about our vision for the future of state management with GraphQL in the `apollo-link-state` announcement post.
+- [The future of state management](https://blog.apollographql.com/the-future-of-state-management-dd410864cae2): Read about our vision for the future of state management with GraphQL in the `apollo-link-state` announcement post.
 - [Tutorial video by Sara Vieira](https://youtu.be/2RvRcnD8wHY): Check out this tutorial video by Sara Vieira if you'd like a step-by-step walkthrough on building an app with `apollo-link-state`.
 

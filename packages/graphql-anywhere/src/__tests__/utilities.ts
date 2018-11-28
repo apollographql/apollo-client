@@ -33,9 +33,51 @@ describe('utilities', () => {
         square: 'abc',
       },
     };
+    const arrayData = [
+      {
+        alias: 'Bob',
+        name: 'Wrong',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+          circle: 'def',
+          triangle: 'qwe',
+        },
+      },
+      {
+        alias: 'Tom',
+        name: 'Right',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+          circle: 'bnm',
+          triangle: 'uio',
+        },
+      },
+    ];
+    const filteredArrayData = [
+      {
+        alias: 'Bob',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+        },
+      },
+      {
+        alias: 'Tom',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+        },
+      },
+    ];
 
     it('can filter data', () => {
       expect(filter(doc, data)).toEqual(filteredData);
+    });
+
+    it('can filter an array of data', () => {
+      expect(filter(doc, arrayData)).toEqual(filteredArrayData);
     });
 
     it('can check matching data', () => {
@@ -90,9 +132,51 @@ describe('utilities', () => {
         square: 'abc',
       },
     };
+    const arrayData = [
+      {
+        alias: 'Bob',
+        name: 'Wrong',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+          circle: 'def',
+          triangle: 'qwe',
+        },
+      },
+      {
+        alias: 'Tom',
+        name: 'Right',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+          circle: 'bnm',
+          triangle: 'uio',
+        },
+      },
+    ];
+    const filteredArrayData = [
+      {
+        alias: 'Bob',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+        },
+      },
+      {
+        alias: 'Tom',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+        },
+      },
+    ];
 
     it('can filter data', () => {
       expect(filter(doc, data)).toEqual(filteredData);
+    });
+
+    it('can filter an array of data', () => {
+      expect(filter(doc, arrayData)).toEqual(filteredArrayData);
     });
 
     it('can check matching data', () => {
@@ -147,9 +231,51 @@ describe('utilities', () => {
         square: 'abc',
       },
     };
+    const arrayData = [
+      {
+        alias: 'Bob',
+        name: 'Wrong',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+          circle: 'def',
+          triangle: 'qwe',
+        },
+      },
+      {
+        alias: 'Tom',
+        name: 'Right',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+          circle: 'bnm',
+          triangle: 'uio',
+        },
+      },
+    ];
+    const filteredArrayData = [
+      {
+        alias: 'Bob',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+        },
+      },
+      {
+        alias: 'Tom',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+        },
+      },
+    ];
 
     it('can filter data', () => {
       expect(filter(doc, data)).toEqual(filteredData);
+    });
+
+    it('can filter an array of data', () => {
+      expect(filter(doc, arrayData)).toEqual(filteredArrayData);
     });
 
     it('can check matching data', () => {
@@ -208,9 +334,53 @@ describe('utilities', () => {
         circle: 'def',
       },
     };
+    const arrayData = [
+      {
+        alias: 'Bob',
+        name: 'Wrong',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+          circle: 'def',
+          triangle: 'qwe',
+        },
+      },
+      {
+        alias: 'Tom',
+        name: 'Right',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+          circle: 'bnm',
+          triangle: 'uio',
+        },
+      },
+    ];
+    const filteredArrayData = [
+      {
+        alias: 'Bob',
+        height: 1.89,
+        avatar: {
+          square: 'abc',
+          circle: 'def',
+        },
+      },
+      {
+        alias: 'Tom',
+        height: 1.77,
+        avatar: {
+          square: 'jkl',
+          circle: 'bnm',
+        },
+      },
+    ];
 
     it('can filter data', () => {
       expect(filter(doc, data)).toEqual(filteredData);
+    });
+
+    it('can filter an array of data', () => {
+      expect(filter(doc, arrayData)).toEqual(filteredArrayData);
     });
 
     it('can check matching data', () => {
@@ -227,6 +397,14 @@ describe('utilities', () => {
         check(doc, {
           name: 'Wrong',
         });
+      }).toThrow();
+
+      expect(() => {
+        check(doc, [
+          {
+            name: 'Wrong',
+          },
+        ]);
       }).toThrow();
 
       expect(() => {

@@ -9,7 +9,7 @@ As your application grows, you may find it helpful to include a type system to a
 
 These docs assume you already have TypeScript configured in your project, if not start [here](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide).
 
-The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can even generate TypeScript definitions automaticaly using a tool like [apollo-codegen](https://github.com/apollographql/apollo-codegen). In these docs however, we will be writing result types manually.
+The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can even generate TypeScript definitions automatically using a tool like [apollo-codegen](https://github.com/apollographql/apollo-codegen). In these docs however, we will be writing result types manually.
 
 <h2 id="typing-components">Typing the Component APIs</h2>
 
@@ -29,7 +29,7 @@ interface Variables {
 class AllPeopleQuery extends Query<Data, Variables> {}
 ```
 
-Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables requried for it to work! Everything else is handled by React Apollo's robust type definitions.
+Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables required for it to work! Everything else is handled by React Apollo's robust type definitions.
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
@@ -72,7 +72,10 @@ type Variables = {
   episode: string;
 };
 
-// note the first parameter is empty here, we will exaplain that below
+// Note that the first parameter here is an empty Object, which means we're
+// not checking incoming props for type safety in this example. The next
+// example (in the "Options" section) shows how the type safety of incoming
+// props can be ensured.
 const withCharacter = graphql<{}, Response, Variables>(HERO_QUERY, {
   options: () => ({
     variables: { episode: "JEDI" }
@@ -141,7 +144,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
-This is expecially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
+This is especially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
 
 ```javascript
 import React from "react";
@@ -278,7 +281,7 @@ If you are using the `name` property in the configuration of the `graphql` wrapp
 ```javascript
 import { NamedProps, QueryProps } from 'react-apollo';
 
-export const withCharacter = graphql<Response, InputProps, Prop>(HERO_QUERY, {
+export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY, {
   name: 'character',
   props: ({ character, ownProps }: NamedProps<{ character: QueryProps & Response }, Props) => ({
     ...character,
@@ -289,4 +292,3 @@ export const withCharacter = graphql<Response, InputProps, Prop>(HERO_QUERY, {
   })
 });
 ```
-

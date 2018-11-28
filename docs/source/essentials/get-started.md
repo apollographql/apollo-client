@@ -12,15 +12,14 @@ If you're an advanced user who would like to configure Apollo Client from scratc
 First, let's install some packages!
 
 ```bash
-npm install apollo-boost react-apollo graphql-tag graphql --save
+npm install apollo-boost react-apollo graphql --save
 ```
 
 - `apollo-boost`: Package containing everything you need to set up Apollo Client
 - `react-apollo`: View layer integration for React
-- `graphql-tag`: Necessary for parsing your GraphQL queries
 - `graphql`: Also parses your GraphQL queries
 
-> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/add-react-to-a-new-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
+> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/create-a-new-react-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this Launchpad](https://launchpad.graphql.com/w5xlvm3vzz) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
 
 <h2 id="creating-client">Create a client</h2>
 
@@ -36,10 +35,12 @@ const client = new ApolloClient({
 });
 ```
 
-That's it! Now your client is ready to start fetching data. Before we hook up Apollo Client to React, let's try sending a query with plain JavaScript first. In the same `index.js` file, try calling `client.query()`. Remember to import the `gql` function for parsing your query string into a query document.
+That's it! Now your client is ready to start fetching data. Before we hook up Apollo Client to React, let's try sending a query with plain JavaScript first. In the same `index.js` file, try calling `client.query()`. Remember to first import the `gql` function for parsing your query string into a query document.
 
 ```js
 import gql from "graphql-tag";
+
+...
 
 client
   .query({
@@ -158,6 +159,14 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   <dd>An object representing your configuration for `apollo-link-state`. This is useful if you would like to use the Apollo cache for local state management. Learn more in our [quick start](/docs/link/links/state.html#start).</dd>
   <dt>`cacheRedirects`: Object</dt>
   <dd>A map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](../features/performance.html#cache-redirects).</dd>
+  <dt>`credentials`: string</dt>
+  <dd>Is set to `same-origin` by default. This option can be used to indicate whether the user agent should send cookies with requests. See [Request.credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) for more details.</dd>
+  <dt>`headers`: Object</dt>
+  <dd>Header key/value pairs to pass along with the request.</dd>
+  <dt>`fetch`: GlobalFetch['fetch']</dt>
+  <dd>A [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) compatible API for making a request.</dd>  
+  <dt>`cache`: ApolloCache</dt>
+  <dd>A custom instance of `ApolloCache` to be used. The default value is `InMemoryCache` from `apollo-cache-inmemory`. This option is quite useful for using a custom cache with `apollo-cache-persist`.</dd>
 </dl>
 
 <h2 id="next-steps">Next steps</h2>
@@ -167,4 +176,3 @@ Now that you've learned how to fetch data with Apollo Client, you're ready to di
 - [Queries](./queries.html): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
 - [Mutations](./mutations.html): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
 - [Apollo Client API](../api/apollo-client.html): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Visit the API reference for a full list of options.
-

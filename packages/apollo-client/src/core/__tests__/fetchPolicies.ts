@@ -8,6 +8,7 @@ import {
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,
 } from 'apollo-cache-inmemory';
+import { stripSymbols } from 'apollo-utilities';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../watchQueryOptions';
@@ -129,7 +130,7 @@ describe('network-only', () => {
       client
         .query({ fetchPolicy: 'network-only', query })
         .then(actualResult => {
-          expect(actualResult.data).toEqual(result);
+          expect(stripSymbols(actualResult.data)).toEqual(result);
           expect(called).toBe(4);
         }),
     );
@@ -151,7 +152,7 @@ describe('network-only', () => {
 
     return client.query({ query, fetchPolicy: 'network-only' }).then(() =>
       client.query({ query }).then(actualResult => {
-        expect(actualResult.data).toEqual(result);
+        expect(stripSymbols(actualResult.data)).toEqual(result);
         expect(called).toBe(2);
       }),
     );
@@ -180,7 +181,7 @@ describe('network-only', () => {
       })
       .then(() =>
         client.query({ query }).then(actualResult => {
-          expect(actualResult.data).toEqual(result);
+          expect(stripSymbols(actualResult.data)).toEqual(result);
           // the first error doesn't call .map on the inspector
           expect(called).toBe(3);
           expect(didFail).toBe(true);
@@ -212,7 +213,7 @@ describe('network-only', () => {
       )
       .then(() => {
         return client.query({ query }).then(actualResult => {
-          expect(actualResult.data).toEqual(merged);
+          expect(stripSymbols(actualResult.data)).toEqual(merged);
         });
       });
   });
@@ -279,7 +280,7 @@ describe('no-cache', () => {
 
     return client.query({ query, fetchPolicy: 'no-cache' }).then(() =>
       client.query({ query }).then(actualResult => {
-        expect(actualResult.data).toEqual(result);
+        expect(stripSymbols(actualResult.data)).toEqual(result);
         // the second query couldn't read anything from the cache
         expect(called).toBe(4);
       }),
@@ -310,7 +311,7 @@ describe('no-cache', () => {
       })
       .then(() =>
         client.query({ query }).then(actualResult => {
-          expect(actualResult.data).toEqual(result);
+          expect(stripSymbols(actualResult.data)).toEqual(result);
           // the first error doesn't call .map on the inspector
           expect(called).toBe(3);
           expect(didFail).toBe(true);
@@ -339,7 +340,7 @@ describe('no-cache', () => {
       )
       .then(() => {
         return client.query({ query }).then(actualResult => {
-          expect(actualResult.data).toEqual(result);
+          expect(stripSymbols(actualResult.data)).toEqual(result);
         });
       });
   });

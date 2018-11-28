@@ -1,6 +1,30 @@
-# Change log
+# CHANGELOG
+
+----
+
+**NOTE:** This changelog is no longer maintained. Changes are now tracked in
+the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+
+----
 
 ### vNext
+
+- Add support for arrays to `filter`.
+  [PR #3591](https://github.com/apollographql/apollo-client/pull/3591)
+
+### 4.1.14
+
+- No changes.
+
+### 4.1.13
+
+- No changes.
+
+### 4.1.12
+
+- No new changes.
+
+### 4.1.11
 
 - Source files are now excluded when publishing to npm.
   [Issue #2806](https://github.com/apollographql/apollo-client/issues/2806)

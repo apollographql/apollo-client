@@ -168,7 +168,7 @@ const enhancedComponent = compose(
 
 <h2 id="controlling-poll-interval">Controlling pollInterval</h2>
 
-This case is borrowed from [David Glasser's post on the Apollo blog](https://dev-blog.apollodata.com/dynamic-graphql-polling-with-react-and-apollo-client-fb36e390d250) about the Meteor's Galaxy UI migrations panel implementation. In the post, he says:
+This case is borrowed from [David Glasser's post on the Apollo blog](https://blog.apollographql.com/dynamic-graphql-polling-with-react-and-apollo-client-fb36e390d250) about the Meteor's Galaxy UI migrations panel implementation. In the post, he says:
 
 > We’re not usually running any migrations, so a nice, slow polling interval like 30 seconds seemed reasonable. But in the rare case where a migration is running, I wanted to be able to see much faster updates on its progress.
 
@@ -191,7 +191,7 @@ const withData = compose(
   withState("pollInterval", "setPollInterval", DEFAULT_INTERVAL),
   graphql(
     gql`
-      query getMigrationStatus {
+      query GetMigrationStatus {
         activeMigration {
           name
           version

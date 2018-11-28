@@ -444,15 +444,15 @@ export function getDirectivesFromDocument(
 
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
   return (argument: ArgumentNode): Boolean => {
-    return config.some((config: RemoveArgumentsConfig) => {
+    return config.some((aConfig: RemoveArgumentsConfig) => {
       if (
         argument.value.kind !== 'Variable' ||
         !(argument.value as VariableNode)
       )
         return false;
       if (!argument.value.name) return false;
-      if (config.name === argument.value.name.value) return true;
-      if (config.test && config.test(argument)) return true;
+      if (aConfig.name === argument.value.name.value) return true;
+      if (aConfig.test && aConfig.test(argument)) return true;
       return false;
     });
   };
@@ -519,10 +519,10 @@ export function removeArgumentsFromDocument(
   docClone.definitions.forEach((definition: DefinitionNode) => {
     const operationDefinition = definition as OperationDefinitionNode;
     const removeVariableConfig = config
-      .filter(config => !!config.name)
-      .map(config => ({
-        name: config.name,
-        remove: config.remove,
+      .filter(aConfig => !!aConfig.name)
+      .map(aConfig => ({
+        name: aConfig.name,
+        remove: aConfig.remove,
       }));
 
     removeArgumentsFromSelectionSet(config, operationDefinition.selectionSet);
@@ -544,15 +544,15 @@ function removeArgumentsFromOperationDefinition(
   if (!definition.variableDefinitions) return definition;
   // if any of the config is set to remove this argument, remove it
   const aggressiveRemove = config.some(
-    (config: RemoveVariableDefinitionConfig) => config.remove,
+    (aConfig: RemoveVariableDefinitionConfig) => aConfig.remove,
   );
 
   let remove: boolean;
   definition.variableDefinitions = definition.variableDefinitions.filter(
     definition => {
-      const shouldKeep = !config.some(config => {
-        if (config.name === definition.variable.name.value) return true;
-        if (config.test && config.test(definition)) return true;
+      const shouldKeep = !config.some(aConfig => {
+        if (aConfig.name === definition.variable.name.value) return true;
+        if (aConfig.test && aConfig.test(definition)) return true;
         return false;
       });
 
@@ -574,7 +574,7 @@ function removeArgumentsFromSelectionSet(
   if (!selectionSet.selections) return selectionSet;
   // if any of the config is set to remove this selectionSet, remove it
   const aggressiveRemove = config.some(
-    (config: RemoveArgumentsConfig) => config.remove,
+    (aConfig: RemoveArgumentsConfig) => aConfig.remove,
   );
 
   selectionSet.selections = selectionSet.selections
@@ -625,9 +625,9 @@ function hasFragmentSpreadInSelection(
     return false;
   }
 
-  return config.some(config => {
-    if (config.name === selection.name.value) return true;
-    if (config.test && config.test(selection)) return true;
+  return config.some(aConfig => {
+    if (aConfig.name === selection.name.value) return true;
+    if (aConfig.test && aConfig.test(selection)) return true;
     return false;
   });
 }
@@ -647,8 +647,8 @@ export function removeFragmentSpreadFromDocument(
 
   docClone.definitions = removeFragmentSpreadFromDefinitions(
     config
-      .filter(config => !!config.name)
-      .map(config => ({ name: config.name })),
+      .filter(aConfig => !!aConfig.name)
+      .map(aConfig => ({ name: aConfig.name })),
     docClone.definitions,
   );
 
@@ -669,9 +669,9 @@ function removeFragmentSpreadFromDefinitions(
       return true;
     }
 
-    return !config.some(config => {
-      if (config.name && config.name === definition.name.value) return true;
-      if (config.test && config.test(definition)) return true;
+    return !config.some(aConfig => {
+      if (aConfig.name && aConfig.name === definition.name.value) return true;
+      if (aConfig.test && aConfig.test(definition)) return true;
       return false;
     });
   });

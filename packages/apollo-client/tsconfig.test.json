@@ -2,6 +2,7 @@
   "extends": "./tsconfig",
   "compilerOptions": {
     "module": "commonjs",
+    "lib": ["es2015", "dom", "es2017"]
   },
   "exclude": [
     "src/__tests__/ApolloClient.ts",

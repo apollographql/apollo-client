@@ -29,7 +29,7 @@ interface Variables {
 class AllPeopleQuery extends Query<Data, Variables> {}
 ```
 
-Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables requried for it to work! Everything else is handled by React Apollo's robust type definitions.
+Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables required for it to work! Everything else is handled by React Apollo's robust type definitions.
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
@@ -144,7 +144,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
-This is expecially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
+This is especially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
 
 ```javascript
 import React from "react";

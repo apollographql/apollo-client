@@ -2,11 +2,60 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Cache In-Memory (1.3.9)
+### Apollo Client (vNext)
 
-- Avoid modifying source objects when merging cache results.
-  [Issue #4081](https://github.com/apollographql/apollo-client/issues/4081)
-  [PR #4089](https://github.com/apollographql/apollo-client/pull/4089)
+- Documtation updates.  <br/>
+  [@justinanastos](https://github.com/justinanastos) in [#4187](https://github.com/apollographql/apollo-client/pull/4187)
+
+### Apollo Utilities (vNext)
+
+- Schema/AST tranformation utilities have been updated to work properly with
+  `@client` directives.  <br/>
+  [@justinmakaila](https://github.com/justinmakaila) in [#3482](https://github.com/apollographql/apollo-client/pull/3482)
+
+
+## Apollo Client (2.4.7)
+
+### Apollo Client (2.4.7)
+
+- The `ApolloClient` constructor has been updated to accept `name` and
+  `version` params, that can be used to support Apollo Server [Client Awareness](https://www.apollographql.com/docs/apollo-server/v2/features/metrics.html#Client-Awareness)
+  functionality. These client awareness properties are passed into the
+  defined Apollo Link chain, and are then ultimately sent out as custom
+  headers with outgoing requests.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#4154](https://github.com/apollographql/apollo-client/pull/4154)
+
+### Apollo Boost (0.1.22)
+
+- No changes.
+
+### Apollo Cache (1.1.21)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.3.11)
+
+- No changes.
+
+### Apollo Utilities (1.0.26)
+
+- No changes.
+
+### Graphql Anywhere (4.1.23)
+
+- No changes.
+
+
+## Apollo Client (2.4.6)
+
+### Apollo Cache In-Memory (1.3.10)
+
+- Added some `return`s to prevent errors with `noImplicitReturns`
+  TypeScript rule.
+  [PR #4137](https://github.com/apollographql/apollo-client/pull/4137)
+
+- Exclude the `src/` directory when publishing `apollo-cache-inmemory`.
+  [Issue #4083](https://github.com/apollographql/apollo-client/issues/4083)
 
 ## Apollo Client (2.4.5)
 
@@ -30,6 +79,12 @@
 - Add `readQuery` test to make sure options aren't mutated.
   [@CarloPalinckx](https://github.com/CarloPalinckx) in
   [#3838](https://github.com/apollographql/apollo-client/pull/3838)
+
+### Apollo Cache In-Memory (1.3.9)
+
+- Avoid modifying source objects when merging cache results.
+  [Issue #4081](https://github.com/apollographql/apollo-client/issues/4081)
+  [PR #4089](https://github.com/apollographql/apollo-client/pull/4089)
 
 ### Apollo Utilities (1.0.25)
 

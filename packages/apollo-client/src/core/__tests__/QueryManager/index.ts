@@ -52,15 +52,18 @@ describe('QueryManager', () => {
   const createQueryManager = ({
     link,
     config = {},
+    clientAwareness = {},
   }: {
     link?: ApolloLink;
     config?: ApolloReducerConfig;
+    clientAwareness?: { [key: string]: string };
   }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
       store: new DataStore(
         new InMemoryCache({ addTypename: false, ...config }),
       ),
+      clientAwareness,
     });
   };
 
@@ -4770,5 +4773,52 @@ describe('QueryManager', () => {
         });
       },
     );
+  });
+
+  describe('client awareness', () => {
+    it('should pass client awareness settings into the link chain via context', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const link = mockSingleLink({
+        request: { query },
+        result: { data },
+      });
+
+      const clientAwareness = {
+        name: 'Test',
+        version: '1.0.0',
+      };
+
+      const queryManager = createQueryManager({
+        link,
+        clientAwareness,
+      });
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        fetchPolicy: 'no-cache',
+      });
+
+      observableToPromise({ observable }, result => {
+        const context = link.operation.getContext();
+        expect(context.clientAwareness).toBeDefined();
+        expect(context.clientAwareness).toEqual(clientAwareness);
+        done();
+      });
+    });
   });
 });

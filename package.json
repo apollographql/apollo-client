@@ -44,7 +44,7 @@
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "4.25 kB"
+      "maxSize": "5 kB"
     },
     {
       "name": "graphql-anywhere",

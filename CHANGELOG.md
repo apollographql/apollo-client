@@ -1,5 +1,19 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client (vNext)
+
+### Apollo Client (vNext)
+
+- Documtation updates.  <br/>
+  [@justinanastos](https://github.com/justinanastos) in [#4187](https://github.com/apollographql/apollo-client/pull/4187)
+
+### Apollo Utilities (vNext)
+
+- Schema/AST tranformation utilities have been updated to work properly with
+  `@client` directives.  <br/>
+  [@justinmakaila](https://github.com/justinmakaila) in [#3482](https://github.com/apollographql/apollo-client/pull/3482)
+
+
 ## Apollo Client (2.4.7)
 
 ### Apollo Client (2.4.7)

@@ -114,7 +114,7 @@
     "lint-staged": "7.3.0",
     "lodash": "4.17.11",
     "pre-commit": "1.2.2",
-    "prettier": "1.15.2",
+    "prettier": "1.15.3",
     "react": "16.6.3",
     "react-dom": "16.6.3",
     "rollup": "0.67.3",

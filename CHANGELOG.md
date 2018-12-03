@@ -2,6 +2,11 @@
 
 ## Apollo Client (vNext)
 
+### Apollo Client (vNext)
+
+- Documtation updates.  <br/>
+  [@justinanastos](https://github.com/justinanastos) in [#4187](https://github.com/apollographql/apollo-client/pull/4187)
+
 ### Apollo Utilities (vNext)
 
 - Schema/AST tranformation utilities have been updated to work properly with

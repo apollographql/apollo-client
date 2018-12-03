@@ -53,10 +53,10 @@ export interface Initializers<TCacheShape> {
 export interface Resolvers {
   [key: string]: {
     [field: string]: (
-      rootValue: any,
-      args: any,
-      context: any,
-      info: any,
+      rootValue?: any,
+      args?: any,
+      context?: any,
+      info?: any,
     ) => any;
   };
 }

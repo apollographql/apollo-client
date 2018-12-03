@@ -259,6 +259,78 @@ describe('Basic resolver capabilities', () => {
       },
     });
   });
+
+  it(
+    'should combine local @client resolver results with server results, for ' +
+      'the same field',
+    done => {
+      const query = gql`
+        query author {
+          author {
+            name
+            stats {
+              totalPosts
+              postsToday @client
+            }
+          }
+        }
+      `;
+
+      const serverQuery = gql`
+        query author {
+          author {
+            name
+            stats {
+              totalPosts
+            }
+          }
+        }
+      `;
+
+      const resolvers = {
+        Stats: {
+          postsToday: () => 10,
+        },
+      };
+
+      assertWithObserver({
+        done,
+        resolvers,
+        query,
+        serverQuery,
+        serverResult: {
+          data: {
+            author: {
+              name: 'John Smith',
+              stats: {
+                totalPosts: 100,
+                __typename: 'Stats',
+              },
+              __typename: 'Author',
+            },
+          },
+        },
+        observer: {
+          next({ data }) {
+            try {
+              expect(data).toEqual({
+                author: {
+                  name: 'John Smith',
+                  stats: {
+                    totalPosts: 100,
+                    postsToday: 10,
+                  },
+                },
+              });
+            } catch (error) {
+              done.fail(error);
+            }
+            done();
+          },
+        },
+      });
+    },
+  );
 });
 
 describe('Writing cache data from resolvers', () => {

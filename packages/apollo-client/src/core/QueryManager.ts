@@ -3,8 +3,6 @@ import {
   ExecutionResult,
   DocumentNode,
   OperationDefinitionNode,
-  FieldNode,
-  SelectionNode,
 } from 'graphql';
 import graphql, { Resolver, FragmentMatcher } from 'graphql-anywhere';
 
@@ -22,8 +20,6 @@ import {
   isProduction,
   hasDirectives,
   mergeDeep,
-  getDirectiveInfoFromField,
-  flattenSelections,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -290,16 +286,9 @@ export class QueryManager<TStore> {
         return storeResult as FetchResult<T>;
       };
 
-      let clientQuery: DocumentNode | null = null;
-      let serverQuery;
-
-      if (hasDirectives(['client'], operation.query)) {
-        clientQuery = operation.query;
-        serverQuery = removeClientSetsFromDocument(operation.query);
-      } else {
-        serverQuery = operation.query;
-      }
-
+      const { clientQuery, serverQuery } = this.parseClientAndServerQuery(
+        operation.query,
+      );
       if (serverQuery) {
         operation.query = serverQuery;
       }
@@ -322,34 +311,18 @@ export class QueryManager<TStore> {
 
           self.mutationStore.markMutationResult(mutationId);
           let updatedResult = result;
+          const { context, variables } = operation;
 
-          if (clientQuery) {
-            const resolver = self.prepareResolver(clientQuery);
-            if (resolver) {
-              const { context, variables } = operation;
-              let localResult;
-              try {
-                localResult = graphql(
-                  resolver,
-                  clientQuery,
-                  result.data,
-                  context,
-                  variables,
-                  { fragmentMatcher: this.fragmentMatcher },
-                );
-              } catch (error) {
-                reject(error);
-                return;
-              }
-
-              if (localResult) {
-                updatedResult.data = {
-                  ...updatedResult.data,
-                  ...localResult,
-                };
-              }
-            }
-          }
+          // Run the query through local client resolvers.
+          updatedResult.data = self.runResolvers({
+            query: clientQuery,
+            remoteResult: result.data,
+            context,
+            variables,
+            onError(error) {
+              reject(error);
+            },
+          });
 
           if (fetchPolicy !== 'no-cache') {
             self.dataStore.markMutationResult({
@@ -1002,39 +975,21 @@ export class QueryManager<TStore> {
       // If this is the first observer, actually initiate the network
       // subscription.
       if (observers.length === 1) {
-        let clientQuery: DocumentNode | null = null;
-        let serverQuery;
-        if (hasDirectives(['client'], transformedDoc)) {
-          clientQuery = transformedDoc;
-          serverQuery = removeClientSetsFromDocument(transformedDoc);
-        } else {
-          serverQuery = transformedDoc;
-        }
+        const { clientQuery, serverQuery } = this.parseClientAndServerQuery(
+          transformedDoc,
+        );
 
         const handler = {
           next: (result: FetchResult) => {
             let updatedResult = result;
 
-            if (clientQuery) {
-              const resolver = this.prepareResolver(clientQuery);
-              if (resolver) {
-                const localResult = graphql(
-                  resolver,
-                  clientQuery,
-                  result.data,
-                  {},
-                  variables,
-                  { fragmentMatcher: this.fragmentMatcher },
-                );
-
-                if (localResult) {
-                  updatedResult.data = {
-                    ...updatedResult.data,
-                    ...localResult,
-                  };
-                }
-              }
-            }
+            // Run the query through local client resolvers.
+            updatedResult.data = this.runResolvers({
+              query: clientQuery,
+              remoteResult: result.data,
+              context: {},
+              variables,
+            });
 
             if (isCacheEnabled) {
               this.dataStore.markSubscriptionResult(
@@ -1254,14 +1209,9 @@ export class QueryManager<TStore> {
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
 
-    let clientQuery: DocumentNode | null = null;
-    let serverQuery: DocumentNode | null = null;
-    if (hasDirectives(['client'], document)) {
-      clientQuery = document;
-      serverQuery = removeClientSetsFromDocument(document);
-    } else {
-      serverQuery = document;
-    }
+    const { clientQuery, serverQuery } = this.parseClientAndServerQuery(
+      document,
+    );
 
     let resultFromStore: any;
     let errorsFromStore: any;
@@ -1290,32 +1240,16 @@ export class QueryManager<TStore> {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
-            if (clientQuery) {
-              const resolver = this.prepareResolver(clientQuery);
-              if (resolver) {
-                let localResult;
-                try {
-                  localResult = graphql(
-                    resolver,
-                    clientQuery,
-                    result.data,
-                    updatedContext,
-                    variables,
-                    { fragmentMatcher: this.fragmentMatcher },
-                  );
-                } catch (error) {
-                  reject(error);
-                  return;
-                }
-
-                if (localResult) {
-                  updatedResult.data = {
-                    ...updatedResult.data,
-                    ...localResult,
-                  };
-                }
-              }
-            }
+            // Run the query through local client resolvers.
+            updatedResult.data = this.runResolvers({
+              query: clientQuery,
+              remoteResult: result.data,
+              context: updatedContext,
+              variables,
+              onError(error) {
+                reject(error);
+              },
+            });
 
             if (fetchPolicy !== 'no-cache') {
               try {
@@ -1513,9 +1447,13 @@ export class QueryManager<TStore> {
   // resolve @client fields.
   private prepareResolver(query: DocumentNode | null, readOnly = false) {
     let resolver: Resolver | null = null;
+    const exportedVariables: Record<string, any> = {};
 
     if (!query) {
-      return resolver;
+      return {
+        resolver,
+        exportedVariables,
+      };
     }
 
     const definition = getMainDefinition(query);
@@ -1540,6 +1478,13 @@ export class QueryManager<TStore> {
       info: any,
     ) => {
       const { resultKey } = info;
+
+      // If an @export directive is associated with the current field, store
+      // the `as` export variable name for later use.
+      let exportedVariable;
+      if (info.directives && info.directives.export) {
+        exportedVariable = info.directives.export.as;
+      }
 
       // To add a bit of flexibility, we'll try resolving data in root value
       // objects, as well as an object pointed to by the first root
@@ -1573,24 +1518,39 @@ export class QueryManager<TStore> {
         mutate: mutateFn,
       };
 
+      let result;
+
       // If a local resolver function is defined, run it and return the
       // outcome.
       const resolverMap = resolvers[(rootValue as any).__typename || type];
       if (resolverMap) {
         const resolve = resolverMap[field];
         if (resolve) {
-          return resolve(rootValue, args, updatedContext, info);
+          result = resolve(rootValue, args, updatedContext, info);
         }
       }
 
-      // If we were able to find a matching field in the root value, return
-      // that value as the resolved value.
-      if (normalNode !== undefined || aliasedNode !== undefined) {
-        return aliasedNode || normalNode;
+      if (!result) {
+        // If we were able to find a matching field in the root value, return
+        // that value as the resolved value.
+        if (normalNode !== undefined || aliasedNode !== undefined) {
+          result = aliasedNode || normalNode;
+        }
       }
+
+      // If an @export directive is associated with this field, store
+      // the calculated result for later use.
+      if (exportedVariable) {
+        exportedVariables[exportedVariable] = result;
+      }
+
+      return result;
     };
 
-    return resolver;
+    return {
+      resolver,
+      exportedVariables,
+    };
   }
 
   // To support `@client @export(as: "someVar")` syntax, we'll first resolve
@@ -1603,35 +1563,26 @@ export class QueryManager<TStore> {
   ) {
     let exportedVariables: { [fieldName: string]: string } = {};
 
-    if (document && hasDirectives(['export'], document)) {
-      const localResult = this.resolveDocumentLocally(
-        document,
-        variables,
-        context,
-      );
-      document.definitions
-        .filter(
-          (definition: OperationDefinitionNode) =>
-            definition.selectionSet && definition.selectionSet.selections,
-        )
-        .map(x => flattenSelections(x as any))
-        .reduce((selections, selected) => selections.concat(selected), [])
-        .filter(
-          (selection: SelectionNode) =>
-            selection.directives && selection.directives.length > 0,
-        )
-        .forEach((field: FieldNode) => {
-          const directiveInfo = getDirectiveInfoFromField(field, {});
-          if (directiveInfo && directiveInfo.export) {
-            let value =
-              localResult[field.name.value] ||
-              localResult[Object.keys(localResult)[0]][field.name.value];
-            if (value.json) {
-              value = value.json;
-            }
-            exportedVariables[directiveInfo.export.as] = value;
-          }
-        });
+    if (
+      document &&
+      hasDirectives(['client'], document) &&
+      hasDirectives(['export'], document)
+    ) {
+      const cachedData = this.dataStore
+        .getCache()
+        .diff({ query: document, optimistic: false });
+      const preparedResolver = this.prepareResolver(document, true);
+      if (preparedResolver.resolver) {
+        const updatedContext = this.contextCopyWithCache(context);
+        graphql(
+          preparedResolver.resolver,
+          document,
+          cachedData.result || {},
+          updatedContext,
+          variables,
+        );
+        exportedVariables = preparedResolver.exportedVariables;
+      }
     }
 
     return {
@@ -1640,29 +1591,86 @@ export class QueryManager<TStore> {
     };
   }
 
-  // Run the specified query + variables through locally defined
-  // query resolvers. The query is resolved using local resolvers (and
-  // the cache) only; no external data (e.g. data coming back from a
-  // remote graphql query) is used.
-  private resolveDocumentLocally(
-    clientQuery: DocumentNode | null,
-    variables?: OperationVariables,
-    context = {},
-  ) {
-    let localResult: any;
-    if (clientQuery) {
-      const resolver = this.prepareResolver(clientQuery, true);
+  // Run local client resolvers against the incoming query and remote data.
+  // Locally resolved field values are merged with the incoming remote data,
+  // and returned. Note that locally resolved fields will overwrite
+  // remote data using the same field name.
+  private runResolvers({
+    query,
+    remoteResult,
+    context,
+    variables,
+    onError,
+  }: {
+    query: DocumentNode | null;
+    remoteResult?: ExecutionResult;
+    context?: Record<string, any>;
+    variables?: Record<string, any>;
+    onError?: (error: any) => void;
+  }) {
+    let localResult: Record<string, any> = {};
+
+    if (query) {
+      const { resolver } = this.prepareResolver(query);
       if (resolver) {
-        const updatedContext = this.contextCopyWithCache(context);
-        localResult = graphql(
-          resolver,
-          clientQuery,
-          {},
-          updatedContext,
-          variables,
-        );
+        // If the main operation is a `Query`, we'll combine both locally
+        // cached and remote data, before running local resolvers. This
+        // gives us a chance to resolve data using both the local cache
+        // and local resolvers.
+        const definition = getMainDefinition(query);
+        const definitionOperation = (<OperationDefinitionNode>definition)
+          .operation;
+        let rootValue;
+        if (definitionOperation === 'query') {
+          const cachedData = this.dataStore.getCache().diff({
+            query,
+            optimistic: false,
+          });
+          rootValue = mergeDeep(cachedData.result, remoteResult);
+        } else {
+          rootValue = remoteResult;
+        }
+
+        try {
+          localResult = graphql(
+            resolver,
+            query,
+            rootValue,
+            context,
+            variables,
+            { fragmentMatcher: this.fragmentMatcher },
+          );
+        } catch (error) {
+          if (onError) {
+            onError(error);
+            return;
+          }
+        }
       }
     }
-    return localResult;
+
+    return {
+      ...remoteResult,
+      ...localResult,
+    };
+  }
+
+  // Extract client and server specific queries from the incoming
+  // document. Client queries contain everything in the incoming
+  // document (if a @client directive is found), whereas server
+  // queries are stripped of all @client based selection sets.
+  private parseClientAndServerQuery(query: DocumentNode) {
+    let clientQuery: DocumentNode | null = null;
+    let serverQuery: DocumentNode | null = null;
+    if (hasDirectives(['client'], query)) {
+      clientQuery = query;
+      serverQuery = removeClientSetsFromDocument(query);
+    } else {
+      serverQuery = query;
+    }
+    return {
+      clientQuery,
+      serverQuery,
+    };
   }
 }

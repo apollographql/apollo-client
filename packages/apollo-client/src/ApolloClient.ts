@@ -48,7 +48,7 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export type ApolloClientOptions<TCacheShape> = {
-  link: ApolloLink;
+  link?: ApolloLink;
   cache: ApolloCache<TCacheShape>;
   ssrForceFetchDelay?: number;
   ssrMode?: boolean;
@@ -115,7 +115,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
-      link,
       cache,
       ssrMode = false,
       ssrForceFetchDelay = 0,
@@ -129,6 +128,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       name: clientAwarenessName,
       version: clientAwarenessVersion,
     } = options;
+
+    let { link } = options;
+
+    // If a link hasn't been defined, but local state initializers/resolvers
+    // have been set, setup a default empty link.
+    if (!link && (initializers || resolvers)) {
+      link = ApolloLink.empty();
+    }
 
     if (!link || !cache) {
       throw new Error(`

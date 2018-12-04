@@ -313,12 +313,13 @@ export class QueryManager<TStore> {
     } = options;
     const cache = this.dataStore.getCache();
 
-    const query = cache.transformDocument(options.query);
+    let query = cache.transformDocument(options.query);
 
     let storeResult: any;
+    let queryToSendToNetwork: DocumentNode = query;
     let needToFetch: boolean =
       fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
-
+    let shouldMergePartitionedResults: boolean = false;
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
@@ -327,15 +328,20 @@ export class QueryManager<TStore> {
       fetchPolicy !== 'network-only' &&
       fetchPolicy !== 'no-cache'
     ) {
-      const { complete, result } = this.dataStore.getCache().diff({
+      const {
+        complete,
+        result,
+        partitionedQuery,
+      } = this.dataStore.getCache().diff({
         query,
         variables,
         returnPartialData: true,
         optimistic: false,
       });
-
+      queryToSendToNetwork = partitionedQuery;
       // If we're in here, only fetch if we have missing fields
       needToFetch = !complete || fetchPolicy === 'cache-and-network';
+      shouldMergePartitionedResults = !complete;
       storeResult = result;
     }
 
@@ -391,8 +397,11 @@ export class QueryManager<TStore> {
         requestId,
         queryId,
         document: query,
+        documentToSend: queryToSendToNetwork,
         options,
         fetchMoreForQueryId,
+        storeResult,
+        shouldMergePartitionedResults,
       }).catch(error => {
         // This is for the benefit of `refetch` promises, which currently don't get their errors
         // through the store like watchQuery observers do
@@ -604,9 +613,11 @@ export class QueryManager<TStore> {
           }
 
           if (observer.next) {
-            if (previouslyHadError ||
-                !observableQuery ||
-                observableQuery.isDifferentFromLastResult(resultFromStore)) {
+            if (
+              previouslyHadError ||
+              !observableQuery ||
+              observableQuery.isDifferentFromLastResult(resultFromStore)
+            ) {
               try {
                 observer.next(resultFromStore);
               } catch (e) {
@@ -1073,17 +1084,23 @@ export class QueryManager<TStore> {
     requestId,
     queryId,
     document,
+    documentToSend,
     options,
     fetchMoreForQueryId,
+    storeResult,
+    shouldMergePartitionedResults,
   }: {
     requestId: number;
     queryId: string;
     document: DocumentNode;
+    documentToSend: DocumentNode;
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
+    storeResult: T;
+    shouldMergePartitionedResults: boolean;
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
-    const operation = this.buildOperationForLink(document, variables, {
+    const operation = this.buildOperationForLink(documentToSend, variables, {
       ...context,
       // TODO: Should this be included for all entry points via
       // buildOperationForLink?
@@ -1102,6 +1119,9 @@ export class QueryManager<TStore> {
           if (requestId >= (lastRequestId || 1)) {
             if (fetchPolicy !== 'no-cache') {
               try {
+                if (shouldMergePartitionedResults && result && result.data) {
+                  merge(result.data, storeResult);
+                }
                 this.dataStore.markQueryResult(
                   result,
                   document,
@@ -1114,6 +1134,9 @@ export class QueryManager<TStore> {
                 return;
               }
             } else {
+              if (shouldMergePartitionedResults && result && result.data) {
+                merge(result.data, storeResult);
+              }
               this.setQuery(queryId, () => ({
                 newData: { result: result.data, complete: true },
               }));
@@ -1212,15 +1235,17 @@ export class QueryManager<TStore> {
   }
 
   private getQuery(queryId: string) {
-    return this.queries.get(queryId) || {
-      listeners: [],
-      invalidated: false,
-      document: null,
-      newData: null,
-      lastRequestId: null,
-      observableQuery: null,
-      subscriptions: [],
-    };
+    return (
+      this.queries.get(queryId) || {
+        listeners: [],
+        invalidated: false,
+        document: null,
+        newData: null,
+        lastRequestId: null,
+        observableQuery: null,
+        subscriptions: [],
+      }
+    );
   }
 
   private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {
@@ -1270,5 +1295,20 @@ export class QueryManager<TStore> {
         },
       },
     };
+  }
+}
+
+const hasOwn = Object.prototype.hasOwnProperty;
+
+function merge(dest: any, src: any) {
+  if (src !== null && typeof src === 'object') {
+    Object.keys(src).forEach(key => {
+      const srcVal = src[key];
+      if (!hasOwn.call(dest, key)) {
+        dest[key] = srcVal;
+      } else {
+        merge(dest[key], srcVal);
+      }
+    });
   }
 }

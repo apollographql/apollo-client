@@ -73,6 +73,7 @@ export namespace DataProxy {
   export type DiffResult<T> = {
     result?: T;
     complete?: boolean;
+    partitionedQuery?: any;
   };
 }
 

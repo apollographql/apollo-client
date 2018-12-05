@@ -213,8 +213,7 @@ export class StoreReader {
       dataIdFromObject: (config && config.dataIdFromObject) || null,
       cacheRedirects: (config && config.cacheRedirects) || {},
     };
-
-    const execResult = this.executeStoreQuery({
+    const execStoreQueryOptions: ExecStoreQueryOptions = {
       query,
       rootValue: {
         type: 'id',
@@ -225,7 +224,8 @@ export class StoreReader {
       contextValue: context,
       variableValues: variables,
       fragmentMatcher: fragmentMatcherFunction,
-    });
+    };
+    const execResult = this.executeStoreQuery(execStoreQueryOptions);
 
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
@@ -253,10 +253,7 @@ export class StoreReader {
     if (hasMissingFields) {
       partitionedQuery = this.partitionQuery(
         execResult.missing.map(missing => missing.selection),
-        query,
-        variables,
-        fragmentMatcherFunction,
-        context,
+        execStoreQueryOptions,
       );
     }
 
@@ -268,14 +265,17 @@ export class StoreReader {
   }
   private partitionQuery(
     fields: FieldNode[],
-    document: DocumentNode,
-    variableValues: any,
-    fragmentMatcher: FragmentMatcher,
-    readStoreContext: ReadStoreContext,
+    {
+      query,
+      rootValue,
+      contextValue,
+      variableValues,
+      fragmentMatcher,
+    }: ExecStoreQueryOptions,
   ): DocumentNode {
-    const mainDefinition = getMainDefinition(document);
+    const mainDefinition = getMainDefinition(query);
 
-    const fragments = getFragmentDefinitions(document);
+    const fragments = getFragmentDefinitions(query);
     const fragmentMap = createFragmentMap(fragments);
 
     // Default matcher always matches all fragments
@@ -284,16 +284,16 @@ export class StoreReader {
       fragmentMap,
       fragmentMatcher,
       variableValues,
-      contextValue: readStoreContext,
+      contextValue: contextValue,
     };
     return {
-      ...document,
+      ...query,
       definitions: [
         {
           ...mainDefinition,
           selectionSet: this.findMissingSelectionSets(
             mainDefinition.selectionSet,
-            undefined,
+            rootValue,
             execContext,
             fields,
           ),

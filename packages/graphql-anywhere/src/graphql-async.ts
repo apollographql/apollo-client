@@ -68,6 +68,7 @@ export function graphql(
     resultMapper,
     resolver,
     fragmentMatcher,
+    breadcrumbs: [],
   };
 
   return executeSelectionSet(
@@ -148,15 +149,23 @@ async function executeField(
   rootValue: any,
   execContext: ExecContext,
 ): Promise<null | Object> {
-  const { variableValues: variables, contextValue, resolver } = execContext;
+  const {
+    variableValues: variables,
+    contextValue,
+    resolver,
+    breadcrumbs: oldBreadcrumbs,
+  } = execContext;
 
   const fieldName = field.name.value;
   const args = argumentsObjectFromField(field, variables);
+
+  const breadcrumbs = [...oldBreadcrumbs, { key: fieldName, args }];
 
   const info: ExecInfo = {
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
     directives: getDirectiveInfoFromField(field, variables),
+    breadcrumbs,
   };
 
   const result = await resolver(fieldName, rootValue, args, contextValue, info);
@@ -173,29 +182,34 @@ async function executeField(
     return result;
   }
 
+  const newExecContext = { ...execContext, breadcrumbs };
+
   if (Array.isArray(result)) {
-    return executeSubSelectedArray(field, result, execContext);
+    return executeSubSelectedArray(field, result, newExecContext);
   }
 
   // Returned value is an object, and the query has a sub-selection. Recurse.
-  return executeSelectionSet(field.selectionSet, result, execContext);
+  return executeSelectionSet(field.selectionSet, result, newExecContext);
 }
 
 function executeSubSelectedArray(field, result, execContext) {
   return Promise.all(
-    result.map(item => {
+    result.map((item, i) => {
       // null value in array
       if (item === null) {
         return null;
       }
 
+      const breadcrumbs = [...execContext.breadcrumbs, { key: i }];
+      const newExecContext = { ...execContext, breadcrumbs };
+
       // This is a nested array, recurse
       if (Array.isArray(item)) {
-        return executeSubSelectedArray(field, item, execContext);
+        return executeSubSelectedArray(field, item, newExecContext);
       }
 
       // This is an object, run the selection set on it
-      return executeSelectionSet(field.selectionSet, item, execContext);
+      return executeSelectionSet(field.selectionSet, item, newExecContext);
     }),
   );
 }

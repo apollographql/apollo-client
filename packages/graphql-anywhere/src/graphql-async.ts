@@ -16,6 +16,7 @@ import {
   isInlineFragment,
   resultKeyNameFromField,
   argumentsObjectFromField,
+  assign,
 } from 'apollo-utilities';
 
 import {
@@ -182,7 +183,7 @@ async function executeField(
     return result;
   }
 
-  const newExecContext = { ...execContext, breadcrumbs };
+  const newExecContext = assign({}, execContext, { breadcrumbs });
 
   if (Array.isArray(result)) {
     return executeSubSelectedArray(field, result, newExecContext);
@@ -201,7 +202,7 @@ function executeSubSelectedArray(field, result, execContext) {
       }
 
       const breadcrumbs = [...execContext.breadcrumbs, { key: i }];
-      const newExecContext = { ...execContext, breadcrumbs };
+      const newExecContext = assign({}, execContext, { breadcrumbs });
 
       // This is a nested array, recurse
       if (Array.isArray(item)) {

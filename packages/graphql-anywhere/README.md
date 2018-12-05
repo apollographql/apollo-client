@@ -45,6 +45,7 @@ The last argument to the `graphql` function is a set of `graphql-anywhere`-speci
 - `isLeaf`: A boolean that is `true` if this resolver is for a leaf field of the query, i.e. one that doesn't have a sub-selection.
 - `resultKey`: The key the result of this field will be put under. It's either the field name from the query, or the field alias.
 - `directives`: An object with information about all directives on this field. It's an object of the format `{ [directiveName]: { [argumentName]: value }}`. So for example a field with `@myDirective(hello: "world")` will be passed as `{ myDirective: { hello: 'world' }}`. Note that fields can't have multiple directives with the same name, as written in the GraphQL spec.
+- `breadcrumbs`: An array of queried fields that are parents of this field. It's an array of the format `{ key: string | number, args?: null | object }[]`.
 
 
 ## Utilities

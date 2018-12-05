@@ -49,7 +49,7 @@
     {
       "name": "graphql-anywhere",
       "path": "./packages/graphql-anywhere/lib/bundle.min.js",
-      "maxSize": "1.25 kB"
+      "maxSize": "1.3 kB"
     }
   ],
   "jest": {

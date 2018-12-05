@@ -444,23 +444,23 @@ const execute = (graphql, r) => () => {
     await graphql(resolver, query, null, null, { x: 'argument' });
 
     expect(leafMap).toEqual({
-      a: {
+      a: expect.objectContaining({
         directives: null,
 
         isLeaf: false,
 
         resultKey: 'alias',
-      },
+      }),
 
-      b: {
+      b: expect.objectContaining({
         directives: null,
 
         isLeaf: true,
 
         resultKey: 'b',
-      },
+      }),
 
-      hasDirective: {
+      hasDirective: expect.objectContaining({
         directives: {
           skip: { if: false },
 
@@ -470,7 +470,7 @@ const execute = (graphql, r) => () => {
         isLeaf: true,
 
         resultKey: 'hasDirective',
-      },
+      }),
     });
   });
 
@@ -646,6 +646,55 @@ const execute = (graphql, r) => () => {
         height: 1.89,
       },
     });
+  });
+
+  it('passes breadcrumbs as info', async () => {
+    const data = {
+      user: {
+        id: 1,
+        name: 'Some User',
+        posts: [{ title: 'Some Article' }, { title: 'Other Article' }],
+      },
+    };
+
+    const query = gql`
+      query {
+        user {
+          id
+          name
+          posts(sort: TOP) {
+            title
+          }
+        }
+      }
+    `;
+
+    const breadcrumbs = [];
+    const resolver = (fieldName, root, args, context, info) => {
+      breadcrumbs.push(info.breadcrumbs);
+      return r(root[fieldName]);
+    };
+
+    const result = await graphql(resolver, query, data);
+
+    expect(breadcrumbs).toEqual([
+      [{ key: 'user', args: null }],
+      [{ key: 'user', args: null }, { key: 'id', args: null }],
+      [{ key: 'user', args: null }, { key: 'name', args: null }],
+      [{ key: 'user', args: null }, { key: 'posts', args: { sort: 'TOP' } }],
+      [
+        { key: 'user', args: null },
+        { key: 'posts', args: { sort: 'TOP' } },
+        { key: 0 },
+        { key: 'title', args: null },
+      ],
+      [
+        { key: 'user', args: null },
+        { key: 'posts', args: { sort: 'TOP' } },
+        { key: 1 },
+        { key: 'title', args: null },
+      ],
+    ]);
   });
 
   describe('examples', () => {

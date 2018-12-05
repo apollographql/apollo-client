@@ -40,6 +40,11 @@ export type FragmentMatcher = (
   context: any,
 ) => boolean;
 
+export type Breadcrumb = {
+  key: string | number;
+  args?: object | null;
+};
+
 export type ExecContext = {
   fragmentMap: FragmentMap;
   contextValue: any;
@@ -47,12 +52,14 @@ export type ExecContext = {
   resultMapper: ResultMapper;
   resolver: Resolver;
   fragmentMatcher: FragmentMatcher;
+  breadcrumbs: Breadcrumb[];
 };
 
 export type ExecInfo = {
   isLeaf: boolean;
   resultKey: string;
   directives: DirectiveInfo;
+  breadcrumbs: Breadcrumb[];
 };
 
 export type ExecOptions = {
@@ -101,6 +108,7 @@ export function graphql(
     resultMapper,
     resolver,
     fragmentMatcher,
+    breadcrumbs: [],
   };
 
   return executeSelectionSet(
@@ -177,15 +185,23 @@ function executeField(
   rootValue: any,
   execContext: ExecContext,
 ): any {
-  const { variableValues: variables, contextValue, resolver } = execContext;
+  const {
+    variableValues: variables,
+    contextValue,
+    resolver,
+    breadcrumbs: oldBreadcrumbs,
+  } = execContext;
 
   const fieldName = field.name.value;
   const args = argumentsObjectFromField(field, variables);
+
+  const breadcrumbs = [...oldBreadcrumbs, { key: fieldName, args }];
 
   const info: ExecInfo = {
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
     directives: getDirectiveInfoFromField(field, variables),
+    breadcrumbs,
   };
 
   const result = resolver(fieldName, rootValue, args, contextValue, info);
@@ -202,28 +218,33 @@ function executeField(
     return result;
   }
 
+  const newExecContext = { ...execContext, breadcrumbs };
+
   if (Array.isArray(result)) {
-    return executeSubSelectedArray(field, result, execContext);
+    return executeSubSelectedArray(field, result, newExecContext);
   }
 
   // Returned value is an object, and the query has a sub-selection. Recurse.
-  return executeSelectionSet(field.selectionSet, result, execContext);
+  return executeSelectionSet(field.selectionSet, result, newExecContext);
 }
 
 function executeSubSelectedArray(field, result, execContext) {
-  return result.map(item => {
+  return result.map((item, i) => {
     // null value in array
     if (item === null) {
       return null;
     }
 
+    const breadcrumbs = [...execContext.breadcrumbs, { key: i }];
+    const newExecContext = { ...execContext, breadcrumbs };
+
     // This is a nested array, recurse
     if (Array.isArray(item)) {
-      return executeSubSelectedArray(field, item, execContext);
+      return executeSubSelectedArray(field, item, newExecContext);
     }
 
     // This is an object, run the selection set on it
-    return executeSelectionSet(field.selectionSet, item, execContext);
+    return executeSelectionSet(field.selectionSet, item, newExecContext);
   });
 }
 

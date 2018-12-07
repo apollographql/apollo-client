@@ -74,9 +74,11 @@ The second argument to the update function is an object with a data property con
 Now that we've learned about the update function, let's implement one for the `Mutation` component we just built!
 
 ```jsx
-const GET_TODOS = gql`query GetTodos {
-  todos
-}`;
+const GET_TODOS = gql`
+  query GetTodos {
+    todos
+  }
+`;
 
 const AddTodo = () => {
   let input;
@@ -88,7 +90,7 @@ const AddTodo = () => {
         const { todos } = cache.readQuery({ query: GET_TODOS });
         cache.writeQuery({
           query: GET_TODOS,
-          data: { todos: todos.concat([addTodo]) }
+          data: { todos: todos.concat([addTodo]) },
         });
       }}
     >

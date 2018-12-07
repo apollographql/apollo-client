@@ -21,6 +21,7 @@ import {
   getFragmentDefinitions,
   createFragmentMap,
   FragmentMap,
+  getMainDefinition,
 } from './getFromAST';
 
 export type RemoveNodeConfig<N> = {
@@ -655,6 +656,33 @@ export function removeFragmentSpreadFromDocument(
   const operation = getOperationDefinitionOrDie(docClone);
   const fragments = createFragmentMap(getFragmentDefinitions(docClone));
   return isNotEmpty(operation, fragments) ? docClone : null;
+}
+
+// If the incoming document is a query, return it as is. Otherwise, build a
+// new document containing a query operation based on the selection set
+// of the previous main operation.
+export function buildQueryFromSelectionSet(
+  document: DocumentNode,
+): DocumentNode {
+  const definition = getMainDefinition(document);
+  const definitionOperation = (<OperationDefinitionNode>definition).operation;
+
+  if (definitionOperation === 'query') {
+    // Already a query, so return the existing document.
+    return document;
+  }
+
+  // Build a new query using the selection set of the main operation.
+  const docClone = cloneDeep(document);
+  const { selectionSet } = definition;
+  docClone.definitions = [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      selectionSet,
+    },
+  ];
+  return docClone;
 }
 
 function removeFragmentSpreadFromDefinitions(

@@ -20,6 +20,7 @@ import {
   isProduction,
   hasDirectives,
   mergeDeep,
+  buildQueryFromSelectionSet,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -1445,7 +1446,7 @@ export class QueryManager<TStore> {
 
   // Prepare and return a local resolver function, that can be used to
   // resolve @client fields.
-  private prepareResolver(query: DocumentNode | null, readOnly = false) {
+  private prepareResolver(query: DocumentNode | null) {
     let resolver: Resolver | null = null;
     const exportedVariables: Record<string, any> = {};
 
@@ -1461,10 +1462,6 @@ export class QueryManager<TStore> {
     let type: string | null = definitionOperation
       ? capitalizeFirstLetter(definitionOperation)
       : 'Query';
-
-    if (readOnly && type === 'Mutation') {
-      type = null;
-    }
 
     const { resolvers } = this;
     const cache = this.dataStore.getCache();
@@ -1568,16 +1565,14 @@ export class QueryManager<TStore> {
       hasDirectives(['client'], document) &&
       hasDirectives(['export'], document)
     ) {
-      const cachedData = this.dataStore
-        .getCache()
-        .diff({ query: document, optimistic: false });
-      const preparedResolver = this.prepareResolver(document, true);
+      const preparedResolver = this.prepareResolver(document);
       if (preparedResolver.resolver) {
+        const rootValue = this.buildRootValueFromCache(document, variables);
         const updatedContext = this.contextCopyWithCache(context);
         graphql(
           preparedResolver.resolver,
           document,
-          cachedData.result || {},
+          rootValue || {},
           updatedContext,
           variables,
         );
@@ -1613,23 +1608,10 @@ export class QueryManager<TStore> {
     if (query) {
       const { resolver } = this.prepareResolver(query);
       if (resolver) {
-        // If the main operation is a `Query`, we'll combine both locally
-        // cached and remote data, before running local resolvers. This
-        // gives us a chance to resolve data using both the local cache
-        // and local resolvers.
-        const definition = getMainDefinition(query);
-        const definitionOperation = (<OperationDefinitionNode>definition)
-          .operation;
-        let rootValue;
-        if (definitionOperation === 'query') {
-          const cachedData = this.dataStore.getCache().diff({
-            query,
-            optimistic: false,
-          });
-          rootValue = mergeDeep(cachedData.result, remoteResult);
-        } else {
-          rootValue = remoteResult;
-        }
+        let rootValue = this.buildRootValueFromCache(query, variables);
+        rootValue = rootValue
+          ? mergeDeep(rootValue, remoteResult)
+          : remoteResult;
 
         try {
           localResult = graphql(
@@ -1653,6 +1635,20 @@ export class QueryManager<TStore> {
       ...remoteResult,
       ...localResult,
     };
+  }
+
+  // Query the cache and return matching data.
+  private buildRootValueFromCache(
+    document: DocumentNode,
+    variables?: Record<string, any>,
+  ) {
+    const query = buildQueryFromSelectionSet(document);
+    const cachedData = this.dataStore.getCache().diff({
+      query,
+      variables,
+      optimistic: false,
+    });
+    return cachedData.result;
   }
 
   // Extract client and server specific queries from the incoming

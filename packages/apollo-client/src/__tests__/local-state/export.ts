@@ -128,7 +128,6 @@ describe('@client @export tests', () => {
         __typename: 'Author',
       };
 
-      const testAuthorId = 100;
       const testPostCount = 200;
 
       const client = new ApolloClient({
@@ -172,7 +171,6 @@ describe('@client @export tests', () => {
       __typename: 'Author',
     };
 
-    const testAuthorId = 100;
     const testPostCount = 200;
 
     const link = new ApolloLink(() =>
@@ -377,6 +375,104 @@ describe('@client @export tests', () => {
             currentReviewer,
           },
           reviewerDetails,
+        });
+        done();
+      });
+    },
+  );
+
+  it(
+    'should support combining @client @export variables, calculated by a ' +
+      'local resolver, with remote mutations',
+    done => {
+      const mutation = gql`
+        mutation upvotePost($postId: Int!) {
+          topPost @client @export(as: "postId")
+          upvotePost(postId: $postId) {
+            title
+            votes
+          }
+        }
+      `;
+
+      const testPostId = 100;
+      const testPost = {
+        title: 'The Day of the Jackal',
+        votes: 10,
+        __typename: 'post',
+      };
+
+      const link = new ApolloLink(({ variables }) => {
+        expect(variables).toMatchObject({ postId: testPostId });
+        return Observable.of({
+          data: {
+            upvotePost: testPost,
+          },
+        });
+      });
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+        resolvers: {
+          Mutation: {
+            topPost() {
+              return testPostId;
+            },
+          },
+        },
+      });
+
+      return client.mutate({ mutation }).then(({ data }: any) => {
+        expect({ ...data }).toMatchObject({
+          upvotePost: testPost,
+        });
+        done();
+      });
+    },
+  );
+
+  it(
+    'should support combining @client @export variables, calculated by ' +
+      'reading from the cache, with remote mutations',
+    done => {
+      const mutation = gql`
+        mutation upvotePost($postId: Int!) {
+          topPost @client @export(as: "postId")
+          upvotePost(postId: $postId) {
+            title
+            votes
+          }
+        }
+      `;
+
+      const testPostId = 100;
+      const testPost = {
+        title: 'The Day of the Jackal',
+        votes: 10,
+        __typename: 'post',
+      };
+
+      const link = new ApolloLink(({ variables }) => {
+        expect(variables).toMatchObject({ postId: testPostId });
+        return Observable.of({
+          data: {
+            upvotePost: testPost,
+          },
+        });
+      });
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+        initializers: {
+          topPost: () => testPostId,
+        },
+      });
+
+      return client.mutate({ mutation }).then(({ data }: any) => {
+        expect({ ...data }).toMatchObject({
+          upvotePost: testPost,
         });
         done();
       });

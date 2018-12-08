@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`General use should write the result of initiailizer functions to the cache 1`] = `
+exports[`Initializers called during ApolloClient instantiation should write the result of initiailizer functions to the cache 1`] = `
 Object {
   "$ROOT_QUERY.foo": Object {
     "__typename": "Bar",

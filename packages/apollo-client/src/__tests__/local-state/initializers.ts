@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 
 import ApolloClient from '../..';
 
-describe('General use', () => {
+describe('Initializers called during ApolloClient instantiation', () => {
   it('should write the result of initiailizer functions to the cache', () => {
     const cache = new InMemoryCache();
     new ApolloClient({
@@ -50,5 +50,30 @@ describe('General use', () => {
         expect(fooResolver).not.toHaveBeenCalled();
       })
       .catch(e => console.error(e));
+  });
+});
+
+describe('Initializers called via runInitializers', () => {
+  it('should run initializers asynchronously', async () => {
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+    });
+
+    client.runInitializers({
+      primaryUserId: () => 100,
+    });
+    expect(cache.extract()).toEqual({});
+
+    await client.runInitializers({
+      secondaryUserId: () => 200,
+    });
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        primaryUserId: 100,
+        secondaryUserId: 200,
+      },
+    });
   });
 });

@@ -154,7 +154,7 @@ describe('@client @export tests', () => {
     },
   );
 
-  it('should allow @client @export varaibles to be used with remote queries', done => {
+  it('should allow @client @export variables to be used with remote queries', done => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor @client {
@@ -197,6 +197,64 @@ describe('@client @export tests', () => {
       done();
     });
   });
+
+  it(
+    'should support @client @export variables that are nested multiple ' +
+      'levels deep',
+    done => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          appContainer @client {
+            systemDetails {
+              currentAuthor {
+                name
+                authorId @export(as: "authorId")
+              }
+            }
+          }
+          postCount(authorId: $authorId)
+        }
+      `;
+
+      const appContainer = {
+        systemDetails: {
+          currentAuthor: {
+            name: 'John Smith',
+            authorId: 100,
+            __typename: 'Author',
+          },
+          __typename: 'SystemDetails',
+        },
+        __typename: 'AppContainer',
+      };
+
+      const testPostCount = 200;
+
+      const link = new ApolloLink(() =>
+        Observable.of({
+          data: {
+            postCount: testPostCount,
+          },
+        }),
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+        initializers: {
+          appContainer: () => appContainer,
+        },
+      });
+
+      return client.query({ query }).then(({ data }: any) => {
+        expect({ ...data }).toMatchObject({
+          appContainer,
+          postCount: testPostCount,
+        });
+        done();
+      });
+    },
+  );
 
   it('should ignore @export directives if not used with @client', done => {
     const query = gql`
@@ -473,6 +531,54 @@ describe('@client @export tests', () => {
       return client.mutate({ mutation }).then(({ data }: any) => {
         expect({ ...data }).toMatchObject({
           upvotePost: testPost,
+        });
+        done();
+      });
+    },
+  );
+
+  it(
+    'should use the value of the last @export variable defined, if multiple ' +
+      'variables are defined with the same name',
+    done => {
+      const query = gql`
+        query reviewerPost($reviewerId: Int!) {
+          primaryReviewerId @client @export(as: "reviewerId")
+          secondaryReviewerId @client @export(as: "reviewerId")
+          post(reviewerId: $reviewerId) {
+            title
+          }
+        }
+      `;
+
+      const post = {
+        title: 'The One Post to Rule Them All',
+        __typename: 'Post',
+      };
+      const primaryReviewerId = 100;
+      const secondaryReviewerId = 200;
+
+      const link = new ApolloLink(({ variables }) => {
+        expect(variables).toMatchObject({ reviewerId: secondaryReviewerId });
+        return Observable.of({
+          data: {
+            post,
+          },
+        });
+      });
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+        initializers: {
+          primaryReviewerId: () => primaryReviewerId,
+          secondaryReviewerId: () => secondaryReviewerId,
+        },
+      });
+
+      return client.query({ query }).then(({ data }: any) => {
+        expect({ ...data }).toMatchObject({
+          post,
         });
         done();
       });

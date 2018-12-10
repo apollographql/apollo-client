@@ -22,7 +22,7 @@ import {
   Resolvers,
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
-
+import { LocalState } from './core/LocalState';
 import { Observable } from './util/Observable';
 
 import {
@@ -84,6 +84,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clientAwareness: Record<string, string> = {};
+  private localState: LocalState<TCacheShape>;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -239,25 +240,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       this.clientAwareness.version = clientAwarenessVersion;
     }
 
-    if (initializers) {
-      // Run (synchronously) provided local state initializers.
-      this.store.initializeSync(initializers);
-    }
-
-    if (resolvers) {
-      // Prepare provided local state resolvers.
-      this.addResolvers(resolvers);
-    }
-
-    if (typeDefs) {
-      // Set local schema type definitions.
-      this.setTypeDefs(typeDefs);
-    }
-
-    if (fragmentMatcher) {
-      // Set custom local state fragment matcher.
-      this.setFragmentMatcher(fragmentMatcher);
-    }
+    this.localState = new LocalState({
+      cache,
+      client: this,
+      initializers,
+      resolvers,
+      typeDefs,
+      fragmentMatcher,
+    });
   }
 
   /**
@@ -470,6 +460,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         queryDeduplication: this.queryDeduplication,
         ssrMode: this.ssrMode,
         clientAwareness: this.clientAwareness,
+        localState: this.localState,
         onBroadcast: () => {
           if (this.devToolsHookCb) {
             this.devToolsHookCb({
@@ -590,21 +581,28 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public runInitializers(
     initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
   ) {
-    this.store.initialize(initializers, this);
+    this.localState.runInitializers(initializers);
   }
 
   /**
-   * Register local resolvers.
+   * Add additional local resolvers.
    */
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.initQueryManager().addResolvers(resolvers);
+    this.localState.addResolvers(resolvers);
+  }
+
+  /**
+   * Set (override existing) local resolvers.
+   */
+  public setResolvers(resolvers: Resolvers | Resolvers[]) {
+    this.localState.setResolvers(resolvers);
   }
 
   /**
    * Get all registered local resolvers.
    */
   public getResolvers() {
-    return this.initQueryManager().getResolvers();
+    return this.localState.getResolvers();
   }
 
   /**
@@ -613,7 +611,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public setTypeDefs(
     typeDefs: string | string[] | DocumentNode | DocumentNode[],
   ) {
-    this.initQueryManager().setTypeDefs(typeDefs);
+    this.localState.setTypeDefs(typeDefs);
   }
 
   /**
@@ -625,14 +623,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     | DocumentNode
     | DocumentNode[]
     | undefined {
-    return this.queryManager ? this.queryManager.getTypeDefs() : undefined;
+    return this.localState.getTypeDefs();
   }
 
   /**
    * Set a custom local state fragment matcher.
    */
   public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
-    this.initQueryManager().setFragmentMatcher(fragmentMatcher);
+    this.localState.setFragmentMatcher(fragmentMatcher);
   }
 
   /**

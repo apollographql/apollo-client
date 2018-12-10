@@ -7,8 +7,7 @@ import {
 } from 'apollo-utilities';
 
 import { QueryStoreValue } from '../data/queries';
-import { MutationQueryReducer, Initializers } from '../core/types';
-import ApolloClient from '..';
+import { MutationQueryReducer } from '../core/types';
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -25,7 +24,6 @@ export interface DataWrite {
 
 export class DataStore<TSerialized> {
   private cache: ApolloCache<TSerialized>;
-  private firedInitializers: string[] = [];
 
   constructor(initialCache: ApolloCache<TSerialized>) {
     this.cache = initialCache;
@@ -210,95 +208,6 @@ export class DataStore<TSerialized> {
   }
 
   public reset(): Promise<void> {
-    // Allow initializers to be called again after a store reset.
-    this.firedInitializers = [];
-
     return this.cache.reset();
-  }
-
-  // Run the incoming initializer functions, asynchronously. Initializers that
-  // have already been run are tracked against the initializer field name, to
-  // prevent them from being run a second time.
-  //
-  // Initializer functions are passed a reference to the current
-  // `ApolloClient` instance, to get access to the cache (or any other
-  // `ApolloClient` properties/functions).
-  //
-  // NOTE: Initializers do not currently check to see if data already exists
-  // in the cache, before writing to the cache. This means existing data
-  // can be overwritten. We might decide to query into the cache first to
-  // see if any previous data exists before overwritting it, but TBD.
-  public initialize(
-    initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
-    client: ApolloClient<TSerialized>,
-  ) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const mergedInitializers = this.mergeInitializers(initializers);
-
-    const initializerPromises: Promise<void>[] = [];
-    this.runInitializers(
-      mergedInitializers,
-      (fieldName: string, initializer: any) => {
-        initializerPromises.push(
-          Promise.resolve(initializer(client)).then(result => {
-            if (result !== null) {
-              this.cache.writeData({ data: { [fieldName]: result } });
-            }
-          }),
-        );
-      },
-    );
-
-    return Promise.all(initializerPromises);
-  }
-
-  // Run incoming intializer functions, synchronously.
-  public initializeSync(
-    initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
-  ) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const mergedInitializers = this.mergeInitializers(initializers);
-
-    this.runInitializers(
-      mergedInitializers,
-      (fieldName: string, initializer: any) => {
-        const result = initializer(this);
-        if (result !== null) {
-          this.cache.writeData({ data: { [fieldName]: result } });
-        }
-      },
-    );
-  }
-
-  private mergeInitializers(
-    initializers: Initializers<TSerialized> | Initializers<TSerialized>[],
-  ) {
-    let mergedInitializers: Initializers<TSerialized> = {};
-    if (Array.isArray(initializers)) {
-      initializers.forEach(initializerGroup => {
-        mergedInitializers = { ...mergedInitializers, ...initializerGroup };
-      });
-    } else {
-      mergedInitializers = initializers;
-    }
-    return mergedInitializers;
-  }
-
-  private runInitializers(
-    initializers: Initializers<TSerialized>,
-    runFunc: (fieldName: string, initializer: any) => any,
-  ) {
-    Object.keys(initializers).forEach(fieldName => {
-      if (this.firedInitializers.indexOf(fieldName) < 0) {
-        runFunc(fieldName, initializers[fieldName]);
-        this.firedInitializers.push(fieldName);
-      }
-    });
   }
 }

@@ -4,12 +4,15 @@ import { mockSingleLink, MockedResponse } from './mockLinks';
 
 import { DataStore } from '../../src/data/store';
 import { InMemoryCache } from 'apollo-cache-inmemory';
+import { LocalState } from '../core/LocalState';
 
 // Helper method for the tests that construct a query manager out of a
 // a list of mocked responses for a mocked network interface.
 export default (...mockedResponses: MockedResponse[]) => {
+  const cache = new InMemoryCache({ addTypename: false });
   return new QueryManager({
     link: mockSingleLink(...mockedResponses),
-    store: new DataStore(new InMemoryCache({ addTypename: false })),
+    store: new DataStore(cache),
+    localState: new LocalState({ cache }),
   });
 };

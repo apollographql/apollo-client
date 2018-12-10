@@ -44,7 +44,7 @@ const assertWithObserver = ({
   });
 
   if (resolvers) {
-    queryManager.addResolvers(resolvers);
+    queryManager.getLocalState().addResolvers(resolvers);
   }
 
   const finalOptions = assign(

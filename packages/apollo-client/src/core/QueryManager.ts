@@ -1,10 +1,5 @@
 import { execute, ApolloLink, FetchResult } from 'apollo-link';
-import {
-  ExecutionResult,
-  DocumentNode,
-  OperationDefinitionNode,
-} from 'graphql';
-import graphql, { Resolver, FragmentMatcher } from 'graphql-anywhere';
+import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
@@ -16,22 +11,14 @@ import {
   getOperationDefinition,
   getOperationName,
   getQueryDefinition,
-  getMainDefinition,
   isProduction,
   hasDirectives,
-  mergeDeep,
-  buildQueryFromSelectionSet,
+  graphQLResultHasError,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
-
 import { isApolloError, ApolloError } from '../errors/ApolloError';
-
 import { Observer, Subscription, Observable } from '../util/Observable';
-import { removeClientSetsFromDocument } from '../util/removeClientSetsFromDocument';
-import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
-import { normalizeTypeDefs } from '../util/normalizeTypeDefs';
-
 import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
@@ -49,9 +36,8 @@ import {
   ApolloQueryResult,
   FetchType,
   OperationVariables,
-  Resolvers,
 } from './types';
-import { graphQLResultHasError } from 'apollo-utilities';
+import { LocalState } from './LocalState';
 
 export interface QueryInfo {
   listeners: QueryListener[];
@@ -82,6 +68,7 @@ export class QueryManager<TStore> {
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
+  private localState: LocalState<TStore>;
 
   private onBroadcast: () => void;
 
@@ -102,15 +89,6 @@ export class QueryManager<TStore> {
   // updateQueries.
   private queryIdsByName: { [queryName: string]: string[] } = {};
 
-  // A map of local resolvers by field/type name.
-  private resolvers: Resolvers = {};
-
-  // Local schema type definitions.
-  private typeDefs: string | string[] | DocumentNode | DocumentNode[];
-
-  // Local state custom fragment matcher.
-  private fragmentMatcher: FragmentMatcher;
-
   constructor({
     link,
     queryDeduplication = false,
@@ -118,6 +96,7 @@ export class QueryManager<TStore> {
     onBroadcast = () => undefined,
     ssrMode = false,
     clientAwareness = {},
+    localState,
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
@@ -125,6 +104,7 @@ export class QueryManager<TStore> {
     onBroadcast?: () => void;
     ssrMode?: boolean;
     clientAwareness?: Record<string, string>;
+    localState: LocalState<TStore>;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
@@ -133,6 +113,7 @@ export class QueryManager<TStore> {
     this.onBroadcast = onBroadcast;
     this.clientAwareness = clientAwareness;
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
+    this.localState = localState;
   }
 
   public mutate<T>({
@@ -191,7 +172,7 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    const updatedVariables: OperationVariables = this.prepareClientExportVariables(
+    const updatedVariables: OperationVariables = this.localState.addExportedVariables(
       mutation,
       variables,
       context,
@@ -287,9 +268,8 @@ export class QueryManager<TStore> {
         return storeResult as FetchResult<T>;
       };
 
-      const { clientQuery, serverQuery } = this.parseClientAndServerQuery(
-        operation.query,
-      );
+      const clientQuery = this.localState.clientQuery(operation.query);
+      const serverQuery = this.localState.serverQuery(operation.query);
       if (serverQuery) {
         operation.query = serverQuery;
       }
@@ -315,7 +295,7 @@ export class QueryManager<TStore> {
           const { context, variables } = operation;
 
           // Run the query through local client resolvers.
-          updatedResult.data = self.runResolvers({
+          updatedResult.data = self.localState.runResolvers({
             query: clientQuery,
             remoteResult: result.data,
             context,
@@ -380,7 +360,7 @@ export class QueryManager<TStore> {
     const cache = this.dataStore.getCache();
 
     const query = cache.transformDocument(options.query);
-    const updatedVariables: OperationVariables = this.prepareClientExportVariables(
+    const updatedVariables: OperationVariables = this.localState.addExportedVariables(
       query,
       variables,
       context,
@@ -909,6 +889,10 @@ export class QueryManager<TStore> {
 
     // begin removing data from the store
     const reset = this.dataStore.reset();
+
+    // Reset initializer tracking.
+    this.localState.resetInitializers();
+
     return reset;
   }
 
@@ -969,6 +953,7 @@ export class QueryManager<TStore> {
 
     let sub: Subscription;
     let observers: Observer<any>[] = [];
+    const clientQuery = this.localState.clientQuery(transformedDoc);
 
     return new Observable(observer => {
       observers.push(observer);
@@ -976,16 +961,12 @@ export class QueryManager<TStore> {
       // If this is the first observer, actually initiate the network
       // subscription.
       if (observers.length === 1) {
-        const { clientQuery, serverQuery } = this.parseClientAndServerQuery(
-          transformedDoc,
-        );
-
         const handler = {
           next: (result: FetchResult) => {
             let updatedResult = result;
 
             // Run the query through local client resolvers.
-            updatedResult.data = this.runResolvers({
+            updatedResult.data = this.localState.runResolvers({
               query: clientQuery,
               remoteResult: result.data,
               context: {},
@@ -1028,10 +1009,11 @@ export class QueryManager<TStore> {
           },
         };
 
-        const updatedVariables: OperationVariables = this.prepareClientExportVariables(
+        const updatedVariables: OperationVariables = this.localState.addExportedVariables(
           transformedDoc,
           variables,
         );
+        const serverQuery = this.localState.serverQuery(transformedDoc);
         if (serverQuery) {
           const operation = this.buildOperationForLink(
             serverQuery,
@@ -1141,32 +1123,8 @@ export class QueryManager<TStore> {
     });
   }
 
-  public addResolvers(resolvers: Resolvers | Resolvers[]) {
-    if (Array.isArray(resolvers)) {
-      resolvers.forEach(resolverGroup => {
-        this.resolvers = mergeDeep(this.resolvers, resolverGroup);
-      });
-    } else {
-      this.resolvers = mergeDeep(this.resolvers, resolvers);
-    }
-  }
-
-  public getResolvers() {
-    return this.resolvers;
-  }
-
-  public setTypeDefs(
-    typeDefs: string | string[] | DocumentNode | DocumentNode[],
-  ) {
-    this.typeDefs = typeDefs;
-  }
-
-  public getTypeDefs(): string | string[] | DocumentNode | DocumentNode[] {
-    return this.typeDefs;
-  }
-
-  public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
-    this.fragmentMatcher = fragmentMatcher;
+  public getLocalState(): LocalState<TStore> {
+    return this.localState;
   }
 
   private getObservableQueryPromises(
@@ -1209,17 +1167,15 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
-
-    const { clientQuery, serverQuery } = this.parseClientAndServerQuery(
-      document,
-    );
-
     let resultFromStore: any;
     let errorsFromStore: any;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       let obs: Observable<FetchResult>;
       let updatedContext = {};
+
+      const clientQuery = this.localState.clientQuery(document);
+      const serverQuery = this.localState.serverQuery(document);
       if (serverQuery) {
         const operation = this.buildOperationForLink(serverQuery, variables, {
           ...context,
@@ -1228,7 +1184,7 @@ export class QueryManager<TStore> {
         updatedContext = operation.context;
         obs = execute(this.deduplicator, operation);
       } else {
-        updatedContext = this.contextCopyWithCache(context);
+        updatedContext = this.prepareContext(context);
         obs = Observable.of({ data: {} });
       }
 
@@ -1242,7 +1198,7 @@ export class QueryManager<TStore> {
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
             // Run the query through local client resolvers.
-            updatedResult.data = this.runResolvers({
+            updatedResult.data = this.localState.runResolvers({
               query: clientQuery,
               remoteResult: result.data,
               context: updatedContext,
@@ -1409,264 +1365,15 @@ export class QueryManager<TStore> {
         : document,
       variables,
       operationName: getOperationName(document) || undefined,
-      context: this.contextCopyWithCache(extraContext),
+      context: this.prepareContext(extraContext),
     };
   }
 
-  private contextCopyWithCache(context = {}) {
-    const cache = this.dataStore.getCache();
-
-    let schemas: object[] = [];
-    if (this.typeDefs) {
-      const directives = 'directive @client on FIELD';
-      const definition = normalizeTypeDefs(this.typeDefs);
-      schemas = schemas.concat([{ definition, directives }]);
-    }
-
-    const newContext = {
-      ...context,
-      cache,
-      // Getting an entry's cache key is useful for local state resolvers.
-      getCacheKey: (obj: { __typename: string; id: string | number }) => {
-        if ((cache as any).config) {
-          return (cache as any).config.dataIdFromObject(obj);
-        } else {
-          throw new Error(
-            'To use context.getCacheKey, you need to use a cache that has ' +
-              'a configurable dataIdFromObject, like apollo-cache-inmemory.',
-          );
-        }
-      },
+  private prepareContext(context = {}) {
+    const newContext = this.localState.prepareContext(context);
+    return {
+      ...newContext,
       clientAwareness: this.clientAwareness,
-      schemas,
-    };
-
-    return newContext;
-  }
-
-  // Prepare and return a local resolver function, that can be used to
-  // resolve @client fields.
-  private prepareResolver(query: DocumentNode | null) {
-    let resolver: Resolver | null = null;
-    const exportedVariables: Record<string, any> = {};
-
-    if (!query) {
-      return {
-        resolver,
-        exportedVariables,
-      };
-    }
-
-    const definition = getMainDefinition(query);
-    const definitionOperation = (<OperationDefinitionNode>definition).operation;
-    let type: string | null = definitionOperation
-      ? capitalizeFirstLetter(definitionOperation)
-      : 'Query';
-
-    const { resolvers } = this;
-    const cache = this.dataStore.getCache();
-    const { query: queryFn, mutate: mutateFn } = this;
-
-    resolver = (
-      fieldName: string,
-      rootValue: any = {},
-      args: any,
-      context: any,
-      info: any,
-    ) => {
-      const { resultKey } = info;
-
-      // If an @export directive is associated with the current field, store
-      // the `as` export variable name for later use.
-      let exportedVariable;
-      if (info.directives && info.directives.export) {
-        exportedVariable = info.directives.export.as;
-      }
-
-      // To add a bit of flexibility, we'll try resolving data in root value
-      // objects, as well as an object pointed to by the first root
-      // value property (if it exists). This means we're resolving using
-      // { property1: '', property2: '', ... } objects, as well as
-      // { someField: { property1: '', property2: '', ... } } objects.
-      let childRootValue: { [key: string]: any } = {};
-      let rootValueKey = Object.keys(rootValue)[0];
-      if (rootValueKey) {
-        childRootValue = rootValue[rootValueKey];
-      }
-
-      let normalNode =
-        rootValue[fieldName] !== undefined
-          ? rootValue[fieldName]
-          : childRootValue[fieldName];
-      let aliasedNode =
-        rootValue[resultKey] !== undefined
-          ? rootValue[resultKey]
-          : childRootValue[resultKey];
-
-      const aliasUsed = resultKey !== fieldName;
-      const field = aliasUsed ? fieldName : resultKey;
-
-      // Make sure the context has access to the cache and query/mutate
-      // functions, so resolvers can use them.
-      const updatedContext = {
-        ...context,
-        cache,
-        query: queryFn,
-        mutate: mutateFn,
-      };
-
-      let result;
-
-      // If a local resolver function is defined, run it and return the
-      // outcome.
-      const resolverMap = resolvers[(rootValue as any).__typename || type];
-      if (resolverMap) {
-        const resolve = resolverMap[field];
-        if (resolve) {
-          result = resolve(rootValue, args, updatedContext, info);
-        }
-      }
-
-      if (!result) {
-        // If we were able to find a matching field in the root value, return
-        // that value as the resolved value.
-        if (normalNode !== undefined || aliasedNode !== undefined) {
-          result = aliasedNode || normalNode;
-        }
-      }
-
-      // If an @export directive is associated with this field, store
-      // the calculated result for later use.
-      if (exportedVariable) {
-        exportedVariables[exportedVariable] = result;
-      }
-
-      return result;
-    };
-
-    return {
-      resolver,
-      exportedVariables,
-    };
-  }
-
-  // To support `@client @export(as: "someVar")` syntax, we'll first resolve
-  // @client @export fields locally, then pass the resolved values back to be
-  // used alongside the original operation variables.
-  private prepareClientExportVariables(
-    document: DocumentNode,
-    variables: OperationVariables = {},
-    context = {},
-  ) {
-    let exportedVariables: { [fieldName: string]: string } = {};
-
-    if (
-      document &&
-      hasDirectives(['client'], document) &&
-      hasDirectives(['export'], document)
-    ) {
-      const preparedResolver = this.prepareResolver(document);
-      if (preparedResolver.resolver) {
-        const rootValue = this.buildRootValueFromCache(document, variables);
-        const updatedContext = this.contextCopyWithCache(context);
-        graphql(
-          preparedResolver.resolver,
-          document,
-          rootValue || {},
-          updatedContext,
-          variables,
-        );
-        exportedVariables = preparedResolver.exportedVariables;
-      }
-    }
-
-    return {
-      ...variables,
-      ...exportedVariables,
-    };
-  }
-
-  // Run local client resolvers against the incoming query and remote data.
-  // Locally resolved field values are merged with the incoming remote data,
-  // and returned. Note that locally resolved fields will overwrite
-  // remote data using the same field name.
-  private runResolvers({
-    query,
-    remoteResult,
-    context,
-    variables,
-    onError,
-  }: {
-    query: DocumentNode | null;
-    remoteResult?: ExecutionResult;
-    context?: Record<string, any>;
-    variables?: Record<string, any>;
-    onError?: (error: any) => void;
-  }) {
-    let localResult: Record<string, any> = {};
-
-    if (query) {
-      const { resolver } = this.prepareResolver(query);
-      if (resolver) {
-        let rootValue = this.buildRootValueFromCache(query, variables);
-        rootValue = rootValue
-          ? mergeDeep(rootValue, remoteResult)
-          : remoteResult;
-
-        try {
-          localResult = graphql(
-            resolver,
-            query,
-            rootValue,
-            context,
-            variables,
-            { fragmentMatcher: this.fragmentMatcher },
-          );
-        } catch (error) {
-          if (onError) {
-            onError(error);
-            return;
-          }
-        }
-      }
-    }
-
-    return {
-      ...remoteResult,
-      ...localResult,
-    };
-  }
-
-  // Query the cache and return matching data.
-  private buildRootValueFromCache(
-    document: DocumentNode,
-    variables?: Record<string, any>,
-  ) {
-    const query = buildQueryFromSelectionSet(document);
-    const cachedData = this.dataStore.getCache().diff({
-      query,
-      variables,
-      optimistic: false,
-    });
-    return cachedData.result;
-  }
-
-  // Extract client and server specific queries from the incoming
-  // document. Client queries contain everything in the incoming
-  // document (if a @client directive is found), whereas server
-  // queries are stripped of all @client based selection sets.
-  private parseClientAndServerQuery(query: DocumentNode) {
-    let clientQuery: DocumentNode | null = null;
-    let serverQuery: DocumentNode | null = null;
-    if (hasDirectives(['client'], query)) {
-      clientQuery = query;
-      serverQuery = removeClientSetsFromDocument(query);
-    } else {
-      serverQuery = query;
-    }
-    return {
-      clientQuery,
-      serverQuery,
     };
   }
 }

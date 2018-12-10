@@ -104,7 +104,7 @@ export class QueryManager<TStore> {
     onBroadcast?: () => void;
     ssrMode?: boolean;
     clientAwareness?: Record<string, string>;
-    localState: LocalState<TStore>;
+    localState?: LocalState<TStore>;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
@@ -113,7 +113,7 @@ export class QueryManager<TStore> {
     this.onBroadcast = onBroadcast;
     this.clientAwareness = clientAwareness;
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
-    this.localState = localState;
+    this.localState = localState || new LocalState({ cache: store.getCache() });
   }
 
   public mutate<T>({

@@ -13,6 +13,5 @@ export default (...mockedResponses: MockedResponse[]) => {
   return new QueryManager({
     link: mockSingleLink(...mockedResponses),
     store: new DataStore(cache),
-    localState: new LocalState({ cache }),
   });
 };

@@ -398,7 +398,7 @@ export class LocalState<TCacheShape> {
         }
       }
 
-      if (!result) {
+      if (result === undefined) {
         // If we were able to find a matching field in the root value, return
         // that value as the resolved value.
         if (normalNode !== undefined || aliasedNode !== undefined) {

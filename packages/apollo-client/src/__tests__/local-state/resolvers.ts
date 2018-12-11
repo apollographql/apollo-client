@@ -331,6 +331,35 @@ describe('Basic resolver capabilities', () => {
       });
     },
   );
+
+  it('should handle resolvers that work with booleans properly', done => {
+    const query = gql`
+      query CartDetails {
+        isInCart @client
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    cache.writeQuery({ query, data: { isInCart: true } });
+
+    const client = new ApolloClient({
+      cache,
+      resolvers: {
+        Query: {
+          isInCart: () => false,
+        },
+      },
+    });
+
+    return client
+      .query({ query, fetchPolicy: 'network-only' })
+      .then(({ data }: any) => {
+        expect({ ...data }).toMatchObject({
+          isInCart: false,
+        });
+        done();
+      });
+  });
 });
 
 describe('Writing cache data from resolvers', () => {

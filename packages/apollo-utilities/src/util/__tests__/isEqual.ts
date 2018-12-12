@@ -83,4 +83,11 @@ describe('isEqual', () => {
     );
     expect(!isEqual(objNoProto, null)).toBe(true);
   });
+
+  it('should correctly handle modified prototypes', () => {
+    Array.prototype.foo = null;
+    expect(isEqual([1, 2, 3], [1, 2, 3])).toBe(true);
+    expect(!isEqual([1, 2, 3], [1, 2, 4])).toBe(true);
+    delete Array.prototype.foo;
+  });
 });

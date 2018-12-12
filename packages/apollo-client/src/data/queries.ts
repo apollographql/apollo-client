@@ -117,7 +117,7 @@ export class QueryStore {
     result: ExecutionResult,
     fetchMoreForQueryId: string | undefined,
   ) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
     this.store[queryId].graphQLErrors =
@@ -141,7 +141,7 @@ export class QueryStore {
     error: Error,
     fetchMoreForQueryId: string | undefined,
   ) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = error;
     this.store[queryId].networkStatus = NetworkStatus.error;
@@ -155,7 +155,7 @@ export class QueryStore {
   }
 
   public markQueryResultClient(queryId: string, complete: boolean) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
     this.store[queryId].previousVariables = null;

@@ -20,10 +20,8 @@ export function mockSingleLink(
   return new MockLink(mockedResponses);
 }
 
-export function mockObservableLink(
-  mockedSubscription: MockedSubscription,
-): MockSubscriptionLink {
-  return new MockSubscriptionLink(mockedSubscription);
+export function mockObservableLink(): MockSubscriptionLink {
+  return new MockSubscriptionLink();
 }
 
 export interface MockedResponse {
@@ -118,6 +116,7 @@ export class MockSubscriptionLink extends ApolloLink {
         unsubscribe: () => {
           this.unsubscribers.forEach(x => x());
         },
+        closed: false
       };
     });
   }
@@ -131,11 +130,11 @@ export class MockSubscriptionLink extends ApolloLink {
     }, result.delay || 0);
   }
 
-  public onSetup(listener): void {
+  public onSetup(listener: any): void {
     this.setups = this.setups.concat([listener]);
   }
 
-  public onUnsubscribe(listener): void {
+  public onUnsubscribe(listener: any): void {
     this.unsubscribers = this.unsubscribers.concat([listener]);
   }
 }

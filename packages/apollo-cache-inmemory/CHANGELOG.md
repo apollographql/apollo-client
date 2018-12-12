@@ -1,5 +1,19 @@
 # CHANGELOG
 
+----
+
+**NOTE:** This changelog is no longer maintained. Changes are now tracked in
+the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+
+----
+
+### 1.3.0
+
+- Optimize repeated `apollo-cache-inmemory` reads by caching partial query
+  results. As a consequence, watched queries will not be rebroadcast unless the
+  data have changed.
+  [PR #3394](https://github.com/apollographql/apollo-client/pull/3394)
+
 ### 1.2.5
 
 - No changes.
@@ -21,7 +35,7 @@
 
 - Fixed an issue that caused fragment only queries to sometimes fail.
   [Issue #3402](https://github.com/apollographql/apollo-client/issues/3402)
-  [PR #3507](https://github.com/apollographql/apollo-client/pull/3507)  
+  [PR #3507](https://github.com/apollographql/apollo-client/pull/3507)
 - Fixed cache invalidation for inlined mixed types in union fields within
   arrays.
   [PR #3422](https://github.com/apollographql/apollo-client/pull/3422)
@@ -29,6 +43,10 @@
 ### 1.2.1
 
 - Not documented
+
+### vNEXT
+- Optimize repeated `apollo-cache-inmemory` reads by caching partial query results
+  [#3394](https://github.com/apollographql/apollo-client/pull/3394)
 
 ### 1.2.0
 

@@ -16,7 +16,7 @@ Here's what this looks like in the code:
 
 ```js
 const UPDATE_COMMENT = gql`
-  mutation updateComment($commentId: ID!, $commentContent: String!) {
+  mutation UpdateComment($commentId: ID!, $commentContent: String!) {
     updateComment(commentId: $commentId, commentContent: $commentContent) {
       id
       __typename
@@ -59,7 +59,7 @@ Here is a concrete example from GitHunt, which inserts a comment into an existin
 
 ```js
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(
       repoFullName: $repoFullName
       commentContent: $commentContent

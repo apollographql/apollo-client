@@ -6,31 +6,85 @@ import { stripSymbols } from 'apollo-utilities';
 import { withError } from './diffAgainstStore';
 import { withWarning } from './writeToStore';
 
+import { DepTrackingCache } from '../depTrackingCache';
+
 import {
   HeuristicFragmentMatcher,
-  writeQueryToStore,
-  readQueryFromStore,
+  StoreReader,
+  StoreWriter,
 } from '../';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
-  const store = writeQueryToStore({
+  const reader = new StoreReader();
+  const writer = new StoreWriter();
+
+  const store = writer.writeQueryToStore({
     result,
     query,
     variables,
-    fragmentMap,
   });
 
-  const reconstructedResult = readQueryFromStore({
+  const readOptions = {
     store,
     query,
     variables,
     fragmentMatcherFunction,
+  };
+
+  const reconstructedResult = reader.readQueryFromStore(readOptions);
+  expect(reconstructedResult).toEqual(result);
+
+  // Make sure the result is identical if we haven't written anything new
+  // to the store. https://github.com/apollographql/apollo-client/pull/3394
+  expect(store).toBeInstanceOf(DepTrackingCache);
+  expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
+
+  // Now make sure subtrees of the result are identical even after we write
+  // an additional bogus field to the store.
+  writer.writeQueryToStore({
+    store,
+    result: { oyez: 1234 },
+    query: gql`
+      {
+        oyez
+      }
+    `,
   });
 
-  expect(stripSymbols(reconstructedResult)).toEqual(result);
+  const deletedRootResult = reader.readQueryFromStore(readOptions);
+  expect(deletedRootResult).toEqual(result);
+
+  if (deletedRootResult === reconstructedResult) {
+    // We don't expect the new result to be identical to the previous result,
+    // but there are some rare cases where that can happen, and it's a good
+    // thing, because it means the caching system is working slightly better
+    // than expected... and we don't need to continue with the rest of the
+    // comparison logic below.
+    return;
+  }
+
+  function expectStrictEqualExceptArrays(a, b) {
+    if (Array.isArray(a)) {
+      // The caching system caches result objects but not result arrays, so we
+      // recursively compare array elements using expectStrictEqualExceptArrays.
+      expect(Array.isArray(b)).toBe(true);
+      expect(a.length).toBe(b.length);
+      a.forEach((aItem, index) => {
+        expectStrictEqualExceptArrays(aItem, b[index]);
+      });
+    } else {
+      expect(a).toBe(b);
+    }
+  }
+
+  Object.keys(result).forEach(key => {
+    expectStrictEqualExceptArrays(
+      deletedRootResult[key],
+      reconstructedResult[key],
+    );
+  });
 }
 
 describe('roundtrip', () => {

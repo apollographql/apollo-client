@@ -1,6 +1,6 @@
 import ApolloClient, { gql, InMemoryCache } from '../';
 import { stripSymbols } from 'apollo-utilities';
-import * as fetchMock from 'fetch-mock';
+import fetchMock from 'fetch-mock';
 
 global.fetch = jest.fn(() =>
   Promise.resolve({ json: () => Promise.resolve({}) }),
@@ -20,6 +20,16 @@ describe('config', () => {
       foo: () => 'woo',
     },
   };
+
+  it('warns about unsupported parameter', () => {
+    jest.spyOn(global.console, 'warn');
+
+    const client = new ApolloClient({
+      link: [],
+    });
+
+    expect(global.console.warn.mock.calls).toMatchSnapshot();
+  });
 
   it('allows you to pass in a custom fetcher', () => {
     const customFetcher = jest.fn(() =>

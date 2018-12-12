@@ -11,7 +11,6 @@ import {
   getOperationName,
   getQueryDefinition,
   isProduction,
-  maybeDeepFreeze,
   hasDirectives,
 } from 'apollo-utilities';
 
@@ -33,7 +32,12 @@ import {
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import { QueryListener, ApolloQueryResult, FetchType } from './types';
+import {
+  QueryListener,
+  ApolloQueryResult,
+  FetchType,
+  OperationVariables,
+} from './types';
 import { graphQLResultHasError } from 'apollo-utilities';
 
 export interface QueryInfo {
@@ -50,16 +54,6 @@ export interface QueryInfo {
   cancel?: (() => void);
 }
 
-const defaultQueryInfo = {
-  listeners: [],
-  invalidated: false,
-  document: null,
-  newData: null,
-  lastRequestId: null,
-  observableQuery: null,
-  subscriptions: [],
-};
-
 export interface QueryPromise {
   resolve: (result: ApolloQueryResult<any>) => void;
   reject: (error: Error) => void;
@@ -74,6 +68,7 @@ export class QueryManager<TStore> {
 
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
+  private clientAwareness: Record<string, string> = {};
 
   private onBroadcast: () => void;
 
@@ -100,19 +95,21 @@ export class QueryManager<TStore> {
     store,
     onBroadcast = () => undefined,
     ssrMode = false,
+    clientAwareness = {},
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
     store: DataStore<TStore>;
     onBroadcast?: () => void;
     ssrMode?: boolean;
+    clientAwareness?: Record<string, string>;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
     this.queryDeduplication = queryDeduplication;
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
-
+    this.clientAwareness = clientAwareness;
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
@@ -122,6 +119,7 @@ export class QueryManager<TStore> {
     optimisticResponse,
     updateQueries: updateQueriesByName,
     refetchQueries = [],
+    awaitRefetchQueries = false,
     update: updateWithProxyFn,
     errorPolicy = 'none',
     fetchPolicy,
@@ -192,6 +190,71 @@ export class QueryManager<TStore> {
         ...context,
         optimisticResponse,
       });
+
+      const completeMutation = async () => {
+        if (error) {
+          this.mutationStore.markMutationError(mutationId, error);
+        }
+
+        this.dataStore.markMutationComplete({
+          mutationId,
+          optimisticResponse,
+        });
+
+        this.broadcastQueries();
+
+        if (error) {
+          throw error;
+        }
+
+        // allow for conditional refetches
+        // XXX do we want to make this the only API one day?
+        if (typeof refetchQueries === 'function') {
+          refetchQueries = refetchQueries(storeResult as ExecutionResult);
+        }
+
+        const refetchQueryPromises: Promise<
+          ApolloQueryResult<any>[] | ApolloQueryResult<{}>
+        >[] = [];
+
+        for (const refetchQuery of refetchQueries) {
+          if (typeof refetchQuery === 'string') {
+            const promise = this.refetchQueryByName(refetchQuery);
+            if (promise) {
+              refetchQueryPromises.push(promise);
+            }
+            continue;
+          }
+
+          const queryOptions: QueryOptions = {
+            query: refetchQuery.query,
+            variables: refetchQuery.variables,
+            fetchPolicy: 'network-only',
+          };
+
+          if (refetchQuery.context) {
+            queryOptions.context = refetchQuery.context;
+          }
+
+          refetchQueryPromises.push(this.query(queryOptions));
+        }
+
+        if (awaitRefetchQueries) {
+          await Promise.all(refetchQueryPromises);
+        }
+
+        this.setQuery(mutationId, () => ({ document: undefined }));
+        if (
+          errorPolicy === 'ignore' &&
+          storeResult &&
+          graphQLResultHasError(storeResult)
+        ) {
+          delete storeResult.errors;
+        }
+
+        return storeResult as FetchResult<T>;
+      };
+
       execute(this.link, operation).subscribe({
         next: (result: ExecutionResult) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
@@ -215,6 +278,7 @@ export class QueryManager<TStore> {
           }
           storeResult = result as FetchResult<T>;
         },
+
         error: (err: Error) => {
           this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete({
@@ -230,54 +294,8 @@ export class QueryManager<TStore> {
             }),
           );
         },
-        complete: () => {
-          if (error) {
-            this.mutationStore.markMutationError(mutationId, error);
-          }
 
-          this.dataStore.markMutationComplete({
-            mutationId,
-            optimisticResponse,
-          });
-
-          this.broadcastQueries();
-
-          if (error) {
-            reject(error);
-            return;
-          }
-
-          // allow for conditional refetches
-          // XXX do we want to make this the only API one day?
-          if (typeof refetchQueries === 'function') {
-            refetchQueries = refetchQueries(storeResult as ExecutionResult);
-          }
-
-          if (refetchQueries) {
-            refetchQueries.forEach(refetchQuery => {
-              if (typeof refetchQuery === 'string') {
-                this.refetchQueryByName(refetchQuery);
-                return;
-              }
-
-              this.query({
-                query: refetchQuery.query,
-                variables: refetchQuery.variables,
-                fetchPolicy: 'network-only',
-              });
-            });
-          }
-
-          this.setQuery(mutationId, () => ({ document: undefined }));
-          if (
-            errorPolicy === 'ignore' &&
-            storeResult &&
-            graphQLResultHasError(storeResult)
-          ) {
-            delete storeResult.errors;
-          }
-          resolve(storeResult as FetchResult<T>);
-        },
+        complete: () => completeMutation().then(resolve, reject),
       });
     });
   }
@@ -527,8 +545,15 @@ export class QueryManager<TStore> {
           let isMissing: boolean;
 
           if (newData) {
-            // clear out the latest new data, since we're now using it
-            this.setQuery(queryId, () => ({ newData: null }));
+            // As long as we're using the cache, clear out the latest
+            // `newData`, since it will now become the current data. We need
+            // to keep the `newData` stored with the query when using
+            // `no-cache` since `getCurrentQueryResult` attemps to pull from
+            // `newData` first, following by trying the cache (which won't
+            // find a hit for `no-cache`).
+            if (fetchPolicy !== 'no-cache') {
+              this.setQuery(queryId, () => ({ newData: null }));
+            }
 
             data = newData.result;
             isMissing = !newData.complete || false;
@@ -582,20 +607,13 @@ export class QueryManager<TStore> {
           }
 
           if (observer.next) {
-            const isDifferentResult = !(
-              lastResult &&
-              resultFromStore &&
-              lastResult.networkStatus === resultFromStore.networkStatus &&
-              lastResult.stale === resultFromStore.stale &&
-              // We can do a strict equality check here because we include a `previousResult`
-              // with `readQueryFromStore`. So if the results are the same they will be
-              // referentially equal.
-              lastResult.data === resultFromStore.data
-            );
-
-            if (isDifferentResult || previouslyHadError) {
+            if (
+              previouslyHadError ||
+              !observableQuery ||
+              observableQuery.isDifferentFromLastResult(resultFromStore)
+            ) {
               try {
-                observer.next(maybeDeepFreeze(resultFromStore));
+                observer.next(resultFromStore);
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
                 setTimeout(() => {
@@ -837,29 +855,6 @@ export class QueryManager<TStore> {
     });
   }
 
-  private getObservableQueryPromises(
-    includeStandby?: boolean,
-  ): Promise<ApolloQueryResult<any>>[] {
-    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
-    this.queries.forEach(({ observableQuery }, queryId) => {
-      if (!observableQuery) return;
-      const fetchPolicy = observableQuery.options.fetchPolicy;
-
-      observableQuery.resetLastResults();
-      if (
-        fetchPolicy !== 'cache-only' &&
-        (includeStandby || fetchPolicy !== 'standby')
-      ) {
-        observableQueryPromises.push(observableQuery.refetch());
-      }
-
-      this.setQuery(queryId, () => ({ newData: null }));
-      this.invalidate(true, queryId);
-    });
-
-    return observableQueryPromises;
-  }
-
   public reFetchObservableQueries(
     includeStandby?: boolean,
   ): Promise<ApolloQueryResult<any>[]> {
@@ -891,6 +886,9 @@ export class QueryManager<TStore> {
     options: SubscriptionOptions,
   ): Observable<any> {
     const { query } = options;
+    const isCacheEnabled = !(
+      options.fetchPolicy && options.fetchPolicy === 'no-cache'
+    );
     const cache = this.dataStore.getCache();
     let transformedDoc = cache.transformDocument(query);
 
@@ -906,26 +904,43 @@ export class QueryManager<TStore> {
     return new Observable(observer => {
       observers.push(observer);
 
-      // If this is the first observer, actually initiate the network subscription
+      // If this is the first observer, actually initiate the network
+      // subscription.
       if (observers.length === 1) {
         const handler = {
           next: (result: FetchResult) => {
-            this.dataStore.markSubscriptionResult(
-              result,
-              transformedDoc,
-              variables,
-            );
-            this.broadcastQueries();
+            if (isCacheEnabled) {
+              this.dataStore.markSubscriptionResult(
+                result,
+                transformedDoc,
+                variables,
+              );
+              this.broadcastQueries();
+            }
 
-            // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
-              // XXX I'd prefer a different way to handle errors for subscriptions
-              if (obs.next) obs.next(result);
+              // If an error exists and a `error` handler has been defined on
+              // the observer, call that `error` handler and make sure the
+              // `next` handler is skipped. If no `error` handler exists, we're
+              // still passing any errors that might occur into the `next`
+              // handler, to give that handler a chance to deal with the
+              // error (we're doing this for backwards compatibilty).
+              if (graphQLResultHasError(result) && obs.error) {
+                obs.error(
+                  new ApolloError({
+                    graphQLErrors: result.errors,
+                  }),
+                );
+              } else if (obs.next) {
+                obs.next(result);
+              }
             });
           },
           error: (error: Error) => {
             observers.forEach(obs => {
-              if (obs.error) obs.error(error);
+              if (obs.error) {
+                obs.error(error);
+              }
             });
           },
         };
@@ -967,8 +982,8 @@ export class QueryManager<TStore> {
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
     // XXX test this
-    if (newData) {
-      return maybeDeepFreeze({ data: newData.result, partial: false });
+    if (newData && newData.complete) {
+      return { data: newData.result, partial: false };
     } else {
       try {
         // the query is brand new, so we read from the store to see if anything is there
@@ -979,16 +994,20 @@ export class QueryManager<TStore> {
           optimistic,
         });
 
-        return maybeDeepFreeze({ data, partial: false });
+        return { data, partial: false };
       } catch (e) {
-        return maybeDeepFreeze({ data: {}, partial: true });
+        return { data: {}, partial: true };
       }
     }
   }
 
   public getQueryWithPreviousResult<T>(
     queryIdOrObservable: string | ObservableQuery<T>,
-  ) {
+  ): {
+    previousResult: any;
+    variables: OperationVariables | undefined;
+    document: DocumentNode;
+  } {
     let observableQuery: ObservableQuery<T>;
     if (typeof queryIdOrObservable === 'string') {
       const { observableQuery: foundObserveableQuery } = this.getQuery(
@@ -1027,6 +1046,29 @@ export class QueryManager<TStore> {
           listener(this.queryStore.get(id), info.newData);
         });
     });
+  }
+
+  private getObservableQueryPromises(
+    includeStandby?: boolean,
+  ): Promise<ApolloQueryResult<any>>[] {
+    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (!observableQuery) return;
+      const fetchPolicy = observableQuery.options.fetchPolicy;
+
+      observableQuery.resetLastResults();
+      if (
+        fetchPolicy !== 'cache-only' &&
+        (includeStandby || fetchPolicy !== 'standby')
+      ) {
+        observableQueryPromises.push(observableQuery.refetch());
+      }
+
+      this.setQuery(queryId, () => ({ newData: null }));
+      this.invalidate(true, queryId);
+    });
+
+    return observableQueryPromises;
   }
 
   // Takes a request id, query id, a query document and information associated with the query
@@ -1175,7 +1217,17 @@ export class QueryManager<TStore> {
   }
 
   private getQuery(queryId: string) {
-    return this.queries.get(queryId) || { ...defaultQueryInfo };
+    return (
+      this.queries.get(queryId) || {
+        listeners: [],
+        invalidated: false,
+        document: null,
+        newData: null,
+        lastRequestId: null,
+        observableQuery: null,
+        subscriptions: [],
+      }
+    );
   }
 
   private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {
@@ -1223,6 +1275,7 @@ export class QueryManager<TStore> {
             );
           }
         },
+        clientAwareness: this.clientAwareness,
       },
     };
   }

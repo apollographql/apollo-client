@@ -324,8 +324,7 @@ describe('ObservableQuery', () => {
           const current = observable.currentResult();
           expect(stripSymbols(current.data)).toEqual(data);
           const secondCurrent = observable.currentResult();
-          // ensure ref equality
-          expect(current.data).toBe(secondCurrent.data);
+          expect(current.data).toEqual(secondCurrent.data);
           done();
         }
       });
@@ -905,39 +904,6 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('returns results that are frozen in development mode', done => {
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
-      );
-      const nop = () => {
-        return 1;
-      };
-      const sub = observable.subscribe({ next: nop });
-
-      observable.setVariables(differentVariables).then(result2 => {
-        expect(stripSymbols(result2.data)).toEqual(dataTwo);
-        try {
-          (result2.data as any).stuff = 'awful';
-          done.fail(
-            new Error(
-              'results from setVariables should be frozen in development mode',
-            ),
-          );
-        } catch (e) {
-          done();
-        } finally {
-          sub.unsubscribe();
-        }
-      });
-    });
-
     it('does not perform a query when unsubscribed if variables change', () => {
       // Note: no responses, will throw if a query is made
       const queryManager = mockQueryManager();
@@ -1204,38 +1170,112 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy', done => {
-      const mockedResponses = [
+    it(
+      'calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` ' +
+        'fetch policy',
+      done => {
+        const mockedResponses = [
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables: differentVariables },
+            result: { data: dataTwo },
+          },
+        ];
+
+        const queryManager = mockQueryManager(...mockedResponses);
+        const firstRequest = mockedResponses[0].request;
+        const observable = queryManager.watchQuery({
+          query: firstRequest.query,
+          variables: firstRequest.variables,
+          fetchPolicy: 'no-cache',
+        });
+
+        const origFetchQuery = queryManager.fetchQuery;
+        queryManager.fetchQuery = jest.fn(() =>
+          origFetchQuery.apply(queryManager, arguments),
+        );
+
+        subscribeAndCount(done, observable, (handleCount, result) => {
+          if (handleCount === 1) {
+            observable.refetch(differentVariables);
+          } else if (handleCount === 2) {
+            expect(
+              queryManager.fetchQuery.mock.calls[1][1].fetchPolicy,
+            ).toEqual('no-cache');
+            done();
+          }
+        });
+      },
+    );
+
+    it('calls ObservableQuery.next even after hitting cache', done => {
+      // This query and variables are copied from react-apollo
+      const queryWithVars = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const variables1 = { first: 0 };
+
+      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+      const variables2 = { first: 1 };
+
+      const observable: ObservableQuery<any> = mockWatchQuery(
         {
-          request: { query, variables },
-          result: { data: dataOne },
+          request: {
+            query: queryWithVars,
+            variables: variables1,
+          },
+          result: { data },
         },
         {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
+          request: {
+            query: queryWithVars,
+            variables: variables2,
+          },
+          result: { data: data2 },
         },
-      ];
-
-      const queryManager = mockQueryManager(...mockedResponses);
-      const firstRequest = mockedResponses[0].request;
-      const observable = queryManager.watchQuery({
-        query: firstRequest.query,
-        variables: firstRequest.variables,
-        fetchPolicy: 'no-cache',
-      });
-
-      const origFetchQuery = queryManager.fetchQuery;
-      queryManager.fetchQuery = jest.fn(() =>
-        origFetchQuery.apply(queryManager, arguments),
+        {
+          request: {
+            query: queryWithVars,
+            variables: variables1,
+          },
+          result: { data },
+        },
       );
+
+      observable.setOptions({ fetchPolicy: 'cache-and-network' });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
-          observable.refetch(differentVariables);
+          expect(result.data).toBeUndefined();
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 2) {
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.loading).toBe(false);
+          observable.refetch(variables2);
         } else if (handleCount === 3) {
-          expect(queryManager.fetchQuery.mock.calls[1][1].fetchPolicy).toEqual(
-            'no-cache',
-          );
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 4) {
+          expect(stripSymbols(result.data)).toEqual(data2);
+          expect(result.loading).toBe(false);
+          observable.refetch(variables1);
+        } else if (handleCount === 5) {
+          expect(stripSymbols(result.data)).toEqual(data2);
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 6) {
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.loading).toBe(false);
           done();
         }
       });

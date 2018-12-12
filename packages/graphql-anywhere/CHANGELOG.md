@@ -1,8 +1,15 @@
 # CHANGELOG
 
+----
+
+**NOTE:** This changelog is no longer maintained. Changes are now tracked in
+the top level [`CHANGELOG.md`](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+
+----
+
 ### vNext
 
-- Add support for arrays to `filter`.       
+- Add support for arrays to `filter`.
   [PR #3591](https://github.com/apollographql/apollo-client/pull/3591)
 
 ### 4.1.14

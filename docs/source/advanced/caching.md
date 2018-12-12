@@ -267,7 +267,7 @@ mutate({
   //... insert comment mutation
   refetchQueries: [{
     query: gql`
-      query updateCache($repoName: String!) {
+      query UpdateCache($repoName: String!) {
         entry(repoFullName: $repoName) {
           id
           comments {
@@ -285,6 +285,8 @@ mutate({
   }],
 })
 ```
+
+Please note that if you call `refetchQueries` with an array of strings, then Apollo Client will look for any previously called queries that have the same names as the provided strings. It will then refetch those queries with their current variables.
 
 A very common way of using `refetchQueries` is to import queries defined for other components to make sure that those components will be updated:
 
@@ -306,7 +308,7 @@ Using `update` gives you full control over the cache, allowing you to make chang
 import CommentAppQuery from '../queries/CommentAppQuery';
 
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(
       repoFullName: $repoFullName
       commentContent: $commentContent
@@ -589,6 +591,9 @@ export class Foo extends Component {
 export default withApollo(Foo);
 ```
 
+If you want to clear the store but don't want to refetch active queries, use
+`client.clearStore()` instead of `client.resetStore()`.
+
 <h3 id="server">Server side rendering</h3>
 
 First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache. (The `.replace()` is necessary to prevent script injection attacks)
@@ -613,6 +618,8 @@ If you would like to persist and rehydrate your Apollo Cache from a storage prov
 
 To get started, simply pass your Apollo Cache and a storage provider to `persistCache`. By default, the contents of your Apollo Cache will be immediately restored asynchronously, and persisted upon every write to the cache with a short configurable debounce interval.
 
+> Note: The `persistCache` method is async and returns a `Promise`.
+
 ```js
 import { AsyncStorage } from 'react-native';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -623,9 +630,10 @@ const cache = new InMemoryCache();
 persistCache({
   cache,
   storage: AsyncStorage,
-});
+}).then(() => {
+  // Continue setting up Apollo as usual.
+})
 
-// Continue setting up Apollo as usual.
 ```
 
 For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).

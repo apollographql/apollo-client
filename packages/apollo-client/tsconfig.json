@@ -1,18 +1,17 @@
 {
-  "extends": "../../tsconfig.base",
+  "extends": "../../config/tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "lib",
-    "noLib": true,
-    "allowSyntheticDefaultImports": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "lib": ["es2015", "dom"]
   },
-  "files": [
-    "node_modules/typescript/lib/lib.es2015.d.ts",
-    "node_modules/typescript/lib/lib.dom.d.ts",
-    "src/index.ts"
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "src/**/__tests__/**/*",
+    "src/**/__mocks__/**/*"
   ]
 }

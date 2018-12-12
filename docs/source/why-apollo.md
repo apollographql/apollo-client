@@ -53,7 +53,7 @@ const GET_ALL_DOGS = gql`
 `;
 
 const UPDATE_DISPLAY_IMAGE = gql`
-  mutation updateDisplayImage($id: String!, $displayImage: String!) {
+  mutation UpdateDisplayImage($id: String!, $displayImage: String!) {
     updateDisplayImage(id: $id, displayImage: $displayImage) {
       id
       displayImage
@@ -102,7 +102,7 @@ Managing all your data with Apollo Client allows you to take advantage of GraphQ
 
 ```js
 const GET_DOG = gql`
-  query getDogByBreed($breed: String!) {
+  query GetDogByBreed($breed: String!) {
     dog(breed: $breed) {
       images {
         url

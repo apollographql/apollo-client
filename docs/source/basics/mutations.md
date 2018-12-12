@@ -45,7 +45,7 @@ import gql from 'graphql-tag';
 class NewEntry extends Component { ... }
 
 const submitRepository = gql`
-  mutation submitRepository {
+  mutation SubmitRepository {
     submitRepository(repoFullName: "apollographql/apollo-client") {
       createdAt
     }
@@ -86,7 +86,7 @@ class NewEntry extends Component {
 }
 
 const submitRepository = gql`
-  mutation submitRepository($repoFullName: String!) {
+  mutation SubmitRepository($repoFullName: String!) {
     submitRepository(repoFullName: $repoFullName) {
       createdAt
     }
@@ -194,7 +194,7 @@ import gql from 'graphql-tag';
 class CommentPage extends Component { ... }
 
 const submitComment = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
       postedBy {
         login

@@ -3,213 +3,99 @@ version: 2
 jobs:
   Danger:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
+      - run: npm --version
+      - run: npm ci
       - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
-            - ./node_modules
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run: npm run danger
 
   Docs:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: cd docs && npm install
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
+      - run: npm --version
+      - run: cd docs && npm ci
       - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
-            - ./node_modules
-      - run: cd docs && npm i && npm run build
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
+      - run: cd docs && npm run build
 
   Filesize:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
+      - run: npm --version
+      - run: npm ci
       - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
-            - ./node_modules
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run: npm run filesize
 
-  Typecheck:
+  Apollo Client Monorepo:
     docker:
-      - image: circleci/node:8
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
-      - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-      - run: npm run type-check
-
-  Apollo Client:
-    docker:
-      - image: circleci/node:8
       - image: circleci/node:10
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
+          keys:
+            # When lock file changes, use increasingly general patterns to
+            # restore cache
+            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v2-{{ .Branch }}-
+            - npm-v2-
+      - run: npm --version
+      - run: npm ci
       - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
+          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
-            - ./node_modules
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
+            # installing to guarantee a clean slate.
+            - ~/.npm
       - run:
-          name: Jest suite
-          command: npx lerna run --scope=apollo-client -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
+          name: Jest suite with coverage
+          command: npm run test-ci && npm run coverage:upload
           environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
-
-  Apollo Boost:
-    docker:
-      - image: circleci/node:8
-      - image: circleci/node:10
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
-      - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-      - run:
-          name: Jest suite
-          command: npx lerna run --scope=apollo-boost -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
-
-  Apollo Cache:
-    docker:
-      - image: circleci/node:8
-      - image: circleci/node:10
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
-      - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-      - run:
-          name: Jest suite
-          command: npx lerna run --scope=apollo-cache -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
-
-  Apollo InMemory Cache:
-    docker:
-      - image: circleci/node:8
-      - image: circleci/node:10
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
-      - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-      - run:
-          name: Jest suite
-          command: npx lerna run --scope=apollo-cache-inmemory -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
-
-  Apollo Utilities:
-    docker:
-      - image: circleci/node:8
-      - image: circleci/node:10
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
-      - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-      - run:
-          name: Jest suite
-          command: npx lerna run --scope=apollo-utilities -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
-
-  GraphQL Anywhere:
-    docker:
-      - image: circleci/node:8
-      - image: circleci/node:10
-    steps:
-      - checkout
-      - restore_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install-npm
-          command: npm install
-      - save_cache:
-          key: v1-dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-      - run:
-          name: Jest suite
-          command: npx lerna run --scope=graphql-anywhere -- coverage -- --ci --testResultsProcessor=jest-junit && npm run coverage:upload
-          environment:
-            JEST_JUNIT_OUTPUT: "../../reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
           path: reports/junit
       - store_artifacts:
@@ -222,11 +108,4 @@ workflows:
       - Danger
       - Docs
       - Filesize
-      # XXX fix issues and turn this back on
-      # - Typecheck
-      - Apollo Client
-      - Apollo Boost
-      - Apollo Cache
-      - Apollo InMemory Cache
-      - Apollo Utilities
-      - GraphQL Anywhere
+      - Apollo Client Monorepo

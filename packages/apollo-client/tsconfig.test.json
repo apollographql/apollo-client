@@ -19,10 +19,6 @@
     "src/core/__tests__/fetchPolicies.ts",
     "src/data/__tests__/queries.ts",
     "src/errors/__tests__/ApolloError.ts",
-    "src/scheduler/__tests__/scheduler.ts",
-    "src/__mocks__/mockFetch.ts",
-    "src/__mocks__/mockLinks.ts",
-    "src/__mocks__/mockQueryManager.ts",
-    "src/__mocks__/mockWatchQuery.ts",
+    "src/scheduler/__tests__/scheduler.ts"
   ]
 }

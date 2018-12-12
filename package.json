@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "postinstall": "lerna run prepare",
+    "postinstall": "lerna exec -- npm install && lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "build": "lerna run build",
     "test": "jest --verbose",
@@ -29,7 +29,7 @@
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
-      "maxSize": "5.25 kB"
+      "maxSize": "7 kB"
     },
     {
       "name": "apollo-client",
@@ -39,12 +39,12 @@
     {
       "name": "apollo-boost",
       "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "22 kB"
+      "maxSize": "35 kB"
     },
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "4.25 kB"
+      "maxSize": "5 kB"
     },
     {
       "name": "graphql-anywhere",
@@ -89,45 +89,45 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.9.5",
+    "@octokit/rest": "15.18.0",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "0.12.7",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "23.3.1",
-    "@types/lodash": "4.14.116",
-    "@types/node": "10.9.2",
-    "@types/react": "16.0.34",
-    "@types/react-dom": "16.0.4",
+    "@types/jest": "23.3.10",
+    "@types/lodash": "4.14.119",
+    "@types/node": "10.12.12",
+    "@types/react": "16.7.13",
+    "@types/react-dom": "16.0.11",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
-    "codecov": "3.0.4",
-    "danger": "3.8.6",
-    "fetch-mock": "6.5.2",
-    "flow-bin": "0.79.1",
+    "codecov": "3.1.0",
+    "danger": "4.4.10",
+    "fetch-mock": "7.2.5",
+    "flow-bin": "0.88.0",
     "graphql": "0.13.2",
-    "graphql-tag": "2.9.2",
+    "graphql-tag": "2.10.0",
     "isomorphic-fetch": "2.2.1",
-    "jest": "23.5.0",
-    "jest-junit": "5.1.0",
-    "lerna": "3.1.4",
-    "lint-staged": "7.2.2",
-    "lodash": "4.17.10",
+    "jest": "23.6.0",
+    "jest-junit": "5.2.0",
+    "lerna": "3.6.0",
+    "lint-staged": "7.3.0",
+    "lodash": "4.17.11",
     "pre-commit": "1.2.2",
-    "prettier": "1.14.2",
-    "react": "15.6.2",
-    "react-dom": "15.6.2",
-    "rollup": "0.65.0",
+    "prettier": "1.15.3",
+    "react": "16.6.3",
+    "react-dom": "16.6.3",
+    "rollup": "0.67.4",
     "rollup-plugin-local-resolve": "1.0.7",
-    "rollup-plugin-node-resolve": "3.3.0",
+    "rollup-plugin-node-resolve": "3.4.0",
     "rollup-plugin-sourcemaps": "0.4.2",
-    "rxjs": "6.2.2",
+    "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
     "tslint": "5.11.0",
-    "typescript": "3.0.1",
-    "uglify-js": "3.4.8",
+    "typescript": "3.1.6",
+    "uglify-js": "3.4.9",
     "webpack": "3.12.0",
-    "webpack-bundle-analyzer": "2.13.1"
+    "webpack-bundle-analyzer": "3.0.3"
   },
   "renovate": {
     "extends": [
@@ -145,11 +145,9 @@
       "dependencies"
     ],
     "assignees": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "reviewers": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "pathRules": [

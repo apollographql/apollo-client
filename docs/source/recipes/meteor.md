@@ -21,7 +21,7 @@ meteor/apollo | apollo client | apollo server
 
 ```sh
 meteor add apollo
-npm install graphql apollo-server-express apollo-boost
+meteor npm install graphql apollo-server-express apollo-boost
 ```
 
 ### Client

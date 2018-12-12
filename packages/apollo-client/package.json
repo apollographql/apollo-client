@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.4.1",
+  "version": "2.4.7",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
@@ -13,7 +13,7 @@
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
-    "test": "jest",
+    "test": "tsc -p tsconfig.test.json --noEmit && jest",
     "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run minify",
@@ -59,7 +59,7 @@
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "optionalDependencies": {
-    "@types/async": "2.0.49"
+    "@types/async": "2.0.50"
   },
   "jest": {
     "transform": {

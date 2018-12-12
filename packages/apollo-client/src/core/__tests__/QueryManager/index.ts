@@ -52,15 +52,18 @@ describe('QueryManager', () => {
   const createQueryManager = ({
     link,
     config = {},
+    clientAwareness = {},
   }: {
     link?: ApolloLink;
     config?: ApolloReducerConfig;
+    clientAwareness?: { [key: string]: string };
   }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
       store: new DataStore(
         new InMemoryCache({ addTypename: false, ...config }),
       ),
+      clientAwareness,
     });
   };
 
@@ -943,43 +946,6 @@ describe('QueryManager', () => {
       .then(result => expect(stripSymbols(result.data)).toEqual(data2));
   });
 
-  it('returns frozen results from refetch', () => {
-    const request = {
-      query: gql`
-        {
-          people_one(id: 1) {
-            name
-          }
-        }
-      `,
-    };
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
-
-    const queryManager = mockRefetch({
-      request,
-      firstResult: { data: data1 },
-      secondResult: { data: data2 },
-    });
-
-    const handle = queryManager.watchQuery<any>(request);
-    handle.subscribe({});
-
-    return handle.refetch().then(result => {
-      expect(stripSymbols(result.data)).toEqual(data2);
-      expect(() => ((result.data as any).stuff = 'awful')).toThrow();
-    });
-  });
-
   it('allows you to refetch queries with new variables', () => {
     const query = gql`
       {
@@ -1272,24 +1238,6 @@ describe('QueryManager', () => {
         expect(stripSymbols(observable.currentResult().data)).toEqual(data);
         done();
       },
-    });
-  });
-
-  it('deepFreezes results in development mode', () => {
-    const query = gql`
-      {
-        stuff
-      }
-    `;
-    const data = { stuff: 'wonderful' };
-    const queryManager = mockQueryManager({
-      request: { query },
-      result: { data },
-    });
-
-    return queryManager.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
-      expect(() => ((result.data as any).stuff = 'awful')).toThrow();
     });
   });
 
@@ -2389,6 +2337,87 @@ describe('QueryManager', () => {
       });
 
     // We have an unhandled error warning from the `subscribe` above, which has no `error` cb
+  });
+
+  it('does not return incomplete data when two queries for the same item are executed', () => {
+    const queryA = gql`
+      query queryA {
+        person(id: "abc") {
+          __typename
+          id
+          firstName
+          lastName
+        }
+      }
+    `;
+    const queryB = gql`
+      query queryB {
+        person(id: "abc") {
+          __typename
+          id
+          lastName
+          age
+        }
+      }
+    `;
+    const dataA = {
+      person: {
+        __typename: 'Person',
+        id: 'abc',
+        firstName: 'Luke',
+        lastName: 'Skywalker',
+      },
+    };
+    const dataB = {
+      person: {
+        __typename: 'Person',
+        id: 'abc',
+        lastName: 'Skywalker',
+        age: '32',
+      },
+    };
+    const queryManager = new QueryManager<NormalizedCacheObject>({
+      link: mockSingleLink(
+        { request: { query: queryA }, result: { data: dataA } },
+        { request: { query: queryB }, result: { data: dataB }, delay: 20 },
+      ),
+      store: new DataStore(new InMemoryCache({})),
+      ssrMode: true,
+    });
+
+    const observableA = queryManager.watchQuery({
+      query: queryA,
+    });
+    const observableB = queryManager.watchQuery({
+      query: queryB,
+    });
+
+    return Promise.all([
+      observableToPromise({ observable: observableA }, () => {
+        expect(
+          stripSymbols(queryManager.getCurrentQueryResult(observableA)),
+        ).toEqual({
+          data: dataA,
+          partial: false,
+        });
+        expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
+          data: {},
+          partial: true,
+        });
+      }),
+      observableToPromise({ observable: observableB }, () => {
+        expect(
+          stripSymbols(queryManager.getCurrentQueryResult(observableA)),
+        ).toEqual({
+          data: dataA,
+          partial: false,
+        });
+        expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
+          data: dataB,
+          partial: false,
+        });
+      }),
+    ]);
   });
 
   describe('polling queries', () => {
@@ -4699,7 +4728,7 @@ describe('QueryManager', () => {
           });
         })
         .then(() => {
-          expect(cache.watches.length).toBe(0);
+          expect(cache.watches.size).toBe(0);
         });
     });
   });
@@ -4744,5 +4773,52 @@ describe('QueryManager', () => {
         });
       },
     );
+  });
+
+  describe('client awareness', () => {
+    it('should pass client awareness settings into the link chain via context', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const link = mockSingleLink({
+        request: { query },
+        result: { data },
+      });
+
+      const clientAwareness = {
+        name: 'Test',
+        version: '1.0.0',
+      };
+
+      const queryManager = createQueryManager({
+        link,
+        clientAwareness,
+      });
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        fetchPolicy: 'no-cache',
+      });
+
+      observableToPromise({ observable }, result => {
+        const context = link.operation.getContext();
+        expect(context.clientAwareness).toBeDefined();
+        expect(context.clientAwareness).toEqual(clientAwareness);
+        done();
+      });
+    });
   });
 });

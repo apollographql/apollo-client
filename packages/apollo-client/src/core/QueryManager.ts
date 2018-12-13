@@ -191,7 +191,7 @@ export class QueryManager<TStore> {
         optimisticResponse,
       });
 
-      const completeMutation = async () => {
+      const completeMutation = () => {
         if (error) {
           this.mutationStore.markMutationError(mutationId, error);
         }
@@ -204,7 +204,7 @@ export class QueryManager<TStore> {
         this.broadcastQueries();
 
         if (error) {
-          throw error;
+          return Promise.reject(error);
         }
 
         // allow for conditional refetches
@@ -239,20 +239,21 @@ export class QueryManager<TStore> {
           refetchQueryPromises.push(this.query(queryOptions));
         }
 
-        if (awaitRefetchQueries) {
-          await Promise.all(refetchQueryPromises);
-        }
+        return Promise.all(
+          awaitRefetchQueries ? refetchQueryPromises : [],
+        ).then(() => {
+          this.setQuery(mutationId, () => ({ document: undefined }));
 
-        this.setQuery(mutationId, () => ({ document: undefined }));
-        if (
-          errorPolicy === 'ignore' &&
-          storeResult &&
-          graphQLResultHasError(storeResult)
-        ) {
-          delete storeResult.errors;
-        }
+          if (
+            errorPolicy === 'ignore' &&
+            storeResult &&
+            graphQLResultHasError(storeResult)
+          ) {
+            delete storeResult.errors;
+          }
 
-        return storeResult as FetchResult<T>;
+          return storeResult as FetchResult<T>;
+        });
       };
 
       execute(this.link, operation).subscribe({

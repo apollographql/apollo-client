@@ -1,5 +1,6 @@
-import graphql, { FragmentMatcher } from '../';
 import gql from 'graphql-tag';
+
+import graphql, { FragmentMatcher } from '../';
 
 describe('fragment matcher', () => {
   it('does basic things', () => {

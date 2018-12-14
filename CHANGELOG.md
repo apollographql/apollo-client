@@ -9,6 +9,10 @@
   [@PowerKiKi](https://github.com/PowerKiKi) in [#3693](https://github.com/apollographql/apollo-client/pull/3693)  <br/>
   [@nandito](https://github.com/nandito) in [#3865](https://github.com/apollographql/apollo-client/pull/3865)
 
+- The `apollo-client` package no longer exports a `printAST` function from
+  `graphql/language/printer`. If you need this functionality, import it
+  directly: `import { print } from "graphql/language/printer"`
+
 ### Apollo Utilities (vNext)
 
 - Schema/AST tranformation utilities have been updated to work properly with

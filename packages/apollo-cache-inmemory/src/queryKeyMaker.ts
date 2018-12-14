@@ -1,6 +1,10 @@
-import { CacheKeyNode } from "./optimism";
-import { DocumentNode, SelectionSetNode, FragmentSpreadNode, FragmentDefinitionNode } from "graphql";
-import { QueryDocumentKeys } from "graphql/language/visitor";
+import { CacheKeyNode } from './optimism';
+import {
+  DocumentNode,
+  SelectionSetNode,
+  FragmentSpreadNode,
+  FragmentDefinitionNode,
+} from 'graphql';
 
 const CIRCULAR = Object.create(null);
 const objToStr = Object.prototype.toString;
@@ -117,42 +121,14 @@ class PerQueryKeyMaker {
   }
 }
 
-const queryKeyMap: {
-  [key: string]: { [key: string]: boolean }
-} = Object.create(null);
-
-Object.keys(QueryDocumentKeys).forEach(parentKind => {
-  const childKeys = queryKeyMap[parentKind] = Object.create(null);
-
-  (QueryDocumentKeys as {
-    [key: string]: any[]
-  })[parentKind].forEach(childKey => {
-    childKeys[childKey] = true;
-  });
-
-  if (parentKind === "FragmentSpread") {
-    // A custom key that we include when looking up FragmentSpread nodes.
-    childKeys["fragment"] = true;
-  }
-});
-
 function safeSortedKeys(object: { [key: string]: any }): string[] {
   const keys = Object.keys(object);
-  const keyCount = keys.length;
-  const knownKeys = typeof object.kind === "string" && queryKeyMap[object.kind];
 
-  // Remove unknown object-valued keys from the array, but leave keys with
-  // non-object values untouched.
-  let target = 0;
-  for (let source = target; source < keyCount; ++source) {
-    const key = keys[source];
-    const value = object[key];
-    const isObjectOrArray = value !== null && typeof value === "object";
-    if (! isObjectOrArray || ! knownKeys || knownKeys[key] === true) {
-      keys[target++] = key;
-    }
+  // Exclude any .loc properties.
+  const locIndex = keys.indexOf('loc');
+  if (locIndex >= 0) {
+    keys.splice(locIndex, 1);
   }
-  keys.length = target;
 
   return keys.sort();
 }

@@ -258,4 +258,45 @@ describe('GraphQL Subscriptions', () => {
     link.simulateResult(errorResult);
     return Promise.all(promises);
   });
+
+  it('should complete subscription', () => {
+    const link = mockObservableLink(sub1);
+    const queryManager = new QueryManager({
+      link,
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
+    });
+
+    const obs = queryManager.startGraphQLSubscription(options);
+
+    const promises = [];
+    for (let i = 0; i < 2; i += 1) {
+      promises.push(
+        new Promise((resolve, reject) => {
+          obs.subscribe({
+            next(result) {
+              fail('Should have hit the complete block');
+              reject();
+            },
+            complete() {
+              resolve();
+            },
+            error(error) {
+              fail('Should have hit the complete block');
+              reject();
+            },
+          });
+        }),
+      );
+    }
+
+    const completeResult = {
+      result: {
+        data: null,
+        errors: null,
+      },
+    };
+
+    link.simulateResult(completeResult);
+    return Promise.all(promises);
+  });
 });

@@ -28,11 +28,11 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    expect(client.queryManager).toBeUndefined();
+    expect((client as any).queryManager).toBeUndefined();
 
     // We only create the query manager on the first query
-    client.initQueryManager();
-    expect(client.queryManager).toBeDefined();
+    (client as any).initQueryManager();
+    expect((client as any).queryManager).toBeDefined();
     expect(client.cache).toBeDefined();
   });
 

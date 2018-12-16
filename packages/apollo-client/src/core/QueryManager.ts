@@ -53,11 +53,6 @@ export interface QueryInfo {
   cancel?: (() => void);
 }
 
-export interface QueryPromise {
-  resolve: (result: ApolloQueryResult<any>) => void;
-  reject: (error: Error) => void;
-}
-
 export class QueryManager<TStore> {
   public scheduler: QueryScheduler<TStore>;
   public link: ApolloLink;
@@ -78,10 +73,10 @@ export class QueryManager<TStore> {
   // subscriptions as well
   private queries: Map<string, QueryInfo> = new Map();
 
-  // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
-  // track of queries that are inflight and reject them in case some
-  // destabalizing action occurs (e.g. reset of the Apollo store).
-  private fetchQueryPromises: Map<string, QueryPromise> = new Map();
+  // A set of Promise reject functions for fetchQuery promises that have not
+  // yet been resolved, used to keep track of in-flight queries so that we can
+  // reject them in case a destabilizing event occurs (e.g. Apollo store reset).
+  private fetchQueryRejectFns = new Set<Function>();
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
   // generally used to refetches for refetchQueries and to update mutation results through
@@ -410,8 +405,6 @@ export class QueryManager<TStore> {
             this.broadcastQueries();
           }
 
-          this.removeFetchQueryPromise(requestId);
-
           throw new ApolloError({ networkError: error });
         }
       });
@@ -695,21 +688,18 @@ export class QueryManager<TStore> {
       throw new Error('pollInterval option only supported on watchQuery.');
     }
 
-    const requestId = this.idCounter;
-
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, resolve, reject);
-
-      return this.watchQuery<T>(options, false)
+      this.fetchQueryRejectFns.add(reject);
+      this.watchQuery<T>(options, false)
         .result()
-        .then(result => {
-          this.removeFetchQueryPromise(requestId);
-          resolve(result);
-        })
-        .catch(error => {
-          this.removeFetchQueryPromise(requestId);
-          reject(error);
-        });
+        .then(resolve, reject)
+        // Since neither resolve nor reject throw or return a value, this .then
+        // handler is guaranteed to execute. Note that it doesn't really matter
+        // when we remove the reject function from this.fetchQueryRejectFns,
+        // since resolve and reject are mutually idempotent. In fact, it would
+        // not be incorrect to let reject functions accumulate over time; it's
+        // just a waste of memory.
+        .then(() => this.fetchQueryRejectFns.delete(reject));
     });
   }
 
@@ -762,23 +752,6 @@ export class QueryManager<TStore> {
     });
   }
 
-  // Adds a promise to this.fetchQueryPromises for a given request ID.
-  public addFetchQueryPromise<T>(
-    requestId: number,
-    resolve: (result: ApolloQueryResult<T>) => void,
-    reject: (error: Error) => void,
-  ) {
-    this.fetchQueryPromises.set(requestId.toString(), {
-      resolve,
-      reject,
-    });
-  }
-
-  // Removes the promise in this.fetchQueryPromises for a particular request ID.
-  public removeFetchQueryPromise(requestId: number) {
-    this.fetchQueryPromises.delete(requestId.toString());
-  }
-
   // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.
   public addObservableQuery<T>(
     queryId: string,
@@ -821,7 +794,7 @@ export class QueryManager<TStore> {
     // in the data portion of the store. So, we cancel the promises and observers
     // that we have issued so far and not yet resolved (in the case of
     // queries).
-    this.fetchQueryPromises.forEach(({ reject }) => {
+    this.fetchQueryRejectFns.forEach(reject => {
       reject(
         new Error(
           'Store reset while query was in flight(not completed in link chain)',
@@ -1104,8 +1077,13 @@ export class QueryManager<TStore> {
     let resultFromStore: any;
     let errorsFromStore: any;
 
+    let rejectFetchPromise: (reason?: any) => void;
+
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, resolve, reject);
+      // Need to assign the reject function to the rejectFetchPromise variable
+      // in the outer scope so that we can refer to it in the .catch handler.
+      this.fetchQueryRejectFns.add(rejectFetchPromise = reject);
+
       const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
@@ -1171,7 +1149,8 @@ export class QueryManager<TStore> {
           }
         },
         error: (error: ApolloError) => {
-          this.removeFetchQueryPromise(requestId);
+          this.fetchQueryRejectFns.delete(reject);
+
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
@@ -1179,7 +1158,8 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
-          this.removeFetchQueryPromise(requestId);
+          this.fetchQueryRejectFns.delete(reject);
+
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
@@ -1197,6 +1177,10 @@ export class QueryManager<TStore> {
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),
       }));
+
+    }).catch(error => {
+      this.fetchQueryRejectFns.delete(rejectFetchPromise);
+      throw error;
     });
   }
 

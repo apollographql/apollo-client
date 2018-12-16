@@ -909,7 +909,7 @@ export class QueryManager<TStore> {
       if (observers.length === 1) {
         const handler = {
           next: (result: FetchResult) => {
-            if (isCacheEnabled) {
+            if (isCacheEnabled && result.data != null) {
               this.dataStore.markSubscriptionResult(
                 result,
                 transformedDoc,
@@ -925,14 +925,24 @@ export class QueryManager<TStore> {
               // still passing any errors that might occur into the `next`
               // handler, to give that handler a chance to deal with the
               // error (we're doing this for backwards compatibilty).
-              if (graphQLResultHasError(result) && obs.error) {
+              const hasError = graphQLResultHasError(result);
+              if (hasError && obs.error) {
                 obs.error(
                   new ApolloError({
                     graphQLErrors: result.errors,
                   }),
                 );
+              } else if (obs.complete && !hasError && result.data == null) {
+                obs.complete();
               } else if (obs.next) {
                 obs.next(result);
+              }
+            });
+          },
+          complete: () => {
+            observers.forEach(obs => {
+              if (obs.complete) {
+                obs.complete();
               }
             });
           },

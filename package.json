@@ -89,14 +89,14 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.18.0",
+    "@octokit/rest": "15.18.1",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.0.3",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "23.3.10",
     "@types/lodash": "4.14.119",
-    "@types/node": "10.12.12",
-    "@types/react": "16.7.13",
+    "@types/node": "10.12.15",
+    "@types/react": "16.7.17",
     "@types/react-dom": "16.0.11",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.0",

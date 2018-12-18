@@ -123,7 +123,7 @@
     "rollup-plugin-sourcemaps": "0.4.2",
     "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
-    "tslint": "5.11.0",
+    "tslint": "5.12.0",
     "typescript": "3.1.6",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",

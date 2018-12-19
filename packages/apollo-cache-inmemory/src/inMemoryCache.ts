@@ -23,6 +23,7 @@ import { StoreWriter } from './writeToStore';
 
 import { defaultNormalizedCacheFactory, DepTrackingCache } from './depTrackingCache';
 import { wrap, CacheKeyNode, OptimisticWrapperFunction } from './optimism';
+import { ObjectCache } from './objectCache';
 
 import { record } from './recordingCache';
 const defaultConfig: ApolloReducerConfig = {
@@ -134,9 +135,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return null;
     }
 
-    const store = (query.optimistic && this.optimistic.length)
-      ? defaultNormalizedCacheFactory(this.extract(true))
-      : this.data;
+    const store =
+      query.optimistic && this.optimistic.length
+        ? new ObjectCache(this.extract(true))
+        : this.data;
 
     return this.storeReader.readQueryFromStore({
       store,
@@ -164,9 +166,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
-    const store = (query.optimistic && this.optimistic.length)
-      ? defaultNormalizedCacheFactory(this.extract(true))
-      : this.data;
+    const store =
+      query.optimistic && this.optimistic.length
+        ? new ObjectCache(this.extract(true))
+        : this.data;
 
     return this.storeReader.diffQueryAgainstStore({
       store: store,

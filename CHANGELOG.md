@@ -15,6 +15,10 @@
   `@client` directives.  <br/>
   [@justinmakaila](https://github.com/justinmakaila) in [#3482](https://github.com/apollographql/apollo-client/pull/3482)
 
+### Apollo Cache In-Memory (1.3.12)
+
+- Avoid using `DepTrackingCache` for optimistic reads.
+  [PR #4521](https://github.com/apollographql/apollo-client/pull/4251)
 
 ## Apollo Client (2.4.7)
 

@@ -21,15 +21,21 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 
-import { defaultNormalizedCacheFactory, DepTrackingCache } from './depTrackingCache';
+import { DepTrackingCache } from './depTrackingCache';
 import { wrap, CacheKeyNode, OptimisticWrapperFunction } from './optimism';
 import { ObjectCache } from './objectCache';
 
 import { record } from './recordingCache';
-const defaultConfig: ApolloReducerConfig = {
+
+export interface InMemoryCacheConfig extends ApolloReducerConfig {
+  resultCaching?: boolean;
+}
+
+const defaultConfig: InMemoryCacheConfig = {
   fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
+  resultCaching: true,
 };
 
 export function defaultDataIdFromObject(result: any): string | null {
@@ -46,7 +52,7 @@ export function defaultDataIdFromObject(result: any): string | null {
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected data: NormalizedCache;
-  protected config: ApolloReducerConfig;
+  protected config: InMemoryCacheConfig;
   protected optimistic: OptimisticStoreItem[] = [];
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
@@ -59,7 +65,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // don't forget to turn it back on!
   private silenceBroadcast: boolean = false;
 
-  constructor(config: ApolloReducerConfig = {}) {
+  constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
 
@@ -79,7 +85,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
 
     this.addTypename = this.config.addTypename;
-    this.data = defaultNormalizedCacheFactory();
+    this.data = this.config.resultCaching
+      ? new DepTrackingCache()
+      : new ObjectCache();
 
     this.storeReader = new StoreReader(this.cacheKeyRoot);
     this.storeWriter = new StoreWriter();

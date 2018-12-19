@@ -20,6 +20,17 @@
 - Avoid using `DepTrackingCache` for optimistic reads.
   [PR #4521](https://github.com/apollographql/apollo-client/pull/4251)
 
+- When creating an `InMemoryCache` object, it's now possible to disable the
+  result caching behavior introduced in [#3394](https://github.com/apollographql/apollo-client/pull/3394),
+  either for diagnostic purposes or because the benefit of caching repeated
+  reads is not worth the extra memory usage in your application:
+  ```ts
+  new InMemoryCache({
+    resultCaching: false
+  })
+  ```
+  Part of [PR #4521](https://github.com/apollographql/apollo-client/pull/4251).
+
 ## Apollo Client (2.4.7)
 
 ### Apollo Client (2.4.7)

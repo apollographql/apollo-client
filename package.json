@@ -71,12 +71,10 @@
   },
   "lint-staged": {
     "*.ts*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
-      "git add"
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
     ],
     "*.js*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
-      "git add"
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
     ]
   },
   "pre-commit": "lint-staged",

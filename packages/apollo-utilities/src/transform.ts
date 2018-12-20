@@ -52,24 +52,14 @@ const TYPENAME_FIELD: FieldNode = {
   },
 };
 
-function isNotEmpty(
+function isEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
   fragments: FragmentMap,
-): Boolean {
-  // keep selections that are still valid
-  return (
-    op.selectionSet.selections.filter(
-      selectionSet =>
-        // anything that doesn't match the compound filter is okay
-        !// not an empty array
-        (
-          selectionSet &&
-          // look into fragments to verify they should stay
-          selectionSet.kind === 'FragmentSpread' &&
-          // see if the fragment in the map is valid (recursively)
-          !isNotEmpty(fragments[selectionSet.name.value], fragments)
-        ),
-    ).length > 0
+): boolean {
+  return op.selectionSet.selections.every(
+    selection =>
+      selection.kind === 'FragmentSpread' &&
+      isEmpty(fragments[selection.name.value], fragments),
   );
 }
 
@@ -347,9 +337,10 @@ export function getDirectivesFromDocument(
     },
   });
 
-  const operation = getOperationDefinitionOrDie(modifiedDoc);
-  const fragments = createFragmentMap(getFragmentDefinitions(modifiedDoc));
-  return isNotEmpty(operation, fragments) ? modifiedDoc : null;
+  return !isEmpty(
+    getOperationDefinitionOrDie(modifiedDoc),
+    createFragmentMap(getFragmentDefinitions(modifiedDoc)),
+  ) ? modifiedDoc : null;
 }
 
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
@@ -451,9 +442,10 @@ export function removeArgumentsFromDocument(
     },
   });
 
-  const operation = getOperationDefinitionOrDie(modifiedDoc);
-  const fragments = createFragmentMap(getFragmentDefinitions(modifiedDoc));
-  return isNotEmpty(operation, fragments) ? modifiedDoc : null;
+  return !isEmpty(
+    getOperationDefinitionOrDie(modifiedDoc),
+    createFragmentMap(getFragmentDefinitions(modifiedDoc)),
+  ) ? modifiedDoc : null;
 }
 
 export function removeFragmentSpreadFromDocument(

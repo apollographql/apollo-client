@@ -354,37 +354,6 @@ function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
   };
 }
 
-function hasArgumentsInSelectionSet(
-  config: RemoveArgumentsConfig[],
-  selectionSet: SelectionSetNode,
-  nestedCheck: boolean = false,
-): boolean {
-  return filterSelectionSet(selectionSet, selection =>
-    hasArgumentsInSelection(config, selection, nestedCheck),
-  );
-}
-
-function hasArgumentsInSelection(
-  config: RemoveArgumentsConfig[],
-  selection: SelectionNode,
-  nestedCheck: boolean = false,
-): boolean {
-  // Selection is a FragmentSpread or InlineFragment, ignore (include it)...
-  if (selection.kind !== 'Field' || !(selection as FieldNode)) {
-    return true;
-  }
-
-  if (!selection.arguments) {
-    return false;
-  }
-
-  return (
-    selection.arguments.some(getArgumentMatcher(config)) ||
-    (nestedCheck &&
-      hasArgumentsInSelectionSet(config, selection.selectionSet, nestedCheck))
-  );
-}
-
 export function removeArgumentsFromDocument(
   config: RemoveArgumentsConfig[],
   doc: DocumentNode,

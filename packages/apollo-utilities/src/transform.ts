@@ -66,13 +66,11 @@ function isEmpty(
 function getDirectiveMatcher(
   directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
 ) {
-  return function directiveMatcher(directive: DirectiveNode): boolean {
+  return function directiveMatcher(directive: DirectiveNode) {
     return directives.some(
-      (dir: RemoveDirectiveConfig | GetDirectiveConfig) => {
-        if (dir.name && dir.name === directive.name.value) return true;
-        if (dir.test && dir.test(directive)) return true;
-        return false;
-      },
+      dir =>
+        (dir.name && dir.name === directive.name.value) ||
+        (dir.test && dir.test(directive)),
     );
   };
 }

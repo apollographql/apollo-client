@@ -282,12 +282,9 @@ function hasDirectivesInSelection(
   if (!selection.directives) {
     return false;
   }
-  const directiveMatcher = getDirectiveMatcher(directives);
-  const matchedDirectives = selection.directives.filter(directiveMatcher);
-  const hasMatches = matchedDirectives.length > 0;
 
   return (
-    hasMatches ||
+    selection.directives.some(getDirectiveMatcher(directives)) ||
     (nestedCheck &&
       hasDirectivesInSelectionSet(
         directives,

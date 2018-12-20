@@ -191,7 +191,7 @@ export function removeDirectivesFromDocument(
   // aren't being used elsewhere.
   if (variablesToRemove) {
     variablesToRemove = variablesToRemove.filter(
-      variable => !variablesInUse.includes(variable.name),
+      variable => variablesInUse.indexOf(variable.name) === -1,
     );
     modifiedDoc = removeArgumentsFromDocument(variablesToRemove, modifiedDoc);
   }
@@ -201,7 +201,7 @@ export function removeDirectivesFromDocument(
   // document, as long as they aren't being used elsewhere.
   if (fragmentSpreadsToRemove) {
     fragmentSpreadsToRemove = fragmentSpreadsToRemove.filter(
-      fragSpread => !fragmentSpreadsInUse.includes(fragSpread.name),
+      fragSpread => fragmentSpreadsInUse.indexOf(fragSpread.name) === -1,
     );
     modifiedDoc = removeFragmentSpreadFromDocument(
       fragmentSpreadsToRemove,

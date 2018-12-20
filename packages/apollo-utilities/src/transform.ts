@@ -265,8 +265,12 @@ function hasDirectivesInSelectionSet(
   selectionSet: SelectionSetNode,
   nestedCheck = true,
 ): boolean {
-  return filterSelectionSet(selectionSet, selection =>
-    hasDirectivesInSelection(directives, selection, nestedCheck),
+  return (
+    selectionSet &&
+    selectionSet.selections &&
+    selectionSet.selections.some(selection =>
+      hasDirectivesInSelection(directives, selection, nestedCheck),
+    )
   );
 }
 
@@ -444,15 +448,4 @@ function getAllFragmentSpreadsFromSelectionSet(
   });
 
   return allFragments;
-}
-
-function filterSelectionSet(
-  selectionSet: SelectionSetNode,
-  filter: (node: SelectionNode) => boolean,
-) {
-  if (!(selectionSet && selectionSet.selections)) {
-    return false;
-  }
-
-  return selectionSet.selections.filter(filter).length > 0;
 }

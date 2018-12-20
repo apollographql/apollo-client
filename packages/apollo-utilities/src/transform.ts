@@ -114,13 +114,13 @@ export function removeDirectivesFromDocument(
           if (node.arguments) {
             // Store field argument variables so they can be removed
             // from the operation definition.
-            node.arguments
-              .filter(arg => arg.value.kind === 'Variable')
-              .forEach(arg => {
+            node.arguments.forEach(arg => {
+              if (arg.value.kind === 'Variable') {
                 variablesToRemove.push({
                   name: (arg.value as VariableNode).name.value,
                 });
-              });
+              }
+            });
           }
 
           if (node.selectionSet) {

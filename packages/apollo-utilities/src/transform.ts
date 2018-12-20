@@ -446,32 +446,19 @@ export function removeArgumentsFromDocument(
 export function removeFragmentSpreadFromDocument(
   config: RemoveFragmentSpreadConfig[],
   doc: DocumentNode,
-): DocumentNode | null {
-  const modifiedDoc = visit(doc, {
-    FragmentSpread: {
-      enter(node) {
-        const fragSpreadFound = config.some(
-          fragSpread => fragSpread.name === node.name.value,
-        );
-        if (fragSpreadFound) {
-          return null;
-        }
-      },
-    },
+): DocumentNode {
+  function enter(
+    node: FragmentSpreadNode | FragmentDefinitionNode,
+  ): null | void {
+    if (config.some(def => def.name === node.name.value)) {
+      return null;
+    }
+  }
 
-    FragmentDefinition: {
-      enter(node) {
-        const fragDefFound = config.some(
-          fragDef => fragDef.name && fragDef.name === node.name.value,
-        );
-        if (fragDefFound) {
-          return null;
-        }
-      },
-    },
+  return visit(doc, {
+    FragmentSpread: { enter },
+    FragmentDefinition: { enter },
   });
-
-  return modifiedDoc;
 }
 
 function getAllFragmentSpreadsFromSelectionSet(

@@ -377,10 +377,9 @@ function hasArgumentsInSelection(
   if (!selection.arguments) {
     return false;
   }
-  const matcher = getArgumentMatcher(config);
-  const matchedArguments = selection.arguments.filter(matcher);
+
   return (
-    matchedArguments.length > 0 ||
+    selection.arguments.some(getArgumentMatcher(config)) ||
     (nestedCheck &&
       hasArgumentsInSelectionSet(config, selection.selectionSet, nestedCheck))
   );

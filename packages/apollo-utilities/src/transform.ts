@@ -76,7 +76,7 @@ function isNotEmpty(
 function getDirectiveMatcher(
   directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
 ) {
-  return function directiveMatcher(directive: DirectiveNode): Boolean {
+  return function directiveMatcher(directive: DirectiveNode): boolean {
     return directives.some(
       (dir: RemoveDirectiveConfig | GetDirectiveConfig) => {
         if (dir.name && dir.name === directive.name.value) return true;
@@ -91,22 +91,22 @@ export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
 ): DocumentNode | null {
-  let variablesInUse: string[] = [];
+  const variablesInUse: Record<string, boolean> = Object.create(null);
   let variablesToRemove: RemoveArgumentsConfig[] = [];
 
-  let fragmentSpreadsInUse: string[] = [];
+  const fragmentSpreadsInUse: Record<string, boolean> = Object.create(null);
   let fragmentSpreadsToRemove: RemoveFragmentSpreadConfig[] = [];
 
   let modifiedDoc = visit(doc, {
     Variable: {
-      enter(node, _, parent) {
+      enter(node, _key, parent) {
         // Store each variable that's referenced as part of an argument
         // (excluding operation definition variables), so we know which
         // variables are being used. If we later want to remove a variable
         // we'll fist check to see if it's being used, before continuing with
         // the removal.
         if ((parent as VariableDefinitionNode).kind !== 'VariableDefinition') {
-          variablesInUse.push(node.name.value);
+          variablesInUse[node.name.value] = true;
         }
       },
     },
@@ -119,45 +119,36 @@ export function removeDirectivesFromDocument(
           directive => directive.remove,
         );
 
-        if (shouldRemoveField) {
-          const matcher = getDirectiveMatcher(directives);
-          let removeField = false;
-          node.directives.forEach(directive => {
-            if (matcher(directive)) {
-              removeField = true;
-              return;
-            }
-          });
-
-          if (removeField) {
-            if (node.arguments) {
-              // Store field argument variables so they can be removed
-              // from the operation definition.
-              variablesToRemove = variablesToRemove.concat(
-                node.arguments
-                  .filter(arg => arg.value.kind === 'Variable')
-                  .map(arg => ({
-                    name: (arg.value as VariableNode).name.value,
-                  })),
-              );
-            }
-
-            if (node.selectionSet) {
-              // Store fragment spread names so they can be removed from the
-              // docuemnt.
-              const fragSpreads = getAllFragmentSpreadsFromSelectionSet(
-                node.selectionSet,
-              );
-              fragmentSpreadsToRemove = fragmentSpreadsToRemove.concat(
-                fragSpreads.map(frag => ({
-                  name: frag.name.value,
-                })),
-              );
-            }
-
-            // Remove the field.
-            return null;
+        if (
+          shouldRemoveField &&
+          node.directives.some(getDirectiveMatcher(directives))
+        ) {
+          if (node.arguments) {
+            // Store field argument variables so they can be removed
+            // from the operation definition.
+            node.arguments
+              .filter(arg => arg.value.kind === 'Variable')
+              .forEach(arg => {
+                variablesToRemove.push({
+                  name: (arg.value as VariableNode).name.value,
+                });
+              });
           }
+
+          if (node.selectionSet) {
+            // Store fragment spread names so they can be removed from the
+            // docuemnt.
+            getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
+              frag => {
+                fragmentSpreadsToRemove.push({
+                  name: frag.name.value,
+                });
+              },
+            );
+          }
+
+          // Remove the field.
+          return null;
         }
       },
     },
@@ -166,7 +157,7 @@ export function removeDirectivesFromDocument(
       enter(node) {
         // Keep track of referenced fragment spreads. This is used to
         // determine if top level fragment definitions should be removed.
-        fragmentSpreadsInUse.push(node.name.value);
+        fragmentSpreadsInUse[node.name.value] = true;
       },
     },
 
@@ -191,7 +182,7 @@ export function removeDirectivesFromDocument(
   // aren't being used elsewhere.
   if (variablesToRemove) {
     variablesToRemove = variablesToRemove.filter(
-      variable => variablesInUse.indexOf(variable.name) === -1,
+      variable => !variablesInUse[variable.name],
     );
     modifiedDoc = removeArgumentsFromDocument(variablesToRemove, modifiedDoc);
   }
@@ -201,7 +192,7 @@ export function removeDirectivesFromDocument(
   // document, as long as they aren't being used elsewhere.
   if (fragmentSpreadsToRemove) {
     fragmentSpreadsToRemove = fragmentSpreadsToRemove.filter(
-      fragSpread => fragmentSpreadsInUse.indexOf(fragSpread.name) === -1,
+      fragSpread => !fragmentSpreadsInUse[fragSpread.name],
     );
     modifiedDoc = removeFragmentSpreadFromDocument(
       fragmentSpreadsToRemove,
@@ -215,19 +206,14 @@ export function removeDirectivesFromDocument(
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
 
-  let isRoot = false;
   const modifiedDoc = visit(doc, {
-    OperationDefinition: {
-      enter(node) {
-        isRoot = true;
-      },
-    },
-
     SelectionSet: {
-      enter(node) {
+      enter(node, _key, parent) {
         // Don't add __typename to OperationDefinitions.
-        if (isRoot) {
-          isRoot = false;
+        if (
+          parent &&
+          (parent as OperationDefinitionNode).kind === 'OperationDefinition'
+        ) {
           return undefined;
         }
 
@@ -332,7 +318,7 @@ export function getDirectivesFromDocument(
   let parentPath: string;
   const modifiedDoc = visit(doc, {
     SelectionSet: {
-      enter(node, _, __, path) {
+      enter(node, _key, _parent, path) {
         const currentPath = path.join('-');
 
         if (
@@ -418,6 +404,8 @@ export function removeArgumentsFromDocument(
   config: RemoveArgumentsConfig[],
   doc: DocumentNode,
 ): DocumentNode | null {
+  const argMatcher = getArgumentMatcher(config);
+
   const modifiedDoc = visit(doc, {
     OperationDefinition: {
       enter(node) {
@@ -440,7 +428,6 @@ export function removeArgumentsFromDocument(
         const shouldRemoveField = config.some(argConfig => argConfig.remove);
 
         if (shouldRemoveField) {
-          const argMatcher = getArgumentMatcher(config);
           let argMatchCount = 0;
           node.arguments.forEach(arg => {
             if (argMatcher(arg)) {
@@ -457,7 +444,6 @@ export function removeArgumentsFromDocument(
     Argument: {
       enter(node) {
         // Remove all matching arguments.
-        const argMatcher = getArgumentMatcher(config);
         if (argMatcher(node)) {
           return null;
         }

@@ -20,6 +20,7 @@ import {
   createFragmentMap,
   FragmentMap,
 } from './getFromAST';
+import { filterInPlace } from './util/filterInPlace';
 
 export type RemoveNodeConfig<N> = {
   name?: string;
@@ -171,22 +172,19 @@ export function removeDirectivesFromDocument(
   // If we've removed fields with arguments, make sure the associated
   // variables are also removed from the rest of the document, as long as they
   // aren't being used elsewhere.
-  if (modifiedDoc && variablesToRemove) {
-    variablesToRemove = variablesToRemove.filter(
-      variable => !variablesInUse[variable.name],
-    );
-
+  if (modifiedDoc &&
+      filterInPlace(variablesToRemove, v => !variablesInUse[v.name]).length) {
     modifiedDoc = removeArgumentsFromDocument(variablesToRemove, modifiedDoc);
   }
 
   // If we've removed selection sets with fragment spreads, make sure the
   // associated fragment definitions are also removed from the rest of the
   // document, as long as they aren't being used elsewhere.
-  if (modifiedDoc && fragmentSpreadsToRemove) {
-    fragmentSpreadsToRemove = fragmentSpreadsToRemove.filter(
-      fragSpread => !fragmentSpreadsInUse[fragSpread.name],
-    );
-
+  if (modifiedDoc &&
+      filterInPlace(
+        fragmentSpreadsToRemove,
+        fs => !fragmentSpreadsInUse[fs.name],
+      ).length) {
     modifiedDoc = removeFragmentSpreadFromDocument(
       fragmentSpreadsToRemove,
       modifiedDoc,

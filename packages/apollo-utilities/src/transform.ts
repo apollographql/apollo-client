@@ -194,10 +194,8 @@ export function removeDirectivesFromDocument(
   return modifiedDoc;
 }
 
-export function addTypenameToDocument(doc: DocumentNode) {
-  checkDocument(doc);
-
-  const modifiedDoc = visit(doc, {
+export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
+  return visit(checkDocument(doc), {
     SelectionSet: {
       enter(node, _key, parent) {
         // Don't add __typename to OperationDefinitions.
@@ -205,13 +203,13 @@ export function addTypenameToDocument(doc: DocumentNode) {
           parent &&
           (parent as OperationDefinitionNode).kind === 'OperationDefinition'
         ) {
-          return undefined;
+          return;
         }
 
         // No changes if no selections.
         const { selections } = node;
         if (!selections) {
-          return undefined;
+          return;
         }
 
         // If selections already have a __typename, or are part of an
@@ -224,7 +222,7 @@ export function addTypenameToDocument(doc: DocumentNode) {
           );
         });
         if (skip) {
-          return undefined;
+          return;
         }
 
         // Create and return a new SelectionSet with a __typename Field.
@@ -235,8 +233,6 @@ export function addTypenameToDocument(doc: DocumentNode) {
       },
     },
   });
-
-  return modifiedDoc;
 }
 
 const connectionRemoveConfig = {

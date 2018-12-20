@@ -342,18 +342,15 @@ export function getDirectivesFromDocument(
 }
 
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
-  return (argument: ArgumentNode): Boolean => {
-    return config.some((aConfig: RemoveArgumentsConfig) => {
-      if (
-        argument.value.kind !== 'Variable' ||
-        !(argument.value as VariableNode)
-      )
-        return false;
-      if (!argument.value.name) return false;
-      if (aConfig.name === argument.value.name.value) return true;
-      if (aConfig.test && aConfig.test(argument)) return true;
-      return false;
-    });
+  return function argumentMatcher(argument: ArgumentNode) {
+    return config.some(
+      (aConfig: RemoveArgumentsConfig) =>
+        argument.value &&
+        argument.value.kind === 'Variable' &&
+        argument.value.name &&
+        (aConfig.name === argument.value.name.value ||
+          (aConfig.test && aConfig.test(argument))),
+    );
   };
 }
 

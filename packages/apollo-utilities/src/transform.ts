@@ -152,13 +152,7 @@ export function removeDirectivesFromDocument(
     Directive: {
       enter(node) {
         // If a matching directive is found, remove it.
-        const directiveFound = directives.some(directive => {
-          if (directive.name && directive.name === node.name.value) return true;
-          if (directive.test && directive.test(node)) return true;
-          return false;
-        });
-        if (directiveFound) {
-          // Remove the directive.
+        if (getDirectiveMatcher(directives)(node)) {
           return null;
         }
       },

@@ -361,14 +361,12 @@ export function removeArgumentsFromDocument(
   return nullIfDocIsEmpty(visit(doc, {
     OperationDefinition: {
       enter(node) {
-        // Remove matching top level variables definitions.
-        const variableDefinitions = node.variableDefinitions.filter(
-          varDef =>
-            !config.some(arg => arg.name === varDef.variable.name.value),
-        );
         return {
           ...node,
-          variableDefinitions,
+          // Remove matching top level variables definitions.
+          variableDefinitions: node.variableDefinitions.filter(
+            varDef => !config.some(arg => arg.name === varDef.variable.name.value),
+          ),
         };
       },
     },

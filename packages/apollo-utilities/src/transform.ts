@@ -259,8 +259,10 @@ const connectionRemoveConfig = {
 };
 
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
-  checkDocument(doc);
-  return removeDirectivesFromDocument([connectionRemoveConfig], doc);
+  return removeDirectivesFromDocument(
+    [connectionRemoveConfig],
+    checkDocument(doc),
+  );
 }
 
 function hasDirectivesInSelectionSet(

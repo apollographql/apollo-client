@@ -63,6 +63,15 @@ function isEmpty(
   );
 }
 
+function nullIfDocIsEmpty(doc: DocumentNode) {
+  return isEmpty(
+    getOperationDefinitionOrDie(doc),
+    createFragmentMap(
+      getFragmentDefinitions(doc)
+    ),
+  ) ? null : doc;
+}
+
 function getDirectiveMatcher(
   directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
 ) {
@@ -85,7 +94,7 @@ export function removeDirectivesFromDocument(
   const fragmentSpreadsInUse: Record<string, boolean> = Object.create(null);
   let fragmentSpreadsToRemove: RemoveFragmentSpreadConfig[] = [];
 
-  let modifiedDoc = visit(doc, {
+  let modifiedDoc = nullIfDocIsEmpty(visit(doc, {
     Variable: {
       enter(node, _key, parent) {
         // Store each variable that's referenced as part of an argument
@@ -157,25 +166,27 @@ export function removeDirectivesFromDocument(
         }
       },
     },
-  });
+  }));
 
   // If we've removed fields with arguments, make sure the associated
   // variables are also removed from the rest of the document, as long as they
   // aren't being used elsewhere.
-  if (variablesToRemove) {
+  if (modifiedDoc && variablesToRemove) {
     variablesToRemove = variablesToRemove.filter(
       variable => !variablesInUse[variable.name],
     );
+
     modifiedDoc = removeArgumentsFromDocument(variablesToRemove, modifiedDoc);
   }
 
   // If we've removed selection sets with fragment spreads, make sure the
   // associated fragment definitions are also removed from the rest of the
   // document, as long as they aren't being used elsewhere.
-  if (fragmentSpreadsToRemove) {
+  if (modifiedDoc && fragmentSpreadsToRemove) {
     fragmentSpreadsToRemove = fragmentSpreadsToRemove.filter(
       fragSpread => !fragmentSpreadsInUse[fragSpread.name],
     );
+
     modifiedDoc = removeFragmentSpreadFromDocument(
       fragmentSpreadsToRemove,
       modifiedDoc,
@@ -295,11 +306,12 @@ function hasDirectivesInSelection(
 export function getDirectivesFromDocument(
   directives: GetDirectiveConfig[],
   doc: DocumentNode,
-): DocumentNode | null {
+): DocumentNode {
   checkDocument(doc);
 
   let parentPath: string;
-  const modifiedDoc = visit(doc, {
+
+  return nullIfDocIsEmpty(visit(doc, {
     SelectionSet: {
       enter(node, _key, _parent, path) {
         const currentPath = path.join('-');
@@ -328,12 +340,7 @@ export function getDirectivesFromDocument(
         }
       },
     },
-  });
-
-  return !isEmpty(
-    getOperationDefinitionOrDie(modifiedDoc),
-    createFragmentMap(getFragmentDefinitions(modifiedDoc)),
-  ) ? modifiedDoc : null;
+  }));
 }
 
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
@@ -352,10 +359,10 @@ function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
 export function removeArgumentsFromDocument(
   config: RemoveArgumentsConfig[],
   doc: DocumentNode,
-): DocumentNode | null {
+): DocumentNode {
   const argMatcher = getArgumentMatcher(config);
 
-  const modifiedDoc = visit(doc, {
+  return nullIfDocIsEmpty(visit(doc, {
     OperationDefinition: {
       enter(node) {
         // Remove matching top level variables definitions.
@@ -398,12 +405,7 @@ export function removeArgumentsFromDocument(
         }
       },
     },
-  });
-
-  return !isEmpty(
-    getOperationDefinitionOrDie(modifiedDoc),
-    createFragmentMap(getFragmentDefinitions(modifiedDoc)),
-  ) ? modifiedDoc : null;
+  }));
 }
 
 export function removeFragmentSpreadFromDocument(
@@ -418,10 +420,12 @@ export function removeFragmentSpreadFromDocument(
     }
   }
 
-  return visit(doc, {
-    FragmentSpread: { enter },
-    FragmentDefinition: { enter },
-  });
+  return nullIfDocIsEmpty(
+    visit(doc, {
+      FragmentSpread: { enter },
+      FragmentDefinition: { enter },
+    }),
+  );
 }
 
 function getAllFragmentSpreadsFromSelectionSet(

@@ -640,10 +640,10 @@ export class QueryManager<TStore> {
   // supposed to be refetched in the event of a store reset. Once we unify error handling for
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
-  public watchQuery<T>(
+  public watchQuery<T, TVariables = OperationVariables>(
     options: WatchQueryOptions,
     shouldSubscribe = true,
-  ): ObservableQuery<T> {
+  ): ObservableQuery<T, TVariables> {
     if (options.fetchPolicy === 'standby') {
       throw new Error(
         'client.watchQuery cannot be called with fetchPolicy set to "standby"',
@@ -667,9 +667,9 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
-    let transformedOptions = { ...options } as WatchQueryOptions;
+    let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
 
-    return new ObservableQuery<T>({
+    return new ObservableQuery<T, TVariables>({
       scheduler: this.scheduler,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,

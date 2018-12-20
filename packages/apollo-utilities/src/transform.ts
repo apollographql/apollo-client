@@ -464,33 +464,21 @@ export function removeFragmentSpreadFromDocument(
 function getAllFragmentSpreadsFromSelectionSet(
   selectionSet: SelectionSetNode,
 ): FragmentSpreadNode[] {
-  return selectionSet.selections
-    .map(getAllFragmentSpreadsFromSelection)
-    .reduce(
-      (allFragments, selectionFragments) => [
-        ...allFragments,
-        ...selectionFragments,
-      ],
-      [],
-    );
-}
+  const allFragments: FragmentSpreadNode[] = [];
 
-function getAllFragmentSpreadsFromSelection(
-  selection: SelectionNode,
-): FragmentSpreadNode[] {
-  if (
-    (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
-    selection.selectionSet
-  ) {
-    return getAllFragmentSpreadsFromSelectionSet(selection.selectionSet);
-  } else if (
-    selection.kind === 'FragmentSpread' &&
-    (selection as FragmentSpreadNode)
-  ) {
-    return [selection];
-  }
+  selectionSet.selections.forEach(selection => {
+    if ((selection.kind === 'Field' ||
+         selection.kind === 'InlineFragment') &&
+        selection.selectionSet) {
+      getAllFragmentSpreadsFromSelectionSet(
+        selection.selectionSet
+      ).forEach(frag => allFragments.push(frag));
+    } else if (selection.kind === 'FragmentSpread') {
+      allFragments.push(selection);
+    }
+  });
 
-  return [];
+  return allFragments;
 }
 
 function filterSelectionSet(

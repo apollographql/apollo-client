@@ -439,7 +439,7 @@ export class QueryManager<TStore> {
     }
 
     if (shouldFetch) {
-      const networkResult = this.fetchRequest({
+      const networkResult = this.fetchRequest<T>({
         requestId,
         queryId,
         document: query,
@@ -479,7 +479,7 @@ export class QueryManager<TStore> {
 
     // If we have no query to send to the server, we should return the result
     // found within the store.
-    return Promise.resolve<ExecutionResult>({ data: storeResult });
+    return Promise.resolve({ data: storeResult });
   }
 
   // Returns a query listener that will update the given observer based on the
@@ -1165,7 +1165,7 @@ export class QueryManager<TStore> {
     document: DocumentNode;
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
-  }): Promise<ExecutionResult> {
+  }): Promise<FetchResult<T>> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
     let resultFromStore: any;
     let errorsFromStore: any;

@@ -2,20 +2,16 @@ import {
   ExecutionResult,
   DocumentNode,
   OperationDefinitionNode,
-  DirectiveNode,
-  ExecutableDefinitionNode,
-  FieldNode,
   print,
 } from 'graphql';
 import graphql, { Resolver, FragmentMatcher } from 'graphql-anywhere';
 import { ApolloCache } from 'apollo-cache';
 import {
-  mergeDeep,
   getMainDefinition,
   buildQueryFromSelectionSet,
   hasDirectives,
-  checkDocument,
-  removeDirectivesFromDocument,
+  removeClientSetsFromDocument,
+  mergeDeep,
 } from 'apollo-utilities';
 
 import ApolloClient from '../ApolloClient';
@@ -219,7 +215,7 @@ export class LocalState<TCacheShape> {
 
   // Server queries are stripped of all @client based selection sets.
   public serverQuery(document: DocumentNode) {
-    return this.removeClientSetsFromDocument(document);
+    return removeClientSetsFromDocument(document);
   }
 
   public prepareContext(context = {}) {
@@ -433,48 +429,6 @@ export class LocalState<TCacheShape> {
       optimistic: false,
     });
     return cachedData.result;
-  }
-
-  // Return a clone of the incoming document that excludes fields / selection
-  // sets that include an @client directive.
-  private removeClientSetsFromDocument(
-    query: DocumentNode,
-  ): DocumentNode | null {
-    checkDocument(query);
-
-    const docClone = removeDirectivesFromDocument(
-      [
-        {
-          test: (directive: DirectiveNode) => directive.name.value === 'client',
-          remove: true,
-        },
-      ],
-      query,
-    );
-
-    // After a fragment definition has had its @client related document
-    // sets removed, if the only field it has left is a __typename field,
-    // remove the entire fragment operation to prevent it from being fired
-    // on the server.
-    if (docClone) {
-      const nonClientDefinitions: ExecutableDefinitionNode[] = [];
-      docClone.definitions.forEach((definition: ExecutableDefinitionNode) => {
-        const isTypenameOnly = definition.selectionSet.selections.every(
-          selection => {
-            return (
-              selection.kind === 'Field' &&
-              (selection as FieldNode).name.value === '__typename'
-            );
-          },
-        );
-        if (!isTypenameOnly) {
-          nonClientDefinitions.push(definition);
-        }
-      });
-      docClone.definitions = nonClientDefinitions;
-    }
-
-    return docClone;
   }
 
   private normalizeTypeDefs(

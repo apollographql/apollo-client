@@ -115,42 +115,44 @@ export function removeDirectivesFromDocument(
 
       Field: {
         enter(node) {
-          // If `remove` is set to true for a directive, and a directive match
-          // is found for a field, remove the field as well.
-          const shouldRemoveField = directives.some(
-            directive => directive.remove,
-          );
+          if (directives && node.directives) {
+            // If `remove` is set to true for a directive, and a directive match
+            // is found for a field, remove the field as well.
+            const shouldRemoveField = directives.some(
+              directive => directive.remove,
+            );
 
-          if (
-            shouldRemoveField &&
-            node.directives.some(getDirectiveMatcher(directives))
-          ) {
-            if (node.arguments) {
-              // Store field argument variables so they can be removed
-              // from the operation definition.
-              node.arguments.forEach(arg => {
-                if (arg.value.kind === 'Variable') {
-                  variablesToRemove.push({
-                    name: (arg.value as VariableNode).name.value,
-                  });
-                }
-              });
+            if (
+              shouldRemoveField &&
+              node.directives.some(getDirectiveMatcher(directives))
+            ) {
+              if (node.arguments) {
+                // Store field argument variables so they can be removed
+                // from the operation definition.
+                node.arguments.forEach(arg => {
+                  if (arg.value.kind === 'Variable') {
+                    variablesToRemove.push({
+                      name: (arg.value as VariableNode).name.value,
+                    });
+                  }
+                });
+              }
+
+              if (node.selectionSet) {
+                // Store fragment spread names so they can be removed from the
+                // docuemnt.
+                getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
+                  frag => {
+                    fragmentSpreadsToRemove.push({
+                      name: frag.name.value,
+                    });
+                  },
+                );
+              }
+
+              // Remove the field.
+              return null;
             }
-
-            if (node.selectionSet) {
-              // Store fragment spread names so they can be removed from the
-              // docuemnt.
-              getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
-                frag => {
-                  fragmentSpreadsToRemove.push({
-                    name: frag.name.value,
-                  });
-                },
-              );
-            }
-
-            // Remove the field.
-            return null;
           }
         },
       },
@@ -516,7 +518,7 @@ export function removeClientSetsFromDocument(
                 );
               },
             );
-            if (!isTypenameOnly) {
+            if (isTypenameOnly) {
               return null;
             }
           }

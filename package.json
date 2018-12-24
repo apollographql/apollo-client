@@ -2,8 +2,13 @@
   "name": "apollo-client-monorepo",
   "private": true,
   "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "postinstall": "lerna exec -- npm install && lerna run prepare",
+    "bootstrap": "lerna bootstrap --loglevel=info",
+    "reinstall": "yarn clean && yarn && yarn bootstrap",
+    "xpostinstall": "lerna bootstrap --loglevel=info && lerna exec -- npm install && lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "build": "lerna run build",
     "test": "jest --verbose",
@@ -94,7 +99,7 @@
     "@types/jest": "23.3.10",
     "@types/lodash": "4.14.119",
     "@types/node": "10.12.18",
-    "@types/react": "16.7.17",
+    "@types/react": "16.7.18",
     "@types/react-dom": "16.0.11",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.0",
@@ -122,10 +127,8 @@
     "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
     "tslint": "5.12.0",
-    "typescript": "3.1.6",
-    "uglify-js": "3.4.9",
-    "webpack": "3.12.0",
-    "webpack-bundle-analyzer": "3.0.3"
+    "typescript": "^3.2.2",
+    "uglify-js": "3.4.9"
   },
   "renovate": {
     "extends": [

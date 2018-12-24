@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    // always include these for project references
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    // customize these common package settings
+    "esModuleInterop": true,
+    // "strict": true, // FIXME enable this asap
+    "target": "es5",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "lib": ["es2017", "esnext.asynciterable", "dom"]
+  }
+}

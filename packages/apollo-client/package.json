@@ -48,12 +48,16 @@
   "license": "MIT",
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
-    "apollo-cache": "file:../apollo-cache",
+    "apollo-cache": "^1.1.22",
     "apollo-link": "^1.0.0",
     "apollo-link-dedup": "^1.0.0",
-    "apollo-utilities": "file:../apollo-utilities",
+    "apollo-utilities": "^1.0.27",
     "symbol-observable": "^1.0.2",
     "zen-observable": "^0.8.0"
+  },
+  "devDependencies": {
+    "webpack": "3.12.0",
+    "webpack-bundle-analyzer": "3.0.3"
   },
   "peerDependencies": {
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"

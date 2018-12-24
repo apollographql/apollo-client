@@ -10,9 +10,9 @@
     "James Burgess <jamesmillerburgess@gmail.com>"
   ],
   "license": "MIT",
-  "main": "./lib/bundle.umd.js",
-  "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
+  "main": "./lib/index.js",
+  "module": "./lib/bundle.esm.js",
+  "browser": "./lib/bundle.umd.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "repository": {
@@ -29,13 +29,15 @@
     "coverage": "jest --coverage",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
-    "build": "tsc -p .",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
+    "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
     "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
+    "postbundle": "npm run clean:tests",
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
     "filesize": "npm run minify"
   },
   "peerDependencies": {
@@ -44,18 +46,5 @@
   "dependencies": {
     "fast-json-stable-stringify": "^2.0.0",
     "tslib": "^1.9.3"
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "testURL": "http://localhost"
   }
 }

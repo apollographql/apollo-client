@@ -3,9 +3,9 @@
   "private": true,
   "version": "2.5.0-beta.0",
   "description": "A simple yet functional GraphQL client.",
-  "main": "./lib/bundle.umd.js",
-  "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
+  "main": "./lib/index.js",
+  "module": "./lib/bundle.esm.js",
+  "browser": "./lib/bundle.umd.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
@@ -13,17 +13,20 @@
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
-    "test": "tsc -p tsconfig.test.json --noEmit && jest",
+    "test": "jest",
     "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run minify",
     "type-check": "flow check",
-    "build": "tsc",
-    "build:benchmark": "tsc -p tsconfig.benchmark.json",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
-    "watch": "tsc -w",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
+    "prebuild": "npm run clean",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
+    "build:benchmark": "tsc -p tsconfig.benchmark.json",
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
+    "watch": "tsc -w",
+    "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
+    "postbundle": "npm run clean:tests",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "testonly": "jest",
     "preanalyze": "npm run build",
@@ -56,23 +59,11 @@
     "tslib": "^1.9.3",
     "zen-observable": "^0.8.0"
   },
+  "devDependencies": {
+    "webpack": "3.12.0",
+    "webpack-bundle-analyzer": "3.0.3"
+  },
   "peerDependencies": {
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "setupFiles": [
-      "<rootDir>/scripts/tests.js"
-    ],
-    "testURL": "http://localhost"
   }
 }

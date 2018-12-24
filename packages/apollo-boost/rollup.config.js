@@ -1,4 +1,6 @@
-import build from '../../config/rollup.config';
+import buildUmdConfig from '../../config/buildUmdConfig';
+import buildEsmConfig from '../../config/buildEsmConfig';
+import pkg from './package.json';
 
 const globals = {
   'apollo-client': 'apollo.core',
@@ -9,10 +11,12 @@ const globals = {
   'graphql-tag': 'graphqlTag',
 };
 
-export default build('apollo.boost', {
-  external: Object.keys(global),
-  output: {
-    file: 'lib/index.umd.js',
-    globals,
-  },
-});
+export default [
+  buildUmdConfig('apollo.boost', {
+    external: Object.keys(globals),
+    output: {
+      globals,
+    },
+  }),
+  buildEsmConfig(pkg),
+];

@@ -1,5 +1,12 @@
-import node from 'rollup-plugin-node-resolve';
 import sourcemaps from 'rollup-plugin-sourcemaps';
+import nodeResolve from 'rollup-plugin-node-resolve';
+import typescriptPlugin from 'rollup-plugin-typescript2';
+import commonjs from 'rollup-plugin-commonjs';
+import typescript from 'typescript';
+import path from 'path';
+
+const extensions = ['.ts', '.tsx'];
+const input = './src/index.ts';
 
 export const globals = {
   // Apollo
@@ -13,13 +20,25 @@ export const globals = {
   'apollo-boost': 'apollo.boost',
 };
 
-export default (name, override = {}) => {
+const commonjsOptions = {
+  include: 'node_modules/**',
+};
+
+export default (name, override = { output: { globals: {} } }) => {
+  const projectDir = path.join(__filename, '..');
+  console.info(`Building project umd ${projectDir}`);
+  const tsconfig = `${projectDir}/tsconfig.json`;
   const config = Object.assign(
     {
-      input: 'lib/index.js',
+      input,
       //output: merged separately
       onwarn,
-      external: Object.keys(globals),
+      external: Object.keys({ ...globals, ...override.output.globals }),
+      plugins: [
+        nodeResolve({ extensions }),
+        typescriptPlugin({ typescript, tsconfig }),
+        commonjs(commonjsOptions),
+      ],
     },
     override,
   );
@@ -39,7 +58,7 @@ export default (name, override = {}) => {
   config.plugins = config.plugins || [];
   config.plugins.push(
     sourcemaps(),
-    node({
+    nodeResolve({
       // Inline anything imported from the tslib package, e.g. __extends
       // and __assign. This depends on the "importHelpers":true option in
       // tsconfig.base.json.
@@ -47,6 +66,7 @@ export default (name, override = {}) => {
       only: ['tslib'],
     }),
   );
+
   return config;
 };
 

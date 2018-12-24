@@ -2,24 +2,26 @@
   "name": "graphql-anywhere",
   "version": "4.2.0-beta.0",
   "description": "Run GraphQL queries with no schema and just one resolver",
-  "main": "./lib/bundle.umd.js",
-  "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
+  "main": "./lib/index.js",
+  "module": "./lib/bundle.esm.js",
+  "browser": "./lib/bundle.umd.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
     "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "test": "jest",
-    "build": "tsc",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup.async.config.js && cp ./lib/graphql-async.d.ts ./lib/async.d.ts",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
+    "postbundle": "npm run clean:tests",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
     "filesize": "npm run minify",
-    "clean": "rm -rf coverage/* && rm -rf lib/*"
+    "clean": "rm -rf coverage/* && rm -rf lib/*",
+    "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +"
   },
   "repository": {
     "type": "git",
@@ -42,18 +44,5 @@
   "dependencies": {
     "apollo-utilities": "file:../apollo-utilities",
     "tslib": "^1.9.3"
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "testURL": "http://localhost"
   }
 }

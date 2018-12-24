@@ -1,7 +1,5 @@
-import resolve from 'rollup-plugin-node-resolve';
+import buildUmdConfig from '../../config/buildUmdConfig';
+import buildEsmConfig from '../../config/buildEsmConfig';
+import pkg from './package.json';
 
-import build from '../../config/rollup.config';
-
-export default build('apollo.cache.core', {
-  plugins: [resolve()],
-});
+export default [buildUmdConfig('apollo.cache.core'), buildEsmConfig(pkg)];

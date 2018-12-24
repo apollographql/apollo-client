@@ -1,4 +1,6 @@
-import build, { globals } from '../../config/rollup.config';
+import buildUmdConfig, { globals } from '../../config/buildUmdConfig';
+import buildEsmConfig from '../../config/buildEsmConfig';
+import pkg from './package.json';
 
 const globalsOverride = {
   ...globals,
@@ -7,8 +9,11 @@ const globalsOverride = {
   'graphql/language/visitor': 'visitor',
 };
 
-export default build('apollo.cache.inmemory', {
-  output: {
-    globals: globalsOverride,
-  },
-});
+export default [
+  buildUmdConfig('apollo.cache.inmemory', {
+    output: {
+      globals: globalsOverride,
+    },
+  }),
+  buildEsmConfig(pkg),
+];

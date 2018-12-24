@@ -1,13 +1,14 @@
 {
-  "extends": "./tsconfig",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
     "outDir": "benchmark_lib",
-    "rootDir": "."
+    "rootDir": "benchmark"
   },
-  "files": [
-    "node_modules/typescript/lib/lib.es2015.d.ts",
-    "node_modules/typescript/lib/lib.dom.d.ts",
-    "benchmark/index.ts"
+  "exclude": [
+    "src",
+    "lib",
+    "benchmark_lib",
+    "node_modules",
+    "src/**/__tests__/**/*.ts"
   ]
 }

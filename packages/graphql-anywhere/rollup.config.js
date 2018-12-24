@@ -1,3 +1,3 @@
-import build from '../../config/rollup.config';
+import buildUmdConfig from "../../config/buildUmdConfig";
 
-export default build('graphqlAnywhere');
+export default [buildUmdConfig("graphqlAnywhere")];

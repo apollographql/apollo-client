@@ -1,13 +1,15 @@
-import build, { globals } from '../../config/rollup.config';
+import buildUmdConfig, { globals } from "../../config/buildUmdConfig";
 
 const globalsOverride = {
   ...globals,
-  'symbol-observable': '$$observable',
-  'graphql/language/printer': 'print',
+  "symbol-observable": "$$observable",
+  "graphql/language/printer": "print"
 };
 
-export default build('apollo.core', {
-  output: {
-    globals: globalsOverride,
-  },
-});
+export default [
+  buildUmdConfig("apollo.core", {
+    output: {
+      globals: globalsOverride
+    }
+  })
+];

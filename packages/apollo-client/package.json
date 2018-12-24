@@ -13,7 +13,7 @@
     "coverage": "jest --coverage",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
-    "test": "tsc -p tsconfig.test.json --noEmit && jest",
+    "test": "jest",
     "benchmark": "yarn build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect": "yarn build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "yarn minify",

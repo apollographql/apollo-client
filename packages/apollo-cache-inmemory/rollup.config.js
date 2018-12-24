@@ -1,12 +1,14 @@
-import build, { globals } from '../../config/rollup.config';
+import buildUmdConfig, { globals } from "../../config/buildUmdConfig";
 
 const globalsOverride = {
   ...globals,
-  'graphql/language/printer': 'print',
+  "graphql/language/printer": "print"
 };
 
-export default build('apollo.cache.inmemory', {
-  output: {
-    globals: globalsOverride,
-  },
-});
+export default [
+  buildUmdConfig("apollo.cache.inmemory", {
+    output: {
+      globals: globalsOverride
+    }
+  })
+];

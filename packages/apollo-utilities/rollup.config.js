@@ -1,12 +1,14 @@
-import build, { globals } from '../../config/rollup.config';
+import buildUmdConfig, { globals } from "../../config/buildUmdConfig";
 
 const globalsOverride = {
   ...globals,
-  'fast-json-stable-stringify': 'stringify',
+  "fast-json-stable-stringify": "stringify"
 };
 
-export default build('apollo.utilities', {
-  output: {
-    globals: globalsOverride,
-  },
-});
+export default [
+  buildUmdConfig("apollo.utilities", {
+    output: {
+      globals: globalsOverride
+    }
+  })
+];

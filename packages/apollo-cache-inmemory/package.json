@@ -13,7 +13,6 @@
   "license": "MIT",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": [
     "./lib/fixPolyfills.js"

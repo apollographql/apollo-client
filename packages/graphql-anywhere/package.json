@@ -11,7 +11,7 @@
     "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "test": "jest",
-    "build": "tsc -b .",
+    "build": "tsc -b --traceResolution .",
     "postbuild": "npm run bundle",
     "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup.async.config.js",
     "watch": "tsc -w",
@@ -54,8 +54,5 @@
       "json"
     ],
     "testURL": "http://localhost"
-  },
-  "devDependencies": {
-    "typescript": "^3.2.2"
   }
 }

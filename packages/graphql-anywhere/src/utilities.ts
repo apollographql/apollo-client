@@ -1,17 +1,17 @@
-import { DocumentNode } from "graphql";
+import { DocumentNode } from 'graphql';
 
-import { graphql } from "./graphql";
+import { graphql } from './graphql';
 
 export function filter<FD = any, D extends FD = any>(
   doc: DocumentNode,
-  data: D
+  data: D,
 ): FD {
   const resolver = (
     fieldName: string,
     root: any,
     args: any,
     context: any,
-    info: any
+    info: any,
   ) => {
     return root[info.resultKey];
   };
@@ -31,7 +31,7 @@ export function check(doc: DocumentNode, data: any): void {
     root: any,
     args: any,
     context: any,
-    info: any
+    info: any,
   ) => {
     if (!{}.hasOwnProperty.call(root, info.resultKey)) {
       throw new Error(`${info.resultKey} missing on ${JSON.stringify(root)}`);
@@ -46,25 +46,25 @@ export function check(doc: DocumentNode, data: any): void {
     {},
     {},
     {
-      fragmentMatcher: () => false
-    }
+      fragmentMatcher: () => false,
+    },
   );
 }
 
 // Lifted/adapted from
 //   https://github.com/facebook/react/blob/master/src/isomorphic/classic/types/ReactPropTypes.js
-const ANONYMOUS = "<<anonymous>>";
+const ANONYMOUS = '<<anonymous>>';
 function PropTypeError(message: string) {
   this.message = message;
-  this.stack = "";
+  this.stack = '';
 }
 // Make `instanceof Error` still work for returned errors.
 PropTypeError.prototype = Error.prototype;
 
 const reactPropTypeLocationNames = {
-  prop: "prop",
-  context: "context",
-  childContext: "child context"
+  prop: 'prop',
+  context: 'context',
+  childContext: 'child context',
 };
 
 function createChainableTypeChecker(validate: any) {
@@ -73,8 +73,8 @@ function createChainableTypeChecker(validate: any) {
     props: any,
     propName: string,
     componentName: string,
-    location: "prop" | "context" | "childContext",
-    propFullName: string
+    location: 'prop' | 'context' | 'childContext',
+    propFullName: string,
   ) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
@@ -84,12 +84,12 @@ function createChainableTypeChecker(validate: any) {
         if (props[propName] === null) {
           return new (PropTypeError as any)(
             `The ${locationName} \`${propFullName}\` is marked as required ` +
-              `in \`${componentName}\`, but its value is \`null\`.`
+              `in \`${componentName}\`, but its value is \`null\`.`,
           );
         }
         return new (PropTypeError as any)(
           `The ${locationName} \`${propFullName}\` is marked as required in ` +
-            `\`${componentName}\`, but its value is \`undefined\`.`
+            `\`${componentName}\`, but its value is \`undefined\`.`,
         );
       }
       return null;

@@ -3,8 +3,8 @@ import {
   SelectionSetNode,
   FieldNode,
   FragmentDefinitionNode,
-  InlineFragmentNode,
-} from 'graphql';
+  InlineFragmentNode
+} from "graphql";
 
 import {
   getMainDefinition,
@@ -15,8 +15,8 @@ import {
   isField,
   isInlineFragment,
   resultKeyNameFromField,
-  argumentsObjectFromField,
-} from 'apollo-utilities';
+  argumentsObjectFromField
+} from "apollo-utilities";
 
 import {
   merge,
@@ -24,8 +24,8 @@ import {
   VariableMap,
   ExecContext,
   ExecInfo,
-  ExecOptions,
-} from './graphql';
+  ExecOptions
+} from "./graphql";
 
 /* Based on graphql function from graphql-js:
  *
@@ -49,7 +49,7 @@ export function graphql(
   rootValue?: any,
   contextValue?: any,
   variableValues?: VariableMap,
-  execOptions: ExecOptions = {},
+  execOptions: ExecOptions = {}
 ): Promise<null | Object> {
   const mainDefinition = getMainDefinition(document);
 
@@ -67,26 +67,26 @@ export function graphql(
     variableValues,
     resultMapper,
     resolver,
-    fragmentMatcher,
+    fragmentMatcher
   };
 
   return executeSelectionSet(
     mainDefinition.selectionSet,
     rootValue,
-    execContext,
+    execContext
   );
 }
 
 async function executeSelectionSet(
   selectionSet: SelectionSetNode,
   rootValue: any,
-  execContext: ExecContext,
+  execContext: ExecContext
 ) {
   const { fragmentMap, contextValue, variableValues: variables } = execContext;
 
-  const result = {};
+  const result: any = {};
 
-  const execute = async selection => {
+  const execute = async (selection: any) => {
     if (!shouldInclude(selection, variables)) {
       // Skip this entirely
       return;
@@ -127,7 +127,7 @@ async function executeSelectionSet(
       const fragmentResult = await executeSelectionSet(
         fragment.selectionSet,
         rootValue,
-        execContext,
+        execContext
       );
 
       merge(result, fragmentResult);
@@ -146,7 +146,7 @@ async function executeSelectionSet(
 async function executeField(
   field: FieldNode,
   rootValue: any,
-  execContext: ExecContext,
+  execContext: ExecContext
 ): Promise<null | Object> {
   const { variableValues: variables, contextValue, resolver } = execContext;
 
@@ -156,7 +156,7 @@ async function executeField(
   const info: ExecInfo = {
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
-    directives: getDirectiveInfoFromField(field, variables),
+    directives: getDirectiveInfoFromField(field, variables)
   };
 
   const result = await resolver(fieldName, rootValue, args, contextValue, info);
@@ -181,9 +181,9 @@ async function executeField(
   return executeSelectionSet(field.selectionSet, result, execContext);
 }
 
-function executeSubSelectedArray(field, result, execContext) {
+function executeSubSelectedArray(field: any, result: any, execContext: any) {
   return Promise.all(
-    result.map(item => {
+    result.map((item: any) => {
       // null value in array
       if (item === null) {
         return null;
@@ -196,6 +196,6 @@ function executeSubSelectedArray(field, result, execContext) {
 
       // This is an object, run the selection set on it
       return executeSelectionSet(field.selectionSet, item, execContext);
-    }),
+    })
   );
 }

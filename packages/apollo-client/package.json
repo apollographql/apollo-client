@@ -18,6 +18,7 @@
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run minify",
     "type-check": "flow check",
+    "prebuild": "rm -rf lib",
     "build": "tsc -b .",
     "build:benchmark": "tsc -p tsconfig.benchmark.json",
     "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",

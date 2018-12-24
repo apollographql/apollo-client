@@ -8,7 +8,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap --loglevel=info",
     "reinstall": "yarn clean && yarn && yarn bootstrap",
-    "xpostinstall": "lerna bootstrap --loglevel=info && lerna exec -- npm install && lerna run prepare",
+    "xxxxxpostinstall": "lerna bootstrap --loglevel=info && lerna exec -- npm install && lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "prebuild": "yarn clean:build",
     "build": "tsc -b",
@@ -86,14 +86,6 @@
     ]
   },
   "pre-commit": "lint-staged",
-  "dependencies": {
-    "apollo-boost": "file:packages/apollo-boost",
-    "apollo-cache": "file:packages/apollo-cache",
-    "apollo-cache-inmemory": "file:packages/apollo-cache-inmemory",
-    "apollo-client": "file:packages/apollo-client",
-    "apollo-utilities": "file:packages/apollo-utilities",
-    "graphql-anywhere": "file:packages/graphql-anywhere"
-  },
   "devDependencies": {
     "@octokit/rest": "15.18.1",
     "@types/benchmark": "1.0.31",

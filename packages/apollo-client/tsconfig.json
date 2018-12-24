@@ -1,17 +1,17 @@
 {
-  "extends": "../../config/tsconfig.base.json",
+  "extends": "../tsconfig.settings.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "lib",
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "strictNullChecks": true,
-    "noUnusedParameters": true,
-    "lib": ["es2015", "dom"]
+    "baseUrl": "./",
+    "paths": {
+      "apollo-cache/*": ["../apollo-cache/src/*"],
+      "apollo-utilities/*": ["../apollo-utilities/src/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": [
-    "src/**/__tests__/**/*",
-    "src/**/__mocks__/**/*"
-  ]
+  "references": [
+    { "path": "../apollo-cache" },
+    { "path": "../apollo-utilities" }
+  ],
+  "exclude": ["src/**/__tests__/*.ts"]
 }

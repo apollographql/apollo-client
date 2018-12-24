@@ -1,10 +1,13 @@
 {
-  "extends": "../../config/tsconfig.base.json",
+  "extends": "../tsconfig.settings.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "lib",
-    "lib": ["es6", "dom", "es2017.object"]
+    "baseUrl": "./",
+    "paths": {
+      "apollo-utilities/*": ["../apollo-utilities/src/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../apollo-utilities" }],
   "exclude": ["src/**/__tests__/*.ts"]
 }

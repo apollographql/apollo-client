@@ -9,8 +9,10 @@
     // customize these common package settings
     "esModuleInterop": true,
     // "strict": true, // FIXME enable this asap
+
+    // use es5/commonjs for ts project-references dev workflow compatibility
     "target": "es5",
-    "module": "es2015",
+    "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": true,
     "lib": ["es2017", "esnext.asynciterable", "dom"]

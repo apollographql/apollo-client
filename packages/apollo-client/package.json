@@ -5,7 +5,6 @@
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
@@ -18,7 +17,7 @@
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run minify",
     "type-check": "flow check",
-    "build": "tsc",
+    "build": "tsc -b .",
     "build:benchmark": "tsc -p tsconfig.benchmark.json",
     "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
     "watch": "tsc -w",

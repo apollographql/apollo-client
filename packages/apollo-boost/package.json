@@ -11,7 +11,6 @@
   "license": "MIT",
   "main": "./lib/index.umd.js",
   "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "repository": {
@@ -28,7 +27,7 @@
     "coverage": "jest --coverage",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
-    "build": "tsc -p .",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",

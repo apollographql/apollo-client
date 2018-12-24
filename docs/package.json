@@ -23,11 +23,11 @@
     "typescript": "3.1.6"
   },
   "scripts": {
-    "start": "npm run build && chexo apollo-hexo-config -- server",
+    "start": "yarn build && chexo apollo-hexo-config -- server",
     "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
-    "build": "npm run types && chexo apollo-hexo-config -- generate",
+    "build": "yarn types && chexo apollo-hexo-config -- generate",
     "clean": "hexo clean",
-    "ci": "npm run clean; start-server-and-test start http-get://localhost:4000 test",
+    "ci": "yarn clean; start-server-and-test start http-get://localhost:4000 test",
     "test": "poke http://localhost:4000 --retry https://www.apollographql.com --shallow --method get --skip-images --skip-duplicates"
   }
 }

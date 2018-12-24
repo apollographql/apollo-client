@@ -23,19 +23,19 @@
   },
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
-    "prepare": "npm run lint && npm run build",
+    "prepare": "yarn lint && yarn build",
     "test": "jest",
     "coverage": "jest --coverage",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
-    "prebuild": "npm run clean",
+    "prebuild": "yarn clean",
     "build": "tsc -b .",
-    "postbuild": "npm run bundle",
+    "postbuild": "yarn bundle",
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",
-    "prepublishOnly": "npm run build",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
-    "filesize": "npm run minify",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup-bundle.config.js"
+    "prepublishOnly": "yarn build",
+    "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "filesize": "yarn minify",
+    "bundle": "rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup-bundle.config.js"
   },
   "dependencies": {
     "apollo-cache": "^1.1.22",

@@ -22,7 +22,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run: npm run danger
+      - run: yarn danger
 
   Docs:
     docker:
@@ -45,7 +45,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run: cd docs && npm run build
+      - run: cd docs && yarn build
 
   Filesize:
     docker:
@@ -68,7 +68,7 @@ jobs:
             # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
             - ~/.npm
-      - run: npm run filesize
+      - run: yarn filesize
 
   Apollo Client Monorepo:
     docker:
@@ -93,7 +93,7 @@ jobs:
             - ~/.npm
       - run:
           name: Jest suite with coverage
-          command: npm run test-ci && npm run coverage:upload
+          command: yarn test-ci && yarn coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:

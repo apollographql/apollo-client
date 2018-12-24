@@ -3,8 +3,9 @@
   "private": true,
   "version": "2.4.8",
   "description": "A simple yet functional GraphQL client.",
-  "main": "./lib/bundle.umd.js",
-  "module": "./lib/index.js",
+  "main": "./lib/index.js",
+  "module": "./lib/bundle.esm.js",
+  "browser": "./lib/bundle.umd.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {

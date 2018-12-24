@@ -9,8 +9,9 @@
     "James Burgess <jamesmillerburgess@gmail.com>"
   ],
   "license": "MIT",
-  "main": "./lib/index.umd.js",
-  "module": "./lib/index.js",
+  "main": "./lib/index.js",
+  "module": "./lib/bundle.esm.js",
+  "browser": "./lib/bundle.umd.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "repository": {

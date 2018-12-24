@@ -3,8 +3,8 @@ import {
   SelectionSetNode,
   FieldNode,
   FragmentDefinitionNode,
-  InlineFragmentNode,
-} from 'graphql';
+  InlineFragmentNode
+} from "graphql";
 
 import {
   getMainDefinition,
@@ -17,27 +17,27 @@ import {
   isField,
   isInlineFragment,
   resultKeyNameFromField,
-  argumentsObjectFromField,
-} from 'apollo-utilities';
+  argumentsObjectFromField
+} from "apollo-utilities";
 
 export type Resolver = (
   fieldName: string,
   rootValue: any,
   args: any,
   context: any,
-  info: ExecInfo,
+  info: ExecInfo
 ) => any;
 
 export type VariableMap = { [name: string]: any };
 
 export type ResultMapper = (
   values: { [fieldName: string]: any },
-  rootValue: any,
+  rootValue: any
 ) => any;
 export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
-  context: any,
+  context: any
 ) => boolean;
 
 export type ExecContext = {
@@ -82,7 +82,7 @@ export function graphql(
   rootValue?: any,
   contextValue?: any,
   variableValues?: VariableMap,
-  execOptions: ExecOptions = {},
+  execOptions: ExecOptions = {}
 ) {
   const mainDefinition = getMainDefinition(document);
 
@@ -100,24 +100,24 @@ export function graphql(
     variableValues,
     resultMapper,
     resolver,
-    fragmentMatcher,
+    fragmentMatcher
   };
 
   return executeSelectionSet(
     mainDefinition.selectionSet,
     rootValue,
-    execContext,
+    execContext
   );
 }
 
 function executeSelectionSet(
   selectionSet: SelectionSetNode,
   rootValue: any,
-  execContext: ExecContext,
+  execContext: ExecContext
 ) {
   const { fragmentMap, contextValue, variableValues: variables } = execContext;
 
-  const result = {};
+  const result: any = {};
 
   selectionSet.selections.forEach(selection => {
     if (!shouldInclude(selection, variables)) {
@@ -126,7 +126,11 @@ function executeSelectionSet(
     }
 
     if (isField(selection)) {
-      const fieldResult = executeField(selection, rootValue, execContext);
+      const fieldResult = executeField(
+        selection as FieldNode,
+        rootValue,
+        execContext
+      );
 
       const resultFieldKey = resultKeyNameFromField(selection);
 
@@ -141,13 +145,13 @@ function executeSelectionSet(
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
       if (isInlineFragment(selection)) {
-        fragment = selection;
+        fragment = selection as any;
       } else {
         // This is a named fragment
-        fragment = fragmentMap[selection.name.value];
+        fragment = fragmentMap[(selection as any).name.value];
 
         if (!fragment) {
-          throw new Error(`No fragment named ${selection.name.value}`);
+          throw new Error(`No fragment named ${(selection as any).name.value}`);
         }
       }
 
@@ -157,7 +161,7 @@ function executeSelectionSet(
         const fragmentResult = executeSelectionSet(
           fragment.selectionSet,
           rootValue,
-          execContext,
+          execContext
         );
 
         merge(result, fragmentResult);
@@ -175,7 +179,7 @@ function executeSelectionSet(
 function executeField(
   field: FieldNode,
   rootValue: any,
-  execContext: ExecContext,
+  execContext: ExecContext
 ): any {
   const { variableValues: variables, contextValue, resolver } = execContext;
 
@@ -185,7 +189,7 @@ function executeField(
   const info: ExecInfo = {
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
-    directives: getDirectiveInfoFromField(field, variables),
+    directives: getDirectiveInfoFromField(field, variables)
   };
 
   const result = resolver(fieldName, rootValue, args, contextValue, info);
@@ -210,8 +214,8 @@ function executeField(
   return executeSelectionSet(field.selectionSet, result, execContext);
 }
 
-function executeSubSelectedArray(field, result, execContext) {
-  return result.map(item => {
+function executeSubSelectedArray(field: any, result: any, execContext: any) {
+  return result.map((item: any) => {
     // null value in array
     if (item === null) {
       return null;
@@ -229,8 +233,8 @@ function executeSubSelectedArray(field, result, execContext) {
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
-export function merge(dest, src) {
-  if (src !== null && typeof src === 'object') {
+export function merge(dest: any, src: any) {
+  if (src !== null && typeof src === "object") {
     Object.keys(src).forEach(key => {
       const srcVal = src[key];
       if (!hasOwn.call(dest, key)) {

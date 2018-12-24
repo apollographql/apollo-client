@@ -17,7 +17,7 @@
     "benchmark": "cd packages/apollo-client && yarn benchmark",
     "prelint": "yarn lint-fix",
     "lint": "lerna run lint",
-    "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+    "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
     "filesize": "lerna run filesize && bundlesize",
     "coverage": "jest --verbose --coverage",

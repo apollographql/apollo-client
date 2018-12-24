@@ -16,7 +16,7 @@ node -e "var package = require('./package.json'); \
 "
 
 # Compile new files
-npm run build
+yarn build
 
 # Make sure the ./npm directory is empty
 rm -rf ./npm

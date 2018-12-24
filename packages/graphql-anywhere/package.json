@@ -8,17 +8,17 @@
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "prepare": "npm run lint && npm run build",
+    "prepare": "yarn lint && yarn build",
     "coverage": "jest --coverage",
     "test": "jest",
     "build": "tsc -b --traceResolution .",
-    "postbuild": "npm run bundle",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup.async.config.js",
+    "postbuild": "yarn bundle",
+    "bundle": "rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup.async.config.js",
     "watch": "tsc -w",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "yarn build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
-    "filesize": "npm run minify",
+    "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "filesize": "yarn minify",
     "clean": "rm -rf coverage/* && rm -rf lib/*"
   },
   "repository": {

@@ -1,9 +1,9 @@
-import resolve from "rollup-plugin-node-resolve";
+import resolve from 'rollup-plugin-node-resolve';
 
-import buildUmdConfig from "../../config/buildUmdConfig";
+import buildUmdConfig from '../../config/buildUmdConfig';
 
 export default [
-  buildUmdConfig("apollo.cache.core", {
-    plugins: [resolve()]
-  })
+  buildUmdConfig('apollo.cache.core', {
+    plugins: [resolve()],
+  }),
 ];

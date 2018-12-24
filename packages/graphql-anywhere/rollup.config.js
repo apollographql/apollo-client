@@ -1,3 +1,3 @@
-import buildUmdConfig from "../../config/buildUmdConfig";
+import buildUmdConfig from '../../config/buildUmdConfig';
 
-export default [buildUmdConfig("graphqlAnywhere")];
+export default [buildUmdConfig('graphqlAnywhere')];

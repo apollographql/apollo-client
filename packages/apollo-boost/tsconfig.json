@@ -15,5 +15,5 @@
     { "path": "../apollo-cache-inmemory" },
     { "path": "../apollo-client" }
   ],
-  "exclude": ["src/**/__tests__/*.ts"]
+  "exclude": ["lib", "node_modules", "src/**/__tests__/*.ts"]
 }

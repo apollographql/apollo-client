@@ -12,7 +12,6 @@
   "license": "MIT",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "repository": {
@@ -29,7 +28,7 @@
     "test": "jest",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts && tslint -c \"../../config/tslint.json\" -p tsconfig.json tests/*.ts",
     "prebuild": "npm run clean",
-    "build": "tsc -p .",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
     "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "watch": "tsc -w -p .",

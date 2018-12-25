@@ -6,8 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "lerna bootstrap --loglevel=info",
-    "reinstall": "yarn clean:npm && yarn clean:build && yarn install && yarn bootstrap",
+    "ci": "yarn clean:npm && yarn clean:build && yarn install",
     "postinstall": "yarn clean:build && yarn lint && yarn bundle",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "prebuild": "echo \"apollo-link-state has re-entrant dependency on 'graphql-anywhere', bootstrapping build...\" && tsc -b packages/apollo-utilities && tsc -b packages/graphql-anywhere",

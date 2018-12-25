@@ -7,14 +7,18 @@
     "sourceMap": true,
 
     // customize these common package settings
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     // "strict": true, // FIXME enable this asap
+    "lib": ["es2017", "esnext.asynciterable", "dom"],
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmitOnError": true,
+    "suppressImplicitAnyIndexErrors": true,
 
     // use es5/commonjs for ts project-references dev workflow compatibility
     "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "noImplicitAny": true,
-    "lib": ["es2017", "esnext.asynciterable", "dom"]
+    "module": "commonjs"
   }
 }

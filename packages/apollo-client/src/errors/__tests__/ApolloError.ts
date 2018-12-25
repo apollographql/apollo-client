@@ -5,7 +5,7 @@ describe('ApolloError', () => {
     const graphQLErrors = [
       new Error('Something went wrong with GraphQL'),
       new Error('Something else went wrong with GraphQL'),
-    ];
+    ] as any;
     const networkError = new Error('Network error');
     const errorMessage = 'this is an error message';
     const apolloError = new ApolloError({
@@ -29,7 +29,7 @@ describe('ApolloError', () => {
   });
 
   it('should add a graphql error to the message', () => {
-    const graphQLErrors = [new Error('this is an error message')];
+    const graphQLErrors = [new Error('this is an error message')] as any;
     const apolloError = new ApolloError({
       graphQLErrors,
     });
@@ -39,7 +39,10 @@ describe('ApolloError', () => {
   });
 
   it('should add multiple graphql errors to the message', () => {
-    const graphQLErrors = [new Error('this is new'), new Error('this is old')];
+    const graphQLErrors = [
+      new Error('this is new'),
+      new Error('this is old'),
+    ] as any;
     const apolloError = new ApolloError({
       graphQLErrors,
     });
@@ -52,7 +55,7 @@ describe('ApolloError', () => {
   });
 
   it('should add both network and graphql errors to the message', () => {
-    const graphQLErrors = [new Error('graphql error message')];
+    const graphQLErrors = [new Error('graphql error message')] as any;
     const networkError = new Error('network error message');
     const apolloError = new ApolloError({
       graphQLErrors,
@@ -67,7 +70,7 @@ describe('ApolloError', () => {
   });
 
   it('should contain a stack trace', () => {
-    const graphQLErrors = [new Error('graphql error message')];
+    const graphQLErrors = [new Error('graphql error message')] as any;
     const networkError = new Error('network error message');
     const apolloError = new ApolloError({
       graphQLErrors,

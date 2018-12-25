@@ -4,7 +4,7 @@ import { DocumentNode } from 'graphql';
 
 describe('QueryStore', () => {
   const queryId = 'abc123';
-  let queryStore;
+  let queryStore: any;
 
   beforeEach(() => {
     queryStore = new QueryStore();

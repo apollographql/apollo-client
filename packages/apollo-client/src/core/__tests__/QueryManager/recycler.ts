@@ -54,7 +54,7 @@ describe('Subscription lifecycles', () => {
       fetchPolicy: 'cache-and-network',
     });
 
-    const observableQueries = [];
+    const observableQueries: any = [];
     let count = 0;
 
     const resubscribe = () => {

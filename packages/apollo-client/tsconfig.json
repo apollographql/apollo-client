@@ -15,5 +15,5 @@
     { "path": "../apollo-cache-inmemory" },
     { "path": "../apollo-utilities" }
   ],
-  "exclude": ["benchmark", "lib", "node_modules", "src/**/__tests__/**/*.ts"]
+  "exclude": ["benchmark", "lib", "node_modules"]
 }

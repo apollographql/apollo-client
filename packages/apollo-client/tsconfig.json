@@ -6,11 +6,13 @@
     "baseUrl": "./",
     "paths": {
       "apollo-cache/*": ["../apollo-cache/src/*"],
+      "apollo-cache-inmemory/*": ["../apollo-cache-inmemory/src/*"],
       "apollo-utilities/*": ["../apollo-utilities/src/*"]
     }
   },
   "references": [
     { "path": "../apollo-cache" },
+    { "path": "../apollo-cache-inmemory" },
     { "path": "../apollo-utilities" }
   ],
   "exclude": ["benchmark", "lib", "node_modules", "src/**/__tests__/**/*.ts"]

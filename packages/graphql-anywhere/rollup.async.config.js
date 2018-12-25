@@ -1,6 +1,6 @@
-import build from '../../config/rollup.config';
+import buildUmdConfig from '../../config/buildUmdConfig';
 
-export default build('graphqlAnywhereAsync', {
+export default buildUmdConfig('graphqlAnywhereAsync', {
   input: 'lib/graphql-async.js',
   output: {
     file: 'lib/async.js',

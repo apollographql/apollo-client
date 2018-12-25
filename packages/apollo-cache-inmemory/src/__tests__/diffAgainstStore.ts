@@ -490,7 +490,7 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    function dataIdFromObject({ id }: { id: string}) {
+    function dataIdFromObject({ id }: { id: string }) {
       return id;
     }
 
@@ -997,20 +997,24 @@ describe('diffing queries against the store', () => {
       const store = writer.writeQueryToStore({
         query: validQuery,
         result: {
-          messageList: [{
-            id: 1,
-            __typename: "Message",
-            message: "hi"
-          }, {
-            id: 2,
-            __typename: "Message",
-            message: "hello"
-          }, {
-            id: 3,
-            __typename: "Message",
-            message: "hey"
-          }]
-        }
+          messageList: [
+            {
+              id: 1,
+              __typename: 'Message',
+              message: 'hi',
+            },
+            {
+              id: 2,
+              __typename: 'Message',
+              message: 'hello',
+            },
+            {
+              id: 3,
+              __typename: 'Message',
+              message: 'hey',
+            },
+          ],
+        },
       });
 
       try {
@@ -1021,7 +1025,7 @@ describe('diffing queries against the store', () => {
         throw new Error('should have thrown');
       } catch (e) {
         expect(e.message).toEqual(
-          'Missing selection set for object of type Message returned for query field messageList'
+          'Missing selection set for object of type Message returned for query field messageList',
         );
       }
     });
@@ -1036,17 +1040,20 @@ describe('diffing queries against the store', () => {
         users: [],
       };
 
-      company.users.push({
-        __typename: 'User',
-        id: 1,
-        name: 'Ben',
-        company,
-      }, {
-        __typename: 'User',
-        id: 2,
-        name: 'James',
-        company,
-      });
+      company.users.push(
+        {
+          __typename: 'User',
+          id: 1,
+          name: 'Ben',
+          company,
+        },
+        {
+          __typename: 'User',
+          id: 2,
+          name: 'James',
+          company,
+        },
+      );
 
       const query = gql`
         query Query {
@@ -1088,42 +1095,49 @@ describe('diffing queries against the store', () => {
             company: {
               id: 1,
               name: 'Apollo',
-              users: [{
-                id: 1,
-                name: 'Ben',
-                company: {
+              users: [
+                {
                   id: 1,
-                  name: 'Apollo',
+                  name: 'Ben',
+                  company: {
+                    id: 1,
+                    name: 'Apollo',
+                  },
                 },
-              }, {
-                id: 2,
-                name: 'James',
-                company: {
-                  id: 1,
-                  name: 'Apollo',
+                {
+                  id: 2,
+                  name: 'James',
+                  company: {
+                    id: 1,
+                    name: 'Apollo',
+                  },
                 },
-              }],
+              ],
             },
           },
         });
       }
 
       // Check first using generated IDs.
-      check(writer.writeQueryToStore({
-        query,
-        result: {
-          user: company.users[0],
-        },
-      }));
+      check(
+        writer.writeQueryToStore({
+          query,
+          result: {
+            user: company.users[0],
+          },
+        }),
+      );
 
       // Now check with __typename-specific IDs.
-      check(writer.writeQueryToStore({
-        dataIdFromObject: defaultDataIdFromObject,
-        query,
-        result: {
-          user: company.users[0],
-        },
-      }));
+      check(
+        writer.writeQueryToStore({
+          dataIdFromObject: defaultDataIdFromObject,
+          query,
+          result: {
+            user: company.users[0],
+          },
+        }),
+      );
     });
   });
 });

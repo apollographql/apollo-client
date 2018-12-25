@@ -113,7 +113,11 @@ export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   variables?: Pick<TVariables, K>;
 }
 
-export type UpdateQueryFn<TData = any, TVariables = OperationVariables, TSubscriptionData = TData> = (
+export type UpdateQueryFn<
+  TData = any,
+  TVariables = OperationVariables,
+  TSubscriptionData = TData
+> = (
   previousQueryResult: TData,
   options: {
     subscriptionData: { data: TSubscriptionData };

@@ -82,14 +82,17 @@ export class MockLink extends ApolloLink {
     }
 
     return new Observable<FetchResult>(observer => {
-      let timer = setTimeout(() => {
-        if (error) {
-          observer.error(error);
-        } else {
-          if (result) observer.next(result);
-          observer.complete();
-        }
-      }, delay ? delay : 0);
+      let timer = setTimeout(
+        () => {
+          if (error) {
+            observer.error(error);
+          } else {
+            if (result) observer.next(result);
+            observer.complete();
+          }
+        },
+        delay ? delay : 0,
+      );
 
       return () => {
         clearTimeout(timer);
@@ -116,7 +119,7 @@ export class MockSubscriptionLink extends ApolloLink {
         unsubscribe: () => {
           this.unsubscribers.forEach(x => x());
         },
-        closed: false
+        closed: false,
       };
     });
   }

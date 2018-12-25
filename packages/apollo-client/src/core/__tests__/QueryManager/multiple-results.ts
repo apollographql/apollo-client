@@ -50,7 +50,7 @@ describe('mutiple results', () => {
         name: 'Luke Skywalker',
         friends: null,
       },
-    };
+    } as any;
 
     const laterData = {
       people_one: {
@@ -107,7 +107,7 @@ describe('mutiple results', () => {
         name: 'Luke Skywalker',
         friends: null,
       },
-    };
+    } as any;
 
     const laterData = {
       people_one: {
@@ -137,7 +137,7 @@ describe('mutiple results', () => {
         if (count === 1) {
           // this shouldn't fire the next event again
           link.simulateResult({
-            result: { errors: [new Error('defer failed')] },
+            result: { errors: [new Error('defer failed')] as any },
           });
           setTimeout(() => {
             link.simulateResult({ result: { data: laterData } });
@@ -176,7 +176,7 @@ describe('mutiple results', () => {
         name: 'Luke Skywalker',
         friends: null,
       },
-    };
+    } as any;
 
     const laterData = {
       people_one: {
@@ -208,7 +208,10 @@ describe('mutiple results', () => {
           expect(stripSymbols(result.data)).toEqual(initialData);
           // this should fire the `next` event without this error
           link.simulateResult({
-            result: { errors: [new Error('defer failed')], data: laterData },
+            result: {
+              errors: [new Error('defer failed')] as any,
+              data: laterData,
+            },
           });
         }
         if (count === 2) {
@@ -247,7 +250,7 @@ describe('mutiple results', () => {
         name: 'Luke Skywalker',
         friends: null,
       },
-    };
+    } as any;
 
     const laterData = {
       people_one: {
@@ -278,7 +281,7 @@ describe('mutiple results', () => {
             expect(result.errors).toBeUndefined();
             // this should fire the next event again
             link.simulateResult({
-              result: { errors: [new Error('defer failed')] },
+              result: { errors: [new Error('defer failed')] as any },
             });
           }
           if (count === 2) {
@@ -322,7 +325,7 @@ describe('mutiple results', () => {
         name: 'Luke Skywalker',
         friends: null,
       },
-    };
+    } as any;
 
     const laterData = {
       people_one: {
@@ -352,7 +355,7 @@ describe('mutiple results', () => {
           expect(result.errors).toBeUndefined();
           // this should fire the next event again
           link.simulateResult({
-            result: { errors: [new Error('defer failed')] },
+            result: { errors: [new Error('defer failed')] as any },
           });
         }
         if (count === 2) {

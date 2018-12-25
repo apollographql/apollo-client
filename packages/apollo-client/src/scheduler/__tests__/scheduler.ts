@@ -59,7 +59,7 @@ describe('QueryScheduler', () => {
     };
 
     const link = mockSingleLink({
-      request: queryOptions,
+      request: queryOptions as any,
       result: { data },
     });
     const queryManager = new QueryManager({
@@ -103,7 +103,7 @@ describe('QueryScheduler', () => {
     const link = mockSingleLink({
       request: {
         query: queryOptions.query,
-      },
+      } as any,
       result: { data },
     });
     const queryManager = new QueryManager({
@@ -151,7 +151,7 @@ describe('QueryScheduler', () => {
       pollInterval: 20,
     };
     const link = mockSingleLink({
-      request: queryOptions,
+      request: queryOptions as any,
       result: { data },
     });
     const queryManager = new QueryManager({
@@ -196,7 +196,7 @@ describe('QueryScheduler', () => {
     const queryOptions = {
       query: myQuery,
       pollInterval: 20,
-    };
+    } as any;
     const link = mockSingleLink(
       { request: queryOptions, result: { data: data[0] } },
       { request: queryOptions, result: { data: data[1] } },
@@ -246,7 +246,7 @@ describe('QueryScheduler', () => {
     const queryOptions = {
       query,
       pollInterval: 80,
-    };
+    } as any;
     const link = mockSingleLink({
       request: queryOptions,
       error,
@@ -288,7 +288,7 @@ describe('QueryScheduler', () => {
     const queryOptions = {
       query,
       pollInterval: 10,
-    };
+    } as any;
     const link = mockSingleLink({
       request: queryOptions,
       result: { data },
@@ -321,7 +321,7 @@ describe('QueryScheduler', () => {
     const queryOptions = {
       query,
       pollInterval: 10000,
-    };
+    } as any;
     const link = mockSingleLink({
       request: queryOptions,
       result: { data },
@@ -382,11 +382,11 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link: mockSingleLink(
         {
-          request: { query: query1 },
+          request: { query: query1 } as any,
           result: { data: data1 },
         },
         {
-          request: { query: query2 },
+          request: { query: query2 } as any,
           result: { data: data2 },
         },
       ),
@@ -436,7 +436,7 @@ describe('QueryScheduler', () => {
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link: mockSingleLink({
-        request: { query },
+        request: { query } as any,
         result: { data },
       }),
     });
@@ -485,7 +485,7 @@ describe('QueryScheduler', () => {
     const networkResult = {
       request: queryOptions,
       result: { data },
-    };
+    } as any;
     const link = mockSingleLink(
       networkResult,
       networkResult,

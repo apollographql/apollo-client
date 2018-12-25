@@ -119,7 +119,7 @@
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "^4.0.0",
     "rollup-plugin-sourcemaps": "0.4.2",
-    "rollup-plugin-typescript": "^1.0.0",
+    "rollup-plugin-typescript2": "^0.18.1",
     "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
     "tslint": "5.12.0",

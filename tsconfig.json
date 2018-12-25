@@ -1,4 +1,5 @@
 {
+  "extends": "./packages/tsconfig.settings.json",
   "files": [],
   "references": [
     { "path": "packages/apollo-boost" },

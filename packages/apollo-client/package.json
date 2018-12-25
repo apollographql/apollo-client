@@ -18,7 +18,7 @@
     "benchmark:inspect": "yarn build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "yarn minify",
     "type-check": "flow check",
-    "prebuild": "rm -rf lib",
+    "prebuild": "yarn clean",
     "build": "tsc -b .",
     "build:benchmark": "tsc -p tsconfig.benchmark.json",
     "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",

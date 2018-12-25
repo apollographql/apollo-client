@@ -35,6 +35,14 @@ class PerQueryKeyMaker {
     this.lookupFragmentSpread = this.cacheMethod(this.lookupFragmentSpread);
   }
 
+  public lookupQuery(document: DocumentNode): object {
+    return this.lookupObject(document);
+  }
+
+  public lookupSelectionSet(selectionSet: SelectionSetNode) {
+    return this.lookupObject(selectionSet);
+  }
+
   private cacheMethod<V, R>(method: (value: V) => R): typeof method {
     return (value: V) => {
       if (this.cache.has(value)) {
@@ -56,14 +64,6 @@ class PerQueryKeyMaker {
         throw e;
       }
     };
-  }
-
-  public lookupQuery(document: DocumentNode): object {
-    return this.lookupObject(document);
-  }
-
-  public lookupSelectionSet(selectionSet: SelectionSetNode) {
-    return this.lookupObject(selectionSet);
   }
 
   private lookupFragmentSpread(fragmentSpread: FragmentSpreadNode): object {

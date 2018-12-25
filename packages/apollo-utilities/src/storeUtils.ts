@@ -16,7 +16,7 @@ import {
   NameNode,
 } from 'graphql';
 
-import * as stringify from 'fast-json-stable-stringify';
+import stringify from 'fast-json-stable-stringify';
 
 export interface IdValue {
   type: 'id';

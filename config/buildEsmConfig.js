@@ -1,5 +1,5 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
-import typescriptPlugin from 'rollup-plugin-typescript';
+import typescriptPlugin from 'rollup-plugin-typescript2';
 import typescript from 'typescript';
 import path from 'path';
 
@@ -10,10 +10,8 @@ const extensions = ['.ts', '.tsx'];
 const input = './src/index.ts';
 
 export default pkg => {
-  console.info(`uhhh1 ${path.basename(__filename)}`);
-  console.info(`uhhh2 ${path.join(__filename)}`);
-  const projectDir = path.join(__filename, `../packages/${pkg.name}`);
-  console.info(`Building project: ${projectDir}`);
+  const projectDir = path.join(__filename, '..');
+  console.info(`Building project ${projectDir}`);
   const tsconfig = `${projectDir}/tsconfig.json`;
   return {
     input,

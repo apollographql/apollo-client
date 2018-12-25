@@ -1,5 +1,6 @@
 # fs
 .DS_Store
+.rpt2_cache
 
 # Logs
 logs

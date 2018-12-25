@@ -35,7 +35,7 @@
     "prepublishOnly": "yarn build",
     "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
     "filesize": "yarn minify",
-    "bundle": "rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup-bundle.config.js"
+    "bundle": "rollup -c rollup.config.js && rollup -c rollup-bundle.config.js"
   },
   "dependencies": {
     "apollo-cache": "^1.1.23",

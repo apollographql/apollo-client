@@ -89,7 +89,7 @@ describe('QueryManager', () => {
     observer: Observer<ApolloQueryResult<any>>;
   }) => {
     const queryManager = mockQueryManager({
-      request: { query, variables },
+      request: { query, variables } as any,
       result,
       error,
       delay,
@@ -99,7 +99,7 @@ describe('QueryManager', () => {
       queryOptions,
     ) as WatchQueryOptions;
     return queryManager.watchQuery<any>(finalOptions).subscribe({
-      next: wrap(done, observer.next!),
+      next: wrap(done as any, observer.next!),
       error: observer.error,
     });
   };
@@ -118,7 +118,7 @@ describe('QueryManager', () => {
     config?: ApolloReducerConfig;
   }) => {
     const link = mockSingleLink({
-      request: { query: mutation, variables },
+      request: { query: mutation, variables } as any,
       result: { data, errors },
     });
     const queryManager = createQueryManager({
@@ -143,6 +143,7 @@ describe('QueryManager', () => {
   const assertMutationRoundtrip = (opts: {
     mutation: DocumentNode;
     data: Object;
+    errors?: any;
     variables?: Object;
   }) => {
     return mockMutation(opts).then(({ result }) => {
@@ -200,7 +201,7 @@ describe('QueryManager', () => {
             name: 'Name',
             message: 'This is an error message.',
           },
-        ],
+        ] as any,
       },
       observer: {
         next() {
@@ -239,7 +240,7 @@ describe('QueryManager', () => {
             name: 'Name',
             message: 'This is an error message.',
           },
-        ],
+        ] as any,
       },
       observer: {
         next({ errors }) {
@@ -282,7 +283,7 @@ describe('QueryManager', () => {
             name: 'Name',
             message: 'This is an error message.',
           },
-        ],
+        ] as any,
       },
       observer: {
         next() {
@@ -473,7 +474,7 @@ describe('QueryManager', () => {
             }
           }
         `,
-      },
+      } as any,
       result: expResult,
     });
 
@@ -503,7 +504,7 @@ describe('QueryManager', () => {
       variables: {
         id: '1',
       },
-    };
+    } as any;
     const data1 = {
       people_one: {
         name: 'Luke Skywalker',
@@ -604,7 +605,7 @@ describe('QueryManager', () => {
         id: '1',
       },
       notifyOnNetworkStatusChange: true,
-    };
+    } as any;
     const request2 = {
       query: gql`
         query fetchLeia($id: String) {
@@ -617,7 +618,7 @@ describe('QueryManager', () => {
         id: '2',
       },
       notifyOnNetworkStatusChange: true,
-    };
+    } as any;
     const request3 = {
       query: gql`
         query fetchHan($id: String) {
@@ -630,7 +631,7 @@ describe('QueryManager', () => {
         id: '3',
       },
       notifyOnNetworkStatusChange: true,
-    };
+    } as any;
 
     const data1 = {
       people_one: {
@@ -700,7 +701,7 @@ describe('QueryManager', () => {
         id: '1',
       },
       notifyOnNetworkStatusChange: false,
-    };
+    } as any;
     const data1 = {
       people_one: {
         name: 'Luke Skywalker',
@@ -747,7 +748,7 @@ describe('QueryManager', () => {
         }
       `,
       notifyOnNetworkStatusChange: false,
-    };
+    } as any;
 
     const data1 = {
       a: 1,
@@ -832,7 +833,7 @@ describe('QueryManager', () => {
         }
       `,
       notifyOnNetworkStatusChange: false,
-    };
+    } as any;
 
     const data1 = {
       a: 1,
@@ -876,7 +877,7 @@ describe('QueryManager', () => {
         id: '1',
       },
       notifyOnNetworkStatusChange: true,
-    };
+    } as any;
     const data1 = {
       people_one: {
         name: 'Luke Skywalker',
@@ -919,7 +920,7 @@ describe('QueryManager', () => {
           }
         }
       `,
-    };
+    } as any;
     const data1 = {
       people_one: {
         name: 'Luke Skywalker',
@@ -989,19 +990,19 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query: query },
+        request: { query } as any,
         result: { data: data1 },
       },
       {
-        request: { query: query },
+        request: { query } as any,
         result: { data: data2 },
       },
       {
-        request: { query: query, variables: variables1 },
+        request: { query: query, variables: variables1 } as any,
         result: { data: data3 },
       },
       {
-        request: { query: query, variables: variables2 },
+        request: { query: query, variables: variables2 } as any,
         result: { data: data4 },
       },
     );
@@ -1061,11 +1062,11 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query: query },
+        request: { query } as any,
         result: { data: data1 },
       },
       {
-        request: { query: query },
+        request: { query } as any,
         result: { data: data2 },
       },
     );
@@ -1120,15 +1121,15 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query },
+        request: { query } as any,
         result: { data: data1 },
       },
       {
-        request: { query },
+        request: { query } as any,
         result: { data: data2 },
       },
       {
-        request: { query },
+        request: { query } as any,
         result: { data: data3 },
       },
     );
@@ -1182,15 +1183,15 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query },
+        request: { query } as any,
         result: { data: data1 },
       },
       {
-        request: { query },
+        request: { query } as any,
         result: { data: data2 },
       },
       {
-        request: { query },
+        request: { query } as any,
         result: { data: data3 },
       },
     );
@@ -1227,7 +1228,7 @@ describe('QueryManager', () => {
     `;
     const data = { list: [null, { value: 1 }] };
     const queryManager = mockQueryManager({
-      request: { query },
+      request: { query } as any,
       result: { data },
     });
     const observable = queryManager.watchQuery({ query });
@@ -1309,7 +1310,7 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager({
-      request: { query: primeQuery },
+      request: { query: primeQuery } as any,
       result: { data: data1 },
     });
 
@@ -1343,7 +1344,7 @@ describe('QueryManager', () => {
   });
 
   it('runs a mutation even when errors is empty array #2912', () => {
-    const errors = [];
+    const errors = [] as any;
     return assertMutationRoundtrip({
       mutation: gql`
         mutation makeListPrivate {
@@ -1473,7 +1474,7 @@ describe('QueryManager', () => {
 
     const queryManager = createQueryManager({
       link: mockSingleLink({
-        request: { query: mutation },
+        request: { query: mutation } as any,
         result: { data },
       }),
       config: { dataIdFromObject: getIdField },
@@ -1527,12 +1528,12 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query: query1 },
+        request: { query: query1 } as any,
         result: { data: data1 },
         delay: 10,
       },
       {
-        request: { query: query2 },
+        request: { query: query2 } as any,
         result: { data: data2 },
       },
     );
@@ -1585,11 +1586,11 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query: query1 },
+        request: { query: query1 } as any,
         result: { data: data1 },
       },
       {
-        request: { query: query2 },
+        request: { query: query2 } as any,
         result: { data: data2 },
         delay: 10,
       },
@@ -1668,7 +1669,7 @@ describe('QueryManager', () => {
     //manager
     createQueryManager({
       link: mockSingleLink({
-        request: { query: transformedQuery },
+        request: { query: transformedQuery } as any,
         result: { data: transformedQueryResult },
       }),
       config: { addTypename: true },
@@ -1709,7 +1710,7 @@ describe('QueryManager', () => {
 
     createQueryManager({
       link: mockSingleLink({
-        request: { query: transformedMutation },
+        request: { query: transformedMutation } as any,
         result: { data: transformedMutationResult },
       }),
       config: { addTypename: true },
@@ -1732,7 +1733,7 @@ describe('QueryManager', () => {
     `;
     const networkError = new Error('Network error');
     mockQueryManager({
-      request: { query },
+      request: { query } as any,
       error: networkError,
     })
       .query({ query })
@@ -1774,7 +1775,7 @@ describe('QueryManager', () => {
     };
     createQueryManager({
       link: mockSingleLink({
-        request: { query },
+        request: { query } as any,
         result: { data },
       }),
       config: reducerConfig,
@@ -1797,9 +1798,9 @@ describe('QueryManager', () => {
         }
       }
     `;
-    const graphQLErrors = [new Error('GraphQL error')];
+    const graphQLErrors = [new Error('GraphQL error')] as any;
     return mockQueryManager({
-      request: { query },
+      request: { query } as any,
       result: { errors: graphQLErrors },
     })
       .query({ query })
@@ -1833,11 +1834,11 @@ describe('QueryManager', () => {
     };
     const queryManager = mockQueryManager(
       {
-        request: { query },
+        request: { query } as any,
         result: { data },
       },
       {
-        request: { query },
+        request: { query } as any,
         error: new Error('Network error ocurred'),
       },
     );
@@ -1885,7 +1886,7 @@ describe('QueryManager', () => {
     };
 
     const observable = mockQueryManager({
-      request: { query },
+      request: { query } as any,
       result: { data },
     }).watchQuery({ query, pollInterval: 20 });
 
@@ -1919,11 +1920,11 @@ describe('QueryManager', () => {
     };
     const queryManager = mockQueryManager(
       {
-        request: { query },
+        request: { query } as any,
         result: { data },
       },
       {
-        request: { query },
+        request: { query } as any,
         error: new Error('Network error occurred.'),
       },
     );
@@ -1973,11 +1974,11 @@ describe('QueryManager', () => {
     };
     const queryManager = mockQueryManager(
       {
-        request: { query },
+        request: { query } as any,
         result: { data },
       },
       {
-        request: { query },
+        request: { query } as any,
         result: { data },
       },
     );
@@ -2012,7 +2013,7 @@ describe('QueryManager', () => {
       },
     };
     const queryManager = mockQueryManager({
-      request: { query },
+      request: { query } as any,
       result: { data },
     });
 
@@ -2077,11 +2078,11 @@ describe('QueryManager', () => {
     const queryManager = createQueryManager({
       link: mockSingleLink(
         {
-          request: { query: query1 },
+          request: { query: query1 } as any,
           result: { data: data1 },
         },
         {
-          request: { query: query2 },
+          request: { query: query2 } as any,
           result: { data: data2 },
         },
       ),
@@ -2167,11 +2168,11 @@ describe('QueryManager', () => {
     const queryManager = createQueryManager({
       link: mockSingleLink(
         {
-          request: { query: queryWithId },
+          request: { query: queryWithId } as any,
           result: { data: dataWithId },
         },
         {
-          request: { query: queryWithoutId },
+          request: { query: queryWithoutId } as any,
           result: { data: dataWithoutId },
         },
       ),
@@ -2254,11 +2255,11 @@ describe('QueryManager', () => {
     const queryManager = createQueryManager({
       link: mockSingleLink(
         {
-          request: { query: queryWithoutId },
+          request: { query: queryWithoutId } as any,
           result: { data: dataWithoutId },
         },
         {
-          request: { query: queryWithId },
+          request: { query: queryWithId } as any,
           result: { data: dataWithId },
         },
       ),
@@ -2294,7 +2295,7 @@ describe('QueryManager', () => {
           }
         }
       `,
-    };
+    } as any;
     const firstResult = {
       data: {
         people_one: {
@@ -2309,7 +2310,7 @@ describe('QueryManager', () => {
           message: 'This is not the person you are looking for.',
         },
       ],
-    };
+    } as any;
 
     const queryManager = mockRefetch({ request, firstResult, secondResult });
 
@@ -2378,8 +2379,12 @@ describe('QueryManager', () => {
     };
     const queryManager = new QueryManager<NormalizedCacheObject>({
       link: mockSingleLink(
-        { request: { query: queryA }, result: { data: dataA } },
-        { request: { query: queryB }, result: { data: dataB }, delay: 20 },
+        { request: { query: queryA } as any, result: { data: dataA } },
+        {
+          request: { query: queryB } as any,
+          result: { data: dataB },
+          delay: 20,
+        },
       ),
       store: new DataStore(new InMemoryCache({})),
       ssrMode: true,
@@ -2448,11 +2453,11 @@ describe('QueryManager', () => {
 
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data1 },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data2 },
         },
       );
@@ -2498,15 +2503,15 @@ describe('QueryManager', () => {
       const queryManager = new QueryManager<NormalizedCacheObject>({
         link: mockSingleLink(
           {
-            request: { query, variables },
+            request: { query, variables } as any,
             result: { data: data1 },
           },
           {
-            request: { query, variables },
+            request: { query, variables } as any,
             result: { data: data2 },
           },
           {
-            request: { query, variables },
+            request: { query, variables } as any,
             result: { data: data2 },
           },
         ),
@@ -2597,27 +2602,27 @@ describe('QueryManager', () => {
       };
       const queryManager = mockQueryManager(
         {
-          request: { query: query1 },
+          request: { query: query1 } as any,
           result: { data: data11 },
         },
         {
-          request: { query: query1 },
+          request: { query: query1 } as any,
           result: { data: data12 },
         },
         {
-          request: { query: query1 },
+          request: { query: query1 } as any,
           result: { data: data13 },
         },
         {
-          request: { query: query1 },
+          request: { query: query1 } as any,
           result: { data: data14 },
         },
         {
-          request: { query: query2 },
+          request: { query: query2 } as any,
           result: { data: data21 },
         },
         {
-          request: { query: query2 },
+          request: { query: query2 } as any,
           result: { data: data22 },
         },
       );
@@ -2688,11 +2693,11 @@ describe('QueryManager', () => {
 
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data1 },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data2 },
         },
       );
@@ -2747,15 +2752,15 @@ describe('QueryManager', () => {
 
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data1 },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           error: new Error('Network error'),
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data2 },
         },
       );
@@ -2767,7 +2772,7 @@ describe('QueryManager', () => {
         notifyOnNetworkStatusChange: false,
       });
 
-      let isFinished;
+      let isFinished: boolean = false;
       process.once('unhandledRejection', () => {
         if (!isFinished) done.fail('unhandledRejection from network');
       });
@@ -2821,11 +2826,11 @@ describe('QueryManager', () => {
 
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data1 },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data2 },
         },
       );
@@ -2871,11 +2876,11 @@ describe('QueryManager', () => {
 
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data1 },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data2 },
         },
       );
@@ -2918,11 +2923,11 @@ describe('QueryManager', () => {
 
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data1 },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: data2 },
         },
       );
@@ -3003,19 +3008,19 @@ describe('QueryManager', () => {
       const queryManager = createQueryManager({
         link: mockSingleLink(
           {
-            request: { query },
+            request: { query } as any,
             result: { data },
           },
           {
-            request: { query: query2 },
+            request: { query: query2 } as any,
             result: { data: data2 },
           },
           {
-            request: { query },
+            request: { query } as any,
             result: { data: dataChanged },
           },
           {
-            request: { query: query2 },
+            request: { query: query2 } as any,
             result: { data: data2Changed },
           },
         ),
@@ -3137,12 +3142,12 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        () =>
+        (() =>
           new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
             return;
-          }),
+          })) as any,
       ]);
 
       queryManager = createQueryManager({ link });
@@ -3245,7 +3250,7 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager({
-        request: { query },
+        request: { query } as any,
         result: { data },
         delay: 10000, //i.e. forever
       });
@@ -3446,19 +3451,19 @@ describe('QueryManager', () => {
       const queryManager = createQueryManager({
         link: mockSingleLink(
           {
-            request: { query },
+            request: { query } as any,
             result: { data },
           },
           {
-            request: { query: query2 },
+            request: { query: query2 } as any,
             result: { data: data2 },
           },
           {
-            request: { query },
+            request: { query } as any,
             result: { data: dataChanged },
           },
           {
-            request: { query: query2 },
+            request: { query: query2 } as any,
             result: { data: data2Changed },
           },
         ),
@@ -3490,7 +3495,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it('should only refetch once when we refetch observable queries', () => {
+    it('should only refetch once when we refetch observable queries', done => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
@@ -3570,12 +3575,12 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        () =>
+        (() =>
           new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
             return;
-          }),
+          })) as any,
       ]);
 
       queryManager = createQueryManager({ link });
@@ -3617,12 +3622,12 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const link = ApolloLink.from([
-        () =>
+        (() =>
           new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
             return;
-          }),
+          })) as any,
       ]);
       queryManager = createQueryManager({ link });
       const observable = queryManager.watchQuery<any>({
@@ -3664,7 +3669,7 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager({
-        request: { query },
+        request: { query } as any,
         result: { data },
         delay: 100,
       });
@@ -3863,7 +3868,7 @@ describe('QueryManager', () => {
         fortuneCookie: 'Buy it',
       };
       return mockQueryManager({
-        request: { query },
+        request: { query } as any,
         result: { data },
       })
         .query({ query })
@@ -3924,11 +3929,11 @@ describe('QueryManager', () => {
       };
       const queryManager = mockQueryManager(
         {
-          request: { query: testQuery },
+          request: { query: testQuery } as any,
           result: { data: data1 },
         },
         {
-          request: { query: testQuery },
+          request: { query: testQuery } as any,
           result: { data: data2 },
         },
       );
@@ -4018,15 +4023,15 @@ describe('QueryManager', () => {
       const variables = { id: '1234' };
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: secondReqData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
       );
@@ -4087,15 +4092,15 @@ describe('QueryManager', () => {
       };
       const queryManager = mockQueryManager(
         {
-          request: { query },
+          request: { query } as any,
           result: { data },
         },
         {
-          request: { query },
+          request: { query } as any,
           result: { data: secondReqData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
       );
@@ -4156,15 +4161,15 @@ describe('QueryManager', () => {
       };
       const queryManager = mockQueryManager(
         {
-          request: { query },
+          request: { query } as any,
           result: { data },
         },
         {
-          request: { query },
+          request: { query } as any,
           result: { data: secondReqData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
       );
@@ -4223,17 +4228,17 @@ describe('QueryManager', () => {
       const mutationVariables = { id: '2345' };
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data },
           delay: 10,
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: secondReqData },
           delay: 100,
         },
         {
-          request: { query: mutation, variables: mutationVariables },
+          request: { query: mutation, variables: mutationVariables } as any,
           result: { data: mutationData },
           delay: 10,
         },
@@ -4304,27 +4309,27 @@ describe('QueryManager', () => {
       };
       const queryManager = mockQueryManager(
         {
-          request: { query },
+          request: { query } as any,
           result: { data },
         },
         {
-          request: { query },
+          request: { query } as any,
           result: { data: secondReqData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = result => {
+      const conditional = (result: ExecutionResult) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
         return false;
       };
 
       return observableToPromise({ observable }, result => {
         expect(stripSymbols(result.data)).toEqual(data);
-        queryManager.mutate({ mutation, refetchQueries: conditional });
+        queryManager.mutate({ mutation, refetchQueries: conditional as any });
       });
     });
     it('also works with a conditional function that returns an array of refetches', () => {
@@ -4364,20 +4369,20 @@ describe('QueryManager', () => {
       };
       const queryManager = mockQueryManager(
         {
-          request: { query },
+          request: { query } as any,
           result: { data },
         },
         {
-          request: { query },
+          request: { query } as any,
           result: { data: secondReqData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = result => {
+      const conditional = (result: ExecutionResult) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
         return [{ query }];
       };
@@ -4430,15 +4435,15 @@ describe('QueryManager', () => {
       const variables = { id: '1234' };
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: secondReqData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
       );
@@ -4464,7 +4469,7 @@ describe('QueryManager', () => {
           });
         },
         result => {
-          const context = queryManager.link.operation.getContext();
+          const context = (queryManager.link as any).operation.getContext();
           expect(context.headers).not.toBeUndefined();
           expect(context.headers.someHeader).toEqual(headers.someHeader);
         },
@@ -4509,15 +4514,15 @@ describe('QueryManager', () => {
       const variables = { id: '1234' };
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: secondReqData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
       );
@@ -4549,7 +4554,7 @@ describe('QueryManager', () => {
           });
         },
         result => {
-          const context = queryManager.link.operation.getContext();
+          const context = (queryManager.link as any).operation.getContext();
           expect(context.headers).not.toBeUndefined();
           expect(context.headers.someHeader).toEqual(headers.someHeader);
         },
@@ -4564,7 +4569,7 @@ describe('QueryManager', () => {
   });
 
   describe('awaitRefetchQueries', () => {
-    function awaitRefetchTest({ awaitRefetchQueries }) {
+    function awaitRefetchTest({ awaitRefetchQueries }: any) {
       const query = gql`
         query getAuthors($id: ID!) {
           author(id: $id) {
@@ -4608,15 +4613,15 @@ describe('QueryManager', () => {
 
       const queryManager = mockQueryManager(
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: queryData },
         },
         {
-          request: { query: mutation },
+          request: { query: mutation } as any,
           result: { data: mutationData },
         },
         {
-          request: { query, variables },
+          request: { query, variables } as any,
           result: { data: secondReqData },
         },
       );
@@ -4635,7 +4640,7 @@ describe('QueryManager', () => {
           const mutateOptions = {
             mutation,
             refetchQueries: ['getAuthors'],
-          };
+          } as any;
           if (awaitRefetchQueries) {
             mutateOptions.awaitRefetchQueries = awaitRefetchQueries;
           }
@@ -4699,10 +4704,10 @@ describe('QueryManager', () => {
       `;
 
       const link = mockSingleLink(
-        { request: { query: query1 }, result: { data: { one: 1 } } },
-        { request: { query: query2 }, result: { data: { two: 2 } } },
-        { request: { query: query3 }, result: { data: { three: 3 } } },
-        { request: { query: query4 }, result: { data: { four: 4 } } },
+        { request: { query: query1 } as any, result: { data: { one: 1 } } },
+        { request: { query: query2 } as any, result: { data: { two: 2 } } },
+        { request: { query: query3 } as any, result: { data: { three: 3 } } },
+        { request: { query: query4 } as any, result: { data: { four: 4 } } },
       );
       const cache = new InMemoryCache();
 
@@ -4728,7 +4733,7 @@ describe('QueryManager', () => {
           });
         })
         .then(() => {
-          expect(cache.watches.size).toBe(0);
+          expect((cache as any).watches.size).toBe(0);
         });
     });
   });
@@ -4756,7 +4761,7 @@ describe('QueryManager', () => {
 
         const queryManager = createQueryManager({
           link: mockSingleLink({
-            request: { query },
+            request: { query } as any,
             result: { data },
           }),
         });
@@ -4794,7 +4799,7 @@ describe('QueryManager', () => {
       };
 
       const link = mockSingleLink({
-        request: { query },
+        request: { query } as any,
         result: { data },
       });
 

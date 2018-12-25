@@ -28,7 +28,7 @@ describe('updateQuery on a simple query', () => {
   it('triggers new result from updateQuery', () => {
     let latestResult: any = null;
     const link = mockSingleLink({
-      request: { query },
+      request: { query } as any,
       result,
     });
 
@@ -94,7 +94,7 @@ describe('updateQuery on a query with required and optional variables', () => {
       request: {
         query,
         variables,
-      },
+      } as any,
       result,
     });
 
@@ -197,7 +197,7 @@ describe('fetchMore on an observable query', () => {
 
   let latestResult: any = null;
 
-  let client: ApolloClient;
+  let client: ApolloClient<any>;
   let link: any;
   let sub: any;
 
@@ -207,7 +207,7 @@ describe('fetchMore on an observable query', () => {
         request: {
           query,
           variables,
-        },
+        } as any,
         result,
       },
       ...mockedResponses,
@@ -347,9 +347,9 @@ describe('fetchMore on an observable query', () => {
 
   it('will set the `network` status to `fetchMore`', done => {
     link = mockSingleLink(
-      { request: { query, variables }, result, delay: 5 },
+      { request: { query, variables } as any, result, delay: 5 },
       {
-        request: { query, variables: variablesMore },
+        request: { query, variables: variablesMore } as any,
         result: resultMore,
         delay: 5,
       },
@@ -410,9 +410,9 @@ describe('fetchMore on an observable query', () => {
   it('will not get an error from `fetchMore` if thrown', done => {
     const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
-      { request: { query, variables }, result, delay: 5 },
+      { request: { query, variables } as any, result, delay: 5 },
       {
-        request: { query, variables: variablesMore },
+        request: { query, variables: variablesMore } as any,
         error: fetchMoreError,
         delay: 5,
       },
@@ -531,7 +531,7 @@ describe('fetchMore on an observable query with connection', () => {
 
   let latestResult: any = null;
 
-  let client: ApolloClient;
+  let client: ApolloClient<any>;
   let link: any;
   let sub: any;
 
@@ -541,7 +541,7 @@ describe('fetchMore on an observable query with connection', () => {
         request: {
           query: transformedQuery,
           variables,
-        },
+        } as any,
         result,
       },
       ...mockedResponses,
@@ -607,9 +607,13 @@ describe('fetchMore on an observable query with connection', () => {
 
   it('will set the network status to `fetchMore`', done => {
     link = mockSingleLink(
-      { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
-        request: { query: transformedQuery, variables: variablesMore },
+        request: { query: transformedQuery, variables } as any,
+        result,
+        delay: 5,
+      },
+      {
+        request: { query: transformedQuery, variables: variablesMore } as any,
         result: resultMore,
         delay: 5,
       },
@@ -670,9 +674,13 @@ describe('fetchMore on an observable query with connection', () => {
   it('will not get an error from `fetchMore` if thrown', done => {
     const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
-      { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
-        request: { query: transformedQuery, variables: variablesMore },
+        request: { query: transformedQuery, variables } as any,
+        result,
+        delay: 5,
+      },
+      {
+        request: { query: transformedQuery, variables: variablesMore } as any,
         error: fetchMoreError,
         delay: 5,
       },

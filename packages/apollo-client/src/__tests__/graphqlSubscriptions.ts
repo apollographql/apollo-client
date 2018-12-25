@@ -33,7 +33,7 @@ describe('GraphQL Subscriptions', () => {
         variables: {
           name: 'Changping Chen',
         },
-      },
+      } as any,
     };
 
     options = {
@@ -61,7 +61,7 @@ describe('GraphQL Subscriptions', () => {
         variables: {
           name: 'Changping Chen',
         },
-      },
+      } as any,
     };
 
     defaultOptions = {
@@ -76,7 +76,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should start a subscription on network interface and unsubscribe', done => {
-    const link = mockObservableLink(defaultSub1);
+    const link = mockObservableLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
@@ -102,7 +102,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should subscribe with default values', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
@@ -128,7 +128,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should multiplex subscriptions', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     const queryManager = new QueryManager({
       link,
       store: new DataStore(new InMemoryCache({ addTypename: false })),
@@ -165,7 +165,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should receive multiple results for a subscription', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     let numResults = 0;
     const queryManager = new QueryManager({
       link,
@@ -189,7 +189,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should not cache subscription data if a `no-cache` fetch policy is used', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     const cache = new InMemoryCache({ addTypename: false });
     const client = new ApolloClient({
       link,
@@ -211,7 +211,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should throw an error if the result has errors on it', () => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     const queryManager = new QueryManager({
       link,
       store: new DataStore(new InMemoryCache({ addTypename: false })),
@@ -253,7 +253,7 @@ describe('GraphQL Subscriptions', () => {
           },
         ],
       },
-    };
+    } as any;
 
     link.simulateResult(errorResult);
     return Promise.all(promises);

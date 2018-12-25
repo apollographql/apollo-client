@@ -61,23 +61,6 @@
       "maxSize": "1.25 kB"
     }
   ],
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "testURL": "http://localhost",
-    "testPathIgnorePatterns": [
-      "/npm/",
-      "/node_modules/"
-    ]
-  },
   "lint-staged": {
     "*.ts*": [
       "prettier --ignore-path \"./config/prettierignore\" --write"

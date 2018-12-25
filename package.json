@@ -7,24 +7,26 @@
   ],
   "scripts": {
     "bootstrap": "lerna bootstrap --loglevel=info",
-    "reinstall": "yarn clean && yarn && yarn bootstrap",
-    "postinstall": "lerna exec -- lerna run prepare",
+    "reinstall": "yarn clean:npm && yarn clean:build && yarn install && yarn bootstrap",
+    "postinstall": "yarn clean:build && yarn lint && yarn bundle",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "prebuild": "echo \"apollo-link-state has re-entrant dependency on 'graphql-anywhere', bootstrapping build...\" && tsc -b packages/apollo-utilities && tsc -b packages/graphql-anywhere",
     "build": "echo \"Building changes...\" && tsc -b",
+    "prebundle": "yarn build",
+    "bundle": "lerna exec --stream --parallel -- yarn bundle",
     "test": "jest --verbose",
     "test-ci": "yarn coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "benchmark": "cd packages/apollo-client && yarn benchmark",
-    "prelint": "yarn lint-fix",
-    "lint": "lerna run lint",
-    "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+    "prelint": "yarn prettier",
+    "lint": "lerna exec --stream --parallel -- yarn run lint",
+    "lint:fix": "lerna exec --stream --parallel -- yarn run lint --fix",
+    "prettier": "prettier --ignore-path \"./config/prettierignore\" --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
     "filesize": "lerna run filesize && bundlesize",
     "coverage": "jest --verbose --coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",
     "deploy": "lerna publish -m \"chore: Publish\" && cd packages/apollo-client && yarn deploy",
-    "clean": "yarn clean:npm && yarn clean:build",
     "clean:npm": "rm -rf ./packages/*/node_modules node_modules",
     "clean:build": "rm -rf ./packages/*/lib ./packages/*/.rpt2_cache"
   },
@@ -79,10 +81,10 @@
   },
   "lint-staged": {
     "*.ts*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
+      "prettier --ignore-path \"./config/prettierignore\" --write"
     ],
     "*.js*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
+      "prettier --ignore-path \"./config/prettierignore\" --write"
     ]
   },
   "pre-commit": "lint-staged",

@@ -1,12 +1,12 @@
 import graphql from '../';
 import gql from 'graphql-tag';
-
 import { cloneElement, createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { Resolver } from '../graphql';
 
 describe('result mapper', () => {
   it('can deal with promises', () => {
-    const resolver = (_, root) => {
+    const resolver: Resolver = (_, root) => {
       return new Promise(res => {
         setTimeout(() => {
           Promise.resolve(root).then(val => res(val + 'fake'));
@@ -14,7 +14,7 @@ describe('result mapper', () => {
       });
     };
 
-    function promiseForObject(object): Promise<{ [key: string]: any }> {
+    function promiseForObject(object: object): Promise<{ [key: string]: any }> {
       const keys = Object.keys(object);
       const valuesAndPromises = keys.map(name => object[name]);
 
@@ -39,7 +39,7 @@ describe('result mapper', () => {
       resultMapper: promiseForObject,
     });
 
-    return result.then(value => {
+    return result.then((value: any) => {
       expect(value).toEqual({
         a: {
           b: 'fakefake',
@@ -50,7 +50,7 @@ describe('result mapper', () => {
   });
 
   it('can construct React elements', () => {
-    const resolver = (fieldName, root, args) => {
+    const resolver: Resolver = (fieldName, root, args) => {
       if (fieldName === 'text') {
         return args.value;
       }
@@ -58,7 +58,7 @@ describe('result mapper', () => {
       return createElement(fieldName, args);
     };
 
-    const reactMapper = (childObj, root) => {
+    const reactMapper = (childObj: any, root: any) => {
       const reactChildren = Object.keys(childObj).map(key => childObj[key]);
 
       if (root) {
@@ -68,7 +68,7 @@ describe('result mapper', () => {
       return reactChildren[0];
     };
 
-    function gqlToReact(document): any {
+    function gqlToReact(document: any): any {
       return graphql(resolver, document, '', null, null, {
         resultMapper: reactMapper,
       });

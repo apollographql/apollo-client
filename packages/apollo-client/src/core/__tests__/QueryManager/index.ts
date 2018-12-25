@@ -3550,9 +3550,11 @@ describe('QueryManager', () => {
           expect(stripSymbols(result.data)).toEqual(data2);
           expect(timesFired).toBe(2);
         },
-      ).catch(e => {
-        done.fail(e);
-      });
+      )
+        .then(() => done())
+        .catch(e => {
+          done.fail(e);
+        });
     });
 
     it('should not refetch torn-down queries', done => {

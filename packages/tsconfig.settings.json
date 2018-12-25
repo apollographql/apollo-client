@@ -1,15 +1,12 @@
 {
   "compilerOptions": {
-    // always include these for project references
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
 
-    // customize these common package settings
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    // "strict": true, // FIXME enable this asap
     "lib": ["es2017", "esnext.asynciterable", "dom"],
     "moduleResolution": "node",
     "noImplicitAny": true,
@@ -17,7 +14,6 @@
     "noEmitOnError": true,
     "suppressImplicitAnyIndexErrors": true,
 
-    // use es5/commonjs for ts project-references dev workflow compatibility
     "target": "es5",
     "module": "commonjs"
   }

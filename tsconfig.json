@@ -1,6 +1,6 @@
 {
-  // "extends": "./packages/tsconfig.settings.json",
-  "files": [],
+  "extends": "./packages/tsconfig.settings.json",
+  // "files": [],
   "references": [
     { "path": "packages/apollo-boost" },
     { "path": "packages/apollo-cache" },
@@ -8,5 +8,7 @@
     { "path": "packages/apollo-client" },
     { "path": "packages/apollo-utilities" },
     { "path": "packages/graphql-anywhere" }
-  ]
+  ],
+  "include": ["./packages/*/src/**/*"],
+  "exclude": ["./node_modules", "./packages/*/node_modules"]
 }

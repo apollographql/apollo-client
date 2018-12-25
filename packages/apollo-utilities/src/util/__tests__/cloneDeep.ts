@@ -54,7 +54,7 @@ describe('cloneDeep', () => {
   });
 
   it('should not attempt to follow circular references', () => {
-    const someObject = {
+    const someObject: any = {
       prop1: 'value1',
       anotherObject: null,
     };

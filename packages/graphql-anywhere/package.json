@@ -41,18 +41,5 @@
   "license": "MIT",
   "dependencies": {
     "apollo-utilities": "^1.0.28"
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "testURL": "http://localhost"
   }
 }

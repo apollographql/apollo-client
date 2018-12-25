@@ -1,4 +1,6 @@
 import buildUmdConfig from '../../config/buildUmdConfig';
+import buildEsmConfig from '../../config/buildEsmConfig';
+import pkg from './package.json';
 
 const globals = {
   'apollo-client': 'apollo.core',
@@ -18,4 +20,5 @@ export default [
       globals,
     },
   }),
+  buildEsmConfig(pkg),
 ];

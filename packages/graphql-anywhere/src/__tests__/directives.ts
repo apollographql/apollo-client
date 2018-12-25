@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 
 import graphql from '../';
+import { Resolver } from '../graphql';
 
 describe('directives', () => {
   it('skips a field that has the skip directive', () => {
@@ -20,7 +21,7 @@ describe('directives', () => {
   });
 
   it('includes info about arbitrary directives', () => {
-    const resolver = (fieldName, root, args, context, info) => {
+    const resolver: Resolver = (fieldName, root, args, context, info) => {
       const { doSomethingDifferent } = info.directives;
       let data = root[info.resultKey];
       if (doSomethingDifferent) {

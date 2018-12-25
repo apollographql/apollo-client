@@ -1,8 +1,6 @@
-import { QueryManager } from '../../src/core/QueryManager';
-
+import { QueryManager } from '../core/QueryManager';
+import { DataStore } from '../data/store';
 import { mockSingleLink, MockedResponse } from './mockLinks';
-
-import { DataStore } from '../../src/data/store';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
 // Helper method for the tests that construct a query manager out of a

@@ -1,4 +1,6 @@
 import buildUmdConfig, { globals } from '../../config/buildUmdConfig';
+import buildEsmConfig from '../../config/buildEsmConfig';
+import pkg from './package.json';
 
 const globalsOverride = {
   ...globals,
@@ -11,4 +13,5 @@ export default [
       globals: globalsOverride,
     },
   }),
+  buildEsmConfig(pkg),
 ];

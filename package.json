@@ -8,10 +8,10 @@
   "scripts": {
     "bootstrap": "lerna bootstrap --loglevel=info",
     "reinstall": "yarn clean && yarn && yarn bootstrap",
-    "xxxxxpostinstall": "lerna exec -- npm install && lerna run prepare",
+    "postinstall": "lerna exec -- lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
-    "prebuild": "yarn clean:build",
-    "build": "tsc -b",
+    "prebuild": "echo \"apollo-link-state has re-entrant dependency on 'graphql-anywhere', bootstrapping build...\" && tsc -b packages/apollo-utilities && tsc -b packages/graphql-anywhere",
+    "build": "echo \"Building changes...\" && tsc -b",
     "test": "jest --verbose",
     "test-ci": "yarn coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "benchmark": "cd packages/apollo-client && yarn benchmark",
@@ -26,7 +26,7 @@
     "deploy": "lerna publish -m \"chore: Publish\" && cd packages/apollo-client && yarn deploy",
     "clean": "yarn clean:npm && yarn clean:build",
     "clean:npm": "rm -rf ./packages/*/node_modules node_modules",
-    "clean:build": "rm -rf ./packages/*/lib"
+    "clean:build": "rm -rf ./packages/*/lib ./packages/*/.rpt2_cache"
   },
   "bundlesize": [
     {

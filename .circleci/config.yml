@@ -29,7 +29,7 @@ jobs:
             # This should cache the yarn cache instead of node_modules, which is
             # needed because yarn ci actually removes node_modules before
             # installing to guarantee a clean slate.
-            - packages/*/node_modules/
+            - ~/.cache/yarn
       - persist_to_workspace:
           root: .
           paths:

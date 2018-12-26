@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { ApolloCache, Cache } from '..';
+import { ApolloCache, Cache, DataProxy, Transaction } from '..';
 import { FragmentDefinitionNode } from 'graphql';
 
 class TestCache<TSerialized = any> extends ApolloCache<TSerialized> {
@@ -11,11 +11,7 @@ class TestCache<TSerialized = any> extends ApolloCache<TSerialized> {
   ): void {
     throw new Error('Method not implemented.');
   }
-  public diff<T>(
-    query: Cache.DiffOptions,
-  ): import('/Users/kross/projects/apollo-client/packages/apollo-cache/src/index').DataProxy.DiffResult<
-    T
-  > {
+  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     throw new Error('Method not implemented.');
   }
   public watch(watch: Cache.WatchOptions): () => void {
@@ -38,17 +34,11 @@ class TestCache<TSerialized = any> extends ApolloCache<TSerialized> {
   public removeOptimistic(id: string): void {
     throw new Error('Method not implemented.');
   }
-  public performTransaction(
-    transaction: import('/Users/kross/projects/apollo-client/packages/apollo-cache/src/cache').Transaction<
-      any
-    >,
-  ): void {
+  public performTransaction(transaction: Transaction<any>): void {
     throw new Error('Method not implemented.');
   }
   public recordOptimisticTransaction(
-    transaction: import('/Users/kross/projects/apollo-client/packages/apollo-cache/src/cache').Transaction<
-      any
-    >,
+    transaction: Transaction<any>,
     id: string,
   ): void {
     throw new Error('Method not implemented.');

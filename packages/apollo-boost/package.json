@@ -35,7 +35,9 @@
     "prepublishOnly": "yarn build",
     "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
     "filesize": "yarn minify",
-    "bundle": "rollup -c rollup.config.js && rollup -c rollup-bundle.config.js"
+    "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
+    "bundle": "rollup -c rollup.config.js && rollup -c rollup-bundle.config.js",
+    "postbundle": "yarn clean:tests"
   },
   "dependencies": {
     "apollo-cache": "^1.1.23",

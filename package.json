@@ -33,32 +33,32 @@
   "bundlesize": [
     {
       "name": "apollo-cache",
-      "path": "./packages/apollo-cache/lib/bundle.min.js",
+      "path": "./packages/apollo-cache/lib/bundle.umd.min.js",
       "maxSize": "1 kB"
     },
     {
       "name": "apollo-cache-inmemory",
-      "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
+      "path": "./packages/apollo-cache-inmemory/lib/bundle.umd.min.js",
       "maxSize": "7 kB"
     },
     {
       "name": "apollo-client",
-      "path": "./packages/apollo-client/lib/bundle.min.js",
+      "path": "./packages/apollo-client/lib/bundle.umd.min.js",
       "maxSize": "10 kB"
     },
     {
       "name": "apollo-boost",
-      "path": "./packages/apollo-boost/lib/bundle.min.js",
+      "path": "./packages/apollo-boost/lib/bundle.umd.min.js",
       "maxSize": "35 kB"
     },
     {
       "name": "apollo-utilities",
-      "path": "./packages/apollo-utilities/lib/bundle.min.js",
+      "path": "./packages/apollo-utilities/lib/bundle.umd.min.js",
       "maxSize": "5 kB"
     },
     {
       "name": "graphql-anywhere",
-      "path": "./packages/graphql-anywhere/lib/bundle.min.js",
+      "path": "./packages/graphql-anywhere/lib/bundle.umd.min.js",
       "maxSize": "1.25 kB"
     }
   ],

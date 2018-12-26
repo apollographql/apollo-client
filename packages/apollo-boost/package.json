@@ -33,7 +33,7 @@
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",
     "prepublishOnly": "yarn build",
-    "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "minify": "uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
     "filesize": "yarn minify",
     "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
     "bundle": "rollup -c rollup.config.js && rollup -c rollup-bundle.config.js",

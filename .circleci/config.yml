@@ -37,26 +37,26 @@ jobs:
 
   Danger:
     <<: *defaults
-    <<: *attach
     steps:
+      - <<: *attach
       - run: yarn danger
 
   Docs:
     <<: *defaults
-    <<: *attach
     steps:
+      - <<: *attach
       - run: cd docs && yarn build
 
   Filesize:
     <<: *defaults
-    <<: *attach
     steps:
+      - <<: *attach
       - run: yarn filesize
 
   Apollo Client Monorepo:
     <<: *defaults
-    <<: *attach
     steps:
+      - <<: *attach
       - run:
           name: Jest suite with coverage
           command: yarn test-ci && yarn coverage:upload

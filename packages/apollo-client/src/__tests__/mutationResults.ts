@@ -295,6 +295,13 @@ describe('mutation results', () => {
         if (count === 0) {
           client.mutate({ mutation, variables: { signature: '1234' } });
           expect(result.data.mini.cover).toBe('image');
+
+          setTimeout(() => {
+            if (count === 1)
+              done.fail(
+                new Error('mutate did not re-call observable with next value'),
+              );
+          }, 250);
         }
         if (count === 1) {
           expect(result.data.mini.cover).toBe('image2');

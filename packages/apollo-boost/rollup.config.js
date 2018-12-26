@@ -10,19 +10,11 @@ const globals = {
   'apollo-link-state': 'apolloLinkState',
   'apollo-link-error': 'apolloLinkError',
   'graphql-tag': 'graphqlTag',
-  // new - not sure if correct ??
-  'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
-  'graphql/language/printer': 'print',
-  'symbol-observable': '$$observable',
-  'zen-observable': 'zenObservable',
-  'fast-json-stable-stringify': 'stringify',
-  'graphql-tag': 'gql',
-  'apollo-utilities': 'apolloUtilities',
 };
 
 export default [
   buildUmdConfig('apollo.boost', {
-    external: Object.keys(global),
+    external: Object.keys(globals),
     output: {
       globals,
     },

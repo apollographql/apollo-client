@@ -297,7 +297,7 @@ describe('mutation results', () => {
           expect(result.data.mini.cover).toBe('image');
 
           setTimeout(() => {
-            if (count === 1)
+            if (count === 0)
               done.fail(
                 new Error('mutate did not re-call observable with next value'),
               );

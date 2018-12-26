@@ -1,10 +1,10 @@
 import gql from 'graphql-tag';
-
 import graphql, { FragmentMatcher } from '../';
+import { Resolver } from '../graphql';
 
 describe('fragment matcher', () => {
   it('does basic things', () => {
-    const resolver = fieldName => fieldName;
+    const resolver: Resolver = fieldName => fieldName;
 
     const query = gql`
       {

@@ -61,7 +61,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     return;
   }
 
-  function expectStrictEqualExceptArrays(a, b) {
+  function expectStrictEqualExceptArrays(a: any, b: any) {
     if (Array.isArray(a)) {
       // The caching system caches result objects but not result arrays, so we
       // recursively compare array elements using expectStrictEqualExceptArrays.

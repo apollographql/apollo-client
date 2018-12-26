@@ -1,4 +1,4 @@
-import ApolloClient, { gql, InMemoryCache } from '../';
+import DefaultClient, { gql, InMemoryCache } from '../';
 import { stripSymbols } from 'apollo-utilities';
 import fetchMock from 'fetch-mock';
 
@@ -6,7 +6,7 @@ import fetchMock from 'fetch-mock';
   Promise.resolve({ json: () => Promise.resolve({}) }),
 );
 
-const sleep = ms => new Promise(res => setTimeout(res, ms));
+const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 describe('config', () => {
   const query = gql`
@@ -24,11 +24,11 @@ describe('config', () => {
   it('warns about unsupported parameter', () => {
     jest.spyOn(global.console, 'warn');
 
-    const client = new ApolloClient({
+    const client = new DefaultClient({
       link: [],
-    });
+    } as any);
 
-    expect(global.console.warn.mock.calls).toMatchSnapshot();
+    expect((global as any).console.warn.mock.calls).toMatchSnapshot();
   });
 
   it('allows you to pass in a custom fetcher', () => {
@@ -38,7 +38,7 @@ describe('config', () => {
       }),
     );
 
-    const client = new ApolloClient({
+    const client = new DefaultClient({
       fetch: customFetcher,
     });
 
@@ -49,10 +49,10 @@ describe('config', () => {
   });
 
   it('allows you to pass in a request handler', () => {
-    let requestCalled;
+    let requestCalled: boolean;
 
-    const client = new ApolloClient({
-      request: () => {
+    const client = new DefaultClient({
+      request: async () => {
         requestCalled = true;
       },
       clientState: { resolvers },
@@ -67,10 +67,10 @@ describe('config', () => {
   });
 
   it('allows you to pass in an async request handler', () => {
-    let requestCalled;
+    let requestCalled: boolean;
 
-    const client = new ApolloClient({
-      request: () => {
+    const client = new DefaultClient({
+      request: async () => {
         Promise.resolve().then(() => {
           requestCalled = true;
         });
@@ -90,8 +90,8 @@ describe('config', () => {
     const cache = new InMemoryCache();
     const cacheRedirects = { Query: { foo: () => 'woo' } };
 
-    expect(_ => {
-      const client = new ApolloClient({
+    expect(() => {
+      const client = new DefaultClient({
         cache,
         cacheRedirects,
       });
@@ -101,7 +101,7 @@ describe('config', () => {
   it('allows you to pass in cache', () => {
     const cache = new InMemoryCache();
 
-    const client = new ApolloClient({
+    const client = new DefaultClient({
       cache,
     });
 
@@ -111,14 +111,14 @@ describe('config', () => {
   it('allows you to pass in cacheRedirects', () => {
     const cacheRedirects = { Query: { foo: () => 'woo' } };
 
-    const client = new ApolloClient({
+    const client = new DefaultClient({
       cacheRedirects,
     });
 
-    expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);
+    expect((client.cache as any).config.cacheRedirects).toEqual(cacheRedirects);
   });
 
-  const makePromise = res =>
+  const makePromise = (res: any) =>
     new Promise((resolve, reject) => setTimeout(() => resolve(res)));
   const data = { data: { hello: 'world' } };
 
@@ -133,14 +133,14 @@ describe('config', () => {
     });
 
     it('should set `credentials` to `same-origin` by default', () => {
-      const client = new ApolloClient({});
+      const client = new DefaultClient({});
       client.query({ query, errorPolicy: 'ignore' });
       const [uri, options] = fetchMock.lastCall();
       expect(options.credentials).toEqual('same-origin');
     });
 
     it('should set `credentials` to `config.credentials` if supplied', () => {
-      const client = new ApolloClient({
+      const client = new DefaultClient({
         credentials: 'some-new-value',
       });
       client.query({ query, errorPolicy: 'ignore' });
@@ -163,7 +163,7 @@ describe('config', () => {
       'should leave existing `headers` in place if no new headers are ' +
         'provided',
       () => {
-        const client = new ApolloClient({});
+        const client = new DefaultClient({});
         client.query({ query, errorPolicy: 'ignore' });
         const [uri, options] = fetchMock.lastCall();
         expect(options.headers).toEqual({
@@ -174,7 +174,7 @@ describe('config', () => {
     );
 
     it('should add new `config.headers` to existing headers', () => {
-      const client = new ApolloClient({
+      const client = new DefaultClient({
         headers: {
           'new-header1': 'value1',
           'new-header2': 'value2',

@@ -13,7 +13,7 @@
     "test": "jest",
     "build": "tsc -b .",
     "postbuild": "yarn bundle",
-    "bundle": "rollup -c rollup.config.js && rollup -c rollup.async.config.js",
+    "bundle": "rollup -c rollup.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "yarn build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",

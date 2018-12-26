@@ -291,13 +291,17 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: result.nestedObj.id,
-          generated: false,
+      ROOT_QUERY: assign<{}, any, any>(
+        {},
+        assign({}, omit(result, 'nestedObj')),
+        {
+          nestedObj: {
+            type: 'id',
+            id: result.nestedObj.id,
+            generated: false,
+          },
         },
-      }),
+      ),
       [result.nestedObj.id]: result.nestedObj,
     });
   });
@@ -493,12 +497,16 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          { type: 'id', id: result.nestedArray[0].id, generated: false },
-          null,
-        ],
-      }),
+      ROOT_QUERY: assign<{}, any, any>(
+        {},
+        assign({}, omit(result, 'nestedArray')),
+        {
+          nestedArray: [
+            { type: 'id', id: result.nestedArray[0].id, generated: false },
+            null,
+          ],
+        },
+      ),
       [result.nestedArray[0].id]: result.nestedArray[0],
     });
   });
@@ -626,16 +634,20 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: [
-            result.simpleArray[0],
-            result.simpleArray[1],
-            result.simpleArray[2],
-          ],
+      ROOT_QUERY: assign<{}, any, any>(
+        {},
+        assign({}, omit(result, 'simpleArray')),
+        {
+          simpleArray: {
+            type: 'json',
+            json: [
+              result.simpleArray[0],
+              result.simpleArray[1],
+              result.simpleArray[2],
+            ],
+          },
         },
-      }),
+      ),
     });
   });
 
@@ -664,16 +676,20 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: [
-            result.simpleArray[0],
-            result.simpleArray[1],
-            result.simpleArray[2],
-          ],
+      ROOT_QUERY: assign<{}, any, any>(
+        {},
+        assign({}, omit(result, 'simpleArray')),
+        {
+          simpleArray: {
+            type: 'json',
+            json: [
+              result.simpleArray[0],
+              result.simpleArray[1],
+              result.simpleArray[2],
+            ],
+          },
         },
-      }),
+      ),
     });
   });
 
@@ -1242,7 +1258,7 @@ describe('writing to the store', () => {
     const expStore = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         author: {
-          id: 0,
+          id: '0',
           typename: 'Author',
           type: 'id',
           generated: false,
@@ -1260,7 +1276,7 @@ describe('writing to the store', () => {
         .writeQueryToStore({
           result: data,
           query,
-          dataIdFromObject: () => 0,
+          dataIdFromObject: () => '0',
         })
         .toObject(),
     ).toEqual(expStore.toObject());

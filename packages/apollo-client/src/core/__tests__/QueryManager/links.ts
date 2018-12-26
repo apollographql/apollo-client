@@ -52,10 +52,10 @@ describe('Link interactions', () => {
       },
     };
 
-    const evictionLink = (operation, forward) => {
+    const evictionLink = (operation: any, forward: any) => {
       const { cache } = operation.getContext();
       expect(cache).toBeDefined();
-      return forward(operation).map(result => {
+      return forward(operation).map((result: any) => {
         setTimeout(() => {
           const cacheResult = stripSymbols(cache.read({ query }));
           expect(cacheResult).toEqual(initialData);
@@ -69,7 +69,7 @@ describe('Link interactions', () => {
     };
 
     const mockLink = new MockSubscriptionLink();
-    const link = ApolloLink.from([evictionLink, mockLink]);
+    const link = ApolloLink.from([evictionLink as any, mockLink]);
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
@@ -124,7 +124,7 @@ describe('Link interactions', () => {
     });
 
     let count = 0;
-    let four;
+    let four: ZenObservable.Subscription;
     // first watch
     const one = observable.subscribe(result => count++);
     // second watch
@@ -195,7 +195,7 @@ describe('Link interactions', () => {
     });
 
     let count = 0;
-    let four;
+    let four: ZenObservable.Subscription;
     let finished = false;
     // first watch
     const one = observable.subscribe(result => count++);
@@ -254,7 +254,7 @@ describe('Link interactions', () => {
       },
     };
 
-    const evictionLink = (operation, forward) => {
+    const evictionLink = (operation: any, forward: any) => {
       const { cache } = operation.getContext();
       expect(cache).toBeDefined();
       done();
@@ -262,7 +262,7 @@ describe('Link interactions', () => {
     };
 
     const mockLink = new MockSubscriptionLink();
-    const link = ApolloLink.from([evictionLink, mockLink]);
+    const link = ApolloLink.from([evictionLink as any, mockLink]);
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
@@ -292,7 +292,7 @@ describe('Link interactions', () => {
       },
     };
 
-    const evictionLink = (operation, forward) => {
+    const evictionLink = (operation: any, forward: any) => {
       const { planet } = operation.getContext();
       expect(planet).toBe('Tatooine');
       done();
@@ -300,7 +300,7 @@ describe('Link interactions', () => {
     };
 
     const mockLink = new MockSubscriptionLink();
-    const link = ApolloLink.from([evictionLink, mockLink]);
+    const link = ApolloLink.from([evictionLink as any, mockLink]);
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
@@ -347,7 +347,7 @@ describe('Link interactions', () => {
       link,
       store: new DataStore(
         new InMemoryCache({
-          cacheResolvers: {
+          cacheRedirects: {
             Query: {
               book: (_, { id }, context) => {
                 expect(context.getCacheKey).toBeDefined();

@@ -70,11 +70,11 @@ const merged = { author: { ...result.author, firstName: 'James' } };
 const createLink = () =>
   mockSingleLink(
     {
-      request: { query },
+      request: { query } as any,
       result: { data: result },
     },
     {
-      request: { query },
+      request: { query } as any,
       result: { data: result },
     },
   );
@@ -82,11 +82,11 @@ const createLink = () =>
 const createFailureLink = () =>
   mockSingleLink(
     {
-      request: { query },
+      request: { query } as any,
       error: new Error('query failed'),
     },
     {
-      request: { query },
+      request: { query } as any,
       result: { data: result },
     },
   );
@@ -95,17 +95,17 @@ const createMutationLink = () =>
   // fetch the data
   mockSingleLink(
     {
-      request: { query },
+      request: { query } as any,
       result: { data: result },
     },
     // update the data
     {
-      request: { query: mutation, variables },
+      request: { query: mutation, variables } as any,
       result: { data: mutationResult },
     },
     // get the new results
     {
-      request: { query },
+      request: { query } as any,
       result: { data: merged },
     },
   );

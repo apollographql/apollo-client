@@ -70,7 +70,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
   ): QueryType | null {
-    return this.read({
+    return this.read<QueryType, TVariables>({
       query: options.query,
       variables: options.variables,
       optimistic,

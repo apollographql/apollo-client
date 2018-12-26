@@ -1,5 +1,7 @@
 import { IntrospectionFragmentMatcher } from '../fragmentMatcher';
 import { defaultNormalizedCacheFactory } from '../objectCache';
+import { IdValue } from 'apollo-utilities';
+import { ReadStoreContext } from '../types';
 
 describe('IntrospectionFragmentMatcher', () => {
   it('will throw an error if match is called if it is not ready', () => {
@@ -29,28 +31,22 @@ describe('IntrospectionFragmentMatcher', () => {
       },
     });
 
-    const store = defaultNormalizedCacheFactory({
-      a: {
-        __typename: 'ItemB',
-      },
-    });
-
-    const idValue = {
+    const idValue: IdValue = {
       type: 'id',
       id: 'a',
       generated: false,
+      typename: undefined,
     };
 
-    const readStoreContext = {
-      store,
-      returnPartialData: false,
-      hasMissingField: false,
-      customResolvers: {},
-    };
+    const readStoreContext: ReadStoreContext = {
+      store: defaultNormalizedCacheFactory({
+        a: {
+          __typename: 'ItemB',
+        },
+      }),
+    } as any;
 
-    expect(ifm.match(idValue as any, 'Item', readStoreContext)).toBe(true);
-    expect(ifm.match(idValue as any, 'NotAnItem', readStoreContext)).toBe(
-      false,
-    );
+    expect(ifm.match(idValue, 'Item', readStoreContext)).toBe(true);
+    expect(ifm.match(idValue, 'NotAnItem', readStoreContext)).toBe(false);
   });
 });

@@ -1,10 +1,10 @@
 import gql from 'graphql-tag';
+import { default as graphqlSync, Resolver, ExecInfo } from '..';
+import { graphql as graphqlAsync } from '../graphql-async';
 
-import { Resolver, ExecInfo } from '..';
-
-const execute = (graphql, r) => () => {
+const execute = (graphql: typeof graphqlSync, r: any) => () => {
   it('does basic things', async () => {
-    const resolver = (_, root) => r(root + 'fake');
+    const resolver: Resolver = (_, root) => r(root + 'fake');
 
     const query = gql`
       {
@@ -31,7 +31,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('works with enum args', async () => {
-    const resolver = (fieldName, root, args) => r(args.value);
+    const resolver: Resolver = (fieldName, root, args) => r(args.value);
 
     const query = gql`
       {
@@ -45,7 +45,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('works with null args', async () => {
-    const resolver = (fieldName, root, args) => r(args.value);
+    const resolver: Resolver = (fieldName, root, args) => r(args.value);
 
     const query = gql`
       {
@@ -59,7 +59,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('traverses arrays returned from the resolver', async () => {
-    const resolver = () => r([1, 2]);
+    const resolver: Resolver = () => r([1, 2]);
 
     const query = gql`
       {
@@ -85,7 +85,7 @@ const execute = (graphql, r) => () => {
       },
     };
 
-    const resolver = (fieldName, root) => r(root[fieldName]);
+    const resolver: Resolver = (fieldName, root) => r(root[fieldName]);
 
     const query = gql`
       {
@@ -110,7 +110,7 @@ const execute = (graphql, r) => () => {
   it('can traverse nested arrays', async () => {
     const obj = { a: [{ b: [[{ c: 1 }, { c: 2 }], [{ c: 3 }, { c: 4 }]] }] };
 
-    const resolver = (fieldName, root) => r(root[fieldName]);
+    const resolver: Resolver = (fieldName, root) => r(root[fieldName]);
 
     const query = gql`
       {
@@ -130,7 +130,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('can use arguments, both inline and variables', async () => {
-    const resolver = (fieldName, _, args) => r(args);
+    const resolver: Resolver = (fieldName, _, args) => r(args);
 
     const query = gql`
       {
@@ -169,7 +169,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('will tolerate missing variables', async () => {
-    const resolver = (fieldName, _, args) => r(args);
+    const resolver: Resolver = (fieldName, _, args) => r(args);
 
     const query = gql`
       {
@@ -201,7 +201,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('can use skip and include', async () => {
-    const resolver = fieldName => r(fieldName);
+    const resolver: Resolver = fieldName => r(fieldName);
 
     const query = gql`
       {
@@ -226,7 +226,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('can use inline and named fragments', async () => {
-    const resolver = fieldName => r(fieldName);
+    const resolver: Resolver = fieldName => r(fieldName);
 
     const query = gql`
       {
@@ -261,7 +261,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('can resolve deeply nested fragments', async () => {
-    const resolver = (fieldName, root) => {
+    const resolver: Resolver = (fieldName, root) => {
       return r(root[fieldName]);
     };
 
@@ -365,7 +365,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('can resolve deeply nested fragments with arrays', async () => {
-    const resolver = (fieldName, root) => {
+    const resolver: Resolver = (fieldName, root) => {
       return r(root[fieldName]);
     };
 
@@ -524,7 +524,7 @@ const execute = (graphql, r) => () => {
   });
 
   it('can handle mutations', async () => {
-    const resolver = (fieldName, root, args) => {
+    const resolver: Resolver = (fieldName, root, args) => {
       let value;
 
       if (fieldName === 'operateOnNumbers') {
@@ -579,7 +579,7 @@ const execute = (graphql, r) => () => {
       },
     };
 
-    const resolver = (fieldName, root) => r(root[fieldName]);
+    const resolver: Resolver = (fieldName, root) => r(root[fieldName]);
 
     const query = gql`
       subscription {
@@ -615,7 +615,7 @@ const execute = (graphql, r) => () => {
       },
     };
 
-    const resolver = (fieldName, root) => r(root[fieldName]);
+    const resolver: Resolver = (fieldName, root) => r(root[fieldName]);
 
     const query = gql`
       fragment A on User {
@@ -694,7 +694,7 @@ const execute = (graphql, r) => () => {
 
       // Define a resolver that just returns a property
 
-      const resolver = (fieldName, root) => root[fieldName];
+      const resolver: Resolver = (fieldName, root) => root[fieldName];
 
       // Filter the data!
 
@@ -730,7 +730,7 @@ const execute = (graphql, r) => () => {
 
       // is used to determine the location in the response
 
-      const resolver = fieldName =>
+      const resolver: Resolver = fieldName =>
         ({ string: 'This is a string', int: 5 }[fieldName] || 'continue');
 
       // Generate the object!
@@ -780,9 +780,9 @@ const execute = (graphql, r) => () => {
 
       // correctly handle the root object, values by ID, and scalar leafs.
 
-      const resolver = (fieldName, rootValue, args, context): any => {
+      const resolver: Resolver = (fieldName, rootValue, args, context): any => {
         if (!rootValue) {
-          return context.result.map(id => {
+          return context.result.map((id: string) => {
             return {
               ...context.entities.articles[id],
 
@@ -840,9 +840,9 @@ const execute = (graphql, r) => () => {
   });
 };
 
-describe('basic operations done sync', execute(require('../').default, x => x));
+describe('basic operations done sync', execute(graphqlSync, (x: any) => x));
 
 describe(
   'basic operations done async',
-  execute(require('../graphql-async').graphql, x => Promise.resolve(x)),
+  execute(graphqlAsync, (x: any) => Promise.resolve(x)),
 );

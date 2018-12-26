@@ -1033,7 +1033,20 @@ describe('diffing queries against the store', () => {
 
   describe('issue #4081', () => {
     it('should not return results containing cycles', () => {
-      const company = {
+      interface Company {
+        __typename: string;
+        id: number;
+        name: string;
+        users: User[];
+      }
+      interface User {
+        __typename: string;
+        id: number;
+        name: string;
+        company: Company;
+      }
+
+      const company: Company = {
         __typename: 'Company',
         id: 1,
         name: 'Apollo',

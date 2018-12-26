@@ -2,9 +2,7 @@ import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { stripSymbols } from 'apollo-utilities';
-
 import { withWarning } from '../util/wrap';
-
 import ApolloClient from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
@@ -13,13 +11,13 @@ describe('ApolloClient', () => {
   describe('constructor', () => {
     it('will throw an error if link is not passed in', () => {
       expect(() => {
-        const client = new ApolloClient({ cache: new InMemoryCache() });
+        new ApolloClient({ cache: new InMemoryCache() } as any);
       }).toThrowErrorMatchingSnapshot();
     });
 
     it('will throw an error if cache is not passed in', () => {
       expect(() => {
-        const client = new ApolloClient({ link: new ApolloLink.empty() });
+        new ApolloClient({ link: ApolloLink.empty() } as any);
       }).toThrowErrorMatchingSnapshot();
     });
   });
@@ -1103,6 +1101,19 @@ describe('ApolloClient', () => {
           }
         }
       `;
+
+      interface Friend {
+        id: number;
+        type: string;
+        __typename: string;
+      }
+      interface Data {
+        people: {
+          id: number;
+          __typename: string;
+          friends: Friend[];
+        };
+      }
       const data = {
         people: {
           id: 1,
@@ -1130,7 +1141,7 @@ describe('ApolloClient', () => {
       });
 
       let count = 0;
-      const observable = client.watchQuery({ query });
+      const observable = client.watchQuery<Data>({ query });
       observable.subscribe({
         next: result => {
           count++;
@@ -2199,8 +2210,10 @@ describe('ApolloClient', () => {
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-
-      client.writeQuery({
+      interface Data {
+        a: number;
+      }
+      client.writeQuery<Data>({
         data: { a: 1 },
         query: gql`
           {
@@ -2209,14 +2222,14 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(client.cache.data.data).toEqual({
+      expect((client.cache as any).data.data).toEqual({
         ROOT_QUERY: {
           a: 1,
         },
       });
 
       await client.clearStore();
-      expect(client.cache.data.data).toEqual({});
+      expect((client.cache as any).data.data).toEqual({});
     });
   });
 });

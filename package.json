@@ -3,7 +3,6 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "ci": "npm run clean:npm && npm run clean:build && npm run install",
     "postinstall": "npm run lint && npm run bundle",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "prebuild": "echo \"apollo-link-state has re-entrant dependency on 'graphql-anywhere', bootstrapping build...\" && tsc -b packages/apollo-utilities && tsc -b packages/graphql-anywhere",

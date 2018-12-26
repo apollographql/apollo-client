@@ -19,7 +19,7 @@
     "watch": "tsc -w",
     "prepublishOnly": "yarn build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
-    "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
+    "minify": "uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
     "filesize": "yarn minify",
     "clean": "rm -rf coverage/* && rm -rf lib/*"
   },

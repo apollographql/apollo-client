@@ -23,7 +23,7 @@ const commonjsOptions = {
   include: 'node_modules/**',
 };
 
-export default (name, override = {}) => {
+export default (name, override = { output: { globals: {} } }) => {
   const projectDir = path.join(__filename, '..');
   console.info(`Building project umd ${projectDir}`);
   const tsconfig = `${projectDir}/tsconfig.json`;
@@ -32,7 +32,7 @@ export default (name, override = {}) => {
       input,
       //output: merged separately
       onwarn,
-      external: Object.keys(globals),
+      external: Object.keys({ ...globals, ...override.output.globals }),
       plugins: [
         nodeResolve({ extensions }),
         typescriptPlugin({ typescript, tsconfig }),

@@ -10,10 +10,14 @@ const globals = {
   'apollo-link-state': 'apolloLinkState',
   'apollo-link-error': 'apolloLinkError',
   'graphql-tag': 'graphqlTag',
-  // new - not sure if correct
-  // 'graphql/language/printer': 'print',
-  // 'graphql/language': 'graphqlLanguage',
-  // 'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
+  // new - not sure if correct ??
+  'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
+  'graphql/language/printer': 'print',
+  'symbol-observable': '$$observable',
+  'zen-observable': 'zenObservable',
+  'fast-json-stable-stringify': 'stringify',
+  'graphql-tag': 'gql',
+  'apollo-utilities': 'apolloUtilities',
 };
 
 export default [

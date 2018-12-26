@@ -16,7 +16,6 @@ export default [
   buildUmdConfig('apollo.boost', {
     external: Object.keys(global),
     output: {
-      file: 'lib/index.umd.js',
       globals,
     },
   }),

@@ -1089,7 +1089,7 @@ describe('ApolloClient', () => {
       }, /Missing field e/);
     });
 
-    it('will correctly call the next observable after a change', done => {
+    describe('observable updates', () => {
       const query = gql`
         query nestedData {
           people {
@@ -1140,46 +1140,50 @@ describe('ApolloClient', () => {
         }),
       });
 
-      let count = 0;
-      const observable = client.watchQuery<Data>({ query });
-      observable.subscribe({
-        next: result => {
-          count++;
-          if (count === 1) {
-            expect(stripSymbols(result.data)).toEqual(data);
-            expect(stripSymbols(observable.currentResult().data)).toEqual(data);
-            const bestFriends = result.data.people.friends.filter(
-              x => x.type === 'best',
-            );
-            // this should re call next
-            client.writeFragment({
-              id: `Person${result.data.people.id}`,
-              fragment: gql`
-                fragment bestFriends on Person {
-                  friends {
-                    id
+      it('writeFragment will correctly call the next observable after a change', done => {
+        let count = 0;
+        const observable = client.watchQuery<Data>({ query });
+        observable.subscribe({
+          next: result => {
+            count++;
+            if (count === 1) {
+              expect(stripSymbols(result.data)).toEqual(data);
+              expect(stripSymbols(observable.currentResult().data)).toEqual(
+                data,
+              );
+              const bestFriends = result.data.people.friends.filter(
+                x => x.type === 'best',
+              );
+              // this should re call next
+              client.writeFragment({
+                id: `Person${result.data.people.id}`,
+                fragment: gql`
+                  fragment bestFriends on Person {
+                    friends {
+                      id
+                    }
                   }
-                }
-              `,
-              data: {
-                friends: bestFriends,
-                __typename: 'Person',
-              },
-            });
+                `,
+                data: {
+                  friends: bestFriends,
+                  __typename: 'Person',
+                },
+              });
 
-            setTimeout(() => {
-              if (count === 1)
-                done.fail(new Error('fragment did not recall observable'));
-            }, 50);
-          }
+              setTimeout(() => {
+                if (count === 1)
+                  done.fail(new Error('fragment did not recall observable'));
+              }, 50);
+            }
 
-          if (count === 2) {
-            expect(stripSymbols(result.data.people.friends)).toEqual([
-              data.people.friends[0],
-            ]);
-            done();
-          }
-        },
+            if (count === 2) {
+              expect(stripSymbols(result.data.people.friends)).toEqual([
+                data.people.friends[0],
+              ]);
+              done();
+            }
+          },
+        });
       });
     });
   });

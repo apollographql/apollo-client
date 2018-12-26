@@ -1181,9 +1181,11 @@ describe('ApolloClient', () => {
                 setTimeout(() => {
                   if (count === 1)
                     done.fail(
-                      new Error('writeQuery did not recall observable'),
+                      new Error(
+                        'writeQuery did not re-call observable with next value',
+                      ),
                     );
-                }, 50);
+                }, 250);
               }
 
               if (count === 2) {
@@ -1234,9 +1236,11 @@ describe('ApolloClient', () => {
                 setTimeout(() => {
                   if (count === 1)
                     done.fail(
-                      new Error('writeFragment did not recall observable'),
+                      new Error(
+                        'writeFragment did not re-call observable with next value',
+                      ),
                     );
-                }, 50);
+                }, 250);
               }
 
               if (count === 2) {
@@ -1299,7 +1303,9 @@ describe('ApolloClient', () => {
                 setTimeout(() => {
                   if (count === 1)
                     done.fail(
-                      new Error('writeFragment did not recall observable'),
+                      new Error(
+                        'writeFragment did not re-call observable with next value',
+                      ),
                     );
                 }, 50);
               }
@@ -1348,7 +1354,9 @@ describe('ApolloClient', () => {
                 setTimeout(() => {
                   if (count === 1)
                     done.fail(
-                      new Error('writeFragment did not recall observable'),
+                      new Error(
+                        'writeFragment did not re-call observable with next value',
+                      ),
                     );
                 }, 50);
               }

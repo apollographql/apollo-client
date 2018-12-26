@@ -22,7 +22,7 @@ const globals = {
 
 export default [
   buildUmdConfig('apollo.boost', {
-    external: Object.keys(global),
+    external: Object.keys(globals),
     output: {
       globals,
     },

@@ -10,6 +10,10 @@ const globals = {
   'apollo-link-state': 'apolloLinkState',
   'apollo-link-error': 'apolloLinkError',
   'graphql-tag': 'graphqlTag',
+  // new - not sure if correct
+  // 'graphql/language/printer': 'print',
+  // 'graphql/language': 'graphqlLanguage',
+  // 'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
 };
 
 export default [

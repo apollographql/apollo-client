@@ -18,19 +18,19 @@ jobs:
           keys:
             # When lock file changes, use increasingly general patterns to
             # restore cache
-            - yarn-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
-            - yarn-v1-{{ .Branch }}-
-            - yarn-v1-
-      - run: yarn --version
-      - run: yarn ci
-      - run: cd docs && yarn install
+            - npm-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - npm-v1-{{ .Branch }}-
+            - npm-v1-
+      - run: npm --version
+      - run: npm ci
+      - run: cd docs && npm ci
       - save_cache:
-          key: yarn-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          key: npm-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
-            # This should cache the yarn cache instead of node_modules, which is
-            # needed because yarn ci actually removes node_modules before
+            # This should cache the npm cache instead of node_modules, which is
+            # needed because npm ci actually removes node_modules before
             # installing to guarantee a clean slate.
-            - ~/.cache/yarn
+            - ~/.npm
       - persist_to_workspace:
           root: .
           paths:
@@ -40,19 +40,19 @@ jobs:
     <<: *defaults
     steps:
       - <<: *attach
-      - run: yarn danger
+      - run: npm run danger
 
   Docs:
     <<: *defaults
     steps:
       - <<: *attach
-      - run: cd docs && yarn build
+      - run: cd docs && npm run build
 
   Filesize:
     <<: *defaults
     steps:
       - <<: *attach
-      - run: yarn filesize
+      - run: npm run filesize
 
   Apollo Client Monorepo:
     <<: *defaults
@@ -60,7 +60,7 @@ jobs:
       - <<: *attach
       - run:
           name: Jest suite with coverage
-          command: yarn test-ci && yarn coverage:upload
+          command: npm run test-ci && npm run coverage:upload
           environment:
             JEST_JUNIT_OUTPUT: 'reports/junit/js-test-results.xml'
       - store_test_results:

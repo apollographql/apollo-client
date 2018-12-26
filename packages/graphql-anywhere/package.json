@@ -8,19 +8,19 @@
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "prepare": "yarn lint && yarn build",
+    "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "test": "jest",
     "build": "tsc -b .",
-    "postbuild": "yarn bundle",
+    "postbuild": "npm run bundle",
     "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
     "bundle": "rollup -c rollup.config.js",
-    "postbundle": "yarn clean:tests",
+    "postbundle": "npm run clean:tests",
     "watch": "tsc -w",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "npm run build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "minify": "uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
-    "filesize": "yarn minify",
+    "filesize": "npm run minify",
     "clean": "rm -rf coverage/* && rm -rf lib/*"
   },
   "repository": {
@@ -42,6 +42,6 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "^1.0.28"
+    "apollo-utilities": "file:../apollo-utilities"
   }
 }

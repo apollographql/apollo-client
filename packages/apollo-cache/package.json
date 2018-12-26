@@ -24,23 +24,23 @@
   },
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
-    "prepare": "yarn lint && yarn build",
+    "prepare": "npm run lint && npm run build",
     "coverage": "jest --coverage",
     "test": "jest",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts && tslint -c \"../../config/tslint.json\" -p tsconfig.json tests/*.ts",
-    "prebuild": "yarn clean",
+    "prebuild": "npm run clean",
     "build": "tsc -b .",
-    "postbuild": "yarn bundle",
+    "postbuild": "npm run bundle",
     "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
     "bundle": "rollup -c rollup.config.js",
-    "postbundle": "yarn clean:tests",
+    "postbundle": "npm run clean:tests",
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",
-    "prepublishOnly": "yarn clean && yarn build",
+    "prepublishOnly": "npm run clean && npm run build",
     "minify": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
-    "filesize": "yarn minify"
+    "filesize": "npm run minify"
   },
   "dependencies": {
-    "apollo-utilities": "^1.0.28"
+    "apollo-utilities": "file:../apollo-utilities"
   }
 }

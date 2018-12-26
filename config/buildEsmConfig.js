@@ -11,7 +11,7 @@ const input = './src/index.ts';
 
 export default pkg => {
   const projectDir = path.join(__filename, '..');
-  console.info(`Building project ${projectDir}`);
+  console.info(`Building project esm ${projectDir}`);
   const tsconfig = `${projectDir}/tsconfig.json`;
   return {
     input,

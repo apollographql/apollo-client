@@ -23,6 +23,7 @@ jobs:
             - yarn-v1-
       - run: yarn --version
       - run: yarn ci
+      - run: cd docs && yarn install
       - save_cache:
           key: yarn-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:

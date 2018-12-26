@@ -33,10 +33,10 @@
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* && rm -rf lib/*",
     "prepublishOnly": "npm run build",
-    "minify": "uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
+    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
     "filesize": "npm run minify",
     "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
-    "bundle": "rollup -c rollup.config.js && rollup -c rollup-bundle.config.js",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && rollup -c rollup-bundle.config.js",
     "postbundle": "npm run clean:tests"
   },
   "dependencies": {

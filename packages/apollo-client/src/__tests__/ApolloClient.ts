@@ -1089,7 +1089,7 @@ describe('ApolloClient', () => {
       }, /Missing field e/);
     });
 
-    describe('observable updates', () => {
+    describe('change will call observable next', () => {
       const query = gql`
         query nestedData {
           people {
@@ -1114,14 +1114,21 @@ describe('ApolloClient', () => {
           friends: Friend[];
         };
       }
+      const bestFriend = {
+        id: 1,
+        type: 'best',
+        __typename: 'Friend',
+      };
+      const badFriend = {
+        id: 2,
+        type: 'bad',
+        __typename: 'Friend',
+      };
       const data = {
         people: {
           id: 1,
           __typename: 'Person',
-          friends: [
-            { id: 1, type: 'best', __typename: 'Friend' },
-            { id: 2, type: 'bad', __typename: 'Friend' },
-          ],
+          friends: [bestFriend, badFriend],
         },
       };
       const link = new ApolloLink(() => {
@@ -1140,49 +1147,226 @@ describe('ApolloClient', () => {
         }),
       });
 
-      it('writeFragment will correctly call the next observable after a change', done => {
-        let count = 0;
-        const observable = client.watchQuery<Data>({ query });
-        observable.subscribe({
-          next: result => {
-            count++;
-            if (count === 1) {
-              expect(stripSymbols(result.data)).toEqual(data);
-              expect(stripSymbols(observable.currentResult().data)).toEqual(
-                data,
-              );
-              const bestFriends = result.data.people.friends.filter(
-                x => x.type === 'best',
-              );
-              // this should re call next
-              client.writeFragment({
-                id: `Person${result.data.people.id}`,
-                fragment: gql`
-                  fragment bestFriends on Person {
-                    friends {
-                      id
+      describe('using writeQuery', () => {
+        it('with a replacement of nested array', done => {
+          let count = 0;
+          const observable = client.watchQuery<Data>({ query });
+          observable.subscribe({
+            next: nextResult => {
+              count++;
+              if (count === 1) {
+                expect(stripSymbols(nextResult.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+
+                const readData = stripSymbols(
+                  client.readQuery<Data>({ query }),
+                );
+                expect(stripSymbols(readData)).toEqual(data);
+
+                // modify readData and writeQuery
+                const bestFriends = readData.people.friends.filter(
+                  x => x.type === 'best',
+                );
+                // this should re call next
+                client.writeQuery({
+                  query,
+                  data: {
+                    friends: bestFriends,
+                    __typename: 'Person',
+                  },
+                });
+
+                setTimeout(() => {
+                  if (count === 1)
+                    done.fail(
+                      new Error('writeQuery did not recall observable'),
+                    );
+                }, 50);
+              }
+
+              if (count === 2) {
+                const expectation = [bestFriend];
+                expect(stripSymbols(nextResult.data.people.friends)).toEqual(
+                  expectation,
+                );
+                expect(stripSymbols(client.readQuery<Data>({ query }))).toEqual(
+                  expectation,
+                );
+                done();
+              }
+            },
+          });
+        });
+
+        it('with a value change inside a nested array', done => {
+          let count = 0;
+          const observable = client.watchQuery<Data>({ query });
+          observable.subscribe({
+            next: nextResult => {
+              count++;
+              if (count === 1) {
+                expect(stripSymbols(nextResult.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+
+                const readData = stripSymbols(
+                  client.readQuery<Data>({ query }),
+                );
+                expect(stripSymbols(readData)).toEqual(data);
+
+                // modify readData and writeQuery
+                const friends = readData.people.friends;
+                friends[0].type = 'okayest';
+                friends[1].type = 'okayest';
+
+                // this should re call next
+                client.writeQuery({
+                  query,
+                  data: {
+                    friends,
+                    __typename: 'Person',
+                  },
+                });
+
+                setTimeout(() => {
+                  if (count === 1)
+                    done.fail(
+                      new Error('writeFragment did not recall observable'),
+                    );
+                }, 50);
+              }
+
+              if (count === 2) {
+                const expectation0 = {
+                  ...bestFriend,
+                  type: 'okayest',
+                };
+                const expectation1 = {
+                  ...badFriend,
+                  type: 'okayest',
+                };
+                const nextFriends = stripSymbols(
+                  nextResult.data.people.friends,
+                );
+                expect(nextFriends[0]).toEqual(expectation0);
+                expect(nextFriends[1]).toEqual(expectation1);
+
+                const readFriends = stripSymbols(
+                  client.readQuery<Data>({ query }).people.friends,
+                );
+                expect(readFriends[0]).toEqual(expectation0);
+                expect(readFriends[1]).toEqual(expectation1);
+                done();
+              }
+            },
+          });
+        });
+      });
+      describe('using writeFragment', () => {
+        it('with a replacement of nested array', done => {
+          let count = 0;
+          const observable = client.watchQuery<Data>({ query });
+          observable.subscribe({
+            next: result => {
+              count++;
+              if (count === 1) {
+                expect(stripSymbols(result.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+                const bestFriends = result.data.people.friends.filter(
+                  x => x.type === 'best',
+                );
+                // this should re call next
+                client.writeFragment({
+                  id: `Person${result.data.people.id}`,
+                  fragment: gql`
+                    fragment bestFriends on Person {
+                      friends {
+                        id
+                      }
                     }
-                  }
-                `,
-                data: {
-                  friends: bestFriends,
-                  __typename: 'Person',
-                },
-              });
+                  `,
+                  data: {
+                    friends: bestFriends,
+                    __typename: 'Person',
+                  },
+                });
 
-              setTimeout(() => {
-                if (count === 1)
-                  done.fail(new Error('fragment did not recall observable'));
-              }, 50);
-            }
+                setTimeout(() => {
+                  if (count === 1)
+                    done.fail(
+                      new Error('writeFragment did not recall observable'),
+                    );
+                }, 50);
+              }
 
-            if (count === 2) {
-              expect(stripSymbols(result.data.people.friends)).toEqual([
-                data.people.friends[0],
-              ]);
-              done();
-            }
-          },
+              if (count === 2) {
+                expect(stripSymbols(result.data.people.friends)).toEqual([
+                  bestFriend,
+                ]);
+                done();
+              }
+            },
+          });
+        });
+
+        it('with a value change inside a nested array', done => {
+          let count = 0;
+          const observable = client.watchQuery<Data>({ query });
+          observable.subscribe({
+            next: result => {
+              count++;
+              if (count === 1) {
+                expect(stripSymbols(result.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+                const friends = result.data.people.friends;
+                friends[0].type = 'okayest';
+                friends[1].type = 'okayest';
+
+                // this should re call next
+                client.writeFragment({
+                  id: `Person${result.data.people.id}`,
+                  fragment: gql`
+                    fragment bestFriends on Person {
+                      friends {
+                        id
+                      }
+                    }
+                  `,
+                  data: {
+                    friends,
+                    __typename: 'Person',
+                  },
+                });
+
+                setTimeout(() => {
+                  if (count === 1)
+                    done.fail(
+                      new Error('writeFragment did not recall observable'),
+                    );
+                }, 50);
+              }
+
+              if (count === 2) {
+                const nextFriends = stripSymbols(result.data.people.friends);
+                expect(nextFriends[0]).toEqual({
+                  ...bestFriend,
+                  type: 'okayest',
+                });
+                expect(nextFriends[1]).toEqual({
+                  ...badFriend,
+                  type: 'okayest',
+                });
+                done();
+              }
+            },
+          });
         });
       });
     });

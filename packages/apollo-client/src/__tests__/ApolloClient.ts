@@ -6,6 +6,7 @@ import { withWarning } from '../util/wrap';
 import ApolloClient from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
+import { DataProxy } from 'apollo-cache';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -1134,22 +1135,25 @@ describe('ApolloClient', () => {
       const link = new ApolloLink(() => {
         return Observable.of({ data });
       });
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({
-          dataIdFromObject: result => {
-            if (result.id && result.__typename) {
-              return result.__typename + result.id;
-            }
-            return null;
-          },
-          addTypename: true,
-        }),
-      });
+      function newClient() {
+        return new ApolloClient({
+          link,
+          cache: new InMemoryCache({
+            dataIdFromObject: result => {
+              if (result.id && result.__typename) {
+                return result.__typename + result.id;
+              }
+              return null;
+            },
+            addTypename: true,
+          }),
+        });
+      }
 
       describe('using writeQuery', () => {
-        it('with a replacement of nested array', done => {
+        it('with a replacement of nested array (wq)', done => {
           let count = 0;
+          const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           observable.subscribe({
             next: nextResult => {
@@ -1170,11 +1174,14 @@ describe('ApolloClient', () => {
                   x => x.type === 'best',
                 );
                 // this should re call next
-                client.writeQuery({
+                client.writeQuery<Data>({
                   query,
                   data: {
-                    friends: bestFriends,
-                    __typename: 'Person',
+                    people: {
+                      id: 1,
+                      friends: bestFriends,
+                      __typename: 'Person',
+                    },
                   },
                 });
 
@@ -1189,10 +1196,14 @@ describe('ApolloClient', () => {
               }
 
               if (count === 2) {
-                const expectation = [bestFriend];
-                expect(stripSymbols(nextResult.data.people.friends)).toEqual(
-                  expectation,
-                );
+                const expectation = {
+                  people: {
+                    id: 1,
+                    friends: [bestFriend],
+                    __typename: 'Person',
+                  },
+                };
+                expect(stripSymbols(nextResult.data)).toEqual(expectation);
                 expect(stripSymbols(client.readQuery<Data>({ query }))).toEqual(
                   expectation,
                 );
@@ -1202,8 +1213,9 @@ describe('ApolloClient', () => {
           });
         });
 
-        it('with a value change inside a nested array', done => {
+        it('with a value change inside a nested array (wq)', done => {
           let count = 0;
+          const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           observable.subscribe({
             next: nextResult => {
@@ -1225,11 +1237,14 @@ describe('ApolloClient', () => {
                 friends[1].type = 'okayest';
 
                 // this should re call next
-                client.writeQuery({
+                client.writeQuery<Data>({
                   query,
                   data: {
-                    friends,
-                    __typename: 'Person',
+                    people: {
+                      id: 1,
+                      friends,
+                      __typename: 'Person',
+                    },
                   },
                 });
 
@@ -1270,8 +1285,9 @@ describe('ApolloClient', () => {
         });
       });
       describe('using writeFragment', () => {
-        it('with a replacement of nested array', done => {
+        it('with a replacement of nested array (wf)', done => {
           let count = 0;
+          const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           observable.subscribe({
             next: result => {
@@ -1320,8 +1336,9 @@ describe('ApolloClient', () => {
           });
         });
 
-        it('with a value change inside a nested array', done => {
+        it('with a value change inside a nested array (wf)', done => {
           let count = 0;
+          const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           observable.subscribe({
             next: result => {

@@ -87,7 +87,7 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.18.1",
+    "@octokit/rest": "16.3.0",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.0.4",
     "@types/isomorphic-fetch": "0.0.34",

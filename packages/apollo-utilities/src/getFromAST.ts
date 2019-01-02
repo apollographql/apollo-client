@@ -51,6 +51,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
       `Ambiguous GraphQL document: contains ${operations.length} operations`,
     );
   }
+
+  return doc;
 }
 
 export function getOperationDefinition(

@@ -1,5 +1,3 @@
-declare function require(id: string): any;
-
 export type OptimisticWrapperFunction<
   T = (...args: any[]) => any
 > = T & {
@@ -14,16 +12,7 @@ export type OptimisticWrapOptions = {
   makeCacheKey?(...args: any[]): any;
 };
 
-const {
-  wrap,
-}: {
-  wrap<T>(
-    originalFunction: T,
-    options?: OptimisticWrapOptions,
-  ): OptimisticWrapperFunction<T>;
-} = require('optimism'); // tslint:disable-line
-
-export { wrap };
+export { wrap } from 'optimism';
 
 export class CacheKeyNode<KeyType = object> {
   private children: Map<any, CacheKeyNode<KeyType>> | null = null;

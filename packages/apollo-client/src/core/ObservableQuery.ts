@@ -22,7 +22,7 @@ import { QueryStoreValue } from '../data/queries';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
-  errors?: GraphQLError[];
+  errors?: ReadonlyArray<GraphQLError>;
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
@@ -77,6 +77,7 @@ export class ObservableQuery<
   private subscriptionHandles: Subscription[];
 
   private lastResult: ApolloQueryResult<TData>;
+  private lastResultSnapshot: ApolloQueryResult<TData>;
   private lastError: ApolloError;
 
   constructor({
@@ -201,7 +202,7 @@ export class ObservableQuery<
     }
 
     const result = {
-      data: cloneDeep(data),
+      data,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     } as ApolloQueryResult<TData>;
@@ -216,9 +217,23 @@ export class ObservableQuery<
 
     if (!partial) {
       this.lastResult = { ...result, stale: false };
+      this.lastResultSnapshot = cloneDeep(this.lastResult);
     }
 
     return { ...result, partial } as ApolloCurrentResult<TData>;
+  }
+
+  // Compares newResult to the snapshot we took of this.lastResult when it was
+  // first received.
+  public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
+    const { lastResultSnapshot: snapshot } = this;
+    return !(
+      snapshot &&
+      newResult &&
+      snapshot.networkStatus === newResult.networkStatus &&
+      snapshot.stale === newResult.stale &&
+      isEqual(snapshot.data, newResult.data)
+    );
   }
 
   // Returns the last result that observer.next was called with. This is not the same as
@@ -233,6 +248,7 @@ export class ObservableQuery<
 
   public resetLastResults(): void {
     delete this.lastResult;
+    delete this.lastResultSnapshot;
     delete this.lastError;
     this.isTornDown = false;
   }
@@ -341,7 +357,9 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore<TSubscriptionData = TData>(options: SubscribeToMoreOptions<TData, TVariables, TSubscriptionData>) {
+  public subscribeToMore<TSubscriptionData = TData>(
+    options: SubscribeToMoreOptions<TData, TVariables, TSubscriptionData>,
+  ) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
@@ -351,13 +369,14 @@ export class ObservableQuery<
         next: (subscriptionData: { data: TSubscriptionData }) => {
           if (options.updateQuery) {
             this.updateQuery((previous, { variables }) =>
-              (options.updateQuery as UpdateQueryFn<TData, TVariables, TSubscriptionData>)(
-                previous,
-                {
-                  subscriptionData,
-                  variables,
-                },
-              ),
+              (options.updateQuery as UpdateQueryFn<
+                TData,
+                TVariables,
+                TSubscriptionData
+              >)(previous, {
+                subscriptionData,
+                variables,
+              }),
             );
           }
         },
@@ -585,7 +604,8 @@ export class ObservableQuery<
 
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
-        this.lastResult = cloneDeep(result);
+        this.lastResult = result;
+        this.lastResultSnapshot = cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

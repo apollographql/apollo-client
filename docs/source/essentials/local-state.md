@@ -239,7 +239,9 @@ You can optionally pass a client-side schema to the `typeDefs` config property. 
 Your schema should be written in [Schema Definition Language](/docs/graphql-tools/generate-schema.html#schema-language). Let's view our schema for our todo app:
 
 ```js
-const typeDefs = `
+import gql from 'graphql-tag';
+
+const typeDefs = gql`
   type Todo {
     id: Int!
     text: String!

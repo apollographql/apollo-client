@@ -63,7 +63,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
   operation.setContext({
     headers: {
       authorization: localStorage.getItem('token') || null,
-    } 
+    }
   });
 
   return forward(operation);
@@ -91,7 +91,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
     headers: {
       ...headers,
       authorization: localStorage.getItem('token') || null,
-    } 
+    }
   }));
 
   return forward(operation);
@@ -103,7 +103,7 @@ const otherMiddleware = new ApolloLink((operation, forward) => {
     headers: {
       ...headers,
       'recent-activity': localStorage.getItem('lastOnlineTime') || null,
-    } 
+    }
   }));
 
   return forward(operation);
@@ -135,7 +135,7 @@ The following example demonstrates how to implement an afterware function.
 ```js
 import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
-import { onError } from 'apollo-link-error'
+import { onError } from 'apollo-link-error';
 
 import { logout } from './logout';
 

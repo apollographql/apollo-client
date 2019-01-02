@@ -9,6 +9,8 @@
 - The `onClearStore` function can now be used to register callbacks that should
   be triggered when calling `clearStore`.  <br/>
   [@joe-re](https://github.com/joe-re) in [#4082](https://github.com/apollographql/apollo-client/pull/4082)
+- Make `isApolloError` available for external use.  <br/>
+  [@FredyC](https://github.com/FredyC) in [#4223](https://github.com/apollographql/apollo-client/pull/4223)
 - Documentation updates.  <br/>
   [@lifedup](https://github.com/lifedup) in [#3931](https://github.com/apollographql/apollo-client/pull/3931)  <br />
   [@Dem0n3D](https://github.com/Dem0n3D) in [#4008](https://github.com/apollographql/apollo-client/pull/4008)  <br />

@@ -534,7 +534,7 @@ describe('query transforms', () => {
     `;
     const expectedQueryStr = print(expectedQuery);
 
-    expect(expectedQueryStr).toBe(print(newQueryDoc));
+    expect(print(newQueryDoc)).toBe(expectedQueryStr);
   });
 
   it('should not add duplicates', () => {
@@ -565,7 +565,7 @@ describe('query transforms', () => {
     `;
     const expectedQueryStr = print(expectedQuery);
 
-    expect(expectedQueryStr).toBe(print(newQueryDoc));
+    expect(print(newQueryDoc)).toBe(expectedQueryStr);
   });
 
   it('should not screw up on a FragmentSpread within the query AST', () => {
@@ -1167,8 +1167,6 @@ describe('getDirectivesFromDocument', () => {
       const expected = gql`
         fragment client on ClientData {
           hi @client
-          bye @storage
-          bar
         }
 
         query Mixed {

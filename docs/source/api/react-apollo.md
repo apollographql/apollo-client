@@ -388,6 +388,16 @@ function MyComponent({ onLoadMore }) {
 }
 ```
 
+To access props that are not added by the `graphql()` function, use the `ownProps` keyword. For example:
+
+```js
+export default graphql(gql`{ ... }`, {
+  props: ({ data: { liveImage }, ownProps: { loadingImage } }) => ({
+    image: liveImage || loadingImage,
+  }),
+})(MyComponent);
+```
+
 <h3 id="graphql-config-skip">`config.skip`</h3>
 
 If `config.skip` is true then all of the React Apollo code will be skipped *entirely*. It will be as if the `graphql()` function were a simple identity function. Your component will behave as if the `graphql()` function were not there at all.

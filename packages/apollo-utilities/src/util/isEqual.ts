@@ -32,7 +32,10 @@ export function isEqual(a: any, b: any): boolean {
     }
     // Look through all the keys in `b`. If `b` has a key that `a` does not, return false.
     for (const key in b) {
-      if (!Object.prototype.hasOwnProperty.call(a, key)) {
+      if (
+        Object.prototype.hasOwnProperty.call(b, key) &&
+        !Object.prototype.hasOwnProperty.call(a, key)
+      ) {
         return false;
       }
     }

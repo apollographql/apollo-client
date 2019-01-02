@@ -25,7 +25,7 @@ A description of what actually happened, including a screenshot or copy-paste of
 
 **How to reproduce the issue:**
 <!--
-If possible, please create a reproduction using https://github.com/apollographql/react-apollo-error-template and link to it here. If you prefer an in-browser way to create reproduction, try https://codesandbox.io/s/7361K9q6w
+If possible, please create a reproduction using https://github.com/apollographql/react-apollo-error-template and link to it here. If you prefer an in-browser way to create reproduction, try: https://codesandbox.io/s/github/apollographql/react-apollo-error-template
 
 Instructions for how the issue can be reproduced by a maintainer or contributor. Be as specific as possible, and only mention what is necessary to reproduce the bug. If possible, try to isolate the exact circumstances in which the bug occurs and avoid speculation over what the cause might be.
 -->

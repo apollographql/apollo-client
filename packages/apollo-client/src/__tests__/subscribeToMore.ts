@@ -55,7 +55,7 @@ describe('subscribeToMore', () => {
   const req4 = { request: { query } as Operation, result: result4 };
 
   interface SubscriptionData {
-    name: string
+    name: string;
   }
 
   it('triggers new result from subscription data', done => {
@@ -71,7 +71,9 @@ describe('subscribeToMore', () => {
       link,
     });
 
-    const obsHandle = client.watchQuery<typeof req1['result']['data']>({ query });
+    const obsHandle = client.watchQuery<typeof req1['result']['data']>({
+      query,
+    });
 
     const sub = obsHandle.subscribe({
       next(queryResult) {
@@ -261,7 +263,9 @@ describe('subscribeToMore', () => {
       link,
     });
 
-    const obsHandle = client.watchQuery<typeof req4['result']['data']>({ query });
+    const obsHandle = client.watchQuery<typeof req4['result']['data']>({
+      query,
+    });
 
     const sub = obsHandle.subscribe({
       next(queryResult) {
@@ -270,7 +274,7 @@ describe('subscribeToMore', () => {
       },
     });
 
-    let nextMutation: {value: string};
+    let nextMutation: { value: string };
     obsHandle.subscribeToMore<SubscriptionData>({
       document: gql`
         subscription createdEntry {
@@ -289,11 +293,14 @@ describe('subscribeToMore', () => {
 
     for (let i = 0; i < 2; i++) {
       // init optimistic mutation
-      let data = client.cache.readQuery<typeof req4['result']['data']>({ query }, false);
+      let data = client.cache.readQuery<typeof req4['result']['data']>(
+        { query },
+        false,
+      );
       client.cache.recordOptimisticTransaction(proxy => {
         nextMutation = { value: results[i].result.data.name };
         proxy.writeQuery({
-          data: { entry: [...(data && data.entry || []), nextMutation] },
+          data: { entry: [...((data && data.entry) || []), nextMutation] },
           query,
         });
       }, i.toString());

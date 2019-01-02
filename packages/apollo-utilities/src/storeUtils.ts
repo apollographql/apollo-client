@@ -271,7 +271,9 @@ export function isInlineFragment(
 }
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
-  return idObject && (idObject as IdValue | JsonValue).type === 'id';
+  return idObject &&
+    (idObject as IdValue | JsonValue).type === 'id' &&
+    typeof (idObject as IdValue).generated === 'boolean';
 }
 
 export type IdConfig = {

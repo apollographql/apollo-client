@@ -68,6 +68,7 @@ export class QueryManager<TStore> {
 
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
+  private clientAwareness: Record<string, string> = {};
 
   private onBroadcast: () => void;
 
@@ -94,19 +95,21 @@ export class QueryManager<TStore> {
     store,
     onBroadcast = () => undefined,
     ssrMode = false,
+    clientAwareness = {},
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
     store: DataStore<TStore>;
     onBroadcast?: () => void;
     ssrMode?: boolean;
+    clientAwareness?: Record<string, string>;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
     this.queryDeduplication = queryDeduplication;
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
-
+    this.clientAwareness = clientAwareness;
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
@@ -604,9 +607,11 @@ export class QueryManager<TStore> {
           }
 
           if (observer.next) {
-            if (previouslyHadError ||
-                !observableQuery ||
-                observableQuery.isDifferentFromLastResult(resultFromStore)) {
+            if (
+              previouslyHadError ||
+              !observableQuery ||
+              observableQuery.isDifferentFromLastResult(resultFromStore)
+            ) {
               try {
                 observer.next(resultFromStore);
               } catch (e) {
@@ -635,10 +640,10 @@ export class QueryManager<TStore> {
   // supposed to be refetched in the event of a store reset. Once we unify error handling for
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
-  public watchQuery<T>(
+  public watchQuery<T, TVariables = OperationVariables>(
     options: WatchQueryOptions,
     shouldSubscribe = true,
-  ): ObservableQuery<T> {
+  ): ObservableQuery<T, TVariables> {
     if (options.fetchPolicy === 'standby') {
       throw new Error(
         'client.watchQuery cannot be called with fetchPolicy set to "standby"',
@@ -662,9 +667,9 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
-    let transformedOptions = { ...options } as WatchQueryOptions;
+    let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
 
-    return new ObservableQuery<T>({
+    return new ObservableQuery<T, TVariables>({
       scheduler: this.scheduler,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
@@ -1212,15 +1217,17 @@ export class QueryManager<TStore> {
   }
 
   private getQuery(queryId: string) {
-    return this.queries.get(queryId) || {
-      listeners: [],
-      invalidated: false,
-      document: null,
-      newData: null,
-      lastRequestId: null,
-      observableQuery: null,
-      subscriptions: [],
-    };
+    return (
+      this.queries.get(queryId) || {
+        listeners: [],
+        invalidated: false,
+        document: null,
+        newData: null,
+        lastRequestId: null,
+        observableQuery: null,
+        subscriptions: [],
+      }
+    );
   }
 
   private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {
@@ -1268,6 +1275,7 @@ export class QueryManager<TStore> {
             );
           }
         },
+        clientAwareness: this.clientAwareness,
       },
     };
   }

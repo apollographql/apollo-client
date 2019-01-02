@@ -2,11 +2,93 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Cache In-Memory (1.3.9)
+### Apollo Client (vNext)
 
-- Avoid modifying source objects when merging cache results.
-  [Issue #4081](https://github.com/apollographql/apollo-client/issues/4081)
-  [PR #4089](https://github.com/apollographql/apollo-client/pull/4089)
+- Apollo Client has been updated to use `graphql` 14.x as a dev dependency.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#4233](https://github.com/apollographql/apollo-client/pull/4233)
+- Documentation updates.  <br/>
+  [@lifedup](https://github.com/lifedup) in [#3931](https://github.com/apollographql/apollo-client/pull/3931)  <br />
+  [@Dem0n3D](https://github.com/Dem0n3D) in [#4008](https://github.com/apollographql/apollo-client/pull/4008)
+
+### Apollo Utilities (vNext)
+
+- Transformation utilities have been refactored to work with `graphql` 14.x.
+  GraphQL AST's are no longer being directly modified.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#4233](https://github.com/apollographql/apollo-client/pull/4233)
+
+## Apollo Client (2.4.8)
+
+### Apollo Client (2.4.8)
+
+- Documentation and config updates.  <br/>
+  [@justinanastos](https://github.com/justinanastos) in [#4187](https://github.com/apollographql/apollo-client/pull/4187)  <br/>
+  [@PowerKiKi](https://github.com/PowerKiKi) in [#3693](https://github.com/apollographql/apollo-client/pull/3693)  <br/>
+  [@nandito](https://github.com/nandito) in [#3865](https://github.com/apollographql/apollo-client/pull/3865)
+
+### Apollo Utilities (1.0.27)
+
+- Schema/AST tranformation utilities have been updated to work properly with
+  `@client` directives.  <br/>
+  [@justinmakaila](https://github.com/justinmakaila) in [#3482](https://github.com/apollographql/apollo-client/pull/3482)
+
+### Apollo Cache In-Memory (1.3.12)
+
+- Avoid using `DepTrackingCache` for optimistic reads.
+  [PR #4521](https://github.com/apollographql/apollo-client/pull/4251)
+
+- When creating an `InMemoryCache` object, it's now possible to disable the
+  result caching behavior introduced in [#3394](https://github.com/apollographql/apollo-client/pull/3394),
+  either for diagnostic purposes or because the benefit of caching repeated
+  reads is not worth the extra memory usage in your application:
+  ```ts
+  new InMemoryCache({
+    resultCaching: false
+  })
+  ```
+  Part of [PR #4521](https://github.com/apollographql/apollo-client/pull/4251).
+
+## Apollo Client (2.4.7)
+
+### Apollo Client (2.4.7)
+
+- The `ApolloClient` constructor has been updated to accept `name` and
+  `version` params, that can be used to support Apollo Server [Client Awareness](https://www.apollographql.com/docs/apollo-server/v2/features/metrics.html#Client-Awareness)
+  functionality. These client awareness properties are passed into the
+  defined Apollo Link chain, and are then ultimately sent out as custom
+  headers with outgoing requests.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#4154](https://github.com/apollographql/apollo-client/pull/4154)
+
+### Apollo Boost (0.1.22)
+
+- No changes.
+
+### Apollo Cache (1.1.21)
+
+- No changes.
+
+### Apollo Cache In-Memory (1.3.11)
+
+- No changes.
+
+### Apollo Utilities (1.0.26)
+
+- No changes.
+
+### Graphql Anywhere (4.1.23)
+
+- No changes.
+
+
+## Apollo Client (2.4.6)
+
+### Apollo Cache In-Memory (1.3.10)
+
+- Added some `return`s to prevent errors with `noImplicitReturns`
+  TypeScript rule.
+  [PR #4137](https://github.com/apollographql/apollo-client/pull/4137)
+
+- Exclude the `src/` directory when publishing `apollo-cache-inmemory`.
+  [Issue #4083](https://github.com/apollographql/apollo-client/issues/4083)
 
 ## Apollo Client (2.4.5)
 
@@ -30,6 +112,12 @@
 - Add `readQuery` test to make sure options aren't mutated.
   [@CarloPalinckx](https://github.com/CarloPalinckx) in
   [#3838](https://github.com/apollographql/apollo-client/pull/3838)
+
+### Apollo Cache In-Memory (1.3.9)
+
+- Avoid modifying source objects when merging cache results.
+  [Issue #4081](https://github.com/apollographql/apollo-client/issues/4081)
+  [PR #4089](https://github.com/apollographql/apollo-client/pull/4089)
 
 ### Apollo Utilities (1.0.25)
 

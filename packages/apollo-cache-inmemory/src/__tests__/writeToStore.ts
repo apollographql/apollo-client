@@ -62,10 +62,12 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: result,
     });
@@ -281,11 +283,13 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-        dataIdFromObject: getIdField,
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+          dataIdFromObject: getIdField,
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
@@ -326,10 +330,12 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
@@ -370,10 +376,12 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         'nestedObj({"arg":"val"})': {
@@ -424,11 +432,13 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-        dataIdFromObject: getIdField,
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+          dataIdFromObject: getIdField,
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: result.nestedArray.map((obj: any) => ({
@@ -475,11 +485,13 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-        dataIdFromObject: getIdField,
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+          dataIdFromObject: getIdField,
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
@@ -977,10 +989,12 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: null,
@@ -1006,10 +1020,12 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer.writeQueryToStore({
-        query,
-        result: cloneDeep(result),
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          query,
+          result: cloneDeep(result),
+        })
+        .toObject(),
     ).toEqual({
       ROOT_QUERY: {
         'people_one({"id":"5"})': {
@@ -1173,16 +1189,18 @@ describe('writing to the store', () => {
     mutation.definitions.map((def: OperationDefinitionNode) => {
       if (isOperationDefinition(def)) {
         expect(
-          writer.writeSelectionSetToStore({
-            dataId: '5',
-            selectionSet: def.selectionSet,
-            result: cloneDeep(result),
-            context: {
-              store: defaultNormalizedCacheFactory(),
-              variables,
-              dataIdFromObject: () => '5',
-            },
-          }).toObject(),
+          writer
+            .writeSelectionSetToStore({
+              dataId: '5',
+              selectionSet: def.selectionSet,
+              result: cloneDeep(result),
+              context: {
+                store: defaultNormalizedCacheFactory(),
+                variables,
+                dataIdFromObject: () => '5',
+              },
+            })
+            .toObject(),
         ).toEqual({
           '5': {
             id: 'id',
@@ -1238,11 +1256,13 @@ describe('writing to the store', () => {
     });
 
     expect(
-      writer.writeQueryToStore({
-        result: data,
-        query,
-        dataIdFromObject: () => 0,
-      }).toObject(),
+      writer
+        .writeQueryToStore({
+          result: data,
+          query,
+          dataIdFromObject: () => 0,
+        })
+        .toObject(),
     ).toEqual(expStore.toObject());
   });
 
@@ -1280,10 +1300,12 @@ describe('writing to the store', () => {
         '$ROOT_QUERY.author': data.author,
       });
       expect(
-        writer.writeQueryToStore({
-          result: data,
-          query,
-        }).toObject(),
+        writer
+          .writeQueryToStore({
+            result: data,
+            query,
+          })
+          .toObject(),
       ).toEqual(expStore.toObject());
     });
 
@@ -1320,11 +1342,13 @@ describe('writing to the store', () => {
         },
       });
       expect(
-        writer.writeQueryToStore({
-          result: data,
-          query,
-          dataIdFromObject,
-        }).toObject(),
+        writer
+          .writeQueryToStore({
+            result: data,
+            query,
+            dataIdFromObject,
+          })
+          .toObject(),
       ).toEqual(expStore.toObject());
     });
 
@@ -1366,11 +1390,13 @@ describe('writing to the store', () => {
         },
       });
       expect(
-        writer.writeQueryToStore({
-          result: data,
-          query,
-          dataIdFromObject,
-        }).toObject(),
+        writer
+          .writeQueryToStore({
+            result: data,
+            query,
+            dataIdFromObject,
+          })
+          .toObject(),
       ).toEqual(expStore.toObject());
     });
   });

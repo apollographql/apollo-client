@@ -44,7 +44,7 @@
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "4.25 kB"
+      "maxSize": "5 kB"
     },
     {
       "name": "graphql-anywhere",
@@ -71,12 +71,10 @@
   },
   "lint-staged": {
     "*.ts*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
-      "git add"
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
     ],
     "*.js*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
-      "git add"
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
     ]
   },
   "pre-commit": "lint-staged",
@@ -89,41 +87,41 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.15.1",
+    "@octokit/rest": "15.18.1",
     "@types/benchmark": "1.0.31",
-    "@types/graphql": "0.12.7",
+    "@types/graphql": "14.0.4",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "23.3.9",
-    "@types/lodash": "4.14.117",
-    "@types/node": "10.12.2",
-    "@types/react": "16.4.18",
-    "@types/react-dom": "16.0.9",
+    "@types/jest": "23.3.11",
+    "@types/lodash": "4.14.119",
+    "@types/node": "10.12.18",
+    "@types/react": "16.7.18",
+    "@types/react-dom": "16.0.11",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.1.0",
     "danger": "4.4.10",
-    "fetch-mock": "7.2.5",
-    "flow-bin": "0.85.0",
-    "graphql": "0.13.2",
+    "fetch-mock": "7.2.8",
+    "flow-bin": "0.89.0",
+    "graphql": "14.0.2",
     "graphql-tag": "2.10.0",
     "isomorphic-fetch": "2.2.1",
     "jest": "23.6.0",
     "jest-junit": "5.2.0",
-    "lerna": "3.4.3",
+    "lerna": "3.8.1",
     "lint-staged": "7.3.0",
     "lodash": "4.17.11",
     "pre-commit": "1.2.2",
-    "prettier": "1.14.3",
-    "react": "16.6.0",
-    "react-dom": "16.6.0",
-    "rollup": "0.67.0",
+    "prettier": "1.15.3",
+    "react": "16.7.0",
+    "react-dom": "16.7.0",
+    "rollup": "0.67.4",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "3.4.0",
     "rollup-plugin-sourcemaps": "0.4.2",
     "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
-    "tslint": "5.11.0",
+    "tslint": "5.12.0",
     "typescript": "3.1.6",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",

@@ -6,6 +6,8 @@
 
 - Apollo Client has been updated to use `graphql` 14.x as a dev dependency.  <br/>
   [@hwillson](https://github.com/hwillson) in [#4233](https://github.com/apollographql/apollo-client/pull/4233)
+- Documentation updates.  <br/>
+  [@lifedup](https://github.com/lifedup) in [#3931](https://github.com/apollographql/apollo-client/pull/3931)
 
 ### Apollo Utilities (vNext)
 

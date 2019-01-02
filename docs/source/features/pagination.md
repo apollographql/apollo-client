@@ -118,8 +118,6 @@ const CommentsWithData = () => (
                   // Put the new comments in the front of the list
                   comments: [...newComments, ...previousEntry.comments]
                 },
-                //note you must return the __typename (two underscores) in the updateQuery. It is attached on every graphQl request
-                //and can be accessed easily in your previous results or in any of your future results.
                 __typename: previousEntry.__typename
               };
             }

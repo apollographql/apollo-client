@@ -1,6 +1,6 @@
 {
   "name": "apollo-boost",
-  "version": "0.1.20",
+  "version": "0.1.23",
   "description": "The easiest way to get started with Apollo Client",
   "author": "Peggy Rayzis <peggy@apollographql.com>",
   "contributors": [

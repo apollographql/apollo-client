@@ -71,20 +71,16 @@ function selectionSetFromObj(obj: any): SelectionSetNode {
   const selections: FieldNode[] = [];
 
   Object.keys(obj).forEach(key => {
+    const nestedSelSet: SelectionSetNode = selectionSetFromObj(obj[key]);
+
     const field: FieldNode = {
       kind: 'Field',
       name: {
         kind: 'Name',
         value: key,
       },
+      selectionSet: nestedSelSet || undefined,
     };
-
-    // Recurse
-    const nestedSelSet: SelectionSetNode = selectionSetFromObj(obj[key]);
-
-    if (nestedSelSet) {
-      field.selectionSet = nestedSelSet;
-    }
 
     selections.push(field);
   });

@@ -8,6 +8,26 @@
   `graphql/language/printer`. If you need this functionality, import it
   directly: `import { print } from "graphql/language/printer"`
 
+### Apollo Cache In-Memory (vNext)
+
+- The `flattenSelections` helper function is no longer exported from
+  `apollo-utilities`, since `getDirectiveNames` has been reimplemented
+  without using `flattenSelections`, and `flattenSelections` has no clear
+  purpose now. If you need the old functionality, use a visitor:
+  ```ts
+  import { visit } from "graphql/language/visitor";
+
+  function flattenSelections(selection: SelectionNode) {
+    const selections: SelectionNode[] = [];
+    visit(selection, {
+      SelectionSet(ss) {
+        selections.push(...ss.selections);
+      }
+    });
+    return selections;
+  }
+  ```
+
 ## Apollo Client (2.4.9)
 
 ### Apollo Client (2.4.9)

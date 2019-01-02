@@ -85,6 +85,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
   <dt>`partialRefetch`: boolean</dt>
   <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="query-render-prop">Render prop function</h3>
@@ -145,6 +147,8 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>A callback executed in the event of an error</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="mutation-render-prop">Render prop function</h3>
@@ -192,6 +196,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
   <dt>`fetchPolicy`: FetchPolicy</dt>
   <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>
@@ -213,7 +219,7 @@ The render prop function that you pass to the `children` prop of `Subscription` 
 import { MockedProvider } from "react-apollo/test-utils";
 ```
 
-The Mocked provider is a test-utility that allows you to created a mocked version of the `ApolloProvider ` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
+The Mocked provider is a test-utility that allows you to create a mocked version of the `ApolloProvider ` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
 
 The `<MockedProvider />` component takes the following props:
 
@@ -386,6 +392,16 @@ function MyComponent({ onLoadMore }) {
     </button>
   );
 }
+```
+
+To access props that are not added by the `graphql()` function, use the `ownProps` keyword. For example:
+
+```js
+export default graphql(gql`{ ... }`, {
+  props: ({ data: { liveImage }, ownProps: { loadingImage } }) => ({
+    image: liveImage || loadingImage,
+  }),
+})(MyComponent);
 ```
 
 <h3 id="graphql-config-skip">`config.skip`</h3>
@@ -914,7 +930,7 @@ export default graphql(gql`query { ... }`, {
 
 <h3 id="graphql-config-options-errorPolicy">`options.errorPolicy`</h3>
 
-The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
+The error policy is an option which allows you to specify how you want your component to handle errors that can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
 
 Valid `errorPolicy` values are:
 
@@ -1340,9 +1356,9 @@ This will only be able to provide access to your client if there is an [`<Apollo
 **Example:**
 
 ```js
-export default withApollo(MyComponent);
-
 function MyComponent({ client }) {
   console.log(client);
 }
+
+export default withApollo(MyComponent);
 ```

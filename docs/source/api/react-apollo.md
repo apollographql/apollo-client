@@ -388,8 +388,7 @@ function MyComponent({ onLoadMore }) {
 }
 ```
 
- To access props that are not added by the `graphql()` function, use the ownProps keyword. For example:
-
+To access props that are not added by the `graphql()` function, use the `ownProps` keyword. For example:
 
 ```js
 export default graphql(gql`{ ... }`, {

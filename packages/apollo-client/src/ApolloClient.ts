@@ -239,7 +239,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public watchQuery<T, TVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables>,
-  ): ObservableQuery<T> {
+  ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = {
         ...this.defaultOptions.watchQuery,
@@ -256,7 +256,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.initQueryManager().watchQuery<T>(options);
+    return this.initQueryManager().watchQuery<T, TVariables>(options);
   }
 
   /**

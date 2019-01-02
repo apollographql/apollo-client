@@ -1333,8 +1333,8 @@ An important note is that `compose()` executes the last enhancer _first_ and wor
 ```js
 export default compose(
   withApollo,
-  graphql(`query { ... }`),
-  graphql(`mutation { ... }`),
+  graphql(gql`query { ... }`),
+  graphql(gql`mutation { ... }`),
   connect(...),
 )(MyComponent);
 ```

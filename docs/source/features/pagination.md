@@ -117,7 +117,8 @@ const CommentsWithData = () => (
                 entry: {
                   // Put the new comments in the front of the list
                   comments: [...newComments, ...previousEntry.comments]
-                }
+                },
+                __typename: previousEntry.__typename
               };
             }
           })

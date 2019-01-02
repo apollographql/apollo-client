@@ -72,6 +72,7 @@ class PerQueryKeyMaker {
         fragment = definition;
         return true;
       }
+      return false;
     });
 
     // Include the key object computed from the FragmentDefinition named by

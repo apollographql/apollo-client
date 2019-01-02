@@ -49,6 +49,8 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  name?: string;
+  version?: string;
 };
 
 /**
@@ -71,6 +73,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
+  private clearStoreCallbacks: Array<() => Promise<any>> = [];
+  private clientAwareness: Record<string, string> = {};
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -87,8 +91,19 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
+   * @param defaultOptions Used to set application wide defaults for the
+   *                       options supplied to `watchQuery`, `query`, or
+   *                       `mutate`.
+   *
+   * @param name A custom name that can be used to identify this client, when
+   *             using Apollo client awareness features. E.g. "iOS".
+   *
+   * @param version A custom version that can be used to identify this client,
+   *                when using Apollo client awareness features. This is the
+   *                version of your client, which you may want to increment on
+   *                new builds. This is NOT the version of Apollo Client that
+   *                you are using.
    */
-
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
       link,
@@ -98,6 +113,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
+      name: clientAwarenessName,
+      version: clientAwarenessVersion,
     } = options;
 
     if (!link || !cache) {
@@ -114,7 +131,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     const supportedDirectives = new ApolloLink(
       (operation: Operation, forward: NextLink) => {
         let result = supportedCache.get(operation.query);
-        if (! result) {
+        if (!result) {
           result = removeConnectionDirectiveFromDocument(operation.query);
           supportedCache.set(operation.query, result);
           supportedCache.set(result, result);
@@ -191,7 +208,16 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         }
       }
     }
+
     this.version = version;
+
+    if (clientAwarenessName) {
+      this.clientAwareness.name = clientAwarenessName;
+    }
+
+    if (clientAwarenessVersion) {
+      this.clientAwareness.version = clientAwarenessVersion;
+    }
   }
   /**
    * This watches the cache store of the query according to the options specified and
@@ -214,7 +240,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public watchQuery<T, TVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables>,
-  ): ObservableQuery<T> {
+  ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = {
         ...this.defaultOptions.watchQuery,
@@ -231,7 +257,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.initQueryManager().watchQuery<T>(options);
+    return this.initQueryManager().watchQuery<T, TVariables>(options);
   }
 
   /**
@@ -402,6 +428,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         store: this.store,
         queryDeduplication: this.queryDeduplication,
         ssrMode: this.ssrMode,
+        clientAwareness: this.clientAwareness,
         onBroadcast: () => {
           if (this.devToolsHookCb) {
             this.devToolsHookCb({
@@ -460,20 +487,35 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public clearStore(): Promise<void | null> {
     const { queryManager } = this;
-    return Promise.resolve().then(
-      () => (queryManager ? queryManager.clearStore() : Promise.resolve(null)),
-    );
+    return Promise.resolve()
+      .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())))
+      .then(
+        () =>
+          queryManager ? queryManager.clearStore() : Promise.resolve(null),
+      );
   }
 
   /**
-   * Allows callbacks to be registered that are executed with the store is reset.
-   * onResetStore returns an unsubscribe function for removing your registered callbacks.
+   * Allows callbacks to be registered that are executed when the store is
+   * reset. `onResetStore` returns an unsubscribe function that can be used
+   * to remove registered callbacks.
    */
-
   public onResetStore(cb: () => Promise<any>): () => void {
     this.resetStoreCallbacks.push(cb);
     return () => {
       this.resetStoreCallbacks = this.resetStoreCallbacks.filter(c => c !== cb);
+    };
+  }
+
+  /**
+   * Allows callbacks to be registered that are executed when the store is
+   * cleared. `onClearStore` returns an unsubscribe function that can be used
+   * to remove registered callbacks.
+   */
+  public onClearStore(cb: () => Promise<any>): () => void {
+    this.clearStoreCallbacks.push(cb);
+    return () => {
+      this.clearStoreCallbacks = this.clearStoreCallbacks.filter(c => c !== cb);
     };
   }
 

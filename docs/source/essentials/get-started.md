@@ -109,7 +109,7 @@ const ExchangeRates = () => (
 
       return data.rates.map(({ currency, rate }) => (
         <div key={currency}>
-          <p>{`${currency}: ${rate}`}</p>
+          <p>{currency}: {rate}</p>
         </div>
       ));
     }}

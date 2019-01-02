@@ -154,7 +154,7 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dt>`subscription`: DocumentNode</dt>
   <dd>A GraphQL subscription document parsed into an AST by `graphql-tag`. **Required**</dd>
   <dt>`children`: (result: SubscriptionResult) => React.ReactNode</dt>
-  <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
+  <dd>A function returning the UI you want to render based on your subscription result.</dd>
   <dt>`variables`: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your subscription needs to execute</dd>
   <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>

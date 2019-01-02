@@ -68,7 +68,7 @@ const ErrorComponent = props =>(
 )
 
 const setRefetchProp = (propName = "data") =>
-  withProps(props => ({refetch: props[propName] && props[propName].data}))
+  withProps(props => ({refetch: props[propName] && props[propName].refetch}))
 
 const enhancedComponent = compose(
   graphql(getUser, { name: "user" }),

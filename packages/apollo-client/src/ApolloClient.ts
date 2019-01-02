@@ -496,8 +496,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * Allows callbacks to be registered that are executed with the store is reset.
-   * onResetStore returns an unsubscribe function for removing your registered callbacks.
+   * Allows callbacks to be registered that are executed when the store is
+   * reset. `onResetStore` returns an unsubscribe function that can be used
+   * to remove registered callbacks.
    */
   public onResetStore(cb: () => Promise<any>): () => void {
     this.resetStoreCallbacks.push(cb);
@@ -507,8 +508,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * Allows callbacks to be registered that are executed with the store is cleared.
-   * onClearStore returns an unsubscribe function for removing your registered callbacks.
+   * Allows callbacks to be registered that are executed when the store is
+   * cleared. `onClearStore` returns an unsubscribe function that can be used
+   * to remove registered callbacks.
    */
   public onClearStore(cb: () => Promise<any>): () => void {
     this.clearStoreCallbacks.push(cb);

@@ -19,7 +19,8 @@
   [@Caerbannog](https://github.com/Caerbannog) in [#4140](https://github.com/apollographql/apollo-client/pull/4140)  <br/>
   [@jedwards1211](https://github.com/jedwards1211) in [#4179](https://github.com/apollographql/apollo-client/pull/4179)  <br/>
   [@nutboltu](https://github.com/nutboltu) in [#4182](https://github.com/apollographql/apollo-client/pull/4182)  <br/>
-  [@CarloPalinckx](https://github.com/CarloPalinckx) in [#4189](https://github.com/apollographql/apollo-client/pull/4189)
+  [@CarloPalinckx](https://github.com/CarloPalinckx) in [#4189](https://github.com/apollographql/apollo-client/pull/4189)  <br/>
+  [@joebernard](https://github.com/joebernard) in [#4206](https://github.com/apollographql/apollo-client/pull/4206)
 
 ### Apollo Utilities (vNext)
 

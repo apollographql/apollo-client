@@ -22,7 +22,7 @@ import { QueryStoreValue } from '../data/queries';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
-  errors?: GraphQLError[];
+  errors?: ReadonlyArray<GraphQLError>;
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;

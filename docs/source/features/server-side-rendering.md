@@ -34,7 +34,7 @@ We'll see below how you can generate both the HTML and the Apollo store's state 
 
 Then, when the client runs the first set of queries, the data will be returned instantly because it is already in the store!
 
-If you are using `forceFetch` on some of the initial queries, you can pass the `ssrForceFetchDelay` option to skip force fetching during initialization, so that even those queries run using the cache:
+If you are using `fetchPolicy: network-only` or `fetchPolicy: cache-and-network` on some of the initial queries, you can pass the `ssrForceFetchDelay` option to skip force fetching during initialization, so that even those queries run using the cache:
 
 ```js
 const client = new ApolloClient({

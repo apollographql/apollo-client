@@ -52,6 +52,7 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClient.resetStore %}
 {% tsapibox ApolloClient.onResetStore %}
 {% tsapibox ApolloClient.clearStore %}
+{% tsapibox ApolloClient.onClearStore %}
 
 <h2 id="ObservableQuery">ObservableQuery</h2>
 

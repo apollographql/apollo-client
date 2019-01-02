@@ -98,7 +98,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
 })
 
 const otherMiddleware = new ApolloLink((operation, forward) => {
-  // add the authorization to the headers
+  // add the recent-activity custom header to the headers
   operation.setContext(({ headers = {} }) => ({
     headers: {
       ...headers,
@@ -121,7 +121,7 @@ const client = new ApolloClient({
 
 ```
 
-Given the above code, the header's `Authorization` value will be that of `token1` and the 'recent-activity' value will.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware using Apollo Link.
+Given the code above, the header's `Authorization` value will be that of `token` from `localStorage` by `authMiddleware` and the `recent-activity` value will  be set by `otherMiddleware` to `lastOnlineTime` again from `localStorage`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware using Apollo Link.
 
 <h3 id="linkAfterware" title="Afterware">Afterware</h3>
 

@@ -4,7 +4,6 @@
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/index.js",
   "module": "./lib/bundle.esm.js",
-  "browser": "./lib/bundle.umd.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {

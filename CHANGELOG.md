@@ -26,7 +26,8 @@
   [@evans](https://github.com/evans) in [#4213](https://github.com/apollographql/apollo-client/pull/4213)  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4214](https://github.com/apollographql/apollo-client/pull/4214)  <br/>
   [@stubailo](https://github.com/stubailo) in [#4220](https://github.com/apollographql/apollo-client/pull/4220)  <br/>
-  [@haysclark](https://github.com/haysclark) in [#4255](https://github.com/apollographql/apollo-client/pull/4255)
+  [@haysclark](https://github.com/haysclark) in [#4255](https://github.com/apollographql/apollo-client/pull/4255)  <br/>
+  [@shelmire](https://github.com/shelmire) in [#4266](https://github.com/apollographql/apollo-client/pull/4266)
 
 ### Apollo Utilities (vNext)
 

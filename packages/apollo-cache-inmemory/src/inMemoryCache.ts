@@ -16,13 +16,14 @@ import {
   ApolloReducerConfig,
   NormalizedCache,
   NormalizedCacheObject,
+  OptimisticWrapperFunction,
 } from './types';
 
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 
 import { DepTrackingCache } from './depTrackingCache';
-import { wrap, CacheKeyNode, OptimisticWrapperFunction } from './optimism';
+import { wrap, CacheKeyNode } from './optimism';
 import { ObjectCache } from './objectCache';
 
 import { record } from './recordingCache';

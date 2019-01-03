@@ -2211,7 +2211,7 @@ describe('client', () => {
       clearStore: () => {
         done();
       },
-    } as QueryManager;
+    } as QueryManager<any>;
     client.clearStore();
   });
 

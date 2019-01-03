@@ -1,5 +1,10 @@
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
-import { wrap, OptimisticWrapperFunction } from './optimism';
+import {
+  NormalizedCache,
+  NormalizedCacheObject,
+  StoreObject,
+  OptimisticWrapperFunction,
+} from './types';
+import { wrap } from './optimism';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 

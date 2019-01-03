@@ -40,7 +40,6 @@ import {
 } from 'graphql';
 
 import { wrap, CacheKeyNode } from './optimism';
-export { OptimisticWrapperFunction } from './optimism';
 
 import { DepTrackingCache } from './depTrackingCache';
 import { QueryKeyMaker } from './queryKeyMaker';

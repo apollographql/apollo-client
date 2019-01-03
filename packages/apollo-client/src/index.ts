@@ -21,7 +21,7 @@ export {
 export { NetworkStatus } from './core/networkStatus';
 export * from './core/types';
 
-export { ApolloError } from './errors/ApolloError';
+export { isApolloError, ApolloError } from './errors/ApolloError';
 
 import ApolloClient, { ApolloClientOptions } from './ApolloClient';
 

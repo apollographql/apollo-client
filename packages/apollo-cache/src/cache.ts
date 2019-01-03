@@ -122,7 +122,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       // To avoid overwriting an existing typename, we need to read it out first
       // and generate a fake one if none exists.
       try {
-        typenameResult = this.read({
+        typenameResult = this.read<any>({
           rootId: id,
           optimistic: false,
           query: justTypenameQuery,

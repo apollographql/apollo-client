@@ -5,6 +5,8 @@ import pkg from './package.json';
 const globalsOverride = {
   ...globals,
   'graphql/language/printer': 'print',
+  optimism: 'optimism',
+  'graphql/language/visitor': 'visitor',
 };
 
 export default [

@@ -728,3 +728,104 @@ describe('Resolving field aliases', () => {
     },
   );
 });
+
+describe('Force local resolvers', () => {
+  it(
+    'should always run resolvers when using a `resolverPolicy` of '
+    + '`resolver-always`',
+    async () => {
+      const query = gql`
+        query Author {
+          author {
+            name
+            isLoggedIn @client
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        initializers: {
+          author: () => ({
+            name: 'John Smith',
+            isLoggedIn: false,
+            __typename: 'Author',
+          }),
+        },
+      });
+
+      const { data: data1 } = await client.query({ query });
+      expect(data1.author.isLoggedIn).toEqual(false);
+
+      client.addResolvers({
+        Author: {
+          isLoggedIn() {
+            return true;
+          },
+        }
+      });
+
+      const { data: data2 } = await client.query({ query });
+      expect(data2.author.isLoggedIn).toEqual(false);
+
+      return client
+        .query({ query, resolverPolicy: 'resolver-always' })
+        .then(({ data }) => {
+          expect(data.author.isLoggedIn).toEqual(true);
+        }
+      );
+    }
+  );
+
+  it(
+    'should be able to retrieve values loaded from both the cache and ' +
+    'resolvers, when using a `resolverPolicy` of `resolver-always`',
+    async () => {
+      const query = gql`
+        query Author {
+          author {
+            name
+            isLoggedIn @client
+            lastLogin @client
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        initializers: {
+          author: () => ({
+            name: 'John Smith',
+            isLoggedIn: false,
+            lastLogin: 'yesterday',
+            __typename: 'Author',
+          }),
+        },
+      });
+
+      const { data: data1 } = await client.query({ query });
+      expect(data1.author.isLoggedIn).toEqual(false);
+      expect(data1.author.lastLogin).toEqual('yesterday');
+
+      client.addResolvers({
+        Author: {
+          isLoggedIn() {
+            return true;
+          },
+        }
+      });
+
+      const { data: data2 } = await client.query({ query });
+      expect(data2.author.isLoggedIn).toEqual(false);
+      expect(data2.author.lastLogin).toEqual('yesterday');
+
+      return client
+        .query({ query, resolverPolicy: 'resolver-always' })
+        .then(({ data }) => {
+          expect(data.author.isLoggedIn).toEqual(true);
+          expect(data.author.lastLogin).toEqual('yesterday');
+        }
+      );
+    }
+  );
+});

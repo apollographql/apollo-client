@@ -178,6 +178,8 @@ export class LocalState<TCacheShape> {
           if (onError) {
             onError(error);
             return;
+          } else {
+            throw error;
           }
         }
       }

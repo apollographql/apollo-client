@@ -21,23 +21,23 @@ describe('General', () => {
     expect(cache.extract()).toEqual({
       '$ROOT_QUERY.foo': {
         bar: false,
-        __typename: 'Bar'
+        __typename: 'Bar',
       },
       ROOT_QUERY: {
         foo: {
           generated: true,
           id: '$ROOT_QUERY.foo',
           type: 'id',
-          typename: 'Bar'
-        }
-      }
+          typename: 'Bar',
+        },
+      },
     });
   });
 
   it(
     'should not attempt to write the return value of an initializer ' +
-    'function if it returns `undefined`',
-    async (done) => {
+      'function if it returns `undefined`',
+    async done => {
       const firstNameQuery = gql`
         query FirstName {
           firstName @client
@@ -71,41 +71,40 @@ describe('General', () => {
         },
       });
 
-      const { data: { firstName: loadedFirstName } } =
-        await client.query({ query: firstNameQuery });
+      const {
+        data: { firstName: loadedFirstName },
+      } = await client.query({ query: firstNameQuery });
       expect(loadedFirstName).toEqual(firstName);
-      const { data: { lastName: loadedLastName } } =
-        await client.query({ query: lastNameQuery });
+      const {
+        data: { lastName: loadedLastName },
+      } = await client.query({ query: lastNameQuery });
       expect(loadedLastName).toEqual(lastName);
       return done();
-    }
+    },
   );
 
-  it(
-    'should be able to write `null` values to the cache from an initializer',
-    async (done) => {
-      const firstNameQuery = gql`
-        query FirstName {
-          firstName @client
-        }
-      `;
+  it('should be able to write `null` values to the cache from an initializer', async done => {
+    const firstNameQuery = gql`
+      query FirstName {
+        firstName @client
+      }
+    `;
 
-      const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        initializers: {
-          firstName() {
-            return null;
-          },
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      initializers: {
+        firstName() {
+          return null;
         },
-      });
+      },
+    });
 
-      const { data } = await client.query({ query: firstNameQuery });
-      expect(data).not.toBe(null);
-      expect(data.firstName).toBe(null);
-      return done();
-    }
-  );
+    const { data } = await client.query({ query: firstNameQuery });
+    expect(data).not.toBe(null);
+    expect(data.firstName).toBe(null);
+    return done();
+  });
 
   it('should not call the resolver if the data is already in the cache', () => {
     const fooResolver = jest.fn();
@@ -138,8 +137,8 @@ describe('General', () => {
   });
 });
 
-describe('Initializers called via runInitializers', () => {
-  it('should run initializers asynchronously', async () => {
+describe('#runInitializers', () => {
+  it('should run initializers asynchronously', async (done) => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
@@ -160,5 +159,74 @@ describe('Initializers called via runInitializers', () => {
         secondaryUserId: 200,
       },
     });
+
+    return done();
   });
+
+  it(
+    'should prevent initializers from running more than once, by default',
+    async (done) => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      await client.runInitializers({
+        primaryUserId: () => 100,
+      });
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          primaryUserId: 100,
+        },
+      });
+
+      const spy =
+        jest.spyOn(global.console, 'warn').mockImplementation(() => {});
+      await client.runInitializers({
+        primaryUserId: () => 100,
+      });
+      expect(spy).toBeCalled();
+      spy.mockRestore();
+      return done();
+    }
+  );
+
+  it(
+    'should be able to run initializers a second time after calling ' +
+    '`ApolloClient.resetInitializers()`',
+    async (done) => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      await client.runInitializers({
+        primaryUserId: () => 100,
+      });
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          primaryUserId: 100,
+        },
+      });
+
+      client.resetInitializers();
+
+      const spy =
+        jest.spyOn(global.console, 'warn').mockImplementation(() => {});
+      await client.runInitializers({
+        primaryUserId: () => 200,
+      });
+      expect(spy).not.toBeCalled();
+      spy.mockRestore();
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          primaryUserId: 200,
+        },
+      });
+      return done();
+    }
+  );
 });

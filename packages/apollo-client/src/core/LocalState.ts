@@ -12,6 +12,7 @@ import {
   hasDirectives,
   removeClientSetsFromDocument,
   mergeDeep,
+  warnOnceInDevelopment,
 } from 'apollo-utilities';
 
 import ApolloClient from '../ApolloClient';
@@ -308,12 +309,26 @@ export class LocalState<TCacheShape> {
     initializers: Initializers<TCacheShape>,
     runFunc: (fieldName: string, initializer: any) => any,
   ) {
+    const alreadyFired: string[] = [];
+
     Object.keys(initializers).forEach(fieldName => {
       if (this.firedInitializers.indexOf(fieldName) < 0) {
         runFunc(fieldName, initializers[fieldName]);
         this.firedInitializers.push(fieldName);
+      } else {
+        alreadyFired.push(fieldName);
       }
     });
+
+    if (alreadyFired.length > 0) {
+      warnOnceInDevelopment(
+        "You're attempting to re-fire initializers for fields that have " +
+        'already been initalized once. These repeat initializer calls have ' +
+        'been ignored. If you really want them to run again, ' +
+        'call `ApolloClient.resetInitializers()` first. ' +
+        `Fields: ${alreadyFired.join(', ')}`
+      );
+    }
   }
 
   // Prepare and return a local resolver function, that can be used to

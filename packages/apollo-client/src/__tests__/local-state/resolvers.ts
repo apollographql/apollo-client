@@ -731,8 +731,8 @@ describe('Resolving field aliases', () => {
 
 describe('Force local resolvers', () => {
   it(
-    'should always run resolvers when using a `resolverPolicy` of '
-    + '`resolver-always`',
+    'should always run resolvers when using a `resolverPolicy` of ' +
+      '`resolver-always`',
     async () => {
       const query = gql`
         query Author {
@@ -762,7 +762,7 @@ describe('Force local resolvers', () => {
           isLoggedIn() {
             return true;
           },
-        }
+        },
       });
 
       const { data: data2 } = await client.query({ query });
@@ -772,14 +772,13 @@ describe('Force local resolvers', () => {
         .query({ query, resolverPolicy: 'resolver-always' })
         .then(({ data }) => {
           expect(data.author.isLoggedIn).toEqual(true);
-        }
-      );
-    }
+        });
+    },
   );
 
   it(
     'should be able to retrieve values loaded from both the cache and ' +
-    'resolvers, when using a `resolverPolicy` of `resolver-always`',
+      'resolvers, when using a `resolverPolicy` of `resolver-always`',
     async () => {
       const query = gql`
         query Author {
@@ -812,7 +811,7 @@ describe('Force local resolvers', () => {
           isLoggedIn() {
             return true;
           },
-        }
+        },
       });
 
       const { data: data2 } = await client.query({ query });
@@ -824,8 +823,7 @@ describe('Force local resolvers', () => {
         .then(({ data }) => {
           expect(data.author.isLoggedIn).toEqual(true);
           expect(data.author.lastLogin).toEqual('yesterday');
-        }
-      );
-    }
+        });
+    },
   );
 });

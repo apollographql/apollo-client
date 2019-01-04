@@ -87,7 +87,7 @@ export class LocalState<TCacheShape> {
       (fieldName: string, initializer: any) => {
         initializerPromises.push(
           Promise.resolve(initializer()).then(result => {
-            if (result !== null) {
+            if (result !== undefined) {
               this.cache.writeData({ data: { [fieldName]: result } });
             }
           }),
@@ -112,7 +112,7 @@ export class LocalState<TCacheShape> {
       mergedInitializers,
       (fieldName: string, initializer: any) => {
         const result = initializer(this);
-        if (result !== null) {
+        if (result !== undefined) {
           this.cache.writeData({ data: { [fieldName]: result } });
         }
       },

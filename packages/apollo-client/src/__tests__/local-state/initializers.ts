@@ -4,12 +4,11 @@ import gql from 'graphql-tag';
 
 import ApolloClient from '../..';
 
-describe('Initializers called during ApolloClient instantiation', () => {
+describe('General', () => {
   it('should write the result of initiailizer functions to the cache', () => {
     const cache = new InMemoryCache();
     new ApolloClient({
       cache,
-      link: ApolloLink.empty(),
       initializers: {
         foo: () => ({ bar: false, __typename: 'Bar' }),
       },
@@ -19,8 +18,94 @@ describe('Initializers called during ApolloClient instantiation', () => {
         },
       },
     });
-    expect(cache.extract()).toMatchSnapshot();
+    expect(cache.extract()).toEqual({
+      '$ROOT_QUERY.foo': {
+        bar: false,
+        __typename: 'Bar'
+      },
+      ROOT_QUERY: {
+        foo: {
+          generated: true,
+          id: '$ROOT_QUERY.foo',
+          type: 'id',
+          typename: 'Bar'
+        }
+      }
+    });
   });
+
+  it(
+    'should not attempt to write the return value of an initializer ' +
+    'function if it returns `undefined`',
+    async (done) => {
+      const firstNameQuery = gql`
+        query FirstName {
+          firstName @client
+        }
+      `;
+
+      const lastNameQuery = gql`
+        query LastName {
+          lastName @client
+        }
+      `;
+
+      const firstName = 'John';
+      const lastName = 'Smith';
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        initializers: {
+          firstName() {
+            cache.writeQuery({
+              query: firstNameQuery,
+              data: {
+                firstName,
+              },
+            });
+          },
+          lastName() {
+            return lastName;
+          },
+        },
+      });
+
+      const { data: { firstName: loadedFirstName } } =
+        await client.query({ query: firstNameQuery });
+      expect(loadedFirstName).toEqual(firstName);
+      const { data: { lastName: loadedLastName } } =
+        await client.query({ query: lastNameQuery });
+      expect(loadedLastName).toEqual(lastName);
+      return done();
+    }
+  );
+
+  it(
+    'should be able to write `null` values to the cache from an initializer',
+    async (done) => {
+      const firstNameQuery = gql`
+        query FirstName {
+          firstName @client
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        initializers: {
+          firstName() {
+            return null;
+          },
+        },
+      });
+
+      const { data } = await client.query({ query: firstNameQuery });
+      expect(data).not.toBe(null);
+      expect(data.firstName).toBe(null);
+      return done();
+    }
+  );
 
   it('should not call the resolver if the data is already in the cache', () => {
     const fooResolver = jest.fn();

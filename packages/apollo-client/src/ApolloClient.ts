@@ -585,6 +585,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * Clear out all initializer run tracking. Initializer runs are tracked to
+   * help prevent the same initializers from running again, which could lead
+   * to certain cache values being wiped out.
+   */
+  public resetInitializers() {
+    this.localState.resetInitializers();
+  }
+
+  /**
    * Add additional local resolvers.
    */
   public addResolvers(resolvers: Resolvers | Resolvers[]) {

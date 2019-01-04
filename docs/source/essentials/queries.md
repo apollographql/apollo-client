@@ -9,7 +9,7 @@ This page assumes some familiarity with building GraphQL queries. If you'd like 
 
 The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](./get-started.html) guide if you need help with either of those steps.
 
-> If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/j2ly83749w) on CodeSandbox and our sample GraphQL server on [Launchpad](https://launchpad.graphql.com/nx9zvp49q7). You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
+> If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/j2ly83749w) on CodeSandbox and our sample GraphQL server on [this CodeSandbox](https://codesandbox.io/s/32ypr38l61). You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
 
 <h2 id="basic">The Query component</h2>
 

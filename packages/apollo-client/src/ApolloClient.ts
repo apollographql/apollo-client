@@ -638,7 +638,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Set a custom local state fragment matcher.
    */
-  public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
+  public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
     this.localState.setFragmentMatcher(fragmentMatcher);
   }
 

@@ -581,7 +581,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public runInitializers(
     initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
   ) {
-    this.localState.runInitializers(initializers);
+    return this.localState.runInitializers(initializers);
   }
 
   /**

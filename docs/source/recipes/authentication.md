@@ -38,7 +38,7 @@ app.use(cors(corsOptions));
 Another common way to identify yourself when using HTTP is to send along an authorization header. It's easy to add an `authorization` header to every HTTP request by chaining together Apollo Links. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
 ```js
-import { ApolloClient } from 'apollo-client';
+import ApolloClient from 'apollo-boost';
 import { createHttpLink } from 'apollo-link-http';
 import { setContext } from 'apollo-link-context';
 import { InMemoryCache } from 'apollo-cache-inmemory';

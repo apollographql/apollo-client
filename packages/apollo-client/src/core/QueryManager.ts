@@ -943,6 +943,13 @@ export class QueryManager<TStore> {
               }
             });
           },
+          complete: () => {
+            observers.forEach(obs => {
+              if (obs.complete) {
+                obs.complete();
+              }
+            });
+          }
         };
 
         // TODO: Should subscriptions also accept a `context` option to pass

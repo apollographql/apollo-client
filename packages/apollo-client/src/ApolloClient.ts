@@ -12,7 +12,6 @@ import {
   isProduction,
   removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
-import { FragmentMatcher } from 'graphql-anywhere';
 
 import { QueryManager } from './core/QueryManager';
 import {
@@ -22,7 +21,7 @@ import {
   Resolvers,
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
-import { LocalState } from './core/LocalState';
+import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
 
 import {

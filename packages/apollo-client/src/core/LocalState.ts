@@ -3,8 +3,12 @@ import {
   DocumentNode,
   OperationDefinitionNode,
   print,
+  SelectionSetNode,
+  SelectionNode,
+  InlineFragmentNode,
+  FragmentDefinitionNode,
+  FieldNode,
 } from 'graphql';
-import graphql, { Resolver, FragmentMatcher } from 'graphql-anywhere';
 import { ApolloCache } from 'apollo-cache';
 import {
   getMainDefinition,
@@ -13,11 +17,63 @@ import {
   removeClientSetsFromDocument,
   mergeDeep,
   warnOnceInDevelopment,
+  FragmentMap,
+  DirectiveInfo,
+  argumentsObjectFromField,
+  resultKeyNameFromField,
+  getDirectiveInfoFromField,
+  getFragmentDefinitions,
+  createFragmentMap,
+  shouldInclude,
+  isField,
+  isInlineFragment,
 } from 'apollo-utilities';
 
 import ApolloClient from '../ApolloClient';
 import { Initializers, Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
+
+export type Resolver = (
+  fieldName: string,
+  rootValue: any,
+  args: any,
+  context: any,
+  info: ExecInfo,
+) => any;
+
+export type VariableMap = { [name: string]: any };
+
+export type ResultMapper = (
+  values: { [fieldName: string]: any },
+  rootValue: any,
+) => any;
+
+export type FragmentMatcher = (
+  rootValue: any,
+  typeCondition: string,
+  context: any,
+) => boolean;
+
+export type ExecContext = {
+  fragmentMap: FragmentMap;
+  context: any;
+  variables: VariableMap;
+  resultMapper?: ResultMapper;
+  fragmentMatcher: FragmentMatcher;
+  defaultOperationType?: string | null;
+  exportedVariables: Record<string, any>;
+};
+
+export type ExecInfo = {
+  isLeaf: boolean;
+  resultKey: string;
+  directives: DirectiveInfo;
+};
+
+export type ExecOptions = {
+  resultMapper?: ResultMapper;
+  fragmentMatcher?: FragmentMatcher;
+};
 
 export class LocalState<TCacheShape> {
   private cache: ApolloCache<TCacheShape>;
@@ -144,13 +200,13 @@ export class LocalState<TCacheShape> {
   // and returned. Note that locally resolved fields will overwrite
   // remote data using the same field name.
   public runResolvers({
-    query,
+    document,
     remoteResult,
     context,
     variables,
     onError,
   }: {
-    query: DocumentNode | null;
+    document: DocumentNode | null;
     remoteResult?: ExecutionResult;
     context?: Record<string, any>;
     variables?: Record<string, any>;
@@ -158,30 +214,27 @@ export class LocalState<TCacheShape> {
   }) {
     let localResult: Record<string, any> = {};
 
-    if (query) {
-      const { resolver } = this.prepareResolver(query);
-      if (resolver) {
-        let rootValue = this.buildRootValueFromCache(query, variables);
-        rootValue = rootValue
-          ? mergeDeep(rootValue, remoteResult)
-          : remoteResult;
+    if (document) {
+      let rootValue = this.buildRootValueFromCache(document, variables);
+      rootValue = rootValue
+        ? mergeDeep(rootValue, remoteResult)
+        : remoteResult;
 
-        try {
-          localResult = graphql(
-            resolver,
-            query,
-            rootValue,
-            context,
-            variables,
-            { fragmentMatcher: this.fragmentMatcher },
-          );
-        } catch (error) {
-          if (onError) {
-            onError(error);
-            return;
-          } else {
-            throw error;
-          }
+      try {
+        const data = this.resolveDocument(
+          document,
+          rootValue,
+          context,
+          variables,
+          { fragmentMatcher: this.fragmentMatcher },
+        );
+        localResult = data.result;
+      } catch (error) {
+        if (onError) {
+          onError(error);
+          return;
+        } else {
+          throw error;
         }
       }
     }
@@ -259,26 +312,22 @@ export class LocalState<TCacheShape> {
     variables: OperationVariables = {},
     context = {},
   ) {
-    let exportedVariables: { [fieldName: string]: string } = {};
+    let exportedVariables: Record<string, string> = {};
 
     if (
       document &&
       hasDirectives(['client'], document) &&
       hasDirectives(['export'], document)
     ) {
-      const preparedResolver = this.prepareResolver(document);
-      if (preparedResolver.resolver) {
-        const rootValue = this.buildRootValueFromCache(document, variables);
-        const updatedContext = this.prepareContext(context);
-        graphql(
-          preparedResolver.resolver,
-          document,
-          rootValue || {},
-          updatedContext,
-          variables,
-        );
-        exportedVariables = preparedResolver.exportedVariables;
-      }
+      const rootValue = this.buildRootValueFromCache(document, variables);
+      const updatedContext = this.prepareContext(context);
+      const data = this.resolveDocument(
+        document,
+        rootValue || {},
+        updatedContext,
+        variables,
+      );
+      exportedVariables = data.exportedVariables;
     }
 
     return {
@@ -331,109 +380,6 @@ export class LocalState<TCacheShape> {
     }
   }
 
-  // Prepare and return a local resolver function, that can be used to
-  // resolve @client fields.
-  private prepareResolver(query: DocumentNode | null) {
-    let resolver: Resolver | null = null;
-    const exportedVariables: Record<string, any> = {};
-
-    if (!query) {
-      return {
-        resolver,
-        exportedVariables,
-      };
-    }
-
-    const definition = getMainDefinition(query);
-    const definitionOperation = (<OperationDefinitionNode>definition).operation;
-    let type: string | null = definitionOperation
-      ? capitalizeFirstLetter(definitionOperation)
-      : 'Query';
-    const { cache, client } = this;
-
-    resolver = (
-      fieldName: string,
-      rootValue: any = {},
-      args: any,
-      context: any,
-      info: any,
-    ) => {
-      const { resultKey } = info;
-
-      // If an @export directive is associated with the current field, store
-      // the `as` export variable name for later use.
-      let exportedVariable;
-      if (info.directives && info.directives.export) {
-        exportedVariable = info.directives.export.as;
-      }
-
-      // To add a bit of flexibility, we'll try resolving data in root value
-      // objects, as well as an object pointed to by the first root
-      // value property (if it exists). This means we're resolving using
-      // { property1: '', property2: '', ... } objects, as well as
-      // { someField: { property1: '', property2: '', ... } } objects.
-      let childRootValue: { [key: string]: any } = {};
-      let rootValueKey = Object.keys(rootValue)[0];
-      if (rootValueKey) {
-        childRootValue = rootValue[rootValueKey];
-      }
-
-      let normalNode =
-        rootValue[fieldName] !== undefined
-          ? rootValue[fieldName]
-          : childRootValue[fieldName];
-      let aliasedNode =
-        rootValue[resultKey] !== undefined
-          ? rootValue[resultKey]
-          : childRootValue[resultKey];
-
-      const aliasUsed = resultKey !== fieldName;
-      const field = aliasUsed ? fieldName : resultKey;
-
-      // Make sure the context has access to the cache and query/mutate
-      // functions, so resolvers can use them.
-      const updatedContext = {
-        ...context,
-        cache,
-        client,
-      };
-
-      let result;
-
-      // If a local resolver function is defined, run it and return the
-      // outcome.
-      const resolverType = rootValue.__typename || type;
-      const resolverMap = (this.resolvers as any)[resolverType];
-      if (resolverMap) {
-        const resolve = resolverMap[field];
-        if (resolve) {
-          result = resolve(rootValue, args, updatedContext, info);
-        }
-      }
-
-      if (result === undefined) {
-        // If we were able to find a matching field in the root value, return
-        // that value as the resolved value.
-        if (normalNode !== undefined || aliasedNode !== undefined) {
-          result = aliasedNode || normalNode;
-        }
-      }
-
-      // If an @export directive is associated with this field, store
-      // the calculated result for later use.
-      if (exportedVariable) {
-        exportedVariables[exportedVariable] = result;
-      }
-
-      return result;
-    };
-
-    return {
-      resolver,
-      exportedVariables,
-    };
-  }
-
   // Query the cache and return matching data.
   private buildRootValueFromCache(
     document: DocumentNode,
@@ -457,5 +403,210 @@ export class LocalState<TCacheShape> {
       .map(typeDef => (typeof typeDef === 'string' ? typeDef : print(typeDef)))
       .map(str => str.trim())
       .join('\n');
+  }
+
+  private resolveDocument(
+    document: DocumentNode,
+    rootValue?: any,
+    context?: any,
+    variables?: VariableMap,
+    execOptions: ExecOptions = {},
+  ) {
+    const mainDefinition = getMainDefinition(document);
+    const fragments = getFragmentDefinitions(document);
+    const fragmentMap = createFragmentMap(fragments);
+    const resultMapper = execOptions.resultMapper;
+
+    const definitionOperation =
+      (<OperationDefinitionNode>mainDefinition).operation;
+    let defaultOperationType: string | null = definitionOperation
+      ? capitalizeFirstLetter(definitionOperation)
+      : 'Query';
+
+    // Default matcher always matches all fragments.
+    const fragmentMatcher = execOptions.fragmentMatcher || (() => true);
+
+    const { cache, client } = this;
+    const execContext: ExecContext = {
+      fragmentMap,
+      context: {
+        ...(context || {}),
+        cache,
+        client,
+      },
+      variables: variables || {},
+      resultMapper,
+      fragmentMatcher,
+      defaultOperationType,
+      exportedVariables: {},
+    };
+
+    const result = this.resolveSelectionSet(
+      mainDefinition.selectionSet,
+      rootValue,
+      execContext,
+    );
+
+    return {
+      result,
+      exportedVariables: execContext.exportedVariables,
+    };
+  }
+
+  private resolveSelectionSet(
+    selectionSet: SelectionSetNode,
+    rootValue: any,
+    execContext: ExecContext,
+  ) {
+    const { fragmentMap, context, variables } = execContext;
+    const result: Record<string, any> = {};
+
+    selectionSet.selections.forEach((selection: SelectionNode) => {
+      if (!shouldInclude(selection, variables)) {
+        // Skip this entirely.
+        return;
+      }
+
+      if (isField(selection)) {
+        const fieldResult = this.resolveField(selection, rootValue, execContext);
+        const resultFieldKey = resultKeyNameFromField(selection);
+
+        if (fieldResult !== undefined) {
+          if (result[resultFieldKey] === undefined) {
+            result[resultFieldKey] = fieldResult;
+          } else {
+            this.mergeIntoResults(result[resultFieldKey], fieldResult);
+          }
+        }
+      } else {
+        let fragment: InlineFragmentNode | FragmentDefinitionNode;
+
+        if (isInlineFragment(selection)) {
+          fragment = selection;
+        } else {
+          // This is a named fragment.
+          fragment = fragmentMap[selection.name.value];
+          if (!fragment) {
+            throw new Error(`No fragment named ${selection.name.value}`);
+          }
+        }
+
+        if (fragment && fragment.typeCondition) {
+          const typeCondition = fragment.typeCondition.name.value;
+          if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
+            const fragmentResult = this.resolveSelectionSet(
+              fragment.selectionSet,
+              rootValue,
+              execContext,
+            );
+            this.mergeIntoResults(result, fragmentResult);
+          }
+        }
+      }
+    });
+
+    return execContext.resultMapper
+      ? execContext.resultMapper(result, rootValue)
+      : result;
+  }
+
+  private resolveField(
+    field: FieldNode,
+    rootValue: any,
+    execContext: ExecContext,
+  ): any {
+    const { variables } = execContext;
+    const fieldName = field.name.value;
+    const args = argumentsObjectFromField(field, variables);
+
+    const aliasedFieldName = resultKeyNameFromField(field);
+    const info: ExecInfo = {
+      isLeaf: !field.selectionSet,
+      resultKey: aliasedFieldName,
+      directives: getDirectiveInfoFromField(field, variables),
+    };
+
+    const aliasUsed = fieldName !== aliasedFieldName;
+
+    let result;
+    const resolverType =
+      rootValue.__typename || execContext.defaultOperationType;
+    const resolverMap = (this.resolvers as any)[resolverType];
+    if (resolverMap) {
+      const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
+      if (resolve) {
+        result = resolve(rootValue, args, execContext.context, info);
+      }
+    }
+
+    if (result === undefined) {
+      result = rootValue[aliasedFieldName] || rootValue[fieldName];
+    }
+
+    // If an @export directive is associated with the current field, store
+    // the `as` export variable name and current result for later use.
+    if (info.directives && info.directives.export) {
+      const exportedVariable = info.directives.export.as;
+      execContext.exportedVariables[exportedVariable] = result;
+    }
+
+    // Handle all scalar types here.
+    if (!field.selectionSet) {
+      return result;
+    }
+
+    // From here down, the field has a selection set, which means it's trying
+    // to query a GraphQLObjectType.
+    if (result == null) {
+      // Basically any field in a GraphQL response can be null, or missing
+      return result;
+    }
+
+    if (Array.isArray(result)) {
+      return this.resolveSubSelectedArray(field, result, execContext);
+    }
+
+    // Returned value is an object, and the query has a sub-selection. Recurse.
+    if (field.selectionSet) {
+      return this.resolveSelectionSet(field.selectionSet, result, execContext);
+    }
+  }
+
+  private resolveSubSelectedArray(
+    field: FieldNode,
+    result: any,
+    execContext: ExecContext,
+  ): any {
+    return result.map((item: any) => {
+      if (item === null) {
+        return null;
+      }
+
+      // This is a nested array, recurse.
+      if (Array.isArray(item)) {
+        return this.resolveSubSelectedArray(field, item, execContext);
+      }
+
+      // This is an object, run the selection set on it.
+      if (field.selectionSet) {
+        return this.resolveSelectionSet(field.selectionSet, item, execContext);
+      }
+    });
+  }
+
+  private mergeIntoResults(
+    dest: Record<string, any>,
+    src: Record<string, any>
+  ) {
+    if (src !== null && typeof src === 'object') {
+      Object.keys(src).forEach((key: string) => {
+        const srcVal = src[key];
+        if (!Object.prototype.hasOwnProperty.call(dest, key)) {
+          dest[key] = srcVal;
+        } else {
+          this.mergeIntoResults(dest[key], srcVal);
+        }
+      });
+    }
   }
 }

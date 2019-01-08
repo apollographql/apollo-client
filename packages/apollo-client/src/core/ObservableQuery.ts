@@ -127,7 +127,7 @@ export class ObservableQuery<
             const { query, variables, context } = that.options;
             const localState = that.queryManager.getLocalState();
             const modifiedData = localState.runResolvers({
-              query,
+              document: query,
               remoteResult: result.data,
               context,
               variables,

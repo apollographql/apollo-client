@@ -296,7 +296,7 @@ export class QueryManager<TStore> {
 
           // Run the query through local client resolvers.
           updatedResult.data = self.localState.runResolvers({
-            query: clientQuery,
+            document: clientQuery,
             remoteResult: result.data,
             context,
             variables,
@@ -967,7 +967,7 @@ export class QueryManager<TStore> {
 
             // Run the query through local client resolvers.
             updatedResult.data = this.localState.runResolvers({
-              query: clientQuery,
+              document: clientQuery,
               remoteResult: result.data,
               context: {},
               variables,
@@ -1199,7 +1199,7 @@ export class QueryManager<TStore> {
           if (requestId >= (lastRequestId || 1)) {
             // Run the query through local client resolvers.
             updatedResult.data = this.localState.runResolvers({
-              query: clientQuery,
+              document: clientQuery,
               remoteResult: result.data,
               context: updatedContext,
               variables,

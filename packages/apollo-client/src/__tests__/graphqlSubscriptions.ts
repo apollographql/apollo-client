@@ -261,7 +261,6 @@ describe('GraphQL Subscriptions', () => {
 
   it('should call complete handler when the subscription completes', done => {
     const link = mockObservableLink();
-    // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -270,8 +269,6 @@ describe('GraphQL Subscriptions', () => {
 
     let count = 0;
     const sub = client.subscribe(defaultOptions).subscribe({
-      next(result) {
-      },
       complete() {
         completeFn();
       }
@@ -280,8 +277,5 @@ describe('GraphQL Subscriptions', () => {
     link.simulateComplete();
     expect(completeFn).toHaveBeenCalled();
     done();
-
   });
-
-
 });

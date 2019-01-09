@@ -1007,6 +1007,13 @@ export class QueryManager<TStore> {
               }
             });
           },
+          complete: () => {
+            observers.forEach(obs => {
+              if (obs.complete) {
+                obs.complete();
+              }
+            });
+          }
         };
 
         const updatedVariables: OperationVariables = this.localState.addExportedVariables(

@@ -17,6 +17,7 @@ const globals = {
   'fast-json-stable-stringify': 'stringify',
   'graphql-tag': 'gql',
   'apollo-utilities': 'apolloUtilities',
+  optimism: 'optimism',
 };
 
 export default {

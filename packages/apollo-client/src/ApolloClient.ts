@@ -60,7 +60,6 @@ export type ApolloClientOptions<TCacheShape> = {
  * to GraphQL queries through {@link Observable} instances.
  */
 export default class ApolloClient<TCacheShape> implements DataProxy {
-  public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
   public queryManager: QueryManager<TCacheShape> | undefined;
@@ -69,12 +68,40 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions = {};
 
+  private _link: ApolloLink;
   private devToolsHookCb: Function;
   private proxy: ApolloCache<TCacheShape> | undefined;
   private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
   private clientAwareness: Record<string, string> = {};
+
+  public get link(): ApolloLink {
+    return this._link;
+  }
+
+  public set link(newLink: ApolloLink) {
+    const supportedCache = new Map<DocumentNode, DocumentNode>();
+    const supportedDirectives = new ApolloLink(
+      (operation: Operation, forward: NextLink) => {
+        let result = supportedCache.get(operation.query);
+        if (!result) {
+          result = removeConnectionDirectiveFromDocument(operation.query);
+          supportedCache.set(operation.query, result);
+          supportedCache.set(result, result);
+        }
+        operation.query = result;
+        return forward(operation);
+      },
+    );
+
+    // remove apollo-client supported directives
+    this._link = supportedDirectives.concat(newLink);
+
+    if (this.queryManager) {
+      this.queryManager.link = this._link;
+    }
+  }
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -127,22 +154,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       `);
     }
 
-    const supportedCache = new Map<DocumentNode, DocumentNode>();
-    const supportedDirectives = new ApolloLink(
-      (operation: Operation, forward: NextLink) => {
-        let result = supportedCache.get(operation.query);
-        if (!result) {
-          result = removeConnectionDirectiveFromDocument(operation.query);
-          supportedCache.set(operation.query, result);
-          supportedCache.set(result, result);
-        }
-        operation.query = result;
-        return forward(operation);
-      },
-    );
-
-    // remove apollo-client supported directives
-    this.link = supportedDirectives.concat(link);
+    this.link = link;
     this.cache = cache;
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;

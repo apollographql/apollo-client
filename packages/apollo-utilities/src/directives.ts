@@ -141,3 +141,11 @@ export function hasDirectives(names: string[], doc: DocumentNode) {
     (name: string) => names.indexOf(name) > -1,
   );
 }
+
+export function hasClientExports(document: DocumentNode) {
+  return (
+    document &&
+    hasDirectives(['client'], document) &&
+    hasDirectives(['export'], document)
+  );
+}

@@ -199,7 +199,7 @@ export class LocalState<TCacheShape> {
   // Locally resolved field values are merged with the incoming remote data,
   // and returned. Note that locally resolved fields will overwrite
   // remote data using the same field name.
-  public runResolvers({
+  public async runResolvers({
     document,
     remoteResult,
     context,
@@ -216,12 +216,10 @@ export class LocalState<TCacheShape> {
 
     if (document) {
       let rootValue = this.buildRootValueFromCache(document, variables);
-      rootValue = rootValue
-        ? mergeDeep(rootValue, remoteResult)
-        : remoteResult;
+      rootValue = rootValue ? mergeDeep(rootValue, remoteResult) : remoteResult;
 
       try {
-        const data = this.resolveDocument(
+        const data = await this.resolveDocument(
           document,
           rootValue,
           context,
@@ -307,21 +305,17 @@ export class LocalState<TCacheShape> {
   // To support `@client @export(as: "someVar")` syntax, we'll first resolve
   // @client @export fields locally, then pass the resolved values back to be
   // used alongside the original operation variables.
-  public addExportedVariables(
+  public async addExportedVariables(
     document: DocumentNode,
     variables: OperationVariables = {},
     context = {},
   ) {
     let exportedVariables: Record<string, string> = {};
 
-    if (
-      document &&
-      hasDirectives(['client'], document) &&
-      hasDirectives(['export'], document)
-    ) {
+    if (document) {
       const rootValue = this.buildRootValueFromCache(document, variables);
       const updatedContext = this.prepareContext(context);
-      const data = this.resolveDocument(
+      const data = await this.resolveDocument(
         document,
         rootValue || {},
         updatedContext,
@@ -372,10 +366,10 @@ export class LocalState<TCacheShape> {
     if (alreadyFired.length > 0) {
       warnOnceInDevelopment(
         "You're attempting to re-fire initializers for fields that have " +
-        'already been initalized once. These repeat initializer calls have ' +
-        'been ignored. If you really want them to run again, ' +
-        'call `ApolloClient.resetInitializers()` first. ' +
-        `Fields: ${alreadyFired.join(', ')}`
+          'already been initalized once. These repeat initializer calls have ' +
+          'been ignored. If you really want them to run again, ' +
+          'call `ApolloClient.resetInitializers()` first. ' +
+          `Fields: ${alreadyFired.join(', ')}`,
       );
     }
   }
@@ -405,7 +399,7 @@ export class LocalState<TCacheShape> {
       .join('\n');
   }
 
-  private resolveDocument(
+  private async resolveDocument(
     document: DocumentNode,
     rootValue?: any,
     context?: any,
@@ -417,8 +411,8 @@ export class LocalState<TCacheShape> {
     const fragmentMap = createFragmentMap(fragments);
     const resultMapper = execOptions.resultMapper;
 
-    const definitionOperation =
-      (<OperationDefinitionNode>mainDefinition).operation;
+    const definitionOperation = (<OperationDefinitionNode>mainDefinition)
+      .operation;
     let defaultOperationType: string | null = definitionOperation
       ? capitalizeFirstLetter(definitionOperation)
       : 'Query';
@@ -441,7 +435,7 @@ export class LocalState<TCacheShape> {
       exportedVariables: {},
     };
 
-    const result = this.resolveSelectionSet(
+    const result = await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       rootValue,
       execContext,
@@ -453,7 +447,7 @@ export class LocalState<TCacheShape> {
     };
   }
 
-  private resolveSelectionSet(
+  private async resolveSelectionSet(
     selectionSet: SelectionSetNode,
     rootValue: any,
     execContext: ExecContext,
@@ -461,14 +455,18 @@ export class LocalState<TCacheShape> {
     const { fragmentMap, context, variables } = execContext;
     const result: Record<string, any> = {};
 
-    selectionSet.selections.forEach((selection: SelectionNode) => {
+    const execute = async (selection: SelectionNode) => {
       if (!shouldInclude(selection, variables)) {
         // Skip this entirely.
         return;
       }
 
       if (isField(selection)) {
-        const fieldResult = this.resolveField(selection, rootValue, execContext);
+        const fieldResult = await this.resolveField(
+          selection,
+          rootValue,
+          execContext,
+        );
         const resultFieldKey = resultKeyNameFromField(selection);
 
         if (fieldResult !== undefined) {
@@ -494,7 +492,7 @@ export class LocalState<TCacheShape> {
         if (fragment && fragment.typeCondition) {
           const typeCondition = fragment.typeCondition.name.value;
           if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
-            const fragmentResult = this.resolveSelectionSet(
+            const fragmentResult = await this.resolveSelectionSet(
               fragment.selectionSet,
               rootValue,
               execContext,
@@ -503,18 +501,22 @@ export class LocalState<TCacheShape> {
           }
         }
       }
-    });
+
+      return Promise.resolve(undefined);
+    };
+
+    await Promise.all(selectionSet.selections.map(execute));
 
     return execContext.resultMapper
       ? execContext.resultMapper(result, rootValue)
       : result;
   }
 
-  private resolveField(
+  private async resolveField(
     field: FieldNode,
     rootValue: any,
     execContext: ExecContext,
-  ): any {
+  ): Promise<any> {
     const { variables } = execContext;
     const fieldName = field.name.value;
     const args = argumentsObjectFromField(field, variables);
@@ -535,7 +537,7 @@ export class LocalState<TCacheShape> {
     if (resolverMap) {
       const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
       if (resolve) {
-        result = resolve(rootValue, args, execContext.context, info);
+        result = await resolve(rootValue, args, execContext.context, info);
       }
     }
 
@@ -577,26 +579,28 @@ export class LocalState<TCacheShape> {
     result: any,
     execContext: ExecContext,
   ): any {
-    return result.map((item: any) => {
-      if (item === null) {
-        return null;
-      }
+    return Promise.all(
+      result.map((item: any) => {
+        if (item === null) {
+          return null;
+        }
 
-      // This is a nested array, recurse.
-      if (Array.isArray(item)) {
-        return this.resolveSubSelectedArray(field, item, execContext);
-      }
+        // This is a nested array, recurse.
+        if (Array.isArray(item)) {
+          return this.resolveSubSelectedArray(field, item, execContext);
+        }
 
-      // This is an object, run the selection set on it.
-      if (field.selectionSet) {
-        return this.resolveSelectionSet(field.selectionSet, item, execContext);
-      }
-    });
+        // This is an object, run the selection set on it.
+        if (field.selectionSet) {
+          return this.resolveSelectionSet(field.selectionSet, item, execContext);
+        }
+      }),
+    );
   }
 
   private mergeIntoResults(
     dest: Record<string, any>,
-    src: Record<string, any>
+    src: Record<string, any>,
   ) {
     if (src !== null && typeof src === 'object') {
       Object.keys(src).forEach((key: string) => {

@@ -45,31 +45,43 @@ describe('Basic functionality', () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { field: 0 } }, { data: { field: 1 } }),
+      Observable.of({ data: { field: 1 } }, { data: { field: 2 } }),
     );
 
-    let counter = 0;
+    let subCounter = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
       resolvers: {
         Subscription: {
-          count: () => counter,
+          count: () => {
+            subCounter += 1;
+            return subCounter;
+          }
         },
       },
     });
 
-    return client.subscribe({ query }).forEach(item => {
-      expect(item).toMatchObject({
-        data: {
-          field: counter,
-          count: counter,
-        },
-      });
-      if (counter === 1) {
+    expect.assertions(2);
+    const obs = client.subscribe({ query });
+    let resultCounter = 1;
+    obs.subscribe({
+      next(result) {
+        try {
+          expect(result).toMatchObject({
+            data: {
+              field: resultCounter,
+              count: resultCounter,
+            },
+          });
+        } catch (error) {
+          done.fail(error);
+        }
+        resultCounter += 1;
+      },
+      complete() {
         done();
       }
-      counter += 1;
     });
   });
 });

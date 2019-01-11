@@ -827,3 +827,81 @@ describe('Force local resolvers', () => {
     },
   );
 });
+
+describe('Async resolvers', () => {
+  it('should support async @client resolvers', async (done) => {
+    const query = gql`
+      query Member {
+        isLoggedIn @client
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      resolvers: {
+        Query: {
+          isLoggedIn() {
+            return Promise.resolve(true);
+          },
+        },
+      },
+    });
+
+    const { data: { isLoggedIn } } = await client.query({ query });
+    expect(isLoggedIn).toBe(true);
+    return done();
+  });
+
+  it(
+    'should support async @client resolvers mixed with remotely resolved data',
+    async (done) => {
+      const query = gql`
+        query Member {
+          member {
+            name
+            sessionCount @client
+            isLoggedIn @client
+          }
+        }
+      `;
+
+      const testMember = {
+        name: 'John Smithsonian',
+        isLoggedIn: true,
+        sessionCount: 10,
+      }
+
+      const link = new ApolloLink(() =>
+        Observable.of({
+          data: {
+            member: {
+              name: testMember.name,
+              __typename: 'Member'
+            }
+          }
+        }),
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+        resolvers: {
+          Member: {
+            isLoggedIn() {
+              return Promise.resolve(testMember.isLoggedIn);
+            },
+            sessionCount() {
+              return testMember.sessionCount;
+            },
+          },
+        },
+      });
+
+      const { data: { member } } = await client.query({ query });
+      expect(member.name).toBe(testMember.name);
+      expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
+      expect(member.sessionCount).toBe(testMember.sessionCount);
+      return done();
+    }
+  );
+});

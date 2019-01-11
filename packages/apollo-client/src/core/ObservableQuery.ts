@@ -117,7 +117,7 @@ export class ObservableQuery<
     return new Promise((resolve, reject) => {
       let subscription: Subscription;
       const observer: Observer<ApolloQueryResult<TData>> = {
-        next(result: ApolloQueryResult<TData>) {
+        async next(result: ApolloQueryResult<TData>) {
           // If a local resolver policy of `resolver-always` is set, fire all
           // local resolvers using the current result as the starting data
           // set. Override the result data with the local resolver
@@ -126,7 +126,7 @@ export class ObservableQuery<
           if (that.options.resolverPolicy === 'resolver-always') {
             const { query, variables, context } = that.options;
             const localState = that.queryManager.getLocalState();
-            const modifiedData = localState.runResolvers({
+            const modifiedData = await localState.runResolvers({
               document: query,
               remoteResult: result.data,
               context,

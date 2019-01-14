@@ -12,4 +12,3 @@ export * from './util/maybeDeepFreeze';
 export * from './util/warnOnce';
 export * from './util/stripSymbols';
 export * from './util/mergeDeep';
-

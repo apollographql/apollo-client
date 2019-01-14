@@ -15,7 +15,8 @@ import { visit } from 'graphql/language/visitor';
 
 import {
   checkDocument,
-  getOperationDefinitionOrDie,
+  getOperationDefinition,
+  getFragmentDefinition,
   getFragmentDefinitions,
   createFragmentMap,
   FragmentMap,
@@ -67,7 +68,7 @@ function isEmpty(
 
 function nullIfDocIsEmpty(doc: DocumentNode) {
   return isEmpty(
-    getOperationDefinitionOrDie(doc),
+    getOperationDefinition(doc) || getFragmentDefinition(doc),
     createFragmentMap(getFragmentDefinitions(doc)),
   )
     ? null

@@ -102,7 +102,7 @@
     "codecov": "3.1.0",
     "danger": "7.0.2",
     "fetch-mock": "7.3.0",
-    "flow-bin": "0.89.0",
+    "flow-bin": "0.90.0",
     "graphql": "14.0.2",
     "graphql-tag": "2.10.0",
     "isomorphic-fetch": "2.2.1",

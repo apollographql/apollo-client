@@ -1,5 +1,5 @@
-// Provides the methods that allow QueryManager to handle
-// the `skip` and `include` directives within GraphQL.
+// Provides the methods that allow QueryManager to handle the `skip` and
+// `include` directives within GraphQL.
 import {
   FieldNode,
   OperationDefinitionNode,

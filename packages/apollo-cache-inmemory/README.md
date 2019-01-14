@@ -318,4 +318,3 @@ client.mutate({
 As you can see the `update` function on `client.mutate` provides extra change management functionality specific to the use case of a mutation while still providing you the powerful data control APIs that are available on `client`.
 
 The `update` function is not a good place for side-effects as it may be called multiple times. Also, you may not call any of the methods on `proxy` asynchronously.
-

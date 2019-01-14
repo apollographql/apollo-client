@@ -29,3 +29,4 @@ export { ApolloClientOptions, DefaultOptions };
 // Export the client as both default and named.
 export { ApolloClient };
 export default ApolloClient;
+

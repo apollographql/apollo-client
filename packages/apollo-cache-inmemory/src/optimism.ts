@@ -1,5 +1,3 @@
-/// <reference path="./declarations.d.ts" />
-
 export type OptimisticWrapperFunction<
   T = (...args: any[]) => any
 > = T & {

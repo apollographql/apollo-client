@@ -19,6 +19,8 @@ query GetPerson {
 }
 ```
 
+It's important to note that the component after the `on` clause is designated for the type we are selecting from. In this case, `people` is of type `Person` and we want to select the `firstName` and `lastName` fields from `people(id: "7)`.
+
 There are two principal uses for fragments in Apollo:
 
   - Sharing fields between multiple queries, mutations or subscriptions.

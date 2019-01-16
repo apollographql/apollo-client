@@ -39,6 +39,7 @@ That's it! Now your client is ready to start fetching data. Before we hook up Ap
 
 ```js
 import { gql } from "apollo-boost";
+// or you can use `import gql from 'graphql-tag';` instead
 
 ...
 

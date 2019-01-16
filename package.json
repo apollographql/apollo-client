@@ -37,19 +37,9 @@
       "maxSize": "10.25 kB"
     },
     {
-      "name": "apollo-boost",
-      "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "35 kB"
-    },
-    {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
       "maxSize": "5 kB"
-    },
-    {
-      "name": "graphql-anywhere",
-      "path": "./packages/graphql-anywhere/lib/bundle.min.js",
-      "maxSize": "1.25 kB"
     }
   ],
   "jest": {

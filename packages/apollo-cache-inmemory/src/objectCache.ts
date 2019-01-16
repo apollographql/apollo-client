@@ -1,23 +1,28 @@
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 
 export class ObjectCache implements NormalizedCache {
-  constructor(private data: NormalizedCacheObject = Object.create(null)) {}
-  public toObject(): NormalizedCacheObject {
+  constructor(protected data: NormalizedCacheObject = Object.create(null)) {}
+
+  public toObject() {
     return this.data;
   }
-  public get(dataId: string): StoreObject {
+  public get(dataId: string) {
     return this.data[dataId];
   }
+
   public set(dataId: string, value: StoreObject) {
     this.data[dataId] = value;
   }
-  public delete(dataId: string): void {
-    this.data[dataId] = undefined;
+
+  public delete(dataId: string) {
+    this.data[dataId] = void 0;
   }
-  public clear(): void {
+
+  public clear() {
     this.data = Object.create(null);
   }
-  public replace(newData: NormalizedCacheObject): void {
+
+  public replace(newData: NormalizedCacheObject) {
     this.data = newData || Object.create(null);
   }
 }

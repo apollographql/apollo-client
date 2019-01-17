@@ -52,6 +52,8 @@ const hasOwn = Object.prototype.hasOwnProperty;
 export class OptimisticCacheLayer extends ObjectCache {
   constructor(
     public readonly optimisticId: string,
+    // OptimisticCacheLayer objects always wrap some other parent cache, so
+    // this.parent should never be null.
     public readonly parent: NormalizedCache,
     public readonly transaction: Transaction<NormalizedCacheObject>,
   ) {
@@ -59,19 +61,19 @@ export class OptimisticCacheLayer extends ObjectCache {
   }
 
   public toObject(): NormalizedCacheObject {
-    return this.parent ? {
+    return {
       ...this.parent.toObject(),
       ...this.data,
-    } : this.data;
+    };
   }
 
+  // All the other accessor methods of ObjectCache work without knowing about
+  // this.parent, but the get method needs to be overridden to implement the
+  // fallback this.parent.get(dataId) behavior.
   public get(dataId: string) {
-    if (hasOwn.call(this.data, dataId)) {
-      return this.data[dataId];
-    }
-    if (this.parent) {
-      return this.parent.get(dataId);
-    }
+    return hasOwn.call(this.data, dataId)
+      ? this.data[dataId]
+      : this.parent.get(dataId);
   }
 }
 
@@ -112,9 +114,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.addTypename = this.config.addTypename;
 
+    // Passing { resultCaching: false } in the InMemoryCache constructor options
+    // will completely disable dependency tracking, which will improve memory
+    // usage but worsen the performance of repeated reads.
     this.data = this.config.resultCaching
       ? new DepTrackingCache()
       : new ObjectCache();
+
+    // When no optimistic writes are currently active, cache.optimisticData ===
+    // cache.data, so there are no additional layers on top of the actual data.
+    // When an optimistic update happens, this.optimisticData will become a
+    // linked list of OptimisticCacheLayer objects that terminates with the
+    // original this.data cache object.
     this.optimisticData = this.data;
 
     this.storeReader = new StoreReader(this.cacheKeyRoot);
@@ -162,7 +173,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    if (options.rootId && this.data.get(options.rootId) === undefined) {
+    if (typeof options.rootId === 'string' &&
+        typeof this.data.get(options.rootId) === 'undefined') {
       return null;
     }
 
@@ -253,6 +265,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public performTransaction(
     transaction: Transaction<NormalizedCacheObject>,
+    // This parameter is not part of the performTransaction signature inherited
+    // from the ApolloCache abstract class, but it's useful because it saves us
+    // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
     const { data, silenceBroadcast } = this;
@@ -262,6 +277,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // Add a new optimistic layer and temporarily make this.data refer to
       // that layer for the duration of the transaction.
       this.data = this.optimisticData = new OptimisticCacheLayer(
+        // Note that there can be multiple layers with the same optimisticId.
+        // When removeOptimistic(id) is called for that id, all matching layers
+        // will be removed, and the remaining layers will be reapplied.
         optimisticId,
         this.optimisticData,
         transaction,
@@ -275,7 +293,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.data = data;
     }
 
-    // This broadcast does nothing if this.silenceBroadcast is true:
+    // This broadcast does nothing if this.silenceBroadcast is true.
     this.broadcastWatches();
   }
 
@@ -353,9 +371,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   protected broadcastWatches() {
     if (!this.silenceBroadcast) {
-      this.watches.forEach((c: Cache.WatchOptions) => {
-        this.maybeBroadcastWatch(c);
-      });
+      this.watches.forEach(c => this.maybeBroadcastWatch(c));
     }
   }
 

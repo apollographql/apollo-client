@@ -2,19 +2,25 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Client (vNext)
+## Apollo Client (2.4.9)
+
+### Apollo Client (2.4.9)
 
 - Apollo Client has been updated to use `graphql` 14.x as a dev dependency.  <br/>
   [@hwillson](https://github.com/hwillson) in [#4233](https://github.com/apollographql/apollo-client/pull/4233)
+
 - The `onClearStore` function can now be used to register callbacks that should
   be triggered when calling `clearStore`.  <br/>
   [@joe-re](https://github.com/joe-re) in [#4082](https://github.com/apollographql/apollo-client/pull/4082)
+
 - Make `isApolloError` available for external use.  <br/>
   [@FredyC](https://github.com/FredyC) in [#4223](https://github.com/apollographql/apollo-client/pull/4223)
+
 - The `QueryManager` now calls `complete` on the observables used by
   Apollo Client's Subscription handling. This gives finite subscriptions a
   chance to handle cleanup.  <br/>
   [@sujeetsr](https://github.com/sujeetsr) in [#4290](https://github.com/apollographql/apollo-client/pull/4290)
+
 - Documentation updates.  <br/>
   [@lifedup](https://github.com/lifedup) in [#3931](https://github.com/apollographql/apollo-client/pull/3931)  <br />
   [@Dem0n3D](https://github.com/Dem0n3D) in [#4008](https://github.com/apollographql/apollo-client/pull/4008)  <br />
@@ -35,21 +41,21 @@
   [@peggyrayzis](https://github.com/peggyrayzis) in [#4280](https://github.com/apollographql/apollo-client/pull/4280)  <br/>
   [@caydie-tran](https://github.com/caydie-tran) in [#4300](https://github.com/apollographql/apollo-client/pull/4300)
 
-### Apollo Utilities (vNext)
+### Apollo Utilities (1.1.0)
 
 - Transformation utilities have been refactored to work with `graphql` 14.x.
   GraphQL AST's are no longer being directly modified.  <br/>
   [@hwillson](https://github.com/hwillson) in [#4233](https://github.com/apollographql/apollo-client/pull/4233)
 
-### Apollo Cache In-Memory (vNext)
+### Apollo Cache In-Memory (1.4.0)
 
 - The speed and memory usage of optimistic reads and writes has been
   improved dramatically using a new layering technique that does not
-  require copying the non-optimistic contents of the cache.
+  require copying the non-optimistic contents of the cache.  <br/>
   [PR #4319](https://github.com/apollographql/apollo-client/pull/4319/)
 
 - The `RecordingCache` abstraction has been removed, and thus is no longer
-  exported from `apollo-cache-inmemory`.
+  exported from `apollo-cache-inmemory`.  <br/>
   [PR #4319](https://github.com/apollographql/apollo-client/pull/4319/)
 
 - Export the optimism `wrap` function using ES2015 export syntax, instead of

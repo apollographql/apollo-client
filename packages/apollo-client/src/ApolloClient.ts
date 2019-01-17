@@ -63,7 +63,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
-  public queryManager: QueryManager<TCacheShape> | undefined;
+  private queryManager: QueryManager<TCacheShape> | undefined;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
@@ -419,38 +419,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * This initializes the query manager that tracks queries and the cache
-   */
-  public initQueryManager(): QueryManager<TCacheShape> {
-    if (!this.queryManager) {
-      this.queryManager = new QueryManager({
-        link: this.link,
-        store: this.store,
-        queryDeduplication: this.queryDeduplication,
-        ssrMode: this.ssrMode,
-        clientAwareness: this.clientAwareness,
-        onBroadcast: () => {
-          if (this.devToolsHookCb) {
-            this.devToolsHookCb({
-              action: {},
-              state: {
-                queries: this.queryManager
-                  ? this.queryManager.queryStore.getStore()
-                  : {},
-                mutations: this.queryManager
-                  ? this.queryManager.mutationStore.getStore()
-                  : {},
-              },
-              dataWithOptimisticResults: this.cache.extract(true),
-            });
-          }
-        },
-      });
-    }
-    return this.queryManager;
-  }
-
-  /**
    * Resets your entire store by clearing out your cache and then re-executing
    * all of your active queries. This makes it so that you may guarantee that
    * there is no data left in your store from a time before you called this
@@ -555,6 +523,38 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
+  }
+
+  /**
+   * This initializes the query manager that tracks queries and the cache
+   */
+  private initQueryManager(): QueryManager<TCacheShape> {
+    if (!this.queryManager) {
+      this.queryManager = new QueryManager({
+        link: this.link,
+        store: this.store,
+        queryDeduplication: this.queryDeduplication,
+        ssrMode: this.ssrMode,
+        clientAwareness: this.clientAwareness,
+        onBroadcast: () => {
+          if (this.devToolsHookCb) {
+            this.devToolsHookCb({
+              action: {},
+              state: {
+                queries: this.queryManager
+                  ? this.queryManager.queryStore.getStore()
+                  : {},
+                mutations: this.queryManager
+                  ? this.queryManager.mutationStore.getStore()
+                  : {},
+              },
+              dataWithOptimisticResults: this.cache.extract(true),
+            });
+          }
+        },
+      });
+    }
+    return this.queryManager;
   }
 
   /**

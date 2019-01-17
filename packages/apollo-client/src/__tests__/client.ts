@@ -1,7 +1,6 @@
 import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { print } from 'graphql/language/printer';
 import { ApolloLink, Observable } from 'apollo-link';
 import {
   InMemoryCache,
@@ -29,11 +28,11 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    expect(client.queryManager).toBeUndefined();
+    expect((client as any).queryManager).toBeUndefined();
 
     // We only create the query manager on the first query
-    client.initQueryManager();
-    expect(client.queryManager).toBeDefined();
+    (client as any).initQueryManager();
+    expect((client as any).queryManager).toBeDefined();
     expect(client.cache).toBeDefined();
   });
 
@@ -1990,16 +1989,6 @@ describe('client', () => {
       jest.runTimersToTime(0);
       return outerPromise;
     });
-  });
-
-  it('should expose a method called printAST that is prints graphql queries', () => {
-    const query = gql`
-      query {
-        fortuneCookie
-      }
-    `;
-
-    expect(printAST(query)).toBe(print(query));
   });
 
   it('should pass a network error correctly on a mutation', done => {

@@ -1,5 +1,3 @@
-export { print as printAST } from 'graphql/language/printer';
-
 export {
   ObservableQuery,
   FetchMoreOptions,

@@ -1,3 +1,4 @@
+import node from 'rollup-plugin-node-resolve';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 
 export const globals = {
@@ -36,7 +37,16 @@ export default (name, override = {}) => {
   );
 
   config.plugins = config.plugins || [];
-  config.plugins.push(sourcemaps());
+  config.plugins.push(
+    sourcemaps(),
+    node({
+      // Inline anything imported from the tslib package, e.g. __extends
+      // and __assign. This depends on the "importHelpers":true option in
+      // tsconfig.base.json.
+      module: true,
+      only: ['tslib'],
+    }),
+  );
   return config;
 };
 

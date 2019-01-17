@@ -336,9 +336,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
-      query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
-      ),
+      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
       optimistic,
@@ -351,7 +349,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
-      query: this.transformDocument(options.query),
+      query: options.query,
       variables: options.variables,
     });
   }
@@ -362,9 +360,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.write({
       dataId: options.id,
       result: options.data,
-      query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
-      ),
+      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
       variables: options.variables,
     });
   }

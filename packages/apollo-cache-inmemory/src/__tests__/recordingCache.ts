@@ -3,6 +3,10 @@ import { ObjectCache } from '../objectCache';
 import { NormalizedCacheObject } from '../types';
 
 describe('OptimisticCacheLayer', () => {
+  function makeLayer(root: ObjectCache) {
+    return new OptimisticCacheLayer('whatever', root, () => {});
+  }
+
   describe('returns correct values during recording', () => {
     const data = {
       Human: { __typename: 'Human', name: 'Mark' },
@@ -15,9 +19,9 @@ describe('OptimisticCacheLayer', () => {
 
     const underlyingCache = new ObjectCache(data);
 
-    let cache = new OptimisticCacheLayer('whatever', underlyingCache);
+    let cache = makeLayer(underlyingCache);
     beforeEach(() => {
-      cache = new OptimisticCacheLayer('whatever', underlyingCache);
+      cache = makeLayer(underlyingCache);
     });
 
     it('should passthrough values if not defined in recording', () => {
@@ -52,11 +56,11 @@ describe('OptimisticCacheLayer', () => {
     };
 
     const underlyingCache = new ObjectCache(data);
-    let cache = new OptimisticCacheLayer('whatever', underlyingCache);
+    let cache = makeLayer(underlyingCache);
     let recording: NormalizedCacheObject;
 
     beforeEach(() => {
-      cache = new OptimisticCacheLayer('whatever', underlyingCache);
+      cache = makeLayer(underlyingCache);
       cache.set('Human', dataToRecord.Human);
       cache.delete('Animal');
       recording = cache.toObject();

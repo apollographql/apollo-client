@@ -3,10 +3,9 @@ import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 
-import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
+import { Cache, ApolloCache, Transaction } from 'apollo-cache';
 
 import {
-  getFragmentQueryDocument,
   addTypenameToDocument,
 } from 'apollo-utilities';
 
@@ -318,51 +317,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
-  }
-
-  public readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables>,
-    optimistic: boolean = false,
-  ): QueryType {
-    return this.read({
-      query: options.query,
-      variables: options.variables,
-      optimistic,
-    });
-  }
-
-  public readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables>,
-    optimistic: boolean = false,
-  ): FragmentType | null {
-    return this.read({
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
-      variables: options.variables,
-      rootId: options.id,
-      optimistic,
-    });
-  }
-
-  public writeQuery<TData = any, TVariables = any>(
-    options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    this.write({
-      dataId: 'ROOT_QUERY',
-      result: options.data,
-      query: options.query,
-      variables: options.variables,
-    });
-  }
-
-  public writeFragment<TData = any, TVariables = any>(
-    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    this.write({
-      dataId: options.id,
-      result: options.data,
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
-      variables: options.variables,
-    });
   }
 
   protected broadcastWatches() {

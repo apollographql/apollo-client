@@ -1,6 +1,5 @@
 import { execute, ApolloLink, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { print } from 'graphql/language/printer';
 import { DedupLink as Deduplicator } from 'apollo-link-dedup';
 import { Cache } from 'apollo-cache';
 import {
@@ -13,8 +12,6 @@ import {
   isProduction,
   hasDirectives,
 } from 'apollo-utilities';
-
-import { QueryScheduler } from '../scheduler/scheduler';
 
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 
@@ -54,13 +51,7 @@ export interface QueryInfo {
   cancel?: (() => void);
 }
 
-export interface QueryPromise {
-  resolve: (result: ApolloQueryResult<any>) => void;
-  reject: (error: Error) => void;
-}
-
 export class QueryManager<TStore> {
-  public scheduler: QueryScheduler<TStore>;
   public link: ApolloLink;
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
@@ -72,6 +63,8 @@ export class QueryManager<TStore> {
 
   private onBroadcast: () => void;
 
+  private ssrMode: boolean;
+
   // let's not start at zero to avoid pain with bad checks
   private idCounter = 1;
 
@@ -79,10 +72,10 @@ export class QueryManager<TStore> {
   // subscriptions as well
   private queries: Map<string, QueryInfo> = new Map();
 
-  // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
-  // track of queries that are inflight and reject them in case some
-  // destabalizing action occurs (e.g. reset of the Apollo store).
-  private fetchQueryPromises: Map<string, QueryPromise> = new Map();
+  // A set of Promise reject functions for fetchQuery promises that have not
+  // yet been resolved, used to keep track of in-flight queries so that we can
+  // reject them in case a destabilizing event occurs (e.g. Apollo store reset).
+  private fetchQueryRejectFns = new Set<Function>();
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
   // generally used to refetches for refetchQueries and to update mutation results through
@@ -110,7 +103,7 @@ export class QueryManager<TStore> {
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
     this.clientAwareness = clientAwareness;
-    this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
+    this.ssrMode = ssrMode;
   }
 
   public mutate<T>({
@@ -145,7 +138,6 @@ export class QueryManager<TStore> {
         getDefaultValues(getMutationDefinition(mutation)),
         variables,
       ));
-    const mutationString = print(mutation);
 
     this.setQuery(mutationId, () => ({ document: mutation }));
 
@@ -169,7 +161,7 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    this.mutationStore.initMutation(mutationId, mutationString, variables);
+    this.mutationStore.initMutation(mutationId, mutation, variables);
 
     this.dataStore.markMutationInit({
       mutationId,
@@ -191,7 +183,7 @@ export class QueryManager<TStore> {
         optimisticResponse,
       });
 
-      const completeMutation = async () => {
+      const completeMutation = () => {
         if (error) {
           this.mutationStore.markMutationError(mutationId, error);
         }
@@ -204,7 +196,7 @@ export class QueryManager<TStore> {
         this.broadcastQueries();
 
         if (error) {
-          throw error;
+          return Promise.reject(error);
         }
 
         // allow for conditional refetches
@@ -239,20 +231,21 @@ export class QueryManager<TStore> {
           refetchQueryPromises.push(this.query(queryOptions));
         }
 
-        if (awaitRefetchQueries) {
-          await Promise.all(refetchQueryPromises);
-        }
+        return Promise.all(
+          awaitRefetchQueries ? refetchQueryPromises : [],
+        ).then(() => {
+          this.setQuery(mutationId, () => ({ document: undefined }));
 
-        this.setQuery(mutationId, () => ({ document: undefined }));
-        if (
-          errorPolicy === 'ignore' &&
-          storeResult &&
-          graphQLResultHasError(storeResult)
-        ) {
-          delete storeResult.errors;
-        }
+          if (
+            errorPolicy === 'ignore' &&
+            storeResult &&
+            graphQLResultHasError(storeResult)
+          ) {
+            delete storeResult.errors;
+          }
 
-        return storeResult as FetchResult<T>;
+          return storeResult as FetchResult<T>;
+        });
       };
 
       execute(this.link, operation).subscribe({
@@ -411,8 +404,6 @@ export class QueryManager<TStore> {
             this.broadcastQueries();
           }
 
-          this.removeFetchQueryPromise(requestId);
-
           throw new ApolloError({ networkError: error });
         }
       });
@@ -533,7 +524,7 @@ export class QueryManager<TStore> {
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
                   'for the query ' +
-                  print(queryStoreValue.document),
+                  JSON.stringify(queryStoreValue.document),
               );
             }
           }
@@ -670,7 +661,7 @@ export class QueryManager<TStore> {
     let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
 
     return new ObservableQuery<T, TVariables>({
-      scheduler: this.scheduler,
+      queryManager: this,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
     });
@@ -696,21 +687,18 @@ export class QueryManager<TStore> {
       throw new Error('pollInterval option only supported on watchQuery.');
     }
 
-    const requestId = this.idCounter;
-
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, resolve, reject);
-
-      return this.watchQuery<T>(options, false)
+      this.fetchQueryRejectFns.add(reject);
+      this.watchQuery<T>(options, false)
         .result()
-        .then(result => {
-          this.removeFetchQueryPromise(requestId);
-          resolve(result);
-        })
-        .catch(error => {
-          this.removeFetchQueryPromise(requestId);
-          reject(error);
-        });
+        .then(resolve, reject)
+        // Since neither resolve nor reject throw or return a value, this .then
+        // handler is guaranteed to execute. Note that it doesn't really matter
+        // when we remove the reject function from this.fetchQueryRejectFns,
+        // since resolve and reject are mutually idempotent. In fact, it would
+        // not be incorrect to let reject functions accumulate over time; it's
+        // just a waste of memory.
+        .then(() => this.fetchQueryRejectFns.delete(reject));
     });
   }
 
@@ -763,23 +751,6 @@ export class QueryManager<TStore> {
     });
   }
 
-  // Adds a promise to this.fetchQueryPromises for a given request ID.
-  public addFetchQueryPromise<T>(
-    requestId: number,
-    resolve: (result: ApolloQueryResult<T>) => void,
-    reject: (error: Error) => void,
-  ) {
-    this.fetchQueryPromises.set(requestId.toString(), {
-      resolve,
-      reject,
-    });
-  }
-
-  // Removes the promise in this.fetchQueryPromises for a particular request ID.
-  public removeFetchQueryPromise(requestId: number) {
-    this.fetchQueryPromises.delete(requestId.toString());
-  }
-
   // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.
   public addObservableQuery<T>(
     queryId: string,
@@ -822,7 +793,7 @@ export class QueryManager<TStore> {
     // in the data portion of the store. So, we cancel the promises and observers
     // that we have issued so far and not yet resolved (in the case of
     // queries).
-    this.fetchQueryPromises.forEach(({ reject }) => {
+    this.fetchQueryRejectFns.forEach(reject => {
       reject(
         new Error(
           'Store reset while query was in flight(not completed in link chain)',
@@ -1105,8 +1076,13 @@ export class QueryManager<TStore> {
     let resultFromStore: any;
     let errorsFromStore: any;
 
+    let rejectFetchPromise: (reason?: any) => void;
+
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.addFetchQueryPromise<T>(requestId, resolve, reject);
+      // Need to assign the reject function to the rejectFetchPromise variable
+      // in the outer scope so that we can refer to it in the .catch handler.
+      this.fetchQueryRejectFns.add(rejectFetchPromise = reject);
+
       const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
@@ -1172,7 +1148,8 @@ export class QueryManager<TStore> {
           }
         },
         error: (error: ApolloError) => {
-          this.removeFetchQueryPromise(requestId);
+          this.fetchQueryRejectFns.delete(reject);
+
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
@@ -1180,7 +1157,8 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
-          this.removeFetchQueryPromise(requestId);
+          this.fetchQueryRejectFns.delete(reject);
+
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
@@ -1198,6 +1176,10 @@ export class QueryManager<TStore> {
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),
       }));
+
+    }).catch(error => {
+      this.fetchQueryRejectFns.delete(rejectFetchPromise);
+      throw error;
     });
   }
 
@@ -1284,6 +1266,135 @@ export class QueryManager<TStore> {
         },
         clientAwareness: this.clientAwareness,
       },
+    };
+  }
+
+  public checkInFlight(queryId: string) {
+    const query = this.queryStore.get(queryId);
+
+    return (
+      query &&
+      query.networkStatus !== NetworkStatus.ready &&
+      query.networkStatus !== NetworkStatus.error
+    );
+  }
+
+  // Map from client ID to { interval, options }.
+  public pollingInfoByQueryId = new Map<string, {
+    interval: number;
+    lastPollTimeMs: number;
+    options: WatchQueryOptions;
+  }>();
+
+  private nextPoll: {
+    time: number;
+    timeout: NodeJS.Timeout;
+  } | null = null;
+
+  public startPollingQuery(
+    options: WatchQueryOptions,
+    queryId: string,
+    listener?: QueryListener,
+  ): string {
+    const { pollInterval } = options;
+
+    if (!pollInterval) {
+      throw new Error(
+        'Attempted to start a polling query without a polling interval.',
+      );
+    }
+
+    // Do not poll in SSR mode
+    if (!this.ssrMode) {
+      this.pollingInfoByQueryId.set(queryId, {
+        interval: pollInterval,
+        // Avoid polling until at least pollInterval milliseconds from now.
+        // The -10 is a fudge factor to help with tests that rely on simulated
+        // timeouts via jest.runTimersToTime.
+        lastPollTimeMs: Date.now() - 10,
+        options: {
+          ...options,
+          fetchPolicy: 'network-only',
+        },
+      });
+
+      if (listener) {
+        this.addQueryListener(queryId, listener);
+      }
+
+      this.schedulePoll(pollInterval);
+    }
+
+    return queryId;
+  }
+
+  public stopPollingQuery(queryId: string) {
+    // Since the master polling interval dynamically adjusts to the contents of
+    // this.pollingInfoByQueryId, stopping a query from polling is as easy as
+    // removing it from the map.
+    this.pollingInfoByQueryId.delete(queryId);
+  }
+
+  // Calling this method ensures a poll will happen within the specified time
+  // limit, canceling any pending polls that would not happen in time.
+  private schedulePoll(timeLimitMs: number) {
+    const now = Date.now();
+
+    if (this.nextPoll) {
+      if (timeLimitMs < this.nextPoll.time - now) {
+        // The next poll will happen too far in the future, so cancel it, and
+        // fall through to scheduling a new timeout.
+        clearTimeout(this.nextPoll.timeout);
+      } else {
+        // The next poll will happen within timeLimitMs, so all is well.
+        return;
+      }
+    }
+
+    this.nextPoll = {
+      // Estimated time when the timeout will fire.
+      time: now + timeLimitMs,
+
+      timeout: setTimeout(() => {
+        this.nextPoll = null;
+        let nextTimeLimitMs = Infinity;
+
+        this.pollingInfoByQueryId.forEach((info, queryId) => {
+          // Pick next timeout according to current minimum interval.
+          if (info.interval < nextTimeLimitMs) {
+            nextTimeLimitMs = info.interval;
+          }
+
+          if (!this.checkInFlight(queryId)) {
+            // If this query was last polled more than interval milliseconds
+            // ago, poll it now. Note that there may be a small delay between
+            // the desired polling time and the actual polling time (equal to
+            // at most the minimum polling interval across all queries), but
+            // that's the tradeoff to batching polling intervals.
+            if (Date.now() - info.lastPollTimeMs >= info.interval) {
+              const updateLastPollTime = () => {
+                info.lastPollTimeMs = Date.now();
+              };
+              this.fetchQuery(queryId, info.options, FetchType.poll).then(
+                // Set info.lastPollTimeMs after the fetch completes, whether
+                // or not it succeeded. Promise.prototype.finally would be nice
+                // here, but we don't have a polyfill for that at the moment,
+                // and this code has historically silenced errors, which is not
+                // the behavior of .finally(updateLastPollTime).
+                updateLastPollTime,
+                updateLastPollTime
+              );
+            }
+          }
+        });
+
+        // If there were no entries in this.pollingInfoByQueryId, then
+        // nextTimeLimitMs will still be Infinity, so this.schedulePoll will
+        // not be called, thus ending the master polling interval.
+        if (isFinite(nextTimeLimitMs)) {
+          this.schedulePoll(nextTimeLimitMs);
+        }
+      }, timeLimitMs),
     };
   }
 }

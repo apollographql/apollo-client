@@ -3,16 +3,14 @@ import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 
-import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
+import { Cache, ApolloCache, Transaction } from 'apollo-cache';
 
 import {
-  getFragmentQueryDocument,
   addTypenameToDocument,
 } from 'apollo-utilities';
 
 import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {
-  OptimisticStoreItem,
   ApolloReducerConfig,
   NormalizedCache,
   NormalizedCacheObject,
@@ -22,10 +20,8 @@ import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 
 import { DepTrackingCache } from './depTrackingCache';
-import { wrap, CacheKeyNode, OptimisticWrapperFunction } from './optimism';
+import { wrap, CacheKeyNode } from './optimism';
 import { ObjectCache } from './objectCache';
-
-import { record } from './recordingCache';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
@@ -50,10 +46,41 @@ export function defaultDataIdFromObject(result: any): string | null {
   return null;
 }
 
+const hasOwn = Object.prototype.hasOwnProperty;
+
+export class OptimisticCacheLayer extends ObjectCache {
+  constructor(
+    public readonly optimisticId: string,
+    // OptimisticCacheLayer objects always wrap some other parent cache, so
+    // this.parent should never be null.
+    public readonly parent: NormalizedCache,
+    public readonly transaction: Transaction<NormalizedCacheObject>,
+  ) {
+    super(Object.create(null));
+  }
+
+  public toObject(): NormalizedCacheObject {
+    return {
+      ...this.parent.toObject(),
+      ...this.data,
+    };
+  }
+
+  // All the other accessor methods of ObjectCache work without knowing about
+  // this.parent, but the get method needs to be overridden to implement the
+  // fallback this.parent.get(dataId) behavior.
+  public get(dataId: string) {
+    return hasOwn.call(this.data, dataId)
+      ? this.data[dataId]
+      : this.parent.get(dataId);
+  }
+}
+
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  protected data: NormalizedCache;
+  private data: NormalizedCache;
+  private optimisticData: NormalizedCache;
+
   protected config: InMemoryCacheConfig;
-  protected optimistic: OptimisticStoreItem[] = [];
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
@@ -85,9 +112,20 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
 
     this.addTypename = this.config.addTypename;
+
+    // Passing { resultCaching: false } in the InMemoryCache constructor options
+    // will completely disable dependency tracking, which will improve memory
+    // usage but worsen the performance of repeated reads.
     this.data = this.config.resultCaching
       ? new DepTrackingCache()
       : new ObjectCache();
+
+    // When no optimistic writes are currently active, cache.optimisticData ===
+    // cache.data, so there are no additional layers on top of the actual data.
+    // When an optimistic update happens, this.optimisticData will become a
+    // linked list of OptimisticCacheLayer objects that terminates with the
+    // original this.data cache object.
+    this.optimisticData = this.data;
 
     this.storeReader = new StoreReader(this.cacheKeyRoot);
     this.storeWriter = new StoreWriter();
@@ -98,7 +136,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return maybeBroadcastWatch.call(this, c);
     }, {
       makeCacheKey(c: Cache.WatchOptions) {
-        if (c.optimistic && cache.optimistic.length > 0) {
+        if (c.optimistic) {
           // If we're reading optimistic data, it doesn't matter if this.data
           // is a DepTrackingCache, since it will be ignored.
           return;
@@ -130,31 +168,22 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public extract(optimistic: boolean = false): NormalizedCacheObject {
-    if (optimistic && this.optimistic.length > 0) {
-      const patches = this.optimistic.map(opt => opt.data);
-      return Object.assign({}, this.data.toObject(), ...patches);
-    }
-
-    return this.data.toObject();
+    return (optimistic ? this.optimisticData : this.data).toObject();
   }
 
-  public read<T>(query: Cache.ReadOptions): T | null {
-    if (query.rootId && this.data.get(query.rootId) === undefined) {
+  public read<T>(options: Cache.ReadOptions): T | null {
+    if (typeof options.rootId === 'string' &&
+        typeof this.data.get(options.rootId) === 'undefined') {
       return null;
     }
 
-    const store =
-      query.optimistic && this.optimistic.length
-        ? new ObjectCache(this.extract(true))
-        : this.data;
-
     return this.storeReader.readQueryFromStore({
-      store,
-      query: this.transformDocument(query.query),
-      variables: query.variables,
-      rootId: query.rootId,
+      store: options.optimistic ? this.optimisticData : this.data,
+      query: this.transformDocument(options.query),
+      variables: options.variables,
+      rootId: options.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
-      previousResult: query.previousResult,
+      previousResult: options.previousResult,
       config: this.config,
     });
   }
@@ -174,13 +203,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
-    const store =
-      query.optimistic && this.optimistic.length
-        ? new ObjectCache(this.extract(true))
-        : this.data;
-
     return this.storeReader.diffQueryAgainstStore({
-      store: store,
+      store: query.optimistic ? this.optimisticData : this.data,
       query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
@@ -209,34 +233,66 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return Promise.resolve();
   }
 
-  public removeOptimistic(id: string) {
-    // Throw away optimistic changes of that particular mutation
-    const toPerform = this.optimistic.filter(item => item.id !== id);
+  public removeOptimistic(idToRemove: string) {
+    const toReapply: OptimisticCacheLayer[] = [];
+    let removedCount = 0;
+    let layer = this.optimisticData;
 
-    this.optimistic = [];
-
-    // Re-run all of our optimistic data actions on top of one another.
-    toPerform.forEach(change => {
-      this.recordOptimisticTransaction(change.transaction, change.id);
-    });
-
-    this.broadcastWatches();
-  }
-
-  public performTransaction(transaction: Transaction<NormalizedCacheObject>) {
-    // TODO: does this need to be different, or is this okay for an in-memory cache?
-
-    let alreadySilenced = this.silenceBroadcast;
-    this.silenceBroadcast = true;
-
-    transaction(this);
-
-    if (!alreadySilenced) {
-      // Don't un-silence since this is a nested transaction
-      // (for example, a transaction inside an optimistic record)
-      this.silenceBroadcast = false;
+    while (layer instanceof OptimisticCacheLayer) {
+      if (layer.optimisticId === idToRemove) {
+        ++removedCount;
+      } else {
+        toReapply.push(layer);
+      }
+      layer = layer.parent;
     }
 
+    if (removedCount > 0) {
+      // Reset this.optimisticData to the first non-OptimisticCacheLayer object,
+      // which is almost certainly this.data.
+      this.optimisticData = layer;
+
+      // Reapply the layers whose optimistic IDs do not match the removed ID.
+      while (toReapply.length > 0) {
+        const layer = toReapply.pop();
+        this.performTransaction(layer.transaction, layer.optimisticId);
+      }
+
+      this.broadcastWatches();
+    }
+  }
+
+  public performTransaction(
+    transaction: Transaction<NormalizedCacheObject>,
+    // This parameter is not part of the performTransaction signature inherited
+    // from the ApolloCache abstract class, but it's useful because it saves us
+    // from duplicating this implementation in recordOptimisticTransaction.
+    optimisticId?: string,
+  ) {
+    const { data, silenceBroadcast } = this;
+    this.silenceBroadcast = true;
+
+    if (typeof optimisticId === 'string') {
+      // Add a new optimistic layer and temporarily make this.data refer to
+      // that layer for the duration of the transaction.
+      this.data = this.optimisticData = new OptimisticCacheLayer(
+        // Note that there can be multiple layers with the same optimisticId.
+        // When removeOptimistic(id) is called for that id, all matching layers
+        // will be removed, and the remaining layers will be reapplied.
+        optimisticId,
+        this.optimisticData,
+        transaction,
+      );
+    }
+
+    try {
+      transaction(this);
+    } finally {
+      this.silenceBroadcast = silenceBroadcast;
+      this.data = data;
+    }
+
+    // This broadcast does nothing if this.silenceBroadcast is true.
     this.broadcastWatches();
   }
 
@@ -244,26 +300,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     transaction: Transaction<NormalizedCacheObject>,
     id: string,
   ) {
-    this.silenceBroadcast = true;
-
-    const patch = record(this.extract(true), recordingCache => {
-      // swapping data instance on 'this' is currently necessary
-      // because of the current architecture
-      const dataCache = this.data;
-      this.data = recordingCache;
-      this.performTransaction(transaction);
-      this.data = dataCache;
-    });
-
-    this.optimistic.push({
-      id,
-      transaction,
-      data: patch,
-    });
-
-    this.silenceBroadcast = false;
-
-    this.broadcastWatches();
+    return this.performTransaction(transaction, id);
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
@@ -282,79 +319,22 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return document;
   }
 
-  public readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables>,
-    optimistic: boolean = false,
-  ): QueryType {
-    return this.read({
-      query: options.query,
-      variables: options.variables,
-      optimistic,
-    });
-  }
-
-  public readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables>,
-    optimistic: boolean = false,
-  ): FragmentType | null {
-    return this.read({
-      query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
-      ),
-      variables: options.variables,
-      rootId: options.id,
-      optimistic,
-    });
-  }
-
-  public writeQuery<TData = any, TVariables = any>(
-    options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    this.write({
-      dataId: 'ROOT_QUERY',
-      result: options.data,
-      query: this.transformDocument(options.query),
-      variables: options.variables,
-    });
-  }
-
-  public writeFragment<TData = any, TVariables = any>(
-    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    this.write({
-      dataId: options.id,
-      result: options.data,
-      query: this.transformDocument(
-        getFragmentQueryDocument(options.fragment, options.fragmentName),
-      ),
-      variables: options.variables,
-    });
-  }
-
   protected broadcastWatches() {
     if (!this.silenceBroadcast) {
-      const optimistic = this.optimistic.length > 0;
-      this.watches.forEach((c: Cache.WatchOptions) => {
-        this.maybeBroadcastWatch(c);
-        if (optimistic) {
-          // If we're broadcasting optimistic data, make sure we rebroadcast
-          // the real data once we're no longer in an optimistic state.
-          (this.maybeBroadcastWatch as OptimisticWrapperFunction<
-            (c: Cache.WatchOptions) => void
-          >).dirty(c);
-        }
-      });
+      this.watches.forEach(c => this.maybeBroadcastWatch(c));
     }
   }
 
   // This method is wrapped in the constructor so that it will be called only
   // if the data that would be broadcast has changed.
   private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    c.callback(this.diff({
-      query: c.query,
-      variables: c.variables,
-      previousResult: c.previousResult && c.previousResult(),
-      optimistic: c.optimistic,
-    }));
+    c.callback(
+      this.diff({
+        query: c.query,
+        variables: c.variables,
+        previousResult: c.previousResult && c.previousResult(),
+        optimistic: c.optimistic,
+      }),
+    );
   }
 }

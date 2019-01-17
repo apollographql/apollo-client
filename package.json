@@ -24,22 +24,22 @@
     {
       "name": "apollo-cache",
       "path": "./packages/apollo-cache/lib/bundle.min.js",
-      "maxSize": "1 kB"
+      "maxSize": "900 B"
     },
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
-      "maxSize": "7 kB"
+      "maxSize": "6.2 kB"
     },
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.min.js",
-      "maxSize": "10.25 kB"
+      "maxSize": "9.15 kB"
     },
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "5 kB"
+      "maxSize": "4.3 kB"
     }
   ],
   "jest": {
@@ -111,6 +111,7 @@
     "rollup-plugin-sourcemaps": "0.4.2",
     "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
+    "tslib": "^1.9.3",
     "tslint": "5.12.1",
     "typescript": "3.2.2",
     "uglify-js": "3.4.9",

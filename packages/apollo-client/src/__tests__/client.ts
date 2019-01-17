@@ -2189,13 +2189,18 @@ describe('client', () => {
         },
       },
     });
-    expect((client.cache as any).optimistic.length).toBe(1);
+
+    const { data, optimisticData } = client.cache as any;
+    expect(optimisticData).not.toBe(data);
+    expect(optimisticData.parent).toBe(data);
+
     mutatePromise
       .then(_ => {
         done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch((_: ApolloError) => {
-        expect((client.cache as any).optimistic.length).toBe(0);
+        const { data, optimisticData } = client.cache as any;
+        expect(optimisticData).toBe(data);
         done();
       });
   });

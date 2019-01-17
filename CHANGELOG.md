@@ -43,10 +43,18 @@
 
 ### Apollo Cache In-Memory (vNext)
 
+- The speed and memory usage of optimistic reads and writes has been
+  improved dramatically using a new layering technique that does not
+  require copying the non-optimistic contents of the cache.
+  [PR #4319](https://github.com/apollographql/apollo-client/pull/4319/)
+
+- The `RecordingCache` abstraction has been removed, and thus is no longer
+  exported from `apollo-cache-inmemory`.
+  [PR #4319](https://github.com/apollographql/apollo-client/pull/4319/)
+
 - Export the optimism `wrap` function using ES2015 export syntax, instead of
   CommonJS.  <br/>
   [@ardatan](https://github.com/ardatan) in [#4158](https://github.com/apollographql/apollo-client/pull/4158)
-
 
 ## Apollo Client (2.4.8)
 

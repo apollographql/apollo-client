@@ -8,7 +8,27 @@
   `graphql/language/printer`. If you need this functionality, import it
   directly: `import { print } from "graphql/language/printer"`
 
+- Query polling now uses a simpler scheduling strategy based on a single
+  `setTimeout` interval rather than multiple `setInterval` timers. The new
+  timer fires at the rate of the fastest polling interval, and queries
+  with longer polling intervals fire whenever the time elapsed since they
+  last fired exceeds their desired interval. <br/>
+  [PR #4243](https://github.com/apollographql/apollo-client/pull/4243)
+
 ### Apollo Cache In-Memory (vNext)
+
+- Error messages involving GraphQL queries now print the queries using
+  `JSON.stringify` instead of the `print` function exported by the
+  `graphql` package, to avoid pulling unnecessary printing logic into your
+  JavaScript bundle. <br/>
+  [PR #4234](https://github.com/apollographql/apollo-client/pull/4234)
+
+- The `QueryKeyMaker` abstraction has been removed, meaning that cache
+  results for non-identical queries (or sub-queries) with equivalent
+  structure will no longer be cached together. This feature was a nice
+  optimization in certain specific use cases, but it was not worth the
+  additional complexity or bundle size.
+  [PR #4245](https://github.com/apollographql/apollo-client/pull/4245)
 
 - The `flattenSelections` helper function is no longer exported from
   `apollo-utilities`, since `getDirectiveNames` has been reimplemented

@@ -41,7 +41,6 @@ These options will be merged with options supplied with each request.
 The `ApolloClient` class is the core API for Apollo, and the one you'll need to use no matter which integration you are using:
 
 {% tsapibox ApolloClient.constructor %}
-{% tsapibox ApolloClient.stop %}
 {% tsapibox ApolloClient.watchQuery %}
 {% tsapibox ApolloClient.query %}
 {% tsapibox ApolloClient.mutate %}
@@ -54,6 +53,7 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClient.onResetStore %}
 {% tsapibox ApolloClient.clearStore %}
 {% tsapibox ApolloClient.onClearStore %}
+{% tsapibox ApolloClient.stop %}
 
 <h2 id="ObservableQuery">ObservableQuery</h2>
 

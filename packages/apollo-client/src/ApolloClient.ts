@@ -222,7 +222,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * Call this method to terminate any active client processes, making it safe
-   * to dispose of this ApolloClient instance.
+   * to dispose of this `ApolloClient` instance.
    */
   public stop() {
     if (this.queryManager) {

@@ -219,6 +219,17 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       this.clientAwareness.version = clientAwarenessVersion;
     }
   }
+
+  /**
+   * Call this method to terminate any active client processes, making it safe
+   * to dispose of this ApolloClient instance.
+   */
+  public stop() {
+    if (this.queryManager) {
+      this.queryManager.stop();
+    }
+  }
+
   /**
    * This watches the cache store of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and

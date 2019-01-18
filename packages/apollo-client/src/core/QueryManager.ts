@@ -107,6 +107,17 @@ export class QueryManager<TStore> {
     this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
+  /**
+   * Call this method to terminate any active query processes, making it safe
+   * to dispose of this QueryManager instance.
+   */
+  public stop() {
+    this.scheduler.stop();
+    this.fetchQueryRejectFns.forEach(reject => {
+      reject(new Error('QueryManager stopped while query was in flight'));
+    });
+  }
+
   public mutate<T>({
     mutation,
     variables,

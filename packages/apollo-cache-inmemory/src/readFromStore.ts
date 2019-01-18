@@ -43,7 +43,6 @@ import { wrap, CacheKeyNode } from './optimism';
 export { OptimisticWrapperFunction } from './optimism';
 
 import { DepTrackingCache } from './depTrackingCache';
-import { QueryKeyMaker } from './queryKeyMaker';
 
 export type VariableMap = { [name: string]: any };
 
@@ -94,68 +93,58 @@ type ExecSelectionSetOptions = {
 };
 
 export class StoreReader {
-  private keyMaker: QueryKeyMaker;
-
-  constructor(private cacheKeyRoot = new CacheKeyNode()) {
+  constructor(
+    private cacheKeyRoot = new CacheKeyNode,
+  ) {
     const reader = this;
     const { executeStoreQuery, executeSelectionSet } = reader;
 
-    reader.keyMaker = new QueryKeyMaker(cacheKeyRoot);
+    this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
+      return executeStoreQuery.call(this, options);
+    }, {
+      makeCacheKey({
+        query,
+        rootValue,
+        contextValue,
+        variableValues,
+        fragmentMatcher,
+      }: ExecStoreQueryOptions) {
+        // The result of executeStoreQuery can be safely cached only if the
+        // underlying store is capable of tracking dependencies and invalidating
+        // the cache when relevant data have changed.
+        if (contextValue.store instanceof DepTrackingCache) {
+          return reader.cacheKeyRoot.lookup(
+            query,
+            contextValue.store,
+            fragmentMatcher,
+            JSON.stringify(variableValues),
+            rootValue.id,
+          );
+        }
+        return;
+      }
+    });
 
-    this.executeStoreQuery = wrap(
-      (options: ExecStoreQueryOptions) => {
-        return executeStoreQuery.call(this, options);
-      },
-      {
-        makeCacheKey({
-          query,
-          rootValue,
-          contextValue,
-          variableValues,
-          fragmentMatcher,
-        }: ExecStoreQueryOptions) {
-          // The result of executeStoreQuery can be safely cached only if the
-          // underlying store is capable of tracking dependencies and invalidating
-          // the cache when relevant data have changed.
-          if (contextValue.store instanceof DepTrackingCache) {
-            return reader.cacheKeyRoot.lookup(
-              reader.keyMaker.forQuery(query).lookupQuery(query),
-              contextValue.store,
-              fragmentMatcher,
-              JSON.stringify(variableValues),
-              rootValue.id,
-            );
-          }
-          return;
-        },
-      },
-    );
-
-    this.executeSelectionSet = wrap(
-      (options: ExecSelectionSetOptions) => {
-        return executeSelectionSet.call(this, options);
-      },
-      {
-        makeCacheKey({
-          selectionSet,
-          rootValue,
-          execContext,
-        }: ExecSelectionSetOptions) {
-          if (execContext.contextValue.store instanceof DepTrackingCache) {
-            return reader.cacheKeyRoot.lookup(
-              reader.keyMaker
-                .forQuery(execContext.query)
-                .lookupSelectionSet(selectionSet),
-              execContext.contextValue.store,
-              execContext.fragmentMatcher,
-              JSON.stringify(execContext.variableValues),
-              rootValue.id,
-            );
-          }
-          return;
-        },
-      },
-    );
+    this.executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
+      return executeSelectionSet.call(this, options);
+    }, {
+      makeCacheKey({
+        selectionSet,
+        rootValue,
+        execContext,
+      }: ExecSelectionSetOptions) {
+        if (execContext.contextValue.store instanceof DepTrackingCache) {
+          return reader.cacheKeyRoot.lookup(
+            selectionSet,
+            execContext.contextValue.store,
+            execContext.fragmentMatcher,
+            JSON.stringify(execContext.variableValues),
+            rootValue.id,
+          );
+        }
+        return;
+      }
+    });
   }
 
   /**

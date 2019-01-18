@@ -5,9 +5,9 @@ import { DocumentNode } from 'graphql';
 
 import { Cache, ApolloCache, Transaction } from 'apollo-cache';
 
-import {
-  addTypenameToDocument,
-} from 'apollo-utilities';
+import { addTypenameToDocument } from 'apollo-utilities';
+
+import { wrap } from 'optimism';
 
 import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {
@@ -18,9 +18,8 @@ import {
 
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
-
 import { DepTrackingCache } from './depTrackingCache';
-import { wrap, CacheKeyNode } from './optimism';
+import { CacheKeyNode } from './cacheKeys';
 import { ObjectCache } from './objectCache';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {

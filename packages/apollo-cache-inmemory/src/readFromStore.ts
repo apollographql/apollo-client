@@ -39,9 +39,8 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import { wrap, CacheKeyNode } from './optimism';
-export { OptimisticWrapperFunction } from './optimism';
-
+import { wrap } from 'optimism';
+import { CacheKeyNode } from './cacheKeys';
 import { DepTrackingCache } from './depTrackingCache';
 
 export type VariableMap = { [name: string]: any };

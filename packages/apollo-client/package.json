@@ -53,6 +53,7 @@
     "apollo-link-dedup": "^1.0.0",
     "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
+    "tslib": "^1.9.3",
     "zen-observable": "^0.8.0"
   },
   "peerDependencies": {

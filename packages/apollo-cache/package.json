@@ -39,7 +39,8 @@
     "filesize": "npm run minify"
   },
   "dependencies": {
-    "apollo-utilities": "file:../apollo-utilities"
+    "apollo-utilities": "file:../apollo-utilities",
+    "tslib": "^1.9.3"
   },
   "jest": {
     "transform": {

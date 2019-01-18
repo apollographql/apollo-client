@@ -2,7 +2,9 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Client (vNext)
+## Apollo Client (2.4.10)
+
+### Apollo Client (2.4.10)
 
 - The `apollo-client` package no longer exports a `printAST` function from
   `graphql/language/printer`. If you need this functionality, import it
@@ -15,7 +17,7 @@
   last fired exceeds their desired interval. <br/>
   [PR #4243](https://github.com/apollographql/apollo-client/pull/4243)
 
-### Apollo Cache In-Memory (vNext)
+### Apollo Cache In-Memory (1.4.1)
 
 - The `optimism` npm package has been updated to a version (0.6.9) that
   provides its own TypeScript declarations, which should fix problems like
@@ -34,6 +36,8 @@
   optimization in certain specific use cases, but it was not worth the
   additional complexity or bundle size. <br/>
   [PR #4245](https://github.com/apollographql/apollo-client/pull/4245)
+
+### Apollo Utilities (1.1.1)
 
 - The `flattenSelections` helper function is no longer exported from
   `apollo-utilities`, since `getDirectiveNames` has been reimplemented

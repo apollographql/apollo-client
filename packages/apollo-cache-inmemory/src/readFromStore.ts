@@ -39,11 +39,9 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import { wrap, CacheKeyNode } from './optimism';
-export { OptimisticWrapperFunction } from './optimism';
-
+import { wrap } from 'optimism';
+import { CacheKeyNode } from './cacheKeys';
 import { DepTrackingCache } from './depTrackingCache';
-import { QueryKeyMaker } from './queryKeyMaker';
 
 export type VariableMap = { [name: string]: any };
 
@@ -94,8 +92,6 @@ type ExecSelectionSetOptions = {
 };
 
 export class StoreReader {
-  private keyMaker: QueryKeyMaker;
-
   constructor(
     private cacheKeyRoot = new CacheKeyNode,
   ) {
@@ -104,8 +100,6 @@ export class StoreReader {
       executeStoreQuery,
       executeSelectionSet,
     } = reader;
-
-    reader.keyMaker = new QueryKeyMaker(cacheKeyRoot);
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
       return executeStoreQuery.call(this, options);
@@ -122,7 +116,7 @@ export class StoreReader {
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
           return reader.cacheKeyRoot.lookup(
-            reader.keyMaker.forQuery(query).lookupQuery(query),
+            query,
             contextValue.store,
             fragmentMatcher,
             JSON.stringify(variableValues),
@@ -143,7 +137,7 @@ export class StoreReader {
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
           return reader.cacheKeyRoot.lookup(
-            reader.keyMaker.forQuery(execContext.query).lookupSelectionSet(selectionSet),
+            selectionSet,
             execContext.contextValue.store,
             execContext.fragmentMatcher,
             JSON.stringify(execContext.variableValues),

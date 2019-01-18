@@ -5,6 +5,7 @@
     "noUnusedLocals": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "importHelpers": true,
     "removeComments": true,
     "sourceMap": true,
     "declaration": true,

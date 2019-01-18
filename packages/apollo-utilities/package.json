@@ -39,7 +39,8 @@
     "filesize": "npm run minify"
   },
   "dependencies": {
-    "fast-json-stable-stringify": "^2.0.0"
+    "fast-json-stable-stringify": "^2.0.0",
+    "tslib": "^1.9.3"
   },
   "jest": {
     "transform": {

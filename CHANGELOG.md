@@ -2,6 +2,18 @@
 
 ## Apollo Client (vNext)
 
+## Apollo Client (2.4.11)
+
+- Added explicit dependencies on the
+  [`tslib`](https://www.npmjs.com/package/tslib) package to all client
+  packages to fix
+  [Issue #4332](https://github.com/apollographql/apollo-client/issues/4332).
+
+### Apollo Client (2.4.11)
+
+- Reverted some breaking changes accidentally released in a patch version
+  (2.4.10). [PR #4334](https://github.com/apollographql/apollo-client/pull/4334)
+
 ## Apollo Client (2.4.10)
 
 ### Apollo Client (2.4.10)

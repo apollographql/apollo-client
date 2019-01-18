@@ -1,5 +1,4 @@
 import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
-import { print } from 'graphql/language/printer';
 import { isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
@@ -40,7 +39,7 @@ export class QueryStore {
     if (
       previousQuery &&
       previousQuery.document !== query.document &&
-      print(previousQuery.document) !== print(query.document)
+      !isEqual(previousQuery.document, query.document)
     ) {
       // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
       // we should implement a separate action for refetching so that QUERY_INIT may never overwrite

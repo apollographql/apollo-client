@@ -5,7 +5,6 @@ import {
   InlineFragmentNode,
   FragmentDefinitionNode,
 } from 'graphql';
-import { print } from 'graphql/language/printer';
 import { FragmentMatcher } from './readFromStore';
 
 import {
@@ -45,7 +44,7 @@ export class WriteError extends Error {
 export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
   // XXX A bit hacky maybe ...
   const enhancedError = new WriteError(
-    `Error writing result to store for query:\n ${print(document)}`,
+    `Error writing result to store for query:\n ${JSON.stringify(document)}`,
   );
   enhancedError.message += '\n' + error.message;
   enhancedError.stack = error.stack;
@@ -360,7 +359,7 @@ export class StoreWriter {
                 escapedId.id
               } for this object. The selectionSet` +
               ` that was trying to be written is:\n` +
-              print(field),
+              JSON.stringify(field),
           );
         }
         // checks if we "lost" the typename
@@ -371,7 +370,7 @@ export class StoreWriter {
                 escapedId.typename
               } for the object of id ${escapedId.id}. The selectionSet` +
               ` that was trying to be written is:\n` +
-              print(field),
+              JSON.stringify(field),
           );
         }
 
@@ -469,11 +468,13 @@ function mergeWithGenerated(
     const value = generated[key];
     const realValue = real[key];
 
-    if (isIdValue(value) &&
-        isGeneratedId(value.id) &&
-        isIdValue(realValue) &&
-        ! isEqual(value, realValue) &&
-        mergeWithGenerated(value.id, realValue.id, cache)) {
+    if (
+      isIdValue(value) &&
+      isGeneratedId(value.id) &&
+      isIdValue(realValue) &&
+      !isEqual(value, realValue) &&
+      mergeWithGenerated(value.id, realValue.id, cache)
+    ) {
       madeChanges = true;
     }
   });

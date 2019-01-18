@@ -2,11 +2,7 @@ import { isEqual, tryFunctionOrLogError, cloneDeep } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
-
-import { QueryScheduler } from '../scheduler/scheduler';
-
 import { ApolloError } from '../errors/ApolloError';
-
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, FetchType, OperationVariables } from './types';
 import {
@@ -68,10 +64,8 @@ export class ObservableQuery<
    */
   public variables: TVariables;
 
-  private isCurrentlyPolling: boolean;
   private shouldSubscribe: boolean;
   private isTornDown: boolean;
-  private scheduler: QueryScheduler<any>;
   private queryManager: QueryManager<any>;
   private observers: Observer<ApolloQueryResult<TData>>[];
   private subscriptionHandles: Subscription[];
@@ -81,11 +75,11 @@ export class ObservableQuery<
   private lastError: ApolloError;
 
   constructor({
-    scheduler,
+    queryManager,
     options,
     shouldSubscribe = true,
   }: {
-    scheduler: QueryScheduler<any>;
+    queryManager: QueryManager<any>;
     options: WatchQueryOptions<TVariables>;
     shouldSubscribe?: boolean;
   }) {
@@ -94,18 +88,16 @@ export class ObservableQuery<
     );
 
     // active state
-    this.isCurrentlyPolling = false;
     this.isTornDown = false;
 
     // query information
     this.options = options;
     this.variables = options.variables || ({} as TVariables);
-    this.queryId = scheduler.queryManager.generateQueryId();
+    this.queryId = queryManager.generateQueryId();
     this.shouldSubscribe = shouldSubscribe;
 
     // related classes
-    this.scheduler = scheduler;
-    this.queryManager = scheduler.queryManager;
+    this.queryManager = queryManager;
 
     // interal data stores
     this.observers = [];
@@ -524,11 +516,8 @@ export class ObservableQuery<
   }
 
   public stopPolling() {
-    if (this.isCurrentlyPolling) {
-      this.scheduler.stopPollingQuery(this.queryId);
-      this.options.pollInterval = undefined;
-      this.isCurrentlyPolling = false;
-    }
+    this.queryManager.stopPollingQuery(this.queryId);
+    this.options.pollInterval = undefined;
   }
 
   public startPolling(pollInterval: number) {
@@ -541,13 +530,8 @@ export class ObservableQuery<
       );
     }
 
-    if (this.isCurrentlyPolling) {
-      this.scheduler.stopPollingQuery(this.queryId);
-      this.isCurrentlyPolling = false;
-    }
     this.options.pollInterval = pollInterval;
-    this.isCurrentlyPolling = true;
-    this.scheduler.startPollingQuery(this.options, this.queryId);
+    this.queryManager.startPollingQuery(this.options, this.queryId);
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
@@ -598,8 +582,7 @@ export class ObservableQuery<
         );
       }
 
-      this.isCurrentlyPolling = true;
-      this.scheduler.startPollingQuery<TData>(this.options, this.queryId);
+      this.queryManager.startPollingQuery(this.options, this.queryId);
     }
 
     const observer: Observer<ApolloQueryResult<TData>> = {
@@ -627,11 +610,7 @@ export class ObservableQuery<
 
   private tearDownQuery() {
     this.isTornDown = true;
-
-    if (this.isCurrentlyPolling) {
-      this.scheduler.stopPollingQuery(this.queryId);
-      this.isCurrentlyPolling = false;
-    }
+    this.queryManager.stopPollingQuery(this.queryId);
 
     // stop all active GraphQL subscriptions
     this.subscriptionHandles.forEach(sub => sub.unsubscribe());

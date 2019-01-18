@@ -2,6 +2,13 @@
 
 ## Apollo Client (vNext)
 
+## Apollo Client (2.4.12)
+
+### Apollo Client (2.4.12)
+
+- Support `ApolloClient#stop` method for safe client disposal. <br/>
+  [PR #4336](https://github.com/apollographql/apollo-client/pull/4336)
+
 ## Apollo Client (2.4.11)
 
 - Added explicit dependencies on the

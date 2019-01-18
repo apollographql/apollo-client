@@ -119,6 +119,7 @@ export function removeDirectivesFromDocument(
 
         if (
           shouldRemoveField &&
+          node.directives &&
           node.directives.some(getDirectiveMatcher(directives))
         ) {
           if (node.arguments) {

@@ -504,6 +504,29 @@ describe('removeDirectivesFromDocument', () => {
 
     expect(doc).toBe(null);
   });
+
+  it('should not throw in combination with addTypenameToDocument', () => {
+    const query = gql`
+      query Simple {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on Thing {
+        ...inDirection
+      }
+
+      fragment inDirection on Thing {
+        field @storage
+      }
+    `;
+
+    expect(() => {
+      removeDirectivesFromDocument(
+        [{ name: 'storage', remove: true }],
+        addTypenameToDocument(query),
+      );
+    }).not.toThrow();
+  });
 });
 
 describe('query transforms', () => {

@@ -1,3 +1,5 @@
+import { DocumentNode } from 'graphql';
+
 export class MutationStore {
   private store: { [mutationId: string]: MutationStoreValue } = {};
 
@@ -11,11 +13,11 @@ export class MutationStore {
 
   public initMutation(
     mutationId: string,
-    mutationString: string,
+    mutation: DocumentNode,
     variables: Object | undefined,
   ) {
     this.store[mutationId] = {
-      mutationString: mutationString,
+      mutation,
       variables: variables || {},
       loading: true,
       error: null,
@@ -50,7 +52,7 @@ export class MutationStore {
 }
 
 export interface MutationStoreValue {
-  mutationString: string;
+  mutation: DocumentNode;
   variables: Object;
   loading: boolean;
   error: Error | null;

@@ -130,6 +130,12 @@ export class MockSubscriptionLink extends ApolloLink {
     }, result.delay || 0);
   }
 
+  public simulateComplete() {
+    const { observer } = this;
+    if (!observer) throw new Error('subscription torn down');
+    if (observer.complete) observer.complete();
+  }
+
   public onSetup(listener: any): void {
     this.setups = this.setups.concat([listener]);
   }

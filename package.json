@@ -24,32 +24,22 @@
     {
       "name": "apollo-cache",
       "path": "./packages/apollo-cache/lib/bundle.min.js",
-      "maxSize": "1 kB"
+      "maxSize": "900 B"
     },
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
-      "maxSize": "7 kB"
+      "maxSize": "6.2 kB"
     },
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.min.js",
-      "maxSize": "10.25 kB"
-    },
-    {
-      "name": "apollo-boost",
-      "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "35 kB"
+      "maxSize": "9.4 kB"
     },
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "5 kB"
-    },
-    {
-      "name": "graphql-anywhere",
-      "path": "./packages/graphql-anywhere/lib/bundle.min.js",
-      "maxSize": "1.25 kB"
+      "maxSize": "4.3 kB"
     }
   ],
   "jest": {
@@ -91,7 +81,7 @@
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.0.4",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "23.3.11",
+    "@types/jest": "23.3.12",
     "@types/lodash": "4.14.119",
     "@types/node": "10.12.18",
     "@types/react": "16.7.18",
@@ -100,28 +90,29 @@
     "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.1.0",
-    "danger": "7.0.1",
+    "danger": "7.0.2",
     "fetch-mock": "7.3.0",
-    "flow-bin": "0.89.0",
+    "flow-bin": "0.90.0",
     "graphql": "14.0.2",
     "graphql-tag": "2.10.0",
     "isomorphic-fetch": "2.2.1",
     "jest": "23.6.0",
     "jest-junit": "5.2.0",
-    "lerna": "3.8.1",
+    "lerna": "3.10.5",
     "lint-staged": "8.1.0",
     "lodash": "4.17.11",
     "pre-commit": "1.2.2",
     "prettier": "1.15.3",
     "react": "16.7.0",
     "react-dom": "16.7.0",
-    "rollup": "1.0.1",
+    "rollup": "1.1.0",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "4.0.0",
     "rollup-plugin-sourcemaps": "0.4.2",
     "rxjs": "6.3.3",
     "ts-jest": "23.1.4",
-    "tslint": "5.12.0",
+    "tslib": "^1.9.3",
+    "tslint": "5.12.1",
     "typescript": "3.2.2",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",

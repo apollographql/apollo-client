@@ -2,15 +2,99 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Client (vNext)
+## Apollo Client (2.4.12)
+
+### Apollo Client (2.4.12)
+
+- Support `ApolloClient#stop` method for safe client disposal. <br/>
+  [PR #4336](https://github.com/apollographql/apollo-client/pull/4336)
+
+## Apollo Client (2.4.11)
+
+- Added explicit dependencies on the
+  [`tslib`](https://www.npmjs.com/package/tslib) package to all client
+  packages to fix
+  [Issue #4332](https://github.com/apollographql/apollo-client/issues/4332).
+
+### Apollo Client (2.4.11)
+
+- Reverted some breaking changes accidentally released in a patch version
+  (2.4.10). [PR #4334](https://github.com/apollographql/apollo-client/pull/4334)
+
+## Apollo Client (2.4.10)
+
+### Apollo Client (2.4.10)
+
+- The `apollo-client` package no longer exports a `printAST` function from
+  `graphql/language/printer`. If you need this functionality, import it
+  directly: `import { print } from "graphql/language/printer"`
+
+- Query polling now uses a simpler scheduling strategy based on a single
+  `setTimeout` interval rather than multiple `setInterval` timers. The new
+  timer fires at the rate of the fastest polling interval, and queries
+  with longer polling intervals fire whenever the time elapsed since they
+  last fired exceeds their desired interval. <br/>
+  [PR #4243](https://github.com/apollographql/apollo-client/pull/4243)
+
+### Apollo Cache In-Memory (1.4.1)
+
+- The `optimism` npm package has been updated to a version (0.6.9) that
+  provides its own TypeScript declarations, which should fix problems like
+  [Issue #4327](https://github.com/apollographql/apollo-client/issues/4327). <br/>
+  [PR #4331](https://github.com/apollographql/apollo-client/pull/4331)
+
+- Error messages involving GraphQL queries now print the queries using
+  `JSON.stringify` instead of the `print` function exported by the
+  `graphql` package, to avoid pulling unnecessary printing logic into your
+  JavaScript bundle. <br/>
+  [PR #4234](https://github.com/apollographql/apollo-client/pull/4234)
+
+- The `QueryKeyMaker` abstraction has been removed, meaning that cache
+  results for non-identical queries (or sub-queries) with equivalent
+  structure will no longer be cached together. This feature was a nice
+  optimization in certain specific use cases, but it was not worth the
+  additional complexity or bundle size. <br/>
+  [PR #4245](https://github.com/apollographql/apollo-client/pull/4245)
+
+### Apollo Utilities (1.1.1)
+
+- The `flattenSelections` helper function is no longer exported from
+  `apollo-utilities`, since `getDirectiveNames` has been reimplemented
+  without using `flattenSelections`, and `flattenSelections` has no clear
+  purpose now. If you need the old functionality, use a visitor:
+  ```ts
+  import { visit } from "graphql/language/visitor";
+
+  function flattenSelections(selection: SelectionNode) {
+    const selections: SelectionNode[] = [];
+    visit(selection, {
+      SelectionSet(ss) {
+        selections.push(...ss.selections);
+      }
+    });
+    return selections;
+  }
+  ```
+
+## Apollo Client (2.4.9)
+
+### Apollo Client (2.4.9)
 
 - Apollo Client has been updated to use `graphql` 14.x as a dev dependency.  <br/>
   [@hwillson](https://github.com/hwillson) in [#4233](https://github.com/apollographql/apollo-client/pull/4233)
+
 - The `onClearStore` function can now be used to register callbacks that should
   be triggered when calling `clearStore`.  <br/>
   [@joe-re](https://github.com/joe-re) in [#4082](https://github.com/apollographql/apollo-client/pull/4082)
+
 - Make `isApolloError` available for external use.  <br/>
   [@FredyC](https://github.com/FredyC) in [#4223](https://github.com/apollographql/apollo-client/pull/4223)
+
+- The `QueryManager` now calls `complete` on the observables used by
+  Apollo Client's Subscription handling. This gives finite subscriptions a
+  chance to handle cleanup.  <br/>
+  [@sujeetsr](https://github.com/sujeetsr) in [#4290](https://github.com/apollographql/apollo-client/pull/4290)
+
 - Documentation updates.  <br/>
   [@lifedup](https://github.com/lifedup) in [#3931](https://github.com/apollographql/apollo-client/pull/3931)  <br />
   [@Dem0n3D](https://github.com/Dem0n3D) in [#4008](https://github.com/apollographql/apollo-client/pull/4008)  <br />
@@ -28,20 +112,29 @@
   [@stubailo](https://github.com/stubailo) in [#4220](https://github.com/apollographql/apollo-client/pull/4220)  <br/>
   [@haysclark](https://github.com/haysclark) in [#4255](https://github.com/apollographql/apollo-client/pull/4255)  <br/>
   [@shelmire](https://github.com/shelmire) in [#4266](https://github.com/apollographql/apollo-client/pull/4266)  <br/>
-  [@peggyrayzis](https://github.com/peggyrayzis) in [#4280](https://github.com/apollographql/apollo-client/pull/4280)
+  [@peggyrayzis](https://github.com/peggyrayzis) in [#4280](https://github.com/apollographql/apollo-client/pull/4280)  <br/>
+  [@caydie-tran](https://github.com/caydie-tran) in [#4300](https://github.com/apollographql/apollo-client/pull/4300)
 
-### Apollo Utilities (vNext)
+### Apollo Utilities (1.1.0)
 
 - Transformation utilities have been refactored to work with `graphql` 14.x.
   GraphQL AST's are no longer being directly modified.  <br/>
   [@hwillson](https://github.com/hwillson) in [#4233](https://github.com/apollographql/apollo-client/pull/4233)
 
-### Apollo Cache In-Memory (vNext)
+### Apollo Cache In-Memory (1.4.0)
+
+- The speed and memory usage of optimistic reads and writes has been
+  improved dramatically using a new layering technique that does not
+  require copying the non-optimistic contents of the cache.  <br/>
+  [PR #4319](https://github.com/apollographql/apollo-client/pull/4319/)
+
+- The `RecordingCache` abstraction has been removed, and thus is no longer
+  exported from `apollo-cache-inmemory`.  <br/>
+  [PR #4319](https://github.com/apollographql/apollo-client/pull/4319/)
 
 - Export the optimism `wrap` function using ES2015 export syntax, instead of
   CommonJS.  <br/>
   [@ardatan](https://github.com/ardatan) in [#4158](https://github.com/apollographql/apollo-client/pull/4158)
-
 
 ## Apollo Client (2.4.8)
 
@@ -51,8 +144,6 @@
   [@justinanastos](https://github.com/justinanastos) in [#4187](https://github.com/apollographql/apollo-client/pull/4187)  <br/>
   [@PowerKiKi](https://github.com/PowerKiKi) in [#3693](https://github.com/apollographql/apollo-client/pull/3693)  <br/>
   [@nandito](https://github.com/nandito) in [#3865](https://github.com/apollographql/apollo-client/pull/3865)
-
-### Apollo Utilities (1.0.27)
 
 - Schema/AST tranformation utilities have been updated to work properly with
   `@client` directives.  <br/>

@@ -5,15 +5,22 @@ export * from 'apollo-cache-inmemory';
 
 import { Operation, ApolloLink, Observable } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
-import { withClientState, ClientStateConfig } from 'apollo-link-state';
 import { onError, ErrorLink } from 'apollo-link-error';
-
 import { ApolloCache } from 'apollo-cache';
 import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import ApolloClient from 'apollo-client';
+import { DocumentNode } from 'graphql';
 
 export { gql, HttpLink };
+
+type ClientStateConfig = {
+  cache?: ApolloCache<any>;
+  resolvers: any | (() => any);
+  defaults?: any;
+  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+  fragmentMatcher?: any;
+};
 
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;
@@ -99,10 +106,6 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
         : new InMemoryCache();
     }
 
-    const stateLink = clientState
-      ? withClientState({ ...clientState, cache })
-      : false;
-
     const errorLink = errorCallback
       ? onError(errorCallback)
       : onError(({ graphQLErrors, networkError }) => {
@@ -154,14 +157,34 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       headers: headers || {},
     });
 
-    const link = ApolloLink.from([
-      errorLink,
-      requestHandler,
-      stateLink,
-      httpLink,
-    ].filter(x => !!x) as ApolloLink[]);
+    const link = ApolloLink.from([errorLink, requestHandler, httpLink].filter(
+      x => !!x,
+    ) as ApolloLink[]);
+
+    let initializers: { [field: string]: any };
+    let resolvers;
+    let typeDefs;
+    if (clientState) {
+      if (clientState.defaults) {
+        initializers = {};
+        Object.keys(clientState.defaults).forEach((field: string) => {
+          initializers[field] = () => clientState.defaults[field];
+        });
+      }
+
+      resolvers = clientState.resolvers;
+      typeDefs = clientState.typeDefs;
+    }
 
     // super hacky, we will fix the types eventually
-    super({ cache, link, name, version } as any);
+    super({
+      cache,
+      link,
+      name,
+      version,
+      initializers,
+      resolvers,
+      typeDefs,
+    } as any);
   }
 }

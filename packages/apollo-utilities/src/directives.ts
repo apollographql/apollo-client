@@ -1,5 +1,5 @@
-// Provides the methods that allow QueryManager to handle
-// the `skip` and `include` directives within GraphQL.
+// Provides the methods that allow QueryManager to handle the `skip` and
+// `include` directives within GraphQL.
 import {
   FieldNode,
   SelectionNode,
@@ -111,5 +111,13 @@ export function getDirectiveNames(doc: DocumentNode) {
 export function hasDirectives(names: string[], doc: DocumentNode) {
   return getDirectiveNames(doc).some(
     (name: string) => names.indexOf(name) > -1,
+  );
+}
+
+export function hasClientExports(document: DocumentNode) {
+  return (
+    document &&
+    hasDirectives(['client'], document) &&
+    hasDirectives(['export'], document)
   );
 }

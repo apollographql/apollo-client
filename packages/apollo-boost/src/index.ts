@@ -33,6 +33,8 @@ export interface PresetConfig {
   onError?: ErrorLink.ErrorHandler;
   cacheRedirects?: CacheResolverMap;
   cache?: ApolloCache<any>;
+  name?: string;
+  version?: string;
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -56,6 +58,8 @@ const PRESET_CONFIG_KEYS = [
   'onError',
   'cacheRedirects',
   'cache',
+  'name',
+  'version',
 ];
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
@@ -83,6 +87,8 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       clientState,
       cacheRedirects,
       onError: errorCallback,
+      name,
+      version,
     } = config;
 
     let { cache } = config;
@@ -171,6 +177,14 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
     }
 
     // super hacky, we will fix the types eventually
-    super({ cache, link, initializers, resolvers, typeDefs } as any);
+    super({
+      cache,
+      link,
+      name,
+      version,
+      initializers,
+      resolvers,
+      typeDefs,
+    } as any);
   }
 }

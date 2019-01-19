@@ -72,7 +72,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
-  private queryManager: QueryManager<TCacheShape> | undefined;
+  public queryManager: QueryManager<TCacheShape> | undefined;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
@@ -248,6 +248,16 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       typeDefs,
       fragmentMatcher,
     });
+  }
+
+  /**
+   * Call this method to terminate any active client processes, making it safe
+   * to dispose of this `ApolloClient` instance.
+   */
+  public stop() {
+    if (this.queryManager) {
+      this.queryManager.stop();
+    }
   }
 
   /**
@@ -447,6 +457,38 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
   public __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult> {
     return execute(this.link, payload);
+  }
+
+  /**
+   * This initializes the query manager that tracks queries and the cache
+   */
+  public initQueryManager(): QueryManager<TCacheShape> {
+    if (!this.queryManager) {
+      this.queryManager = new QueryManager({
+        link: this.link,
+        store: this.store,
+        queryDeduplication: this.queryDeduplication,
+        ssrMode: this.ssrMode,
+        clientAwareness: this.clientAwareness,
+        onBroadcast: () => {
+          if (this.devToolsHookCb) {
+            this.devToolsHookCb({
+              action: {},
+              state: {
+                queries: this.queryManager
+                  ? this.queryManager.queryStore.getStore()
+                  : {},
+                mutations: this.queryManager
+                  ? this.queryManager.mutationStore.getStore()
+                  : {},
+              },
+              dataWithOptimisticResults: this.cache.extract(true),
+            });
+          }
+        },
+      });
+    }
+    return this.queryManager;
   }
 
   /**

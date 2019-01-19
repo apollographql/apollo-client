@@ -36,7 +36,7 @@ interface MockOperation {
 }
 
 export interface MockedResponse {
-  request: GraphQLRequest;
+  request: Operation;
   result?: FetchResult;
   error?: Error;
   delay?: number;
@@ -159,7 +159,7 @@ export class MockSubscriptionLink extends ApolloLink {
   }
 }
 
-function requestToKey(request: GraphQLRequest): string {
+function requestToKey(request: Operation): string {
   const queryString = request.query && print(request.query);
 
   return JSON.stringify({

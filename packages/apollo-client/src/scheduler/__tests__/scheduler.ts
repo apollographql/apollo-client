@@ -2,35 +2,23 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
 
-import { QueryManager } from '../QueryManager';
+import { QueryScheduler } from '../scheduler';
+import { QueryManager } from '../../core/QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
 import { NetworkStatus } from '../../core/networkStatus';
 
 import { DataStore } from '../../data/store';
-import { ObservableQuery } from '../../core/ObservableQuery';
-
-// Used only for unit testing.
-function registerPollingQuery<T>(
-  queryManager: QueryManager<any>,
-  queryOptions: WatchQueryOptions,
-): ObservableQuery<T> {
-  if (!queryOptions.pollInterval) {
-    throw new Error(
-      'Attempted to register a non-polling query with the scheduler.',
-    );
-  }
-  return new ObservableQuery<T>({
-    queryManager,
-    options: queryOptions,
-  });
-}
 
 describe('QueryScheduler', () => {
   it('should throw an error if we try to start polling a non-polling query', () => {
     const queryManager = new QueryManager({
       link: mockSingleLink(),
       store: new DataStore(new InMemoryCache({ addTypename: false })),
+    });
+
+    const scheduler = new QueryScheduler({
+      queryManager,
     });
 
     const query = gql`
@@ -45,7 +33,7 @@ describe('QueryScheduler', () => {
       query,
     };
     expect(() => {
-      queryManager.startPollingQuery(queryOptions, null as never);
+      scheduler.startPollingQuery(queryOptions, null as never);
     }).toThrow();
   });
 
@@ -79,13 +67,16 @@ describe('QueryScheduler', () => {
 
       link: link,
     });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
     let timesFired = 0;
-    const queryId = queryManager.startPollingQuery(queryOptions, 'fake-id', () => {
+    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', () => {
       timesFired += 1;
     });
     setTimeout(() => {
       expect(timesFired).toBeGreaterThanOrEqual(0);
-      queryManager.stopPollingQuery(queryId);
+      queryManager.stop();
       done();
     }, 120);
   });
@@ -119,20 +110,24 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link: link,
     });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
     let timesFired = 0;
-    let queryId = queryManager.startPollingQuery(
+    const queryId = scheduler.startPollingQuery(
       queryOptions,
       'fake-id',
       queryStoreValue => {
         if (queryStoreValue.networkStatus !== NetworkStatus.poll) {
           timesFired += 1;
-          queryManager.stopPollingQuery(queryId);
+          scheduler.stopPollingQuery(queryId);
         }
       },
     );
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
+      queryManager.stop();
       done();
     }, 170);
   });
@@ -165,8 +160,11 @@ describe('QueryScheduler', () => {
 
       link,
     });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
     let timesFired = 0;
-    let observableQuery = registerPollingQuery(queryManager, queryOptions);
+    let observableQuery = scheduler.registerPollingQuery(queryOptions);
     let subscription = observableQuery.subscribe({
       next(result) {
         timesFired += 1;
@@ -177,6 +175,7 @@ describe('QueryScheduler', () => {
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -209,8 +208,11 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
     let timesFired = 0;
-    let observableQuery = registerPollingQuery(queryManager, queryOptions);
+    let observableQuery = scheduler.registerPollingQuery(queryOptions);
     let subscription = observableQuery.subscribe({
       next(result) {
         expect(stripSymbols(result.data)).toEqual(data[timesFired]);
@@ -229,6 +231,7 @@ describe('QueryScheduler', () => {
       // timesFired end up greater than 2.
       expect(timesFired).toEqual(2);
       subscription.unsubscribe();
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -255,9 +258,13 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
-    let observableQuery = registerPollingQuery(queryManager, queryOptions);
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    let observableQuery = scheduler.registerPollingQuery(queryOptions);
     const subscription = observableQuery.subscribe({
       next() {
+        queryManager.stop();
         done.fail(
           new Error('Observer provided a result despite a network error.'),
         );
@@ -265,10 +272,10 @@ describe('QueryScheduler', () => {
 
       error(errorVal) {
         expect(errorVal).toBeDefined();
-        queryManager.pollingInfoByQueryId.forEach((_: any, queryId: string) => {
-          expect(queryManager.checkInFlight(queryId)).toBe(false);
-        });
+        const queryId = scheduler.intervalQueries[queryOptions.pollInterval][0];
+        expect(scheduler.checkInFlight(queryId)).toBe(false);
         subscription.unsubscribe();
+        queryManager.stop();
         done();
       },
     });
@@ -296,10 +303,14 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache()),
       link,
     });
-    const observer = registerPollingQuery(queryManager, queryOptions);
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    const observer = scheduler.registerPollingQuery(queryOptions);
     const subscription = observer.subscribe({});
     setTimeout(() => {
       subscription.unsubscribe();
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -321,20 +332,25 @@ describe('QueryScheduler', () => {
       request: queryOptions,
       result: { data },
     });
-    const queryManager = new QueryManager<any>({
+    const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache()),
       link,
     });
-    const queryId = 'fake-id';
-    queryManager.startPollingQuery(queryOptions, queryId);
-
-    let count = 0;
-    queryManager.pollingInfoByQueryId.forEach((info: { interval: number }, qid: string) => {
-      ++count;
-      expect(info.interval).toEqual(queryOptions.pollInterval);
-      expect(qid).toEqual(queryId);
+    const scheduler = new QueryScheduler({
+      queryManager,
     });
-    expect(count).toEqual(1);
+    const queryId = 'fake-id';
+    scheduler.addQueryOnInterval<any>(queryId, queryOptions);
+    expect(Object.keys(scheduler.intervalQueries).length).toEqual(1);
+    expect(Object.keys(scheduler.intervalQueries)[0]).toEqual(
+      queryOptions.pollInterval.toString(),
+    );
+    const queries = (<any>scheduler.intervalQueries)[
+      queryOptions.pollInterval.toString()
+    ];
+    expect(queries.length).toEqual(1);
+    expect(queries[0]).toEqual(queryId);
+    queryManager.stop();
   });
 
   it('should add multiple queries to an interval correctly', () => {
@@ -382,26 +398,33 @@ describe('QueryScheduler', () => {
         },
       ),
     });
-    const observable1 = registerPollingQuery(queryManager, queryOptions1);
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    const observable1 = scheduler.registerPollingQuery(queryOptions1);
     observable1.subscribe({
       next() {
         //do nothing
       },
     });
 
-    const observable2 = registerPollingQuery(queryManager, queryOptions2);
+    const observable2 = scheduler.registerPollingQuery(queryOptions2);
     observable2.subscribe({
       next() {
         //do nothing
       },
     });
 
-    let count = 0;
-    queryManager.pollingInfoByQueryId.forEach((info: { interval: number }) => {
-      expect(info.interval).toEqual(interval);
-      ++count;
-    });
-    expect(count).toEqual(2);
+    const keys = Object.keys(scheduler.intervalQueries);
+    expect(keys.length).toEqual(1);
+    expect(keys[0]).toEqual(String(interval));
+
+    const queryIds = (<any>scheduler.intervalQueries)[keys[0]];
+    expect(queryIds.length).toEqual(2);
+    expect(scheduler.registeredQueries[queryIds[0]]).toEqual(queryOptions1);
+    expect(scheduler.registeredQueries[queryIds[1]]).toEqual(queryOptions2);
+
+    queryManager.stop();
   });
 
   it('should remove queries from the interval list correctly', done => {
@@ -426,8 +449,11 @@ describe('QueryScheduler', () => {
         result: { data },
       }),
     });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
     let timesFired = 0;
-    const observable = registerPollingQuery(queryManager, {
+    const observable = scheduler.registerPollingQuery({
       query,
       pollInterval: 10,
     });
@@ -436,12 +462,13 @@ describe('QueryScheduler', () => {
         timesFired += 1;
         expect(stripSymbols(result.data)).toEqual(data);
         subscription.unsubscribe();
-        expect(queryManager.pollingInfoByQueryId.size).toEqual(0);
+        expect(Object.keys(scheduler.registeredQueries).length).toEqual(0);
       },
     });
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -479,21 +506,25 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache({ addTypename: false })),
       link: link,
     });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
     let timesFired = 0;
-    let queryId = queryManager.startPollingQuery(queryOptions, 'fake-id', () => {
-      queryManager.stopPollingQuery(queryId);
+    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', () => {
+      scheduler.stopPollingQuery(queryId);
     });
     setTimeout(() => {
-      let queryId2 = queryManager.startPollingQuery(
+      scheduler.startPollingQuery(
         queryOptions,
         'fake-id2',
         () => {
           timesFired += 1;
         },
       );
+      expect(scheduler.intervalQueries[20].length).toEqual(1);
       setTimeout(() => {
         expect(timesFired).toBeGreaterThanOrEqual(1);
-        queryManager.stopPollingQuery(queryId2);
+        queryManager.stop();
         done();
       }, 80);
     }, 200);

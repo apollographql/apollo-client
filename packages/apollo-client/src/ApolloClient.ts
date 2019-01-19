@@ -470,6 +470,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         queryDeduplication: this.queryDeduplication,
         ssrMode: this.ssrMode,
         clientAwareness: this.clientAwareness,
+        localState: this.localState,
         onBroadcast: () => {
           if (this.devToolsHookCb) {
             this.devToolsHookCb({
@@ -664,39 +665,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
     this.localState.setFragmentMatcher(fragmentMatcher);
-  }
-
-  /**
-   * This initializes the query manager that tracks queries and the cache
-   */
-  private initQueryManager(): QueryManager<TCacheShape> {
-    if (!this.queryManager) {
-      this.queryManager = new QueryManager({
-        link: this.link,
-        store: this.store,
-        queryDeduplication: this.queryDeduplication,
-        ssrMode: this.ssrMode,
-        clientAwareness: this.clientAwareness,
-        localState: this.localState,
-        onBroadcast: () => {
-          if (this.devToolsHookCb) {
-            this.devToolsHookCb({
-              action: {},
-              state: {
-                queries: this.queryManager
-                  ? this.queryManager.queryStore.getStore()
-                  : {},
-                mutations: this.queryManager
-                  ? this.queryManager.mutationStore.getStore()
-                  : {},
-              },
-              dataWithOptimisticResults: this.cache.extract(true),
-            });
-          }
-        },
-      });
-    }
-    return this.queryManager;
   }
 
   /**

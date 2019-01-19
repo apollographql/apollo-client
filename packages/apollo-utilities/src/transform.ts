@@ -137,23 +137,23 @@ export function removeDirectivesFromDocument(
                       name: (arg.value as VariableNode).name.value,
                     });
                   }
-
-                  if (node.selectionSet) {
-                    // Store fragment spread names so they can be removed from the
-                    // docuemnt.
-                    getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
-                      frag => {
-                        fragmentSpreadsToRemove.push({
-                          name: frag.name.value,
-                        });
-                      },
-                    );
-                  }
-
-                  // Remove the field.
-                  return null;
                 });
               }
+
+              if (node.selectionSet) {
+                // Store fragment spread names so they can be removed from the
+                // docuemnt.
+                getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
+                  frag => {
+                    fragmentSpreadsToRemove.push({
+                      name: frag.name.value,
+                    });
+                  },
+                );
+              }
+
+              // Remove the field.
+              return null;
             }
           }
         },

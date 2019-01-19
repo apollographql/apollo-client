@@ -79,7 +79,7 @@
   "devDependencies": {
     "@octokit/rest": "16.3.2",
     "@types/benchmark": "1.0.31",
-    "@types/graphql": "14.0.4",
+    "@types/graphql": "14.0.5",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "23.3.12",
     "@types/lodash": "4.14.119",
@@ -93,7 +93,7 @@
     "danger": "7.0.2",
     "fetch-mock": "7.3.0",
     "flow-bin": "0.90.0",
-    "graphql": "14.0.2",
+    "graphql": "14.1.1",
     "graphql-tag": "2.10.0",
     "isomorphic-fetch": "2.2.1",
     "jest": "23.6.0",

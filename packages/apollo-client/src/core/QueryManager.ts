@@ -13,8 +13,6 @@ import {
   hasDirectives,
 } from 'apollo-utilities';
 
-import { QueryScheduler } from '../scheduler/scheduler';
-
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 
 import { Observer, Subscription, Observable } from '../util/Observable';
@@ -54,7 +52,6 @@ export interface QueryInfo {
 }
 
 export class QueryManager<TStore> {
-  public scheduler: QueryScheduler<TStore>;
   public link: ApolloLink;
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
@@ -65,6 +62,8 @@ export class QueryManager<TStore> {
   private clientAwareness: Record<string, string> = {};
 
   private onBroadcast: () => void;
+
+  private ssrMode: boolean;
 
   // let's not start at zero to avoid pain with bad checks
   private idCounter = 1;
@@ -104,7 +103,7 @@ export class QueryManager<TStore> {
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
     this.clientAwareness = clientAwareness;
-    this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
+    this.ssrMode = ssrMode;
   }
 
   /**
@@ -112,8 +111,6 @@ export class QueryManager<TStore> {
    * to dispose of this QueryManager instance.
    */
   public stop() {
-    this.scheduler.stop();
-
     this.queries.forEach((_info, queryId) => {
       this.stopQueryNoBroadcast(queryId);
     });
@@ -678,7 +675,7 @@ export class QueryManager<TStore> {
     let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
 
     return new ObservableQuery<T, TVariables>({
-      scheduler: this.scheduler,
+      queryManager: this,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
     });
@@ -731,7 +728,7 @@ export class QueryManager<TStore> {
   }
 
   private stopQueryInStoreNoBroadcast(queryId: string) {
-    this.scheduler.stopPollingQuery(queryId);
+    this.stopPollingQuery(queryId);
     this.queryStore.stopQuery(queryId);
     this.invalidate(true, queryId);
   }
@@ -1293,6 +1290,135 @@ export class QueryManager<TStore> {
         },
         clientAwareness: this.clientAwareness,
       },
+    };
+  }
+
+  public checkInFlight(queryId: string) {
+    const query = this.queryStore.get(queryId);
+
+    return (
+      query &&
+      query.networkStatus !== NetworkStatus.ready &&
+      query.networkStatus !== NetworkStatus.error
+    );
+  }
+
+  // Map from client ID to { interval, options }.
+  private pollingInfoByQueryId = new Map<string, {
+    interval: number;
+    lastPollTimeMs: number;
+    options: WatchQueryOptions;
+  }>();
+
+  private nextPoll: {
+    time: number;
+    timeout: NodeJS.Timeout;
+  } | null = null;
+
+  public startPollingQuery(
+    options: WatchQueryOptions,
+    queryId: string,
+    listener?: QueryListener,
+  ): string {
+    const { pollInterval } = options;
+
+    if (!pollInterval) {
+      throw new Error(
+        'Attempted to start a polling query without a polling interval.',
+      );
+    }
+
+    // Do not poll in SSR mode
+    if (!this.ssrMode) {
+      this.pollingInfoByQueryId.set(queryId, {
+        interval: pollInterval,
+        // Avoid polling until at least pollInterval milliseconds from now.
+        // The -10 is a fudge factor to help with tests that rely on simulated
+        // timeouts via jest.runTimersToTime.
+        lastPollTimeMs: Date.now() - 10,
+        options: {
+          ...options,
+          fetchPolicy: 'network-only',
+        },
+      });
+
+      if (listener) {
+        this.addQueryListener(queryId, listener);
+      }
+
+      this.schedulePoll(pollInterval);
+    }
+
+    return queryId;
+  }
+
+  public stopPollingQuery(queryId: string) {
+    // Since the master polling interval dynamically adjusts to the contents of
+    // this.pollingInfoByQueryId, stopping a query from polling is as easy as
+    // removing it from the map.
+    this.pollingInfoByQueryId.delete(queryId);
+  }
+
+  // Calling this method ensures a poll will happen within the specified time
+  // limit, canceling any pending polls that would not happen in time.
+  private schedulePoll(timeLimitMs: number) {
+    const now = Date.now();
+
+    if (this.nextPoll) {
+      if (timeLimitMs < this.nextPoll.time - now) {
+        // The next poll will happen too far in the future, so cancel it, and
+        // fall through to scheduling a new timeout.
+        clearTimeout(this.nextPoll.timeout);
+      } else {
+        // The next poll will happen within timeLimitMs, so all is well.
+        return;
+      }
+    }
+
+    this.nextPoll = {
+      // Estimated time when the timeout will fire.
+      time: now + timeLimitMs,
+
+      timeout: setTimeout(() => {
+        this.nextPoll = null;
+        let nextTimeLimitMs = Infinity;
+
+        this.pollingInfoByQueryId.forEach((info, queryId) => {
+          // Pick next timeout according to current minimum interval.
+          if (info.interval < nextTimeLimitMs) {
+            nextTimeLimitMs = info.interval;
+          }
+
+          if (!this.checkInFlight(queryId)) {
+            // If this query was last polled more than interval milliseconds
+            // ago, poll it now. Note that there may be a small delay between
+            // the desired polling time and the actual polling time (equal to
+            // at most the minimum polling interval across all queries), but
+            // that's the tradeoff to batching polling intervals.
+            if (Date.now() - info.lastPollTimeMs >= info.interval) {
+              const updateLastPollTime = () => {
+                info.lastPollTimeMs = Date.now();
+              };
+              this.fetchQuery(queryId, info.options, FetchType.poll).then(
+                // Set info.lastPollTimeMs after the fetch completes, whether
+                // or not it succeeded. Promise.prototype.finally would be nice
+                // here, but we don't have a polyfill for that at the moment,
+                // and this code has historically silenced errors, which is not
+                // the behavior of .finally(updateLastPollTime).
+                updateLastPollTime,
+                updateLastPollTime
+              );
+            }
+          }
+        });
+
+        // If there were no entries in this.pollingInfoByQueryId, then
+        // nextTimeLimitMs will still be Infinity, so this.schedulePoll will
+        // not be called, thus ending the master polling interval.
+        if (isFinite(nextTimeLimitMs)) {
+          this.schedulePoll(nextTimeLimitMs);
+        }
+      }, timeLimitMs),
     };
   }
 }

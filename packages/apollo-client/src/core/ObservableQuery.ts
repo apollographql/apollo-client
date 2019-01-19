@@ -117,8 +117,27 @@ export class ObservableQuery<
     return new Promise((resolve, reject) => {
       let subscription: Subscription;
       const observer: Observer<ApolloQueryResult<TData>> = {
-        next(result: ApolloQueryResult<TData>) {
-          resolve(result);
+        async next(result: ApolloQueryResult<TData>) {
+          // If a local resolver policy of `resolver-always` is set, fire all
+          // local resolvers using the current result as the starting data
+          // set. Override the result data with the local resolver
+          // modified data set.
+          let modifiedResult = result;
+          if (that.options.resolverPolicy === 'resolver-always') {
+            const { query, variables, context } = that.options;
+            const localState = that.queryManager.getLocalState();
+            const modifiedData = await localState.runResolvers({
+              document: query,
+              remoteResult: result.data,
+              context,
+              variables,
+            });
+            if (modifiedData && Object.keys(modifiedData).length > 0) {
+              modifiedResult.data = modifiedData as TData;
+            }
+          }
+
+          resolve(modifiedResult);
 
           // Stop the query within the QueryManager if we can before
           // this function returns.
@@ -174,6 +193,19 @@ export class ObservableQuery<
           networkError: queryStoreValue.networkError,
         }),
       };
+    }
+
+    // Variables might have been added dynamically at query time, when
+    // using `@client @export(as: "varname")` for example. When this happens,
+    // the variables have been updated in the query store, but not updated on
+    // the original `ObservableQuery`. We'll update the observable query
+    // variables here to match, so retrieving from the cache doesn't fail.
+    if (queryStoreValue && queryStoreValue.variables) {
+      this.options.variables = Object.assign(
+        {},
+        this.options.variables,
+        queryStoreValue.variables,
+      );
     }
 
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);

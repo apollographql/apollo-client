@@ -15,7 +15,6 @@ import { PureQueryOptions, OperationVariables } from './types';
  * - network-only: return result from network, fail if network call doesn't succeed, save to cache
  * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */
-
 export type FetchPolicy =
   | 'cache-first'
   | 'cache-and-network'
@@ -30,8 +29,28 @@ export type FetchPolicy =
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
  */
-
 export type ErrorPolicy = 'none' | 'ignore' | 'all';
+
+/**
+ * `resolverPolicy` can be used to control when Apollo Client's local state
+ * resolvers (`@client`) are fired. The options are:
+ *
+ * - cache-first (default): By default, local resolvers only fire if a field
+ *                          value can't be found in the cache first (unless
+ *                          `fetchPolicy` is set to `no-cache` or
+ *                          `network-only`, in which case local resolvers are
+ *                          fired on each request, since they're then treated
+ *                          just like network based resolvers).
+ * - resolver-always: When this option is set, queries resolve using the cache
+ *                    as they would normally, which means if a `@client`
+ *                    field can be found in the cache (and the `fetchPolicy`
+ *                    is not `no-cache` or `network-only`), it will be loaded.
+ *                    After the vaue is done loading from the cache however,
+ *                    if a local resolver is specified for the field in
+ *                    question, it will then be fired and override the loaded
+ *                    cache value, which will be returned in the query response.
+ */
+export type ResolverPolicy = 'cache-first' | 'resolver-always';
 
 /**
  * Common options shared across all query interfaces.
@@ -52,6 +71,11 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
    * Specifies the {@link ErrorPolicy} to be used for this query
    */
   errorPolicy?: ErrorPolicy;
+
+  /**
+   * Specifies the {@link ResolverPolicy} to be used for this query
+   */
+  resolverPolicy?: ResolverPolicy;
 
   /**
    * Whether or not to fetch results
@@ -113,7 +137,11 @@ export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   variables?: Pick<TVariables, K>;
 }
 
-export type UpdateQueryFn<TData = any, TVariables = OperationVariables, TSubscriptionData = TData> = (
+export type UpdateQueryFn<
+  TData = any,
+  TVariables = OperationVariables,
+  TSubscriptionData = TData
+> = (
   previousQueryResult: TData,
   options: {
     subscriptionData: { data: TSubscriptionData };

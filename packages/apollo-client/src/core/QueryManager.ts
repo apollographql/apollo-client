@@ -460,7 +460,7 @@ export class QueryManager<TStore> {
     if (shouldDispatchClientResult) {
       this.queryStore.markQueryResultClient(queryId, !shouldFetch);
       this.invalidate(true, queryId, fetchMoreForQueryId);
-      this.broadcastQueries();
+      this.broadcastQueries(this.localState.shouldForceResolvers(query));
     }
 
     if (shouldFetch) {
@@ -513,9 +513,10 @@ export class QueryManager<TStore> {
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     let previouslyHadError: boolean = false;
-    return (
+    return async (
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
+      forceResolvers?: boolean,
     ) => {
       // we're going to take a look at the data, so the query is no longer invalidated
       this.invalidate(false, queryId);
@@ -685,6 +686,25 @@ export class QueryManager<TStore> {
               observableQuery.isDifferentFromLastResult(resultFromStore)
             ) {
               try {
+                // Local resolvers can be forced by using
+                // `@client(always: true)` syntax. If any resolvers are
+                // forced, we'll make sure they're run here to override any
+                // data returned from the cache. Only the selection sets and
+                // fields marked with `@client(always: true)` are overwritten.
+                if (forceResolvers) {
+                  const { query, variables, context } = options;
+                  const updatedResult = await this.localState.runResolvers({
+                    document: query,
+                    remoteResult: resultFromStore.data,
+                    context,
+                    variables,
+                    onlyRunForcedResolvers: forceResolvers,
+                  });
+                  if (updatedResult) {
+                    resultFromStore.data = updatedResult as T;
+                  }
+                }
+
                 observer.next(resultFromStore);
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
@@ -1138,7 +1158,7 @@ export class QueryManager<TStore> {
     };
   }
 
-  public broadcastQueries() {
+  public broadcastQueries(forceResolvers = false) {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
       if (!info.invalidated || !info.listeners) return;
@@ -1147,7 +1167,7 @@ export class QueryManager<TStore> {
         // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
         .filter((x: QueryListener) => !!x)
         .forEach((listener: QueryListener) => {
-          listener(this.queryStore.get(id), info.newData);
+          listener(this.queryStore.get(id), info.newData, forceResolvers);
         });
     });
   }

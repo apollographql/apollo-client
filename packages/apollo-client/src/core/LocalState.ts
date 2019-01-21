@@ -2,13 +2,17 @@ import {
   ExecutionResult,
   DocumentNode,
   OperationDefinitionNode,
-  print,
   SelectionSetNode,
   SelectionNode,
   InlineFragmentNode,
   FragmentDefinitionNode,
   FieldNode,
+  BooleanValueNode,
+  ASTNode,
 } from 'graphql';
+import { print } from 'graphql/language/printer';
+import { visit, BREAK } from 'graphql/language/visitor';
+
 import { ApolloCache } from 'apollo-cache';
 import {
   getMainDefinition,
@@ -62,6 +66,7 @@ export type ExecContext = {
   fragmentMatcher: FragmentMatcher;
   defaultOperationType?: string | null;
   exportedVariables: Record<string, any>;
+  onlyRunForcedResolvers?: boolean;
 };
 
 export type ExecInfo = {
@@ -205,12 +210,14 @@ export class LocalState<TCacheShape> {
     context,
     variables,
     onError,
+    onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
     remoteResult?: ExecutionResult;
     context?: Record<string, any>;
     variables?: Record<string, any>;
     onError?: (error: any) => void;
+    onlyRunForcedResolvers?: boolean;
   }) {
     let localResult: Record<string, any> = {};
 
@@ -225,6 +232,7 @@ export class LocalState<TCacheShape> {
           context,
           variables,
           { fragmentMatcher: this.fragmentMatcher },
+          onlyRunForcedResolvers,
         );
         localResult = data.result;
       } catch (error) {
@@ -334,6 +342,33 @@ export class LocalState<TCacheShape> {
     this.firedInitializers = [];
   }
 
+  public shouldForceResolvers(document: ASTNode) {
+    let forceResolvers = false;
+    visit(document, {
+      Directive: {
+        enter(node) {
+          if (node.name.value === 'client' && node.arguments) {
+            forceResolvers =
+              node.arguments
+                .filter(arg => (
+                  arg.name.value === 'always' &&
+                  (arg.value as BooleanValueNode).value === true
+                ))
+                .length > 0;
+            if (forceResolvers) {
+              return BREAK;
+            }
+          }
+        },
+      },
+    });
+    return forceResolvers;
+  }
+
+  public shouldForceResolver(field: FieldNode) {
+    return this.shouldForceResolvers(field);
+  }
+
   private mergeInitializers(
     initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
   ) {
@@ -405,6 +440,7 @@ export class LocalState<TCacheShape> {
     context?: any,
     variables?: VariableMap,
     execOptions: ExecOptions = {},
+    onlyRunForcedResolvers?: boolean,
   ) {
     const mainDefinition = getMainDefinition(document);
     const fragments = getFragmentDefinitions(document);
@@ -433,6 +469,7 @@ export class LocalState<TCacheShape> {
       fragmentMatcher,
       defaultOperationType,
       exportedVariables: {},
+      onlyRunForcedResolvers,
     };
 
     const result = await this.resolveSelectionSet(
@@ -529,15 +566,24 @@ export class LocalState<TCacheShape> {
     };
 
     const aliasUsed = fieldName !== aliasedFieldName;
-
     let result;
-    const resolverType =
-      rootValue.__typename || execContext.defaultOperationType;
-    const resolverMap = (this.resolvers as any)[resolverType];
-    if (resolverMap) {
-      const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
-      if (resolve) {
-        result = await resolve(rootValue, args, execContext.context, info);
+
+    // Usually all local resolvers are run when passing through here, but
+    // if we've specifically identified that we only want to run forced
+    // resolvers (that is, resolvers for fields marked with
+    // `@client(always: true)`), then we'll skip running non-forced resolvers.
+    if (
+      !execContext.onlyRunForcedResolvers ||
+      (execContext.onlyRunForcedResolvers && this.shouldForceResolver(field))
+    ) {
+      const resolverType =
+        rootValue.__typename || execContext.defaultOperationType;
+      const resolverMap = (this.resolvers as any)[resolverType];
+      if (resolverMap) {
+        const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
+        if (resolve) {
+          result = await resolve(rootValue, args, execContext.context, info);
+        }
       }
     }
 

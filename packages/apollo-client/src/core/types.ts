@@ -8,6 +8,7 @@ import { NetworkStatus } from './networkStatus';
 export type QueryListener = (
   queryStoreValue: QueryStoreValue,
   newData?: any,
+  forceResolvers?: boolean,
 ) => void;
 
 export type OperationVariables = { [key: string]: any };

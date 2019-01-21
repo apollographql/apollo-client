@@ -94,7 +94,7 @@
     "fetch-mock": "7.3.0",
     "flow-bin": "0.91.0",
     "graphql": "14.1.1",
-    "graphql-tag": "2.10.0",
+    "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",
     "jest": "23.6.0",
     "jest-junit": "5.2.0",

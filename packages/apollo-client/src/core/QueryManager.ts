@@ -113,6 +113,11 @@ export class QueryManager<TStore> {
    */
   public stop() {
     this.scheduler.stop();
+
+    this.queries.forEach((_info, queryId) => {
+      this.stopQueryNoBroadcast(queryId);
+    });
+
     this.fetchQueryRejectFns.forEach(reject => {
       reject(new Error('QueryManager stopped while query was in flight'));
     });
@@ -721,9 +726,14 @@ export class QueryManager<TStore> {
   }
 
   public stopQueryInStore(queryId: string) {
+    this.stopQueryInStoreNoBroadcast(queryId);
+    this.broadcastQueries();
+  }
+
+  private stopQueryInStoreNoBroadcast(queryId: string) {
+    this.scheduler.stopPollingQuery(queryId);
     this.queryStore.stopQuery(queryId);
     this.invalidate(true, queryId);
-    this.broadcastQueries();
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -953,7 +963,12 @@ export class QueryManager<TStore> {
   }
 
   public stopQuery(queryId: string) {
-    this.stopQueryInStore(queryId);
+    this.stopQueryNoBroadcast(queryId);
+    this.broadcastQueries();
+  }
+
+  private stopQueryNoBroadcast(queryId: string) {
+    this.stopQueryInStoreNoBroadcast(queryId);
     this.removeQuery(queryId);
   }
 

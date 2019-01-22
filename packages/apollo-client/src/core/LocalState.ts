@@ -80,6 +80,15 @@ export type ExecOptions = {
   fragmentMatcher?: FragmentMatcher;
 };
 
+export type LocalStateOptions<TCacheShape> = {
+  cache: ApolloCache<TCacheShape>;
+  client?: ApolloClient<TCacheShape>;
+  initializers?: Initializers<TCacheShape> | Initializers<TCacheShape>[];
+  resolvers?: Resolvers | Resolvers[];
+  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+  fragmentMatcher?: FragmentMatcher;
+};
+
 export class LocalState<TCacheShape> {
   private cache: ApolloCache<TCacheShape>;
   private client: ApolloClient<TCacheShape>;
@@ -95,14 +104,7 @@ export class LocalState<TCacheShape> {
     resolvers,
     typeDefs,
     fragmentMatcher,
-  }: {
-    cache: ApolloCache<TCacheShape>;
-    client?: ApolloClient<TCacheShape>;
-    initializers?: Initializers<TCacheShape> | Initializers<TCacheShape>[];
-    resolvers?: Resolvers | Resolvers[];
-    typeDefs?: string | string[] | DocumentNode | DocumentNode[];
-    fragmentMatcher?: FragmentMatcher;
-  }) {
+  }: LocalStateOptions<TCacheShape>) {
     this.cache = cache;
 
     if (client) {

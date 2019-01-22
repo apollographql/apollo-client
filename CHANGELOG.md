@@ -2,6 +2,11 @@
 
 ## Apollo Client (vNext)
 
+### Apollo Client (vNext)
+
+- Documentation updates.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)
+
 ## Apollo Client (2.4.12)
 
 ### Apollo Client (2.4.12)

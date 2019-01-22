@@ -1,6 +1,12 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (vNext)
+## Apollo Client (vNext, minor bump)
+
+### Apollo Client (vNext, minor bump)
+
+- Un-revert "Improve (and shorten) query polling implementation.
+  ([#4243](https://github.com/apollographql/apollo-client/pull/4243))" <br/>
+  [PR #4337](https://github.com/apollographql/apollo-client/pull/4337)
 
 ### Apollo Client (vNext)
 

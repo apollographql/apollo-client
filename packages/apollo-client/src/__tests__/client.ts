@@ -1,7 +1,6 @@
 import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { print } from 'graphql/language/printer';
 import { ApolloLink, Observable } from 'apollo-link';
 import {
   InMemoryCache,
@@ -1992,16 +1991,6 @@ describe('client', () => {
     });
   });
 
-  it('should expose a method called printAST that is prints graphql queries', () => {
-    const query = gql`
-      query {
-        fortuneCookie
-      }
-    `;
-
-    expect(printAST(query)).toBe(print(query));
-  });
-
   it('should pass a network error correctly on a mutation', done => {
     const mutation = gql`
       mutation {
@@ -2189,13 +2178,18 @@ describe('client', () => {
         },
       },
     });
-    expect((client.cache as any).optimistic.length).toBe(1);
+
+    const { data, optimisticData } = client.cache as any;
+    expect(optimisticData).not.toBe(data);
+    expect(optimisticData.parent).toBe(data);
+
     mutatePromise
       .then(_ => {
         done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch((_: ApolloError) => {
-        expect((client.cache as any).optimistic.length).toBe(0);
+        const { data, optimisticData } = client.cache as any;
+        expect(optimisticData).toBe(data);
         done();
       });
   });

@@ -407,13 +407,11 @@ export class LocalState<TCacheShape> {
     document: DocumentNode,
     variables?: Record<string, any>,
   ) {
-    const query = buildQueryFromSelectionSet(document);
-    const cachedData = this.cache.diff({
-      query,
+    return this.cache.diff({
+      query: buildQueryFromSelectionSet(document),
       variables,
       optimistic: false,
-    });
-    return cachedData.result;
+    }).result;
   }
 
   private normalizeTypeDefs(

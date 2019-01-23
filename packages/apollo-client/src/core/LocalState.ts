@@ -46,11 +46,6 @@ export type Resolver = (
 
 export type VariableMap = { [name: string]: any };
 
-export type ResultMapper = (
-  values: { [fieldName: string]: any },
-  rootValue: any,
-) => any;
-
 export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
@@ -61,7 +56,6 @@ export type ExecContext = {
   fragmentMap: FragmentMap;
   context: any;
   variables: VariableMap;
-  resultMapper?: ResultMapper;
   fragmentMatcher: FragmentMatcher;
   defaultOperationType?: string | null;
   exportedVariables: Record<string, any>;
@@ -75,7 +69,6 @@ export type ExecInfo = {
 };
 
 export type ExecOptions = {
-  resultMapper?: ResultMapper;
   fragmentMatcher?: FragmentMatcher;
 };
 
@@ -445,7 +438,6 @@ export class LocalState<TCacheShape> {
     const mainDefinition = getMainDefinition(document);
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const resultMapper = execOptions.resultMapper;
 
     const definitionOperation = (<OperationDefinitionNode>mainDefinition)
       .operation;
@@ -465,7 +457,6 @@ export class LocalState<TCacheShape> {
         client,
       },
       variables: variables || {},
-      resultMapper,
       fragmentMatcher,
       defaultOperationType,
       exportedVariables: {},
@@ -544,9 +535,7 @@ export class LocalState<TCacheShape> {
 
     await Promise.all(selectionSet.selections.map(execute));
 
-    return execContext.resultMapper
-      ? execContext.resultMapper(result, rootValue)
-      : result;
+    return result;
   }
 
   private async resolveField(

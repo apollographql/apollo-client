@@ -312,16 +312,18 @@ export class QueryManager<TStore> {
 
           // Run the query through local client resolvers.
           if (clientQuery && hasDirectives(['client'], clientQuery)) {
-            updatedResult.data = await self.localState.runResolvers({
-              document: clientQuery,
-              remoteResult: result.data,
-              context,
-              variables,
-              onError(error) {
+            updatedResult.data = await self.localState
+              .runResolvers({
+                document: clientQuery,
+                remoteResult: result.data,
+                context,
+                variables,
+              })
+              .catch(error => {
                 handlingNext = false;
                 reject(error);
-              },
-            });
+                return updatedResult.data;
+              });
           }
 
           if (fetchPolicy !== 'no-cache') {
@@ -1268,16 +1270,18 @@ export class QueryManager<TStore> {
           if (requestId >= (lastRequestId || 1)) {
             // Run the query through local client resolvers.
             if (clientQuery && hasDirectives(['client'], clientQuery)) {
-              updatedResult.data = await this.localState.runResolvers({
-                document: clientQuery,
-                remoteResult: result.data,
-                context: updatedContext,
-                variables,
-                onError(error) {
+              updatedResult.data = await this.localState
+                .runResolvers({
+                  document: clientQuery,
+                  remoteResult: result.data,
+                  context: updatedContext,
+                  variables,
+                })
+                .catch(error => {
                   handlingNext = false;
                   reject(error);
-                },
-              });
+                  return updatedResult.data;
+                });
             }
 
             if (fetchPolicy !== 'no-cache') {

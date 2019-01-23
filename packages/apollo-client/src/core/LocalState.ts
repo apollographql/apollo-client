@@ -203,45 +203,33 @@ export class LocalState<TCacheShape> {
     remoteResult,
     context,
     variables,
-    onError,
     onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
     remoteResult?: ExecutionResult;
     context?: Record<string, any>;
     variables?: Record<string, any>;
-    onError?: (error: any) => void;
     onlyRunForcedResolvers?: boolean;
-  }) {
-    let localResult: Record<string, any> = {};
-
+  }): Promise<ExecutionResult> {
     if (document) {
       let rootValue = this.buildRootValueFromCache(document, variables);
       rootValue = rootValue ? mergeDeep(rootValue, remoteResult) : remoteResult;
 
-      try {
-        const data = await this.resolveDocument(
-          document,
-          rootValue,
-          context,
-          variables,
-          { fragmentMatcher: this.fragmentMatcher },
-          onlyRunForcedResolvers,
-        );
-        localResult = data.result;
-      } catch (error) {
-        if (onError) {
-          onError(error);
-          return;
-        } else {
-          throw error;
-        }
-      }
+      return this.resolveDocument(
+        document,
+        rootValue,
+        context,
+        variables,
+        { fragmentMatcher: this.fragmentMatcher },
+        onlyRunForcedResolvers,
+      ).then(data => ({
+        ...remoteResult,
+        ...data.result,
+      }));
     }
 
     return {
       ...remoteResult,
-      ...localResult,
     };
   }
 

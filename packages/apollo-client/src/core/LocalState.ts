@@ -7,7 +7,6 @@ import {
   InlineFragmentNode,
   FragmentDefinitionNode,
   FieldNode,
-  BooleanValueNode,
   ASTNode,
 } from 'graphql';
 import { print } from 'graphql/language/printer';
@@ -350,13 +349,12 @@ export class LocalState<TCacheShape> {
       Directive: {
         enter(node) {
           if (node.name.value === 'client' && node.arguments) {
-            forceResolvers =
-              node.arguments
-                .filter(arg => (
-                  arg.name.value === 'always' &&
-                  (arg.value as BooleanValueNode).value === true
-                ))
-                .length > 0;
+            forceResolvers = node.arguments.some(
+              arg =>
+                arg.name.value === 'always' &&
+                arg.value.kind === 'BooleanValue' &&
+                arg.value.value === true,
+            );
             if (forceResolvers) {
               return BREAK;
             }

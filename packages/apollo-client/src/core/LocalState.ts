@@ -512,10 +512,10 @@ export class LocalState<TCacheShape> {
   ): Promise<any> {
     const { variables } = execContext;
     const fieldName = field.name.value;
-    const args = argumentsObjectFromField(field, variables);
     const aliasedFieldName = resultKeyNameFromField(field);
     const aliasUsed = fieldName !== aliasedFieldName;
-    let result: any;
+    const defaultResult = rootValue[aliasedFieldName] || rootValue[fieldName];
+    let resultPromise = Promise.resolve(defaultResult);
 
     // Usually all local resolvers are run when passing through here, but
     // if we've specifically identified that we only want to run forced
@@ -523,7 +523,7 @@ export class LocalState<TCacheShape> {
     // `@client(always: true)`), then we'll skip running non-forced resolvers.
     if (
       !execContext.onlyRunForcedResolvers ||
-      (execContext.onlyRunForcedResolvers && this.shouldForceResolver(field))
+      this.shouldForceResolver(field)
     ) {
       const resolverType =
         rootValue.__typename || execContext.defaultOperationType;
@@ -531,51 +531,56 @@ export class LocalState<TCacheShape> {
       if (resolverMap) {
         const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
         if (resolve) {
-          result = await resolve(rootValue, args, execContext.context, {
-            field,
-          });
+          resultPromise = Promise.resolve(resolve(
+            rootValue,
+            argumentsObjectFromField(field, variables),
+            execContext.context,
+            { field },
+          ));
         }
       }
     }
 
-    if (result === undefined) {
-      result = rootValue[aliasedFieldName] || rootValue[fieldName];
-    }
+    return resultPromise.then((result = defaultResult) => {
+      // If an @export directive is associated with the current field, store
+      // the `as` export variable name and current result for later use.
+      if (field.directives) {
+        field.directives.forEach(directive => {
+          if (directive.name.value === 'export' && directive.arguments) {
+            directive.arguments.forEach(arg => {
+              if (arg.name.value === 'as' && arg.value.kind === 'StringValue') {
+                execContext.exportedVariables[arg.value.value] = result;
+              }
+            });
+          }
+        });
+      }
 
-    // If an @export directive is associated with the current field, store
-    // the `as` export variable name and current result for later use.
-    if (field.directives) {
-      field.directives.forEach(directive => {
-        if (directive.name.value === 'export' && directive.arguments) {
-          directive.arguments.forEach(arg => {
-            if (arg.name.value === 'as' && arg.value.kind === 'StringValue') {
-              execContext.exportedVariables[arg.value.value] = result;
-            }
-          });
-        }
-      });
-    }
+      // Handle all scalar types here.
+      if (!field.selectionSet) {
+        return result;
+      }
 
-    // Handle all scalar types here.
-    if (!field.selectionSet) {
-      return result;
-    }
+      // From here down, the field has a selection set, which means it's trying
+      // to query a GraphQLObjectType.
+      if (result == null) {
+        // Basically any field in a GraphQL response can be null, or missing
+        return result;
+      }
 
-    // From here down, the field has a selection set, which means it's trying
-    // to query a GraphQLObjectType.
-    if (result == null) {
-      // Basically any field in a GraphQL response can be null, or missing
-      return result;
-    }
+      if (Array.isArray(result)) {
+        return this.resolveSubSelectedArray(field, result, execContext);
+      }
 
-    if (Array.isArray(result)) {
-      return this.resolveSubSelectedArray(field, result, execContext);
-    }
-
-    // Returned value is an object, and the query has a sub-selection. Recurse.
-    if (field.selectionSet) {
-      return this.resolveSelectionSet(field.selectionSet, result, execContext);
-    }
+      // Returned value is an object, and the query has a sub-selection. Recurse.
+      if (field.selectionSet) {
+        return this.resolveSelectionSet(
+          field.selectionSet,
+          result,
+          execContext,
+        );
+      }
+    });
   }
 
   private resolveSubSelectedArray(

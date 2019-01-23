@@ -622,11 +622,11 @@ export class LocalState<TCacheShape> {
 
   private resolveSubSelectedArray(
     field: FieldNode,
-    result: any,
+    result: any[],
     execContext: ExecContext,
   ): any {
     return Promise.all(
-      result.map((item: any) => {
+      result.map(item => {
         if (item === null) {
           return null;
         }

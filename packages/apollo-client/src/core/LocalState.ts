@@ -291,23 +291,20 @@ export class LocalState<TCacheShape> {
     variables: OperationVariables = {},
     context = {},
   ) {
-    let exportedVariables: Record<string, string> = {};
-
     if (document) {
-      const rootValue = this.buildRootValueFromCache(document, variables);
-      const updatedContext = this.prepareContext(context);
-      const data = await this.resolveDocument(
+      return this.resolveDocument(
         document,
-        rootValue || {},
-        updatedContext,
+        this.buildRootValueFromCache(document, variables) || {},
+        this.prepareContext(context),
         variables,
-      );
-      exportedVariables = data.exportedVariables;
+      ).then(data => ({
+        ...variables,
+        ...data.exportedVariables,
+      }));
     }
 
     return {
       ...variables,
-      ...exportedVariables,
     };
   }
 

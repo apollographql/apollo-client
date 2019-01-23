@@ -19,6 +19,7 @@ import {
   hasDirectives,
   removeClientSetsFromDocument,
   mergeDeep,
+  mergeDeepArray,
   warnOnceInDevelopment,
   FragmentMap,
   DirectiveInfo,
@@ -459,61 +460,55 @@ export class LocalState<TCacheShape> {
     execContext: ExecContext,
   ) {
     const { fragmentMap, context, variables } = execContext;
-    const result: Record<string, any> = {};
+    const resultsToMerge: any[] = [];
 
-    const execute = async (selection: SelectionNode) => {
+    const execute = async (selection: SelectionNode): Promise<void> => {
       if (!shouldInclude(selection, variables)) {
         // Skip this entirely.
         return;
       }
 
       if (isField(selection)) {
-        const fieldResult = await this.resolveField(
-          selection,
-          rootValue,
-          execContext,
+        return this.resolveField(selection, rootValue, execContext).then(
+          fieldResult => {
+            if (typeof fieldResult !== 'undefined') {
+              resultsToMerge.push({
+                [resultKeyNameFromField(selection)]: fieldResult,
+              });
+            }
+          },
         );
-        const resultFieldKey = resultKeyNameFromField(selection);
+      }
 
-        if (fieldResult !== undefined) {
-          if (result[resultFieldKey] === undefined) {
-            result[resultFieldKey] = fieldResult;
-          } else {
-            this.mergeIntoResults(result[resultFieldKey], fieldResult);
-          }
-        }
+      let fragment: InlineFragmentNode | FragmentDefinitionNode;
+
+      if (isInlineFragment(selection)) {
+        fragment = selection;
       } else {
-        let fragment: InlineFragmentNode | FragmentDefinitionNode;
-
-        if (isInlineFragment(selection)) {
-          fragment = selection;
-        } else {
-          // This is a named fragment.
-          fragment = fragmentMap[selection.name.value];
-          if (!fragment) {
-            throw new Error(`No fragment named ${selection.name.value}`);
-          }
-        }
-
-        if (fragment && fragment.typeCondition) {
-          const typeCondition = fragment.typeCondition.name.value;
-          if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
-            const fragmentResult = await this.resolveSelectionSet(
-              fragment.selectionSet,
-              rootValue,
-              execContext,
-            );
-            this.mergeIntoResults(result, fragmentResult);
-          }
+        // This is a named fragment.
+        fragment = fragmentMap[selection.name.value];
+        if (!fragment) {
+          throw new Error(`No fragment named ${selection.name.value}`);
         }
       }
 
-      return Promise.resolve(undefined);
+      if (fragment && fragment.typeCondition) {
+        const typeCondition = fragment.typeCondition.name.value;
+        if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
+          return this.resolveSelectionSet(
+            fragment.selectionSet,
+            rootValue,
+            execContext,
+          ).then(fragmentResult => {
+            resultsToMerge.push(fragmentResult);
+          });
+        }
+      }
     };
 
-    await Promise.all(selectionSet.selections.map(execute));
-
-    return result;
+    return Promise.all(selectionSet.selections.map(execute)).then(function() {
+      return mergeDeepArray(resultsToMerge);
+    });
   }
 
   private async resolveField(
@@ -609,21 +604,5 @@ export class LocalState<TCacheShape> {
         }
       }),
     );
-  }
-
-  private mergeIntoResults(
-    dest: Record<string, any>,
-    src: Record<string, any>,
-  ) {
-    if (src !== null && typeof src === 'object') {
-      Object.keys(src).forEach((key: string) => {
-        const srcVal = src[key];
-        if (!Object.prototype.hasOwnProperty.call(dest, key)) {
-          dest[key] = srcVal;
-        } else {
-          this.mergeIntoResults(dest[key], srcVal);
-        }
-      });
-    }
   }
 }

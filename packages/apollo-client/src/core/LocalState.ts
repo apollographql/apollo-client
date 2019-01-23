@@ -22,10 +22,8 @@ import {
   mergeDeepArray,
   warnOnceInDevelopment,
   FragmentMap,
-  DirectiveInfo,
   argumentsObjectFromField,
   resultKeyNameFromField,
-  getDirectiveInfoFromField,
   getFragmentDefinitions,
   createFragmentMap,
   shouldInclude,
@@ -42,7 +40,9 @@ export type Resolver = (
   rootValue: any,
   args: any,
   context: any,
-  info: ExecInfo,
+  info: {
+    field: FieldNode;
+  },
 ) => any;
 
 export type VariableMap = { [name: string]: any };
@@ -61,12 +61,6 @@ export type ExecContext = {
   defaultOperationType: string;
   exportedVariables: Record<string, any>;
   onlyRunForcedResolvers: boolean;
-};
-
-export type ExecInfo = {
-  isLeaf: boolean;
-  resultKey: string;
-  directives: DirectiveInfo;
 };
 
 export type LocalStateOptions<TCacheShape> = {
@@ -519,16 +513,9 @@ export class LocalState<TCacheShape> {
     const { variables } = execContext;
     const fieldName = field.name.value;
     const args = argumentsObjectFromField(field, variables);
-
     const aliasedFieldName = resultKeyNameFromField(field);
-    const info: ExecInfo = {
-      isLeaf: !field.selectionSet,
-      resultKey: aliasedFieldName,
-      directives: getDirectiveInfoFromField(field, variables),
-    };
-
     const aliasUsed = fieldName !== aliasedFieldName;
-    let result;
+    let result: any;
 
     // Usually all local resolvers are run when passing through here, but
     // if we've specifically identified that we only want to run forced
@@ -544,7 +531,9 @@ export class LocalState<TCacheShape> {
       if (resolverMap) {
         const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
         if (resolve) {
-          result = await resolve(rootValue, args, execContext.context, info);
+          result = await resolve(rootValue, args, execContext.context, {
+            field,
+          });
         }
       }
     }
@@ -555,9 +544,16 @@ export class LocalState<TCacheShape> {
 
     // If an @export directive is associated with the current field, store
     // the `as` export variable name and current result for later use.
-    if (info.directives && info.directives.export) {
-      const exportedVariable = info.directives.export.as;
-      execContext.exportedVariables[exportedVariable] = result;
+    if (field.directives) {
+      field.directives.forEach(directive => {
+        if (directive.name.value === 'export' && directive.arguments) {
+          directive.arguments.forEach(arg => {
+            if (arg.name.value === 'as' && arg.value.kind === 'StringValue') {
+              execContext.exportedVariables[arg.value.value] = result;
+            }
+          });
+        }
+      });
     }
 
     // Handle all scalar types here.

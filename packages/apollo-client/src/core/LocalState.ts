@@ -289,7 +289,7 @@ export class LocalState<TCacheShape> {
     if (this.typeDefs) {
       const directives = 'directive @client on FIELD';
       const definition = this.normalizeTypeDefs(this.typeDefs);
-      schemas = schemas.concat([{ definition, directives }]);
+      schemas.push({ definition, directives });
     }
 
     const newContext = {

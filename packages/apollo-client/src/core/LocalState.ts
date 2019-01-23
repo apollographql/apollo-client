@@ -57,19 +57,15 @@ export type ExecContext = {
   context: any;
   variables: VariableMap;
   fragmentMatcher: FragmentMatcher;
-  defaultOperationType?: string | null;
+  defaultOperationType: string;
   exportedVariables: Record<string, any>;
-  onlyRunForcedResolvers?: boolean;
+  onlyRunForcedResolvers: boolean;
 };
 
 export type ExecInfo = {
   isLeaf: boolean;
   resultKey: string;
   directives: DirectiveInfo;
-};
-
-export type ExecOptions = {
-  fragmentMatcher?: FragmentMatcher;
 };
 
 export type LocalStateOptions<TCacheShape> = {
@@ -220,7 +216,7 @@ export class LocalState<TCacheShape> {
         rootValue,
         context,
         variables,
-        { fragmentMatcher: this.fragmentMatcher },
+        this.fragmentMatcher,
         onlyRunForcedResolvers,
       ).then(data => ({
         ...remoteResult,
@@ -416,49 +412,45 @@ export class LocalState<TCacheShape> {
   private async resolveDocument(
     document: DocumentNode,
     rootValue?: any,
-    context?: any,
-    variables?: VariableMap,
-    execOptions: ExecOptions = {},
-    onlyRunForcedResolvers?: boolean,
+    context: any = {},
+    variables: VariableMap = {},
+    fragmentMatcher: FragmentMatcher = () => true,
+    onlyRunForcedResolvers: boolean = false,
   ) {
     const mainDefinition = getMainDefinition(document);
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
 
-    const definitionOperation = (<OperationDefinitionNode>mainDefinition)
+    const definitionOperation = (mainDefinition as OperationDefinitionNode)
       .operation;
-    let defaultOperationType: string | null = definitionOperation
+
+    const defaultOperationType = definitionOperation
       ? capitalizeFirstLetter(definitionOperation)
       : 'Query';
-
-    // Default matcher always matches all fragments.
-    const fragmentMatcher = execOptions.fragmentMatcher || (() => true);
 
     const { cache, client } = this;
     const execContext: ExecContext = {
       fragmentMap,
       context: {
-        ...(context || {}),
+        ...context,
         cache,
         client,
       },
-      variables: variables || {},
+      variables,
       fragmentMatcher,
       defaultOperationType,
       exportedVariables: {},
       onlyRunForcedResolvers,
     };
 
-    const result = await this.resolveSelectionSet(
+    return this.resolveSelectionSet(
       mainDefinition.selectionSet,
       rootValue,
       execContext,
-    );
-
-    return {
+    ).then(result => ({
       result,
       exportedVariables: execContext.exportedVariables,
-    };
+    }));
   }
 
   private async resolveSelectionSet(

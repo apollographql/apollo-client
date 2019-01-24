@@ -8,7 +8,7 @@ import {
   InMemoryCache,
   IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';
-import { ApolloLink, Observable } from 'apollo-link';
+import { ApolloLink, Observable, Operation } from 'apollo-link';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {
@@ -417,12 +417,17 @@ describe('Sample apps', () => {
       updater: (data: { count: number }, variables: { amount: number }) => any,
     ) => {
       return (
-        result: {},
+        _result: {},
         variables: { amount: number },
         { cache }: { cache: ApolloCache<any> },
       ): null => {
-        const data = updater(client.readQuery({ query, variables }), variables);
-        cache.writeQuery({ query, variables, data });
+        const read = client.readQuery<{ count: number }>({ query, variables });
+        if (read) {
+          const data = updater(read, variables);
+          cache.writeQuery({ query, variables, data });
+        } else {
+          throw new Error('readQuery returned a falsy value');
+        }
         return null;
       };
     };
@@ -509,10 +514,10 @@ describe('Sample apps', () => {
 
     const update = (
       query: DocumentNode,
-      updater: (todos, variables) => any,
+      updater: (todos: any, variables: Todo) => any,
     ) => {
       return (
-        result: {},
+        _result: {},
         variables: Todo,
         { cache }: { cache: ApolloCache<any> },
       ): null => {
@@ -587,7 +592,7 @@ describe('Reset/clear store', () => {
       initializers,
       resolvers: {
         Mutation: {
-          foo: (_, $, { cache }) => {
+          foo(_data, _args, { cache }) {
             cache.writeData({ data: { foo: 'woo' } });
             return null;
           },
@@ -845,8 +850,11 @@ describe('Reset/clear store', () => {
         complete: fail,
       });
 
-      const makeTerminatingCheck = (body, done) => {
-        return (...args) => {
+      const makeTerminatingCheck = (
+        body: (...args: any[]) => void,
+        done: () => any,
+      ) => {
+        return (...args: any[]) => {
           try {
             body(...args);
             done();
@@ -919,13 +927,17 @@ describe('Reset/clear store', () => {
 
       const componentObservable = client.watchQuery({ query: counterQuery });
 
+      let nextCallCount = 0;
       const unsub = componentObservable.subscribe({
-        next: ({ data }) => done.fail,
+        next: () => ++nextCallCount,
         error: done.fail,
         complete: done.fail,
       });
 
-      client.resetStore() as Promise<null>;
+      client.resetStore().then(() => {
+        expect(nextCallCount).toBe(1);
+        done();
+      });
     },
   );
 });
@@ -985,7 +997,7 @@ describe('Combining client and server state/operations', () => {
           },
         },
         ListItem: {
-          isSelected: (source, args, context) => {
+          isSelected(source) {
             expect(source.name).toBeDefined();
             // List items default to an unselected state
             return false;
@@ -997,7 +1009,7 @@ describe('Combining client and server state/operations', () => {
     const observer = client.watchQuery({ query });
 
     let count = 0;
-    const sub = observer.subscribe({
+    observer.subscribe({
       next: response => {
         if (count === 0) {
           const initial = { ...data };
@@ -1008,8 +1020,8 @@ describe('Combining client and server state/operations', () => {
           expect(response.data).toMatchObject(initial);
         }
         if (count === 1) {
-          expect(response.data.list.items[0].isSelected).toBe(true);
-          expect(response.data.list.items[1].isSelected).toBe(false);
+          expect((response.data as any).list.items[0].isSelected).toBe(true);
+          expect((response.data as any).list.items[1].isSelected).toBe(false);
           done();
         }
         count++;
@@ -1206,7 +1218,7 @@ describe('Combining client and server state/operations', () => {
     `;
 
     let watchCount = 0;
-    const link = new ApolloLink(operation => {
+    const link = new ApolloLink((operation: Operation): Observable<{}> => {
       if (operation.operationName === 'SampleQuery') {
         return Observable.of({
           data: { user: { __typename: 'User', firstName: 'John' } },
@@ -1217,6 +1229,9 @@ describe('Combining client and server state/operations', () => {
           data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
         });
       }
+      return Observable.of({
+        errors: [new Error(`Unknown operation ${operation.operationName}`)],
+      })
     });
 
     const cache = new InMemoryCache();
@@ -1249,7 +1264,7 @@ describe('Combining client and server state/operations', () => {
           watchCount += 1;
           client.mutate({
             mutation,
-            update: (proxy, { data: { updateUser } }) => {
+            update(proxy, { data: { updateUser } }: { data: any }) {
               proxy.writeQuery({
                 query: userQuery,
                 data: {

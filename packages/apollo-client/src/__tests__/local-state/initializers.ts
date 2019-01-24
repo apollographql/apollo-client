@@ -130,7 +130,7 @@ describe('General', () => {
 
     client
       .query({ query })
-      .then(({ data }) => {
+      .then(() => {
         expect(fooResolver).not.toHaveBeenCalled();
       })
       .catch(e => console.error(e));

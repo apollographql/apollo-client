@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloLink, Observable, FetchResult } from 'apollo-link';
+import { ApolloLink, Observable } from 'apollo-link';
 
 import ApolloClient from '../..';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
@@ -38,7 +38,7 @@ const assertWithObserver = ({
   observer: Observer<ApolloQueryResult<any>>;
 }) => {
   const queryManager = mockQueryManager({
-    request: { query: serverQuery, variables },
+    request: { query: serverQuery || query, variables },
     result: serverResult,
     error,
     delay,
@@ -203,7 +203,7 @@ describe('Basic resolver capabilities', () => {
         foo: () => ({ __typename: 'Foo' }),
       },
       Foo: {
-        bar: (data: any, { id }: { id: number }) => id,
+        bar: (_data: any, { id }: { id: number }) => id,
       },
     };
 
@@ -239,7 +239,7 @@ describe('Basic resolver capabilities', () => {
         foo: () => ({ __typename: 'Foo' }),
       },
       Foo: {
-        bar: (data: any, _: any, { id }: { id: number }) => id,
+        bar: (_data: any, _args: any, { id }: { id: number }) => id,
       },
     };
 
@@ -382,7 +382,7 @@ describe('Writing cache data from resolvers', () => {
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start: (_, $, { cache }) => {
+          start(_data, _args, { cache }) {
             cache.writeData({ data: { field: 1 } });
             return { start: true };
           },
@@ -418,7 +418,7 @@ describe('Writing cache data from resolvers', () => {
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start: (_, $, { cache }) => {
+          start(_data, _args, { cache }) {
             cache.writeQuery({
               query,
               data: {
@@ -463,7 +463,7 @@ describe('Writing cache data from resolvers', () => {
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start: (_, $, { cache }) => {
+          start(_data, _args, { cache }) {
             cache.writeQuery({
               query,
               data: {
@@ -520,7 +520,7 @@ describe('Writing cache data from resolvers', () => {
         link: ApolloLink.empty(),
         resolvers: {
           Mutation: {
-            start: (_, $, { cache }) => {
+            start(_data, _args, { cache }) {
               // This would cause a warning to be printed because we don't have
               // __typename on the obj field. But that's intentional because
               // that's exactly the situation we're trying to test...
@@ -892,15 +892,15 @@ describe('Force local resolvers', () => {
       });
 
       client.watchQuery({ query }).subscribe({
-        next(result: FetchResult) {
+        next() {
           expect(callCount).toBe(1);
 
           client.watchQuery({ query }).subscribe({
-            next(result: FetchResult) {
+            next() {
               expect(callCount).toBe(2);
 
               client.watchQuery({ query: queryNoForce }).subscribe({
-                next(result: FetchResult) {
+                next() {
                   // Result is loaded from the cache since the resolver
                   // isn't being forced.
                   expect(callCount).toBe(2);

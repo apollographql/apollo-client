@@ -3,7 +3,6 @@ import {
   ApolloLink,
   FetchResult,
   Observable,
-  DocumentNode,
   GraphQLRequest,
 } from 'apollo-link';
 
@@ -23,16 +22,6 @@ export function mockSingleLink(
 
 export function mockObservableLink(): MockSubscriptionLink {
   return new MockSubscriptionLink();
-}
-
-interface MockOperation {
-  query: DocumentNode;
-  variables: Record<string, any>;
-  operationName?: string;
-  extensions?: Record<string, any>;
-  setContext?: (context: Record<string, any>) => Record<string, any>;
-  getContext?: () => Record<string, any>;
-  toKey?: () => string;
 }
 
 export interface MockedResponse {

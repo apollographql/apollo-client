@@ -82,7 +82,38 @@ describe('mergeDeep', function() {
     expect(mergeDeep(a, b, c, d)).toEqual([
       { a: 1, b: 2, c: 3 },
       { a: 'ay', b: 'bee', c: 'cee', d: 'dee' },
-      'a',
+      'c',
     ]);
+  });
+
+  it('lets the last conflicting value win', function() {
+    expect(mergeDeep('a', 'b', 'c')).toBe('c');
+
+    expect(
+      mergeDeep(
+        { a: 'a', conflict: 1 },
+        { b: 'b', conflict: 2 },
+        { c: 'c', conflict: 3 },
+      ),
+    ).toEqual({
+      a: 'a',
+      b: 'b',
+      c: 'c',
+      conflict: 3,
+    });
+
+    expect(mergeDeep(
+      ['a', ['b', 'c'], 'd'],
+      [/*empty*/, ['B'], 'D'],
+    )).toEqual(
+      ['a', ['B', 'c'], 'D'],
+    );
+
+    expect(mergeDeep(
+      ['a', ['b', 'c'], 'd'],
+      ['A', [/*empty*/, 'C']],
+    )).toEqual(
+      ['A', ['b', 'C'], 'd'],
+    );
   });
 });

@@ -9,16 +9,20 @@ export function mergeDeep(...sources: any[]) {
 }
 
 export function mergeDeepArray(sources: any[]) {
-  let first = sources[0] || {};
+  let target = sources[0] || {};
   const count = sources.length;
   if (count > 1) {
     const pastCopies: any[] = [];
-    first = shallowCopyForMerge(first, pastCopies);
+    target = shallowCopyForMerge(target, pastCopies);
     for (let i = 1; i < count; ++i) {
-      mergeHelper(first, sources[i], pastCopies);
+      target = mergeHelper(target, sources[i], pastCopies);
     }
   }
-  return first;
+  return target;
+}
+
+function isObject(obj: any): obj is Record<string | number, any> {
+  return obj !== null && typeof obj === 'object';
 }
 
 function mergeHelper(
@@ -26,7 +30,7 @@ function mergeHelper(
   source: Record<string, any>,
   pastCopies: any[],
 ) {
-  if (source !== null && typeof source === 'object') {
+  if (isObject(source) && isObject(target)) {
     // In case the target has been frozen, make an extensible copy so that
     // we can merge properties into the copy.
     if (Object.isExtensible && !Object.isExtensible(target)) {
@@ -57,9 +61,12 @@ function mergeHelper(
         target[sourceKey] = sourceValue;
       }
     });
+
+    return target;
   }
 
-  return target;
+  // If source (or target) is not an object, let source replace target.
+  return source;
 }
 
 function shallowCopyForMerge<T>(value: T, pastCopies: any[]): T {

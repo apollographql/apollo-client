@@ -1,4 +1,4 @@
-import { mergeDeep } from '../mergeDeep';
+import { mergeDeep, mergeDeepArray } from '../mergeDeep';
 
 describe('mergeDeep', function() {
   it('should return an object if first argument falsy', function() {
@@ -115,5 +115,25 @@ describe('mergeDeep', function() {
     )).toEqual(
       ['A', ['b', 'C'], 'd'],
     );
+  });
+
+  it('mergeDeep returns the intersection of its argument types', function() {
+    const abc = mergeDeep({ str: "hi", a: 1 }, { a: 3, b: 2 }, { b: 1, c: 2 });
+    // The point of this test is that the following lines type-check without
+    // resorting to any `any` loopholes:
+    expect(abc.str.slice(0)).toBe("hi");
+    expect(abc.a * 2).toBe(6);
+    expect(abc.b - 0).toBe(1);
+    expect(abc.c / 2).toBe(1);
+  });
+
+  it('mergeDeepArray returns the supertype of its argument types', function() {
+    class F {
+      check() { return "ok" };
+    }
+    const fs: F[] = [new F, new F, new F];
+    // Although mergeDeepArray doesn't have the same tuple type awareness as
+    // mergeDeep, it does infer that F should be the return type here:
+    expect(mergeDeepArray(fs).check()).toBe("ok");
   });
 });

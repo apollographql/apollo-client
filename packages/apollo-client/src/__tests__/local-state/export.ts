@@ -15,12 +15,12 @@ describe('@client @export tests', () => {
         }
       `;
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        initializers: {
-          field: () => 1,
-        },
+        cache,
+        link: ApolloLink.empty(),
       });
+      cache.writeData({ data: { field: 1 } });
 
       return client.query({ query }).then(({ data }: any) => {
         expect({ ...data }).toMatchObject({ field: 1 });
@@ -43,17 +43,22 @@ describe('@client @export tests', () => {
         }
       `;
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        initializers: {
-          car: () => ({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      cache.writeData({
+        data: {
+          car: {
             engine: {
               cylinders: 8,
               torque: 7200,
               __typename: 'Engine',
             },
             __typename: 'Car',
-          }),
+          },
         },
       });
 
@@ -84,17 +89,21 @@ describe('@client @export tests', () => {
       const testAuthorId = 100;
       const testPostCount = 200;
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        initializers: {
-          currentAuthorId: () => testAuthorId,
-        },
+        cache,
         resolvers: {
           Query: {
             postCount(_, { authorId }) {
               return authorId === testAuthorId ? testPostCount : 0;
             },
           },
+        },
+      });
+
+      cache.writeData({
+        data: {
+          currentAuthorId: testAuthorId,
         },
       });
 
@@ -130,11 +139,9 @@ describe('@client @export tests', () => {
 
       const testPostCount = 200;
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        initializers: {
-          currentAuthor: () => testAuthor,
-        },
+        cache,
         resolvers: {
           Query: {
             postCount(_, { authorId }) {
@@ -142,6 +149,12 @@ describe('@client @export tests', () => {
             },
           },
         },
+      });
+
+      cache.writeData({
+        data: {
+          currentAuthor: testAuthor,
+        }
       });
 
       return client.query({ query }).then(({ data }: any) => {
@@ -181,11 +194,15 @@ describe('@client @export tests', () => {
       }),
     );
 
+    const cache = new InMemoryCache();
     const client = new ApolloClient({
-      cache: new InMemoryCache(),
+      cache,
       link,
-      initializers: {
-        currentAuthor: () => testAuthor,
+    });
+
+    cache.writeData({
+      data: {
+        currentAuthor: testAuthor,
       },
     });
 
@@ -238,11 +255,15 @@ describe('@client @export tests', () => {
         }),
       );
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
+        cache,
         link,
-        initializers: {
-          appContainer: () => appContainer,
+      });
+
+      cache.writeData({
+        data: {
+          appContainer,
         },
       });
 
@@ -335,15 +356,17 @@ describe('@client @export tests', () => {
         });
       });
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
+        cache,
         link,
-        initializers: {
-          postRequiringReview() {
-            return {
-              loggedInReviewerId,
-              __typename: 'Post',
-            };
+      });
+
+      cache.writeData({
+        data: {
+          postRequiringReview: {
+            loggedInReviewerId,
+            __typename: 'Post',
           },
         },
       });
@@ -405,22 +428,24 @@ describe('@client @export tests', () => {
         });
       });
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
+        cache,
         link,
-        initializers: {
-          postRequiringReview() {
-            return {
-              currentReviewer: {
-                __typename: 'CurrentReviewer',
-              },
-              __typename: 'Post',
-            };
-          },
-        },
         resolvers: {
           CurrentReviewer: {
             id: () => currentReviewer.id,
+          },
+        },
+      });
+
+      cache.writeData({
+        data: {
+          postRequiringReview: {
+            currentReviewer: {
+              __typename: 'CurrentReviewer',
+            },
+            __typename: 'Post',
           },
         },
       });
@@ -520,11 +545,15 @@ describe('@client @export tests', () => {
         });
       });
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
+        cache,
         link,
-        initializers: {
-          topPost: () => testPostId,
+      });
+
+      cache.writeData({
+        data: {
+          topPost: testPostId,
         },
       });
 
@@ -567,12 +596,16 @@ describe('@client @export tests', () => {
         });
       });
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
+        cache,
         link,
-        initializers: {
-          primaryReviewerId: () => primaryReviewerId,
-          secondaryReviewerId: () => secondaryReviewerId,
+      });
+
+      cache.writeData({
+        data: {
+          primaryReviewerId,
+          secondaryReviewerId,
         },
       });
 

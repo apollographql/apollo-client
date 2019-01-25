@@ -20,7 +20,6 @@ import {
   removeClientSetsFromDocument,
   mergeDeep,
   mergeDeepArray,
-  warnOnceInDevelopment,
   FragmentMap,
   argumentsObjectFromField,
   resultKeyNameFromField,
@@ -32,7 +31,7 @@ import {
 } from 'apollo-utilities';
 
 import ApolloClient from '../ApolloClient';
-import { Initializers, Resolvers, OperationVariables } from './types';
+import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
 
 export type Resolver = (
@@ -66,7 +65,6 @@ export type ExecContext = {
 export type LocalStateOptions<TCacheShape> = {
   cache: ApolloCache<TCacheShape>;
   client?: ApolloClient<TCacheShape>;
-  initializers?: Initializers<TCacheShape> | Initializers<TCacheShape>[];
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
@@ -78,12 +76,10 @@ export class LocalState<TCacheShape> {
   private resolvers: Resolvers | Resolvers[] = {};
   private typeDefs: string | string[] | DocumentNode | DocumentNode[];
   private fragmentMatcher: FragmentMatcher;
-  private firedInitializers: string[] = [];
 
   constructor({
     cache,
     client,
-    initializers,
     resolvers,
     typeDefs,
     fragmentMatcher,
@@ -92,10 +88,6 @@ export class LocalState<TCacheShape> {
 
     if (client) {
       this.client = client;
-    }
-
-    if (initializers) {
-      this.runInitializersSync(initializers);
     }
 
     if (resolvers) {
@@ -109,61 +101,6 @@ export class LocalState<TCacheShape> {
     if (fragmentMatcher) {
       this.setFragmentMatcher(fragmentMatcher);
     }
-  }
-
-  // Run the incoming initializer functions, asynchronously. Initializers that
-  // have already been run are tracked against the initializer field name, to
-  // prevent them from being run a second time.
-  //
-  // NOTE: Initializers do not currently check to see if data already exists
-  // in the cache, before writing to the cache. This means existing data
-  // can be overwritten. We might decide to query into the cache first to
-  // see if any previous data exists before overwritting it, but TBD.
-  public runInitializers(
-    initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
-  ) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const mergedInitializers = this.mergeInitializers(initializers);
-
-    const initializerPromises: Promise<void>[] = [];
-    this.processInitializers(
-      mergedInitializers,
-      (fieldName: string, initializer: any) => {
-        initializerPromises.push(
-          Promise.resolve(initializer()).then(result => {
-            if (result !== undefined) {
-              this.cache.writeData({ data: { [fieldName]: result } });
-            }
-          }),
-        );
-      },
-    );
-
-    return Promise.all(initializerPromises);
-  }
-
-  // Run incoming intializer functions, synchronously.
-  public runInitializersSync(
-    initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
-  ) {
-    if (!initializers) {
-      throw new Error('Invalid/missing initializers');
-    }
-
-    const mergedInitializers = this.mergeInitializers(initializers);
-
-    this.processInitializers(
-      mergedInitializers,
-      (fieldName: string, initializer: any) => {
-        const result = initializer(this);
-        if (result !== undefined) {
-          this.cache.writeData({ data: { [fieldName]: result } });
-        }
-      },
-    );
   }
 
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
@@ -308,10 +245,6 @@ export class LocalState<TCacheShape> {
     };
   }
 
-  public resetInitializers() {
-    this.firedInitializers = [];
-  }
-
   public shouldForceResolvers(document: ASTNode) {
     let forceResolvers = false;
     visit(document, {
@@ -336,46 +269,6 @@ export class LocalState<TCacheShape> {
 
   public shouldForceResolver(field: FieldNode) {
     return this.shouldForceResolvers(field);
-  }
-
-  private mergeInitializers(
-    initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
-  ) {
-    let mergedInitializers: Initializers<TCacheShape> = {};
-    if (Array.isArray(initializers)) {
-      initializers.forEach(initializerGroup => {
-        mergedInitializers = { ...mergedInitializers, ...initializerGroup };
-      });
-    } else {
-      mergedInitializers = initializers;
-    }
-    return mergedInitializers;
-  }
-
-  private processInitializers(
-    initializers: Initializers<TCacheShape>,
-    runFunc: (fieldName: string, initializer: any) => any,
-  ) {
-    const alreadyFired: string[] = [];
-
-    Object.keys(initializers).forEach(fieldName => {
-      if (this.firedInitializers.indexOf(fieldName) < 0) {
-        runFunc(fieldName, initializers[fieldName]);
-        this.firedInitializers.push(fieldName);
-      } else {
-        alreadyFired.push(fieldName);
-      }
-    });
-
-    if (alreadyFired.length > 0) {
-      warnOnceInDevelopment(
-        "You're attempting to re-fire initializers for fields that have " +
-          'already been initalized once. These repeat initializer calls have ' +
-          'been ignored. If you really want them to run again, ' +
-          'call `ApolloClient.resetInitializers()` first. ' +
-          `Fields: ${alreadyFired.join(', ')}`,
-      );
-    }
   }
 
   // Query the cache and return matching data.

@@ -713,11 +713,14 @@ describe('Resolving field aliases', () => {
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),
-        initializers: {
-          foo: () => ({
+      });
+
+      cache.writeData({
+        data: {
+          foo: {
             bar: 'yo',
             __typename: 'Foo',
-          }),
+          },
         },
       });
 
@@ -744,14 +747,19 @@ describe('Force local resolvers', () => {
         }
       `;
 
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        initializers: {
-          author: () => ({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      cache.writeData({
+        data: {
+          author: {
             name: 'John Smith',
             isLoggedIn: false,
             __typename: 'Author',
-          }),
+          },
         },
       });
 

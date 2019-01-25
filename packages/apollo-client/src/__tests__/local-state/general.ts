@@ -568,380 +568,6 @@ describe('Sample apps', () => {
   });
 });
 
-describe('Reset/clear store', () => {
-  it('should allow initializers to be called after the store is reset', done => {
-    const mutation = gql`
-      mutation foo {
-        foo @client
-      }
-    `;
-
-    const query = gql`
-      {
-        foo @client
-      }
-    `;
-
-    const cache = new InMemoryCache();
-    const initializers = {
-      foo: () => 'bar',
-    };
-    const client = new ApolloClient({
-      cache,
-      link: ApolloLink.empty(),
-      initializers,
-      resolvers: {
-        Mutation: {
-          foo(_data, _args, { cache }) {
-            cache.writeData({ data: { foo: 'woo' } });
-            return null;
-          },
-        },
-      },
-    });
-
-    client.onResetStore(() =>
-      Promise.resolve(client.runInitializers(initializers)),
-    );
-
-    client
-      .query({ query })
-      .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ foo: 'bar' });
-      })
-      .catch(done.fail);
-
-    client
-      .mutate({ mutation })
-      .then(() => client.query({ query }))
-      .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ foo: 'woo' });
-      })
-      // Should be default after this reset call
-      .then(() => client.resetStore())
-      .then(() => client.query({ query }))
-      .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ foo: 'bar' });
-        done();
-      })
-      .catch(done.fail);
-  });
-
-  it(
-    'should return initializer data after the store is reset, the ' +
-      'initializers are re-run, and Query resolver is specified',
-    done => {
-      const counterQuery = gql`
-        query {
-          counter @client
-        }
-      `;
-
-      const plusMutation = gql`
-        mutation plus {
-          plus @client
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      const initializers = {
-        counter: () => 10,
-      };
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.empty(),
-        resolvers: {
-          Mutation: {
-            plus: (_, __, { cache }) => {
-              const { counter } = cache.readQuery({ query: counterQuery });
-              const data = {
-                counter: counter + 1,
-              };
-              cache.writeData({ data });
-              return null;
-            },
-          },
-        },
-        initializers,
-      });
-
-      let checkedCount = [10, 11, 12, 10];
-      const componentObservable = client.watchQuery({ query: counterQuery });
-      componentObservable.subscribe({
-        next: ({ data }) => {
-          try {
-            expect(data).toMatchObject({ counter: checkedCount.shift() });
-          } catch (e) {
-            done.fail(e);
-          }
-        },
-        error: done.fail,
-        complete: done.fail,
-      });
-
-      client.onResetStore(() =>
-        Promise.resolve(client.runInitializers(initializers)),
-      );
-
-      client
-        .mutate({ mutation: plusMutation })
-        .then(() => {
-          expect(cache.readQuery({ query: counterQuery })).toMatchObject({
-            counter: 11,
-          });
-          expect(client.query({ query: counterQuery })).resolves.toMatchObject({
-            data: { counter: 11 },
-          });
-        })
-        .then(() => client.mutate({ mutation: plusMutation }))
-        .then(() => {
-          expect(cache.readQuery({ query: counterQuery })).toMatchObject({
-            counter: 12,
-          });
-          expect(client.query({ query: counterQuery })).resolves.toMatchObject({
-            data: { counter: 12 },
-          });
-        })
-        .then(() => client.resetStore() as Promise<null>)
-        .then(() => {
-          expect(client.query({ query: counterQuery }))
-            .resolves.toMatchObject({ data: { counter: 10 } })
-            .then(() => {
-              expect(checkedCount.length).toBe(0);
-              done();
-            });
-        })
-        .catch(done.fail);
-    },
-  );
-
-  it('should return a Query result via resolver after the store has been reset', async () => {
-    const counterQuery = gql`
-      query {
-        counter @client
-      }
-    `;
-
-    const plusMutation = gql`
-      mutation plus {
-        plus @client
-      }
-    `;
-
-    const cache = new InMemoryCache();
-    const initializers = {
-      counter: () => 10,
-    };
-    const client = new ApolloClient({
-      cache,
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          counter: () => 0,
-        },
-        Mutation: {
-          plus: (_, __, { cache }) => {
-            const { counter } = cache.readQuery({ query: counterQuery });
-            const data = {
-              counter: counter + 1,
-            };
-            cache.writeData({ data });
-            return null;
-          },
-        },
-      },
-      initializers,
-    });
-
-    await client.mutate({ mutation: plusMutation });
-    expect(cache.readQuery({ query: counterQuery })).toMatchObject({
-      counter: 11,
-    });
-
-    await client.mutate({ mutation: plusMutation });
-    expect(cache.readQuery({ query: counterQuery })).toMatchObject({
-      counter: 12,
-    });
-    await expect(client.query({ query: counterQuery })).resolves.toMatchObject({
-      data: { counter: 12 },
-    });
-
-    (client.resetStore() as Promise<null>)
-      .then(() => {
-        expect(client.query({ query: counterQuery }))
-          .resolves.toMatchObject({ data: { counter: 0 } })
-          .catch(fail);
-      })
-      .catch(fail);
-  });
-
-  it(
-    'should return default data from the cache in a Query resolver after ' +
-      'the store has been reset, and intializers have been re-run',
-    async () => {
-      const counterQuery = gql`
-        query {
-          counter @client
-        }
-      `;
-
-      const plusMutation = gql`
-        mutation plus {
-          plus @client
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      const initializers = {
-        counter: () => 10,
-      };
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.empty(),
-        resolvers: {
-          Query: {
-            counter: () => {
-              return (cache.readQuery({ query: counterQuery }) as any).counter;
-            },
-          },
-          Mutation: {
-            plus: (_, __, { cache }) => {
-              const { counter } = cache.readQuery({ query: counterQuery });
-              const data = {
-                counter: counter + 1,
-              };
-              cache.writeData({ data });
-              return null;
-            },
-          },
-        },
-        initializers,
-      });
-
-      client.onResetStore(() =>
-        Promise.resolve(client.runInitializers(initializers)),
-      );
-
-      await client.mutate({ mutation: plusMutation });
-      await client.mutate({ mutation: plusMutation });
-      expect(cache.readQuery({ query: counterQuery })).toMatchObject({
-        counter: 12,
-      });
-      const result = await client.query({ query: counterQuery });
-      expect(result).toMatchObject({
-        data: { counter: 12 },
-      });
-
-      let called = false;
-      const componentObservable = client.watchQuery({ query: counterQuery });
-
-      const unsub = componentObservable.subscribe({
-        next: ({ data }) => {
-          try {
-            if (called) {
-              expect(data).toMatchObject({ counter: 10 });
-            }
-            called = true;
-          } catch (e) {
-            fail(e);
-          }
-        },
-        error: fail,
-        complete: fail,
-      });
-
-      const makeTerminatingCheck = (
-        body: (...args: any[]) => void,
-        done: () => any,
-      ) => {
-        return (...args: any[]) => {
-          try {
-            body(...args);
-            done();
-          } catch (error) {
-            fail(error);
-          }
-        };
-      };
-
-      try {
-        await client.resetStore();
-      } catch (error) {
-        // Do nothing
-      }
-
-      expect(client.query({ query: counterQuery }))
-        .resolves.toMatchObject({ data: { counter: 10 } })
-        .then(
-          makeTerminatingCheck(
-            () => {
-              unsub.unsubscribe();
-            },
-            () => {
-              expect(called);
-            },
-          ),
-        )
-        .catch(fail);
-    },
-  );
-
-  it(
-    'should not find data in the cache via a Query resolver if the store ' +
-      'is reset and initializers are not re-run',
-    done => {
-      const counterQuery = gql`
-        query {
-          counter @client
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      const initializers = {
-        counter: () => 10,
-      };
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.empty(),
-        resolvers: {
-          Query: {
-            counter: () => {
-              try {
-                return (cache.readQuery({ query: counterQuery }) as any)
-                  .counter;
-              } catch (error) {
-                try {
-                  expect(error.message).toMatch(/field counter/);
-                } catch (e) {
-                  done.fail(e);
-                }
-                unsub.unsubscribe();
-                done();
-              }
-              return -1; // to remove warning from in-memory-cache
-            },
-          },
-        },
-        initializers,
-      });
-
-      const componentObservable = client.watchQuery({ query: counterQuery });
-
-      let nextCallCount = 0;
-      const unsub = componentObservable.subscribe({
-        next: () => ++nextCallCount,
-        error: done.fail,
-        complete: done.fail,
-      });
-
-      client.resetStore().then(() => {
-        expect(nextCallCount).toBe(1);
-        done();
-      });
-    },
-  );
-});
-
 describe('Combining client and server state/operations', () => {
   it('should merge remote and local state', done => {
     const query = gql`
@@ -1123,8 +749,11 @@ describe('Combining client and server state/operations', () => {
     const client = new ApolloClient({
       cache,
       link,
-      initializers: {
-        count: () => 0,
+    });
+
+    cache.writeData({
+      data: {
+        count: 0,
       },
     });
 
@@ -1157,12 +786,13 @@ describe('Combining client and server state/operations', () => {
     const client = new ApolloClient({
       cache,
       link,
-      initializers: {
-        user() {
-          return {
-            __typename: 'User',
-            firstName: 'John',
-          };
+    });
+
+    cache.writeData({
+      data: {
+        user: {
+          __typename: 'User',
+          firstName: 'John',
         },
       },
     });
@@ -1238,9 +868,6 @@ describe('Combining client and server state/operations', () => {
     const client = new ApolloClient({
       cache,
       link,
-      initializers: {
-        count: () => 0,
-      },
       resolvers: {
         Mutation: {
           incrementCount: (_, __, { cache }) => {
@@ -1250,6 +877,12 @@ describe('Combining client and server state/operations', () => {
             return null;
           },
         },
+      },
+    });
+
+    cache.writeData({
+      data: {
+        count: 0,
       },
     });
 

@@ -1,7 +1,6 @@
 import { FetchResult } from 'apollo-link';
 import { DocumentNode, GraphQLError } from 'graphql';
 
-import ApolloClient from '../ApolloClient';
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
 
@@ -46,10 +45,6 @@ export type MutationQueryReducer<T> = (
 export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
-
-export interface Initializers<TCacheShape> {
-  [field: string]: (client: ApolloClient<TCacheShape>) => any;
-}
 
 export interface Resolvers {
   [key: string]: {

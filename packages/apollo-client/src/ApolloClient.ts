@@ -17,7 +17,6 @@ import { QueryManager } from './core/QueryManager';
 import {
   ApolloQueryResult,
   OperationVariables,
-  Initializers,
   Resolvers,
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
@@ -54,7 +53,6 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
-  initializers?: Initializers<TCacheShape> | Initializers<TCacheShape>[];
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
@@ -122,7 +120,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
-      initializers,
       resolvers,
       typeDefs,
       fragmentMatcher,
@@ -132,9 +129,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     let { link } = options;
 
-    // If a link hasn't been defined, but local state initializers/resolvers
-    // have been set, setup a default empty link.
-    if (!link && (initializers || resolvers)) {
+    // If a link hasn't been defined, but local state resolvers have been set,
+    // setup a default empty link.
+    if (!link && resolvers) {
       link = ApolloLink.empty();
     }
 
@@ -243,7 +240,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.localState = new LocalState({
       cache,
       client: this,
-      initializers,
       resolvers,
       typeDefs,
       fragmentMatcher,
@@ -597,25 +593,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
-  }
-
-  /**
-   * Run one or many initializer functions to put the cache into a desired
-   * state.
-   */
-  public runInitializers(
-    initializers: Initializers<TCacheShape> | Initializers<TCacheShape>[],
-  ) {
-    return this.localState.runInitializers(initializers);
-  }
-
-  /**
-   * Clear out all initializer run tracking. Initializer runs are tracked to
-   * help prevent the same initializers from running again, which could lead
-   * to certain cache values being wiped out.
-   */
-  public resetInitializers() {
-    this.localState.resetInitializers();
   }
 
   /**

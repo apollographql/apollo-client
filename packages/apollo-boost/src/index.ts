@@ -17,7 +17,6 @@ export { gql, HttpLink };
 type ClientStateConfig = {
   cache?: ApolloCache<any>;
   resolvers: any | (() => any);
-  defaults?: any;
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: any;
 };
@@ -161,17 +160,9 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       x => !!x,
     ) as ApolloLink[]);
 
-    let initializers: { [field: string]: any };
     let resolvers;
     let typeDefs;
     if (clientState) {
-      if (clientState.defaults) {
-        initializers = {};
-        Object.keys(clientState.defaults).forEach((field: string) => {
-          initializers[field] = () => clientState.defaults[field];
-        });
-      }
-
       resolvers = clientState.resolvers;
       typeDefs = clientState.typeDefs;
     }
@@ -182,7 +173,6 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       link,
       name,
       version,
-      initializers,
       resolvers,
       typeDefs,
     } as any);

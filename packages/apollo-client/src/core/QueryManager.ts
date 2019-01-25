@@ -922,9 +922,6 @@ export class QueryManager<TStore> {
     // begin removing data from the store
     const reset = this.dataStore.reset();
 
-    // Reset initializer tracking.
-    this.localState.resetInitializers();
-
     return reset;
   }
 

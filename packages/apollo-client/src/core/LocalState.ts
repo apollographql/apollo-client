@@ -126,7 +126,7 @@ export class LocalState<TCacheShape> {
   // Locally resolved field values are merged with the incoming remote data,
   // and returned. Note that locally resolved fields will overwrite
   // remote data using the same field name.
-  public async runResolvers({
+  public async runResolvers<TData>({
     document,
     remoteResult,
     context,
@@ -134,31 +134,41 @@ export class LocalState<TCacheShape> {
     onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
-    remoteResult?: ExecutionResult;
+    remoteResult: ExecutionResult<TData>;
     context?: Record<string, any>;
     variables?: Record<string, any>;
     onlyRunForcedResolvers?: boolean;
-  }): Promise<ExecutionResult> {
+  }): Promise<ExecutionResult<TData>> {
     if (document) {
-      let rootValue = this.buildRootValueFromCache(document, variables);
-      rootValue = rootValue ? mergeDeep(rootValue, remoteResult) : remoteResult;
+      const toMerge: TData[] = [];
+
+      const rootValueFromCache = this.buildRootValueFromCache(
+        document,
+        variables,
+      );
+
+      if (rootValueFromCache) {
+        toMerge.push(rootValueFromCache as TData);
+      }
+
+      if (remoteResult.data) {
+        toMerge.push(remoteResult.data);
+      }
 
       return this.resolveDocument(
         document,
-        rootValue,
+        mergeDeepArray(toMerge),
         context,
         variables,
         this.fragmentMatcher,
         onlyRunForcedResolvers,
-      ).then(data => ({
+      ).then(localResult => ({
         ...remoteResult,
-        ...data.result,
+        data: localResult.result,
       }));
     }
 
-    return {
-      ...remoteResult,
-    };
+    return remoteResult;
   }
 
   public setTypeDefs(
@@ -294,9 +304,9 @@ export class LocalState<TCacheShape> {
       .join('\n');
   }
 
-  private async resolveDocument(
+  private async resolveDocument<TData>(
     document: DocumentNode,
-    rootValue?: any,
+    rootValue: TData,
     context: any = {},
     variables: VariableMap = {},
     fragmentMatcher: FragmentMatcher = () => true,
@@ -338,13 +348,13 @@ export class LocalState<TCacheShape> {
     }));
   }
 
-  private async resolveSelectionSet(
+  private async resolveSelectionSet<TData>(
     selectionSet: SelectionSetNode,
-    rootValue: any,
+    rootValue: TData,
     execContext: ExecContext,
   ) {
     const { fragmentMap, context, variables } = execContext;
-    const resultsToMerge: any[] = [];
+    const resultsToMerge: TData[] = [rootValue];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
       if (!shouldInclude(selection, variables)) {
@@ -358,7 +368,7 @@ export class LocalState<TCacheShape> {
             if (typeof fieldResult !== 'undefined') {
               resultsToMerge.push({
                 [resultKeyNameFromField(selection)]: fieldResult,
-              });
+              } as TData);
             }
           },
         );

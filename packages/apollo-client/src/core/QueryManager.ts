@@ -312,17 +312,17 @@ export class QueryManager<TStore> {
 
           // Run the query through local client resolvers.
           if (clientQuery && hasDirectives(['client'], clientQuery)) {
-            updatedResult.data = await self.localState
+            updatedResult = await self.localState
               .runResolvers({
                 document: clientQuery,
-                remoteResult: result.data,
+                remoteResult: result,
                 context,
                 variables,
               })
               .catch(error => {
                 handlingNext = false;
                 reject(error);
-                return updatedResult.data;
+                return result;
               });
           }
 
@@ -697,16 +697,19 @@ export class QueryManager<TStore> {
                 // fields marked with `@client(always: true)` are overwritten.
                 if (forceResolvers) {
                   const { query, variables, context } = options;
+
                   const updatedResult = await this.localState.runResolvers({
                     document: query,
-                    remoteResult: resultFromStore.data,
+                    remoteResult: resultFromStore,
                     context,
                     variables,
                     onlyRunForcedResolvers: forceResolvers,
                   });
-                  if (updatedResult) {
-                    resultFromStore.data = updatedResult as T;
-                  }
+
+                  resultFromStore = {
+                    ...resultFromStore,
+                    ...updatedResult,
+                  };
                 }
 
                 observer.next(resultFromStore);
@@ -1001,9 +1004,9 @@ export class QueryManager<TStore> {
 
             // Run the query through local client resolvers.
             if (clientQuery && hasDirectives(['client'], clientQuery)) {
-              updatedResult.data = await this.localState.runResolvers({
+              updatedResult = await this.localState.runResolvers({
                 document: clientQuery,
-                remoteResult: result.data,
+                remoteResult: result,
                 context: {},
                 variables: updatedVariables,
               });
@@ -1267,17 +1270,17 @@ export class QueryManager<TStore> {
           if (requestId >= (lastRequestId || 1)) {
             // Run the query through local client resolvers.
             if (clientQuery && hasDirectives(['client'], clientQuery)) {
-              updatedResult.data = await this.localState
+              updatedResult = await this.localState
                 .runResolvers({
                   document: clientQuery,
-                  remoteResult: result.data,
+                  remoteResult: result,
                   context: updatedContext,
                   variables,
                 })
                 .catch(error => {
                   handlingNext = false;
                   reject(error);
-                  return updatedResult.data;
+                  return result;
                 });
             }
 

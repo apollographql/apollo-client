@@ -852,7 +852,7 @@ describe('QueryManager', () => {
         try {
           expect(stripSymbols(result.data)).toEqual(data1);
           expect(stripSymbols(result.data)).toEqual(
-            stripSymbols(observable.currentResult().data),
+            stripSymbols(observable.getCurrentResult().data),
           );
           done();
         } catch (error) {
@@ -1235,7 +1235,7 @@ describe('QueryManager', () => {
     observable.subscribe({
       next: result => {
         expect(stripSymbols(result.data)).toEqual(data);
-        expect(stripSymbols(observable.currentResult().data)).toEqual(data);
+        expect(stripSymbols(observable.getCurrentResult().data)).toEqual(data);
         done();
       },
     });
@@ -2401,7 +2401,7 @@ describe('QueryManager', () => {
           partial: false,
         });
         expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
-          data: {},
+          data: undefined,
           partial: true,
         });
       }),
@@ -4042,7 +4042,7 @@ describe('QueryManager', () => {
           queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
         },
         result => {
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             secondReqData,
           );
           expect(stripSymbols(result.data)).toEqual(secondReqData);
@@ -4253,7 +4253,7 @@ describe('QueryManager', () => {
           }
           if (count === 1) {
             setTimeout(() => {
-              expect(stripSymbols(observable.currentResult().data)).toEqual(
+              expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                 secondReqData,
               );
               done();
@@ -4649,7 +4649,7 @@ describe('QueryManager', () => {
           } else {
             expect(mutationComplete).toBeTruthy();
           }
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             secondReqData,
           );
           expect(stripSymbols(result.data)).toEqual(secondReqData);

@@ -195,7 +195,7 @@ export class QueryManager<TStore> {
         optimisticResponse,
       });
 
-      const completeMutation = () => {
+      const completeMutation = async () => {
         if (error) {
           this.mutationStore.markMutationError(mutationId, error);
         }
@@ -214,7 +214,7 @@ export class QueryManager<TStore> {
         // allow for conditional refetches
         // XXX do we want to make this the only API one day?
         if (typeof refetchQueries === 'function') {
-          refetchQueries = refetchQueries(storeResult as ExecutionResult);
+          refetchQueries = await refetchQueries(storeResult as ExecutionResult);
         }
 
         const refetchQueryPromises: Promise<

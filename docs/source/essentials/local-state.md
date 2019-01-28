@@ -1090,7 +1090,9 @@ Updating your application to use Apollo Client's local state management features
   });
   ```
 
-3. Test thoroughly! 🙂
+3. If you're using Apollo Boost, you shouldn't have to change anything. Apollo Boost has been updated to use Apollo Client's integrated local state handling, which means it is no longer using `apollo-link-state`. Behind the scenes, the Apollo Boost `clientState` constructor parameter now feeds the necessary local state initialization directly into Apollo Client.
+
+4. Test thoroughly! 🙂
 
 <h2 id="next-steps">Next steps</h2>
 

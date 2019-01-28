@@ -6,11 +6,11 @@ title: Setup and options - Simple and Advanced
 
 To get started quickly and easily with Apollo and React, you should use [`apollo-boost`](https://www.npmjs.com/package/apollo-boost).
 
-> If you are first getting started with Apollo Client, Apollo Boost is the best package to start with, because it offers a preconfiged GraphQL Client for you! You'll notice within the docs, where we interchange `apollo-boost` and `apollo-client` packages. The `apollo-client` examples are for the more advanced use cases, the `apollo-boost` examples are for the simpler ones. 
+> If you are first getting started with Apollo Client, Apollo Boost is the best package to start with, because it offers a preconfigured GraphQL Client for you! You'll notice within the docs, where we interchange `apollo-boost` and `apollo-client` packages. The `apollo-client` examples are for the more advanced use cases, the `apollo-boost` examples are for the simpler ones. 
 
 If you are now ready to move forward with Apollo Boost, [then let's go to that section of the docs and get started](https://github.com/apollographql/apollo-client/blob/master/docs/source/essentials/get-started.md)! 
 
-The reast of this page is for the more advanced programmers and those who want to dive in the deep end first. 
+The rest of this page is for more advanced use cases and for those who want to dive into the deep end first. 
 
 <h3 id="creating-client">Installation with Apollo Client - For Advanced Use</h3>
 

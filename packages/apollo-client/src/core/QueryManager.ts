@@ -729,7 +729,7 @@ export class QueryManager<TStore> {
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.setQuery(queryId, ({ listeners = [] }) => ({
       listeners: listeners.concat([listener]),
-      invalidate: false,
+      invalidated: false,
     }));
   }
 

@@ -9,7 +9,7 @@ This page assumes some familiarity with building GraphQL mutations. If you'd lik
 
 The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](./get-started.html) guide if you need help with either of those steps. Let's dive in!
 
-> If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/znl94y0vp) on CodeSandbox, and our sample GraphQL server on [Launchpad](https://launchpad.graphql.com/8v9r9kpn7q). You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
+> If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/znl94y0vp) on CodeSandbox, and our sample GraphQL server on [this CodeSandBox](https://codesandbox.io/s/plp0mopxq). You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
 
 <h2 id="basic">The Mutation component</h2>
 
@@ -74,6 +74,12 @@ The second argument to the update function is an object with a data property con
 Now that we've learned about the update function, let's implement one for the `Mutation` component we just built!
 
 ```jsx
+const GET_TODOS = gql`
+  query GetTodos {
+    todos
+  }
+`;
+
 const AddTodo = () => {
   let input;
 
@@ -84,7 +90,7 @@ const AddTodo = () => {
         const { todos } = cache.readQuery({ query: GET_TODOS });
         cache.writeQuery({
           query: GET_TODOS,
-          data: { todos: todos.concat([addTodo]) }
+          data: { todos: todos.concat([addTodo]) },
         });
       }}
     >

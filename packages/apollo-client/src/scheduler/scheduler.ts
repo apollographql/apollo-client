@@ -50,6 +50,21 @@ export class QueryScheduler<TCacheShape> {
     this.ssrMode = ssrMode || false;
   }
 
+  /**
+   * Call this method to terminate any active scheduler timers, making it safe
+   * to dispose of this QueryScheduler instance.
+   */
+  public stop() {
+    Object.keys(this.registeredQueries).forEach(queryId => {
+      this.stopPollingQuery(queryId);
+    });
+    // After calling this.stopPollingQuery for all registered queries, calling
+    // fetchQueriesOnInterval will remove the corresponding intervals.
+    Object.keys(this.intervalQueries).forEach(interval => {
+      this.fetchQueriesOnInterval(+interval);
+    });
+  }
+
   public checkInFlight(queryId: string) {
     const query = this.queryManager.queryStore.get(queryId);
 

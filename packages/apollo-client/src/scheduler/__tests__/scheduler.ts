@@ -76,7 +76,7 @@ describe('QueryScheduler', () => {
     });
     setTimeout(() => {
       expect(timesFired).toBeGreaterThanOrEqual(0);
-      scheduler.stopPollingQuery(queryId);
+      queryManager.stop();
       done();
     }, 120);
   });
@@ -114,7 +114,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    let queryId = scheduler.startPollingQuery(
+    const queryId = scheduler.startPollingQuery(
       queryOptions,
       'fake-id',
       queryStoreValue => {
@@ -127,6 +127,7 @@ describe('QueryScheduler', () => {
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
+      queryManager.stop();
       done();
     }, 170);
   });
@@ -174,6 +175,7 @@ describe('QueryScheduler', () => {
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -229,6 +231,7 @@ describe('QueryScheduler', () => {
       // timesFired end up greater than 2.
       expect(timesFired).toEqual(2);
       subscription.unsubscribe();
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -261,6 +264,7 @@ describe('QueryScheduler', () => {
     let observableQuery = scheduler.registerPollingQuery(queryOptions);
     const subscription = observableQuery.subscribe({
       next() {
+        queryManager.stop();
         done.fail(
           new Error('Observer provided a result despite a network error.'),
         );
@@ -271,6 +275,7 @@ describe('QueryScheduler', () => {
         const queryId = scheduler.intervalQueries[queryOptions.pollInterval][0];
         expect(scheduler.checkInFlight(queryId)).toBe(false);
         subscription.unsubscribe();
+        queryManager.stop();
         done();
       },
     });
@@ -305,6 +310,7 @@ describe('QueryScheduler', () => {
     const subscription = observer.subscribe({});
     setTimeout(() => {
       subscription.unsubscribe();
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -344,6 +350,7 @@ describe('QueryScheduler', () => {
     ];
     expect(queries.length).toEqual(1);
     expect(queries[0]).toEqual(queryId);
+    queryManager.stop();
   });
 
   it('should add multiple queries to an interval correctly', () => {
@@ -416,6 +423,8 @@ describe('QueryScheduler', () => {
     expect(queryIds.length).toEqual(2);
     expect(scheduler.registeredQueries[queryIds[0]]).toEqual(queryOptions1);
     expect(scheduler.registeredQueries[queryIds[1]]).toEqual(queryOptions2);
+
+    queryManager.stop();
   });
 
   it('should remove queries from the interval list correctly', done => {
@@ -459,6 +468,7 @@ describe('QueryScheduler', () => {
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
+      queryManager.stop();
       done();
     }, 100);
   });
@@ -504,7 +514,7 @@ describe('QueryScheduler', () => {
       scheduler.stopPollingQuery(queryId);
     });
     setTimeout(() => {
-      let queryId2 = scheduler.startPollingQuery(
+      scheduler.startPollingQuery(
         queryOptions,
         'fake-id2',
         () => {
@@ -514,7 +524,7 @@ describe('QueryScheduler', () => {
       expect(scheduler.intervalQueries[20].length).toEqual(1);
       setTimeout(() => {
         expect(timesFired).toBeGreaterThanOrEqual(1);
-        scheduler.stopPollingQuery(queryId2);
+        queryManager.stop();
         done();
       }, 80);
     }, 200);

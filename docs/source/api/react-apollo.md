@@ -85,6 +85,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
   <dt>`partialRefetch`: boolean</dt>
   <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="query-render-prop">Render prop function</h3>
@@ -145,6 +147,8 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>A callback executed in the event of an error</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="mutation-render-prop">Render prop function</h3>
@@ -192,6 +196,8 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
   <dt>`fetchPolicy`: FetchPolicy</dt>
   <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>
@@ -386,6 +392,16 @@ function MyComponent({ onLoadMore }) {
     </button>
   );
 }
+```
+
+To access props that are not added by the `graphql()` function, use the `ownProps` keyword. For example:
+
+```js
+export default graphql(gql`{ ... }`, {
+  props: ({ data: { liveImage }, ownProps: { loadingImage } }) => ({
+    image: liveImage || loadingImage,
+  }),
+})(MyComponent);
 ```
 
 <h3 id="graphql-config-skip">`config.skip`</h3>
@@ -1317,8 +1333,8 @@ An important note is that `compose()` executes the last enhancer _first_ and wor
 ```js
 export default compose(
   withApollo,
-  graphql(`query { ... }`),
-  graphql(`mutation { ... }`),
+  graphql(gql`query { ... }`),
+  graphql(gql`mutation { ... }`),
   connect(...),
 )(MyComponent);
 ```
@@ -1329,7 +1345,7 @@ export default compose(
 import { withApollo } from 'react-apollo';
 ```
 
-A simple enhancer which provides direct access to your [`ApolloClient`][] instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`][] as a `client` prop.
+A simple enhancer which provides direct access to your [`ApolloClient`](apollo-client.html) instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`](apollo-client.html) as a `client` prop.
 
 If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphql) the answer is that most of the time you will want to use [`graphql()`](#graphql). [`graphql()`](#graphql) provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
 
@@ -1340,9 +1356,9 @@ This will only be able to provide access to your client if there is an [`<Apollo
 **Example:**
 
 ```js
-export default withApollo(MyComponent);
-
 function MyComponent({ client }) {
   console.log(client);
 }
+
+export default withApollo(MyComponent);
 ```

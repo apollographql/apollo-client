@@ -2190,6 +2190,8 @@ describe('ApolloClient', () => {
       expect(queryOptions.fetchPolicy).toEqual(
         defaultOptions.query!.fetchPolicy,
       );
+
+      client.stop();
     });
   });
 

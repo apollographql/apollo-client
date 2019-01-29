@@ -41,7 +41,7 @@ Since the result of a query will be sent to the wrapped component as props, we w
 ```javascript
 import React from "react";
 import gql from "graphql-tag";
-import { graphql } from "react-apollo";
+import { ChildDataProps, graphql } from "react-apollo";
 
 const HERO_QUERY = gql`
   query GetCharacter($episode: Episode!) {
@@ -72,11 +72,13 @@ type Variables = {
   episode: string;
 };
 
+type ChildProps = ChildDataProps<{}, Response, Variables>;
+
 // Note that the first parameter here is an empty Object, which means we're
 // not checking incoming props for type safety in this example. The next
 // example (in the "Options" section) shows how the type safety of incoming
 // props can be ensured.
-const withCharacter = graphql<{}, Response, Variables>(HERO_QUERY, {
+const withCharacter = graphql<{}, Response, Variables, ChildProps>(HERO_QUERY, {
   options: () => ({
     variables: { episode: "JEDI" }
   })
@@ -96,7 +98,7 @@ Typically, variables to the query will be computed from the props of the wrapper
 ```javascript
 import React from "react";
 import gql from "graphql-tag";
-import { graphql } from "react-apollo";
+import { ChildDataProps, graphql } from "react-apollo";
 
 const HERO_QUERY = gql`
   query GetCharacter($episode: Episode!) {
@@ -131,7 +133,9 @@ type Variables = {
   episode: string;
 };
 
-const withCharacter = graphql<InputProps, Response, Variables>(HERO_QUERY, {
+type ChildProps = ChildDataProps<InputProps, Response, Variables>;
+
+const withCharacter = graphql<InputProps, Response, Variables, ChildProps>(HERO_QUERY, {
   options: ({ episode }) => ({
     variables: { episode }
   }),

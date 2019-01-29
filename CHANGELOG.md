@@ -6,6 +6,8 @@
  
 - Resolve "invalidate" -> "invalidated" typo in `QueryManager`.  <br/>
   [@quazzie](https://github.com/quazzie) in [#4041](https://github.com/apollographql/apollo-client/pull/4041)
+- Properly type `setQuery` and fix now typed callers.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4369](https://github.com/apollographql/apollo-client/pull/4369)
 - Documentation updates.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)
 

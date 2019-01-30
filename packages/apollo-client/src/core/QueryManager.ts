@@ -50,7 +50,7 @@ export interface QueryInfo {
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   observableQuery: ObservableQuery<any> | null;
   subscriptions: Subscription[];
-  cancel?: (() => void);
+  cancel?: () => void;
 }
 
 export class QueryManager<TStore> {
@@ -246,7 +246,7 @@ export class QueryManager<TStore> {
         return Promise.all(
           awaitRefetchQueries ? refetchQueryPromises : [],
         ).then(() => {
-          this.setQuery(mutationId, () => ({ document: undefined }));
+          this.setQuery(mutationId, () => ({ document: null }));
 
           if (
             errorPolicy === 'ignore' &&
@@ -292,7 +292,7 @@ export class QueryManager<TStore> {
           });
           this.broadcastQueries();
 
-          this.setQuery(mutationId, () => ({ document: undefined }));
+          this.setQuery(mutationId, () => ({ document: null }));
           reject(
             new ApolloError({
               networkError: err,
@@ -729,7 +729,7 @@ export class QueryManager<TStore> {
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.setQuery(queryId, ({ listeners = [] }) => ({
       listeners: listeners.concat([listener]),
-      invalidate: false,
+      invalidated: false,
     }));
   }
 
@@ -757,7 +757,7 @@ export class QueryManager<TStore> {
       variables: options.variables,
       optimistic: true,
       previousResult,
-      callback: (newData: ApolloQueryResult<any>) => {
+      callback: newData => {
         this.setQuery(queryId, () => ({ invalidated: true, newData }));
       },
     });
@@ -932,7 +932,7 @@ export class QueryManager<TStore> {
                 obs.complete();
               }
             });
-          }
+          },
         };
 
         // TODO: Should subscriptions also accept a `context` option to pass
@@ -1093,7 +1093,7 @@ export class QueryManager<TStore> {
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       // Need to assign the reject function to the rejectFetchPromise variable
       // in the outer scope so that we can refer to it in the .catch handler.
-      this.fetchQueryRejectFns.add(rejectFetchPromise = reject);
+      this.fetchQueryRejectFns.add((rejectFetchPromise = reject));
 
       const subscription = execute(this.deduplicator, operation).subscribe({
         next: (result: ExecutionResult) => {
@@ -1188,7 +1188,6 @@ export class QueryManager<TStore> {
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),
       }));
-
     }).catch(error => {
       this.fetchQueryRejectFns.delete(rejectFetchPromise);
       throw error;
@@ -1231,7 +1230,10 @@ export class QueryManager<TStore> {
     );
   }
 
-  private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {
+  private setQuery<T extends keyof QueryInfo>(
+    queryId: string,
+    updater: (prev: QueryInfo) => Pick<QueryInfo, T>,
+  ) {
     const prev = this.getQuery(queryId);
     const newInfo = { ...prev, ...updater(prev) };
     this.queries.set(queryId, newInfo);

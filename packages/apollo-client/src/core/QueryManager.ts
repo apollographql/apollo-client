@@ -246,7 +246,7 @@ export class QueryManager<TStore> {
         return Promise.all(
           awaitRefetchQueries ? refetchQueryPromises : [],
         ).then(() => {
-          this.setQuery(mutationId, () => ({ document: undefined }));
+          this.setQuery(mutationId, () => ({ document: null }));
 
           if (
             errorPolicy === 'ignore' &&
@@ -292,7 +292,7 @@ export class QueryManager<TStore> {
           });
           this.broadcastQueries();
 
-          this.setQuery(mutationId, () => ({ document: undefined }));
+          this.setQuery(mutationId, () => ({ document: null }));
           reject(
             new ApolloError({
               networkError: err,
@@ -729,7 +729,7 @@ export class QueryManager<TStore> {
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.setQuery(queryId, ({ listeners = [] }) => ({
       listeners: listeners.concat([listener]),
-      invalidate: false,
+      invalidated: false,
     }));
   }
 
@@ -757,7 +757,7 @@ export class QueryManager<TStore> {
       variables: options.variables,
       optimistic: true,
       previousResult,
-      callback: (newData: ApolloQueryResult<any>) => {
+      callback: newData => {
         this.setQuery(queryId, () => ({ invalidated: true, newData }));
       },
     });
@@ -1234,7 +1234,10 @@ export class QueryManager<TStore> {
     );
   }
 
-  private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {
+  private setQuery<T extends keyof QueryInfo>(
+    queryId: string,
+    updater: (prev: QueryInfo) => Pick<QueryInfo, T>,
+  ) {
     const prev = this.getQuery(queryId);
     const newInfo = { ...prev, ...updater(prev) };
     this.queries.set(queryId, newInfo);

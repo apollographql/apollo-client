@@ -967,7 +967,10 @@ export class QueryManager<TStore> {
   public getCurrentQueryResult<T>(
     observableQuery: ObservableQuery<T>,
     optimistic: boolean = true,
-  ) {
+  ): {
+    data: T | undefined;
+    partial: boolean;
+  } {
     const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
@@ -977,16 +980,17 @@ export class QueryManager<TStore> {
     } else {
       try {
         // the query is brand new, so we read from the store to see if anything is there
-        const data = this.dataStore.getCache().read({
-          query,
-          variables,
-          previousResult: lastResult ? lastResult.data : undefined,
-          optimistic,
-        });
+        const data =
+          this.dataStore.getCache().read<T>({
+            query,
+            variables,
+            previousResult: lastResult ? lastResult.data : undefined,
+            optimistic,
+          }) || undefined;
 
         return { data, partial: false };
       } catch (e) {
-        return { data: {}, partial: true };
+        return { data: undefined, partial: true };
       }
     }
   }

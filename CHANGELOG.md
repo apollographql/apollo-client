@@ -9,7 +9,7 @@
 - Properly type `setQuery` and fix now typed callers.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4369](https://github.com/apollographql/apollo-client/pull/4369)
 - Align with the React Apollo decision that result `data` should be 
-  `TData | undefinedi` instead of `TData | {}`.  <br/>
+  `TData | undefined` instead of `TData | {}`.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4356](https://github.com/apollographql/apollo-client/pull/4356)
 - Documentation updates.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)  <br />

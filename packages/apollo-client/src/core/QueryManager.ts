@@ -1185,6 +1185,12 @@ export class QueryManager<TStore> {
         },
       });
 
+      let originalUnsubscribe = subscription.unsubscribe;
+      subscription.unsubscribe = () => {
+        this.fetchQueryRejectFns.delete(reject);
+        return originalUnsubscribe.call(subscription);
+      };
+
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),
       }));

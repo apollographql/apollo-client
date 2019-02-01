@@ -961,6 +961,7 @@ export class QueryManager<TStore> {
   public removeQuery(queryId: string) {
     const { subscriptions } = this.getQuery(queryId);
     // teardown all links
+    this.fetchQueryRejectFns.delete(queryId);
     subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
   }

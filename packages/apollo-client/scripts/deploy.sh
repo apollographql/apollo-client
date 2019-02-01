@@ -62,4 +62,4 @@ node -e "\
 cp ../../README.md npm/
 cp ../../LICENSE npm/
 
-cd npm && npm publish --tag alpha
+cd npm && npm publish --tag beta

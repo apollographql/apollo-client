@@ -17,7 +17,7 @@
     "coverage": "jest --verbose --coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",
-    "deploy": "lerna publish -m \"chore: Publish\" --npm-tag alpha && cd packages/apollo-client && npm run deploy",
+    "deploy": "lerna publish -m \"chore: Publish\" --npm-tag beta && cd packages/apollo-client && npm run deploy",
     "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"lib\" -exec rm -rf '{}' +"
   },
   "bundlesize": [

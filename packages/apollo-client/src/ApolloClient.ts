@@ -617,27 +617,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * Set the local schema type definitions.
-   */
-  public setTypeDefs(
-    typeDefs: string | string[] | DocumentNode | DocumentNode[],
-  ) {
-    this.localState.setTypeDefs(typeDefs);
-  }
-
-  /**
-   * Get local schema type definitions.
-   */
-  public getTypeDefs():
-    | string
-    | string[]
-    | DocumentNode
-    | DocumentNode[]
-    | undefined {
-    return this.localState.getTypeDefs();
-  }
-
-  /**
    * Set a custom local state fragment matcher.
    */
   public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {

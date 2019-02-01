@@ -193,6 +193,19 @@ export class ObservableQuery<
       };
     }
 
+    // Variables might have been added dynamically at query time, when
+    // using `@client @export(as: "varname")` for example. When this happens,
+    // the variables have been updated in the query store, but not updated on
+    // the original `ObservableQuery`. We'll update the observable query
+    // variables here to match, so retrieving from the cache doesn't fail.
+    if (queryStoreValue && queryStoreValue.variables) {
+      this.options.variables = Object.assign(
+        {},
+        this.options.variables,
+        queryStoreValue.variables,
+      );
+    }
+
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
 
     const queryLoading =

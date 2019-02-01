@@ -1613,7 +1613,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it('warns if you forget the template literal tag', () => {
+  it('warns if you forget the template literal tag', async () => {
     const queryManager = mockQueryManager();
     expect(() => {
       queryManager.query<any>({
@@ -1622,12 +1622,12 @@ describe('QueryManager', () => {
       });
     }).toThrowError(/wrap the query string in a "gql" tag/);
 
-    expect(() => {
+    await expect(
       queryManager.mutate({
         // Bamboozle TypeScript into letting us do this
         mutation: ('string' as any) as DocumentNode,
-      });
-    }).toThrowError(/wrap the query string in a "gql" tag/);
+      })
+    ).rejects.toThrow(/wrap the query string in a "gql" tag/);
 
     expect(() => {
       queryManager.watchQuery<any>({
@@ -3490,7 +3490,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it('should only refetch once when we refetch observable queries', () => {
+    it.only('should only refetch once when we refetch observable queries', (done) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
@@ -3544,6 +3544,7 @@ describe('QueryManager', () => {
           // only refetch once and make sure data has changed
           expect(stripSymbols(result.data)).toEqual(data2);
           expect(timesFired).toBe(2);
+          done();
         },
       ).catch(e => {
         done.fail(e);

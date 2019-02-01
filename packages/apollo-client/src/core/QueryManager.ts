@@ -11,12 +11,12 @@ import {
   getQueryDefinition,
   isProduction,
   hasDirectives,
+  graphQLResultHasError,
+  hasClientExports,
 } from 'apollo-utilities';
 
 import { isApolloError, ApolloError } from '../errors/ApolloError';
-
 import { Observer, Subscription, Observable } from '../util/Observable';
-
 import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
@@ -35,7 +35,7 @@ import {
   FetchType,
   OperationVariables,
 } from './types';
-import { graphQLResultHasError } from 'apollo-utilities';
+import { LocalState } from './LocalState';
 
 export interface QueryInfo {
   listeners: QueryListener[];
@@ -60,6 +60,7 @@ export class QueryManager<TStore> {
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
+  private localState: LocalState<TStore>;
 
   private onBroadcast: () => void;
 
@@ -89,6 +90,7 @@ export class QueryManager<TStore> {
     onBroadcast = () => undefined,
     ssrMode = false,
     clientAwareness = {},
+    localState,
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
@@ -96,6 +98,7 @@ export class QueryManager<TStore> {
     onBroadcast?: () => void;
     ssrMode?: boolean;
     clientAwareness?: Record<string, string>;
+    localState?: LocalState<TStore>;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
@@ -103,6 +106,7 @@ export class QueryManager<TStore> {
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
     this.clientAwareness = clientAwareness;
+    this.localState = localState || new LocalState({ cache: store.getCache() });
     this.ssrMode = ssrMode;
   }
 
@@ -120,7 +124,7 @@ export class QueryManager<TStore> {
     });
   }
 
-  public mutate<T>({
+  public async mutate<T>({
     mutation,
     variables,
     optimisticResponse,
@@ -175,12 +179,25 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    this.mutationStore.initMutation(mutationId, mutation, variables);
+    const updatedVariables: OperationVariables =
+      hasClientExports(mutation)
+        ? await this.localState.addExportedVariables(
+            mutation,
+            variables,
+            context,
+          )
+        : variables;
+
+    this.mutationStore.initMutation(
+      mutationId,
+      mutation,
+      updatedVariables,
+    );
 
     this.dataStore.markMutationInit({
       mutationId,
       document: mutation,
-      variables: variables || {},
+      variables: updatedVariables || {},
       updateQueries: generateUpdateQueriesInfo(),
       update: updateWithProxyFn,
       optimisticResponse,
@@ -192,7 +209,7 @@ export class QueryManager<TStore> {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
 
-      const operation = this.buildOperationForLink(mutation, variables, {
+      const operation = this.buildOperationForLink(mutation, updatedVariables, {
         ...context,
         optimisticResponse,
       });
@@ -262,39 +279,81 @@ export class QueryManager<TStore> {
         });
       };
 
-      execute(this.link, operation).subscribe({
-        next: (result: ExecutionResult) => {
+      const clientQuery = this.localState.clientQuery(operation.query);
+      const serverQuery = this.localState.serverQuery(operation.query);
+      if (serverQuery) {
+        operation.query = serverQuery;
+      }
+
+      const obs: Observable<FetchResult> = serverQuery
+        ? execute(this.link, operation)
+        : Observable.of({
+            data: {},
+          });
+
+      const self = this;
+      let complete = false;
+      let handlingNext = false;
+      obs.subscribe({
+        next: async (result: ExecutionResult) => {
+          handlingNext = true;
+
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
+            handlingNext = false;
             error = new ApolloError({
               graphQLErrors: result.errors,
             });
             return;
           }
 
-          this.mutationStore.markMutationResult(mutationId);
+          self.mutationStore.markMutationResult(mutationId);
+          let updatedResult = result;
+          const { context, variables } = operation;
+
+          // Run the query through local client resolvers.
+          if (clientQuery && hasDirectives(['client'], clientQuery)) {
+            updatedResult = await self.localState
+              .runResolvers({
+                document: clientQuery,
+                remoteResult: result,
+                context,
+                variables,
+              })
+              .catch(error => {
+                handlingNext = false;
+                reject(error);
+                return result;
+              });
+          }
 
           if (fetchPolicy !== 'no-cache') {
-            this.dataStore.markMutationResult({
+            self.dataStore.markMutationResult({
               mutationId,
-              result,
+              result: updatedResult,
               document: mutation,
-              variables: variables || {},
+              variables: updatedVariables || {},
               updateQueries: generateUpdateQueriesInfo(),
               update: updateWithProxyFn,
             });
           }
-          storeResult = result as FetchResult<T>;
+
+          storeResult = updatedResult as FetchResult<T>;
+
+          handlingNext = false;
+          if (complete) {
+            completeMutation().then(resolve, reject);
+          }
         },
 
-        error: (err: Error) => {
-          this.mutationStore.markMutationError(mutationId, err);
-          this.dataStore.markMutationComplete({
+        error(err: Error) {
+          self.mutationStore.markMutationError(mutationId, err);
+          self.dataStore.markMutationComplete({
             mutationId,
             optimisticResponse,
           });
-          this.broadcastQueries();
+          self.broadcastQueries();
 
-          this.setQuery(mutationId, () => ({ document: null }));
+          self.setQuery(mutationId, () => ({ document: null }));
           reject(
             new ApolloError({
               networkError: err,
@@ -302,12 +361,17 @@ export class QueryManager<TStore> {
           );
         },
 
-        complete: () => completeMutation().then(resolve, reject),
+        complete() {
+          if (!handlingNext) {
+            completeMutation().then(resolve, reject);
+          }
+          complete = true;
+        },
       });
     });
   }
 
-  public fetchQuery<T>(
+  public async fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
     fetchType?: FetchType,
@@ -320,10 +384,20 @@ export class QueryManager<TStore> {
       variables = {},
       metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
+      context = {},
     } = options;
     const cache = this.dataStore.getCache();
-
     const query = cache.transformDocument(options.query);
+
+    const updatedVariables: OperationVariables =
+      hasClientExports(query)
+        ? await this.localState.addExportedVariables(query, variables, context)
+        : variables;
+
+    const updatedOptions: WatchQueryOptions = {
+      ...options,
+      ...{ variables: updatedVariables },
+    };
 
     let storeResult: any;
     let needToFetch: boolean =
@@ -339,7 +413,7 @@ export class QueryManager<TStore> {
     ) {
       const { complete, result } = this.dataStore.getCache().diff({
         query,
-        variables,
+        variables: updatedVariables,
         returnPartialData: true,
         optimistic: false,
       });
@@ -358,7 +432,7 @@ export class QueryManager<TStore> {
     const requestId = this.generateRequestId();
 
     // set up a watcher to listen to cache updates
-    const cancel = this.updateQueryWatch(queryId, query, options);
+    const cancel = this.updateQueryWatch(queryId, query, updatedOptions);
 
     // Initialize query in store with unique requestId
     this.setQuery(queryId, () => ({
@@ -374,7 +448,7 @@ export class QueryManager<TStore> {
       queryId,
       document: query,
       storePreviousVariables: shouldFetch,
-      variables,
+      variables: updatedVariables,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
       metadata,
@@ -387,13 +461,10 @@ export class QueryManager<TStore> {
     // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult =
       !shouldFetch || fetchPolicy === 'cache-and-network';
-
     if (shouldDispatchClientResult) {
       this.queryStore.markQueryResultClient(queryId, !shouldFetch);
-
       this.invalidate(true, queryId, fetchMoreForQueryId);
-
-      this.broadcastQueries();
+      this.broadcastQueries(this.localState.shouldForceResolvers(query));
     }
 
     if (shouldFetch) {
@@ -401,7 +472,7 @@ export class QueryManager<TStore> {
         requestId,
         queryId,
         document: query,
-        options,
+        options: updatedOptions,
         fetchMoreForQueryId,
       }).catch(error => {
         // This is for the benefit of `refetch` promises, which currently don't get their errors
@@ -446,9 +517,10 @@ export class QueryManager<TStore> {
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     let previouslyHadError: boolean = false;
-    return (
+    return async (
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
+      forceResolvers?: boolean,
     ) => {
       // we're going to take a look at the data, so the query is no longer invalidated
       this.invalidate(false, queryId);
@@ -618,6 +690,28 @@ export class QueryManager<TStore> {
               observableQuery.isDifferentFromLastResult(resultFromStore)
             ) {
               try {
+                // Local resolvers can be forced by using
+                // `@client(always: true)` syntax. If any resolvers are
+                // forced, we'll make sure they're run here to override any
+                // data returned from the cache. Only the selection sets and
+                // fields marked with `@client(always: true)` are overwritten.
+                if (forceResolvers) {
+                  const { query, variables, context } = options;
+
+                  const updatedResult = await this.localState.runResolvers({
+                    document: query,
+                    remoteResult: resultFromStore,
+                    context,
+                    variables,
+                    onlyRunForcedResolvers: forceResolvers,
+                  });
+
+                  resultFromStore = {
+                    ...resultFromStore,
+                    ...updatedResult,
+                  };
+                }
+
                 observer.next(resultFromStore);
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
@@ -830,6 +924,7 @@ export class QueryManager<TStore> {
 
     // begin removing data from the store
     const reset = this.dataStore.reset();
+
     return reset;
   }
 
@@ -888,8 +983,10 @@ export class QueryManager<TStore> {
       options.variables,
     );
 
+    let updatedVariables = variables;
     let sub: Subscription;
     let observers: Observer<any>[] = [];
+    const clientQuery = this.localState.clientQuery(transformedDoc);
 
     return new Observable(observer => {
       observers.push(observer);
@@ -897,13 +994,29 @@ export class QueryManager<TStore> {
       // If this is the first observer, actually initiate the network
       // subscription.
       if (observers.length === 1) {
+        let activeNextCalls = 0;
+        let complete = false;
+
         const handler = {
-          next: (result: FetchResult) => {
+          next: async (result: FetchResult) => {
+            activeNextCalls += 1;
+            let updatedResult = result;
+
+            // Run the query through local client resolvers.
+            if (clientQuery && hasDirectives(['client'], clientQuery)) {
+              updatedResult = await this.localState.runResolvers({
+                document: clientQuery,
+                remoteResult: result,
+                context: {},
+                variables: updatedVariables,
+              });
+            }
+
             if (isCacheEnabled) {
               this.dataStore.markSubscriptionResult(
-                result,
+                updatedResult,
                 transformedDoc,
-                variables,
+                updatedVariables,
               );
               this.broadcastQueries();
             }
@@ -915,16 +1028,21 @@ export class QueryManager<TStore> {
               // still passing any errors that might occur into the `next`
               // handler, to give that handler a chance to deal with the
               // error (we're doing this for backwards compatibilty).
-              if (graphQLResultHasError(result) && obs.error) {
+              if (graphQLResultHasError(updatedResult) && obs.error) {
                 obs.error(
                   new ApolloError({
-                    graphQLErrors: result.errors,
+                    graphQLErrors: updatedResult.errors,
                   }),
                 );
               } else if (obs.next) {
-                obs.next(result);
+                obs.next(updatedResult);
               }
+              activeNextCalls -= 1;
             });
+
+            if (activeNextCalls === 0 && complete) {
+              handler.complete();
+            }
           },
           error: (error: Error) => {
             observers.forEach(obs => {
@@ -934,18 +1052,36 @@ export class QueryManager<TStore> {
             });
           },
           complete: () => {
-            observers.forEach(obs => {
-              if (obs.complete) {
-                obs.complete();
-              }
-            });
-          },
+            if (activeNextCalls === 0) {
+              observers.forEach(obs => {
+                if (obs.complete) {
+                  obs.complete();
+                }
+              });
+            }
+            complete = true;
+          }
         };
 
-        // TODO: Should subscriptions also accept a `context` option to pass
-        // through to links?
-        const operation = this.buildOperationForLink(transformedDoc, variables);
-        sub = execute(this.link, operation).subscribe(handler);
+        (async () => {
+          const updatedVariables: OperationVariables =
+            hasClientExports(transformedDoc)
+              ? await this.localState.addExportedVariables(
+                  transformedDoc,
+                  variables
+                )
+              : variables;
+          const serverQuery = this.localState.serverQuery(transformedDoc);
+          if (serverQuery) {
+            const operation = this.buildOperationForLink(
+              serverQuery,
+              updatedVariables,
+            );
+            sub = execute(this.link, operation).subscribe(handler);
+          } else {
+            sub = Observable.of({ data: {} }).subscribe(handler);
+          }
+        })();
       }
 
       return () => {
@@ -986,6 +1122,7 @@ export class QueryManager<TStore> {
     const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
+
     // XXX test this
     if (newData && newData.complete) {
       return { data: newData.result, partial: false };
@@ -1040,7 +1177,7 @@ export class QueryManager<TStore> {
     };
   }
 
-  public broadcastQueries() {
+  public broadcastQueries(forceResolvers = false) {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
       if (!info.invalidated || !info.listeners) return;
@@ -1049,9 +1186,13 @@ export class QueryManager<TStore> {
         // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
         .filter((x: QueryListener) => !!x)
         .forEach((listener: QueryListener) => {
-          listener(this.queryStore.get(id), info.newData);
+          listener(this.queryStore.get(id), info.newData, forceResolvers);
         });
     });
+  }
+
+  public getLocalState(): LocalState<TStore> {
+    return this.localState;
   }
 
   private getObservableQueryPromises(
@@ -1094,50 +1235,83 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string;
   }): Promise<FetchResult<T>> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
-    const operation = this.buildOperationForLink(document, variables, {
-      ...context,
-      // TODO: Should this be included for all entry points via
-      // buildOperationForLink?
-      forceFetch: !this.queryDeduplication,
-    });
-
     let resultFromStore: any;
     let errorsFromStore: any;
 
     let rejectFetchPromise: (reason?: any) => void;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+      let obs: Observable<FetchResult>;
+      let updatedContext = {};
+
+      const clientQuery = this.localState.clientQuery(document);
+      const serverQuery = this.localState.serverQuery(document);
+      if (serverQuery) {
+        const operation = this.buildOperationForLink(serverQuery, variables, {
+          ...context,
+          forceFetch: !this.queryDeduplication,
+        });
+        updatedContext = operation.context;
+        obs = execute(this.deduplicator, operation);
+      } else {
+        updatedContext = this.prepareContext(context);
+        obs = Observable.of({ data: {} });
+      }
+
       // Need to assign the reject function to the rejectFetchPromise variable
       // in the outer scope so that we can refer to it in the .catch handler.
       this.fetchQueryRejectFns.add((rejectFetchPromise = reject));
 
-      const subscription = execute(this.deduplicator, operation).subscribe({
-        next: (result: ExecutionResult) => {
+      let complete = false;
+      let handlingNext = true;
+
+      const subscriber = {
+        next: async (result: ExecutionResult) => {
+          handlingNext = true;
+          let updatedResult = result;
+
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
           if (requestId >= (lastRequestId || 1)) {
+            // Run the query through local client resolvers.
+            if (clientQuery && hasDirectives(['client'], clientQuery)) {
+              updatedResult = await this.localState
+                .runResolvers({
+                  document: clientQuery,
+                  remoteResult: result,
+                  context: updatedContext,
+                  variables,
+                })
+                .catch(error => {
+                  handlingNext = false;
+                  reject(error);
+                  return result;
+                });
+            }
+
             if (fetchPolicy !== 'no-cache') {
               try {
                 this.dataStore.markQueryResult(
-                  result,
+                  updatedResult,
                   document,
                   variables,
                   fetchMoreForQueryId,
                   errorPolicy === 'ignore' || errorPolicy === 'all',
                 );
               } catch (e) {
+                handlingNext = false;
                 reject(e);
                 return;
               }
             } else {
               this.setQuery(queryId, () => ({
-                newData: { result: result.data, complete: true },
+                newData: { result: updatedResult.data, complete: true },
               }));
             }
 
             this.queryStore.markQueryResult(
               queryId,
-              result,
+              updatedResult,
               fetchMoreForQueryId,
             );
 
@@ -1146,21 +1320,22 @@ export class QueryManager<TStore> {
             this.broadcastQueries();
           }
 
-          if (result.errors && errorPolicy === 'none') {
+          if (updatedResult.errors && errorPolicy === 'none') {
+            handlingNext = false;
             reject(
               new ApolloError({
-                graphQLErrors: result.errors,
+                graphQLErrors: updatedResult.errors,
               }),
             );
             return;
           } else if (errorPolicy === 'all') {
-            errorsFromStore = result.errors;
+            errorsFromStore = updatedResult.errors;
           }
 
           if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
             // We don't write fetchMore results to the store because this would overwrite
             // the original result in case an @connection directive is used.
-            resultFromStore = result.data;
+            resultFromStore = updatedResult.data;
           } else {
             try {
               // ensure result is combined with data already in store
@@ -1174,6 +1349,11 @@ export class QueryManager<TStore> {
               // tslint:disable-next-line
             } catch (e) {}
           }
+
+          handlingNext = false;
+          if (complete) {
+            subscriber.complete();
+          }
         },
         error: (error: ApolloError) => {
           this.fetchQueryRejectFns.delete(reject);
@@ -1185,21 +1365,25 @@ export class QueryManager<TStore> {
           reject(error);
         },
         complete: () => {
-          this.fetchQueryRejectFns.delete(reject);
+          if (!handlingNext) {
+            this.fetchQueryRejectFns.delete(reject);
+            this.setQuery(queryId, ({ subscriptions }) => ({
+              subscriptions: subscriptions.filter(x => x !== subscription),
+            }));
 
-          this.setQuery(queryId, ({ subscriptions }) => ({
-            subscriptions: subscriptions.filter(x => x !== subscription),
-          }));
-
-          resolve({
-            data: resultFromStore,
-            errors: errorsFromStore,
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            stale: false,
-          });
+            resolve({
+              data: resultFromStore,
+              errors: errorsFromStore,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              stale: false,
+            });
+          }
+          complete = true;
         },
-      });
+      };
+
+      const subscription = obs.subscribe(subscriber);
 
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),
@@ -1273,29 +1457,21 @@ export class QueryManager<TStore> {
     extraContext?: any,
   ) {
     const cache = this.dataStore.getCache();
-
     return {
       query: cache.transformForLink
         ? cache.transformForLink(document)
         : document,
       variables,
       operationName: getOperationName(document) || undefined,
-      context: {
-        ...extraContext,
-        cache,
-        // getting an entry's cache key is useful for cacheResolvers & state-link
-        getCacheKey: (obj: { __typename: string; id: string | number }) => {
-          if ((cache as any).config) {
-            // on the link, we just want the id string, not the full id value from toIdValue
-            return (cache as any).config.dataIdFromObject(obj);
-          } else {
-            throw new Error(
-              'To use context.getCacheKey, you need to use a cache that has a configurable dataIdFromObject, like apollo-cache-inmemory.',
-            );
-          }
-        },
-        clientAwareness: this.clientAwareness,
-      },
+      context: this.prepareContext(extraContext),
+    };
+  }
+
+  private prepareContext(context = {}) {
+    const newContext = this.localState.prepareContext(context);
+    return {
+      ...newContext,
+      clientAwareness: this.clientAwareness,
     };
   }
 

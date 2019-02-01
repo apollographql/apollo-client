@@ -177,15 +177,28 @@ export class StoreWriter {
             context,
           });
         } else {
-          // if this is a defered field we don't need to throw / wanr
-          const isDefered =
-            selection.directives &&
-            selection.directives.length &&
-            selection.directives.some(
+          let isDefered = false;
+          let isClient = false;
+          if (selection.directives && selection.directives.length) {
+            // If this is a defered field we don't need to throw / warn.
+            isDefered = selection.directives.some(
               directive => directive.name && directive.name.value === 'defer',
             );
 
-          if (!isDefered && context.fragmentMatcherFunction) {
+            // When using the @client directive, it might be desirable in
+            // some cases to want to write a selection set to the store,
+            // without having all of the selection set values available.
+            // This is because the @client field values might have already
+            // been written to the cache separately (e.g. via Apollo
+            // Cache's `writeData` capabilities). Because of this, we'll
+            // skip the missing field warning for fields with @client
+            // directives.
+            isClient = selection.directives.some(
+              directive => directive.name && directive.name.value === 'client',
+            );
+          }
+
+          if (!isDefered && !isClient && context.fragmentMatcherFunction) {
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.
             //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);

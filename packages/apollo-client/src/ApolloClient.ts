@@ -14,9 +14,13 @@ import {
 } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
-import { ApolloQueryResult, OperationVariables } from './core/types';
+import {
+  ApolloQueryResult,
+  OperationVariables,
+  Resolvers,
+} from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
-
+import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
 
 import {
@@ -42,13 +46,16 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export type ApolloClientOptions<TCacheShape> = {
-  link: ApolloLink;
+  link?: ApolloLink;
   cache: ApolloCache<TCacheShape>;
-  ssrMode?: boolean;
   ssrForceFetchDelay?: number;
+  ssrMode?: boolean;
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  resolvers?: Resolvers | Resolvers[];
+  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+  fragmentMatcher?: FragmentMatcher;
   name?: string;
   version?: string;
 };
@@ -75,6 +82,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
   private clientAwareness: Record<string, string> = {};
+  private localState: LocalState<TCacheShape>;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -106,16 +114,26 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
-      link,
       cache,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
+      resolvers,
+      typeDefs,
+      fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
     } = options;
+
+    let { link } = options;
+
+    // If a link hasn't been defined, but local state resolvers have been set,
+    // setup a default empty link.
+    if (!link && resolvers) {
+      link = ApolloLink.empty();
+    }
 
     if (!link || !cache) {
       throw new Error(`
@@ -218,6 +236,14 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     if (clientAwarenessVersion) {
       this.clientAwareness.version = clientAwarenessVersion;
     }
+
+    this.localState = new LocalState({
+      cache,
+      client: this,
+      resolvers,
+      typeDefs,
+      fragmentMatcher,
+    });
   }
 
   /**
@@ -440,6 +466,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         queryDeduplication: this.queryDeduplication,
         ssrMode: this.ssrMode,
         clientAwareness: this.clientAwareness,
+        localState: this.localState,
         onBroadcast: () => {
           if (this.devToolsHookCb) {
             this.devToolsHookCb({
@@ -566,6 +593,34 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
     return this.initProxy().restore(serializedState);
+  }
+
+  /**
+   * Add additional local resolvers.
+   */
+  public addResolvers(resolvers: Resolvers | Resolvers[]) {
+    this.localState.addResolvers(resolvers);
+  }
+
+  /**
+   * Set (override existing) local resolvers.
+   */
+  public setResolvers(resolvers: Resolvers | Resolvers[]) {
+    this.localState.setResolvers(resolvers);
+  }
+
+  /**
+   * Get all registered local resolvers.
+   */
+  public getResolvers() {
+    return this.localState.getResolvers();
+  }
+
+  /**
+   * Set a custom local state fragment matcher.
+   */
+  public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
+    this.localState.setFragmentMatcher(fragmentMatcher);
   }
 
   /**

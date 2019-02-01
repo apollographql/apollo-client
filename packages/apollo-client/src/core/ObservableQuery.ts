@@ -16,8 +16,19 @@ import {
 
 import { QueryStoreValue } from '../data/queries';
 
+// XXX remove in the next breaking semver change (3.0)
+// Deprecated, use ApolloCurrentQueryResult
 export type ApolloCurrentResult<T> = {
   data: T | {};
+  errors?: ReadonlyArray<GraphQLError>;
+  loading: boolean;
+  networkStatus: NetworkStatus;
+  error?: ApolloError;
+  partial?: boolean;
+};
+
+export type ApolloCurrentQueryResult<T> = {
+  data: T | undefined;
   errors?: ReadonlyArray<GraphQLError>;
   loading: boolean;
   networkStatus: NetworkStatus;
@@ -138,16 +149,30 @@ export class ObservableQuery<
     });
   }
 
+  // XXX remove in the next breaking semver change (3.0)
+  // Deprecated, use getCurrentResult()
+  public currentResult(): ApolloCurrentResult<TData> {
+    const result = this.getCurrentResult() as ApolloCurrentResult<TData>;
+    if (result.data === undefined) {
+      result.data = {};
+    }
+    return result;
+  }
+
   /**
    * Return the result of the query from the local cache as well as some fetching status
    * `loading` and `networkStatus` allow to know if a request is in flight
    * `partial` lets you know if the result from the local cache is complete or partial
    * @return {data: Object, error: ApolloError, loading: boolean, networkStatus: number, partial: boolean}
    */
-  public currentResult(): ApolloCurrentResult<TData> {
+  public getCurrentResult(): ApolloCurrentQueryResult<TData> {
     if (this.isTornDown) {
       return {
-        data: this.lastError ? {} : this.lastResult ? this.lastResult.data : {},
+        data: this.lastError
+          ? undefined
+          : this.lastResult
+          ? this.lastResult.data
+          : undefined,
         error: this.lastError,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -158,7 +183,7 @@ export class ObservableQuery<
 
     if (hasError(queryStoreValue, this.options.errorPolicy)) {
       return {
-        data: {},
+        data: undefined,
         loading: false,
         networkStatus: queryStoreValue.networkStatus,
         error: new ApolloError({
@@ -212,7 +237,7 @@ export class ObservableQuery<
       this.lastResultSnapshot = cloneDeep(this.lastResult);
     }
 
-    return { ...result, partial } as ApolloCurrentResult<TData>;
+    return { ...result, partial };
   }
 
   // Compares newResult to the snapshot we took of this.lastResult when it was
@@ -229,7 +254,7 @@ export class ObservableQuery<
   }
 
   // Returns the last result that observer.next was called with. This is not the same as
-  // currentResult! If you're not sure which you need, then you probably need currentResult.
+  // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
   public getLastResult(): ApolloQueryResult<TData> {
     return this.lastResult;
   }

@@ -225,7 +225,7 @@ The `<MockedProvider />` component takes the following props:
 
 - `addTypename`: A boolean indicating whether or not `__typename` are injected into the documents sent to graphql. This **defaults to true**.
 - `defaultOptions`: An object containing options to pass directly to the `ApolloClient`instance. See documentation [here](./apollo-client.html#apollo-client).
-- `mocks`: An array containing a request object and the corresponding response. You can defined mocks in the following shape:.
+- `mocks`: An array containing a request object and the corresponding response. You can define mocks in the following shape:.
 
 ```js
 const mocks = [

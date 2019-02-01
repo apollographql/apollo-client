@@ -50,6 +50,7 @@ export interface QueryInfo {
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   observableQuery: ObservableQuery<any> | null;
   subscriptions: Subscription[];
+  rejectFn?: (reason?: any) => void;
   cancel?: () => void;
 }
 
@@ -958,9 +959,10 @@ export class QueryManager<TStore> {
   }
 
   public removeQuery(queryId: string) {
-    const { subscriptions } = this.getQuery(queryId);
+    const query = this.getQuery(queryId);
     // teardown all links
-    subscriptions.forEach(x => x.unsubscribe());
+    query.subscriptions.forEach(x => x.unsubscribe());
+    query.rejectFn && this.fetchQueryRejectFns.delete(query.rejectFn);
     this.queries.delete(queryId);
   }
 
@@ -1187,6 +1189,7 @@ export class QueryManager<TStore> {
 
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),
+        rejectFn: reject,
       }));
     }).catch(error => {
       this.fetchQueryRejectFns.delete(rejectFetchPromise);

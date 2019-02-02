@@ -12,7 +12,6 @@
   "license": "MIT",
   "main": "./lib/index.js",
   "module": "./lib/bundle.esm.js",
-  "browser": "./lib/bundle.umd.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "repository": {

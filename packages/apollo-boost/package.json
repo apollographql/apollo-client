@@ -23,7 +23,7 @@
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
     "prepare": "npm run lint && npm run build",
-    "test": "jest",
+    "test": "tsc -p tsconfig.json --noEmit && jest",
     "coverage": "jest --coverage",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",

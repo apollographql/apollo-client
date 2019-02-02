@@ -3,6 +3,12 @@ module.exports = {
     '.(ts|tsx)': 'ts-jest',
   },
 
+  globals: {
+    'ts-jest': {
+      diagnostics: false,
+    },
+  },
+
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   testURL: 'http://localhost',
 

@@ -28,7 +28,7 @@
   "scripts": {
     "prepare": "npm run build",
     "coverage": "jest --coverage",
-    "test": "jest",
+    "test": "tsc -p tsconfig.json --noEmit && jest",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -b .",

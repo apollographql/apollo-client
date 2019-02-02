@@ -2,6 +2,7 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import typescriptPlugin from 'rollup-plugin-typescript2';
 import typescript from 'typescript';
 import path from 'path';
+import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
 
 function onwarn(message) {
@@ -80,6 +81,7 @@ export function rollup({
           only: ['tslib'],
         }),
         typescriptPlugin({ typescript, tsconfig }),
+        invariantPlugin(),
       ],
       onwarn,
     },

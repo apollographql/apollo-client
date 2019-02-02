@@ -41,11 +41,8 @@ There are some Apollo examples written in React Native that you may wish to refe
 
 <h2 id="apollo-dev-tools">Apollo Dev Tools</h2>
 
-[React Native Debugger](https://github.com/jhen0409/react-native-debugger) supports Apollo Dev Tools. 
+[React Native Debugger](https://github.com/jhen0409/react-native-debugger) supports the [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools):
 
-Usage.
-
-1. Install React Native Debugger and open it as any application.
-2. Enable remote dev tools in your app. 
-3. (Optional) If you do not see Developer Tools panel or Apollo tab is missing in in them, toggle Developer Tools by right clicking anywhere and selecting "Toggle Developer Tools".
-
+1. Install React Native Debugger and open it.
+2. Enable "Debug JS Remotely" in your app.
+3. (Optional) If you do not see the Developer Tools panel or the Apollo tab is missing in them, toggle the Developer Tools by right clicking anywhere and selecting "Toggle Developer Tools".

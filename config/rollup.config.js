@@ -23,6 +23,7 @@ const defaultGlobals = {
   'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
   'apollo-boost': 'apollo.boost',
   'tslib': 'tslib',
+  'ts-invariant': 'invariant',
 };
 
 export function rollup({

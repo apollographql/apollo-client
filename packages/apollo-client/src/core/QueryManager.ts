@@ -15,6 +15,8 @@ import {
   hasClientExports,
 } from 'apollo-utilities';
 
+import invariant from 'ts-invariant';
+
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';
 import { QueryWithUpdater, DataStore } from '../data/store';
@@ -138,17 +140,15 @@ export class QueryManager<TStore> {
     fetchPolicy,
     context = {},
   }: MutationOptions): Promise<FetchResult<T>> {
-    if (!mutation) {
-      throw new Error(
-        'mutation option is required. You must specify your GraphQL document in the mutation option.',
-      );
-    }
+    invariant(
+      mutation,
+      'mutation option is required. You must specify your GraphQL document in the mutation option.',
+    );
 
-    if (fetchPolicy && fetchPolicy !== 'no-cache') {
-      throw new Error(
-        "fetchPolicy for mutations currently only supports the 'no-cache' policy",
-      );
-    }
+    invariant(
+      !fetchPolicy || fetchPolicy === 'no-cache',
+      "fetchPolicy for mutations currently only supports the 'no-cache' policy"
+    );
 
     const mutationId = this.generateQueryId();
     const cache = this.dataStore.getCache();
@@ -745,11 +745,10 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions,
     shouldSubscribe = true,
   ): ObservableQuery<T, TVariables> {
-    if (options.fetchPolicy === 'standby') {
-      throw new Error(
-        'client.watchQuery cannot be called with fetchPolicy set to "standby"',
-      );
-    }
+    invariant(
+      options.fetchPolicy !== 'standby',
+      'client.watchQuery cannot be called with fetchPolicy set to "standby"',
+    );
 
     // get errors synchronously
     const queryDefinition = getQueryDefinition(options.query);
@@ -778,24 +777,26 @@ export class QueryManager<TStore> {
   }
 
   public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {
-    if (!options.query) {
-      throw new Error(
-        'query option is required. You must specify your GraphQL document ' +
-          'in the query option.',
-      );
-    }
+    invariant(
+      options.query,
+      'query option is required. You must specify your GraphQL document ' +
+        'in the query option.',
+    );
 
-    if (options.query.kind !== 'Document') {
-      throw new Error('You must wrap the query string in a "gql" tag.');
-    }
+    invariant(
+      options.query.kind === 'Document',
+      'You must wrap the query string in a "gql" tag.',
+    );
 
-    if ((options as any).returnPartialData) {
-      throw new Error('returnPartialData option only supported on watchQuery.');
-    }
+    invariant(
+      !(options as any).returnPartialData,
+      'returnPartialData option only supported on watchQuery.',
+    );
 
-    if ((options as any).pollInterval) {
-      throw new Error('pollInterval option only supported on watchQuery.');
-    }
+    invariant(
+      !(options as any).pollInterval,
+      'pollInterval option only supported on watchQuery.',
+    );
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       const watchedQuery = this.watchQuery<T>(options, false);
@@ -1167,12 +1168,11 @@ export class QueryManager<TStore> {
       const { observableQuery: foundObserveableQuery } = this.getQuery(
         queryIdOrObservable,
       );
-      if (!foundObserveableQuery) {
-        throw new Error(
-          `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`,
-        );
-      }
-      observableQuery = foundObserveableQuery;
+      invariant(
+        foundObserveableQuery,
+        `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`
+      );
+      observableQuery = foundObserveableQuery!;
     } else {
       observableQuery = queryIdOrObservable;
     }
@@ -1512,16 +1512,15 @@ export class QueryManager<TStore> {
   ): string {
     const { pollInterval } = options;
 
-    if (!pollInterval) {
-      throw new Error(
-        'Attempted to start a polling query without a polling interval.',
-      );
-    }
+    invariant(
+      pollInterval,
+      'Attempted to start a polling query without a polling interval.',
+    );
 
     // Do not poll in SSR mode
     if (!this.ssrMode) {
       this.pollingInfoByQueryId.set(queryId, {
-        interval: pollInterval,
+        interval: pollInterval!,
         // Avoid polling until at least pollInterval milliseconds from now.
         // The -10 is a fudge factor to help with tests that rely on simulated
         // timeouts via jest.runTimersToTime.
@@ -1536,7 +1535,7 @@ export class QueryManager<TStore> {
         this.addQueryListener(queryId, listener);
       }
 
-      this.schedulePoll(pollInterval);
+      this.schedulePoll(pollInterval!);
     }
 
     return queryId;

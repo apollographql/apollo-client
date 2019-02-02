@@ -13,6 +13,8 @@ import {
   removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
 
+import { invariant, InvariantError } from 'ts-invariant';
+
 import { QueryManager } from './core/QueryManager';
 import {
   ApolloQueryResult,
@@ -36,6 +38,7 @@ import {
 import { DataStore } from './data/store';
 
 import { version } from './version';
+
 
 export interface DefaultOptions {
   watchQuery?: ModifiableWatchQueryOptions;
@@ -136,7 +139,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     if (!link || !cache) {
-      throw new Error(`
+      throw new InvariantError(`
         In order to initialize Apollo Client, you must specify link & cache properties on the config object.
         This is part of the required upgrade when migrating from Apollo Client 1.0 to Apollo Client 2.0.
         For more information, please visit:
@@ -315,11 +318,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       >;
     }
 
-    if (options.fetchPolicy === 'cache-and-network') {
-      throw new Error(
-        'cache-and-network fetchPolicy can only be used with watchQuery',
-      );
-    }
+    invariant(
+      options.fetchPolicy !== 'cache-and-network',
+      'cache-and-network fetchPolicy can only be used with watchQuery'
+    );
 
     // XXX Overwriting options is probably not the best way to do this long
     // term...

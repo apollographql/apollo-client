@@ -416,7 +416,7 @@ Fundamentally, paginated queries are the same as any other query with the except
 
 To solve this Apollo Client 1.6 introduced the `@connection` directive to specify a custom store key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
 
-To have a stable cache location for query results, Apollo Client 1.6 introduced the `@connection` directive, which can be used to specify a custom store key for results. To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
 ```
 const query = gql`query Feed($type: FeedType!, $offset: Int, $limit: Int) {

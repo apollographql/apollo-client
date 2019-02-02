@@ -22,6 +22,7 @@ const defaultGlobals = {
   'graphql-anywhere': 'graphqlAnywhere',
   'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
   'apollo-boost': 'apollo.boost',
+  'tslib': 'tslib',
 };
 
 export function rollup({
@@ -74,11 +75,7 @@ export function rollup({
       plugins: [
         nodeResolve({
           extensions: ['.ts', '.tsx'],
-          // Inline anything imported from the tslib package, e.g. __extends
-          // and __assign. This depends on the "importHelpers":true option in
-          // tsconfig.base.json.
           module: true,
-          only: ['tslib'],
         }),
         typescriptPlugin({ typescript, tsconfig }),
         invariantPlugin(),

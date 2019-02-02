@@ -1,17 +1,8 @@
-import buildUmdConfig, { globals } from '../../config/buildUmdConfig';
-import buildEsmConfig from '../../config/buildEsmConfig';
-import pkg from './package.json';
+import { rollup } from '../../config/rollup.config';
 
-const globalsOverride = {
-  ...globals,
-  'symbol-observable': '$$observable',
-};
-
-export default [
-  buildUmdConfig('apollo.core', {
-    output: {
-      globals: globalsOverride,
-    },
-  }),
-  buildEsmConfig(pkg),
-];
+export default rollup({
+  name: 'apollo-client',
+  extraGlobals: {
+    'symbol-observable': '$$observable',
+  },
+});

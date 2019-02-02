@@ -1,17 +1,8 @@
-import buildUmdConfig, { globals } from '../../config/buildUmdConfig';
-import buildEsmConfig from '../../config/buildEsmConfig';
-import pkg from './package.json';
+import { rollup } from '../../config/rollup.config';
 
-const globalsOverride = {
-  ...globals,
-  'fast-json-stable-stringify': 'stringify',
-};
-
-export default [
-  buildUmdConfig('apollo.utilities', {
-    output: {
-      globals: globalsOverride,
-    },
-  }),
-  buildEsmConfig(pkg),
-];
+export default rollup({
+  name: 'apollo-utilities',
+  extraGlobals: {
+    'fast-json-stable-stringify': 'stringify',
+  },
+});

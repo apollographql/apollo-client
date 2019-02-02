@@ -1,14 +1,10 @@
-import buildUmdConfig from '../../config/buildUmdConfig';
-import buildEsmConfig from '../../config/buildEsmConfig';
-import pkg from './package.json';
+import { rollup } from '../../config/rollup.config';
 
 export default [
-  buildUmdConfig('graphqlAnywhere'),
-  buildUmdConfig('graphqlAnywhereAsync', {
-    input: 'lib/graphql-async.js',
-    output: {
-      file: 'lib/async.js',
-    },
+  ...rollup({ name: 'graphql-anywhere' }),
+  ...rollup({
+    name: 'graphql-anywhere-async',
+    input: 'src/graphql-async.ts',
+    outputPrefix: 'async',
   }),
-  buildEsmConfig(pkg),
 ];

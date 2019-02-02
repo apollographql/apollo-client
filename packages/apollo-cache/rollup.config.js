@@ -1,5 +1,5 @@
-import buildUmdConfig from '../../config/buildUmdConfig';
-import buildEsmConfig from '../../config/buildEsmConfig';
-import pkg from './package.json';
+import { rollup } from '../../config/rollup.config';
 
-export default [buildUmdConfig('apollo.cache.core'), buildEsmConfig(pkg)];
+export default rollup({
+  name: 'apollo-cache',
+});

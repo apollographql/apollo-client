@@ -1,19 +1,10 @@
-import buildUmdConfig, { globals } from '../../config/buildUmdConfig';
-import buildEsmConfig from '../../config/buildEsmConfig';
-import pkg from './package.json';
+import { rollup } from '../../config/rollup.config';
 
-const globalsOverride = {
-  ...globals,
-  'graphql/language/printer': 'print',
-  optimism: 'optimism',
-  'graphql/language/visitor': 'visitor',
-};
-
-export default [
-  buildUmdConfig('apollo.cache.inmemory', {
-    output: {
-      globals: globalsOverride,
-    },
-  }),
-  buildEsmConfig(pkg),
-];
+export default rollup({
+  name: 'apollo-cache-inmemory',
+  extraGlobals: {
+    'graphql/language/printer': 'print',
+    optimism: 'optimism',
+    'graphql/language/visitor': 'visitor',
+  },
+});

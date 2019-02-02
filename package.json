@@ -23,22 +23,22 @@
   "bundlesize": [
     {
       "name": "apollo-cache",
-      "path": "./packages/apollo-cache/lib/bundle.umd.min.js",
+      "path": "./packages/apollo-cache/lib/bundle.cjs.min.js",
       "maxSize": "900 B"
     },
     {
       "name": "apollo-cache-inmemory",
-      "path": "./packages/apollo-cache-inmemory/lib/bundle.umd.min.js",
+      "path": "./packages/apollo-cache-inmemory/lib/bundle.cjs.min.js",
       "maxSize": "6.2 kB"
     },
     {
       "name": "apollo-client",
-      "path": "./packages/apollo-client/lib/bundle.umd.min.js",
+      "path": "./packages/apollo-client/lib/bundle.cjs.min.js",
       "maxSize": "13 kB"
     },
     {
       "name": "apollo-utilities",
-      "path": "./packages/apollo-utilities/lib/bundle.umd.min.js",
+      "path": "./packages/apollo-utilities/lib/bundle.cjs.min.js",
       "maxSize": "4.75 kB"
     }
   ],
@@ -93,13 +93,13 @@
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "4.0.0",
     "rollup-plugin-sourcemaps": "0.4.2",
+    "rollup-plugin-terser": "^4.0.3",
     "rollup-plugin-typescript2": "0.18.1",
     "rxjs": "6.4.0",
     "ts-jest": "23.1.4",
     "tslib": "1.9.3",
     "tslint": "5.12.1",
-    "typescript": "3.3.1",
-    "uglify-js": "3.4.9"
+    "typescript": "3.3.1"
   },
   "renovate": {
     "extends": [

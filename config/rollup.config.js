@@ -2,6 +2,7 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import typescriptPlugin from 'rollup-plugin-typescript2';
 import typescript from 'typescript';
 import path from 'path';
+import { terser as minify } from 'rollup-plugin-terser';
 
 function onwarn(message) {
   const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];
@@ -82,7 +83,26 @@ export function rollup({
       ],
       onwarn,
     },
-    convert('cjs'),
     convert('umd'),
+    convert('cjs'),
+    {
+      input: outputFile('cjs'),
+      output: {
+        file: outputFile('cjs.min'),
+        format: 'cjs',
+      },
+      plugins: [
+        minify({
+          mangle: {
+            toplevel: true,
+          },
+          compress: {
+            global_defs: {
+              '@process.env.NODE_ENV': JSON.stringify('production'),
+            },
+          },
+        }),
+      ],
+    },
   ];
 }

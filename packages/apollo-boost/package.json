@@ -30,13 +30,9 @@
     "build": "tsc -b .",
     "postbuild": "npm run bundle",
     "watch": "tsc -w -p .",
-    "clean": "rm -rf coverage/* && rm -rf lib/*",
+    "clean": "rm -rf coverage/* lib/*",
     "prepublishOnly": "npm run build",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
-    "filesize": "npm run minify",
-    "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
-    "postbundle": "npm run clean:tests"
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js"
   },
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",

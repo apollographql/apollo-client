@@ -13,7 +13,7 @@
     "lint": "lerna run lint",
     "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
-    "filesize": "lerna run filesize && bundlesize",
+    "filesize": "lerna run build && bundlesize",
     "coverage": "jest --verbose --coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",

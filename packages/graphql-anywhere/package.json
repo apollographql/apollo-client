@@ -13,14 +13,10 @@
     "build": "tsc -b .",
     "postbuild": "npm run bundle",
     "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
-    "postbundle": "npm run clean:tests",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.umd.min.js -- ./lib/bundle.umd.js",
-    "filesize": "npm run minify",
-    "clean": "rm -rf coverage/* && rm -rf lib/*",
-    "clean:tests": "find ./lib -name \"__tests__\" -exec rm -rf '{}' +"
+    "clean": "rm -rf coverage/* lib/*"
   },
   "repository": {
     "type": "git",

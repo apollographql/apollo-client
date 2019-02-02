@@ -8,7 +8,7 @@
   [@quazzie](https://github.com/quazzie) in [#4041](https://github.com/apollographql/apollo-client/pull/4041)
 - Properly type `setQuery` and fix now typed callers.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4369](https://github.com/apollographql/apollo-client/pull/4369)
-- Align with the React Apollo decision that result `data` should be 
+- Align with the React Apollo decision that result `data` should be
   `TData | undefined` instead of `TData | {}`.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4356](https://github.com/apollographql/apollo-client/pull/4356)
 - Documentation updates.  <br/>
@@ -17,6 +17,7 @@
   [@jtassin](https://github.com/jtassin) in [#4287](https://github.com/apollographql/apollo-client/pull/4287)  <br />
   [@Gongreg](https://github.com/Gongreg) in [#4386](https://github.com/apollographql/apollo-client/pull/4386)  <br />
   [@davecardwell](https://github.com/davecardwell) in [#4399](https://github.com/apollographql/apollo-client/pull/4399)  <br />
+  [@michaelknoch](https://github.com/michaelknoch) in [#4384](https://github.com/apollographql/apollo-client/pull/4384)  <br />
 
 ## Apollo Client (2.4.12)
 

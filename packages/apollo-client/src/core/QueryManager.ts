@@ -73,9 +73,11 @@ export class QueryManager<TStore> {
   // subscriptions as well
   private queries: Map<string, QueryInfo> = new Map();
 
-  // A set of Promise reject functions for fetchQuery promises that have not
+  // A map of Promise reject functions for fetchQuery promises that have not
   // yet been resolved, used to keep track of in-flight queries so that we can
   // reject them in case a destabilizing event occurs (e.g. Apollo store reset).
+  // The key is in the format of `query:${queryId}` or `fetchRequest:${queryId}`,
+  // depending on where the promise's rejection function was created from.
   private fetchQueryRejectFns = new Map<string, Function>();
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
@@ -963,6 +965,10 @@ export class QueryManager<TStore> {
   public removeQuery(queryId: string) {
     const { subscriptions } = this.getQuery(queryId);
     // teardown all links
+    // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
+    // that each add their reject functions to fetchQueryRejectFns.
+    // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
+    // The same queryId could have two rejection fns for two promises
     this.fetchQueryRejectFns.delete(`query:${queryId}`);
     this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
     subscriptions.forEach(x => x.unsubscribe());
@@ -1098,8 +1104,6 @@ export class QueryManager<TStore> {
     let errorsFromStore: any;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      // Need to assign the reject function to the rejectFetchPromise variable
-      // in the outer scope so that we can refer to it in the .catch handler.
       this.fetchQueryRejectFns.set(`fetchRequest:${queryId}`, reject);
 
       const subscription = execute(this.deduplicator, operation).subscribe({

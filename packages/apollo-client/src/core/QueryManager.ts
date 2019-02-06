@@ -73,10 +73,12 @@ export class QueryManager<TStore> {
   // subscriptions as well
   private queries: Map<string, QueryInfo> = new Map();
 
-  // A set of Promise reject functions for fetchQuery promises that have not
+  // A map of Promise reject functions for fetchQuery promises that have not
   // yet been resolved, used to keep track of in-flight queries so that we can
   // reject them in case a destabilizing event occurs (e.g. Apollo store reset).
-  private fetchQueryRejectFns = new Set<Function>();
+  // The key is in the format of `query:${queryId}` or `fetchRequest:${queryId}`,
+  // depending on where the promise's rejection function was created from.
+  private fetchQueryRejectFns = new Map<string, Function>();
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
   // generally used to refetches for refetchQueries and to update mutation results through
@@ -796,8 +798,9 @@ export class QueryManager<TStore> {
     }
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      this.fetchQueryRejectFns.add(reject);
-      this.watchQuery<T>(options, false)
+      const watchedQuery = this.watchQuery<T>(options, false);
+      this.fetchQueryRejectFns.set(`query:${watchedQuery.queryId}`, reject);
+      watchedQuery
         .result()
         .then(resolve, reject)
         // Since neither resolve nor reject throw or return a value, this .then
@@ -806,7 +809,9 @@ export class QueryManager<TStore> {
         // since resolve and reject are mutually idempotent. In fact, it would
         // not be incorrect to let reject functions accumulate over time; it's
         // just a waste of memory.
-        .then(() => this.fetchQueryRejectFns.delete(reject));
+        .then(() =>
+          this.fetchQueryRejectFns.delete(`query:${watchedQuery.queryId}`),
+        );
     });
   }
 
@@ -1108,6 +1113,12 @@ export class QueryManager<TStore> {
   public removeQuery(queryId: string) {
     const { subscriptions } = this.getQuery(queryId);
     // teardown all links
+    // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
+    // that each add their reject functions to fetchQueryRejectFns.
+    // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
+    // The same queryId could have two rejection fns for two promises
+    this.fetchQueryRejectFns.delete(`query:${queryId}`);
+    this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
     subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
   }
@@ -1238,8 +1249,6 @@ export class QueryManager<TStore> {
     let resultFromStore: any;
     let errorsFromStore: any;
 
-    let rejectFetchPromise: (reason?: any) => void;
-
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       let obs: Observable<FetchResult>;
       let updatedContext = {};
@@ -1258,9 +1267,7 @@ export class QueryManager<TStore> {
         obs = Observable.of({ data: {} });
       }
 
-      // Need to assign the reject function to the rejectFetchPromise variable
-      // in the outer scope so that we can refer to it in the .catch handler.
-      this.fetchQueryRejectFns.add((rejectFetchPromise = reject));
+      this.fetchQueryRejectFns.set(`fetchRequest:${queryId}`, reject);
 
       let complete = false;
       let handlingNext = true;
@@ -1356,7 +1363,7 @@ export class QueryManager<TStore> {
           }
         },
         error: (error: ApolloError) => {
-          this.fetchQueryRejectFns.delete(reject);
+          this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
 
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),
@@ -1366,7 +1373,8 @@ export class QueryManager<TStore> {
         },
         complete: () => {
           if (!handlingNext) {
-            this.fetchQueryRejectFns.delete(reject);
+            this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
+
             this.setQuery(queryId, ({ subscriptions }) => ({
               subscriptions: subscriptions.filter(x => x !== subscription),
             }));
@@ -1389,7 +1397,7 @@ export class QueryManager<TStore> {
         subscriptions: subscriptions.concat([subscription]),
       }));
     }).catch(error => {
-      this.fetchQueryRejectFns.delete(rejectFetchPromise);
+      this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
       throw error;
     });
   }

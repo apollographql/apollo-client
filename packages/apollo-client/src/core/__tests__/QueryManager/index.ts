@@ -3229,6 +3229,42 @@ describe('QueryManager', () => {
       );
     });
 
+    it('should not error on a stopped query()', done => {
+      let queryManager: QueryManager<NormalizedCacheObject>;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const link = new ApolloLink(
+        () =>
+          new Observable(observer => {
+            observer.next({ data });
+          }),
+      );
+
+      queryManager = createQueryManager({ link });
+
+      const queryId = '1';
+      queryManager
+        .fetchQuery(queryId, { query })
+        .catch(e => done.fail('Exception thrown for stopped query'));
+
+      queryManager.removeQuery(queryId);
+      queryManager.resetStore().then(() => done());
+    });
+
     it('should throw an error on an inflight fetch query if the store is reset', done => {
       const query = gql`
         query {

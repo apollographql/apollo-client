@@ -95,8 +95,8 @@
     "rollup-plugin-sourcemaps": "0.4.2",
     "rollup-plugin-typescript2": "0.18.1",
     "rxjs": "6.4.0",
-    "ts-jest": "23.10.5",
-    "tslib": "^1.9.3",
+    "ts-jest": "23.1.4",
+    "tslib": "1.9.3",
     "tslint": "5.12.1",
     "typescript": "3.3.1",
     "uglify-js": "3.4.9"

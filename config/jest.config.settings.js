@@ -17,11 +17,5 @@ module.exports = {
     '/node_modules/',
     '/lib/',
     '<rootDir>/lib/',
-    // '<rootDir>/../*/lib/',
   ],
-
-  // moduleNameMapper: {
-  //   '(apollo-boost|apollo-cache-inmemory|apollo-cache|apollo-client|apollo-utilities|graphql-anywhere)(.*)':
-  //     '<rootDir>/../$1/src/$2',
-  // },
 };

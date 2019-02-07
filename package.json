@@ -24,22 +24,22 @@
     {
       "name": "apollo-cache",
       "path": "./packages/apollo-cache/lib/bundle.cjs.min.js",
-      "maxSize": "900 B"
+      "maxSize": "825 B"
     },
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.cjs.min.js",
-      "maxSize": "6.2 kB"
+      "maxSize": "4.9 kB"
     },
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.cjs.min.js",
-      "maxSize": "13 kB"
+      "maxSize": "10.6 kB"
     },
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.cjs.min.js",
-      "maxSize": "4.75 kB"
+      "maxSize": "4.15 kB"
     }
   ],
   "lint-staged": {

@@ -17,6 +17,7 @@ import {
 } from 'graphql';
 
 import stringify from 'fast-json-stable-stringify';
+import { InvariantError } from 'ts-invariant';
 
 export interface IdValue {
   type: 'id';
@@ -127,7 +128,7 @@ export function valueToObjectRepresentation(
   } else if (isNullValue(value)) {
     argObj[name.value] = null;
   } else {
-    throw new Error(
+    throw new InvariantError(
       `The inline argument "${name.value}" of kind "${(value as any).kind}"` +
         'is not supported. Use variables instead of inline arguments to ' +
         'overcome this limitation.',
@@ -303,7 +304,7 @@ export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
 }
 
 function defaultValueFromVariable(node: VariableNode) {
-  throw new Error(`Variable nodes are not supported by valueFromNode`);
+  throw new InvariantError(`Variable nodes are not supported by valueFromNode`);
 }
 
 export type VariableValue = (node: VariableNode) => any;

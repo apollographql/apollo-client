@@ -30,7 +30,7 @@ import {
   isInlineFragment,
 } from 'apollo-utilities';
 
-import invariant from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import ApolloClient from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';

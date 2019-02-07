@@ -14,7 +14,7 @@ import {
   hasClientExports,
 } from 'apollo-utilities';
 
-import invariant from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';

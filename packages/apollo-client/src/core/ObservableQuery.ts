@@ -16,7 +16,7 @@ import {
 
 import { QueryStoreValue } from '../data/queries';
 
-import invariant from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 // XXX remove in the next breaking semver change (3.0)
 // Deprecated, use ApolloCurrentQueryResult

@@ -16,6 +16,8 @@ import {
 
 import { QueryStoreValue } from '../data/queries';
 
+import { invariant } from 'ts-invariant';
+
 // XXX remove in the next breaking semver change (3.0)
 // Deprecated, use ApolloCurrentQueryResult
 export type ApolloCurrentResult<T> = {
@@ -335,11 +337,9 @@ export class ObservableQuery<
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     // early return if no update Query
-    if (!fetchMoreOptions.updateQuery) {
-      throw new Error(
-        'updateQuery option is required. This function defines how to update the query data with the new results.',
-      );
-    }
+    invariant(fetchMoreOptions.updateQuery,
+      'updateQuery option is required. This function defines how to update the query data with the new results.',
+    );
 
     let combinedOptions: any;
 
@@ -559,15 +559,7 @@ export class ObservableQuery<
   }
 
   public startPolling(pollInterval: number) {
-    if (
-      this.options.fetchPolicy === 'cache-first' ||
-      this.options.fetchPolicy === 'cache-only'
-    ) {
-      throw new Error(
-        'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
-      );
-    }
-
+    assertNotCacheFirstOrOnly(this);
     this.options.pollInterval = pollInterval;
     this.queryManager.startPollingQuery(this.options, this.queryId);
   }
@@ -611,15 +603,7 @@ export class ObservableQuery<
     }
 
     if (!!this.options.pollInterval) {
-      if (
-        this.options.fetchPolicy === 'cache-first' ||
-        this.options.fetchPolicy === 'cache-only'
-      ) {
-        throw new Error(
-          'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
-        );
-      }
-
+      assertNotCacheFirstOrOnly(this);
       this.queryManager.startPollingQuery(this.options, this.queryId);
     }
 
@@ -660,4 +644,14 @@ export class ObservableQuery<
 
     this.observers = [];
   }
+}
+
+function assertNotCacheFirstOrOnly<TData, TVariables>(
+  obsQuery: ObservableQuery<TData, TVariables>,
+) {
+  const { fetchPolicy } = obsQuery.options;
+  invariant(
+    fetchPolicy !== 'cache-first' && fetchPolicy !== 'cache-only',
+    'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
+  );
 }

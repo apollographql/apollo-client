@@ -11,9 +11,8 @@
     "Bazyli Brzóska <bazyli.brzoska@gmail.com>"
   ],
   "license": "MIT",
-  "main": "./lib/bundle.umd.js",
-  "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
+  "main": "./lib/bundle.cjs.js",
+  "module": "./lib/bundle.esm.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": [
     "./lib/fixPolyfills.js"
@@ -29,17 +28,15 @@
   "scripts": {
     "prepare": "npm run build",
     "coverage": "jest --coverage",
-    "test": "jest",
+    "test": "tsc -p tsconfig.json --noEmit && jest",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
-    "build": "tsc -p .",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
     "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "watch": "tsc -w -p .",
-    "clean": "rm -rf coverage/* && rm -rf lib/*",
-    "prepublishOnly": "npm run build",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
-    "filesize": "npm run minify"
+    "clean": "rm -rf coverage/* lib/*",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",
@@ -49,18 +46,5 @@
   },
   "peerDependencies": {
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0 || ^14.0.0"
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "testURL": "http://localhost"
   }
 }

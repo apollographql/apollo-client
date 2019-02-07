@@ -30,9 +30,12 @@ import {
   isInlineFragment,
 } from 'apollo-utilities';
 
+import { invariant } from 'ts-invariant';
+
 import ApolloClient from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
+
 
 export type Resolver = (
   fieldName: string,
@@ -218,7 +221,7 @@ export class LocalState<TCacheShape> {
         if ((cache as any).config) {
           return (cache as any).config.dataIdFromObject(obj);
         } else {
-          throw new Error(
+          invariant(false,
             'To use context.getCacheKey, you need to use a cache that has ' +
               'a configurable dataIdFromObject, like apollo-cache-inmemory.',
           );
@@ -381,9 +384,7 @@ export class LocalState<TCacheShape> {
       } else {
         // This is a named fragment.
         fragment = fragmentMap[selection.name.value];
-        if (!fragment) {
-          throw new Error(`No fragment named ${selection.name.value}`);
-        }
+        invariant(fragment, `No fragment named ${selection.name.value}`);
       }
 
       if (fragment && fragment.typeCondition) {

@@ -9,9 +9,10 @@ import {
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
 import {
-  isProduction,
   removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
+
+import { invariant, InvariantError } from 'ts-invariant';
 
 import { QueryManager } from './core/QueryManager';
 import {
@@ -36,6 +37,7 @@ import {
 import { DataStore } from './data/store';
 
 import { version } from './version';
+
 
 export interface DefaultOptions {
   watchQuery?: ModifiableWatchQueryOptions;
@@ -136,7 +138,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     if (!link || !cache) {
-      throw new Error(`
+      throw new InvariantError(`
         In order to initialize Apollo Client, you must specify link & cache properties on the config object.
         This is part of the required upgrade when migrating from Apollo Client 1.0 to Apollo Client 2.0.
         For more information, please visit:
@@ -184,7 +186,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
     const defaultConnectToDevTools =
-      !isProduction() &&
+      process.env.NODE_ENV !== 'production' &&
       typeof window !== 'undefined' &&
       !(window as any).__APOLLO_CLIENT__;
 
@@ -199,7 +201,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && !isProduction()) {
+    if (!hasSuggestedDevtools && process.env.NODE_ENV !== 'production') {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&
@@ -315,11 +317,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       >;
     }
 
-    if (options.fetchPolicy === 'cache-and-network') {
-      throw new Error(
-        'cache-and-network fetchPolicy can only be used with watchQuery',
-      );
-    }
+    invariant(
+      options.fetchPolicy !== 'cache-and-network',
+      'cache-and-network fetchPolicy can only be used with watchQuery'
+    );
 
     // XXX Overwriting options is probably not the best way to do this long
     // term...

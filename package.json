@@ -13,7 +13,7 @@
     "lint": "lerna run lint",
     "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
-    "filesize": "lerna run filesize && bundlesize",
+    "filesize": "lerna run build && bundlesize",
     "coverage": "jest --verbose --coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",
@@ -23,45 +23,25 @@
   "bundlesize": [
     {
       "name": "apollo-cache",
-      "path": "./packages/apollo-cache/lib/bundle.min.js",
+      "path": "./packages/apollo-cache/lib/bundle.cjs.min.js",
       "maxSize": "900 B"
     },
     {
       "name": "apollo-cache-inmemory",
-      "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
+      "path": "./packages/apollo-cache-inmemory/lib/bundle.cjs.min.js",
       "maxSize": "6.2 kB"
     },
     {
       "name": "apollo-client",
-      "path": "./packages/apollo-client/lib/bundle.min.js",
+      "path": "./packages/apollo-client/lib/bundle.cjs.min.js",
       "maxSize": "13 kB"
     },
     {
       "name": "apollo-utilities",
-      "path": "./packages/apollo-utilities/lib/bundle.min.js",
+      "path": "./packages/apollo-utilities/lib/bundle.cjs.min.js",
       "maxSize": "4.75 kB"
     }
   ],
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "modulePathIgnorePatterns": [
-      "/npm/"
-    ],
-    "testURL": "http://localhost",
-    "testPathIgnorePatterns": [
-      "/npm/",
-      "/node_modules/"
-    ]
-  },
   "lint-staged": {
     "*.ts*": [
       "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
@@ -109,17 +89,18 @@
     "react": "16.7.0",
     "react-dom": "16.7.0",
     "rollup": "1.1.2",
+    "rollup-plugin-commonjs": "9.2.0",
+    "rollup-plugin-invariant": "^0.2.3",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "4.0.0",
     "rollup-plugin-sourcemaps": "0.4.2",
+    "rollup-plugin-terser": "^4.0.3",
+    "rollup-plugin-typescript2": "0.18.1",
     "rxjs": "6.4.0",
     "ts-jest": "23.1.4",
-    "tslib": "^1.9.3",
+    "tslib": "1.9.3",
     "tslint": "5.12.1",
-    "typescript": "3.3.1",
-    "uglify-js": "3.4.9",
-    "webpack": "3.12.0",
-    "webpack-bundle-analyzer": "3.0.3"
+    "typescript": "3.3.1"
   },
   "renovate": {
     "extends": [

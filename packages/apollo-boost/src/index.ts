@@ -14,6 +14,7 @@ import ApolloClient, {
   LocalStateFragmentMatcher,
 } from 'apollo-client';
 import { DocumentNode } from 'graphql';
+import { invariant } from 'ts-invariant';
 
 export { gql, HttpLink };
 
@@ -79,7 +80,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       );
 
       if (diff.length > 0) {
-        console.warn(
+        invariant.warn(
           'ApolloBoost was initialized with unsupported options: ' +
             `${diff.join(' ')}`,
         );
@@ -105,12 +106,11 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     let { cache } = config;
 
-    if (cache && cacheRedirects) {
-      throw new Error(
-        'Incompatible cache configuration. If providing `cache` then ' +
-          'configure the provided instance with `cacheRedirects` instead.',
-      );
-    }
+    invariant(
+      !cache || !cacheRedirects,
+      'Incompatible cache configuration. If providing `cache` then ' +
+        'configure the provided instance with `cacheRedirects` instead.',
+    );
 
     if (!cache) {
       cache = cacheRedirects
@@ -124,7 +124,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
           if (graphQLErrors) {
             graphQLErrors.map(({ message, locations, path }) =>
               // tslint:disable-next-line
-              console.log(
+              invariant.warn(
                 `[GraphQL error]: Message: ${message}, Location: ` +
                   `${locations}, Path: ${path}`,
               ),
@@ -132,7 +132,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
           }
           if (networkError) {
             // tslint:disable-next-line
-            console.log(`[Network error]: ${networkError}`);
+            invariant.warn(`[Network error]: ${networkError}`);
           }
         });
 

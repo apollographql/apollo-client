@@ -43,6 +43,7 @@ import {
 import { wrap } from 'optimism';
 import { CacheKeyNode } from './cacheKeys';
 import { DepTrackingCache } from './depTrackingCache';
+import { invariant, InvariantError } from 'ts-invariant';
 
 export type VariableMap = { [name: string]: any };
 
@@ -225,7 +226,7 @@ export class StoreReader {
     if (hasMissingFields && ! returnPartialData) {
       execResult.missing.forEach(info => {
         if (info.tolerable) return;
-        throw new Error(
+        throw new InvariantError(
           `Can't find field ${info.fieldName} on object ${JSON.stringify(
             info.object,
             null,
@@ -343,7 +344,7 @@ export class StoreReader {
           fragment = fragmentMap[selection.name.value];
 
           if (!fragment) {
-            throw new Error(`No fragment named ${selection.name.value}`);
+            throw new InvariantError(`No fragment named ${selection.name.value}`);
           }
         }
 
@@ -503,7 +504,7 @@ function assertSelectionSetForIdValue(
   value: any,
 ) {
   if (!field.selectionSet && isIdValue(value)) {
-    throw new Error(
+    throw new InvariantError(
       `Missing selection set for object of type ${
         value.typename
       } returned for query field ${field.name.value}`
@@ -516,11 +517,10 @@ function defaultFragmentMatcher() {
 }
 
 export function assertIdValue(idValue: IdValue) {
-  if (!isIdValue(idValue)) {
-    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
+  invariant(isIdValue(idValue), `\
+Encountered a sub-selection on the query, but the store doesn't have \
 an object reference. This should never happen during normal use unless you have custom code \
 that is directly manipulating the store; please file an issue.`);
-  }
 }
 
 function readStoreResolver(

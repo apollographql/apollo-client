@@ -1,6 +1,6 @@
 import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
 import { isEqual } from 'apollo-utilities';
-import invariant from 'ts-invariant';
+import { InvariantError } from 'ts-invariant';
 import { NetworkStatus } from '../core/networkStatus';
 
 export type QueryStoreValue = {
@@ -44,7 +44,9 @@ export class QueryStore {
       // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
       // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
       // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
-      invariant(false, 'Internal Error: may not update existing query string in store');
+      throw new InvariantError(
+        'Internal Error: may not update existing query string in store',
+      );
     }
 
     let isSetVariables = false;

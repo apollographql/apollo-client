@@ -9,7 +9,6 @@ import {
   getOperationDefinition,
   getOperationName,
   getQueryDefinition,
-  isProduction,
   hasDirectives,
   graphQLResultHasError,
   hasClientExports,
@@ -607,7 +606,7 @@ export class QueryManager<TStore> {
             setTimeout(() => {
               throw apolloError;
             }, 0);
-            if (!isProduction()) {
+            if (process.env.NODE_ENV !== 'production') {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +

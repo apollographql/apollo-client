@@ -9,7 +9,6 @@ import {
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
 import {
-  isProduction,
   removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
 
@@ -187,7 +186,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
     const defaultConnectToDevTools =
-      !isProduction() &&
+      process.env.NODE_ENV !== 'production' &&
       typeof window !== 'undefined' &&
       !(window as any).__APOLLO_CLIENT__;
 
@@ -202,7 +201,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && !isProduction()) {
+    if (!hasSuggestedDevtools && process.env.NODE_ENV !== 'production') {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&

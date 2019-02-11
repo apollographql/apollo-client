@@ -36,6 +36,9 @@ There are some Apollo examples written in React Native that you may wish to refe
 
 1. The ["Hello World" example](https://github.com/apollographql/frontpage-react-native-app) used at dev.apollodata.com.
 2. A [GitHub API Example](https://github.com/apollographql/GitHub-GraphQL-API-Example) built to work with GitHub's new GraphQL API.
+3. A [Country Directory Application](https://github.com/muhzi4u/country-directory-app) built by using [GraphQL API For Countries](https://countries.trevorblades.com/)
+
+4. An app that [Lists most followed users in github](https://github.com/muhzi4u/most-followed-users-github) by using GitHub's GraphQL API.
 
 > If you've got an example to post here, please hit the "Edit on GitHub" button above and let us know!
 

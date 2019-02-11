@@ -18,7 +18,7 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  window.__APOLLO_STATE__ = client.extract();
+  window.__APOLLO_STATE__ = JSON.stringify(client.extract());
 </script>
 ```
 

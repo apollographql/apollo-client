@@ -1136,7 +1136,9 @@ describe('ApolloClient', () => {
           count++;
           if (count === 1) {
             expect(stripSymbols(result.data)).toEqual(data);
-            expect(stripSymbols(observable.currentResult().data)).toEqual(data);
+            expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+              data,
+            );
             const bestFriends = result.data.people.friends.filter(
               x => x.type === 'best',
             );

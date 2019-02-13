@@ -343,10 +343,11 @@ export class ObservableQuery<
     );
 
     let combinedOptions: any;
+    let qid: string;
 
     return Promise.resolve()
       .then(() => {
-        const qid = this.queryManager.generateQueryId();
+        qid = this.queryManager.generateQueryId();
 
         if (fetchMoreOptions.query) {
           // fetch a new query
@@ -380,6 +381,7 @@ export class ObservableQuery<
             variables: combinedOptions.variables,
           }),
         );
+        this.queryManager.stopQuery(qid);
 
         return fetchMoreResult as ApolloQueryResult<TData>;
       });

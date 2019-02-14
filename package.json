@@ -79,7 +79,7 @@
   "devDependencies": {
     "@octokit/rest": "16.15.0",
     "@types/benchmark": "1.0.31",
-    "@types/graphql": "14.0.5",
+    "@types/graphql": "14.0.7",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "23.3.14",
     "@types/lodash": "4.14.120",

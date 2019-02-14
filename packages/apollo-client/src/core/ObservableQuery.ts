@@ -1,4 +1,9 @@
-import { isEqual, tryFunctionOrLogError, cloneDeep } from 'apollo-utilities';
+import {
+  isEqual,
+  tryFunctionOrLogError,
+  cloneDeep,
+  getOperationDefinition,
+} from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
@@ -71,7 +76,8 @@ export class ObservableQuery<
   TVariables = OperationVariables
 > extends Observable<ApolloQueryResult<TData>> {
   public options: WatchQueryOptions<TVariables>;
-  public queryId: string;
+  public readonly queryId: string;
+  public readonly queryName?: string;
   /**
    *
    * The current value of the variables for this query. Can change.
@@ -109,6 +115,9 @@ export class ObservableQuery<
     this.variables = options.variables || ({} as TVariables);
     this.queryId = queryManager.generateQueryId();
     this.shouldSubscribe = shouldSubscribe;
+
+    const opDef = getOperationDefinition(options.query);
+    this.queryName = opDef && opDef.name && opDef.name.value;
 
     // related classes
     this.queryManager = queryManager;

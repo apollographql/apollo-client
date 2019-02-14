@@ -38,6 +38,8 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 
+const { hasOwnProperty } = Object.prototype;
+
 export interface QueryInfo {
   listeners: QueryListener[];
   invalidated: boolean;
@@ -81,11 +83,6 @@ export class QueryManager<TStore> {
   // The key is in the format of `query:${queryId}` or `fetchRequest:${queryId}`,
   // depending on where the promise's rejection function was created from.
   private fetchQueryRejectFns = new Map<string, Function>();
-
-  // A map going from the name of a query to an observer issued for it by watchQuery. This is
-  // generally used to refetches for refetchQueries and to update mutation results through
-  // updateQueries.
-  private queryIdsByName: { [queryName: string]: string[] } = {};
 
   constructor({
     link,
@@ -171,14 +168,20 @@ export class QueryManager<TStore> {
       const ret: { [queryId: string]: QueryWithUpdater } = {};
 
       if (updateQueriesByName) {
-        Object.keys(updateQueriesByName).forEach(queryName =>
-          (this.queryIdsByName[queryName] || []).forEach(queryId => {
-            ret[queryId] = {
-              updater: updateQueriesByName[queryName],
-              query: this.queryStore.get(queryId),
-            };
-          }),
-        );
+        this.queries.forEach(({ observableQuery }, queryId) => {
+          if (observableQuery) {
+            const { queryName } = observableQuery;
+            if (
+              queryName &&
+              hasOwnProperty.call(updateQueriesByName, queryName)
+            ) {
+              ret[queryId] = {
+                updater: updateQueriesByName[queryName],
+                query: this.queryStore.get(queryId),
+              };
+            }
+          }
+        });
       }
 
       return ret;
@@ -247,10 +250,14 @@ export class QueryManager<TStore> {
 
         for (const refetchQuery of refetchQueries) {
           if (typeof refetchQuery === 'string') {
-            const promise = this.refetchQueryByName(refetchQuery);
-            if (promise) {
-              refetchQueryPromises.push(promise);
-            }
+            this.queries.forEach(({ observableQuery }) => {
+              if (
+                observableQuery &&
+                observableQuery.queryName === refetchQuery
+              ) {
+                refetchQueryPromises.push(observableQuery.refetch());
+              }
+            });
             continue;
           }
 
@@ -879,33 +886,12 @@ export class QueryManager<TStore> {
     observableQuery: ObservableQuery<T>,
   ) {
     this.setQuery(queryId, () => ({ observableQuery }));
-
-    // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
-    const queryDef = getQueryDefinition(observableQuery.options.query);
-    if (queryDef.name && queryDef.name.value) {
-      const queryName = queryDef.name.value;
-
-      // XXX we may we want to warn the user about query name conflicts in the future
-      this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
-      this.queryIdsByName[queryName].push(observableQuery.queryId);
-    }
   }
 
   public removeObservableQuery(queryId: string) {
-    const { observableQuery, cancel } = this.getQuery(queryId);
-    if (cancel) cancel();
-    if (!observableQuery) return;
-
-    const definition = getQueryDefinition(observableQuery.options.query);
-    const queryName = definition.name ? definition.name.value : null;
+    const { cancel } = this.getQuery(queryId);
     this.setQuery(queryId, () => ({ observableQuery: null }));
-    if (queryName) {
-      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter(
-        val => {
-          return !(observableQuery.queryId === val);
-        },
-      );
-    }
+    if (cancel) cancel();
   }
 
   public clearStore(): Promise<void> {
@@ -1405,22 +1391,6 @@ export class QueryManager<TStore> {
       this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
       throw error;
     });
-  }
-
-  // Refetches a query given that query's name. Refetches
-  // all ObservableQuery instances associated with the query name.
-  private refetchQueryByName(queryName: string) {
-    const refetchedQueries = this.queryIdsByName[queryName];
-    // early return if the query named does not exist (not yet fetched)
-    // this used to warn but it may be inteneded behavoir to try and refetch
-    // un called queries because they could be on different routes
-    if (refetchedQueries === undefined) return;
-    return Promise.all(
-      refetchedQueries
-        .map(id => this.getQuery(id).observableQuery)
-        .filter(x => !!x)
-        .map((x: ObservableQuery<any>) => x.refetch()),
-    );
   }
 
   private generateRequestId() {

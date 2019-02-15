@@ -25,7 +25,7 @@ The docs for Apollo Client are mainly written using the [React integration](./es
 
 <h2 id="other-platforms" title="Prefer a non-React Platform?">Prefer a non-React platform?</h2>
 
-Most of this sites documentation examples are written using React, but Apollo Client supports many other platforms:
+Most of this site's documentation examples are written using React, but Apollo Client supports many other platforms:
 
 - JavaScript
   - [Angular](/docs/angular)

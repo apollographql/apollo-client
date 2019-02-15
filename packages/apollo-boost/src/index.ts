@@ -53,6 +53,7 @@ const PRESET_CONFIG_KEYS = [
   'cache',
   'name',
   'version',
+  'ssrMode',
 ];
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
@@ -82,6 +83,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       onError: errorCallback,
       name,
       version,
+      ssrMode,
     } = config;
 
     let { cache } = config;
@@ -162,6 +164,6 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
     ].filter(x => !!x) as ApolloLink[]);
 
     // super hacky, we will fix the types eventually
-    super({ cache, link, name, version } as any);
+    super({ cache, link, name, version, ssrMode } as any);
   }
 }

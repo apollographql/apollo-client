@@ -46,7 +46,7 @@ If you'd like a deep dive into the `clientState` config properties, we recommend
 
 <h2 id="mutations">Updating local data</h2>
 
-There are two ways to perform mutations in `apollo-link-state`. The first way is directly writing to the cache by calling `cache.writeData` within an `ApolloConsumer` or `Query` component. Direct writes are great for one-off mutations that don't depend on the data that's currently in the cache, such as writing a single value. The second way is creating a `Mutation` component with a GraphQL mutation that calls a client-side resolver. We recommend using resolvers if your mutation depends on existing values in the cache, such as adding an item to a list or toggling a boolean. You can think of direct writes like calling `setState`, whereas resolvers offer a bit more structure like Redux. Let's learn about both ways below!
+There are two ways to perform mutations in `apollo-link-state`. The first way is directly writing to the cache by calling `client.writeData` within an `ApolloConsumer` or `Query` component. Direct writes are great for one-off mutations that don't depend on the data that's currently in the cache, such as writing a single value. The second way is creating a `Mutation` component with a GraphQL mutation that calls a client-side resolver. We recommend using resolvers if your mutation depends on existing values in the cache, such as adding an item to a list or toggling a boolean. You can think of direct writes like calling `setState`, whereas resolvers offer a bit more structure like Redux. Let's learn about both ways below!
 
 <h3 id="direct-writes">Direct writes</h3>
 

@@ -71,7 +71,7 @@ export class ObservableQuery<
   TData = any,
   TVariables = OperationVariables
 > extends Observable<ApolloQueryResult<TData>> {
-  public options: WatchQueryOptions<TVariables>;
+  public options: WatchQueryOptions<TData, TVariables>;
   public queryId: string;
   /**
    *
@@ -97,7 +97,7 @@ export class ObservableQuery<
     shouldSubscribe = true,
   }: {
     scheduler: QueryScheduler<any>;
-    options: WatchQueryOptions<TVariables>;
+    options: WatchQueryOptions<TData, TVariables>;
     shouldSubscribe?: boolean;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) =>
@@ -322,7 +322,19 @@ export class ObservableQuery<
 
     return this.queryManager
       .fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
-      .then(result => result as ApolloQueryResult<TData>);
+      .then((result: ApolloQueryResult<TData>) => {
+        const { updateQuery } = this.options;
+        if (typeof updateQuery === 'function') {
+          this.updateQuery((previousResult: any) =>
+            updateQuery(previousResult, {
+              nextQueryResult: result.data as TData,
+              variables: this.variables,
+            }),
+          );
+        }
+
+        return result;
+      });
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -368,6 +380,13 @@ export class ObservableQuery<
         );
       })
       .then(fetchMoreResult => {
+        if (fetchMoreOptions.updateQuery) {
+          // TODO: Only warn once
+          console.info(
+            '[Deprecated] `fetchMore.updateQuery` has been deprecated. Please move the `updateQuery` property up to the base query options. See (ADD CHANGELOG/NOTE/DOCS ABOUT MIGRATION)',
+          );
+        }
+
         this.updateQuery((previousResult: any) =>
           fetchMoreOptions.updateQuery(previousResult, {
             fetchMoreResult: fetchMoreResult.data as TData,
@@ -432,6 +451,7 @@ export class ObservableQuery<
   ): Promise<ApolloQueryResult<TData>> {
     const oldOptions = this.options;
     this.options = Object.assign({}, this.options, opts) as WatchQueryOptions<
+      TData,
       TVariables
     >;
 
@@ -518,7 +538,19 @@ export class ObservableQuery<
           ...this.options,
           variables: this.variables,
         } as WatchQueryOptions)
-        .then(result => result as ApolloQueryResult<TData>);
+        .then((result: ApolloQueryResult<TData>) => {
+          const { updateQuery } = this.options;
+          if (typeof updateQuery === 'function') {
+            this.updateQuery((previousResult: any) =>
+              updateQuery(previousResult, {
+                nextQueryResult: result.data as TData,
+                variables: this.variables,
+              }),
+            );
+          }
+
+          return result;
+        });
     }
   }
 

@@ -62,7 +62,7 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
 /**
  * Query options.
  */
-export interface QueryOptions<TVariables = OperationVariables>
+export interface QueryOptions<TData = any, TVariables = OperationVariables>
   extends QueryBaseOptions<TVariables> {
   /**
    * A GraphQL document that consists of a single query to be sent down to the
@@ -71,6 +71,12 @@ export interface QueryOptions<TVariables = OperationVariables>
   // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a
   // lot of tests.
   query: DocumentNode;
+
+  /**
+   * Function called after data is returned from resolvers and before result is
+   * written to store.
+   */
+  updateQuery?: AfterFetchUpdateQueryFn<TData, TVariables>;
 
   /**
    * Arbitrary metadata stored in the store with this query.  Designed for debugging,
@@ -101,11 +107,26 @@ export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
   notifyOnNetworkStatusChange?: boolean;
 }
 
+// XXX Better name?
+export type AfterFetchUpdateQueryFn<
+  TData = any,
+  TVariables = OperationVariables
+> = (
+  previousQueryResult: TData,
+  options: {
+    nextQueryResult?: TData;
+    variables?: TVariables;
+  },
+) => TData;
+
 /**
  * Watched query options.
  */
-export interface WatchQueryOptions<TVariables = OperationVariables>
-  extends QueryOptions<TVariables>,
+export interface WatchQueryOptions<
+  TData = any,
+  TVariables = OperationVariables
+>
+  extends QueryOptions<TData, TVariables>,
     ModifiableWatchQueryOptions<TVariables> {}
 
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
@@ -113,7 +134,11 @@ export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   variables?: Pick<TVariables, K>;
 }
 
-export type UpdateQueryFn<TData = any, TVariables = OperationVariables, TSubscriptionData = TData> = (
+export type UpdateQueryFn<
+  TData = any,
+  TVariables = OperationVariables,
+  TSubscriptionData = TData
+> = (
   previousQueryResult: TData,
   options: {
     subscriptionData: { data: TSubscriptionData };

@@ -672,7 +672,7 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
-    let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
+    let transformedOptions = { ...options } as WatchQueryOptions<T, TVariables>;
 
     return new ObservableQuery<T, TVariables>({
       scheduler: this.scheduler,

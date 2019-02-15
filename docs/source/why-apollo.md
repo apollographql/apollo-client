@@ -126,7 +126,7 @@ This flexibility makes it simple to create your dream client by building extensi
 - [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
 - [AppSync by AWS](https://blog.apollographql.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
 
-When you choose Apollo to manage your data, you also gain the support of our amazing community. There are over 5000 developers on our [Apollo Slack](https://www.apollographql.com/#slack) channel for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://blog.apollographql.com/), updated weekly.
+When you choose Apollo to manage your data, you also gain the support of our amazing community. There are thousands ov developers in our [Apollo Spectrum community](https://spectrum.chat/apollo) for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://blog.apollographql.com/), updated weekly.
 
 <h2 id="case-studies">Case studies</h2>
 
@@ -138,4 +138,4 @@ Companies ranging from enterprises to startups trust Apollo Client to power thei
 - [Expo](https://blog.apollographql.com/using-graphql-apollo-at-expo-4c1f21f0f115): Developing their React Native app with Apollo allowed the Expo engineers to focus on improving their product instead of writing data fetching logic
 - [KLM](https://youtu.be/T2njjXHdKqw): Learn how the KLM team scaled their Angular app with GraphQL and Apollo
 
-If your company is using Apollo Client in production, we'd love to feature a case study on our blog! Please get in touch via Slack so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send in a PR.
+If your company is using Apollo Client in production, we'd love to feature a case study on our blog! Please get in touch via Spectrum so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send in a PR.

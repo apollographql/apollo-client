@@ -1580,7 +1580,7 @@ describe('ObservableQuery', () => {
           fetchPolicy: 'network-only',
         });
         expect(stripSymbols(observable.getCurrentResult())).toEqual({
-          data: dataOne,
+          data: undefined,
           loading: true,
           networkStatus: 1,
           partial: false,

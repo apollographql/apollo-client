@@ -2,15 +2,27 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Client (vNext)
+## Apollo Client (vNext)
+
+- Fixes an issue where the `QueryManager` was accidentally returning cached 
+  data for `network-only` queries.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4352](https://github.com/apollographql/apollo-client/pull/4352)
+
+
+## Apollo Client (2.4.13)
+
+### Apollo Client (2.4.13)
 
 - Resolve "invalidate" -> "invalidated" typo in `QueryManager`.  <br/>
   [@quazzie](https://github.com/quazzie) in [#4041](https://github.com/apollographql/apollo-client/pull/4041)
+
 - Properly type `setQuery` and fix now typed callers.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4369](https://github.com/apollographql/apollo-client/pull/4369)
+
 - Align with the React Apollo decision that result `data` should be
   `TData | undefined` instead of `TData | {}`.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4356](https://github.com/apollographql/apollo-client/pull/4356)
+
 - Documentation updates.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)  <br />
   [@justyn-clark](https://github.com/justyn-clark) in [#4383](https://github.com/apollographql/apollo-client/pull/4383)  <br />

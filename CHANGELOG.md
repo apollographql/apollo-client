@@ -2,6 +2,13 @@
 
 ## Apollo Client (vNext)
 
+## Apollo Client (vNext)
+
+- Fixes an issue where the `QueryManager` was accidentally returning cached 
+  data for `network-only` queries.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4352](https://github.com/apollographql/apollo-client/pull/4352)
+
+
 ## Apollo Client (2.4.13)
 
 ### Apollo Client (2.4.13)

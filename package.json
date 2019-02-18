@@ -116,7 +116,7 @@
     "typescript": "3.3.3",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",
-    "webpack-bundle-analyzer": "3.0.3"
+    "webpack-bundle-analyzer": "3.0.4"
   },
   "renovate": {
     "extends": [

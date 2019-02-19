@@ -148,7 +148,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
   <dt>`client`: ApolloClient</dt>
-  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
+  <dd>An `ApolloClient` instance. By default `Mutation` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="mutation-render-prop">Render prop function</h3>
@@ -197,7 +197,7 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dt>`fetchPolicy`: FetchPolicy</dt>
   <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
   <dt>`client`: ApolloClient</dt>
-  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
+  <dd>An `ApolloClient` instance. By default `Subscription` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>

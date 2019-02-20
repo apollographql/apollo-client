@@ -79,7 +79,7 @@ describe('Subscription lifecycles', () => {
         if (count === 2) {
           expect(result.loading).toBe(false);
           expect(stripSymbols(result.data)).toEqual(initialData);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             initialData,
           );
 
@@ -101,7 +101,7 @@ describe('Subscription lifecycles', () => {
           setTimeout(() => {
             // step 4, start new Subscription;
             const recyled = resubscribe();
-            const currentResult = recyled.currentResult();
+            const currentResult = recyled.getCurrentResult();
             expect(recyled.isTornDown).toEqual(false);
             expect(stripSymbols(currentResult.data)).toEqual(initialData);
             done();

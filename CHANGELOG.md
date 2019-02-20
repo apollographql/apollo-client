@@ -2,10 +2,38 @@
 
 ## Apollo Client (vNext)
 
-### Apollo Client (vNext)
+## Apollo Client (vNext)
+
+- Fixes an issue where the `QueryManager` was accidentally returning cached 
+  data for `network-only` queries.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4352](https://github.com/apollographql/apollo-client/pull/4352)
+- Fixed an issue in the repo `.gitattributes` that was causing binary files
+  to have their line endings adjusted, and cleaned up corrupted documentation 
+  images (ref: https://github.com/apollographql/apollo-client/pull/4232).  <br/>
+  [@rajington](https://github.com/rajington) in [#4438](https://github.com/apollographql/apollo-client/pull/4438)
+
+
+## Apollo Client (2.4.13)
+
+### Apollo Client (2.4.13)
+
+- Resolve "invalidate" -> "invalidated" typo in `QueryManager`.  <br/>
+  [@quazzie](https://github.com/quazzie) in [#4041](https://github.com/apollographql/apollo-client/pull/4041)
+
+- Properly type `setQuery` and fix now typed callers.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4369](https://github.com/apollographql/apollo-client/pull/4369)
+
+- Align with the React Apollo decision that result `data` should be
+  `TData | undefined` instead of `TData | {}`.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4356](https://github.com/apollographql/apollo-client/pull/4356)
 
 - Documentation updates.  <br/>
-  [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)
+  [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)  <br />
+  [@justyn-clark](https://github.com/justyn-clark) in [#4383](https://github.com/apollographql/apollo-client/pull/4383)  <br />
+  [@jtassin](https://github.com/jtassin) in [#4287](https://github.com/apollographql/apollo-client/pull/4287)  <br />
+  [@Gongreg](https://github.com/Gongreg) in [#4386](https://github.com/apollographql/apollo-client/pull/4386)  <br />
+  [@davecardwell](https://github.com/davecardwell) in [#4399](https://github.com/apollographql/apollo-client/pull/4399)  <br />
+  [@michaelknoch](https://github.com/michaelknoch) in [#4384](https://github.com/apollographql/apollo-client/pull/4384)  <br />
 
 ## Apollo Client (2.4.12)
 

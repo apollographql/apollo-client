@@ -946,7 +946,7 @@ const client = new ApolloClient({
 
 If you open up Apollo Client Devtools and click on the `GraphiQL` tab, you'll be able to explore your client schema in the "Docs" section. This example doesn't include a remote schema, but if it did, you would be able to see your local queries and mutations alongside your remote ones.
 
-![GraphiQL Console](../img/client-schema.png)
+![GraphiQL Console](../assets/client-schema.png)
 
 <h2 id="migrating">Migrating from `apollo-link-state`</h2>
 

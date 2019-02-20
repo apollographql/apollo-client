@@ -852,7 +852,7 @@ describe('QueryManager', () => {
         try {
           expect(stripSymbols(result.data)).toEqual(data1);
           expect(stripSymbols(result.data)).toEqual(
-            stripSymbols(observable.currentResult().data),
+            stripSymbols(observable.getCurrentResult().data),
           );
           done();
         } catch (error) {
@@ -1235,7 +1235,7 @@ describe('QueryManager', () => {
     observable.subscribe({
       next: result => {
         expect(stripSymbols(result.data)).toEqual(data);
-        expect(stripSymbols(observable.currentResult().data)).toEqual(data);
+        expect(stripSymbols(observable.getCurrentResult().data)).toEqual(data);
         done();
       },
     });
@@ -2401,7 +2401,7 @@ describe('QueryManager', () => {
           partial: false,
         });
         expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
-          data: {},
+          data: undefined,
           partial: true,
         });
       }),
@@ -3229,6 +3229,42 @@ describe('QueryManager', () => {
       );
     });
 
+    it('should not error on a stopped query()', done => {
+      let queryManager: QueryManager<NormalizedCacheObject>;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const link = new ApolloLink(
+        () =>
+          new Observable(observer => {
+            observer.next({ data });
+          }),
+      );
+
+      queryManager = createQueryManager({ link });
+
+      const queryId = '1';
+      queryManager
+        .fetchQuery(queryId, { query })
+        .catch(e => done.fail('Exception thrown for stopped query'));
+
+      queryManager.removeQuery(queryId);
+      queryManager.resetStore().then(() => done());
+    });
+
     it('should throw an error on an inflight fetch query if the store is reset', done => {
       const query = gql`
         query {
@@ -4042,7 +4078,7 @@ describe('QueryManager', () => {
           queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
         },
         result => {
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             secondReqData,
           );
           expect(stripSymbols(result.data)).toEqual(secondReqData);
@@ -4253,7 +4289,7 @@ describe('QueryManager', () => {
           }
           if (count === 1) {
             setTimeout(() => {
-              expect(stripSymbols(observable.currentResult().data)).toEqual(
+              expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                 secondReqData,
               );
               done();
@@ -4649,7 +4685,7 @@ describe('QueryManager', () => {
           } else {
             expect(mutationComplete).toBeTruthy();
           }
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             secondReqData,
           );
           expect(stripSymbols(result.data)).toEqual(secondReqData);

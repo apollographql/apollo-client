@@ -77,7 +77,7 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "16.15.0",
+    "@octokit/rest": "16.16.0",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.0.7",
     "@types/isomorphic-fetch": "0.0.35",
@@ -85,7 +85,7 @@
     "@types/lodash": "4.14.121",
     "@types/node": "10.12.26",
     "@types/react": "16.8.3",
-    "@types/react-dom": "16.8.0",
+    "@types/react-dom": "16.8.2",
     "benchmark": "2.1.4",
     "bundlesize": "0.17.1",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
@@ -104,8 +104,8 @@
     "pre-commit": "1.2.2",
     "prettier": "1.16.4",
     "react": "16.8.2",
-    "react-dom": "16.8.1",
-    "rollup": "1.1.2",
+    "react-dom": "16.8.2",
+    "rollup": "1.2.2",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "4.0.0",
     "rollup-plugin-sourcemaps": "0.4.2",

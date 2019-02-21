@@ -8,6 +8,17 @@
   ([#4243](https://github.com/apollographql/apollo-client/pull/4243))" <br/>
   [PR #4337](https://github.com/apollographql/apollo-client/pull/4337)
 
+## Apollo Client (vNext)
+
+- Fixes an issue where the `QueryManager` was accidentally returning cached 
+  data for `network-only` queries.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4352](https://github.com/apollographql/apollo-client/pull/4352)
+- Fixed an issue in the repo `.gitattributes` that was causing binary files
+  to have their line endings adjusted, and cleaned up corrupted documentation 
+  images (ref: https://github.com/apollographql/apollo-client/pull/4232).  <br/>
+  [@rajington](https://github.com/rajington) in [#4438](https://github.com/apollographql/apollo-client/pull/4438)
+
+
 ## Apollo Client (2.4.13)
 
 ### Apollo Client (2.4.13)

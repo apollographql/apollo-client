@@ -629,7 +629,7 @@ export class QueryManager<TStore> {
             // `no-cache` since `getCurrentQueryResult` attemps to pull from
             // `newData` first, following by trying the cache (which won't
             // find a hit for `no-cache`).
-            if (fetchPolicy !== 'no-cache') {
+            if (fetchPolicy !== 'no-cache' && fetchPolicy !== 'network-only') {
               this.setQuery(queryId, () => ({ newData: null }));
             }
 
@@ -1130,13 +1130,15 @@ export class QueryManager<TStore> {
     data: T | undefined;
     partial: boolean;
   } {
-    const { variables, query } = observableQuery.options;
+    const { variables, query, fetchPolicy } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
 
     // XXX test this
     if (newData && newData.complete) {
       return { data: newData.result, partial: false };
+    } else if (fetchPolicy === 'no-cache' || fetchPolicy === 'network-only') {
+      return { data: undefined, partial: false };
     } else {
       try {
         // the query is brand new, so we read from the store to see if anything is there

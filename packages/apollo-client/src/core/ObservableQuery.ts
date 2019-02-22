@@ -36,6 +36,7 @@ export type ApolloCurrentQueryResult<T> = {
   networkStatus: NetworkStatus;
   error?: ApolloError;
   partial?: boolean;
+  stale?: boolean;
 };
 
 export interface FetchMoreOptions<

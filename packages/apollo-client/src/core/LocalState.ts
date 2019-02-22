@@ -346,7 +346,7 @@ export class LocalState<TCacheShape> {
       rootValue,
       execContext,
     ).then(result => ({
-      result,
+      result: mergeDeep(rootValue, result),
       exportedVariables: execContext.exportedVariables,
     }));
   }
@@ -357,7 +357,7 @@ export class LocalState<TCacheShape> {
     execContext: ExecContext,
   ) {
     const { fragmentMap, context, variables } = execContext;
-    const resultsToMerge: TData[] = [rootValue];
+    const resultsToMerge: TData[] = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
       if (!shouldInclude(selection, variables)) {

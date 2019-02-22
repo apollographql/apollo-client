@@ -1444,7 +1444,7 @@ export class QueryManager<TStore> {
     updater: (prev: QueryInfo) => Pick<QueryInfo, T>,
   ) {
     const prev = this.getQuery(queryId);
-    const newInfo = { ...prev, ...updater(prev) };
+    const newInfo = { ...prev, ...(updater(prev) as object) };
     this.queries.set(queryId, newInfo);
   }
 

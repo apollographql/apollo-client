@@ -288,6 +288,8 @@ export class StoreWriter {
         field.selectionSet,
         context,
       );
+    } else if (value.__typename === 'JSON') {
+      storeValue = value;
     } else {
       // It's an object
       let valueDataId = `${dataId}.${storeFieldName}`;

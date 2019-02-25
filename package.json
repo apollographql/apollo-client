@@ -104,7 +104,7 @@
     "pre-commit": "1.2.2",
     "prettier": "1.16.4",
     "react": "16.8.3",
-    "react-dom": "16.8.2",
+    "react-dom": "16.8.3",
     "rollup": "1.2.2",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "4.0.0",

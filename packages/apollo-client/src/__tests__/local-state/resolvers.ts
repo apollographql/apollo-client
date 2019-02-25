@@ -731,6 +731,69 @@ describe('Resolving field aliases', () => {
       });
     },
   );
+
+  it(
+    'should resolve @client fields using local resolvers and not have ' +
+    'their value overridden when a fragment is loaded',
+    () => {
+      const query = gql`
+        fragment LaunchDetails on Launch {
+          id
+          __typename
+        }
+        query Launch {
+          launch {
+            isInCart @client
+            ...LaunchDetails
+          }
+        }
+      `;
+
+      const link = new ApolloLink(() =>
+        Observable.of({
+          data: {
+            launch: {
+              id: 1,
+              __typename: 'Launch',
+            },
+          },
+        }),
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+        resolvers: {
+          Launch: {
+            isInCart() {
+              return true;
+            },
+          },
+        },
+      });
+
+      client.writeData({
+        data: {
+          launch: {
+            isInCart: false,
+            __typename: 'Launch',
+          },
+        },
+      });
+
+      return client.query({ query }).then(({ data }) => {
+        // `isInCart` resolver is fired, returning `true` (which is then
+        // stored in the cache).
+        expect(data.launch.isInCart).toBe(true);
+      }).then(() => {
+        client.query({ query }).then(({ data }) => {
+          // When the same query fires again, `isInCart` should be pulled from
+          // the cache and have a value of `true`.
+          expect(data.launch.isInCart).toBe(true);
+        });
+      });
+    }
+  );
 });
 
 describe('Force local resolvers', () => {

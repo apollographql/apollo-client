@@ -9,7 +9,6 @@ import {
   FieldNode,
   ASTNode,
 } from 'graphql';
-import { print } from 'graphql/language/printer';
 import { visit, BREAK } from 'graphql/language/visitor';
 
 import { ApolloCache } from 'apollo-cache';
@@ -69,7 +68,6 @@ export type LocalStateOptions<TCacheShape> = {
   cache: ApolloCache<TCacheShape>;
   client?: ApolloClient<TCacheShape>;
   resolvers?: Resolvers | Resolvers[];
-  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
 };
 
@@ -77,14 +75,12 @@ export class LocalState<TCacheShape> {
   private cache: ApolloCache<TCacheShape>;
   private client: ApolloClient<TCacheShape>;
   private resolvers: Resolvers | Resolvers[] = {};
-  private typeDefs: string | string[] | DocumentNode | DocumentNode[];
   private fragmentMatcher: FragmentMatcher;
 
   constructor({
     cache,
     client,
     resolvers,
-    typeDefs,
     fragmentMatcher,
   }: LocalStateOptions<TCacheShape>) {
     this.cache = cache;
@@ -95,10 +91,6 @@ export class LocalState<TCacheShape> {
 
     if (resolvers) {
       this.addResolvers(resolvers);
-    }
-
-    if (typeDefs) {
-      this.setTypeDefs(typeDefs);
     }
 
     if (fragmentMatcher) {
@@ -159,16 +151,6 @@ export class LocalState<TCacheShape> {
     return remoteResult;
   }
 
-  public setTypeDefs(
-    typeDefs: string | string[] | DocumentNode | DocumentNode[],
-  ) {
-    this.typeDefs = typeDefs;
-  }
-
-  public getTypeDefs(): string | string[] | DocumentNode | DocumentNode[] {
-    return this.typeDefs;
-  }
-
   public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
     this.fragmentMatcher = fragmentMatcher;
   }
@@ -189,14 +171,7 @@ export class LocalState<TCacheShape> {
   }
 
   public prepareContext(context = {}) {
-    const cache = this.cache;
-
-    let schemas: object[] = [];
-    if (this.typeDefs) {
-      const directives = 'directive @client on FIELD';
-      const definition = this.normalizeTypeDefs(this.typeDefs);
-      schemas.push({ definition, directives });
-    }
+    const { cache } = this;
 
     const newContext = {
       ...context,
@@ -212,7 +187,6 @@ export class LocalState<TCacheShape> {
           );
         }
       },
-      schemas,
     };
 
     return newContext;
@@ -279,17 +253,6 @@ export class LocalState<TCacheShape> {
       variables,
       optimistic: false,
     }).result;
-  }
-
-  private normalizeTypeDefs(
-    typeDefs: string | string[] | DocumentNode | DocumentNode[],
-  ) {
-    const defs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
-
-    return defs
-      .map(typeDef => (typeof typeDef === 'string' ? typeDef : print(typeDef)))
-      .map(str => str.trim())
-      .join('\n');
   }
 
   private async resolveDocument<TData>(

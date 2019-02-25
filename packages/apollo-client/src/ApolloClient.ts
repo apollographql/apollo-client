@@ -77,6 +77,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions = {};
+  public readonly typeDefs: ApolloClientOptions<TCacheShape>['typeDefs'];
 
   private devToolsHookCb: Function;
   private proxy: ApolloCache<TCacheShape> | undefined;
@@ -169,6 +170,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
     this.defaultOptions = defaultOptions || {};
+    this.typeDefs = typeDefs;
 
     if (ssrForceFetchDelay) {
       setTimeout(
@@ -243,7 +245,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       cache,
       client: this,
       resolvers,
-      typeDefs,
       fragmentMatcher,
     });
   }

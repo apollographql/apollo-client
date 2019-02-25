@@ -107,7 +107,7 @@
     "react-dom": "16.8.3",
     "rollup": "1.2.2",
     "rollup-plugin-local-resolve": "1.0.7",
-    "rollup-plugin-node-resolve": "4.0.0",
+    "rollup-plugin-node-resolve": "4.0.1",
     "rollup-plugin-sourcemaps": "0.4.2",
     "rxjs": "6.4.0",
     "ts-jest": "23.1.4",

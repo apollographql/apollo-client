@@ -320,13 +320,17 @@ export class ObservableQuery<
       fetchPolicy: isNetworkFetchPolicy ? fetchPolicy : 'network-only',
     };
 
+    const {
+      previousResult: actualPreviousResult,
+    } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
     return this.queryManager
       .fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
       .then((result: ApolloQueryResult<TData>) => {
         const { updateQuery } = this.options;
         if (typeof updateQuery === 'function') {
-          this.updateQuery((previousResult: any) =>
-            updateQuery(previousResult, {
+          this.updateQuery(() =>
+            updateQuery(actualPreviousResult, {
               nextQueryResult: result.data as TData,
               variables: this.variables,
             }),
@@ -532,6 +536,10 @@ export class ObservableQuery<
         return new Promise(resolve => resolve());
       }
 
+      const {
+        previousResult: actualPreviousResult,
+      } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
       // Use the same options as before, but with new variables
       return this.queryManager
         .fetchQuery(this.queryId, {
@@ -541,8 +549,8 @@ export class ObservableQuery<
         .then((result: ApolloQueryResult<TData>) => {
           const { updateQuery } = this.options;
           if (typeof updateQuery === 'function') {
-            this.updateQuery((previousResult: any) =>
-              updateQuery(previousResult, {
+            this.updateQuery(() =>
+              updateQuery(actualPreviousResult, {
                 nextQueryResult: result.data as TData,
                 variables: this.variables,
               }),

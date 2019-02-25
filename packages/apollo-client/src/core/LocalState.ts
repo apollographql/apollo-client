@@ -143,24 +143,9 @@ export class LocalState<TCacheShape> {
     onlyRunForcedResolvers?: boolean;
   }): Promise<ExecutionResult<TData>> {
     if (document) {
-      const toMerge: TData[] = [];
-
-      const rootValueFromCache = this.buildRootValueFromCache(
-        document,
-        variables,
-      );
-
-      if (rootValueFromCache) {
-        toMerge.push(rootValueFromCache as TData);
-      }
-
-      if (remoteResult.data) {
-        toMerge.push(remoteResult.data);
-      }
-
       return this.resolveDocument(
         document,
-        mergeDeepArray(toMerge),
+        remoteResult.data,
         context,
         variables,
         this.fragmentMatcher,

@@ -433,8 +433,10 @@ describe('@client @export tests', () => {
         cache,
         link,
         resolvers: {
-          CurrentReviewer: {
-            id: () => currentReviewer.id,
+          Post: {
+            currentReviewer() {
+              return currentReviewer;
+            },
           },
         },
       });
@@ -442,9 +444,6 @@ describe('@client @export tests', () => {
       cache.writeData({
         data: {
           postRequiringReview: {
-            currentReviewer: {
-              __typename: 'CurrentReviewer',
-            },
             __typename: 'Post',
           },
         },

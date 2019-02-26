@@ -1154,10 +1154,6 @@ client.setResolvers({ ... });
   <dd>A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache. Resolver functions added through `setResolvers` overwrite all existing resolvers (a pre-existing resolver map is wiped out, before the new resolvers are added).</dd>
   <dt>`getResolvers`</dt>
   <dd>Get the currently defined resolver map.</dd>
-  <dt>`setTypeDefs(typeDefs: string | string[] | DocumentNode | DocumentNode[])`</dt>
-  <dd>A string representing your client-side schema written in the [Schema Definition Language](/docs/graphql-tools/generate-schema.html#schema-language), or as a GraphQL AST. This schema is not used for validation, but is used for introspection by the [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools).</dd>
-  <dt>`getTypeDefs`</dt>
-  <dd>Returns a string (SDL) or GraphQL AST representation of your client-side schema (if previously set via the `ApolloClient` constructor or `setTypeDefs`).</dd>
   <dt>`setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher)`</dt>
   <dd>Set a custom `FragmentMatcher` to be used when resolving local state queries involving [fragments on unions or interfaces](/docs/react/advanced/fragments.html#fragment-matcher).</dd>
 </dl>

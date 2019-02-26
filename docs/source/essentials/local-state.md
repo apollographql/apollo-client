@@ -512,6 +512,7 @@ const cache = new InMemoryCache();
 const client = new ApolloClient({
   cache,
   link: new HttpLink({ uri: 'http://localhost:4000/graphql' }),
+  resolvers: {},
 });
 
 cache.writeData({
@@ -537,6 +538,8 @@ ReactDOM.render(
 ```
 
 In the above example, we first prep the cache using `cache.writeData` to store a value for the `isLoggedIn` field. We then run the `IS_LOGGED_IN` query via a React Apollo `Query` component, which includes an `@client` directive. When Apollo Client executes the `IS_LOGGED_IN` query, it first looks for a local resolver that can be used to handle the `@client` field. When it can't find one, it falls back on trying to pull the specified field out of the cache. So in this case, the `data` value passed into the `Query` component's render prop has a `isLoggedIn` property available, which includes the `isLoggedIn` result (`!!localStorage.getItem('token')`) pulled directly from the cache.
+
+> ⚠️ If you want to use Apollo Client's `@client` support to query the cache without using local resolvers, you must pass an empty object into the `ApolloClient` constructor `resolvers` option. Without this Apollo Client will not enable its integrated `@client` support, which means your `@client` based queries will be passed to the Apollo Client link chain. You can find more details about why this is necessary [here](https://github.com/apollographql/apollo-client/pull/4499).
 
 Pulling `@client` field values directly out of the cache isn't quite as flexible as local resolver functions, since local resolvers can perform extra computations before returning a result. Depending on your application's needs however, loading `@client` fields directly from the cache might be a simpler option. Apollo Client doesn't restrict combining both approaches, so feel free to mix and match. If the need arises, you can pull some `@client` values from the cache, and resolve others with local resolvers, all in the same query.
 
@@ -677,6 +680,7 @@ const cache = new InMemoryCache();
 const client = new ApolloClient({
   link: new HttpLink({ uri: 'http://localhost:4000/graphql' }),
   cache,
+  resolvers: {},
 });
 
 cache.writeData({
@@ -710,6 +714,7 @@ const cache = new InMemoryCache();
 const client = new ApolloClient({
   link: new HttpLink({ uri: 'http://localhost:4000/graphql' }),
   cache,
+  resolvers: {},
 });
 
 cache.writeData({

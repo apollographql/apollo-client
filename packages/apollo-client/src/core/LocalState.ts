@@ -35,7 +35,6 @@ import ApolloClient from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
 
-
 export type Resolver = (
   fieldName: string,
   rootValue: any,
@@ -74,7 +73,7 @@ export type LocalStateOptions<TCacheShape> = {
 export class LocalState<TCacheShape> {
   private cache: ApolloCache<TCacheShape>;
   private client: ApolloClient<TCacheShape>;
-  private resolvers?: Resolvers | Resolvers[];
+  private resolvers?: Resolvers;
   private fragmentMatcher: FragmentMatcher;
 
   constructor({
@@ -386,8 +385,7 @@ export class LocalState<TCacheShape> {
     ) {
       const resolverType =
         rootValue.__typename || execContext.defaultOperationType;
-      const resolverMap =
-        this.resolvers && (this.resolvers as any)[resolverType];
+      const resolverMap = this.resolvers && this.resolvers[resolverType];
       if (resolverMap) {
         const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
         if (resolve) {

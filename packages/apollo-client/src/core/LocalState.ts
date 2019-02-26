@@ -35,7 +35,6 @@ import ApolloClient from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
 
-
 export type Resolver = (
   fieldName: string,
   rootValue: any,
@@ -74,7 +73,7 @@ export type LocalStateOptions<TCacheShape> = {
 export class LocalState<TCacheShape> {
   private cache: ApolloCache<TCacheShape>;
   private client: ApolloClient<TCacheShape>;
-  private resolvers: Resolvers | Resolvers[] = {};
+  private resolvers?: Resolvers;
   private fragmentMatcher: FragmentMatcher;
 
   constructor({
@@ -99,6 +98,7 @@ export class LocalState<TCacheShape> {
   }
 
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
+    this.resolvers = this.resolvers || {};
     if (Array.isArray(resolvers)) {
       resolvers.forEach(resolverGroup => {
         this.resolvers = mergeDeep(this.resolvers, resolverGroup);
@@ -114,7 +114,7 @@ export class LocalState<TCacheShape> {
   }
 
   public getResolvers() {
-    return this.resolvers;
+    return this.resolvers || {};
   }
 
   // Run local client resolvers against the incoming query and remote data.
@@ -162,12 +162,21 @@ export class LocalState<TCacheShape> {
   // Client queries contain everything in the incoming document (if a @client
   // directive is found).
   public clientQuery(document: DocumentNode) {
-    return hasDirectives(['client'], document) ? document : null;
+    if (hasDirectives(['client'], document)) {
+      if (this.resolvers) {
+        return document;
+      }
+      invariant.warn(
+        'Found @client directives in query but no client resolvers were specified. ' +
+          'You can now pass apollo-link-state resolvers to the ApolloClient constructor.',
+      );
+    }
+    return null;
   }
 
   // Server queries are stripped of all @client based selection sets.
   public serverQuery(document: DocumentNode) {
-    return removeClientSetsFromDocument(document);
+    return this.resolvers ? removeClientSetsFromDocument(document) : document;
   }
 
   public prepareContext(context = {}) {
@@ -376,7 +385,7 @@ export class LocalState<TCacheShape> {
     ) {
       const resolverType =
         rootValue.__typename || execContext.defaultOperationType;
-      const resolverMap = (this.resolvers as any)[resolverType];
+      const resolverMap = this.resolvers && this.resolvers[resolverType];
       if (resolverMap) {
         const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
         if (resolve) {

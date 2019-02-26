@@ -9,6 +9,7 @@ import {
   IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';
 import { ApolloLink, Observable, Operation } from 'apollo-link';
+import { hasDirectives } from 'apollo-utilities';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {
@@ -32,6 +33,38 @@ describe('General functionality', () => {
     return client.query({ query }).then(({ data }) => {
       expect({ ...data }).toMatchObject({ field: 1 });
     });
+  });
+
+  // TODO The functionality tested here should be removed (along with the test)
+  // once apollo-link-state is fully deprecated.
+  it('should strip @client fields only if client resolvers specified', async () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(operation => {
+        expect(hasDirectives(['client'], operation.query)).toBe(true);
+        return Observable.of({ data: { field: 'local' } });
+      }),
+    });
+
+    const { warn } = console;
+    const messages: string[] = [];
+    console.warn = (message: string) => messages.push(message);
+    try {
+      const result = await client.query({ query });
+      expect(result.data).toEqual({ field: 'local' });
+      expect(messages).toEqual([
+        'Found @client directives in query but no client resolvers were specified. ' +
+          'You can now pass apollo-link-state resolvers to the ApolloClient constructor.',
+      ]);
+    } finally {
+      console.warn = warn;
+    }
   });
 
   it('should not interfere with server introspection queries', () => {
@@ -232,6 +265,7 @@ describe('Cache manipulation', () => {
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),
+        resolvers: {},
       });
 
       cache.writeQuery({ query, data: { field: 'yo' } });
@@ -410,6 +444,7 @@ describe('Sample apps', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      resolvers: {},
     });
 
     const update = (
@@ -504,6 +539,7 @@ describe('Sample apps', () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
+      resolvers: {},
     });
 
     interface Todo {
@@ -749,6 +785,7 @@ describe('Combining client and server state/operations', () => {
     const client = new ApolloClient({
       cache,
       link,
+      resolvers: {},
     });
 
     cache.writeData({
@@ -786,6 +823,7 @@ describe('Combining client and server state/operations', () => {
     const client = new ApolloClient({
       cache,
       link,
+      resolvers: {},
     });
 
     cache.writeData({

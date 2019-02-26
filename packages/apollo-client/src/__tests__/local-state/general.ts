@@ -37,7 +37,7 @@ describe('General functionality', () => {
 
   // TODO The functionality tested here should be removed (along with the test)
   // once apollo-link-state is fully deprecated.
-  it('should strip @client fields only if no client resolvers specified', async () => {
+  it('should strip @client fields only if client resolvers specified', async () => {
     const query = gql`
       {
         field @client

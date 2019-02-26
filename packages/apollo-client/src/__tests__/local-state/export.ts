@@ -19,6 +19,7 @@ describe('@client @export tests', () => {
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),
+        resolvers: {},
       });
       cache.writeData({ data: { field: 1 } });
 
@@ -47,6 +48,7 @@ describe('@client @export tests', () => {
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),
+        resolvers: {},
       });
 
       cache.writeData({
@@ -198,6 +200,7 @@ describe('@client @export tests', () => {
     const client = new ApolloClient({
       cache,
       link,
+      resolvers: {},
     });
 
     cache.writeData({
@@ -259,6 +262,7 @@ describe('@client @export tests', () => {
       const client = new ApolloClient({
         cache,
         link,
+        resolvers: {},
       });
 
       cache.writeData({
@@ -307,6 +311,7 @@ describe('@client @export tests', () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
+      resolvers: {},
     });
 
     return client.query({ query }).then(({ data }: any) => {
@@ -360,6 +365,7 @@ describe('@client @export tests', () => {
       const client = new ApolloClient({
         cache,
         link,
+        resolvers: {},
       });
 
       cache.writeData({
@@ -548,6 +554,7 @@ describe('@client @export tests', () => {
       const client = new ApolloClient({
         cache,
         link,
+        resolvers: {},
       });
 
       cache.writeData({
@@ -599,6 +606,7 @@ describe('@client @export tests', () => {
       const client = new ApolloClient({
         cache,
         link,
+        resolvers: {},
       });
 
       cache.writeData({

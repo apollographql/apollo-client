@@ -1,22 +1,24 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (vNext, minor bump)
+## Apollo Client (2.5.0)
 
-### Apollo Client (vNext, minor bump)
+## Apollo Client (2.5.0)
 
-- Un-revert "Improve (and shorten) query polling implementation.
-  ([#4243](https://github.com/apollographql/apollo-client/pull/4243))" <br/>
-  [PR #4337](https://github.com/apollographql/apollo-client/pull/4337)
-
-## Apollo Client (vNext)
-
-- Fixes an issue where the `QueryManager` was accidentally returning cached 
+- Introduces new local state management features (client-side schema
+  and local resolver / `@client` support) and many overall code improvements,
+  to help reduce the Apollo Client bundle size.  <br/>
+  [#4361](https://github.com/apollographql/apollo-client/pull/4361)
+- Revamped CJS and ESM bundling approach with Rollup.  <br/>
+  [@rosskevin](https://github.com/rosskevin) in [#4261](https://github.com/apollographql/apollo-client/pull/4261)
+- Fixes an issue where the `QueryManager` was accidentally returning cached
   data for `network-only` queries.  <br/>
   [@danilobuerger](https://github.com/danilobuerger) in [#4352](https://github.com/apollographql/apollo-client/pull/4352)
 - Fixed an issue in the repo `.gitattributes` that was causing binary files
-  to have their line endings adjusted, and cleaned up corrupted documentation 
+  to have their line endings adjusted, and cleaned up corrupted documentation
   images (ref: https://github.com/apollographql/apollo-client/pull/4232).  <br/>
   [@rajington](https://github.com/rajington) in [#4438](https://github.com/apollographql/apollo-client/pull/4438)
+- Improve (and shorten) query polling implementation.  <br/>
+  [PR #4337](https://github.com/apollographql/apollo-client/pull/4337)
 
 
 ## Apollo Client (2.4.13)

@@ -1,6 +1,6 @@
 {
   "name": "apollo-boost",
-  "version": "0.1.28",
+  "version": "0.3.0-rc.3",
   "description": "The easiest way to get started with Apollo Client",
   "author": "Peggy Rayzis <peggy@apollographql.com>",
   "contributors": [
@@ -9,9 +9,8 @@
     "James Burgess <jamesmillerburgess@gmail.com>"
   ],
   "license": "MIT",
-  "main": "./lib/index.umd.js",
-  "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
+  "main": "./lib/bundle.cjs.js",
+  "module": "./lib/bundle.esm.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "repository": {
@@ -24,18 +23,16 @@
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
     "prepare": "npm run lint && npm run build",
-    "test": "jest",
+    "test": "tsc -p tsconfig.json --noEmit && jest",
     "coverage": "jest --coverage",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
-    "build": "tsc -p .",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
     "watch": "tsc -w -p .",
-    "clean": "rm -rf coverage/* && rm -rf lib/*",
+    "clean": "rm -rf coverage/* lib/*",
     "prepublishOnly": "npm run build",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
-    "filesize": "npm run minify",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup-bundle.config.js"
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js"
   },
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",
@@ -44,24 +41,11 @@
     "apollo-link": "^1.0.6",
     "apollo-link-error": "^1.0.3",
     "apollo-link-http": "^1.3.1",
-    "apollo-link-state": "^0.4.0",
     "graphql-tag": "^2.4.2",
+    "ts-invariant": "^0.2.1",
     "tslib": "^1.9.3"
   },
   "peerDependencies": {
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "testURL": "http://localhost"
   }
 }

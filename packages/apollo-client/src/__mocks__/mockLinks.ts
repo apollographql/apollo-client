@@ -3,7 +3,7 @@ import {
   ApolloLink,
   FetchResult,
   Observable,
-  // Observer,
+  GraphQLRequest,
 } from 'apollo-link';
 
 import { print } from 'graphql/language/printer';
@@ -25,7 +25,7 @@ export function mockObservableLink(): MockSubscriptionLink {
 }
 
 export interface MockedResponse {
-  request: Operation;
+  request: GraphQLRequest;
   result?: FetchResult;
   error?: Error;
   delay?: number;
@@ -82,14 +82,17 @@ export class MockLink extends ApolloLink {
     }
 
     return new Observable<FetchResult>(observer => {
-      let timer = setTimeout(() => {
-        if (error) {
-          observer.error(error);
-        } else {
-          if (result) observer.next(result);
-          observer.complete();
-        }
-      }, delay ? delay : 0);
+      let timer = setTimeout(
+        () => {
+          if (error) {
+            observer.error(error);
+          } else {
+            if (result) observer.next(result);
+            observer.complete();
+          }
+        },
+        delay ? delay : 0,
+      );
 
       return () => {
         clearTimeout(timer);
@@ -116,7 +119,7 @@ export class MockSubscriptionLink extends ApolloLink {
         unsubscribe: () => {
           this.unsubscribers.forEach(x => x());
         },
-        closed: false
+        closed: false,
       };
     });
   }
@@ -145,7 +148,7 @@ export class MockSubscriptionLink extends ApolloLink {
   }
 }
 
-function requestToKey(request: Operation): string {
+function requestToKey(request: GraphQLRequest): string {
   const queryString = request.query && print(request.query);
 
   return JSON.stringify({

@@ -1,11 +1,10 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.4.13",
+  "version": "2.5.0-rc.3",
   "description": "A simple yet functional GraphQL client.",
-  "main": "./lib/bundle.umd.js",
-  "module": "./lib/index.js",
-  "jsnext:main": "./lib/index.js",
+  "main": "./lib/bundle.cjs.js",
+  "module": "./lib/bundle.esm.js",
   "typings": "./lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
@@ -16,19 +15,18 @@
     "test": "tsc -p tsconfig.test.json --noEmit && jest",
     "benchmark": "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect": "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
-    "filesize": "npm run minify",
     "type-check": "flow check",
-    "build": "tsc",
-    "build:benchmark": "tsc -p tsconfig.benchmark.json",
-    "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
-    "watch": "tsc -w",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
+    "prebuild": "npm run clean",
+    "build": "tsc -b .",
     "postbuild": "npm run bundle",
+    "build:benchmark": "tsc -p tsconfig.benchmark.json",
+    "watch": "../../node_modules/tsc-watch/index.js --onSuccess \"npm run postbuild\"",
+    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "testonly": "jest",
     "preanalyze": "npm run build",
     "analyze": "webpack -p --config analyze/webpack.config.js",
-    "clean": "rm -rf coverage/* && rm -rf lib/*"
+    "clean": "rm -rf coverage/* lib/*"
   },
   "repository": {
     "type": "git",
@@ -53,26 +51,11 @@
     "apollo-link-dedup": "^1.0.0",
     "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
+    "ts-invariant": "^0.2.1",
     "tslib": "^1.9.3",
     "zen-observable": "^0.8.0"
   },
   "peerDependencies": {
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "setupFiles": [
-      "<rootDir>/scripts/tests.js"
-    ],
-    "testURL": "http://localhost"
   }
 }

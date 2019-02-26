@@ -15,7 +15,6 @@ const { hasOwnProperty } = Object.prototype;
 // true & false, and the inferred type ends up as unknown in many cases),
 // in addition to being nearly impossible to explain/understand.
 export type TupleToIntersection<T extends any[]> =
-  T extends [] ? {} :
   T extends [infer A] ? A :
   T extends [infer A, infer B] ? A & B :
   T extends [infer A, infer B, infer C] ? A & B & C :

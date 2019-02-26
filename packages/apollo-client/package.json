@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.5.0-rc.2",
+  "version": "2.5.0-rc.3",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.cjs.js",
   "module": "./lib/bundle.esm.js",

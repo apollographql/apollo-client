@@ -948,6 +948,80 @@ If you open up Apollo Client Devtools and click on the `GraphiQL` tab, you'll be
 
 ![GraphiQL Console](../assets/client-schema.png)
 
+<h2 id="advanced">Advanced</h2>
+
+<h3 id="code-splitting">Code splitting</h3>
+
+Depending on the complexity and size of your local resolvers, you might not always want to define them up front, when you create your initial `ApolloClient` instance. If you have local resolvers that are only needed in a specific part of your application, you can leverage Apollo Client's [`addResolvers`](#apollo-client) and [`setResolvers`](#apollo-client) functions to adjust your resolver map at any point. This can be really useful when leveraging techniques like route based code-splitting, using something like [`react-loadable`](https://github.com/jamiebuilds/react-loadable).
+
+Let's say we're building a messaging app and have a `/stats` route that is used return the total number of messages stored locally. If we use `react-loadable` to load our `Stats` component like:
+
+```js
+import Loadable from 'react-loadable';
+
+import Loading from './components/Loading';
+
+export const Stats = Loadable({
+  loader: () => import('./components/stats/Stats'),
+  loading: Loading,
+});
+```
+
+and wait until our `Stats` component is called to define our local resolvers (using `addResolvers`):
+
+```js
+import React from 'react';
+import { ApolloConsumer, Query } from 'react-apollo';
+import gql from 'graphql-tag';
+
+const GET_MESSAGE_COUNT = gql`
+  {
+    messageCount @client {
+      total
+    }
+  }
+`;
+
+const resolvers = {
+  Query: {
+    messageCount: (_, args, { cache }) => {
+      // ... calculate and return the number of messages in
+      // the cache ...
+      return {
+        total: 123,
+        __typename: 'MessageCount',
+      };
+    },
+  },
+};
+
+const MessageCount = () => {
+  return (
+    <ApolloConsumer>
+      {(client) => {
+        client.addResolvers(resolvers);
+        return (
+          <Query query={GET_MESSAGE_COUNT}>
+            {({ loading, data: { messageCount } }) => {
+              if (loading) return 'Loading ...';
+              return (
+                <p>
+                  Total number of messages: {messageCount.total}
+                </p>
+              );
+            }}
+          </Query>
+        );
+      }}
+    </ApolloConsumer>
+  );
+};
+
+export default MessageCount;
+```
+
+our local resolver code will only be included in the bundle a user downloads when (if) they access `/stats`. It won't be included in the initial application bundle, which helps keep the size of our initial bundle down, and ultimately helps with download and application startup times.
+
 <h2 id="migrating">Migrating from `apollo-link-state`</h2>
 
 The [`apollo-link-state`](https://github.com/apollographql/apollo-link-state) project was the first to bring local state handling into the Apollo ecosystem. Handling local resolvers through the addition of an `ApolloLink` was a great starting point, and proved that `@client` based queries make sense, and work really well for local state management.

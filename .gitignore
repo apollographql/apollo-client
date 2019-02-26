@@ -54,3 +54,5 @@ docs/public/*
 .idea/
 
 junit.xml
+
+.rpt2_cache

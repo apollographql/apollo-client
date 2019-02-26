@@ -278,7 +278,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
    */
-  public watchQuery<T, TVariables = OperationVariables>(
+  public watchQuery<T = any, TVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables>,
   ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
@@ -309,7 +309,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query<T, TVariables = OperationVariables>(
+  public query<T = any, TVariables = OperationVariables>(
     options: QueryOptions<TVariables>,
   ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
@@ -339,7 +339,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T, TVariables = OperationVariables>(
+  public mutate<T = any, TVariables = OperationVariables>(
     options: MutationOptions<T, TVariables>,
   ): Promise<FetchResult<T>> {
     if (this.defaultOptions.mutate) {
@@ -359,7 +359,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public subscribe<T = any, TVariables = OperationVariables>(
     options: SubscriptionOptions<TVariables>,
   ): Observable<T> {
-    return this.initQueryManager().startGraphQLSubscription(options);
+    return this.initQueryManager().startGraphQLSubscription<T>(options);
   }
 
   /**
@@ -371,11 +371,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param optimistic Set to `true` to allow `readQuery` to return
    * optimistic results. Is `false` by default.
    */
-  public readQuery<T, TVariables = OperationVariables>(
+  public readQuery<T = any, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
   ): T | null {
-    return this.initProxy().readQuery<T>(options, optimistic);
+    return this.initProxy().readQuery<T, TVariables>(options, optimistic);
   }
 
   /**
@@ -392,11 +392,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param optimistic Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
    */
-  public readFragment<T, TVariables = OperationVariables>(
+  public readFragment<T = any, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
   ): T | null {
-    return this.initProxy().readFragment<T>(options, optimistic);
+    return this.initProxy().readFragment<T, TVariables>(options, optimistic);
   }
 
   /**
@@ -407,7 +407,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public writeQuery<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
   ): void {
-    const result = this.initProxy().writeQuery(options);
+    const result = this.initProxy().writeQuery<TData, TVariables>(options);
     this.initQueryManager().broadcastQueries();
     return result;
   }
@@ -426,7 +426,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public writeFragment<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
   ): void {
-    const result = this.initProxy().writeFragment(options);
+    const result = this.initProxy().writeFragment<TData, TVariables>(options);
     this.initQueryManager().broadcastQueries();
     return result;
   }
@@ -444,7 +444,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public writeData<TData = any>(
     options: DataProxy.WriteDataOptions<TData>,
   ): void {
-    const result = this.initProxy().writeData(options);
+    const result = this.initProxy().writeData<TData>(options);
     this.initQueryManager().broadcastQueries();
     return result;
   }

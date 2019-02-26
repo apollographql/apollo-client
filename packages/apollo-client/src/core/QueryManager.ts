@@ -972,9 +972,9 @@ export class QueryManager<TStore> {
     return queryId;
   }
 
-  public startGraphQLSubscription(
+  public startGraphQLSubscription<T = any>(
     options: SubscriptionOptions,
-  ): Observable<any> {
+  ): Observable<T> {
     const { query } = options;
     const isCacheEnabled = !(
       options.fetchPolicy && options.fetchPolicy === 'no-cache'

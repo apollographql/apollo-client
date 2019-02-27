@@ -1,8 +1,21 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (2.5.0)
+## Apollo Client (vNext)
+
+### apollo-client (vNext)
+
+- Fixes `A tuple type element list cannot be empty` issue.  <br/>
+  [@benjamn](https://github.com/benjamn) in [#4502](https://github.com/apollographql/apollo-client/pull/4502)
+
+### graphql-anywhere (vNext)
+
+- Adds back the missing `graphql-anywhere/lib/async` entry point.  <br/>
+  [@benjamn](https://github.com/benjamn) in [#4503](https://github.com/apollographql/apollo-client/pull/4503)
+
 
 ## Apollo Client (2.5.0)
+
+### Apollo Client (2.5.0)
 
 - Introduces new local state management features (client-side schema
   and local resolver / `@client` support) and many overall code improvements,

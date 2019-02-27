@@ -1,13 +1,13 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (vNext)
+## Apollo Client 2.5.1
 
-### apollo-client (vNext)
+### apollo-client 2.5.1
 
 - Fixes `A tuple type element list cannot be empty` issue.  <br/>
   [@benjamn](https://github.com/benjamn) in [#4502](https://github.com/apollographql/apollo-client/pull/4502)
 
-### graphql-anywhere (vNext)
+### graphql-anywhere 4.2.1
 
 - Adds back the missing `graphql-anywhere/lib/async` entry point.  <br/>
   [@benjamn](https://github.com/benjamn) in [#4503](https://github.com/apollographql/apollo-client/pull/4503)

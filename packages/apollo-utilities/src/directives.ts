@@ -1,5 +1,5 @@
-// Provides the methods that allow QueryManager to handle
-// the `skip` and `include` directives within GraphQL.
+// Provides the methods that allow QueryManager to handle the `skip` and
+// `include` directives within GraphQL.
 import {
   FieldNode,
   SelectionNode,
@@ -10,6 +10,8 @@ import {
 } from 'graphql';
 
 import { visit } from 'graphql/language/visitor';
+
+import { invariant } from 'ts-invariant';
 
 import { argumentsObjectFromField } from './storeUtils';
 
@@ -53,33 +55,31 @@ export function shouldInclude(
     //evaluate the "if" argument and skip (i.e. return undefined) if it evaluates to true.
     const directiveArguments = directive.arguments || [];
     const directiveName = directive.name.value;
-    if (directiveArguments.length !== 1) {
-      throw new Error(
-        `Incorrect number of arguments for the @${directiveName} directive.`,
-      );
-    }
+
+    invariant(
+      directiveArguments.length === 1,
+      `Incorrect number of arguments for the @${directiveName} directive.`,
+    );
 
     const ifArgument = directiveArguments[0];
-    if (!ifArgument.name || ifArgument.name.value !== 'if') {
-      throw new Error(`Invalid argument for the @${directiveName} directive.`);
-    }
+    invariant(
+      ifArgument.name && ifArgument.name.value === 'if',
+      `Invalid argument for the @${directiveName} directive.`,
+    );
 
     const ifValue = directiveArguments[0].value;
     let evaledValue: boolean = false;
     if (!ifValue || ifValue.kind !== 'BooleanValue') {
       // means it has to be a variable value if this is a valid @skip or @include directive
-      if (ifValue.kind !== 'Variable') {
-        throw new Error(
-          `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
-        );
-      } else {
-        evaledValue = variables[(ifValue as VariableNode).name.value];
-        if (evaledValue === undefined) {
-          throw new Error(
-            `Invalid variable referenced in @${directiveName} directive.`,
-          );
-        }
-      }
+      invariant(
+        ifValue.kind === 'Variable',
+        `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
+      );
+      evaledValue = variables[(ifValue as VariableNode).name.value];
+      invariant(
+        evaledValue !== void 0,
+        `Invalid variable referenced in @${directiveName} directive.`,
+      );
     } else {
       evaledValue = (ifValue as BooleanValueNode).value;
     }
@@ -111,5 +111,13 @@ export function getDirectiveNames(doc: DocumentNode) {
 export function hasDirectives(names: string[], doc: DocumentNode) {
   return getDirectiveNames(doc).some(
     (name: string) => names.indexOf(name) > -1,
+  );
+}
+
+export function hasClientExports(document: DocumentNode) {
+  return (
+    document &&
+    hasDirectives(['client'], document) &&
+    hasDirectives(['export'], document)
   );
 }

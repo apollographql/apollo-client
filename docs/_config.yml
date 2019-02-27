@@ -4,7 +4,8 @@ propertytitle: Using GraphQL with Apollo Client
 subtitle: React Guide
 description: A guide to using the Apollo GraphQL Client with React.
 versions:
-  - '1'
+  - '2.5'
+  - '2.4'
 
 content_root: docs/source
 public_dir: public/docs/react

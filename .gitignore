@@ -1,5 +1,6 @@
 # fs
 .DS_Store
+.rpt2_cache
 
 # Logs
 logs
@@ -54,3 +55,5 @@ docs/public/*
 .idea/
 
 junit.xml
+
+.rpt2_cache

@@ -46,8 +46,7 @@ node -e "\
   delete package.scripts; \
   delete package.options; \
   package.main = 'bundle.umd.js'; \
-  package.module = 'index.js'; \
-  package['jsnext:main'] = 'index.js'; \
+  package.module = 'bundle.esm.js'; \
   package.typings = 'index.d.ts'; \
   package.dependencies['apollo-cache'] = apolloCacheVersion; \
   package.dependencies['apollo-utilities'] = apolloUtilitiesVersion; \

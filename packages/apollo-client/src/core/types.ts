@@ -1,11 +1,13 @@
+import { FetchResult } from 'apollo-link';
 import { DocumentNode, GraphQLError } from 'graphql';
+
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
-import { FetchResult } from 'apollo-link';
 
 export type QueryListener = (
   queryStoreValue: QueryStoreValue,
   newData?: any,
+  forceResolvers?: boolean,
 ) => void;
 
 export type OperationVariables = { [key: string]: any };
@@ -43,3 +45,14 @@ export type MutationQueryReducer<T> = (
 export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
+
+export interface Resolvers {
+  [key: string]: {
+    [field: string]: (
+      rootValue?: any,
+      args?: any,
+      context?: any,
+      info?: any,
+    ) => any;
+  };
+}

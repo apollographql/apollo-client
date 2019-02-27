@@ -9,6 +9,8 @@ import { addTypenameToDocument } from 'apollo-utilities';
 
 import { wrap } from 'optimism';
 
+import { invariant, InvariantError } from 'ts-invariant';
+
 import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {
   ApolloReducerConfig,
@@ -97,14 +99,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     // backwards compat
     if ((this.config as any).customResolvers) {
-      console.warn(
+      invariant.warn(
         'customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version.',
       );
       this.config.cacheRedirects = (this.config as any).customResolvers;
     }
 
     if ((this.config as any).cacheResolvers) {
-      console.warn(
+      invariant.warn(
         'cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.',
       );
       this.config.cacheRedirects = (this.config as any).cacheResolvers;
@@ -222,7 +224,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    throw new Error(`eviction is not implemented on InMemory Cache`);
+    throw new InvariantError(`eviction is not implemented on InMemory Cache`);
   }
 
   public reset(): Promise<void> {

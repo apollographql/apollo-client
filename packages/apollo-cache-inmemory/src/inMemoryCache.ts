@@ -183,6 +183,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       rootId: options.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
       previousResult: options.previousResult,
+      returnPartialData: options.returnPartialData,
       config: this.config,
     });
   }

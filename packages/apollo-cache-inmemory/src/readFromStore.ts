@@ -167,7 +167,12 @@ export class StoreReader {
   public readQueryFromStore<QueryType>(
     options: ReadQueryOptions,
   ): QueryType {
-    const optsPatch = { returnPartialData: false };
+    const optsPatch = {};
+    // If `returnPartialData: true` wasn't _explicitly_ passed here,
+    // set it to false. (Otherwise `diffQueryAgainstStore`'s default of `true` would apply.)
+    if (!options.returnPartialData) {
+      optsPatch.returnPartialData = false;
+    }
 
     return this.diffQueryAgainstStore<QueryType>({
       ...options,

@@ -249,6 +249,90 @@ client.writeQuery({
 });
 ```
 
+<h2 id="custom_cache">Writing a Custom Cache</h2>
+It is possible to drop in your own custom cache if you decide to opt out of the `InMemoryCache` implementation. To supply your own implementation, it is recommended that you extend the abstract base class `ApolloCache` from the `apollo-cache` package and implement the core caching API to providing basic caching functionality. In addition to the core API there are 2 additional APIs that you will need to implement depending upon the features of Apollo used in your application.
+
+<h3 id="core_cache_api">Core Cache API</h3>
+All subclasses of `ApolloCache` at a minimum must implement the core cache API, which includes
+
+<dl>
+<dt>`read(query: ReadOptions): TResult | null`</dt>
+<dd>Returns the data from the cache matching the given read options. This is the main method which `readQuery` and `readFragment` use to fetch the cached results of a given GraphQL query or fragment. `readQuery` and `readFragment` are already implemented on the `ApolloCache` base class, so all that’s required is a read implementation.</dd>
+<dt>`write(write: WriteOptions): void`</dt>
+<dd>The main write method which `writeQuery` and `writeFragment` use to write the results of a GraphQL query or fragment to the store. Just like `read`, `ApolloCache` provides implementations for `writeQuery` and `writeFragment` so all that’s needed is a write implementation.</dd>
+<dt>`diff(query: DiffOptions): DiffResult`</dt>
+<dd>Method used by the `ApolloClient` to return as many cached fields for a given GraphQL query as possible. It returns a flag indicating whether or not all the query’s fields were present in the cache. If any are missing, the `ApolloClient` will need to fetch the additional fields from the server.</dd>
+<dt>`watch(watch: WatchOptions): () => void`</dt>
+<dd>Takes a callback which is executed whenever any data for a given GraphQL query is updated in the cache. If an unrelated query returns updated fields for the same object as a previous query this allows the UI to re-render with the new data without making an explicit call to the client. Returns a callback which, when called, removes the watcher.</dd>
+<dt>`reset(): Promise`</dt>
+<dd>Clears the cache contents.</dd>
+</dl>
+
+**Typescript interfaces/types:**
+
+```ts
+import { DocumentNode } from "graphql";
+
+interface Query<TVariables> {
+    query: DocumentNode;
+    variables?: TVariables;
+}
+
+interface ReadOptions<TVariables> extends Query<TVariables> {
+    rootId?: String;
+    previousResult?: any;
+    optimistic: boolean;
+}
+
+interface WriteOptions<TResult, TVariables> extends Query<TVariables> {
+    dataId: string;
+    result: TResult;
+}
+
+interface DiffOptions<TVariables> extends ReadOptions<TVariables> {
+    returnPartialData?: boolean;
+}
+
+interface DiffResult<TResult> {
+    result?: TResult;
+    complete?: boolean;
+}
+
+interface WatchOptions<TVariables> extends ReadOptions<TVariables> {
+    callback: (newData: any) => void;
+}
+```
+
+<h3 id="offline-api">Offline API</h3>
+To include offline and server side rendering support, you must also implement the offline/ssr API
+
+<dl>
+<dt>`extract(optimistic?: boolean): TSerialized`</dt>
+<dd>Returns a serialized version of the `ApolloCache` which will be passed to `restore` client-side. The exact serialized format doesn’t matter so long as `restore` properly de-serializes it.</dd>
+<dt>`restore(serializedState: TSerialized): ApolloCache`</dt>
+<dd>Takes the output of `extract` and uses it to populate the cache with the given serialized data.</dd>
+</dl>
+
+<h3 id="transaction-api">Transaction API</h3>
+If you need to support mutations you will need to implement the transactional API used for supporting the [optimistic UI feature of Apollo](../features/optimistic-ui.html). A "transaction" is a function which takes a cache instance and performs a batched update of the cache. By keeping a record of transactions executed on a cache the transaction API can keep track of the end result of the updates such that the cache can be rolled back to any state prior to a transaction.
+
+<dl>
+<dt>`recordOptimisticTransaction(transaction: Transaction, id: string)`</dt>
+<dd>Records an optimistic transaction, the result of which will be returned on any `read` calls with the `optimistic` flag set to `true`. `InMemoryCache` implements this by creating a copy of the cache contents which will contain the optimistic updates. These can then either be committed by calling `performTransaction` or rolled back via `removeOptimistic`.</dd>
+<dt>`performTransation(transation: Transaction)`</dt>
+<dd>Executes a transaction against a cache in a persistent way. `read` will return the results of this transaction regardless of the `optimistic` flag. This method is used to commit the results of a successful mutation after the data is updated on the server.</dd>
+<dt>`removeOptimistic(id: string)`</dt>
+<dd>Rolls back an optimistic transaction with the given id such as in the case of a failed mutation.</dd>
+</dl>
+
+
+**Typescript interfaces/types:**
+
+```ts
+type Transaction<T> = (c: ApolloCache<T>) => void;
+```
+
+
 <h2 id="recipes">Recipes</h2>
 
 Here are some common situations where you would need to access the cache directly. If you're manipulating the cache in an interesting way and would like your example to be featured, please send in a pull request!

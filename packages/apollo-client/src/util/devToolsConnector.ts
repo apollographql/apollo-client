@@ -1,21 +1,21 @@
 import ApolloClient from '..';
 
-interface CollectionItem {
+declare type CollectionItem<TCacheShape> = {
   id: number;
   name: string | undefined;
-  client: ApolloClient;
+  client: ApolloClient<TCacheShape>;
 }
 
-export class DevToolsConnector {
+export class DevToolsConnector<TCacheShape> {
   private beacon: number = 0;
   private listeners: Array<Function> = [];
-  private collection: Array<CollectionItem> = [];
+  private collection: Array<CollectionItem<TCacheShape>> = [];
 
   constructor() {
     this.collection = [];
   }
 
-  public register(name: string | undefined, client: ApolloClient) {
+  public register(name: string | undefined, client: ApolloClient<TCacheShape>) {
     this.beacon += 1;
     this.collection.push({ id: this.beacon, name, client });
 

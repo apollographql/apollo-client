@@ -139,13 +139,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     if (!link || !cache) {
-      throw new InvariantError(`
-        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
-        This is part of the required upgrade when migrating from Apollo Client 1.0 to Apollo Client 2.0.
-        For more information, please visit:
-          https://www.apollographql.com/docs/react/basics/setup.html
-        to help you get started.
-      `);
+      throw new InvariantError(
+        "In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.\n" +
+        "These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.\n" +
+        "For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
+      );
     }
 
     const supportedCache = new Map<DocumentNode, DocumentNode>();

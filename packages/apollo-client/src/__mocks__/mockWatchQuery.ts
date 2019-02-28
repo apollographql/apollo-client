@@ -10,6 +10,6 @@ export default (...mockedResponses: MockedResponse[]): ObservableQuery<any> => {
   return queryManager.watchQuery({
     query: firstRequest.query!,
     variables: firstRequest.variables,
-    notifyOnNetworkStatusChange: false, // XXX might not always be the right option. Set for legacy reasons.
+    notifyOnNetworkStatusChange: false // XXX might not always be the right option. Set for legacy reasons.
   });
 };

@@ -4,7 +4,7 @@ export function filterInPlace<T>(
   context?: any,
 ): T[] {
   let target = 0;
-  array.forEach(function(elem, i) {
+  array.forEach(function (elem, i) {
     if (test.call(this, elem, i, array)) {
       array[target++] = elem;
     }

@@ -1626,7 +1626,7 @@ describe('QueryManager', () => {
       queryManager.mutate({
         // Bamboozle TypeScript into letting us do this
         mutation: ('string' as any) as DocumentNode,
-      }),
+      })
     ).rejects.toThrow(/wrap the query string in a "gql" tag/);
 
     expect(() => {
@@ -3526,7 +3526,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it.only('should only refetch once when we refetch observable queries', done => {
+    it.only('should only refetch once when we refetch observable queries', (done) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {

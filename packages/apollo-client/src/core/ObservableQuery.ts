@@ -338,8 +338,7 @@ export class ObservableQuery<
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     // early return if no update Query
-    invariant(
-      fetchMoreOptions.updateQuery,
+    invariant(fetchMoreOptions.updateQuery,
       'updateQuery option is required. This function defines how to update the query data with the new results.',
     );
 

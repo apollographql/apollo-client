@@ -7,6 +7,8 @@ version: 2.4
 versions:
   - '2.5'
   - '2.4'
+versioned-netlify-redirects:
+  netlify_site_id: apollo-client-docs
 
 content_root: docs/source
 public_dir: public/docs/react

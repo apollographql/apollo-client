@@ -21,6 +21,7 @@ import {
   shouldInclude,
   toIdValue,
   mergeDeepArray,
+  maybeDeepFreeze,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -93,15 +94,24 @@ type ExecSelectionSetOptions = {
   execContext: ExecContext;
 };
 
+export interface StoreReaderConfig {
+  cacheKeyRoot?: CacheKeyNode;
+  freezeResults?: boolean;
+};
+
 export class StoreReader {
-  constructor(
-    private cacheKeyRoot = new CacheKeyNode,
-  ) {
-    const reader = this;
+  private freezeResults: boolean;
+
+  constructor({
+    cacheKeyRoot = new CacheKeyNode,
+    freezeResults = false,
+  }: StoreReaderConfig = {}) {
     const {
       executeStoreQuery,
       executeSelectionSet,
-    } = reader;
+    } = this;
+
+    this.freezeResults = freezeResults;
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
       return executeStoreQuery.call(this, options);
@@ -117,7 +127,7 @@ export class StoreReader {
         // underlying store is capable of tracking dependencies and invalidating
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
-          return reader.cacheKeyRoot.lookup(
+          return cacheKeyRoot.lookup(
             query,
             contextValue.store,
             fragmentMatcher,
@@ -138,7 +148,7 @@ export class StoreReader {
         execContext,
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
-          return reader.cacheKeyRoot.lookup(
+          return cacheKeyRoot.lookup(
             selectionSet,
             execContext.contextValue.store,
             execContext.fragmentMatcher,
@@ -376,6 +386,10 @@ export class StoreReader {
     // defensive shallow copies than necessary.
     finalResult.result = mergeDeepArray(objectsToMerge);
 
+    if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+      Object.freeze(finalResult.result);
+    }
+
     return finalResult;
   }
 
@@ -417,6 +431,9 @@ export class StoreReader {
     // Handle all scalar types here
     if (!field.selectionSet) {
       assertSelectionSetForIdValue(field, readStoreResult.result);
+      if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+        maybeDeepFreeze(readStoreResult);
+      }
       return readStoreResult;
     }
 
@@ -494,6 +511,10 @@ export class StoreReader {
 
       return item;
     });
+
+    if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+      Object.freeze(result);
+    }
 
     return { result, missing };
   }

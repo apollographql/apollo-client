@@ -8,12 +8,18 @@ import {
 } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
-import { removeConnectionDirectiveFromDocument } from 'apollo-utilities';
+import {
+  removeConnectionDirectiveFromDocument,
+} from 'apollo-utilities';
 
 import { invariant, InvariantError } from 'ts-invariant';
 
 import { QueryManager } from './core/QueryManager';
-import { ApolloQueryResult, OperationVariables, Resolvers } from './core/types';
+import {
+  ApolloQueryResult,
+  OperationVariables,
+  Resolvers,
+} from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
@@ -32,6 +38,7 @@ import {
 import { DataStore } from './data/store';
 
 import { version } from './version';
+
 
 export interface DefaultOptions {
   watchQuery?: ModifiableWatchQueryOptions;
@@ -324,7 +331,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     invariant(
       options.fetchPolicy !== 'cache-and-network',
-      'cache-and-network fetchPolicy can only be used with watchQuery',
+      'cache-and-network fetchPolicy can only be used with watchQuery'
     );
 
     // XXX Overwriting options is probably not the best way to do this long
@@ -533,8 +540,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     const { queryManager } = this;
     return Promise.resolve()
       .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())))
-      .then(() =>
-        queryManager ? queryManager.clearStore() : Promise.resolve(null),
+      .then(
+        () =>
+          queryManager ? queryManager.clearStore() : Promise.resolve(null),
       );
   }
 

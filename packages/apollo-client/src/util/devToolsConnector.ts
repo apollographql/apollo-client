@@ -4,7 +4,7 @@ declare type CollectionItem<TCacheShape> = {
   id: number;
   name: string | undefined;
   client: ApolloClient<TCacheShape>;
-}
+};
 
 export class DevToolsConnector<TCacheShape> {
   private beacon: number = 0;

@@ -146,7 +146,7 @@ export class QueryManager<TStore> {
 
     invariant(
       !fetchPolicy || fetchPolicy === 'no-cache',
-      "fetchPolicy for mutations currently only supports the 'no-cache' policy"
+      "fetchPolicy for mutations currently only supports the 'no-cache' policy",
     );
 
     const mutationId = this.generateQueryId();
@@ -180,20 +180,11 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    const updatedVariables: OperationVariables =
-      hasClientExports(mutation)
-        ? await this.localState.addExportedVariables(
-            mutation,
-            variables,
-            context,
-          )
-        : variables;
+    const updatedVariables: OperationVariables = hasClientExports(mutation)
+      ? await this.localState.addExportedVariables(mutation, variables, context)
+      : variables;
 
-    this.mutationStore.initMutation(
-      mutationId,
-      mutation,
-      updatedVariables,
-    );
+    this.mutationStore.initMutation(mutationId, mutation, updatedVariables);
 
     this.dataStore.markMutationInit({
       mutationId,
@@ -390,10 +381,9 @@ export class QueryManager<TStore> {
     const cache = this.dataStore.getCache();
     const query = cache.transformDocument(options.query);
 
-    const updatedVariables: OperationVariables =
-      hasClientExports(query)
-        ? await this.localState.addExportedVariables(query, variables, context)
-        : variables;
+    const updatedVariables: OperationVariables = hasClientExports(query)
+      ? await this.localState.addExportedVariables(query, variables, context)
+      : variables;
 
     const updatedOptions: WatchQueryOptions = {
       ...options,
@@ -1065,17 +1055,18 @@ export class QueryManager<TStore> {
               });
             }
             complete = true;
-          }
+          },
         };
 
         (async () => {
-          const updatedVariables: OperationVariables =
-            hasClientExports(transformedDoc)
-              ? await this.localState.addExportedVariables(
-                  transformedDoc,
-                  variables
-                )
-              : variables;
+          const updatedVariables: OperationVariables = hasClientExports(
+            transformedDoc,
+          )
+            ? await this.localState.addExportedVariables(
+                transformedDoc,
+                variables,
+              )
+            : variables;
           const serverQuery = this.localState.serverQuery(transformedDoc);
           if (serverQuery) {
             const operation = this.buildOperationForLink(
@@ -1171,7 +1162,7 @@ export class QueryManager<TStore> {
       );
       invariant(
         foundObserveableQuery,
-        `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`
+        `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`,
       );
       observableQuery = foundObserveableQuery!;
     } else {
@@ -1495,11 +1486,14 @@ export class QueryManager<TStore> {
   }
 
   // Map from client ID to { interval, options }.
-  private pollingInfoByQueryId = new Map<string, {
-    interval: number;
-    lastPollTimeMs: number;
-    options: WatchQueryOptions;
-  }>();
+  private pollingInfoByQueryId = new Map<
+    string,
+    {
+      interval: number;
+      lastPollTimeMs: number;
+      options: WatchQueryOptions;
+    }
+  >();
 
   private nextPoll: {
     time: number;
@@ -1596,7 +1590,7 @@ export class QueryManager<TStore> {
                 // and this code has historically silenced errors, which is not
                 // the behavior of .finally(updateLastPollTime).
                 updateLastPollTime,
-                updateLastPollTime
+                updateLastPollTime,
               );
             }
           }

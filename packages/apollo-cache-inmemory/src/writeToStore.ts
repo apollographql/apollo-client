@@ -365,9 +365,9 @@ export class StoreWriter {
           !generated || escapedId.generated || typenameChanged,
           `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${
             escapedId.id
-          } for this object. The selectionSet that was trying to be written is:\n${
-            JSON.stringify(field)
-          }`,
+          } for this object. The selectionSet that was trying to be written is:\n${JSON.stringify(
+            field,
+          )}`,
         );
 
         // checks if we "lost" the typename
@@ -375,9 +375,11 @@ export class StoreWriter {
           !hadTypename || hasTypename,
           `Store error: the application attempted to write an object with no provided typename but the store already contains an object with typename of ${
             escapedId.typename
-          } for the object of id ${escapedId.id}. The selectionSet that was trying to be written is:\n${
-            JSON.stringify(field)
-          }`,
+          } for the object of id ${
+            escapedId.id
+          }. The selectionSet that was trying to be written is:\n${JSON.stringify(
+            field,
+          )}`,
         );
 
         if (escapedId.generated) {

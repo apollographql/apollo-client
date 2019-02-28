@@ -57,7 +57,7 @@ describe('Basic functionality', () => {
           count: () => {
             subCounter += 1;
             return subCounter;
-          }
+          },
         },
       },
     });
@@ -81,7 +81,7 @@ describe('Basic functionality', () => {
       },
       complete() {
         done();
-      }
+      },
     });
   });
 });

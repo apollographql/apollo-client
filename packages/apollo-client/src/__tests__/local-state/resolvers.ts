@@ -734,7 +734,7 @@ describe('Resolving field aliases', () => {
 
   it(
     'should resolve @client fields using local resolvers and not have ' +
-    'their value overridden when a fragment is loaded',
+      'their value overridden when a fragment is loaded',
     () => {
       const query = gql`
         fragment LaunchDetails on Launch {
@@ -781,25 +781,28 @@ describe('Resolving field aliases', () => {
         },
       });
 
-      return client.query({ query }).then(({ data }) => {
-        // `isInCart` resolver is fired, returning `true` (which is then
-        // stored in the cache).
-        expect(data.launch.isInCart).toBe(true);
-      }).then(() => {
-        client.query({ query }).then(({ data }) => {
-          // When the same query fires again, `isInCart` should be pulled from
-          // the cache and have a value of `true`.
+      return client
+        .query({ query })
+        .then(({ data }) => {
+          // `isInCart` resolver is fired, returning `true` (which is then
+          // stored in the cache).
           expect(data.launch.isInCart).toBe(true);
+        })
+        .then(() => {
+          client.query({ query }).then(({ data }) => {
+            // When the same query fires again, `isInCart` should be pulled from
+            // the cache and have a value of `true`.
+            expect(data.launch.isInCart).toBe(true);
+          });
         });
-      });
-    }
+    },
   );
 });
 
 describe('Force local resolvers', () => {
   it(
     'should force the running of local resolvers marked with ' +
-    '`@client(always: true)` when using `ApolloClient.query`',
+      '`@client(always: true)` when using `ApolloClient.query`',
     async () => {
       const query = gql`
         query Author {
@@ -849,7 +852,7 @@ describe('Force local resolvers', () => {
 
   it(
     'should avoid running forced resolvers a second time when ' +
-    'loading results over the network (so not from the cache)',
+      'loading results over the network (so not from the cache)',
     async () => {
       const query = gql`
         query Author {
@@ -865,7 +868,7 @@ describe('Force local resolvers', () => {
           data: {
             author: {
               name: 'John Smith',
-              __typename: 'Author'
+              __typename: 'Author',
             },
           },
         }),
@@ -893,7 +896,7 @@ describe('Force local resolvers', () => {
 
   it(
     'should only force resolvers for fields marked with ' +
-    '`@client(always: true)`, not all `@client` fields',
+      '`@client(always: true)`, not all `@client` fields',
     async () => {
       const query = gql`
         query UserDetails {
@@ -935,8 +938,8 @@ describe('Force local resolvers', () => {
 
   it(
     'should force the running of local resolvers marked with ' +
-    '`@client(always: true)` when using `ApolloClient.watchQuery`',
-    (done) => {
+      '`@client(always: true)` when using `ApolloClient.watchQuery`',
+    done => {
       const query = gql`
         query IsUserLoggedIn {
           isUserLoggedIn @client(always: true)
@@ -957,8 +960,8 @@ describe('Force local resolvers', () => {
             isUserLoggedIn() {
               callCount += 1;
               return true;
-            }
-          }
+            },
+          },
         },
       });
 
@@ -976,18 +979,18 @@ describe('Force local resolvers', () => {
                   // isn't being forced.
                   expect(callCount).toBe(2);
                   done();
-                }
+                },
               });
-            }
+            },
           });
-        }
+        },
       });
     },
   );
 });
 
 describe('Async resolvers', () => {
-  it('should support async @client resolvers', async (done) => {
+  it('should support async @client resolvers', async done => {
     const query = gql`
       query Member {
         isLoggedIn @client
@@ -1005,70 +1008,71 @@ describe('Async resolvers', () => {
       },
     });
 
-    const { data: { isLoggedIn } } = await client.query({ query });
+    const {
+      data: { isLoggedIn },
+    } = await client.query({ query });
     expect(isLoggedIn).toBe(true);
     return done();
   });
 
-  it(
-    'should support async @client resolvers mixed with remotely resolved data',
-    async (done) => {
-      const query = gql`
-        query Member {
-          member {
-            name
-            sessionCount @client
-            isLoggedIn @client
-          }
+  it('should support async @client resolvers mixed with remotely resolved data', async done => {
+    const query = gql`
+      query Member {
+        member {
+          name
+          sessionCount @client
+          isLoggedIn @client
         }
-      `;
-
-      const testMember = {
-        name: 'John Smithsonian',
-        isLoggedIn: true,
-        sessionCount: 10,
       }
+    `;
 
-      const link = new ApolloLink(() =>
-        Observable.of({
-          data: {
-            member: {
-              name: testMember.name,
-              __typename: 'Member'
-            }
-          }
-        }),
-      );
+    const testMember = {
+      name: 'John Smithsonian',
+      isLoggedIn: true,
+      sessionCount: 10,
+    };
 
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-        resolvers: {
-          Member: {
-            isLoggedIn() {
-              return Promise.resolve(testMember.isLoggedIn);
-            },
-            sessionCount() {
-              return testMember.sessionCount;
-            },
+    const link = new ApolloLink(() =>
+      Observable.of({
+        data: {
+          member: {
+            name: testMember.name,
+            __typename: 'Member',
           },
         },
-      });
+      }),
+    );
 
-      const { data: { member } } = await client.query({ query });
-      expect(member.name).toBe(testMember.name);
-      expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
-      expect(member.sessionCount).toBe(testMember.sessionCount);
-      return done();
-    }
-  );
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Member: {
+          isLoggedIn() {
+            return Promise.resolve(testMember.isLoggedIn);
+          },
+          sessionCount() {
+            return testMember.sessionCount;
+          },
+        },
+      },
+    });
+
+    const {
+      data: { member },
+    } = await client.query({ query });
+    expect(member.name).toBe(testMember.name);
+    expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
+    expect(member.sessionCount).toBe(testMember.sessionCount);
+    return done();
+  });
 });
 
 describe('LocalState helpers', () => {
   describe('#shouldForceResolvers', () => {
     it(
       'should return true if the document contains any @client directives ' +
-      'with an `always` variable of true',
+        'with an `always` variable of true',
       () => {
         const localState = new LocalState({ cache: new InMemoryCache() });
         const query = gql`
@@ -1078,12 +1082,12 @@ describe('LocalState helpers', () => {
           }
         `;
         expect(localState.shouldForceResolvers(query)).toBe(true);
-      }
+      },
     );
 
     it(
       'should return false if the document contains any @client directives ' +
-      'without an `always` variable',
+        'without an `always` variable',
       () => {
         const localState = new LocalState({ cache: new InMemoryCache() });
         const query = gql`
@@ -1093,12 +1097,12 @@ describe('LocalState helpers', () => {
           }
         `;
         expect(localState.shouldForceResolvers(query)).toBe(false);
-      }
+      },
     );
 
     it(
       'should return false if the document contains any @client directives ' +
-      'with an `always` variable of false',
+        'with an `always` variable of false',
       () => {
         const localState = new LocalState({ cache: new InMemoryCache() });
         const query = gql`
@@ -1108,7 +1112,7 @@ describe('LocalState helpers', () => {
           }
         `;
         expect(localState.shouldForceResolvers(query)).toBe(false);
-      }
+      },
     );
   });
 });

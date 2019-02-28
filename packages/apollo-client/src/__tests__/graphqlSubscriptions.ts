@@ -271,7 +271,7 @@ describe('GraphQL Subscriptions', () => {
     const sub = client.subscribe(defaultOptions).subscribe({
       complete() {
         completeFn();
-      }
+      },
     });
 
     link.simulateComplete();

@@ -156,7 +156,7 @@ describe('@client @export tests', () => {
       cache.writeData({
         data: {
           currentAuthor: testAuthor,
-        }
+        },
       });
 
       return client.query({ query }).then(({ data }: any) => {

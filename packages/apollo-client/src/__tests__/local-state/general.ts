@@ -886,21 +886,23 @@ describe('Combining client and server state/operations', () => {
     `;
 
     let watchCount = 0;
-    const link = new ApolloLink((operation: Operation): Observable<{}> => {
-      if (operation.operationName === 'SampleQuery') {
+    const link = new ApolloLink(
+      (operation: Operation): Observable<{}> => {
+        if (operation.operationName === 'SampleQuery') {
+          return Observable.of({
+            data: { user: { __typename: 'User', firstName: 'John' } },
+          });
+        }
+        if (operation.operationName === 'SampleMutation') {
+          return Observable.of({
+            data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
+          });
+        }
         return Observable.of({
-          data: { user: { __typename: 'User', firstName: 'John' } },
+          errors: [new Error(`Unknown operation ${operation.operationName}`)],
         });
-      }
-      if (operation.operationName === 'SampleMutation') {
-        return Observable.of({
-          data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
-        });
-      }
-      return Observable.of({
-        errors: [new Error(`Unknown operation ${operation.operationName}`)],
-      })
-    });
+      },
+    );
 
     const cache = new InMemoryCache();
     const client = new ApolloClient({

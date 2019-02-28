@@ -3,7 +3,7 @@
 const testMap = new Map();
 if (testMap.set(1, 2) !== testMap) {
   const { set } = testMap;
-  Map.prototype.set = function (...args) {
+  Map.prototype.set = function(...args) {
     set.apply(this, args);
     return this;
   };
@@ -13,7 +13,7 @@ if (testMap.set(1, 2) !== testMap) {
 const testSet = new Set();
 if (testSet.add(3) !== testSet) {
   const { add } = testSet;
-  Set.prototype.add = function (...args) {
+  Set.prototype.add = function(...args) {
     add.apply(this, args);
     return this;
   };
@@ -34,16 +34,19 @@ try {
   testMap.set(frozen, frozen).delete(frozen);
 } catch {
   const wrap = (method: <T>(obj: T) => T): typeof method => {
-    return method && (obj => {
-      try {
-        // If .set succeeds, also call .delete to avoid leaking memory.
-        testMap.set(obj, obj).delete(obj);
-      } finally {
-        // If .set or .delete fails, the exception will be silently swallowed
-        // by this return-from-finally statement:
-        return method.call(Object, obj);
-      }
-    });
+    return (
+      method &&
+      (obj => {
+        try {
+          // If .set succeeds, also call .delete to avoid leaking memory.
+          testMap.set(obj, obj).delete(obj);
+        } finally {
+          // If .set or .delete fails, the exception will be silently swallowed
+          // by this return-from-finally statement:
+          return method.call(Object, obj);
+        }
+      })
+    );
   };
   Object.freeze = wrap(Object.freeze);
   Object.seal = wrap(Object.seal);

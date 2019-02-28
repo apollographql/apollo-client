@@ -133,34 +133,37 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
-    this.maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
-      return maybeBroadcastWatch.call(this, c);
-    }, {
-      makeCacheKey(c: Cache.WatchOptions) {
-        if (c.optimistic) {
-          // If we're reading optimistic data, it doesn't matter if this.data
-          // is a DepTrackingCache, since it will be ignored.
-          return;
-        }
+    this.maybeBroadcastWatch = wrap(
+      (c: Cache.WatchOptions) => {
+        return maybeBroadcastWatch.call(this, c);
+      },
+      {
+        makeCacheKey(c: Cache.WatchOptions) {
+          if (c.optimistic) {
+            // If we're reading optimistic data, it doesn't matter if this.data
+            // is a DepTrackingCache, since it will be ignored.
+            return;
+          }
 
-        if (c.previousResult) {
-          // If a previousResult was provided, assume the caller would prefer
-          // to compare the previous data to the new data to determine whether
-          // to broadcast, so we should disable caching by returning here, to
-          // give maybeBroadcastWatch a chance to do that comparison.
-          return;
-        }
+          if (c.previousResult) {
+            // If a previousResult was provided, assume the caller would prefer
+            // to compare the previous data to the new data to determine whether
+            // to broadcast, so we should disable caching by returning here, to
+            // give maybeBroadcastWatch a chance to do that comparison.
+            return;
+          }
 
-        if (cache.data instanceof DepTrackingCache) {
-          // Return a cache key (thus enabling caching) only if we're currently
-          // using a data store that can track cache dependencies.
-          return cache.cacheKeyRoot.lookup(
-            c.query,
-            JSON.stringify(c.variables),
-          );
-        }
-      }
-    });
+          if (cache.data instanceof DepTrackingCache) {
+            // Return a cache key (thus enabling caching) only if we're currently
+            // using a data store that can track cache dependencies.
+            return cache.cacheKeyRoot.lookup(
+              c.query,
+              JSON.stringify(c.variables),
+            );
+          }
+        },
+      },
+    );
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -173,8 +176,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    if (typeof options.rootId === 'string' &&
-        typeof this.data.get(options.rootId) === 'undefined') {
+    if (
+      typeof options.rootId === 'string' &&
+      typeof this.data.get(options.rootId) === 'undefined'
+    ) {
       return null;
     }
 

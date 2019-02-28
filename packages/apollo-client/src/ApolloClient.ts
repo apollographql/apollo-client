@@ -23,6 +23,7 @@ import {
 import { ObservableQuery } from './core/ObservableQuery';
 import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
+import DevToolsConnector from './util/devToolsConnector';
 
 import {
   QueryBaseOptions,
@@ -198,6 +199,16 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         : connectToDevTools && typeof window !== 'undefined'
     ) {
       (window as any).__APOLLO_CLIENT__ = this;
+    }
+
+    // use case: multiple instance of dev-tools
+    // register new apollo-client in dev-tools
+    if (
+      typeof connectToDevTools === 'undefined'
+        ? process.env.NODE_ENV !== 'production' && typeof window !== 'undefined'
+        : connectToDevTools && typeof window !== 'undefined'
+    ) {
+      DevToolsConnector.register(clientAwarenessName, this);
     }
 
     /**

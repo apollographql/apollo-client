@@ -173,7 +173,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return (optimistic ? this.optimisticData : this.data).toObject();
   }
 
-  public read<T>(options: Cache.ReadOptions): T | null {
+  public read<T>(options: Cache.DiffOptions): T | null {
     if (
       typeof options.rootId === 'string' &&
       typeof this.data.get(options.rootId) === 'undefined'
@@ -188,6 +188,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       rootId: options.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
       previousResult: options.previousResult,
+      returnPartialData: options.returnPartialData,
       config: this.config,
     });
   }

@@ -1533,7 +1533,10 @@ export class QueryManager<TStore> {
             const newDirectives = existingSelection.directives.filter(
               directive => directive.name.value !== 'defer',
             );
-            existingSelection = { ...existingSelection, directives: newDirectives }
+            existingSelection = {
+              ...existingSelection,
+              directives: newDirectives,
+            };
           }
         }
       } else {

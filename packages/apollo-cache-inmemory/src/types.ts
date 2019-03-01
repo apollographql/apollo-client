@@ -58,12 +58,11 @@ export type ReadQueryOptions = {
   variables?: Object;
   previousResult?: any;
   rootId?: string;
+  returnPartialData: boolean;
   config?: ApolloReducerConfig;
 };
 
-export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
-  returnPartialData?: boolean;
-};
+export type DiffQueryAgainstStoreOptions = ReadQueryOptions;
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;

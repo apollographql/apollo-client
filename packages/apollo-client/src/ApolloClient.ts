@@ -55,6 +55,7 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
@@ -103,6 +104,12 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    *                       options supplied to `watchQuery`, `query`, or
    *                       `mutate`.
    *
+   * @param assumeImmutableResults When this option is true, the client will assume results
+   *                               read from the cache are never mutated by application code,
+   *                               which enables substantial performance optimizations. Passing
+   *                               `{ freezeResults: true }` to the `InMemoryCache` constructor
+   *                               can help enforce this immutability.
+   *
    * @param name A custom name that can be used to identify this client, when
    *             using Apollo client awareness features. E.g. "iOS".
    *
@@ -120,6 +127,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
+      assumeImmutableResults = false,
       resolvers,
       typeDefs,
       fragmentMatcher,
@@ -244,6 +252,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         version: clientAwarenessVersion!,
       },
       localState: this.localState,
+      assumeImmutableResults,
       onBroadcast: () => {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({

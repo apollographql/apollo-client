@@ -13,11 +13,12 @@ export type OperationVariables = { [key: string]: any };
 export type PureQueryOptions = {
   query: DocumentNode;
   variables?: { [key: string]: any };
+  context?: any;
 };
 
 export type ApolloQueryResult<T> = {
   data: T;
-  errors?: GraphQLError[];
+  errors?: ReadonlyArray<GraphQLError>;
   loading: boolean;
   networkStatus: NetworkStatus;
   stale: boolean;

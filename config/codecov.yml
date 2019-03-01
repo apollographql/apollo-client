@@ -1,0 +1,11 @@
+coverage:
+  parsers:
+    javascript:
+      enable_partials: yes
+  status:
+    project:
+      default:
+        target: "80%"
+    patch:
+      enabled: false
+comment: false

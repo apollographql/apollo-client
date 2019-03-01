@@ -2,13 +2,14 @@
 // the `skip` and `include` directives within GraphQL.
 import {
   FieldNode,
-  OperationDefinitionNode,
   SelectionNode,
   VariableNode,
   BooleanValueNode,
   DirectiveNode,
   DocumentNode,
 } from 'graphql';
+
+import { visit } from 'graphql/language/visitor';
 
 import { argumentsObjectFromField } from './storeUtils';
 
@@ -95,45 +96,16 @@ export function shouldInclude(
   return res;
 }
 
-export function flattenSelections(selection: SelectionNode): SelectionNode[] {
-  if (
-    !(selection as FieldNode).selectionSet ||
-    !((selection as FieldNode).selectionSet.selections.length > 0)
-  )
-    return [selection];
-
-  return [selection].concat(
-    (selection as FieldNode).selectionSet.selections
-      .map(selectionNode =>
-        [selectionNode].concat(flattenSelections(selectionNode)),
-      )
-      .reduce((selections, selected) => selections.concat(selected), []),
-  );
-}
-
 export function getDirectiveNames(doc: DocumentNode) {
-  // operation => [names of directives];
-  const directiveNames = doc.definitions
-    .filter(
-      (definition: OperationDefinitionNode) =>
-        definition.selectionSet && definition.selectionSet.selections,
-    )
-    // operation => [[Selection]]
-    .map(x => flattenSelections(x as any))
-    // [[Selection]] => [Selection]
-    .reduce((selections, selected) => selections.concat(selected), [])
-    // [Selection] => [Selection with Directives]
-    .filter(
-      (selection: SelectionNode) =>
-        selection.directives && selection.directives.length > 0,
-    )
-    // [Selection with Directives] => [[Directives]]
-    .map((selection: SelectionNode) => selection.directives)
-    // [[Directives]] => [Directives]
-    .reduce((directives, directive) => directives.concat(directive), [])
-    // [Directives] => [Name]
-    .map((directive: DirectiveNode) => directive.name.value);
-  return directiveNames;
+  const names: string[] = [];
+
+  visit(doc, {
+    Directive(node) {
+      names.push(node.name.value);
+    },
+  });
+
+  return names;
 }
 
 export function hasDirectives(names: string[], doc: DocumentNode) {

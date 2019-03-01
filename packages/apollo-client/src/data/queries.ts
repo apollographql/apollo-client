@@ -1,5 +1,4 @@
-import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
-import { print } from 'graphql/language/printer';
+import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
 import { isEqual } from 'apollo-utilities';
 
 import { NetworkStatus } from '../core/networkStatus';
@@ -13,7 +12,7 @@ export type QueryStoreValue = {
   previousVariables?: Object | null;
   networkStatus: NetworkStatus;
   networkError?: Error | null;
-  graphQLErrors?: GraphQLError[];
+  graphQLErrors?: ReadonlyArray<GraphQLError>;
   loadingState?: Record<string, any>;
   compactedLoadingState?: Record<string, any>;
   metadata: any;
@@ -45,7 +44,7 @@ export class QueryStore {
     if (
       previousQuery &&
       previousQuery.document !== query.document &&
-      print(previousQuery.document) !== print(query.document)
+      !isEqual(previousQuery.document, query.document)
     ) {
       // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
       // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
@@ -83,7 +82,7 @@ export class QueryStore {
       networkStatus = NetworkStatus.loading;
     }
 
-    let graphQLErrors: GraphQLError[] = [];
+    let graphQLErrors: ReadonlyArray<GraphQLError> = [];
     if (previousQuery && previousQuery.graphQLErrors) {
       graphQLErrors = previousQuery.graphQLErrors;
     }
@@ -143,7 +142,7 @@ export class QueryStore {
     isDeferred: boolean,
     loadingState?: Record<string, any>,
   ) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     // Store loadingState along with a compacted version of it
     if (isDeferred && loadingState) {
@@ -191,7 +190,7 @@ export class QueryStore {
     error: Error,
     fetchMoreForQueryId: string | undefined,
   ) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = error;
     this.store[queryId].networkStatus = NetworkStatus.error;
@@ -209,7 +208,7 @@ export class QueryStore {
     complete: boolean,
     loadingState?: Record<string, any>,
   ) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     // Store loadingState if it is passed in
     if (loadingState) {

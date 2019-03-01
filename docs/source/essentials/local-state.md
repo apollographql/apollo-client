@@ -30,11 +30,11 @@ const client = new ApolloClient({
 The three options you can pass to `clientState` are:
 
 <dl>
-  <dt>[`defaults`](#defaults.html): Object</dt>
+  <dt>[`defaults`](#defaults): Object</dt>
   <dd>The initial data you want to write to the Apollo cache when the client is initialized</dd>
-  <dt>[`resolvers`](#resolvers.html): Object</dt>
+  <dt>[`resolvers`](#resolvers): Object</dt>
   <dd>A map of functions that your GraphQL queries and mutations call in order to read and write to the cache</dd>
-  <dt>[`typeDefs`](#schema.html): string | Array<string></dt>
+  <dt>[`typeDefs`](#schema): string | Array<string></dt>
   <dd>A string representing your client-side schema written in [Schema Definition Language](/docs/graphql-tools/generate-schema.html#schema-language). This schema is not used for validation (yet!), but is used for introspection in Apollo DevTools</dd>
 </dl>
 
@@ -90,7 +90,7 @@ const GET_VISIBILITY_FILTER = gql`
   }
 `;
 
-// Remember to set a initial value for visibilityFilter with defaults
+// Remember to set an initial value for visibilityFilter with defaults
 const FilterLink = ({ filter, children }) => (
   <Query query={GET_VISIBILITY_FILTER}>
     {({ data, client }) => (
@@ -178,7 +178,7 @@ const Todo = ({ id, completed, text }) => (
 
 First, we create a GraphQL mutation that takes the todo's id we want to toggle as its only argument. We indicate that this is a local mutation by marking the field with a `@client` directive. This will tell `apollo-link-state` to call our `toggleTodo` mutation resolver in order to resolve the field. Then, we create a `Mutation` component just as we would for a remote mutation. Finally, pass in your GraphQL mutation to your component and trigger it from within the UI in your render prop function.
 
-If you'd like to see an example of a local mutation adding a todo to a list, check out the `TodoList` component in the [CodeSandbox](https://codesandbox.io/s/github/apollographql/apollo-link-state/tree/master/examples/todo).
+If you'd like to see an example of a local mutation adding a todo to a list, check out the `TodoForm` component in the [CodeSandbox](https://codesandbox.io/s/github/apollographql/apollo-link-state/tree/master/examples/todo).
 
 <h2 id="queries">Querying local data</h2>
 

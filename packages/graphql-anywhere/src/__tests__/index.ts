@@ -10,7 +10,6 @@ const execute = (graphql, r) => () => {
       {
         a {
           b
-
           ...frag
         }
       }
@@ -92,7 +91,6 @@ const execute = (graphql, r) => () => {
       {
         a {
           b
-
           c
         }
       }
@@ -137,7 +135,6 @@ const execute = (graphql, r) => () => {
     const query = gql`
       {
         inline(int: 5, float: 3.14, string: "string")
-
         variables(int: $int, float: $float, string: $string)
       }
     `;
@@ -210,11 +207,8 @@ const execute = (graphql, r) => () => {
       {
         a {
           b @skip(if: true)
-
           c @include(if: true)
-
           d @skip(if: false)
-
           e @include(if: false)
         }
       }
@@ -239,17 +233,14 @@ const execute = (graphql, r) => () => {
         a {
           ... on Type {
             b
-
             c
           }
-
           ...deFrag
         }
       }
 
       fragment deFrag on Type {
         d
-
         e
       }
     `;
@@ -277,43 +268,31 @@ const execute = (graphql, r) => () => {
     const query = gql`
       {
         stringField
-
         numberField
-
         nullField
-
         ... on Item {
           nestedObj {
             stringField
-
             nullField
-
             deepNestedObj {
               stringField
-
               nullField
             }
           }
         }
-
         ... on Item {
           nestedObj {
             numberField
-
             nullField
-
             deepNestedObj {
               numberField
-
               nullField
             }
           }
         }
-
         ... on Item {
           nullObject
         }
-
         nestedObj {
           inlinedObjectStringField
         }
@@ -395,23 +374,18 @@ const execute = (graphql, r) => () => {
         ... on Item {
           array {
             id
-
             field1
           }
         }
-
         ... on Item {
           array {
             id
-
             field2
           }
         }
-
         ... on Item {
           array {
             id
-
             field3
           }
         }
@@ -462,7 +436,6 @@ const execute = (graphql, r) => () => {
       {
         alias: a {
           b
-
           hasDirective @skip(if: false) @otherDirective(arg: $x)
         }
       }
@@ -521,12 +494,9 @@ const execute = (graphql, r) => () => {
     const fragment = gql`
       fragment PersonDetails on Person {
         alias: name
-
         height(unit: METERS)
-
         avatar {
           square
-
           ... on Avatar {
             circle
           }
@@ -576,11 +546,8 @@ const execute = (graphql, r) => () => {
       mutation {
         operateOnNumbers(a: 10, b: 2) {
           add
-
           subtract
-
           multiply
-
           divide
         }
       }
@@ -618,9 +585,7 @@ const execute = (graphql, r) => () => {
       subscription {
         user {
           id
-
           name
-
           height
         }
       }
@@ -664,9 +629,7 @@ const execute = (graphql, r) => () => {
       query {
         user {
           id
-
           ...A
-
           ...B
         }
       }
@@ -720,11 +683,9 @@ const execute = (graphql, r) => () => {
       const query = gql`
         {
           title
-
           user {
             login
           }
-
           labels {
             name
           }
@@ -755,9 +716,7 @@ const execute = (graphql, r) => () => {
         {
           author {
             name: string
-
             age: int
-
             address {
               state: string
             }
@@ -808,7 +767,6 @@ const execute = (graphql, r) => () => {
         {
           result {
             title
-
             author {
               name
             }
@@ -856,11 +814,8 @@ const execute = (graphql, r) => () => {
 
       const result = await graphql(
         resolver,
-
         query,
-
         null,
-
         data, // pass data as context since we have to access it all the time
       );
 
@@ -889,6 +844,5 @@ describe('basic operations done sync', execute(require('../').default, x => x));
 
 describe(
   'basic operations done async',
-
   execute(require('../graphql-async').graphql, x => Promise.resolve(x)),
 );

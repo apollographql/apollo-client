@@ -1,6 +1,6 @@
 import ApolloClient, { gql, InMemoryCache } from '../';
 import { stripSymbols } from 'apollo-utilities';
-import * as fetchMock from 'fetch-mock';
+import fetchMock from 'fetch-mock';
 
 global.fetch = jest.fn(() =>
   Promise.resolve({ json: () => Promise.resolve({}) }),
@@ -116,6 +116,19 @@ describe('config', () => {
     });
 
     expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);
+  });
+
+  it('allows you to pass in name and version', () => {
+    const name = 'client-name';
+    const version = 'client-version';
+
+    const client = new ApolloClient({
+      name,
+      version,
+    });
+
+    expect(client.clientAwareness.name).toEqual(name);
+    expect(client.clientAwareness.version).toEqual(version);
   });
 
   const makePromise = res =>

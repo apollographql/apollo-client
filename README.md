@@ -1,4 +1,4 @@
-# [Apollo Client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack) [![Open Source Helpers](https://www.codetriage.com/apollographql/apollo-client/badges/users.svg)](https://www.codetriage.com/apollographql/apollo-client)
+# [Apollo Client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Open Source Helpers](https://www.codetriage.com/apollographql/apollo-client/badges/users.svg)](https://www.codetriage.com/apollographql/apollo-client)
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
@@ -98,18 +98,15 @@ To learn more about all of the features available to you through the `apollo-cli
 
 ## Contributing
 
-[![Build status](https://travis-ci.org/apollographql/apollo-client.svg?branch=master)](https://travis-ci.org/apollographql/apollo-client)
-[![Build status](https://ci.appveyor.com/api/projects/status/ajdf70delshw2ire/branch/master?svg=true)](https://ci.appveyor.com/project/stubailo/apollo-client/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-client?branch=master)
+[![CircleCI](https://circleci.com/gh/apollographql/apollo-client.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-client)
+[![codecov](https://codecov.io/gh/apollographql/apollo-client/branch/master/graph/badge.svg)](https://codecov.io/gh/apollographql/apollo-client)
 
 [Read the Apollo Contributor Guidelines.](CONTRIBUTING.md)
 
 Running tests locally:
 
 ```
-# nvm use node
 npm install
-npm run build
 npm test
 ```
 
@@ -123,3 +120,8 @@ If you're getting booted up as a contributor, here are some discussions you shou
 1. [Idea for pagination handling](https://github.com/apollostack/apollo-client/issues/26)
 1. [Discussion about interaction with Redux and domain vs. client state](https://github.com/apollostack/apollo-client/issues/98)
 1. [Long conversation about different client options, before this repo existed](https://github.com/apollostack/apollo/issues/1)
+
+## Maintainers
+
+- [@benjamn](https://github.com/benjamn) (Apollo)
+- [@hwillson](https://github.com/hwillson) (Apollo)

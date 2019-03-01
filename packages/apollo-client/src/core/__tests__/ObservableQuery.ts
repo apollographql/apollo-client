@@ -9,9 +9,8 @@ import mockQueryManager from '../../__mocks__/mockQueryManager';
 import mockWatchQuery from '../../__mocks__/mockWatchQuery';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
 
-import { ObservableQuery, ApolloCurrentResult } from '../ObservableQuery';
+import { ObservableQuery } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';
-import { ApolloQueryResult, FetchType } from '../types';
 import { QueryManager } from '../QueryManager';
 import { DataStore } from '../../data/store';
 import ApolloClient from '../../';
@@ -321,11 +320,10 @@ describe('ObservableQuery', () => {
           expect(stripSymbols(result.data)).toEqual(data2);
           // go back to first set of variables
           observable.setOptions({ variables });
-          const current = observable.currentResult();
+          const current = observable.getCurrentResult();
           expect(stripSymbols(current.data)).toEqual(data);
-          const secondCurrent = observable.currentResult();
-          // ensure ref equality
-          expect(current.data).toBe(secondCurrent.data);
+          const secondCurrent = observable.getCurrentResult();
+          expect(current.data).toEqual(secondCurrent.data);
           done();
         }
       });
@@ -715,20 +713,20 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(dataOne);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataOne,
           );
           observable.setVariables(differentVariables);
-          expect(stripSymbols(observable.currentResult().data)).toEqual({});
-          expect(observable.currentResult().loading).toBe(true);
+          expect(observable.getCurrentResult().data).toEqual(undefined);
+          expect(observable.getCurrentResult().loading).toBe(true);
         }
         // after loading is false and data has returned
         if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataTwo,
           );
-          expect(observable.currentResult().loading).toBe(false);
+          expect(observable.getCurrentResult().loading).toBe(false);
           done();
         }
       });
@@ -782,20 +780,20 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(dataOne);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataOne,
           );
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().data).toEqual({});
-          expect(observable.currentResult().loading).toBe(true);
+          expect(observable.getCurrentResult().data).toEqual(undefined);
+          expect(observable.getCurrentResult().loading).toBe(true);
         }
         // after loading is false and data has returned
         if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataTwo,
           );
-          expect(observable.currentResult().loading).toBe(false);
+          expect(observable.getCurrentResult().loading).toBe(false);
           done();
         }
       });
@@ -849,20 +847,20 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(dataOne);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataOne,
           );
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().data).toEqual({});
-          expect(observable.currentResult().loading).toBe(true);
+          expect(observable.getCurrentResult().data).toEqual(undefined);
+          expect(observable.getCurrentResult().loading).toBe(true);
         }
         // after loading is false and data has returned
         if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataTwo,
           );
-          expect(observable.currentResult().loading).toBe(false);
+          expect(observable.getCurrentResult().loading).toBe(false);
           done();
         }
       });
@@ -889,51 +887,18 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.errors).toEqual([error]);
-          expect(observable.currentResult().errors).toEqual([error]);
+          expect(observable.getCurrentResult().errors).toEqual([error]);
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().errors).toEqual([error]);
+          expect(observable.getCurrentResult().errors).toEqual([error]);
         }
         // after loading is done and new results are returned
         if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.currentResult().data)).toEqual(
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataTwo,
           );
-          expect(observable.currentResult().loading).toBe(false);
+          expect(observable.getCurrentResult().loading).toBe(false);
           done();
-        }
-      });
-    });
-
-    it('returns results that are frozen in development mode', done => {
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
-      );
-      const nop = () => {
-        return 1;
-      };
-      const sub = observable.subscribe({ next: nop });
-
-      observable.setVariables(differentVariables).then(result2 => {
-        expect(stripSymbols(result2.data)).toEqual(dataTwo);
-        try {
-          (result2.data as any).stuff = 'awful';
-          done.fail(
-            new Error(
-              'results from setVariables should be frozen in development mode',
-            ),
-          );
-        } catch (e) {
-          done();
-        } finally {
-          sub.unsubscribe();
         }
       });
     });
@@ -1421,7 +1386,7 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(done, observable, (count, result) => {
-        const { data, loading, networkStatus } = observable.currentResult();
+        const { data, loading, networkStatus } = observable.getCurrentResult();
         try {
           expect(result).toEqual({
             data,
@@ -1453,7 +1418,7 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(done, observable, () => {
-        expect(stripSymbols(observable.currentResult())).toEqual({
+        expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: 7,
@@ -1462,17 +1427,17 @@ describe('ObservableQuery', () => {
         done();
       });
 
-      expect(observable.currentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqual({
         loading: true,
-        data: {},
+        data: undefined,
         networkStatus: 1,
         partial: true,
       });
       setTimeout(
         wrap(done, () => {
-          expect(observable.currentResult()).toEqual({
+          expect(observable.getCurrentResult()).toEqual({
             loading: true,
-            data: {},
+            data: undefined,
             networkStatus: 1,
             partial: true,
           });
@@ -1498,7 +1463,7 @@ describe('ObservableQuery', () => {
           query,
           variables,
         });
-        expect(stripSymbols(observable.currentResult())).toEqual({
+        expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: 7,
@@ -1522,7 +1487,7 @@ describe('ObservableQuery', () => {
         error: theError => {
           expect(theError.graphQLErrors).toEqual([error]);
 
-          const currentResult = observable.currentResult();
+          const currentResult = observable.getCurrentResult();
           expect(currentResult.loading).toBe(false);
           expect(currentResult.error!.graphQLErrors).toEqual([error]);
           done();
@@ -1544,10 +1509,10 @@ describe('ObservableQuery', () => {
       return observable.result().catch((theError: any) => {
         expect(theError.graphQLErrors).toEqual([error]);
 
-        const currentResult = observable.currentResult();
+        const currentResult = observable.getCurrentResult();
         expect(currentResult.loading).toBe(false);
         expect(currentResult.error!.graphQLErrors).toEqual([error]);
-        const currentResult2 = observable.currentResult();
+        const currentResult2 = observable.getCurrentResult();
         expect(currentResult.error === currentResult2.error).toBe(true);
       });
     });
@@ -1567,7 +1532,7 @@ describe('ObservableQuery', () => {
       return observable.result().then(result => {
         expect(stripSymbols(result.data)).toEqual(dataOne);
         expect(result.errors).toEqual([error]);
-        const currentResult = observable.currentResult();
+        const currentResult = observable.getCurrentResult();
         expect(currentResult.loading).toBe(false);
         expect(currentResult.errors).toEqual([error]);
         expect(currentResult.error).toBeUndefined();
@@ -1589,7 +1554,7 @@ describe('ObservableQuery', () => {
       return observable.result().then(result => {
         expect(stripSymbols(result.data)).toEqual(dataOne);
         expect(result.errors).toBeUndefined();
-        const currentResult = observable.currentResult();
+        const currentResult = observable.getCurrentResult();
         expect(currentResult.loading).toBe(false);
         expect(currentResult.errors).toBeUndefined();
         expect(currentResult.error).toBeUndefined();
@@ -1614,15 +1579,19 @@ describe('ObservableQuery', () => {
           variables,
           fetchPolicy: 'network-only',
         });
-        expect(stripSymbols(observable.currentResult())).toEqual({
-          data: dataOne,
+        expect(stripSymbols(observable.getCurrentResult())).toEqual({
+          data: undefined,
           loading: true,
           networkStatus: 1,
           partial: false,
         });
 
         subscribeAndCount(done, observable, (handleCount, subResult) => {
-          const { data, loading, networkStatus } = observable.currentResult();
+          const {
+            data,
+            loading,
+            networkStatus,
+          } = observable.getCurrentResult();
           expect(subResult).toEqual({
             data,
             loading,
@@ -1684,7 +1653,11 @@ describe('ObservableQuery', () => {
         });
 
         subscribeAndCount(done, observable, (count, result) => {
-          const { data, loading, networkStatus } = observable.currentResult();
+          const {
+            data,
+            loading,
+            networkStatus,
+          } = observable.getCurrentResult();
           expect(result).toEqual({
             data,
             loading,

@@ -5,7 +5,7 @@ description: A guide to what's new in React Apollo 2.1
 
 React Apollo was designed from the beginning to make using Apollo with React the easiest possible experience. For a long time, this meant using higher order components to configure and connect Apollo to your React application. With React Apollo 2.1, using the two together is easier and more natural than ever thanks to the brand new Apollo Components! 🚀
 
-**Important**: The 2.1 version only introduces new features, it doesn't remove or break any existing usage of the `graphql` higher order component. You should be able to start using the new features as they make sense without worrying about a full rewrite of your app!
+**Important**: The 2.1 version only introduces new features, it doesn't remove, break, or deprecate any existing usage of the `graphql` higher order component. You should be able to start using the new features as they make sense without worrying about a full rewrite of your app!
 
 <h2 id="query-component">The Query Component</h2>
 
@@ -174,8 +174,10 @@ With upcoming versions of React (starting in React 16.3), there is a new version
 const MyClient = () => (
   <ApolloConsumer>
     {(client) => (
-      <h1>The current cache is:</h1>
-      <pre>{client.extract()}</pre>
+      <div>
+        <h1>The current cache is:</h1>
+        <pre>{client.extract()}</pre>
+      </div>
     )}
   </ApolloConsumer>
 )

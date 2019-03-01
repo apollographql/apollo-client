@@ -13,7 +13,7 @@ import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import ApolloClient from 'apollo-client';
 
-export { gql, InMemoryCache, HttpLink };
+export { gql, HttpLink };
 
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;
@@ -26,6 +26,8 @@ export interface PresetConfig {
   onError?: ErrorLink.ErrorHandler;
   cacheRedirects?: CacheResolverMap;
   cache?: ApolloCache<any>;
+  name?: string;
+  version?: string;
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -49,6 +51,8 @@ const PRESET_CONFIG_KEYS = [
   'onError',
   'cacheRedirects',
   'cache',
+  'name',
+  'version',
 ];
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
@@ -76,6 +80,8 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       clientState,
       cacheRedirects,
       onError: errorCallback,
+      name,
+      version,
     } = config;
 
     let { cache } = config;
@@ -156,6 +162,6 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
     ].filter(x => !!x) as ApolloLink[]);
 
     // super hacky, we will fix the types eventually
-    super({ cache, link } as any);
+    super({ cache, link, name, version } as any);
   }
 }

@@ -1,4 +1,4 @@
-import build from '../../rollup.config';
+import build from '../../config/rollup.config';
 
 export default build('graphqlAnywhereAsync', {
   input: 'lib/graphql-async.js',

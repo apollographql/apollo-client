@@ -18,7 +18,7 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  window.__APOLLO_STATE__ = client.extract();
+  window.__APOLLO_STATE__ = JSON.stringify(client.extract());
 </script>
 ```
 
@@ -34,7 +34,7 @@ We'll see below how you can generate both the HTML and the Apollo store's state 
 
 Then, when the client runs the first set of queries, the data will be returned instantly because it is already in the store!
 
-If you are using `forceFetch` on some of the initial queries, you can pass the `ssrForceFetchDelay` option to skip force fetching during initialization, so that even those queries run using the cache:
+If you are using `fetchPolicy: network-only` or `fetchPolicy: cache-and-network` on some of the initial queries, you can pass the `ssrForceFetchDelay` option to skip force fetching during initialization, so that even those queries run using the cache:
 
 ```js
 const client = new ApolloClient({
@@ -56,7 +56,7 @@ In order to render your application on the server, you need to handle a HTTP req
 
 We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
 
-1. When [creating an Apollo Client instance](../basics/setup.html) on the server, you'll need to set up you network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
+1. When [creating an Apollo Client instance](../basics/setup.html) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
 
 2. Since you only want to fetch each query result once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid repeated force-fetching.
 

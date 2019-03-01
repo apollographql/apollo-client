@@ -1136,7 +1136,9 @@ describe('ApolloClient', () => {
           count++;
           if (count === 1) {
             expect(stripSymbols(result.data)).toEqual(data);
-            expect(stripSymbols(observable.currentResult().data)).toEqual(data);
+            expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+              data,
+            );
             const bestFriends = result.data.people.friends.filter(
               x => x.type === 'best',
             );
@@ -2190,6 +2192,35 @@ describe('ApolloClient', () => {
       expect(queryOptions.fetchPolicy).toEqual(
         defaultOptions.query!.fetchPolicy,
       );
+
+      client.stop();
+    });
+  });
+
+  describe('clearStore', () => {
+    it('should remove all data from the store', async () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      client.writeQuery({
+        data: { a: 1 },
+        query: gql`
+          {
+            a
+          }
+        `,
+      });
+
+      expect(client.cache.data.data).toEqual({
+        ROOT_QUERY: {
+          a: 1,
+        },
+      });
+
+      await client.clearStore();
+      expect(client.cache.data.data).toEqual({});
     });
   });
 });

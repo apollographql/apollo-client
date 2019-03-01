@@ -83,6 +83,10 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed in the event of an error.</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+  <dt>`partialRefetch`: boolean</dt>
+  <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="query-render-prop">Render prop function</h3>
@@ -143,6 +147,8 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>A callback executed in the event of an error</dd>
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="mutation-render-prop">Render prop function</h3>
@@ -167,6 +173,8 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
   <dd>Any errors returned from the mutation</dd>
   <dt>`called`: boolean</dt>
   <dd>A boolean indicating if the mutate function has been called</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>Your `ApolloClient` instance. Useful for invoking cache methods outside the context of the update function, such as `client.writeData` and `client.readQuery`.</dd>
 </dl>
 
 <h2 id="subscription" title="Subscription">`Subscription`</h2>
@@ -184,6 +192,12 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>An object containing all of the variables your subscription needs to execute</dd>
   <dt>`shouldResubscribe`: boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
+  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
+  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
+  <dt>`client`: ApolloClient</dt>
+  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>
@@ -205,13 +219,13 @@ The render prop function that you pass to the `children` prop of `Subscription` 
 import { MockedProvider } from "react-apollo/test-utils";
 ```
 
-The Mocked provider is a test-utility that allows you to created a mocked version of the `ApolloProvider ` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
+The Mocked provider is a test-utility that allows you to create a mocked version of the `ApolloProvider ` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
 
 The `<MockedProvider />` component takes the following props:
 
 - `addTypename`: A boolean indicating whether or not `__typename` are injected into the documents sent to graphql. This **defaults to true**.
 - `defaultOptions`: An object containing options to pass directly to the `ApolloClient`instance. See documentation [here](./apollo-client.html#apollo-client).
-- `mocks`: An array containing a request object and the corresponding response. You can defined mocks in the following shape:.
+- `mocks`: An array containing a request object and the corresponding response. You can define mocks in the following shape:.
 
 ```js
 const mocks = [
@@ -380,6 +394,16 @@ function MyComponent({ onLoadMore }) {
 }
 ```
 
+To access props that are not added by the `graphql()` function, use the `ownProps` keyword. For example:
+
+```js
+export default graphql(gql`{ ... }`, {
+  props: ({ data: { liveImage }, ownProps: { loadingImage } }) => ({
+    image: liveImage || loadingImage,
+  }),
+})(MyComponent);
+```
+
 <h3 id="graphql-config-skip">`config.skip`</h3>
 
 If `config.skip` is true then all of the React Apollo code will be skipped *entirely*. It will be as if the `graphql()` function were a simple identity function. Your component will behave as if the `graphql()` function were not there at all.
@@ -472,9 +496,10 @@ class MyContainerComponent extends Component {
     return (
       <MyGraphQLComponent
         ref={component => {
-          assert(component.getWrappedInstance() instanceof MyComponent);
+          const wrappedInstance = component.getWrappedInstance();
+          assert(wrappedInstance instanceof MyComponent);
           // We can call methods on the component class instance.
-          component.saySomething();
+          wrappedInstance.saySomething();
         }}
       />
     );
@@ -484,7 +509,7 @@ class MyContainerComponent extends Component {
 
 <h3 id="graphql-config-alias">`config.alias`</h3>
 
-By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more then one higher order components and you look at the [React Devtools][].
+By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more than one higher order component and you look at the [React Devtools][].
 
 [React Devtools]: https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434
 
@@ -700,7 +725,7 @@ This function will set up a subscription, triggering updates whenever the server
 
 This function returns an `unsubscribe` function handler which can be used to unsubscribe later.
 
-A common practice is to wrap the `subscribeToMore` call within `componentWillReceiveProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can attach it to the component instance. See the example for more details.
+A common practice is to wrap the `subscribeToMore` call within `getDerivedStateFromProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can add it to component state. See the example for more details.
 
 - `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
@@ -713,34 +738,47 @@ In order to update the query's store with the result of the subscription, you mu
 
 ```js
 class SubscriptionComponent extends Component {
-  componentWillReceiveProps(nextProps) {
-    if(!nextProps.data.loading) {
+  state = {
+    subscriptionParam: null,
+    unsubscribe: null,
+  };
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (!nextProps.data.loading) {
       // Check for existing subscription
-      if (this.unsubscribe) {
-        // Check if props have changed and, if necessary, stop the subscription
-        if (this.props.subscriptionParam !== nextProps.subscriptionParam) {
-          this.unsubscribe();
-        } else {
-          return;
+      if (prevState.unsubscribe) {
+        // Only unsubscribe/update state if subscription variable has changed
+        if (prevState.subscriptionParam === nextProps.subscriptionParam) {
+          return null;
         }
+        prevState.unsubscribe();
       }
 
-      // Subscribe
-      this.unsubscribe = nextProps.data.subscribeToMore({
-        document: gql`subscription {...}`,
-        updateQuery: (previousResult, { subscriptionData, variables }) => {
-          // Perform updates on previousResult with subscriptionData
-          return updatedResult;
-        }
-      });
+      return {
+        // Subscribe
+        unsubscribe: nextProps.data.subscribeToMore({
+          document: gql`subscription {...}`,
+          variables: {
+            param: nextProps.subscriptionParam,
+          },
+          updateQuery: (previousResult, { subscriptionData, variables }) => {
+            // Perform updates on previousResult with subscriptionData
+            return updatedResult;
+          },
+        }),
+        // Store subscriptionParam in state for next update
+        subscriptionParam: nextProps.subscriptionParam,
+      };
     }
+
+    return null;
   }
+
   render() {
     ...
   }
 }
 ```
-
 
 <h3 id="graphql-query-data-startPolling">`data.startPolling(interval)`</h3>
 
@@ -829,7 +867,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
 
 **Example:**
 
@@ -892,7 +930,7 @@ export default graphql(gql`query { ... }`, {
 
 <h3 id="graphql-config-options-errorPolicy">`options.errorPolicy`</h3>
 
-The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
+The error policy is an option which allows you to specify how you want your component to handle errors that can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
 
 Valid `errorPolicy` values are:
 
@@ -943,6 +981,20 @@ export default graphql(gql`query { ... }`, {
 <h3 id="graphql-config-options-context">`options.context`</h3>
 With the flexiblity and power of [Apollo Link](/docs/link) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](/docs/link/overview.html#context)
 
+<h3 id="graphql-config-options-partialRefetch">`partialRefetch`</h3>
+
+If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss).
+
+The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.
+
+**Example:**
+
+```js
+export default graphql(gql`query { ... }`, {
+  options: { partialRefetch: true },
+})(MyComponent);
+```
+
 <h2 id="graphql-mutation-options" title="graphql() mutation options">`graphql() options for mutations`</h2>
 
 <h3 id="graphql-mutation-mutate">`props.mutate`</h3>
@@ -982,7 +1034,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
 
 The properties accepted in this options object may also be accepted by the [`props.mutate`](#graphql-mutation-mutate) function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
 
@@ -1281,8 +1333,8 @@ An important note is that `compose()` executes the last enhancer _first_ and wor
 ```js
 export default compose(
   withApollo,
-  graphql(`query { ... }`),
-  graphql(`mutation { ... }`),
+  graphql(gql`query { ... }`),
+  graphql(gql`mutation { ... }`),
   connect(...),
 )(MyComponent);
 ```
@@ -1293,7 +1345,7 @@ export default compose(
 import { withApollo } from 'react-apollo';
 ```
 
-A simple enhancer which provides direct access to your [`ApolloClient`][] instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`][] as a `client` prop.
+A simple enhancer which provides direct access to your [`ApolloClient`](apollo-client.html) instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`](apollo-client.html) as a `client` prop.
 
 If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphql) the answer is that most of the time you will want to use [`graphql()`](#graphql). [`graphql()`](#graphql) provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
 
@@ -1304,9 +1356,9 @@ This will only be able to provide access to your client if there is an [`<Apollo
 **Example:**
 
 ```js
-export default withApollo(MyComponent);
-
 function MyComponent({ client }) {
   console.log(client);
 }
+
+export default withApollo(MyComponent);
 ```

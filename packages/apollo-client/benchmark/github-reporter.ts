@@ -26,29 +26,29 @@ export function collectAndReportBenchmarks(uploadToGithub: Boolean) {
   Promise.all(groupPromises)
     .then(() => {
       log('Running benchmarks.');
-      return new Promise<{ [name: string]: { mean: number; moe: number } }>(
-        resolve => {
-          const retMap: { [name: string]: { mean: number; moe: number } } = {};
+      return new Promise<{
+        [name: string]: { mean: number; moe: number };
+      }>(resolve => {
+        const retMap: { [name: string]: { mean: number; moe: number } } = {};
 
-          bsuite
-            .on('error', (error: any) => {
-              log('Error: ', error);
-            })
-            .on('cycle', (event: any) => {
-              retMap[event.target.name] = {
-                mean: event.target.stats.mean * 1000,
-                moe: event.target.stats.moe * 1000,
-              };
-              log('Mean time in ms: ', event.target.stats.mean * 1000);
-              log(String(event.target));
-              log('');
-            })
-            .on('complete', (_: any) => {
-              resolve(retMap);
-            })
-            .run({ async: false });
-        },
-      );
+        bsuite
+          .on('error', (error: any) => {
+            log('Error: ', error);
+          })
+          .on('cycle', (event: any) => {
+            retMap[event.target.name] = {
+              mean: event.target.stats.mean * 1000,
+              moe: event.target.stats.moe * 1000,
+            };
+            log('Mean time in ms: ', event.target.stats.mean * 1000);
+            log(String(event.target));
+            log('');
+          })
+          .on('complete', (_: any) => {
+            resolve(retMap);
+          })
+          .run({ async: false });
+      });
     })
     .then(res => {
       let message = '';

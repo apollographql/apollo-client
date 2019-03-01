@@ -1,8 +1,4 @@
-import {
-  isEqual,
-  maybeDeepFreeze,
-  tryFunctionOrLogError,
-} from 'apollo-utilities';
+import { isEqual, tryFunctionOrLogError, cloneDeep } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { isNetworkRequestInFlight, NetworkStatus } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
@@ -25,9 +21,20 @@ import {
 import { QueryStoreValue } from '../data/queries';
 import { hasDirectives } from 'apollo-utilities';
 
+// XXX remove in the next breaking semver change (3.0)
+// Deprecated, use ApolloCurrentQueryResult
 export type ApolloCurrentResult<T> = {
   data: T | {};
-  errors?: GraphQLError[];
+  errors?: ReadonlyArray<GraphQLError>;
+  loading: boolean;
+  networkStatus: NetworkStatus;
+  error?: ApolloError;
+  partial?: boolean;
+};
+
+export type ApolloCurrentQueryResult<T> = {
+  data: T | undefined;
+  errors?: ReadonlyArray<GraphQLError>;
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
@@ -93,6 +100,7 @@ export class ObservableQuery<
   private subscriptionHandles: Subscription[];
 
   private lastResult: ApolloQueryResult<TData>;
+  private lastResultSnapshot: ApolloQueryResult<TData>;
   private lastError: ApolloError;
 
   constructor({
@@ -161,16 +169,30 @@ export class ObservableQuery<
     });
   }
 
+  // XXX remove in the next breaking semver change (3.0)
+  // Deprecated, use getCurrentResult()
+  public currentResult(): ApolloCurrentResult<TData> {
+    const result = this.getCurrentResult() as ApolloCurrentResult<TData>;
+    if (result.data === undefined) {
+      result.data = {};
+    }
+    return result;
+  }
+
   /**
    * Return the result of the query from the local cache as well as some fetching status
    * `loading` and `networkStatus` allow to know if a request is in flight
    * `partial` lets you know if the result from the local cache is complete or partial
    * @return {data: Object, error: ApolloError, loading: boolean, networkStatus: number, partial: boolean}
    */
-  public currentResult(): ApolloCurrentResult<TData> {
+  public getCurrentResult(): ApolloCurrentQueryResult<TData> {
     if (this.isTornDown) {
       return {
-        data: this.lastError ? {} : this.lastResult ? this.lastResult.data : {},
+        data: this.lastError
+          ? undefined
+          : this.lastResult
+          ? this.lastResult.data
+          : undefined,
         error: this.lastError,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -181,7 +203,7 @@ export class ObservableQuery<
 
     if (hasError(queryStoreValue, this.options.errorPolicy)) {
       return {
-        data: {},
+        data: undefined,
         loading: false,
         networkStatus: queryStoreValue.networkStatus,
         error: new ApolloError({
@@ -242,15 +264,28 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      const stale = false;
-      this.lastResult = { ...result, stale };
+      this.lastResult = { ...result, stale: false };
+      this.lastResultSnapshot = cloneDeep(this.lastResult);
     }
 
-    return { ...result, partial } as ApolloCurrentResult<TData>;
+    return { ...result, partial };
+  }
+
+  // Compares newResult to the snapshot we took of this.lastResult when it was
+  // first received.
+  public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
+    const { lastResultSnapshot: snapshot } = this;
+    return !(
+      snapshot &&
+      newResult &&
+      snapshot.networkStatus === newResult.networkStatus &&
+      snapshot.stale === newResult.stale &&
+      isEqual(snapshot.data, newResult.data)
+    );
   }
 
   // Returns the last result that observer.next was called with. This is not the same as
-  // currentResult! If you're not sure which you need, then you probably need currentResult.
+  // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
   public getLastResult(): ApolloQueryResult<TData> {
     return this.lastResult;
   }
@@ -261,6 +296,7 @@ export class ObservableQuery<
 
   public resetLastResults(): void {
     delete this.lastResult;
+    delete this.lastResultSnapshot;
     delete this.lastError;
     this.isTornDown = false;
   }
@@ -309,7 +345,7 @@ export class ObservableQuery<
 
     return this.queryManager
       .fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
-      .then(result => maybeDeepFreeze(result));
+      .then(result => result as ApolloQueryResult<TData>);
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -369,23 +405,26 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore(options: SubscribeToMoreOptions<TData, TVariables>) {
+  public subscribeToMore<TSubscriptionData = TData>(
+    options: SubscribeToMoreOptions<TData, TVariables, TSubscriptionData>,
+  ) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
         variables: options.variables,
       })
       .subscribe({
-        next: (subscriptionData: { data: TData }) => {
+        next: (subscriptionData: { data: TSubscriptionData }) => {
           if (options.updateQuery) {
             this.updateQuery((previous, { variables }) =>
-              (options.updateQuery as UpdateQueryFn<TData, TVariables>)(
-                previous,
-                {
-                  subscriptionData,
-                  variables,
-                },
-              ),
+              (options.updateQuery as UpdateQueryFn<
+                TData,
+                TVariables,
+                TSubscriptionData
+              >)(previous, {
+                subscriptionData,
+                variables,
+              }),
             );
           }
         },
@@ -502,7 +541,7 @@ export class ObservableQuery<
           ...this.options,
           variables: this.variables,
         } as WatchQueryOptions)
-        .then(result => maybeDeepFreeze(result));
+        .then(result => result as ApolloQueryResult<TData>);
     }
   }
 
@@ -614,6 +653,7 @@ export class ObservableQuery<
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
         this.lastResult = result;
+        this.lastResultSnapshot = cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

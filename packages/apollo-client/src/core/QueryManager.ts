@@ -1439,7 +1439,7 @@ export class QueryManager<TStore> {
     result: ExecutionResult,
   ) {
     // Collect all the fragment definitions
-    const fragmentMap: Record<string, SelectionNode[]> = {};
+    const fragmentMap: Record<string, ReadonlyArray<SelectionNode>> = {};
     doc.definitions
       .filter(definition => definition.kind === Kind.FRAGMENT_DEFINITION)
       .forEach(definition => {
@@ -1514,7 +1514,7 @@ export class QueryManager<TStore> {
     // Add expanded FragmentSpreads to the current selection set
     expandedFragments.forEach(fragSelection => {
       const fragFieldName = (fragSelection as FieldNode).name.value;
-      const existingSelection = selections.find(
+      let existingSelection = selections.find(
         selection =>
           selection.kind !== Kind.INLINE_FRAGMENT &&
           (selection as FieldNode).name.value === fragFieldName,
@@ -1530,9 +1530,10 @@ export class QueryManager<TStore> {
           // selections of the field must specify defer in order for the field
           // to be deferred. This should match the behavior on apollo-server.
           if (existingSelection.directives) {
-            existingSelection.directives = existingSelection.directives.filter(
+            const newDirectives = existingSelection.directives.filter(
               directive => directive.name.value !== 'defer',
             );
+            existingSelection = { ...existingSelection, directives: newDirectives }
           }
         }
       } else {

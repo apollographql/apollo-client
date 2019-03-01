@@ -29,7 +29,7 @@
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.cjs.min.js",
-      "maxSize": "4.9 kB"
+      "maxSize": "4.95 kB"
     },
     {
       "name": "apollo-client",

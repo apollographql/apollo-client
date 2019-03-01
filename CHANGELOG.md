@@ -1,5 +1,12 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client vNEXT
+
+### Apollo Cache In-Memory
+
+- Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4514](https://github.com/apollographql/apollo-client/pull/4514)
+
 ## Apollo Client 2.5.1
 
 ### apollo-client 2.5.1

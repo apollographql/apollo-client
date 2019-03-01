@@ -3,7 +3,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
-import { filter, check } from '../utilities';
+import { filter, check, propType } from '../utilities';
 
 describe('utilities', () => {
   describe('with a single query', () => {
@@ -12,6 +12,24 @@ describe('utilities', () => {
         alias: name
         height(unit: METERS)
         avatar {
+          square
+        }
+      }
+    `;
+    const fragment = gql`
+      fragment foo on Foo {
+        alias: name
+        height(unit: METERS)
+        avatar {
+          square
+        }
+      }
+    `;
+    const fragmentWithAVariable = gql`
+      fragment foo on Foo {
+        alias: name
+        height(unit: METERS)
+        avatar @include(if: $foo) {
           square
         }
       }
@@ -78,6 +96,22 @@ describe('utilities', () => {
 
     it('can filter an array of data', () => {
       expect(filter(doc, arrayData)).toEqual(filteredArrayData);
+    });
+
+    it('can filter data for fragments ', () => {
+      expect(filter(fragment, data)).toEqual(filteredData);
+    });
+
+    it('can filter data for fragments with variables', () => {
+      expect(filter(fragmentWithAVariable, data)).toEqual(filteredData);
+    });
+
+    it('can generate propTypes for fragments', () => {
+      expect(propType(fragment)).toEqual(expect.any(Function));
+    });
+
+    it('can generate propTypes for fragments with variables', () => {
+      expect(propType(fragmentWithAVariable)).toEqual(expect.any(Function));
     });
 
     it('can check matching data', () => {

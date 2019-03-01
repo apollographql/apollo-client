@@ -81,7 +81,7 @@ export function graphql(
   document: DocumentNode,
   rootValue?: any,
   contextValue?: any,
-  variableValues?: VariableMap,
+  variableValues: VariableMap = {},
   execOptions: ExecOptions = {},
 ) {
   const mainDefinition = getMainDefinition(document);
@@ -120,8 +120,8 @@ function executeSelectionSet(
   const result = {};
 
   selectionSet.selections.forEach(selection => {
-    if (!shouldInclude(selection, variables)) {
-      // Skip this entirely
+    if (variables && !shouldInclude(selection, variables)) {
+      // Skip selection sets which we're able to determine should not be run
       return;
     }
 

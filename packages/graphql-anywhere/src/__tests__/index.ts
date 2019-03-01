@@ -214,7 +214,7 @@ const execute = (graphql, r) => () => {
       }
     `;
 
-    const result = await graphql(resolver, query, null, null, null);
+    const result = await graphql(resolver, query, null, null);
 
     expect(result).toEqual({
       a: {

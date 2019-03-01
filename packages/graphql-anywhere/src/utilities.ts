@@ -17,8 +17,8 @@ export function filter<FD = any, D extends FD = any>(
   };
 
   return Array.isArray(data)
-    ? data.map(dataObj => graphql(resolver, doc, dataObj))
-    : graphql(resolver, doc, data);
+    ? data.map(dataObj => graphql(resolver, doc, dataObj, null, null))
+    : graphql(resolver, doc, data, null, null);
 }
 
 // TODO: we should probably make check call propType and then throw,
@@ -44,7 +44,7 @@ export function check(doc: DocumentNode, data: any): void {
     doc,
     data,
     {},
-    {},
+    null,
     {
       fragmentMatcher: () => false,
     },

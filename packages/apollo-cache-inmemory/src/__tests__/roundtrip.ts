@@ -16,8 +16,25 @@ import {
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
+function assertDeeplyFrozen(value: any, stack: any[] = []) {
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    stack.indexOf(value) < 0
+  ) {
+    expect(Object.isExtensible(value)).toBe(false);
+    expect(Object.isFrozen(value)).toBe(true);
+    stack.push(value);
+    Object.keys(value).forEach(key => {
+      assertDeeplyFrozen(value[key], stack);
+    });
+    expect(stack.pop()).toBe(value);
+  }
+}
+
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   const reader = new StoreReader();
+  const immutableReader = new StoreReader({ freezeResults: true });
   const writer = new StoreWriter();
 
   const store = writer.writeQueryToStore({
@@ -40,6 +57,22 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   // to the store. https://github.com/apollographql/apollo-client/pull/3394
   expect(store).toBeInstanceOf(DepTrackingCache);
   expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
+
+  const immutableResult = immutableReader.readQueryFromStore(readOptions);
+  expect(immutableResult).toEqual(reconstructedResult);
+  expect(immutableReader.readQueryFromStore(readOptions)).toBe(immutableResult);
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      // Note: this illegal assignment will only throw in strict mode, but that's
+      // safe to assume because this test file is a module.
+      (immutableResult as any).illegal = "this should not work";
+      throw new Error("unreached");
+    } catch (e) {
+      expect(e.message).not.toMatch(/unreached/);
+      expect(e).toBeInstanceOf(TypeError);
+    }
+    assertDeeplyFrozen(immutableResult);
+  }
 
   // Now make sure subtrees of the result are identical even after we write
   // an additional bogus field to the store.
@@ -203,6 +236,19 @@ describe('roundtrip', () => {
   });
 
   it('with GraphQLJSON scalar type', () => {
+    const updateClub = {
+      uid: '1d7f836018fc11e68d809dfee940f657',
+      name: 'Eple',
+      settings: {
+        name: 'eple',
+        currency: 'AFN',
+        calendarStretch: 2,
+        defaultPreAllocationPeriod: 1,
+        confirmationEmailCopy: null,
+        emailDomains: null,
+      },
+    };
+
     storeRoundtrip(
       gql`
         {
@@ -214,20 +260,14 @@ describe('roundtrip', () => {
         }
       `,
       {
-        updateClub: {
-          uid: '1d7f836018fc11e68d809dfee940f657',
-          name: 'Eple',
-          settings: {
-            name: 'eple',
-            currency: 'AFN',
-            calendarStretch: 2,
-            defaultPreAllocationPeriod: 1,
-            confirmationEmailCopy: null,
-            emailDomains: null,
-          },
-        },
+        updateClub,
       },
     );
+
+    // Just because we read from the store using { freezeResults: true }, the
+    // original data should not be frozen.
+    expect(Object.isExtensible(updateClub)).toBe(true);
+    expect(Object.isFrozen(updateClub)).toBe(false);
   });
 
   describe('directives', () => {

@@ -72,7 +72,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
-  public queryManager: QueryManager<TCacheShape> | undefined;
+  public readonly queryManager: QueryManager<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
@@ -80,11 +80,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public readonly typeDefs: ApolloClientOptions<TCacheShape>['typeDefs'];
 
   private devToolsHookCb: Function;
-  private proxy: ApolloCache<TCacheShape> | undefined;
-  private ssrMode: boolean;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
-  private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TCacheShape>;
 
   /**
@@ -166,7 +163,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
-    this.ssrMode = ssrMode;
     this.defaultOptions = defaultOptions || {};
     this.typeDefs = typeDefs;
 
@@ -231,19 +227,35 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     this.version = version;
 
-    if (clientAwarenessName) {
-      this.clientAwareness.name = clientAwarenessName;
-    }
-
-    if (clientAwarenessVersion) {
-      this.clientAwareness.version = clientAwarenessVersion;
-    }
-
     this.localState = new LocalState({
       cache,
       client: this,
       resolvers,
       fragmentMatcher,
+    });
+
+    this.queryManager = new QueryManager({
+      link: this.link,
+      store: this.store,
+      queryDeduplication,
+      ssrMode,
+      clientAwareness: {
+        name: clientAwarenessName!,
+        version: clientAwarenessVersion!,
+      },
+      localState: this.localState,
+      onBroadcast: () => {
+        if (this.devToolsHookCb) {
+          this.devToolsHookCb({
+            action: {},
+            state: {
+              queries: this.queryManager.queryStore.getStore(),
+              mutations: this.queryManager.mutationStore.getStore(),
+            },
+            dataWithOptimisticResults: this.cache.extract(true),
+          });
+        }
+      },
     });
   }
 
@@ -295,7 +307,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.initQueryManager().watchQuery<T, TVariables>(options);
+    return this.queryManager.watchQuery<T, TVariables>(options);
   }
 
   /**
@@ -327,7 +339,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.initQueryManager().query<T>(options);
+    return this.queryManager.query<T>(options);
   }
 
   /**
@@ -347,7 +359,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       } as MutationOptions<T, TVariables>;
     }
 
-    return this.initQueryManager().mutate<T>(options);
+    return this.queryManager.mutate<T>(options);
   }
 
   /**
@@ -357,7 +369,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public subscribe<T = any, TVariables = OperationVariables>(
     options: SubscriptionOptions<TVariables>,
   ): Observable<T> {
-    return this.initQueryManager().startGraphQLSubscription<T>(options);
+    return this.queryManager.startGraphQLSubscription<T>(options);
   }
 
   /**
@@ -373,7 +385,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
   ): T | null {
-    return this.initProxy().readQuery<T, TVariables>(options, optimistic);
+    return this.cache.readQuery<T, TVariables>(options, optimistic);
   }
 
   /**
@@ -394,7 +406,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
   ): T | null {
-    return this.initProxy().readFragment<T, TVariables>(options, optimistic);
+    return this.cache.readFragment<T, TVariables>(options, optimistic);
   }
 
   /**
@@ -405,8 +417,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public writeQuery<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
   ): void {
-    const result = this.initProxy().writeQuery<TData, TVariables>(options);
-    this.initQueryManager().broadcastQueries();
+    const result = this.cache.writeQuery<TData, TVariables>(options);
+    this.queryManager.broadcastQueries();
     return result;
   }
 
@@ -424,8 +436,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public writeFragment<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
   ): void {
-    const result = this.initProxy().writeFragment<TData, TVariables>(options);
-    this.initQueryManager().broadcastQueries();
+    const result = this.cache.writeFragment<TData, TVariables>(options);
+    this.queryManager.broadcastQueries();
     return result;
   }
 
@@ -442,8 +454,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public writeData<TData = any>(
     options: DataProxy.WriteDataOptions<TData>,
   ): void {
-    const result = this.initProxy().writeData<TData>(options);
-    this.initQueryManager().broadcastQueries();
+    const result = this.cache.writeData<TData>(options);
+    this.queryManager.broadcastQueries();
     return result;
   }
 
@@ -459,32 +471,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * This initializes the query manager that tracks queries and the cache
    */
   public initQueryManager(): QueryManager<TCacheShape> {
-    if (!this.queryManager) {
-      this.queryManager = new QueryManager({
-        link: this.link,
-        store: this.store,
-        queryDeduplication: this.queryDeduplication,
-        ssrMode: this.ssrMode,
-        clientAwareness: this.clientAwareness,
-        localState: this.localState,
-        onBroadcast: () => {
-          if (this.devToolsHookCb) {
-            this.devToolsHookCb({
-              action: {},
-              state: {
-                queries: this.queryManager
-                  ? this.queryManager.queryStore.getStore()
-                  : {},
-                mutations: this.queryManager
-                  ? this.queryManager.mutationStore.getStore()
-                  : {},
-              },
-              dataWithOptimisticResults: this.cache.extract(true),
-            });
-          }
-        },
-      });
-    }
     return this.queryManager;
   }
 
@@ -581,7 +567,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
   public extract(optimistic?: boolean): TCacheShape {
-    return this.initProxy().extract(optimistic);
+    return this.cache.extract(optimistic);
   }
 
   /**
@@ -592,7 +578,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * and also (potentially) during hot reloads.
    */
   public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
-    return this.initProxy().restore(serializedState);
+    return this.cache.restore(serializedState);
   }
 
   /**
@@ -621,18 +607,5 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
     this.localState.setFragmentMatcher(fragmentMatcher);
-  }
-
-  /**
-   * Initializes a data proxy for this client instance if one does not already
-   * exist and returns either a previously initialized proxy instance or the
-   * newly initialized instance.
-   */
-  private initProxy(): ApolloCache<TCacheShape> {
-    if (!this.proxy) {
-      this.initQueryManager();
-      this.proxy = this.cache;
-    }
-    return this.proxy;
   }
 }

@@ -222,7 +222,7 @@ export class ObservableQuery<
     // See more: https://github.com/apollostack/apollo-client/issues/707
     // Basically: is there a query in flight right now (modolo the next tick)?
     const loading =
-      (this.options.fetchPolicy === 'network-only' && queryLoading) ||
+      ((this.options.fetchPolicy === 'network-only' || this.options.fetchPolicy === 'no-cache') && queryLoading) ||
       (partial && this.options.fetchPolicy !== 'cache-only');
 
     // if there is nothing in the query store, it means this query hasn't fired yet or it has been cleaned up. Therefore the

@@ -2,10 +2,18 @@
 
 ## Apollo Client vNEXT
 
+### Apollo Client 
+
+- Update the React Native docs to remove the request for external example 
+  apps that we can link to. We're no longer going to manage a list of 
+  external example apps.  <br />
+  [@hwillson](https://github.com/hwillson) in [#4531](https://github.com/apollographql/apollo-client/pull/4531)
+
 ### Apollo Cache In-Memory
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>
   [@benjamn](https://github.com/benjamn) in [#4514](https://github.com/apollographql/apollo-client/pull/4514)
+
 
 ## Apollo Client 2.5.1
 

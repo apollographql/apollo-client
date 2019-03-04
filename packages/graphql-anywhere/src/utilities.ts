@@ -6,7 +6,7 @@ export function filter<FD = any, D extends FD = any>(
   doc: DocumentNode,
   data: D,
   variableValues: VariableMap = {},
-  ): FD {
+): FD {
   const resolver = (
     fieldName: string,
     root: any,
@@ -26,7 +26,11 @@ export function filter<FD = any, D extends FD = any>(
 // rather than the other way round, to avoid constructing stack traces
 // for things like oneOf uses in React. At this stage I doubt many people
 // are using this like that, but in the future, who knows?
-export function check(doc: DocumentNode, data: any): void {
+export function check(
+  doc: DocumentNode,
+  data: any,
+  variables: VariableMap = {},
+): void {
   const resolver = (
     fieldName: string,
     root: any,
@@ -40,16 +44,9 @@ export function check(doc: DocumentNode, data: any): void {
     return root[info.resultKey];
   };
 
-  graphql(
-    resolver,
-    doc,
-    data,
-    {},
-    null,
-    {
-      fragmentMatcher: () => false,
-    },
-  );
+  graphql(resolver, doc, data, {}, variables, {
+    fragmentMatcher: () => false,
+  });
 }
 
 // Lifted/adapted from
@@ -105,12 +102,15 @@ function createChainableTypeChecker(validate) {
   return chainedCheckType;
 }
 
-export function propType(doc) {
+export function propType(
+  doc: DocumentNode,
+  mapPropsToVariables = props => props,
+) {
   return createChainableTypeChecker((props, propName) => {
     const prop = props[propName];
     try {
       if (!prop.loading) {
-        check(doc, prop);
+        check(doc, prop, mapPropsToVariables(props));
       }
       return null;
     } catch (e) {

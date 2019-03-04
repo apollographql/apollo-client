@@ -103,7 +103,9 @@ describe('utilities', () => {
     });
 
     it('can filter data for fragments with variables', () => {
-      expect(filter(fragmentWithAVariable, data, {foo: true})).toEqual(filteredData);
+      expect(filter(fragmentWithAVariable, data, { foo: true })).toEqual(
+        filteredData,
+      );
     });
 
     it('can generate propTypes for fragments', () => {
@@ -116,6 +118,18 @@ describe('utilities', () => {
 
     it('can check matching data', () => {
       check(doc, filteredData);
+    });
+
+    it('can check matching data for fragments with variables', () => {
+      check(doc, filteredData, { foo: true });
+    });
+
+    it('throws when checking non-matching data for fragments with variables', () => {
+      const badFilteredData = { ...filteredData };
+      delete badFilteredData.avatar;
+      expect(() => {
+        check(doc, badFilteredData);
+      }).toThrow();
     });
 
     // This doesn't throw but potentially it should?

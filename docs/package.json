@@ -1,9 +1,6 @@
 {
-  "name": "hexo-site",
-  "version": "0.0.0",
-  "private": true,
   "scripts": {
-    "start": "gatsby develop"
+    "start": "gatsby develop --prefix-paths"
   },
   "dependencies": {
     "gatsby": "^2.1.21",

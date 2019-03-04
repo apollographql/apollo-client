@@ -39,5 +39,8 @@
   "dependencies": {
     "apollo-utilities": "file:../apollo-utilities",
     "tslib": "^1.9.3"
+  },
+  "devDependencies": {
+    "prop-types": "^15.7.2"
   }
 }

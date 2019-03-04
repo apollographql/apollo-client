@@ -1,4 +1,5 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
+import {checkPropTypes} from 'prop-types';
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
@@ -89,6 +90,16 @@ describe('utilities', () => {
         },
       },
     ];
+    let consoleSpy;
+
+    beforeEach(() => {
+      checkPropTypes.resetWarningCache();
+      consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      consoleSpy.mockRestore();
+    });
 
     it('can filter data', () => {
       expect(filter(doc, data)).toEqual(filteredData);
@@ -112,8 +123,31 @@ describe('utilities', () => {
       expect(propType(fragment)).toEqual(expect.any(Function));
     });
 
+    it('can check propTypes for fragments', () => {
+      const propTypes = {
+        foo: propType(fragment),
+      };
+      checkPropTypes(propTypes, filteredData, 'prop', 'MyComponent');
+      expect(consoleSpy).not.toHaveBeenCalled();
+      checkPropTypes(propTypes, { foo: {} }, 'prop', 'MyComponent');
+      expect(consoleSpy.mock.calls[0]).toMatchSnapshot();
+    });
+
     it('can generate propTypes for fragments with variables', () => {
       expect(propType(fragmentWithAVariable)).toEqual(expect.any(Function));
+    });
+
+    it('can check propTypes for fragments with variables', () => {
+      const mapPropsToVariables = () => ({foo: true});
+      const propTypes = {
+        foo: propType(fragmentWithAVariable, mapPropsToVariables),
+      };
+      checkPropTypes(propTypes, filteredData, 'prop', 'MyComponent');
+      expect(consoleSpy).not.toHaveBeenCalled();
+      const badProps = { foo: { ...filteredData } };
+      delete badProps.foo.avatar;
+      checkPropTypes(propTypes, badProps, 'prop', 'MyComponent');
+      expect(consoleSpy.mock.calls[0]).toMatchSnapshot();
     });
 
     it('can check matching data', () => {

@@ -2,10 +2,15 @@
 
 ## Apollo Client vNEXT
 
-### Apollo Client 
+- In production, `invariant(condition, message)` failures will now include
+  a unique error code that can be used to trace the error back to the
+  point of failure. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4521](https://github.com/apollographql/apollo-client/pull/4521)
 
-- Update the React Native docs to remove the request for external example 
-  apps that we can link to. We're no longer going to manage a list of 
+### Apollo Client
+
+- Update the React Native docs to remove the request for external example
+  apps that we can link to. We're no longer going to manage a list of
   external example apps.  <br />
   [@hwillson](https://github.com/hwillson) in [#4531](https://github.com/apollographql/apollo-client/pull/4531)
 
@@ -13,7 +18,6 @@
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>
   [@benjamn](https://github.com/benjamn) in [#4514](https://github.com/apollographql/apollo-client/pull/4514)
-
 
 ## Apollo Client 2.5.1
 

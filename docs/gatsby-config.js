@@ -14,13 +14,13 @@ module.exports = {
             'index',
             'why-apollo',
             'integrations',
-            'react-apollo-migration'
+            'react-apollo-migration',
           ],
           Essentials: [
             'essentials/get-started',
             'essentials/queries',
             'essentials/mutations',
-            'essentials/local-state'
+            'essentials/local-state',
           ],
           Features: [
             'features/error-handling',
@@ -28,14 +28,14 @@ module.exports = {
             'features/optimistic-ui',
             'features/server-side-rendering',
             'features/developer-tooling',
-            'features/defer-support'
+            'features/defer-support',
           ],
           Advanced: [
             'advanced/boost-migration',
             'advanced/subscriptions',
             'advanced/network-layer',
             'advanced/caching',
-            'advanced/fragments'
+            'advanced/fragments',
           ],
           Recipes: [
             'recipes/authentication',
@@ -47,14 +47,11 @@ module.exports = {
             'recipes/webpack',
             'recipes/meteor',
             'recipes/recompose',
-            'recipes/2.0-migration'
+            'recipes/2.0-migration',
           ],
-          API: [
-            'api/apollo-client',
-            'api/react-apollo'
-          ]
-        }
-      }
-    }
-  ]
+          API: ['api/apollo-client', 'api/react-apollo'],
+        },
+      },
+    },
+  ],
 };

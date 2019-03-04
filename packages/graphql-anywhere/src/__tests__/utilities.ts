@@ -103,7 +103,7 @@ describe('utilities', () => {
     });
 
     it('can filter data for fragments with variables', () => {
-      expect(filter(fragmentWithAVariable, data)).toEqual(filteredData);
+      expect(filter(fragmentWithAVariable, data, {foo: true})).toEqual(filteredData);
     });
 
     it('can generate propTypes for fragments', () => {

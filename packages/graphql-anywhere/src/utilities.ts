@@ -1,11 +1,12 @@
 import { DocumentNode } from 'graphql';
 
-import { graphql } from './graphql';
+import { graphql, VariableMap } from './graphql';
 
 export function filter<FD = any, D extends FD = any>(
   doc: DocumentNode,
   data: D,
-): FD {
+  variableValues: VariableMap = {},
+  ): FD {
   const resolver = (
     fieldName: string,
     root: any,
@@ -17,8 +18,8 @@ export function filter<FD = any, D extends FD = any>(
   };
 
   return Array.isArray(data)
-    ? data.map(dataObj => graphql(resolver, doc, dataObj, null, null))
-    : graphql(resolver, doc, data, null, null);
+    ? data.map(dataObj => graphql(resolver, doc, dataObj, null, variableValues))
+    : graphql(resolver, doc, data, null, variableValues);
 }
 
 // TODO: we should probably make check call propType and then throw,

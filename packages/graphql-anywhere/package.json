@@ -21,6 +21,9 @@
     "filesize": "npm run minify",
     "clean": "rm -rf coverage/* && rm -rf lib/*"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "apollographql/graphql-anywhere"

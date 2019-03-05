@@ -38,6 +38,9 @@
     "minify": "../../node_modules/uglify-js/bin/uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.umd.js",
     "filesize": "npm run minify"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "apollo-utilities": "file:../apollo-utilities",
     "tslib": "^1.9.3"

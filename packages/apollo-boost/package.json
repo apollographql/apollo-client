@@ -37,6 +37,9 @@
     "filesize": "npm run minify",
     "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js && ../../node_modules/rollup/bin/rollup -c rollup-bundle.config.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",
     "apollo-cache-inmemory": "file:../apollo-cache-inmemory",

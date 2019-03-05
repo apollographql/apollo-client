@@ -1,6 +1,5 @@
 {
   "name": "@rmosolgo/apollo-client",
-  "private": true,
   "version": "2.4.13",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
@@ -29,6 +28,9 @@
     "preanalyze": "npm run build",
     "analyze": "webpack -p --config analyze/webpack.config.js",
     "clean": "rm -rf coverage/* && rm -rf lib/*"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "repository": {
     "type": "git",

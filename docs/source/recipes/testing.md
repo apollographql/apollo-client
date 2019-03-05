@@ -34,8 +34,8 @@ export const GET_DOG_QUERY = gql`
 export const Dog = ({ name }) => (
   <Query query={GET_DOG_QUERY} variables={{ name }}>
     {({ loading, error, data }) => {
-      if (loading) return 'Loading...';
-      if (error) return `Error!`;
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error!</p>;
 
       return (
         <p>

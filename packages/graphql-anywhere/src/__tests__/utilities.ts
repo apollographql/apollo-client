@@ -1,5 +1,5 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
-import {checkPropTypes} from 'prop-types';
+import { checkPropTypes } from 'prop-types';
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
@@ -90,15 +90,14 @@ describe('utilities', () => {
         },
       },
     ];
-    let consoleSpy;
 
     beforeEach(() => {
       checkPropTypes.resetWarningCache();
-      consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      jest.spyOn(global.console, 'error').mockImplementation(() => {});
     });
 
     afterEach(() => {
-      consoleSpy.mockRestore();
+      global.console.error.mockRestore();
     });
 
     it('can filter data', () => {
@@ -128,9 +127,9 @@ describe('utilities', () => {
         foo: propType(fragment),
       };
       checkPropTypes(propTypes, filteredData, 'prop', 'MyComponent');
-      expect(consoleSpy).not.toHaveBeenCalled();
+      expect(global.console.error).not.toHaveBeenCalled();
       checkPropTypes(propTypes, { foo: {} }, 'prop', 'MyComponent');
-      expect(consoleSpy.mock.calls[0]).toMatchSnapshot();
+      expect(global.console.error.mock.calls[0]).toMatchSnapshot();
     });
 
     it('can generate propTypes for fragments with variables', () => {
@@ -138,16 +137,27 @@ describe('utilities', () => {
     });
 
     it('can check propTypes for fragments with variables', () => {
-      const mapPropsToVariables = () => ({foo: true});
+      const mapPropsToVariables = () => null;
       const propTypes = {
         foo: propType(fragmentWithAVariable, mapPropsToVariables),
       };
-      checkPropTypes(propTypes, filteredData, 'prop', 'MyComponent');
-      expect(consoleSpy).not.toHaveBeenCalled();
+      checkPropTypes(propTypes, { foo: filteredData }, 'prop', 'MyComponent');
+      expect(global.console.error).not.toHaveBeenCalled();
       const badProps = { foo: { ...filteredData } };
-      delete badProps.foo.avatar;
+      delete badProps.foo.height;
       checkPropTypes(propTypes, badProps, 'prop', 'MyComponent');
-      expect(consoleSpy.mock.calls[0]).toMatchSnapshot();
+      expect(global.console.error).toHaveBeenCalled();
+      expect(global.console.error.mock.calls[0]).toMatchSnapshot();
+    });
+
+    it('makes variable inclusion props optional, when no variables are passed', () => {
+      const propTypes = {
+        foo: propType(fragmentWithAVariable),
+      };
+      const propsWithoutAvatar = { foo: { ...filteredData } };
+      delete propsWithoutAvatar.foo.avatar;
+      checkPropTypes(propTypes, propsWithoutAvatar, 'prop', 'MyComponent');
+      expect(global.console.error).not.toHaveBeenCalled();
     });
 
     it('can check matching data', () => {

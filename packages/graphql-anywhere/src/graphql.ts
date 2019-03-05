@@ -53,6 +53,7 @@ export type ExecInfo = {
   isLeaf: boolean;
   resultKey: string;
   directives: DirectiveInfo;
+  field: FieldNode;
 };
 
 export type ExecOptions = {
@@ -186,6 +187,7 @@ function executeField(
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
     directives: getDirectiveInfoFromField(field, variables),
+    field,
   };
 
   const result = resolver(fieldName, rootValue, args, contextValue, info);

@@ -8,6 +8,6 @@ Array [
 
 exports[`utilities with a single query can check propTypes for fragments with variables 1`] = `
 Array [
-  "Warning: Failed prop type: avatar missing on {\\"alias\\":\\"Bob\\",\\"height\\":1.89}",
+  "Warning: Failed prop type: height missing on {\\"alias\\":\\"Bob\\",\\"avatar\\":{\\"square\\":\\"abc\\"}}",
 ]
 `;

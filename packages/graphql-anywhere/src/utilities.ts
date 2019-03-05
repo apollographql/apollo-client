@@ -1,6 +1,8 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, DirectiveNode } from 'graphql';
 
-import { graphql, VariableMap } from './graphql';
+import { getInclusionDirectives, InclusionDirectives } from 'apollo-utilities';
+
+import { graphql, VariableMap, ExecInfo, ExecContext } from './graphql';
 
 export function filter<FD = any, D extends FD = any>(
   doc: DocumentNode,
@@ -10,9 +12,9 @@ export function filter<FD = any, D extends FD = any>(
   const resolver = (
     fieldName: string,
     root: any,
-    args: any,
-    context: any,
-    info: any,
+    args: Object,
+    context: ExecContext,
+    info: ExecInfo,
   ) => {
     return root[info.resultKey];
   };
@@ -39,7 +41,11 @@ export function check(
     info: any,
   ) => {
     if (!{}.hasOwnProperty.call(root, info.resultKey)) {
-      throw new Error(`${info.resultKey} missing on ${JSON.stringify(root)}`);
+      // When variables is null, fields with @include/skip directives that
+      // reference variables are considered optional.
+      if (variables || !hasVariableInclusions(info.field.directives)) {
+        throw new Error(`${info.resultKey} missing on ${JSON.stringify(root)}`);
+      }
     }
     return root[info.resultKey];
   };
@@ -47,6 +53,21 @@ export function check(
   graphql(resolver, doc, data, {}, variables, {
     fragmentMatcher: () => false,
   });
+}
+
+function hasVariableInclusions(
+  directives: ReadonlyArray<DirectiveNode>,
+): boolean {
+  if (!directives || !directives.length) {
+    return false;
+  }
+  const inclusionDirectives: InclusionDirectives = getInclusionDirectives(
+    directives,
+  );
+  return inclusionDirectives.some(
+    ({ ifArgument }) =>
+      ifArgument.value && ifArgument.value.kind === 'Variable',
+  );
 }
 
 // Lifted/adapted from
@@ -104,7 +125,7 @@ function createChainableTypeChecker(validate) {
 
 export function propType(
   doc: DocumentNode,
-  mapPropsToVariables = props => props,
+  mapPropsToVariables = props => null,
 ) {
   return createChainableTypeChecker((props, propName) => {
     const prop = props[propName];

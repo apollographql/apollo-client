@@ -1,6 +1,6 @@
 {
   "name": "@rmosolgo/apollo-cache-inmemory",
-  "version": "1.4.3",
+  "version": "1.4.4-alpha.0",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [

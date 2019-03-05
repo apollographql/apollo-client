@@ -1,6 +1,6 @@
 {
   "name": "@rmosolgo/apollo-client",
-  "version": "2.4.13",
+  "version": "2.4.14-alpha.0",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",

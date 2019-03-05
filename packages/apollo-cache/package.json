@@ -1,6 +1,6 @@
 {
   "name": "@rmosolgo/apollo-cache",
-  "version": "1.1.26",
+  "version": "1.1.27-alpha.0",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [

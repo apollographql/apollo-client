@@ -9,6 +9,7 @@ module.exports = {
         contentDir: 'source',
         basePath: '/docs/react',
         githubRepo: 'apollographql/apollo-client',
+        versions: ['2.4', '2.5'],
         sidebarCategories: {
           null: [
             'index',

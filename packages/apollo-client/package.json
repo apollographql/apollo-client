@@ -1,5 +1,5 @@
 {
-  "name": "apollo-client",
+  "name": "@rmosolgo/apollo-client",
   "private": true,
   "version": "2.4.13",
   "description": "A simple yet functional GraphQL client.",

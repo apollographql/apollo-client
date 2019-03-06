@@ -480,6 +480,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * This initializes the query manager that tracks queries and the cache
    */
   public initQueryManager(): QueryManager<TCacheShape> {
+    invariant.warn(
+      'Calling the initQueryManager method is no longer necessary, ' +
+        'and it will be removed from ApolloClient in version 3.0.',
+    );
     return this.queryManager;
   }
 

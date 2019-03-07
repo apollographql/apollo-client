@@ -34,12 +34,12 @@
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.cjs.min.js",
-      "maxSize": "10.6 kB"
+      "maxSize": "10.5 kB"
     },
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.cjs.min.js",
-      "maxSize": "4.2 kB"
+      "maxSize": "4.1 kB"
     }
   ],
   "lint-staged": {

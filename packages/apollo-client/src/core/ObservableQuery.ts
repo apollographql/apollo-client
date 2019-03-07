@@ -339,7 +339,8 @@ export class ObservableQuery<
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     // early return if no update Query
-    invariant(fetchMoreOptions.updateQuery,
+    invariant(
+      fetchMoreOptions.updateQuery,
       'updateQuery option is required. This function defines how to update the query data with the new results.',
     );
 
@@ -417,7 +418,7 @@ export class ObservableQuery<
             options.onError(err);
             return;
           }
-          console.error('Unhandled GraphQL subscription error', err);
+          invariant.error('Unhandled GraphQL subscription error', err);
         },
       });
 
@@ -577,7 +578,7 @@ export class ObservableQuery<
       (observer as any)._subscription._observer.error = (
         error: ApolloError,
       ) => {
-        console.error('Unhandled error', error.message, error.stack);
+        invariant.error('Unhandled error', error.message, error.stack);
       };
     }
 

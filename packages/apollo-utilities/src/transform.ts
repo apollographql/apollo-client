@@ -23,6 +23,7 @@ import {
   getMainDefinition,
 } from './getFromAST';
 import { filterInPlace } from './util/filterInPlace';
+import { invariant } from 'ts-invariant';
 
 export type RemoveNodeConfig<N> = {
   name?: string;
@@ -254,7 +255,7 @@ const connectionRemoveConfig = {
         !directive.arguments ||
         !directive.arguments.some(arg => arg.name.value === 'key')
       ) {
-        console.warn(
+        invariant.warn(
           'Removing an @connection directive even though it does not have a key. ' +
             'You may want to use the key parameter to specify a store key.',
         );

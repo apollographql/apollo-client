@@ -48,7 +48,6 @@
     "@types/zen-observable": "^0.8.0",
     "apollo-cache": "file:../apollo-cache",
     "apollo-link": "^1.0.0",
-    "apollo-link-dedup": "^1.0.0",
     "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
     "ts-invariant": "^0.3.2",

@@ -185,7 +185,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: ExecutionResult) => RefetchQueryDescription)
+    | ((result: ExecutionResult<T>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**

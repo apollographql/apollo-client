@@ -250,7 +250,8 @@ export class ObservableQuery<
 
     if (!partial) {
       this.lastResult = { ...result, stale: false };
-      this.lastResultSnapshot = cloneDeep(this.lastResult);
+      this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+        ? this.lastResult : cloneDeep(this.lastResult);
     }
 
     return { ...result, partial };
@@ -611,7 +612,8 @@ export class ObservableQuery<
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
         this.lastResult = result;
-        this.lastResultSnapshot = cloneDeep(result);
+        this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+          ? result : cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

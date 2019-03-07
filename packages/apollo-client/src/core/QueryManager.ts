@@ -57,6 +57,7 @@ export class QueryManager<TStore> {
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
   public dataStore: DataStore<TStore>;
+  public readonly assumeImmutableResults: boolean;
 
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
@@ -94,6 +95,7 @@ export class QueryManager<TStore> {
     ssrMode = false,
     clientAwareness = {},
     localState,
+    assumeImmutableResults,
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
@@ -102,6 +104,7 @@ export class QueryManager<TStore> {
     ssrMode?: boolean;
     clientAwareness?: Record<string, string>;
     localState?: LocalState<TStore>;
+    assumeImmutableResults?: boolean;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
@@ -111,6 +114,7 @@ export class QueryManager<TStore> {
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache: store.getCache() });
     this.ssrMode = ssrMode;
+    this.assumeImmutableResults = !!assumeImmutableResults;
   }
 
   /**

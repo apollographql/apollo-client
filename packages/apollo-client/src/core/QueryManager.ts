@@ -36,7 +36,7 @@ import {
   OperationVariables,
 } from './types';
 import { LocalState } from './LocalState';
-import { afterAllUnsubscribed, asyncMap } from '../util/observables';
+import { afterAllUnsubscribed, asyncMap, multiplex, afterPromise } from '../util/observables';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -960,132 +960,49 @@ export class QueryManager<TStore> {
     return queryId;
   }
 
-  public startGraphQLSubscription<T = any>(
-    options: SubscriptionOptions,
-  ): Observable<T> {
-    const { query } = options;
-    const isCacheEnabled = !(
-      options.fetchPolicy && options.fetchPolicy === 'no-cache'
-    );
-    const cache = this.dataStore.getCache();
-    let transformedDoc = cache.transformDocument(query);
+  public startGraphQLSubscription<T = any>({
+    query,
+    fetchPolicy,
+    variables,
+  }: SubscriptionOptions): Observable<FetchResult<T>> {
+    let transformedDoc = this.dataStore.getCache().transformDocument(query);
 
-    const variables = assign(
-      {},
-      getDefaultValues(getOperationDefinition(query)),
-      options.variables,
-    );
-
-    let updatedVariables = variables;
-    let sub: Subscription;
-    let observers: Observer<any>[] = [];
-    const clientQuery = this.localState.clientQuery(transformedDoc);
-
-    return new Observable(observer => {
-      observers.push(observer);
-
-      // If this is the first observer, actually initiate the network
-      // subscription.
-      if (observers.length === 1) {
-        let activeNextCalls = 0;
-        let complete = false;
-
-        const handler = {
-          next: async (result: FetchResult) => {
-            activeNextCalls += 1;
-            let updatedResult = result;
-
-            // Run the query through local client resolvers.
-            if (clientQuery && hasDirectives(['client'], clientQuery)) {
-              updatedResult = await this.localState.runResolvers({
-                document: clientQuery,
-                remoteResult: result,
-                context: {},
-                variables: updatedVariables,
-              });
-            }
-
-            if (isCacheEnabled) {
-              this.dataStore.markSubscriptionResult(
-                updatedResult,
-                transformedDoc,
-                updatedVariables,
-              );
-              this.broadcastQueries();
-            }
-
-            observers.forEach(obs => {
-              // If an error exists and a `error` handler has been defined on
-              // the observer, call that `error` handler and make sure the
-              // `next` handler is skipped. If no `error` handler exists, we're
-              // still passing any errors that might occur into the `next`
-              // handler, to give that handler a chance to deal with the
-              // error (we're doing this for backwards compatibilty).
-              if (graphQLResultHasError(updatedResult) && obs.error) {
-                obs.error(
-                  new ApolloError({
-                    graphQLErrors: updatedResult.errors,
-                  }),
-                );
-              } else if (obs.next) {
-                obs.next(updatedResult);
-              }
-              activeNextCalls -= 1;
-            });
-
-            if (activeNextCalls === 0 && complete) {
-              handler.complete();
-            }
-          },
-          error: (error: Error) => {
-            observers.forEach(obs => {
-              if (obs.error) {
-                obs.error(error);
-              }
-            });
-          },
-          complete: () => {
-            if (activeNextCalls === 0) {
-              observers.forEach(obs => {
-                if (obs.complete) {
-                  obs.complete();
-                }
-              });
-            }
-            complete = true;
-          }
+    return afterPromise(
+      new Promise(resolve => {
+        variables = {
+          ...getDefaultValues(getOperationDefinition(transformedDoc)),
+          ...variables,
         };
 
-        (async () => {
-          const updatedVariables: OperationVariables =
-            hasClientExports(transformedDoc)
-              ? await this.localState.addExportedVariables(
-                  transformedDoc,
-                  variables
-                )
-              : variables;
-          const serverQuery = this.localState.serverQuery(transformedDoc);
-          if (serverQuery) {
-            const operation = this.buildOperationForLink(
-              serverQuery,
-              updatedVariables,
-            );
-            sub = execute(this.link, operation).subscribe(handler);
-          } else {
-            sub = Observable.of({ data: {} }).subscribe(handler);
-          }
-        })();
-      }
-
-      return () => {
-        observers = observers.filter(obs => obs !== observer);
-
-        // If we removed the last observer, tear down the network subscription
-        if (observers.length === 0 && sub) {
-          sub.unsubscribe();
+        resolve(hasClientExports(transformedDoc)
+          ? this.localState.addExportedVariables(transformedDoc, variables)
+          : variables
+        );
+      }),
+      variables => multiplex(this.getObservableFromLink<T>(
+        transformedDoc,
+        {},
+        variables,
+        false,
+      ).map(result => {
+        if (!fetchPolicy || fetchPolicy !== 'no-cache') {
+          this.dataStore.markSubscriptionResult(
+            result,
+            transformedDoc,
+            variables,
+          );
+          this.broadcastQueries();
         }
-      };
-    });
+
+        if (graphQLResultHasError(result)) {
+          throw new ApolloError({
+            graphQLErrors: result.errors,
+          });
+        }
+
+        return result;
+      })),
+    );
   }
 
   public stopQuery(queryId: string) {

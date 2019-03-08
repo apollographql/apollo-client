@@ -1,4 +1,4 @@
-import { Observable, Observer } from './Observable';
+import { Observable, Observer, Subscription } from './Observable';
 
 export function afterAllUnsubscribed<T>(
   inner: Observable<T>,
@@ -12,6 +12,50 @@ export function afterAllUnsubscribed<T>(
       sub.unsubscribe();
       if (observers.delete(observer) && !observers.size) {
         cleanup();
+      }
+    };
+  });
+}
+
+export function afterPromise<T, U>(
+  promise: Promise<T>,
+  makeObservable: (value: T) => Observable<U>,
+): Observable<U> {
+  const obsPromise = promise.then(makeObservable);
+  return new Observable<U>(observer => {
+    let sub: Subscription | null = null;
+    obsPromise.then(
+      observable => sub = observable.subscribe(observer),
+      error => observer.error && observer.error(error),
+    );
+    return () => sub && sub.unsubscribe();
+  });
+}
+
+// Returns a normal Observable that can have any number of subscribers,
+// while ensuring the original Observable gets subscribed to at most once.
+export function multiplex<T>(inner: Observable<T>): Observable<T> {
+  const observers = new Set<Observer<T>>();
+  let sub: Subscription | null = null;
+  return new Observable<T>(observer => {
+    observers.add(observer);
+    sub = sub || inner.subscribe({
+      next(value) {
+        observers.forEach(obs => obs.next && obs.next(value));
+      },
+      error(error) {
+        observers.forEach(obs => obs.error && obs.error(error));
+      },
+      complete() {
+        observers.forEach(obs => obs.complete && obs.complete());
+      },
+    });
+    return () => {
+      if (observers.delete(observer) && !observers.size) {
+        if (sub) {
+          sub.unsubscribe();
+          sub = null;
+        }
       }
     };
   });

@@ -2,4 +2,4 @@
 
 exports[`Combining client and server state/operations should correctly propagate an error from a client resolver 1`] = `"Network error: Illegal Query Operation Occurred"`;
 
-exports[`Combining client and server state/operations should correctly propagate an error from a client resolver 2`] = `"Illegal Mutation Operation Occurred"`;
+exports[`Combining client and server state/operations should correctly propagate an error from a client resolver 2`] = `"Network error: Illegal Mutation Operation Occurred"`;

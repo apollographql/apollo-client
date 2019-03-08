@@ -4,7 +4,6 @@ import { Cache } from 'apollo-cache';
 import {
   assign,
   getDefaultValues,
-  getMutationDefinition,
   getOperationDefinition,
   getOperationName,
   getQueryDefinition,
@@ -149,15 +148,18 @@ export class QueryManager<TStore> {
     );
 
     const mutationId = this.generateQueryId();
-    const cache = this.dataStore.getCache();
-    (mutation = cache.transformDocument(mutation)),
-      (variables = assign(
-        {},
-        getDefaultValues(getMutationDefinition(mutation)),
-        variables,
-      ));
+    mutation = this.dataStore.getCache().transformDocument(mutation);
 
     this.setQuery(mutationId, () => ({ document: mutation }));
+
+    variables = {
+      ...getDefaultValues(getOperationDefinition(mutation)),
+      ...variables,
+    };
+
+    if (hasClientExports(mutation)) {
+      variables = await this.localState.addExportedVariables(mutation, variables, context);
+    }
 
     // Create a map of update queries by id to the query instead of by name.
     const generateUpdateQueriesInfo: () => {
@@ -185,25 +187,16 @@ export class QueryManager<TStore> {
       return ret;
     };
 
-    const updatedVariables: OperationVariables =
-      hasClientExports(mutation)
-        ? await this.localState.addExportedVariables(
-            mutation,
-            variables,
-            context,
-          )
-        : variables;
-
     this.mutationStore.initMutation(
       mutationId,
       mutation,
-      updatedVariables,
+      variables,
     );
 
     this.dataStore.markMutationInit({
       mutationId,
       document: mutation,
-      variables: updatedVariables || {},
+      variables,
       updateQueries: generateUpdateQueriesInfo(),
       update: updateWithProxyFn,
       optimisticResponse,
@@ -211,105 +204,23 @@ export class QueryManager<TStore> {
 
     this.broadcastQueries();
 
+    const self = this;
+
     return new Promise((resolve, reject) => {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
 
-      const operation = this.buildOperationForLink(mutation, updatedVariables, {
-        ...context,
-        optimisticResponse,
-      });
-
-      const completeMutation = () => {
-        if (error) {
-          this.mutationStore.markMutationError(mutationId, error);
-        }
-
-        this.dataStore.markMutationComplete({
-          mutationId,
+      self.getObservableFromLink(
+        mutation,
+        {
+          ...context,
           optimisticResponse,
-        });
-
-        this.broadcastQueries();
-
-        if (error) {
-          return Promise.reject(error);
-        }
-
-        // allow for conditional refetches
-        // XXX do we want to make this the only API one day?
-        if (typeof refetchQueries === 'function') {
-          refetchQueries = refetchQueries(storeResult as ExecutionResult);
-        }
-
-        const refetchQueryPromises: Promise<
-          ApolloQueryResult<any>[] | ApolloQueryResult<{}>
-        >[] = [];
-
-        for (const refetchQuery of refetchQueries) {
-          if (typeof refetchQuery === 'string') {
-            this.queries.forEach(({ observableQuery }) => {
-              if (
-                observableQuery &&
-                observableQuery.queryName === refetchQuery
-              ) {
-                refetchQueryPromises.push(observableQuery.refetch());
-              }
-            });
-            continue;
-          }
-
-          const queryOptions: QueryOptions = {
-            query: refetchQuery.query,
-            variables: refetchQuery.variables,
-            fetchPolicy: 'network-only',
-          };
-
-          if (refetchQuery.context) {
-            queryOptions.context = refetchQuery.context;
-          }
-
-          refetchQueryPromises.push(this.query(queryOptions));
-        }
-
-        return Promise.all(
-          awaitRefetchQueries ? refetchQueryPromises : [],
-        ).then(() => {
-          this.setQuery(mutationId, () => ({ document: null }));
-
-          if (
-            errorPolicy === 'ignore' &&
-            storeResult &&
-            graphQLResultHasError(storeResult)
-          ) {
-            delete storeResult.errors;
-          }
-
-          return storeResult as FetchResult<T>;
-        });
-      };
-
-      const clientQuery = this.localState.clientQuery(operation.query);
-      const serverQuery = this.localState.serverQuery(operation.query);
-      if (serverQuery) {
-        operation.query = serverQuery;
-      }
-
-      const obs: Observable<FetchResult> = serverQuery
-        ? execute(this.link, operation)
-        : Observable.of({
-            data: {},
-          });
-
-      const self = this;
-      let complete = false;
-      let handlingNext = false;
-      obs.subscribe({
-        next: async (result: ExecutionResult) => {
-          handlingNext = true;
-
+        },
+        variables,
+        false,
+      ).subscribe({
+        next(result: ExecutionResult) {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
-            handlingNext = false;
             error = new ApolloError({
               graphQLErrors: result.errors,
             });
@@ -317,42 +228,19 @@ export class QueryManager<TStore> {
           }
 
           self.mutationStore.markMutationResult(mutationId);
-          let updatedResult = result;
-          const { context, variables } = operation;
-
-          // Run the query through local client resolvers.
-          if (clientQuery && hasDirectives(['client'], clientQuery)) {
-            updatedResult = await self.localState
-              .runResolvers({
-                document: clientQuery,
-                remoteResult: result,
-                context,
-                variables,
-              })
-              .catch(error => {
-                handlingNext = false;
-                reject(error);
-                return result;
-              });
-          }
 
           if (fetchPolicy !== 'no-cache') {
             self.dataStore.markMutationResult({
               mutationId,
-              result: updatedResult,
+              result,
               document: mutation,
-              variables: updatedVariables || {},
+              variables,
               updateQueries: generateUpdateQueriesInfo(),
               update: updateWithProxyFn,
             });
           }
 
-          storeResult = updatedResult as FetchResult<T>;
-
-          handlingNext = false;
-          if (complete) {
-            completeMutation().then(resolve, reject);
-          }
+          storeResult = result as FetchResult<T>;
         },
 
         error(err: Error) {
@@ -362,7 +250,6 @@ export class QueryManager<TStore> {
             optimisticResponse,
           });
           self.broadcastQueries();
-
           self.setQuery(mutationId, () => ({ document: null }));
           reject(
             new ApolloError({
@@ -372,10 +259,73 @@ export class QueryManager<TStore> {
         },
 
         complete() {
-          if (!handlingNext) {
-            completeMutation().then(resolve, reject);
+          if (error) {
+            self.mutationStore.markMutationError(mutationId, error);
           }
-          complete = true;
+
+          self.dataStore.markMutationComplete({
+            mutationId,
+            optimisticResponse,
+          });
+
+          self.broadcastQueries();
+
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          // allow for conditional refetches
+          // XXX do we want to make this the only API one day?
+          if (typeof refetchQueries === 'function') {
+            refetchQueries = refetchQueries(storeResult as ExecutionResult);
+          }
+
+          const refetchQueryPromises: Promise<
+            ApolloQueryResult<any>[] | ApolloQueryResult<{}>
+          >[] = [];
+
+          for (const refetchQuery of refetchQueries) {
+            if (typeof refetchQuery === 'string') {
+              self.queries.forEach(({ observableQuery }) => {
+                if (
+                  observableQuery &&
+                  observableQuery.queryName === refetchQuery
+                ) {
+                  refetchQueryPromises.push(observableQuery.refetch());
+                }
+              });
+              continue;
+            }
+
+            const queryOptions: QueryOptions = {
+              query: refetchQuery.query,
+              variables: refetchQuery.variables,
+              fetchPolicy: 'network-only',
+            };
+
+            if (refetchQuery.context) {
+              queryOptions.context = refetchQuery.context;
+            }
+
+            refetchQueryPromises.push(self.query(queryOptions));
+          }
+
+          Promise.all(
+            awaitRefetchQueries ? refetchQueryPromises : [],
+          ).then(() => {
+            self.setQuery(mutationId, () => ({ document: null }));
+
+            if (
+              errorPolicy === 'ignore' &&
+              storeResult &&
+              graphQLResultHasError(storeResult)
+            ) {
+              delete storeResult.errors;
+            }
+
+            resolve(storeResult!);
+          });
         },
       });
     });

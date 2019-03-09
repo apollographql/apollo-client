@@ -99,7 +99,7 @@
     "ts-jest": "23.1.4",
     "tsc-watch": "^2.1.2",
     "tslib": "1.9.3",
-    "tslint": "5.12.1",
+    "tslint": "5.13.1",
     "typescript": "3.3.3333",
     "uglify-js": "3.4.9",
     "webpack": "3.12.0",

@@ -203,4 +203,7 @@ There is no additional setup for the transport required to use `@defer`. By defa
 
 If you are sending queries to a GraphQL server that does not support `@defer`, it is likely that the `@defer` directive is simply ignored, or a GraphQL validation error is thrown.
 
+The following servers are known to support `@defer`:
+- [Lighthouse - GraphQL Server for Laravel](https://lighthouse-php.com/)
+
 If you would want to implement a GraphQL server that is able to interoperate with Apollo Client, please look at the documentation [here](https://github.com/apollographql/apollo-server/blob/defer-support/docs/source/defer-support.md).

@@ -49,7 +49,11 @@ describe('ObservableQuery', () => {
   const createQueryManager = ({ link }: { link?: ApolloLink }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      assumeImmutableResults: true,
+      store: new DataStore(new InMemoryCache({
+        addTypename: false,
+        freezeResults: true,
+      })),
     });
   };
 
@@ -1687,6 +1691,102 @@ describe('ObservableQuery', () => {
           }
         });
       });
+    });
+  });
+
+  describe('assumeImmutableResults', () => {
+    it('should prevent costly (but safe) cloneDeep calls', async () => {
+      const queryOptions = {
+        query: gql`
+          query {
+            value
+          }
+        `,
+        pollInterval: 20,
+      };
+
+      function check({ assumeImmutableResults, freezeResults }) {
+        const client = new ApolloClient({
+          link: mockSingleLink(
+            { request: queryOptions, result: { data: { value: 1 } } },
+            { request: queryOptions, result: { data: { value: 2 } } },
+            { request: queryOptions, result: { data: { value: 3 } } },
+          ),
+          assumeImmutableResults,
+          cache: new InMemoryCache({ freezeResults }),
+        });
+
+        const observable = client.watchQuery(queryOptions);
+        const values = [];
+
+        return new Promise<any[]>((resolve, reject) => {
+          observable.subscribe({
+            next(result) {
+              values.push(result.data.value);
+              try {
+                result.data.value = 'oyez';
+              } catch (error) {
+                reject(error);
+              }
+              client.writeData(result);
+            },
+            error(err) {
+              expect(err.message).toMatch(/No more mocked responses/);
+              resolve(values);
+            },
+          });
+        });
+      }
+
+      // When we assume immutable results, the next method will not fire as a
+      // result of destructively modifying result.data.value, because the data
+      // object is still === to the previous object. This behavior might seem
+      // like a bug, if you are relying on the mutability of results, but the
+      // cloneDeep calls required to prevent that bug are expensive. Assuming
+      // immutability is safe only when you write your code in an immutable
+      // style, but the benefits are well worth the extra effort.
+      expect(
+        await check({
+          assumeImmutableResults: true,
+          freezeResults: false,
+        }),
+      ).toEqual([1, 2, 3]);
+
+      // When we do not assume immutable results, the observable must do
+      // extra work to take snapshots of past results, just in case those
+      // results are destructively modified. The benefit of that work is
+      // that such mutations can be detected, which is why "oyez" appears
+      // in the list of values here. This is a somewhat indirect way of
+      // detecting that cloneDeep must have been called, but at least it
+      // doesn't violate any abstractions.
+      expect(
+        await check({
+          assumeImmutableResults: false,
+          freezeResults: false,
+        }),
+      ).toEqual([1, 'oyez', 2, 'oyez', 3, 'oyez']);
+
+      async function checkThrows(assumeImmutableResults) {
+        try {
+          await check({
+            assumeImmutableResults,
+            // No matter what value we provide for assumeImmutableResults, if we
+            // tell the InMemoryCache to deep-freeze its results, destructive
+            // modifications of the result objects will become fatal. Once you
+            // start enforcing immutability in this way, you might as well pass
+            // assumeImmutableResults: true, to prevent calling cloneDeep.
+            freezeResults: true,
+          });
+          throw new Error('not reached');
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+          expect(error.message).toMatch(
+            /Cannot assign to read only property 'value'/,
+          );
+        }
+      }
+      await checkThrows(true);
+      await checkThrows(false);
     });
   });
 

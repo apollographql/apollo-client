@@ -167,8 +167,10 @@ export class LocalState<TCacheShape> {
         return document;
       }
       invariant.warn(
-        'Found @client directives in query but no client resolvers were specified. ' +
-          'You can now pass apollo-link-state resolvers to the ApolloClient constructor.',
+        'Found @client directives in a query but no ApolloClient resolvers ' +
+        'were specified. This means ApolloClient local resolver handling ' +
+        'has been disabled, and @client directives will be passed through ' +
+        'to your link chain.',
       );
     }
     return null;

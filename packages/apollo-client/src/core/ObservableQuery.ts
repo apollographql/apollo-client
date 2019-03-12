@@ -87,8 +87,8 @@ export class ObservableQuery<
   private shouldSubscribe: boolean;
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
-  private observers: Observer<ApolloQueryResult<TData>>[];
-  private subscriptionHandles: Subscription[];
+  private observers = new Set<Observer<ApolloQueryResult<TData>>>();
+  private subscriptions = new Set<Subscription>();
 
   private lastResult: ApolloQueryResult<TData>;
   private lastResultSnapshot: ApolloQueryResult<TData>;
@@ -121,16 +121,11 @@ export class ObservableQuery<
 
     // related classes
     this.queryManager = queryManager;
-
-    // interal data stores
-    this.observers = [];
-    this.subscriptionHandles = [];
   }
 
   public result(): Promise<ApolloQueryResult<TData>> {
     const that = this;
     return new Promise((resolve, reject) => {
-      let subscription: Subscription;
       const observer: Observer<ApolloQueryResult<TData>> = {
         next(result: ApolloQueryResult<TData>) {
           resolve(result);
@@ -145,7 +140,8 @@ export class ObservableQuery<
           // are fired in the meantime, observers that should have been removed
           // from the QueryManager will continue to fire, causing an unnecessary
           // performance hit.
-          if (!that.observers.some(obs => obs !== observer)) {
+          that.observers.delete(observer);
+          if (!that.observers.size) {
             that.queryManager.removeQuery(that.queryId);
           }
 
@@ -157,7 +153,7 @@ export class ObservableQuery<
           reject(error);
         },
       };
-      subscription = that.subscribe(observer);
+      const subscription = that.subscribe(observer);
     });
   }
 
@@ -431,12 +427,10 @@ export class ObservableQuery<
         },
       });
 
-    this.subscriptionHandles.push(subscription);
+    this.subscriptions.add(subscription);
 
     return () => {
-      const i = this.subscriptionHandles.indexOf(subscription);
-      if (i >= 0) {
-        this.subscriptionHandles.splice(i, 1);
+      if (this.subscriptions.delete(subscription)) {
         subscription.unsubscribe();
       }
     };
@@ -516,7 +510,7 @@ export class ObservableQuery<
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      if (this.observers.length === 0 || !fetchResults) {
+      if (!this.observers.size || !fetchResults) {
         return new Promise(resolve => resolve());
       }
       return this.result();
@@ -525,7 +519,7 @@ export class ObservableQuery<
       this.options.variables = newVariables;
 
       // See comment above
-      if (this.observers.length === 0) {
+      if (!this.observers.size) {
         return new Promise(resolve => resolve());
       }
 
@@ -591,19 +585,18 @@ export class ObservableQuery<
       };
     }
 
-    this.observers.push(observer);
+    const first = !this.observers.size;
+    this.observers.add(observer);
 
     // Deliver initial result
     if (observer.next && this.lastResult) observer.next(this.lastResult);
     if (observer.error && this.lastError) observer.error(this.lastError);
 
     // setup the query if it hasn't been done before
-    if (this.observers.length === 1) this.setUpQuery();
+    if (first) this.setUpQuery();
 
     return () => {
-      this.observers = this.observers.filter(obs => obs !== observer);
-
-      if (this.observers.length === 0) {
+      if (this.observers.delete(observer) && !this.observers.size) {
         this.tearDownQuery();
       }
     };
@@ -624,11 +617,11 @@ export class ObservableQuery<
         this.lastResult = result;
         this.lastResultSnapshot = this.queryManager.assumeImmutableResults
           ? result : cloneDeep(result);
-        this.observers.forEach(obs => obs.next && obs.next(result));
+        iterateObserversSafely(this.observers, 'next', result);
       },
       error: (error: ApolloError) => {
         this.lastError = error;
-        this.observers.forEach(obs => obs.error && obs.error(error));
+        iterateObserversSafely(this.observers, 'error', error);
       },
     };
 
@@ -648,15 +641,28 @@ export class ObservableQuery<
     this.queryManager.stopPollingQuery(this.queryId);
 
     // stop all active GraphQL subscriptions
-    this.subscriptionHandles.forEach(sub => sub.unsubscribe());
-    this.subscriptionHandles = [];
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions.clear();
 
     this.queryManager.removeObservableQuery(this.queryId);
 
     this.queryManager.stopQuery(this.queryId);
 
-    this.observers = [];
+    this.observers.clear();
   }
+}
+
+function iterateObserversSafely<E, A>(
+  observers: Set<Observer<E>>,
+  method: keyof Observer<E>,
+  argument?: A,
+) {
+  // In case observers is modified during iteration, we need to commit to the
+  // original elements, which also provides an opportunity to filter them down
+  // to just the observers with the given method.
+  const observersWithMethod: Observer<E>[] = [];
+  observers.forEach(obs => obs[method] && observersWithMethod.push(obs));
+  observersWithMethod.forEach(obs => (obs as any)[method](argument));
 }
 
 function assertNotCacheFirstOrOnly<TData, TVariables>(

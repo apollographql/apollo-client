@@ -437,7 +437,9 @@ export class QueryManager<TStore> {
     const requestId = this.generateRequestId();
 
     // set up a watcher to listen to cache updates
-    const cancel = this.updateQueryWatch(queryId, query, updatedOptions);
+    const cancel = fetchPolicy !== 'no-cache'
+      ? this.updateQueryWatch(queryId, query, updatedOptions)
+      : undefined;
 
     // Initialize query in store with unique requestId
     this.setQuery(queryId, () => ({

@@ -1,9 +1,14 @@
 {
   "scripts": {
-    "start": "gatsby develop --prefix-paths"
+    "start": "gatsby develop --prefix-paths",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
     "gatsby": "^2.1.21",
-    "gatsby-theme-apollo-docs": "^0.2.11"
+    "gatsby-theme-apollo-docs": "^0.2.14"
+  },
+  "devDependencies": {
+    "typedoc": "^0.14.2",
+    "typescript": "^3.3.3333"
   }
 }

@@ -35,7 +35,11 @@ import {
   OperationVariables,
 } from './types';
 import { LocalState } from './LocalState';
-import { afterAllUnsubscribed, asyncMap, multiplex, afterPromise } from '../util/observables';
+import {
+  afterAllUnsubscribed,
+  asyncMap,
+  afterPromise,
+} from '../util/observables';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -929,7 +933,7 @@ export class QueryManager<TStore> {
           : variables
         );
       }),
-      variables => multiplex(this.getObservableFromLink<T>(
+      variables => this.getObservableFromLink<T>(
         transformedDoc,
         {},
         variables,
@@ -951,7 +955,7 @@ export class QueryManager<TStore> {
         }
 
         return result;
-      })),
+      }),
     );
   }
 

@@ -7,6 +7,7 @@ import {
 } from 'apollo-link';
 
 import { print } from 'graphql/language/printer';
+import { multiplex } from '../util/observables';
 
 interface MockApolloLink extends ApolloLink {
   operation?: Operation;
@@ -112,7 +113,7 @@ export class MockSubscriptionLink extends ApolloLink {
   }
 
   public request() {
-    return new Observable<FetchResult>(observer => {
+    return multiplex(new Observable<FetchResult>(observer => {
       this.setups.forEach(x => x());
       this.observer = observer;
       return {
@@ -121,7 +122,7 @@ export class MockSubscriptionLink extends ApolloLink {
         },
         closed: false,
       };
-    });
+    }));
   }
 
   public simulateResult(result: MockedSubscriptionResult) {

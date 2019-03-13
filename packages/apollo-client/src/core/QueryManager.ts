@@ -12,7 +12,7 @@ import {
   hasClientExports,
 } from 'apollo-utilities';
 
-import { invariant } from 'ts-invariant';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';
@@ -125,7 +125,9 @@ export class QueryManager<TStore> {
     });
 
     this.fetchQueryRejectFns.forEach(reject => {
-      reject(new Error('QueryManager stopped while query was in flight'));
+      reject(
+        new InvariantError('QueryManager stopped while query was in flight'),
+      );
     });
   }
 
@@ -854,11 +856,9 @@ export class QueryManager<TStore> {
     // that we have issued so far and not yet resolved (in the case of
     // queries).
     this.fetchQueryRejectFns.forEach(reject => {
-      reject(
-        new Error(
-          'Store reset while query was in flight(not completed in link chain)',
-        ),
-      );
+      reject(new InvariantError(
+        'Store reset while query was in flight (not completed in link chain)',
+      ));
     });
 
     const resetIds: string[] = [];

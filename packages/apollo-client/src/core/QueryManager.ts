@@ -878,11 +878,26 @@ export class QueryManager<TStore> {
   }
 
   public reFetchObservableQueries(
-    includeStandby?: boolean,
+    includeStandby: boolean = false,
   ): Promise<ApolloQueryResult<any>[]> {
-    const observableQueryPromises: Promise<
-      ApolloQueryResult<any>
-    >[] = this.getObservableQueryPromises(includeStandby);
+    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (observableQuery) {
+        const fetchPolicy = observableQuery.options.fetchPolicy;
+
+        observableQuery.resetLastResults();
+        if (
+          fetchPolicy !== 'cache-only' &&
+          (includeStandby || fetchPolicy !== 'standby')
+        ) {
+          observableQueryPromises.push(observableQuery.refetch());
+        }
+
+        this.setQuery(queryId, () => ({ newData: null }));
+        this.invalidate(true, queryId);
+      }
+    });
 
     this.broadcastQueries();
 
@@ -1064,29 +1079,6 @@ export class QueryManager<TStore> {
 
   public getLocalState(): LocalState<TStore> {
     return this.localState;
-  }
-
-  private getObservableQueryPromises(
-    includeStandby?: boolean,
-  ): Promise<ApolloQueryResult<any>>[] {
-    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
-    this.queries.forEach(({ observableQuery }, queryId) => {
-      if (!observableQuery) return;
-      const fetchPolicy = observableQuery.options.fetchPolicy;
-
-      observableQuery.resetLastResults();
-      if (
-        fetchPolicy !== 'cache-only' &&
-        (includeStandby || fetchPolicy !== 'standby')
-      ) {
-        observableQueryPromises.push(observableQuery.refetch());
-      }
-
-      this.setQuery(queryId, () => ({ newData: null }));
-      this.invalidate(true, queryId);
-    });
-
-    return observableQueryPromises;
   }
 
   private inFlightLinkObservables = new Map<

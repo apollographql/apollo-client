@@ -1196,88 +1196,83 @@ export class QueryManager<TStore> {
         variables,
       );
 
-      this.fetchQueryRejectFns.set(`fetchRequest:${queryId}`, reject);
+      const fqrfId = `fetchRequest:${queryId}`;
+      this.fetchQueryRejectFns.set(fqrfId, reject);
 
-      const subscriber = {
-        next: (result: ExecutionResult) => {
-          // default the lastRequestId to 1
-          const { lastRequestId } = this.getQuery(queryId);
-          if (requestId >= (lastRequestId || 1)) {
-            if (fetchPolicy !== 'no-cache') {
-              try {
-                this.dataStore.markQueryResult(
-                  result,
-                  document,
-                  variables,
-                  fetchMoreForQueryId,
-                  errorPolicy === 'ignore' || errorPolicy === 'all',
-                );
-              } catch (e) {
-                reject(e);
-                return;
-              }
-            } else {
-              this.setQuery(queryId, () => ({
-                newData: { result: result.data, complete: true },
-              }));
-            }
+      const cleanup = () => {
+        this.fetchQueryRejectFns.delete(fqrfId);
+        this.setQuery(queryId, ({ subscriptions }) => ({
+          subscriptions: subscriptions.filter(x => x !== subscription),
+        }));
+      };
 
-            this.queryStore.markQueryResult(
-              queryId,
+      const subscription = observable.map((result: ExecutionResult) => {
+        // default the lastRequestId to 1
+        const { lastRequestId } = this.getQuery(queryId);
+        if (requestId >= (lastRequestId || 1)) {
+          if (fetchPolicy !== 'no-cache') {
+            this.dataStore.markQueryResult(
               result,
+              document,
+              variables,
               fetchMoreForQueryId,
+              errorPolicy === 'ignore' || errorPolicy === 'all',
             );
-
-            this.invalidate(true, queryId, fetchMoreForQueryId);
-
-            this.broadcastQueries();
-          }
-
-          if (result.errors && errorPolicy === 'none') {
-            reject(
-              new ApolloError({
-                graphQLErrors: result.errors,
-              }),
-            );
-            return;
-          } else if (errorPolicy === 'all') {
-            errorsFromStore = result.errors;
-          }
-
-          if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
-            // We don't write fetchMore results to the store because this would overwrite
-            // the original result in case an @connection directive is used.
-            resultFromStore = result.data;
           } else {
-            try {
-              // ensure result is combined with data already in store
-              resultFromStore = this.dataStore.getCache().read({
-                variables,
-                query: document,
-                optimistic: false,
-              });
-              // this will throw an error if there are missing fields in
-              // the results which can happen with errors from the server.
-              // tslint:disable-next-line
-            } catch (e) {}
+            this.setQuery(queryId, () => ({
+              newData: { result: result.data, complete: true },
+            }));
           }
-        },
+
+          this.queryStore.markQueryResult(
+            queryId,
+            result,
+            fetchMoreForQueryId,
+          );
+
+          this.invalidate(true, queryId, fetchMoreForQueryId);
+
+          this.broadcastQueries();
+        }
+
+        if (result.errors && errorPolicy === 'none') {
+          throw new ApolloError({
+            graphQLErrors: result.errors,
+          });
+        }
+
+        if (errorPolicy === 'all') {
+          errorsFromStore = result.errors;
+        }
+
+        if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
+          // We don't write fetchMore results to the store because this would overwrite
+          // the original result in case an @connection directive is used.
+          resultFromStore = result.data;
+        } else {
+          try {
+            // ensure result is combined with data already in store
+            resultFromStore = this.dataStore.getCache().read({
+              variables,
+              query: document,
+              optimistic: false,
+            });
+            // this will throw an error if there are missing fields in
+            // the results which can happen with errors from the server.
+            // tslint:disable-next-line
+          } catch (e) {}
+        }
+
+        return resultFromStore;
+
+      }).subscribe({
         error: (error: ApolloError) => {
-          this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
-
-          this.setQuery(queryId, ({ subscriptions }) => ({
-            subscriptions: subscriptions.filter(x => x !== subscription),
-          }));
-
+          cleanup();
           reject(error);
         },
+
         complete: () => {
-          this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
-
-          this.setQuery(queryId, ({ subscriptions }) => ({
-            subscriptions: subscriptions.filter(x => x !== subscription),
-          }));
-
+          cleanup();
           resolve({
             data: resultFromStore,
             errors: errorsFromStore,
@@ -1286,16 +1281,11 @@ export class QueryManager<TStore> {
             stale: false,
           });
         },
-      };
-
-      const subscription = observable.subscribe(subscriber);
+      });
 
       this.setQuery(queryId, ({ subscriptions }) => ({
         subscriptions: subscriptions.concat([subscription]),
       }));
-    }).catch(error => {
-      this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
-      throw error;
     });
   }
 

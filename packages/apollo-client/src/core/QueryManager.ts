@@ -773,9 +773,7 @@ export class QueryManager<TStore> {
   }
 
   public generateQueryId() {
-    const queryId = this.idCounter.toString();
-    this.idCounter++;
-    return queryId;
+    return String(this.idCounter++);
   }
 
   public stopQueryInStore(queryId: string) {

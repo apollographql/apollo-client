@@ -1,20 +1,5 @@
 import { Observable, Observer, Subscription } from './Observable';
 
-export function afterPromise<T, U>(
-  promise: Promise<T>,
-  makeObservable: (value: T) => Observable<U>,
-): Observable<U> {
-  const obsPromise = promise.then(makeObservable);
-  return new Observable<U>(observer => {
-    let sub: Subscription | null = null;
-    obsPromise.then(
-      observable => sub = observable.subscribe(observer),
-      error => observer.error && observer.error(error),
-    );
-    return () => sub && sub.unsubscribe();
-  });
-}
-
 // Returns a normal Observable that can have any number of subscribers,
 // while ensuring the original Observable gets subscribed to at most once.
 export function multiplex<T>(inner: Observable<T>): Observable<T> {

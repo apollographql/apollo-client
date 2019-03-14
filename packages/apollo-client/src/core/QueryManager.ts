@@ -35,11 +35,7 @@ import {
   OperationVariables,
 } from './types';
 import { LocalState } from './LocalState';
-import {
-  asyncMap,
-  afterPromise,
-  multiplex,
-} from '../util/observables';
+import { asyncMap, multiplex } from '../util/observables';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -921,19 +917,13 @@ export class QueryManager<TStore> {
   }: SubscriptionOptions): Observable<FetchResult<T>> {
     let transformedDoc = this.dataStore.getCache().transformDocument(query);
 
-    return afterPromise(
-      new Promise(resolve => {
-        variables = {
-          ...getDefaultValues(getOperationDefinition(transformedDoc)),
-          ...variables,
-        };
+    variables = {
+      ...getDefaultValues(getOperationDefinition(transformedDoc)),
+      ...variables,
+    };
 
-        resolve(hasClientExports(transformedDoc)
-          ? this.localState.addExportedVariables(transformedDoc, variables)
-          : variables
-        );
-      }),
-      variables => this.getObservableFromLink<T>(
+    const makeObservable = (variables: OperationVariables) =>
+      this.getObservableFromLink<T>(
         transformedDoc,
         {},
         variables,
@@ -955,8 +945,25 @@ export class QueryManager<TStore> {
         }
 
         return result;
-      }),
-    );
+      });
+
+    if (hasClientExports(transformedDoc)) {
+      const observablePromise = this.localState.addExportedVariables(
+        transformedDoc,
+        variables,
+      ).then(makeObservable);
+
+      return new Observable<FetchResult<T>>(observer => {
+        let sub: Subscription | null = null;
+        observablePromise.then(
+          observable => sub = observable.subscribe(observer),
+          observer.error,
+        );
+        return () => sub && sub.unsubscribe();
+      });
+    }
+
+    return makeObservable(variables);
   }
 
   public stopQuery(queryId: string) {

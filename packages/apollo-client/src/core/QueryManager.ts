@@ -49,7 +49,7 @@ export interface QueryInfo {
   // these to keep track of queries that are inflight and error on the observers associated
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   observableQuery: ObservableQuery<any> | null;
-  subscriptions: Subscription[];
+  subscriptions: Set<Subscription>;
   cancel?: () => void;
 }
 
@@ -973,7 +973,6 @@ export class QueryManager<TStore> {
   }
 
   public removeQuery(queryId: string) {
-    const { subscriptions } = this.getQuery(queryId);
     // teardown all links
     // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
     // that each add their reject functions to fetchQueryRejectFns.
@@ -981,7 +980,7 @@ export class QueryManager<TStore> {
     // The same queryId could have two rejection fns for two promises
     this.fetchQueryRejectFns.delete(`query:${queryId}`);
     this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
-    subscriptions.forEach(x => x.unsubscribe());
+    this.getQuery(queryId).subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
   }
 
@@ -1197,9 +1196,9 @@ export class QueryManager<TStore> {
 
       const cleanup = () => {
         this.fetchQueryRejectFns.delete(fqrfId);
-        this.setQuery(queryId, ({ subscriptions }) => ({
-          subscriptions: subscriptions.filter(x => x !== subscription),
-        }));
+        this.setQuery(queryId, ({ subscriptions }) => {
+          subscriptions.delete(subscription);
+        });
       };
 
       const subscription = observable.map((result: ExecutionResult) => {
@@ -1278,9 +1277,9 @@ export class QueryManager<TStore> {
         },
       });
 
-      this.setQuery(queryId, ({ subscriptions }) => ({
-        subscriptions: subscriptions.concat([subscription]),
-      }));
+      this.setQuery(queryId, ({ subscriptions }) => {
+        subscriptions.add(subscription);
+      });
     });
   }
 
@@ -1299,14 +1298,14 @@ export class QueryManager<TStore> {
         newData: null,
         lastRequestId: 1,
         observableQuery: null,
-        subscriptions: [],
+        subscriptions: new Set<Subscription>(),
       }
     );
   }
 
   private setQuery<T extends keyof QueryInfo>(
     queryId: string,
-    updater: (prev: QueryInfo) => Pick<QueryInfo, T>,
+    updater: (prev: QueryInfo) => Pick<QueryInfo, T> | void,
   ) {
     const prev = this.getQuery(queryId);
     const newInfo = { ...prev, ...updater(prev) };

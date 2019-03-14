@@ -40,7 +40,7 @@ import { asyncMap, multiplex } from '../util/observables';
 const { hasOwnProperty } = Object.prototype;
 
 export interface QueryInfo {
-  listeners: QueryListener[];
+  listeners: Set<QueryListener>;
   invalidated: boolean;
   newData: Cache.DiffResult<any> | null;
   document: DocumentNode | null;
@@ -788,10 +788,10 @@ export class QueryManager<TStore> {
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
-    this.setQuery(queryId, ({ listeners = [] }) => ({
-      listeners: listeners.concat([listener]),
-      invalidated: false,
-    }));
+    this.setQuery(queryId, ({ listeners }) => {
+      listeners.add(listener);
+      return { invalidated: false };
+    });
   }
 
   public updateQueryWatch(
@@ -1066,14 +1066,15 @@ export class QueryManager<TStore> {
   public broadcastQueries(forceResolvers = false) {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
-      if (!info.invalidated || !info.listeners) return;
-      info.listeners
-        // it's possible for the listener to be undefined if the query is being stopped
-        // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
-        .filter((x: QueryListener) => !!x)
-        .forEach((listener: QueryListener) => {
-          listener(this.queryStore.get(id), info.newData, forceResolvers);
+      if (info.invalidated) {
+        info.listeners.forEach(listener => {
+          // it's possible for the listener to be undefined if the query is being stopped
+          // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
+          if (listener) {
+            listener(this.queryStore.get(id), info.newData, forceResolvers);
+          }
         });
+      }
     });
   }
 
@@ -1276,7 +1277,7 @@ export class QueryManager<TStore> {
   private getQuery(queryId: string) {
     return (
       this.queries.get(queryId) || {
-        listeners: [],
+        listeners: new Set<QueryListener>(),
         invalidated: false,
         document: null,
         newData: null,

@@ -44,7 +44,7 @@ export interface QueryInfo {
   invalidated: boolean;
   newData: Cache.DiffResult<any> | null;
   document: DocumentNode | null;
-  lastRequestId: number | null;
+  lastRequestId: number;
   // A map going from queryId to an observer for a query issued by watchQuery. We use
   // these to keep track of queries that are inflight and error on the observers associated
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
@@ -442,15 +442,11 @@ export class QueryManager<TStore> {
         if (isApolloError(error)) {
           throw error;
         } else {
-          const { lastRequestId } = this.getQuery(queryId);
-          if (requestId >= (lastRequestId || 1)) {
+          if (requestId >= this.getQuery(queryId).lastRequestId) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
-
             this.invalidate(true, queryId, fetchMoreForQueryId);
-
             this.broadcastQueries();
           }
-
           throw new ApolloError({ networkError: error });
         }
       });
@@ -1208,8 +1204,7 @@ export class QueryManager<TStore> {
 
       const subscription = observable.map((result: ExecutionResult) => {
         // default the lastRequestId to 1
-        const { lastRequestId } = this.getQuery(queryId);
-        if (requestId >= (lastRequestId || 1)) {
+        if (requestId >= this.getQuery(queryId).lastRequestId) {
           if (fetchPolicy !== 'no-cache') {
             this.dataStore.markQueryResult(
               result,
@@ -1302,7 +1297,7 @@ export class QueryManager<TStore> {
         invalidated: false,
         document: null,
         newData: null,
-        lastRequestId: null,
+        lastRequestId: 1,
         observableQuery: null,
         subscriptions: [],
       }

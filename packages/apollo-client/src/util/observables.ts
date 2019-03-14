@@ -1,22 +1,5 @@
 import { Observable, Observer, Subscription } from './Observable';
 
-export function afterAllUnsubscribed<T>(
-  inner: Observable<T>,
-  cleanup: () => any,
-): Observable<T> {
-  const observers = new Set<Observer<T>>();
-  return new Observable<T>(observer => {
-    observers.add(observer);
-    const sub = inner.subscribe(observer);
-    return () => {
-      sub.unsubscribe();
-      if (observers.delete(observer) && !observers.size) {
-        cleanup();
-      }
-    };
-  });
-}
-
 export function afterPromise<T, U>(
   promise: Promise<T>,
   makeObservable: (value: T) => Observable<U>,
@@ -51,11 +34,9 @@ export function multiplex<T>(inner: Observable<T>): Observable<T> {
       },
     });
     return () => {
-      if (observers.delete(observer) && !observers.size) {
-        if (sub) {
-          sub.unsubscribe();
-          sub = null;
-        }
+      if (observers.delete(observer) && !observers.size && sub) {
+        sub.unsubscribe();
+        sub = null;
       }
     };
   });

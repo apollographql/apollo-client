@@ -1512,6 +1512,47 @@ describe('client', () => {
     });
   });
 
+  it('unsubscribes from deduplicated observables only once', done => {
+    const document: DocumentNode = gql`
+      query test1($x: String) {
+        test(x: $x)
+      }
+    `;
+
+    const variables1 = { x: 'Hello World' };
+    const variables2 = { x: 'Hello World' };
+
+    let unsubscribed = false;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable(observer => {
+          observer.complete();
+          return () => {
+            unsubscribed = true;
+            setTimeout(done, 0);
+          };
+        });
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    const sub1 = client.watchQuery({
+      query: document,
+      variables: variables1,
+    }).subscribe({});
+
+    const sub2 = client.watchQuery({
+      query: document,
+      variables: variables2,
+    }).subscribe({});
+
+    sub1.unsubscribe();
+    expect(unsubscribed).toBe(false);
+
+    sub2.unsubscribe();
+  });
+
   describe('deprecated options', () => {
     const query = gql`
       query people {

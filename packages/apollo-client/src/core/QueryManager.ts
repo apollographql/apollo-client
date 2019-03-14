@@ -36,9 +36,9 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 import {
-  afterAllUnsubscribed,
   asyncMap,
   afterPromise,
+  multiplex,
 } from '../util/observables';
 
 const { hasOwnProperty } = Object.prototype;
@@ -1116,21 +1116,31 @@ export class QueryManager<TStore> {
         inFlightLinkObservables.set(serverQuery, byVariables);
 
         const varJson = JSON.stringify(variables);
+        observable = byVariables.get(varJson);
 
-        observable = byVariables.get(varJson) || afterAllUnsubscribed(
-          execute(link, operation),
-          function cleanup() {
+        if (!observable) {
+          byVariables.set(
+            varJson,
+            observable = multiplex(
+              execute(link, operation) as Observable<FetchResult<T>>
+            )
+          );
+
+          const cleanup = () => {
             byVariables.delete(varJson);
-            if (!byVariables.size) {
-              inFlightLinkObservables.delete(serverQuery);
-            }
-          },
-        );
+            if (!byVariables.size) inFlightLinkObservables.delete(serverQuery);
+            cleanupSub.unsubscribe();
+          };
 
-        byVariables.set(varJson, observable);
+          const cleanupSub = observable.subscribe({
+            next: cleanup,
+            error: cleanup,
+            complete: cleanup,
+          });
+        }
 
       } else {
-        observable = execute(link, operation) as Observable<FetchResult<T>>;
+        observable = multiplex(execute(link, operation) as Observable<FetchResult<T>>);
       }
     } else {
       observable = Observable.of({ data: {} } as FetchResult<T>);

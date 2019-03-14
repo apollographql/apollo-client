@@ -1329,11 +1329,8 @@ export class QueryManager<TStore> {
     variables: any,
     extraContext?: any,
   ) {
-    const cache = this.dataStore.getCache();
     return {
-      query: cache.transformForLink
-        ? cache.transformForLink(document)
-        : document,
+      query: this.dataStore.getCache().transformForLink(document),
       variables,
       operationName: getOperationName(document) || undefined,
       context: this.prepareContext(extraContext),

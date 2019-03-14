@@ -391,7 +391,7 @@ export class QueryManager<TStore> {
     // we need to check to see if this is an operation that uses the @live directive
     if (hasDirectives(['live'], query)) shouldFetch = true;
 
-    const requestId = this.generateRequestId();
+    const requestId = this.idCounter++;
 
     // set up a watcher to listen to cache updates
     const cancel = this.updateQueryWatch(queryId, query, options);
@@ -1281,12 +1281,6 @@ export class QueryManager<TStore> {
         subscriptions.add(subscription);
       });
     });
-  }
-
-  private generateRequestId() {
-    const requestId = this.idCounter;
-    this.idCounter++;
-    return requestId;
   }
 
   private getQuery(queryId: string) {

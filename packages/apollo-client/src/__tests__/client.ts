@@ -1512,6 +1512,47 @@ describe('client', () => {
     });
   });
 
+  it('unsubscribes from deduplicated observables only once', done => {
+    const document: DocumentNode = gql`
+      query test1($x: String) {
+        test(x: $x)
+      }
+    `;
+
+    const variables1 = { x: 'Hello World' };
+    const variables2 = { x: 'Hello World' };
+
+    let unsubscribed = false;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable(observer => {
+          observer.complete();
+          return () => {
+            unsubscribed = true;
+            setTimeout(done, 0);
+          };
+        });
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    const sub1 = client.watchQuery({
+      query: document,
+      variables: variables1,
+    }).subscribe({});
+
+    const sub2 = client.watchQuery({
+      query: document,
+      variables: variables2,
+    }).subscribe({});
+
+    sub1.unsubscribe();
+    expect(unsubscribed).toBe(false);
+
+    sub2.unsubscribe();
+  });
+
   describe('deprecated options', () => {
     const query = gql`
       query people {
@@ -2176,17 +2217,14 @@ describe('client', () => {
       });
   });
 
-  it('has a clearStore method which calls QueryManager', done => {
+  it('has a clearStore method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      clearStore: () => {
-        done();
-      },
-    } as QueryManager;
-    client.clearStore();
+    const spy = jest.spyOn(client.queryManager, 'clearStore');
+    await client.clearStore();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('has an onClearStore method which takes a callback to be called after clearStore', async () => {
@@ -2218,17 +2256,14 @@ describe('client', () => {
     expect(onClearStore).not.toHaveBeenCalled();
   });
 
-  it('has a resetStore method which calls QueryManager', done => {
+  it('has a resetStore method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      clearStore: () => {
-        done();
-      },
-    } as QueryManager;
-    client.resetStore();
+    const spy = jest.spyOn(client.queryManager, 'clearStore');
+    await client.resetStore();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('has an onResetStore method which takes a callback to be called after resetStore', async () => {
@@ -2324,6 +2359,7 @@ describe('client', () => {
           new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
+            observer.complete();
             return;
           }),
       ),
@@ -2387,17 +2423,14 @@ describe('client', () => {
     expect(next).toHaveBeenCalledTimes(2);
   });
 
-  it('has a reFetchObservableQueries method which calls QueryManager', done => {
+  it('has a reFetchObservableQueries method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      reFetchObservableQueries: () => {
-        done();
-      },
-    } as QueryManager;
-    client.reFetchObservableQueries();
+    const spy = jest.spyOn(client.queryManager, 'reFetchObservableQueries');
+    await client.reFetchObservableQueries();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('should enable dev tools logging', () => {

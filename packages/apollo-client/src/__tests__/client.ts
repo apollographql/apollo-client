@@ -2217,17 +2217,14 @@ describe('client', () => {
       });
   });
 
-  it('has a clearStore method which calls QueryManager', done => {
+  it('has a clearStore method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      clearStore: () => {
-        done();
-      },
-    } as QueryManager;
-    client.clearStore();
+    const spy = jest.spyOn(client.queryManager, 'clearStore');
+    await client.clearStore();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('has an onClearStore method which takes a callback to be called after clearStore', async () => {
@@ -2259,17 +2256,14 @@ describe('client', () => {
     expect(onClearStore).not.toHaveBeenCalled();
   });
 
-  it('has a resetStore method which calls QueryManager', done => {
+  it('has a resetStore method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      clearStore: () => {
-        done();
-      },
-    } as QueryManager;
-    client.resetStore();
+    const spy = jest.spyOn(client.queryManager, 'clearStore');
+    await client.resetStore();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('has an onResetStore method which takes a callback to be called after resetStore', async () => {
@@ -2429,17 +2423,14 @@ describe('client', () => {
     expect(next).toHaveBeenCalledTimes(2);
   });
 
-  it('has a reFetchObservableQueries method which calls QueryManager', done => {
+  it('has a reFetchObservableQueries method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      reFetchObservableQueries: () => {
-        done();
-      },
-    } as QueryManager;
-    client.reFetchObservableQueries();
+    const spy = jest.spyOn(client.queryManager, 'reFetchObservableQueries');
+    await client.reFetchObservableQueries();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('should enable dev tools logging', () => {

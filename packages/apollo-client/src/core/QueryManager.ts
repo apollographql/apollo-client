@@ -859,9 +859,7 @@ export class QueryManager<TStore> {
     this.mutationStore.reset();
 
     // begin removing data from the store
-    const reset = this.dataStore.reset();
-
-    return reset;
+    return this.dataStore.reset();
   }
 
   public resetStore(): Promise<ApolloQueryResult<any>[]> {

@@ -39,8 +39,8 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "apollo-cache": "^1.2.1",
-    "apollo-utilities": "^1.2.1",
+    "apollo-cache": "file:../apollo-cache",
+    "apollo-utilities": "file:../apollo-utilities",
     "optimism": "^0.6.9",
     "ts-invariant": "^0.3.2",
     "tslib": "^1.9.3"

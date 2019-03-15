@@ -46,9 +46,9 @@
   "license": "MIT",
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
-    "apollo-cache": "^1.2.1",
+    "apollo-cache": "file:../apollo-cache",
     "apollo-link": "^1.0.0",
-    "apollo-utilities": "^1.2.1",
+    "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
     "ts-invariant": "^0.3.2",
     "tslib": "^1.9.3",

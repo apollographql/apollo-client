@@ -287,7 +287,7 @@ export class QueryManager<TStore> {
             ApolloQueryResult<any>[] | ApolloQueryResult<{}>
           >[] = [];
 
-          for (const refetchQuery of refetchQueries) {
+          refetchQueries.forEach(refetchQuery => {
             if (typeof refetchQuery === 'string') {
               self.queries.forEach(({ observableQuery }) => {
                 if (
@@ -297,21 +297,20 @@ export class QueryManager<TStore> {
                   refetchQueryPromises.push(observableQuery.refetch());
                 }
               });
-              continue;
+            } else {
+              const queryOptions: QueryOptions = {
+                query: refetchQuery.query,
+                variables: refetchQuery.variables,
+                fetchPolicy: 'network-only',
+              };
+
+              if (refetchQuery.context) {
+                queryOptions.context = refetchQuery.context;
+              }
+
+              refetchQueryPromises.push(self.query(queryOptions));
             }
-
-            const queryOptions: QueryOptions = {
-              query: refetchQuery.query,
-              variables: refetchQuery.variables,
-              fetchPolicy: 'network-only',
-            };
-
-            if (refetchQuery.context) {
-              queryOptions.context = refetchQuery.context;
-            }
-
-            refetchQueryPromises.push(self.query(queryOptions));
-          }
+          });
 
           Promise.all(
             awaitRefetchQueries ? refetchQueryPromises : [],

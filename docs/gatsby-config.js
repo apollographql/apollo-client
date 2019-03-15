@@ -11,6 +11,9 @@ module.exports = {
         basePath: '/docs/react',
         githubRepo: 'apollographql/apollo-client',
         versions: ['2.4', '2.5'],
+        typescriptApiBox: {
+          filepathPrefix: 'packages/apollo-client/src/'
+        },
         sidebarCategories: {
           null: [
             'index',

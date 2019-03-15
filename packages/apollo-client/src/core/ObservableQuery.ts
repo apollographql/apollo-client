@@ -412,7 +412,7 @@ export class ObservableQuery<
   public setOptions(
     opts: ModifiableWatchQueryOptions,
   ): Promise<ApolloQueryResult<TData> | void> {
-    const { fetchPolicy: oldFechPolicy } = this.options;
+    const { fetchPolicy: oldFetchPolicy } = this.options;
     this.options = {
       ...this.options,
       ...opts,
@@ -430,9 +430,9 @@ export class ObservableQuery<
       this.options.variables as TVariables,
       // Try to fetch the query if fetchPolicy changed from either cache-only
       // or standby to something else, or changed to network-only.
-      oldFechPolicy !== fetchPolicy && (
-        oldFechPolicy === 'cache-only' ||
-        oldFechPolicy === 'standby' ||
+      oldFetchPolicy !== fetchPolicy && (
+        oldFetchPolicy === 'cache-only' ||
+        oldFetchPolicy === 'standby' ||
         fetchPolicy === 'network-only'
       ),
       opts.fetchResults,

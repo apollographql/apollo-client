@@ -6,7 +6,7 @@ const hasOwn = Object.prototype.hasOwnProperty;
 export class DepTrackingCache implements NormalizedCache {
   // Wrapper function produced by the optimism library, used to depend on
   // dataId strings, for easy invalidation of specific IDs.
-  private depend: OptimisticWrapperFunction<(dataId: string) => StoreObject>;
+  private depend: OptimisticWrapperFunction<[string], StoreObject>;
 
   constructor(private data: NormalizedCacheObject = Object.create(null)) {
     this.depend = wrap((

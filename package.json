@@ -73,7 +73,7 @@
     "benchmark": "2.1.4",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.2.0",
-    "danger": "7.0.14",
+    "danger": "7.0.15",
     "fetch-mock": "7.3.1",
     "flow-bin": "0.94.0",
     "graphql": "14.1.1",

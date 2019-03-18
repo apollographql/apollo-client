@@ -26,7 +26,7 @@ export namespace DataProxy {
     /**
      * A GraphQL document created using the `gql` template string tag from
      * `graphql-tag` with one or more fragments which will be used to determine
-     * the shape of data to read. If you provide more then one fragment in this
+     * the shape of data to read. If you provide more than one fragment in this
      * document then you must also specify `fragmentName` to select a single.
      */
     fragment: DocumentNode;
@@ -92,7 +92,7 @@ export interface DataProxy {
   ): QueryType | null;
 
   /**
-   * Reads a GraphQL fragment from any arbitrary id. If there are more then
+   * Reads a GraphQL fragment from any arbitrary id. If there are more than
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
@@ -109,7 +109,7 @@ export interface DataProxy {
   ): void;
 
   /**
-   * Writes a GraphQL fragment to any arbitrary id. If there are more then
+   * Writes a GraphQL fragment to any arbitrary id. If there are more than
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */

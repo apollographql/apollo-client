@@ -220,7 +220,7 @@ cache.writeData({
 });
 ```
 
-Sometimes you may need to [reset the store](/docs/react/features/cache-updates.html#reset-store) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
+Sometimes you may need to [reset the store](/docs/react/api/apollo-client.html#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
 
 ```js
 import { ApolloClient } from 'apollo-client';

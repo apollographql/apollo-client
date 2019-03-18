@@ -87,23 +87,19 @@ export class DataStore<TSerialized> {
         optimistic = mutation.optimisticResponse;
       }
 
-      const changeFn = () => {
-        this.markMutationResult({
-          mutationId: mutation.mutationId,
-          result: { data: optimistic },
-          document: mutation.document,
-          variables: mutation.variables,
-          updateQueries: mutation.updateQueries,
-          update: mutation.update,
-        });
-      };
-
       this.cache.recordOptimisticTransaction(c => {
         const orig = this.cache;
         this.cache = c;
 
         try {
-          changeFn();
+          this.markMutationResult({
+            mutationId: mutation.mutationId,
+            result: { data: optimistic },
+            document: mutation.document,
+            variables: mutation.variables,
+            updateQueries: mutation.updateQueries,
+            update: mutation.update,
+          });
         } finally {
           this.cache = orig;
         }

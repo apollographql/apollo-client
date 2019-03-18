@@ -41,8 +41,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import { wrap } from 'optimism';
-import { CacheKeyNode } from './cacheKeys';
+import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
 import { invariant, InvariantError } from 'ts-invariant';
 
@@ -95,7 +94,7 @@ type ExecSelectionSetOptions = {
 };
 
 export interface StoreReaderConfig {
-  cacheKeyRoot?: CacheKeyNode;
+  cacheKeyRoot?: KeyTrie<object>;
   freezeResults?: boolean;
 };
 
@@ -103,7 +102,7 @@ export class StoreReader {
   private freezeResults: boolean;
 
   constructor({
-    cacheKeyRoot = new CacheKeyNode,
+    cacheKeyRoot = new KeyTrie<object>(false),
     freezeResults = false,
   }: StoreReaderConfig = {}) {
     const {

@@ -93,6 +93,7 @@ To learn more about all of the features available to you through the `apollo-cli
 - [Blaze](http://github.com/Swydo/blaze-apollo)
 - [Vanilla JS](https://www.apollographql.com/docs/react/api/apollo-client.html)
 - [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
+- [Stencil](https://github.com/ardatan/stencil-apollo)
 
 ---
 

@@ -36,6 +36,7 @@ Most of this sites documentation examples are written using React, but Apollo Cl
   - [Polymer](./integrations.html#web-components)
   - [lit-apollo](./integrations.html#web-components)
 - Native mobile
+  - [Stencil](./integrations.html#web-components)
   - [Native iOS with Swift](/docs/ios)
   - [Native Android with Java](/docs/android)
 

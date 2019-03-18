@@ -30,3 +30,4 @@ There are two [Ember](http://emberjs.com/) integrations available:
 
 - **Polymer:** A [Polymer](https://www.polymer-project.org/) integration is maintained by Arun Kumar T K ([@aruntk](https://github.com/aruntk)). See the Github [repository](https://github.com/aruntk/polymer-apollo) for more details.
 - **lit-apollo:** A set of custom-element base classes that extend from LitElement which let you easily compose front-end apps in a framework-agnostic way. [`lit-apollo`](https://github.com/bennypowers/lit-apollo) is maintained by Benny Powers ([@bennypowers](https://github.com/bennypowers)).
+- **Stencil:** Stencil-Apollo is a set of web components based on Apollo built using [Stencil](http://stenciljs.com).

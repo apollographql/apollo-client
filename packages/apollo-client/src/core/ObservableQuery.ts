@@ -244,9 +244,7 @@ export class ObservableQuery<
 
     if (!partial) {
       this.lastResult = { ...result, stale: false };
-      this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-        ? this.lastResult
-        : cloneDeep(this.lastResult);
+      this.updateLastResultSnapshot();
     }
 
     return { ...result, partial };
@@ -538,6 +536,12 @@ export class ObservableQuery<
     this.queryManager.startPollingQuery(this.options, this.queryId);
   }
 
+  private updateLastResultSnapshot() {
+    this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+      ? this.lastResult
+      : cloneDeep(this.lastResult);
+  }
+
   private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
     const first = !this.observers.size;
     this.observers.add(observer);
@@ -601,9 +605,7 @@ export class ObservableQuery<
         const lastResult = this.lastResult;
 
         this.lastResult = result;
-        this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-          ? result
-          : cloneDeep(result);
+        this.updateLastResultSnapshot();
 
         // Before calling `next` on each observer, we need to first see if
         // the query is using `@client @export` directives, and update

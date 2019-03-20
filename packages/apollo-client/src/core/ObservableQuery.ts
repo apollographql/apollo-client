@@ -3,6 +3,7 @@ import {
   tryFunctionOrLogError,
   cloneDeep,
   getOperationDefinition,
+  hasClientExports,
 } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -210,6 +211,7 @@ export class ObservableQuery<
           ...this.options.variables,
           ...(queryStoreValue.variables as TVariables),
         };
+        this.variables = this.options.variables;
       }
 
       result = {
@@ -554,6 +556,35 @@ export class ObservableQuery<
     };
   }
 
+  private async updateExportVariables() {
+    const { query, variables } = this.options;
+    const hasExports = hasClientExports(query);
+    this.variables = (hasExports
+      ? await this.queryManager
+          .getLocalState()
+          .addExportedVariables(query, variables)
+      : variables) as TVariables;
+    this.options.variables = this.variables;
+    return hasExports;
+  }
+
+  private isRefetchRequired(
+    lastVariables: TVariables,
+    currentResult: ApolloQueryResult<TData>,
+    lastResult: ApolloQueryResult<TData>,
+    hasExports: boolean,
+  ) {
+    const { fetchPolicy, query } = this.options;
+    return (
+      !currentResult.loading &&
+      lastResult &&
+      fetchPolicy !== 'cache-only' &&
+      this.queryManager.getLocalState().serverQuery(query) &&
+      hasExports &&
+      !isEqual(lastVariables, this.variables)
+    );
+  }
+
   private setUpQuery() {
     if (this.shouldSubscribe) {
       this.queryManager.addObservableQuery<TData>(this.queryId, this);
@@ -566,11 +597,25 @@ export class ObservableQuery<
 
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
+        const lastVariables = this.variables;
+        const lastResult = this.lastResult;
+
         this.lastResult = result;
         this.lastResultSnapshot = this.queryManager.assumeImmutableResults
           ? result
           : cloneDeep(result);
-        iterateObserversSafely(this.observers, 'next', result);
+
+        // Before calling `next` on each observer, we need to first see if
+        // the query is using `@client @export` directives, and update
+        // any variables that might have changed. If `@export` variables have
+        // changed, and the query is calling against both local and remote
+        // data, a refetch is needed to pull in new data, using the
+        // updated `@export` variables.
+        this.updateExportVariables().then(hasExports => {
+          this.isRefetchRequired(lastVariables, result, lastResult, hasExports)
+            ? this.refetch()
+            : iterateObserversSafely(this.observers, 'next', result);
+        });
       },
       error: (error: ApolloError) => {
         this.lastError = error;

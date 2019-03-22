@@ -1259,7 +1259,6 @@ export class QueryManager<TStore> {
       };
 
       const subscription = observable.map((result: ExecutionResult) => {
-        // default the lastRequestId to 1
         if (requestId >= this.getQuery(queryId).lastRequestId) {
           this.markQueryResult(
             queryId,

@@ -9,6 +9,7 @@ import {
   graphQLResultHasError,
   hasClientExports,
   removeConnectionDirectiveFromDocument,
+  canUseWeakMap,
 } from 'apollo-utilities';
 
 import { invariant, InvariantError } from 'ts-invariant';
@@ -682,13 +683,16 @@ export class QueryManager<TStore> {
     };
   }
 
-  private transformCache = new WeakMap<DocumentNode, Readonly<{
-    document: Readonly<DocumentNode>;
-    hasClientExports: boolean;
-    clientQuery: Readonly<DocumentNode> | null;
-    serverQuery: Readonly<DocumentNode> | null;
-    defaultVars: Readonly<OperationVariables>;
-  }>>();
+  private transformCache = new (canUseWeakMap ? WeakMap : Map)<
+    DocumentNode,
+    Readonly<{
+      document: Readonly<DocumentNode>;
+      hasClientExports: boolean;
+      clientQuery: Readonly<DocumentNode> | null;
+      serverQuery: Readonly<DocumentNode> | null;
+      defaultVars: Readonly<OperationVariables>;
+    }>
+  >();
 
   private transform(document: DocumentNode) {
     const { transformCache } = this;

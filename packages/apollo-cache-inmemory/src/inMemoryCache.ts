@@ -5,7 +5,7 @@ import { DocumentNode } from 'graphql';
 
 import { Cache, ApolloCache, Transaction } from 'apollo-cache';
 
-import { addTypenameToDocument } from 'apollo-utilities';
+import { addTypenameToDocument, canUseWeakMap } from 'apollo-utilities';
 
 import { wrap } from 'optimism';
 
@@ -89,7 +89,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
-  private cacheKeyRoot = new KeyTrie<object>(false);
+  private cacheKeyRoot = new KeyTrie<object>(canUseWeakMap);
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!

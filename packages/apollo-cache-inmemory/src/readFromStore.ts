@@ -1,27 +1,28 @@
 import {
+  argumentsObjectFromField,
   assign,
-  getDefaultValues,
-  getQueryDefinition,
-  isEqual,
+  canUseWeakMap,
+  createFragmentMap,
   DirectiveInfo,
   FragmentMap,
-  IdValue,
-  StoreValue,
-  argumentsObjectFromField,
-  createFragmentMap,
+  getDefaultValues,
   getDirectiveInfoFromField,
   getFragmentDefinitions,
   getMainDefinition,
+  getQueryDefinition,
   getStoreKeyName,
+  IdValue,
+  isEqual,
   isField,
   isIdValue,
   isInlineFragment,
   isJsonValue,
+  maybeDeepFreeze,
+  mergeDeepArray,
   resultKeyNameFromField,
   shouldInclude,
+  StoreValue,
   toIdValue,
-  mergeDeepArray,
-  maybeDeepFreeze,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -102,7 +103,7 @@ export class StoreReader {
   private freezeResults: boolean;
 
   constructor({
-    cacheKeyRoot = new KeyTrie<object>(false),
+    cacheKeyRoot = new KeyTrie<object>(canUseWeakMap),
     freezeResults = false,
   }: StoreReaderConfig = {}) {
     const {

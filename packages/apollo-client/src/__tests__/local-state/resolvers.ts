@@ -713,6 +713,7 @@ describe('Resolving field aliases', () => {
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),
+        resolvers: {},
       });
 
       cache.writeData({
@@ -814,6 +815,7 @@ describe('Force local resolvers', () => {
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),
+        resolvers: {},
       });
 
       cache.writeData({

@@ -2,14 +2,14 @@ import { execute, ApolloLink, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { Cache } from 'apollo-cache';
 import {
-  assign,
   getDefaultValues,
   getOperationDefinition,
   getOperationName,
-  getQueryDefinition,
   hasDirectives,
   graphQLResultHasError,
   hasClientExports,
+  removeConnectionDirectiveFromDocument,
+  canUseWeakMap,
 } from 'apollo-utilities';
 
 import { invariant, InvariantError } from 'ts-invariant';
@@ -150,16 +150,13 @@ export class QueryManager<TStore> {
     );
 
     const mutationId = this.generateQueryId();
-    mutation = this.dataStore.getCache().transformDocument(mutation);
+    mutation = this.transform(mutation).document;
 
     this.setQuery(mutationId, () => ({ document: mutation }));
 
-    variables = {
-      ...getDefaultValues(getOperationDefinition(mutation)),
-      ...variables,
-    };
+    variables = this.getVariables(mutation, variables);
 
-    if (hasClientExports(mutation)) {
+    if (this.transform(mutation).hasClientExports) {
       variables = await this.localState.addExportedVariables(mutation, variables, context);
     }
 
@@ -347,14 +344,11 @@ export class QueryManager<TStore> {
       context = {},
     } = options;
 
-    const query = this.dataStore.getCache().transformDocument(options.query);
+    const query = this.transform(options.query).document;
 
-    let variables = {
-      ...getDefaultValues(getOperationDefinition(query)),
-      ...options.variables,
-    };
+    let variables = this.getVariables(query, options.variables);
 
-    if (hasClientExports(query)) {
+    if (this.transform(query).hasClientExports) {
       variables = await this.localState.addExportedVariables(query, variables, context);
     }
 
@@ -689,6 +683,66 @@ export class QueryManager<TStore> {
     };
   }
 
+  private transformCache = new (canUseWeakMap ? WeakMap : Map)<
+    DocumentNode,
+    Readonly<{
+      document: Readonly<DocumentNode>;
+      hasClientExports: boolean;
+      clientQuery: Readonly<DocumentNode> | null;
+      serverQuery: Readonly<DocumentNode> | null;
+      defaultVars: Readonly<OperationVariables>;
+    }>
+  >();
+
+  private transform(document: DocumentNode) {
+    const { transformCache } = this;
+
+    if (!transformCache.has(document)) {
+      const cache = this.dataStore.getCache();
+      const transformed = cache.transformDocument(document);
+      const forLink = removeConnectionDirectiveFromDocument(
+        cache.transformForLink(transformed));
+
+      const clientQuery = this.localState.clientQuery(transformed);
+      const serverQuery = this.localState.serverQuery(forLink);
+
+      const cacheEntry = {
+        document: transformed,
+        hasClientExports: hasClientExports(transformed),
+        clientQuery,
+        serverQuery,
+        defaultVars: getDefaultValues(
+          getOperationDefinition(transformed)
+        ) as OperationVariables,
+      };
+
+      const add = (doc: DocumentNode | null) => {
+        if (doc && !transformCache.has(doc)) {
+          transformCache.set(doc, cacheEntry);
+        }
+      }
+      // Add cacheEntry to the transformCache using several different keys,
+      // since any one of these documents could end up getting passed to the
+      // transform method again in the future.
+      add(document);
+      add(transformed);
+      add(clientQuery);
+      add(serverQuery);
+    }
+
+    return transformCache.get(document)!;
+  }
+
+  private getVariables(
+    document: DocumentNode,
+    variables?: OperationVariables,
+  ): OperationVariables {
+    return {
+      ...this.transform(document).defaultVars,
+      ...variables,
+    };
+  }
+
   // The shouldSubscribe option is a temporary fix that tells us whether watchQuery was called
   // directly (i.e. through ApolloClient) or through the query method within QueryManager.
   // Currently, the query method uses watchQuery in order to handle non-network errors correctly
@@ -705,18 +759,8 @@ export class QueryManager<TStore> {
       'client.watchQuery cannot be called with fetchPolicy set to "standby"',
     );
 
-    // get errors synchronously
-    const queryDefinition = getQueryDefinition(options.query);
-
     // assign variable default values if supplied
-    if (
-      queryDefinition.variableDefinitions &&
-      queryDefinition.variableDefinitions.length
-    ) {
-      const defaultValues = getDefaultValues(queryDefinition);
-
-      options.variables = assign({}, defaultValues, options.variables);
-    }
+    options.variables = this.getVariables(options.query, options.variables);
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
       options.notifyOnNetworkStatusChange = false;
@@ -921,16 +965,12 @@ export class QueryManager<TStore> {
     fetchPolicy,
     variables,
   }: SubscriptionOptions): Observable<FetchResult<T>> {
-    let transformedDoc = this.dataStore.getCache().transformDocument(query);
-
-    variables = {
-      ...getDefaultValues(getOperationDefinition(transformedDoc)),
-      ...variables,
-    };
+    query = this.transform(query).document;
+    variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
       this.getObservableFromLink<T>(
-        transformedDoc,
+        query,
         {},
         variables,
         false,
@@ -938,7 +978,7 @@ export class QueryManager<TStore> {
         if (!fetchPolicy || fetchPolicy !== 'no-cache') {
           this.dataStore.markSubscriptionResult(
             result,
-            transformedDoc,
+            query,
             variables,
           );
           this.broadcastQueries();
@@ -953,9 +993,9 @@ export class QueryManager<TStore> {
         return result;
       });
 
-    if (hasClientExports(transformedDoc)) {
+    if (this.transform(query).hasClientExports) {
       const observablePromise = this.localState.addExportedVariables(
-        transformedDoc,
+        query,
         variables,
       ).then(makeObservable);
 
@@ -1092,13 +1132,20 @@ export class QueryManager<TStore> {
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
 
-    const serverQuery = this.localState.serverQuery(query);
+    const { serverQuery } = this.transform(query);
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
-      const operation = this.buildOperationForLink(serverQuery, variables, {
-        ...context,
-        forceFetch: !deduplication,
-      });
+
+      const operation = {
+        query: serverQuery,
+        variables,
+        operationName: getOperationName(serverQuery) || void 0,
+        context: this.prepareContext({
+          ...context,
+          forceFetch: !deduplication
+        }),
+      };
+
       context = operation.context;
 
       if (deduplication) {
@@ -1137,7 +1184,7 @@ export class QueryManager<TStore> {
       context = this.prepareContext(context);
     }
 
-    const clientQuery = this.localState.clientQuery(query);
+    const { clientQuery } = this.transform(query);
     if (clientQuery) {
       observable = asyncMap(observable, result => {
         return this.localState.runResolvers({
@@ -1304,19 +1351,6 @@ export class QueryManager<TStore> {
     if (fetchMoreForQueryId) {
       this.setQuery(fetchMoreForQueryId, () => ({ invalidated }));
     }
-  }
-
-  private buildOperationForLink(
-    document: DocumentNode,
-    variables: any,
-    extraContext?: any,
-  ) {
-    return {
-      query: this.dataStore.getCache().transformForLink(document),
-      variables,
-      operationName: getOperationName(document) || undefined,
-      context: this.prepareContext(extraContext),
-    };
   }
 
   private prepareContext(context = {}) {

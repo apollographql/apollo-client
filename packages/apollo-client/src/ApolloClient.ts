@@ -1,16 +1,11 @@
 import {
   ApolloLink,
-  Operation,
-  NextLink,
   FetchResult,
   GraphQLRequest,
   execute,
 } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
-import {
-  removeConnectionDirectiveFromDocument,
-} from 'apollo-utilities';
 
 import { invariant, InvariantError } from 'ts-invariant';
 
@@ -151,22 +146,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       );
     }
 
-    const supportedCache = new Map<DocumentNode, DocumentNode>();
-    const supportedDirectives = new ApolloLink(
-      (operation: Operation, forward: NextLink) => {
-        let result = supportedCache.get(operation.query);
-        if (!result) {
-          result = removeConnectionDirectiveFromDocument(operation.query);
-          supportedCache.set(operation.query, result);
-          supportedCache.set(result, result);
-        }
-        operation.query = result;
-        return forward(operation);
-      },
-    );
-
     // remove apollo-client supported directives
-    this.link = supportedDirectives.concat(link);
+    this.link = link;
     this.cache = cache;
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;

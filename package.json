@@ -39,7 +39,7 @@
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.cjs.min.js",
-      "maxSize": "4.1 kB"
+      "maxSize": "4.15 kB"
     }
   ],
   "lint-staged": {

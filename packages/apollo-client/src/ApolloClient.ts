@@ -53,7 +53,6 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
-  request?: (operation: Operation) => Promise<void>;
   disableDefaults?: boolean;
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];

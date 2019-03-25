@@ -1,12 +1,11 @@
 import { ApolloCache } from 'apollo-cache';
 import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import { onError } from 'apollo-link-error';
-import { ApolloLink, Operation, NextLink } from 'apollo-link';
+import { ApolloLink } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
 import { GraphQLError } from 'graphql';
 
 import { ApolloClientOptions } from '../ApolloClient';
-import { Observable } from '../util/Observable';
 
 export interface ErrorResponse {
   graphQLErrors?: ReadonlyArray<GraphQLError>;
@@ -44,38 +43,6 @@ export default class Defaults<TCacheShape> {
         });
   }
 
-  public getRequestHandler() {
-    const { request } = this.options;
-    let requestHandler = null;
-    if (!this.disableDefaults) {
-      requestHandler = request
-        ? new ApolloLink(
-            (operation: Operation, forward: NextLink) =>
-              new Observable(observer => {
-                let handle: any;
-                Promise.resolve(operation)
-                  .then(oper => request(oper))
-                  .then(() => {
-                    handle = forward(operation).subscribe({
-                      next: observer.next.bind(observer),
-                      error: observer.error.bind(observer),
-                      complete: observer.complete.bind(observer),
-                    });
-                  })
-                  .catch(observer.error.bind(observer));
-
-                return () => {
-                  if (handle) {
-                    handle.unsubscribe();
-                  }
-                };
-              }),
-          )
-        : null;
-    }
-    return requestHandler;
-  }
-
   public getHttpLink() {
     return this.disableDefaults
       ? null
@@ -89,7 +56,6 @@ export default class Defaults<TCacheShape> {
     if (!this.disableDefaults) {
       const links: (ApolloLink | null)[] = [
         this.getErrorLink(),
-        this.getRequestHandler(),
         this.getHttpLink(),
       ].filter(n => n);
       link = ApolloLink.from(links as ApolloLink[]);

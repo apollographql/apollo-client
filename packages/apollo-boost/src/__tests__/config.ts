@@ -15,6 +15,12 @@ describe('config', () => {
     }
   `;
 
+  const remoteQuery = gql`
+    {
+      foo
+    }
+  `;
+
   const resolvers = {
     Query: {
       foo: () => 'woo',
@@ -49,17 +55,23 @@ describe('config', () => {
   });
 
   it('allows you to pass in a request handler', () => {
+    const customFetcher = jest.fn(() =>
+      Promise.resolve({
+        text: () => Promise.resolve('{"data": {"foo": "woo" }}'),
+      }),
+    );
+
     let requestCalled;
 
     const client = new ApolloClient({
       request: () => {
         requestCalled = true;
       },
-      clientState: { resolvers },
+      fetch: customFetcher,
     });
 
     return client
-      .query({ query, fetchPolicy: 'network-only' })
+      .query({ query: remoteQuery, fetchPolicy: 'network-only' })
       .then(({ data }) => {
         expect(stripSymbols(data)).toEqual({ foo: 'woo' });
         expect(requestCalled).toEqual(true);
@@ -67,6 +79,12 @@ describe('config', () => {
   });
 
   it('allows you to pass in an async request handler', () => {
+    const customFetcher = jest.fn(() =>
+      Promise.resolve({
+        text: () => Promise.resolve('{"data": {"foo": "woo" }}'),
+      }),
+    );
+
     let requestCalled;
 
     const client = new ApolloClient({
@@ -75,11 +93,11 @@ describe('config', () => {
           requestCalled = true;
         });
       },
-      clientState: { resolvers },
+      fetch: customFetcher,
     });
 
     return client
-      .query({ query, fetchPolicy: 'network-only' })
+      .query({ query: remoteQuery, fetchPolicy: 'network-only' })
       .then(({ data }) => {
         expect(stripSymbols(data)).toEqual({ foo: 'woo' });
         expect(requestCalled).toEqual(true);
@@ -118,6 +136,20 @@ describe('config', () => {
     expect(client.cache.config.cacheRedirects).toEqual(cacheRedirects);
   });
 
+  it('allows you to pass in name and version', () => {
+    const name = 'client-name';
+    const version = 'client-version';
+
+    const client = new ApolloClient({
+      name,
+      version,
+    });
+
+    const { clientAwareness } = client.queryManager as any;
+    expect(clientAwareness.name).toEqual(name);
+    expect(clientAwareness.version).toEqual(version);
+  });
+
   const makePromise = res =>
     new Promise((resolve, reject) => setTimeout(() => resolve(res)));
   const data = { data: { hello: 'world' } };
@@ -134,7 +166,7 @@ describe('config', () => {
 
     it('should set `credentials` to `same-origin` by default', () => {
       const client = new ApolloClient({});
-      client.query({ query, errorPolicy: 'ignore' });
+      client.query({ query: remoteQuery, errorPolicy: 'ignore' });
       const [uri, options] = fetchMock.lastCall();
       expect(options.credentials).toEqual('same-origin');
     });
@@ -143,7 +175,7 @@ describe('config', () => {
       const client = new ApolloClient({
         credentials: 'some-new-value',
       });
-      client.query({ query, errorPolicy: 'ignore' });
+      client.query({ query: remoteQuery, errorPolicy: 'ignore' });
       const [uri, options] = fetchMock.lastCall();
       expect(options.credentials).toEqual('some-new-value');
     });
@@ -164,7 +196,7 @@ describe('config', () => {
         'provided',
       () => {
         const client = new ApolloClient({});
-        client.query({ query, errorPolicy: 'ignore' });
+        client.query({ query: remoteQuery, errorPolicy: 'ignore' });
         const [uri, options] = fetchMock.lastCall();
         expect(options.headers).toEqual({
           accept: '*/*',
@@ -180,7 +212,7 @@ describe('config', () => {
           'new-header2': 'value2',
         },
       });
-      client.query({ query, errorPolicy: 'ignore' });
+      client.query({ query: remoteQuery, errorPolicy: 'ignore' });
       const [uri, options] = fetchMock.lastCall();
       expect(options.headers).toEqual({
         accept: '*/*',

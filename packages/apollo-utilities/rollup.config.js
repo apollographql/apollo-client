@@ -1,12 +1,8 @@
-import build, { globals } from '../../config/rollup.config';
+import { rollup } from '../../config/rollup.config';
 
-const globalsOverride = {
-  ...globals,
-  'fast-json-stable-stringify': 'stringify',
-};
-
-export default build('apollo.utilities', {
-  output: {
-    globals: globalsOverride,
+export default rollup({
+  name: 'apollo-utilities',
+  extraGlobals: {
+    'fast-json-stable-stringify': 'stringify',
   },
 });

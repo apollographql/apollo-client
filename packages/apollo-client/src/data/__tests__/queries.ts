@@ -54,6 +54,18 @@ describe('QueryStore', () => {
 
   describe('markQueryResult', () => {
     it(
+      'should not attempt to set the network status if the store does not ' +
+        'exist',
+      () => {
+        const testStore = new QueryStore();
+        testStore['store'] = null;
+        expect(() => {
+          testStore.markQueryResult('someId', {}, 'anotherId');
+        }).not.toThrow();
+      },
+    );
+
+    it(
       'should set the network status of a `fetchMoreForQueryId` query to ' +
         '`ready` in the store, if it exists',
       () => {
@@ -75,6 +87,18 @@ describe('QueryStore', () => {
 
   describe('markQueryError', () => {
     it(
+      'should not attempt to set the network status if the store does not ' +
+        'exist',
+      () => {
+        const testStore = new QueryStore();
+        testStore['store'] = null;
+        expect(() => {
+          testStore.markQueryError('someId', null, 'anotherId');
+        }).not.toThrow();
+      },
+    );
+
+    it(
       'should set the network status of a `fetchMoreForQueryId` query to ' +
         '`ready` in the store, if it exists',
       () => {
@@ -90,6 +114,20 @@ describe('QueryStore', () => {
         expect(() => {
           queryStore.markQueryError(queryId, null, 'id-does-not-exist');
         }).not.toThrow("Cannot set property 'networkStatus' of undefined");
+      },
+    );
+  });
+
+  describe('markQueryResultClient', () => {
+    it(
+      'should not attempt to set the network status if the store does not ' +
+        'exist',
+      () => {
+        const testStore = new QueryStore();
+        testStore['store'] = null;
+        expect(() => {
+          testStore.markQueryResultClient('someId', false);
+        }).not.toThrow();
       },
     );
   });

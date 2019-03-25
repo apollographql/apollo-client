@@ -21,7 +21,7 @@ After installing the package, you'll want to initialize the cache constructor. T
 ```js
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { HttpLink } from 'apollo-link-http';
-import ApolloClient from 'apollo-client';
+import { ApolloClient } from 'apollo-client';
 
 const cache = new InMemoryCache();
 
@@ -254,7 +254,7 @@ client.writeQuery({
 Here are some common situations where you would need to access the cache directly. If you're manipulating the cache in an interesting way and would like your example to be featured, please send in a pull request!
 
 <h3 id="ignore">Bypassing the cache</h3>
-Sometimes it makes sense to not use the cache for a specfic operation. This can be done using either the `network-only` or `no-cache` fetchPolicy. The key difference between these two policies is that `network-only` still saves the response to the cache for later use, bypassing the reading and forcing a network request. The `no-cache` policy does not read, nor does it write to the cache with the response. This may be useful for sensitive data like passwords that you don't want to keep in the cache.
+Sometimes it makes sense to not use the cache for a specific operation. This can be done using either the `network-only` or `no-cache` fetchPolicy. The key difference between these two policies is that `network-only` still saves the response to the cache for later use, bypassing the reading and forcing a network request. The `no-cache` policy does not read, nor does it write to the cache with the response. This may be useful for sensitive data like passwords that you don't want to keep in the cache.
 
 <h3 id="after-mutations">Updating after a mutation</h3>
 
@@ -416,7 +416,7 @@ Fundamentally, paginated queries are the same as any other query with the except
 
 To solve this Apollo Client 1.6 introduced the `@connection` directive to specify a custom store key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
 
-To have a stable cache location for query results, Apollo Client 1.6 introduced the `@connection` directive, which can be used to specify a custom store key for results. To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
 ```
 const query = gql`query Feed($type: FeedType!, $offset: Int, $limit: Int) {
@@ -535,7 +535,7 @@ Sometimes, you may want to reset the store entirely, such as [when a user logs o
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {
-  props: ({ data: { loading, currentUser }, client }) => ({
+  props: ({ data: { loading, currentUser }, ownProps: { client }}) => ({
     loading,
     currentUser,
     resetOnLogout: async () => client.resetStore(),
@@ -591,6 +591,9 @@ export class Foo extends Component {
 export default withApollo(Foo);
 ```
 
+If you want to clear the store but don't want to refetch active queries, use
+`client.clearStore()` instead of `client.resetStore()`.
+
 <h3 id="server">Server side rendering</h3>
 
 First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache. (The `.replace()` is necessary to prevent script injection attacks)
@@ -615,6 +618,8 @@ If you would like to persist and rehydrate your Apollo Cache from a storage prov
 
 To get started, simply pass your Apollo Cache and a storage provider to `persistCache`. By default, the contents of your Apollo Cache will be immediately restored asynchronously, and persisted upon every write to the cache with a short configurable debounce interval.
 
+> Note: The `persistCache` method is async and returns a `Promise`.
+
 ```js
 import { AsyncStorage } from 'react-native';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -625,9 +630,10 @@ const cache = new InMemoryCache();
 persistCache({
   cache,
   storage: AsyncStorage,
-});
+}).then(() => {
+  // Continue setting up Apollo as usual.
+})
 
-// Continue setting up Apollo as usual.
 ```
 
 For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).

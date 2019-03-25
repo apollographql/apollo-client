@@ -2,7 +2,7 @@ import { MockedResponse } from './mockLinks';
 
 import mockQueryManager from './mockQueryManager';
 
-import { ObservableQuery } from '../../src/core/ObservableQuery'; // tslint:disable-line
+import { ObservableQuery } from '../core/ObservableQuery';
 
 export default (...mockedResponses: MockedResponse[]): ObservableQuery<any> => {
   const queryManager = mockQueryManager(...mockedResponses);
@@ -10,7 +10,6 @@ export default (...mockedResponses: MockedResponse[]): ObservableQuery<any> => {
   return queryManager.watchQuery({
     query: firstRequest.query!,
     variables: firstRequest.variables,
-    notifyOnNetworkStatusChange:
-      firstRequest.notifyOnNetworkStatusChange || false, // XXX might not always be the right option. Set for legacy reasons.
+    notifyOnNetworkStatusChange: false // XXX might not always be the right option. Set for legacy reasons.
   });
 };

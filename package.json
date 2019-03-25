@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "postinstall": "lerna run prepare",
+    "postinstall": "lerna exec -- npm install --package-lock=false && lerna run prepare",
     "diff": "check-if-folder-contents-changed-in-git-commit-range",
     "build": "lerna run build",
     "test": "jest --verbose",
@@ -13,70 +13,41 @@
     "lint": "lerna run lint",
     "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
-    "filesize": "lerna run filesize && bundlesize",
+    "filesize": "lerna run build && bundlesize",
     "coverage": "jest --verbose --coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",
-    "deploy": "lerna publish -m \"chore: Publish\" --npm-tag verify && cd packages/apollo-client && npm run deploy",
+    "deploy": "lerna publish -m \"chore: Publish\" && cd packages/apollo-client && npm run deploy",
     "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"lib\" -exec rm -rf '{}' +"
   },
   "bundlesize": [
     {
       "name": "apollo-cache",
-      "path": "./packages/apollo-cache/lib/bundle.min.js",
-      "maxSize": "1 kB"
+      "path": "./packages/apollo-cache/lib/bundle.cjs.min.js",
+      "maxSize": "825 B"
     },
     {
       "name": "apollo-cache-inmemory",
-      "path": "./packages/apollo-cache-inmemory/lib/bundle.min.js",
-      "maxSize": "5.25 kB"
+      "path": "./packages/apollo-cache-inmemory/lib/bundle.cjs.min.js",
+      "maxSize": "4.95 kB"
     },
     {
       "name": "apollo-client",
-      "path": "./packages/apollo-client/lib/bundle.min.js",
-      "maxSize": "10 kB"
-    },
-    {
-      "name": "apollo-boost",
-      "path": "./packages/apollo-boost/lib/bundle.min.js",
-      "maxSize": "22 kB"
+      "path": "./packages/apollo-client/lib/bundle.cjs.min.js",
+      "maxSize": "10.6 kB"
     },
     {
       "name": "apollo-utilities",
-      "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "maxSize": "4.25 kB"
-    },
-    {
-      "name": "graphql-anywhere",
-      "path": "./packages/graphql-anywhere/lib/bundle.min.js",
-      "maxSize": "1.25 kB"
+      "path": "./packages/apollo-utilities/lib/bundle.cjs.min.js",
+      "maxSize": "4.2 kB"
     }
   ],
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "json"
-    ],
-    "testURL": "http://localhost",
-    "testPathIgnorePatterns": [
-      "/npm/",
-      "/node_modules/"
-    ]
-  },
   "lint-staged": {
     "*.ts*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
-      "git add"
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
     ],
     "*.js*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write",
-      "git add"
+      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
     ]
   },
   "pre-commit": "lint-staged",
@@ -89,45 +60,50 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@octokit/rest": "15.9.5",
+    "@condenast/bundlesize": "0.18.1",
+    "@octokit/rest": "16.20.0",
     "@types/benchmark": "1.0.31",
-    "@types/graphql": "0.12.7",
-    "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "23.3.1",
-    "@types/lodash": "4.14.116",
-    "@types/node": "10.7.1",
-    "@types/react": "16.0.34",
-    "@types/react-dom": "16.0.4",
+    "@types/graphql": "14.0.7",
+    "@types/isomorphic-fetch": "0.0.35",
+    "@types/jest": "23.3.14",
+    "@types/lodash": "4.14.123",
+    "@types/node": "10.14.3",
+    "@types/react": "16.8.8",
+    "@types/react-dom": "16.8.3",
     "benchmark": "2.1.4",
-    "bundlesize": "0.17.0",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
-    "codecov": "3.0.4",
-    "danger": "3.8.6",
-    "fetch-mock": "6.5.2",
-    "flow-bin": "0.79.1",
-    "graphql": "0.13.2",
-    "graphql-tag": "2.9.2",
+    "codecov": "3.2.0",
+    "danger": "7.0.15",
+    "fetch-mock": "7.3.1",
+    "flow-bin": "0.95.1",
+    "graphql": "14.1.1",
+    "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",
-    "jest": "23.5.0",
-    "jest-junit": "5.1.0",
-    "lerna": "3.1.4",
-    "lint-staged": "7.2.2",
-    "lodash": "4.17.10",
+    "jest": "23.6.0",
+    "jest-junit": "5.2.0",
+    "lerna": "3.13.1",
+    "lint-staged": "8.1.5",
+    "lodash": "4.17.11",
     "pre-commit": "1.2.2",
-    "prettier": "1.14.2",
-    "react": "15.6.2",
-    "react-dom": "15.6.2",
-    "rollup": "0.64.1",
+    "prettier": "1.16.4",
+    "react": "16.8.5",
+    "react-dom": "16.8.4",
+    "rollup": "1.7.0",
+    "rollup-plugin-invariant": "0.4.2",
     "rollup-plugin-local-resolve": "1.0.7",
-    "rollup-plugin-node-resolve": "3.3.0",
+    "rollup-plugin-node-resolve": "4.0.1",
     "rollup-plugin-sourcemaps": "0.4.2",
-    "rxjs": "6.2.2",
+    "rollup-plugin-terser": "^4.0.3",
+    "rollup-plugin-typescript2": "0.18.1",
+    "rxjs": "6.4.0",
     "ts-jest": "23.1.4",
-    "tslint": "5.11.0",
-    "typescript": "3.0.1",
-    "uglify-js": "3.4.7",
+    "tsc-watch": "^2.1.2",
+    "tslib": "1.9.3",
+    "tslint": "5.14.0",
+    "typescript": "3.3.4000",
+    "uglify-js": "3.4.10",
     "webpack": "3.12.0",
-    "webpack-bundle-analyzer": "2.13.1"
+    "webpack-bundle-analyzer": "3.1.0"
   },
   "renovate": {
     "extends": [
@@ -145,11 +121,9 @@
       "dependencies"
     ],
     "assignees": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "reviewers": [
-      "@jbaxleyiii",
       "@hwillson"
     ],
     "pathRules": [

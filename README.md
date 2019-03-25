@@ -1,4 +1,4 @@
-# [Apollo Client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack) [![Open Source Helpers](https://www.codetriage.com/apollographql/apollo-client/badges/users.svg)](https://www.codetriage.com/apollographql/apollo-client)
+# [Apollo Client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Open Source Helpers](https://www.codetriage.com/apollographql/apollo-client/badges/users.svg)](https://www.codetriage.com/apollographql/apollo-client)
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
@@ -120,3 +120,8 @@ If you're getting booted up as a contributor, here are some discussions you shou
 1. [Idea for pagination handling](https://github.com/apollostack/apollo-client/issues/26)
 1. [Discussion about interaction with Redux and domain vs. client state](https://github.com/apollostack/apollo-client/issues/98)
 1. [Long conversation about different client options, before this repo existed](https://github.com/apollostack/apollo/issues/1)
+
+## Maintainers
+
+- [@benjamn](https://github.com/benjamn) (Apollo)
+- [@hwillson](https://github.com/hwillson) (Apollo)

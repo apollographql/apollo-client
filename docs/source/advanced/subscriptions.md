@@ -154,13 +154,15 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dt>`subscription`: DocumentNode</dt>
   <dd>A GraphQL subscription document parsed into an AST by `graphql-tag`. **Required**</dd>
   <dt>`children`: (result: SubscriptionResult) => React.ReactNode</dt>
-  <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
+  <dd>A function returning the UI you want to render based on your subscription result.</dd>
   <dt>`variables`: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your subscription needs to execute</dd>
   <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
   <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
   <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
+  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
 </dl>
 
 <h3 id="render-prop">Render prop function</h3>

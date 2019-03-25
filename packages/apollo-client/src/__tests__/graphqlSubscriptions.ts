@@ -258,4 +258,24 @@ describe('GraphQL Subscriptions', () => {
     link.simulateResult(errorResult);
     return Promise.all(promises);
   });
+
+  it('should call complete handler when the subscription completes', done => {
+    const link = mockObservableLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+    const completeFn = jest.fn();
+
+    let count = 0;
+    const sub = client.subscribe(defaultOptions).subscribe({
+      complete() {
+        completeFn();
+      }
+    });
+
+    link.simulateComplete();
+    expect(completeFn).toHaveBeenCalled();
+    done();
+  });
 });

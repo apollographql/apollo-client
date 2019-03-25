@@ -1,7 +1,6 @@
 import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
-import { print } from 'graphql/language/printer';
 import { isEqual } from 'apollo-utilities';
-
+import { InvariantError } from 'ts-invariant';
 import { NetworkStatus } from '../core/networkStatus';
 
 export type QueryStoreValue = {
@@ -10,7 +9,7 @@ export type QueryStoreValue = {
   previousVariables?: Object | null;
   networkStatus: NetworkStatus;
   networkError?: Error | null;
-  graphQLErrors?: GraphQLError[];
+  graphQLErrors?: ReadonlyArray<GraphQLError>;
   metadata: any;
 };
 
@@ -40,12 +39,12 @@ export class QueryStore {
     if (
       previousQuery &&
       previousQuery.document !== query.document &&
-      print(previousQuery.document) !== print(query.document)
+      !isEqual(previousQuery.document, query.document)
     ) {
       // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
       // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
       // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
-      throw new Error(
+      throw new InvariantError(
         'Internal Error: may not update existing query string in store',
       );
     }
@@ -78,7 +77,7 @@ export class QueryStore {
       networkStatus = NetworkStatus.loading;
     }
 
-    let graphQLErrors: GraphQLError[] = [];
+    let graphQLErrors: ReadonlyArray<GraphQLError> = [];
     if (previousQuery && previousQuery.graphQLErrors) {
       graphQLErrors = previousQuery.graphQLErrors;
     }
@@ -117,7 +116,7 @@ export class QueryStore {
     result: ExecutionResult,
     fetchMoreForQueryId: string | undefined,
   ) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
     this.store[queryId].graphQLErrors =
@@ -141,7 +140,7 @@ export class QueryStore {
     error: Error,
     fetchMoreForQueryId: string | undefined,
   ) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = error;
     this.store[queryId].networkStatus = NetworkStatus.error;
@@ -155,7 +154,7 @@ export class QueryStore {
   }
 
   public markQueryResultClient(queryId: string, complete: boolean) {
-    if (!this.store[queryId]) return;
+    if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
     this.store[queryId].previousVariables = null;

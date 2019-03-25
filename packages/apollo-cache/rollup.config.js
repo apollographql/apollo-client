@@ -1,7 +1,5 @@
-import resolve from 'rollup-plugin-node-resolve';
+import { rollup } from '../../config/rollup.config';
 
-import build from '../../config/rollup.config';
-
-export default build('apollo.cache.core', {
-  plugins: [resolve()],
+export default rollup({
+  name: 'apollo-cache',
 });

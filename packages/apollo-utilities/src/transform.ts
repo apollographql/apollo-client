@@ -2,22 +2,50 @@ import {
   DocumentNode,
   SelectionNode,
   SelectionSetNode,
-  DefinitionNode,
   OperationDefinitionNode,
   FieldNode,
   DirectiveNode,
   FragmentDefinitionNode,
+  ArgumentNode,
+  FragmentSpreadNode,
+  VariableDefinitionNode,
+  VariableNode,
 } from 'graphql';
-
-import { cloneDeep } from './util/cloneDeep';
+import { visit } from 'graphql/language/visitor';
 
 import {
   checkDocument,
-  getOperationDefinitionOrDie,
+  getOperationDefinition,
+  getFragmentDefinition,
   getFragmentDefinitions,
   createFragmentMap,
   FragmentMap,
+  getMainDefinition,
 } from './getFromAST';
+import { filterInPlace } from './util/filterInPlace';
+
+export type RemoveNodeConfig<N> = {
+  name?: string;
+  test?: (node: N) => boolean;
+  remove?: boolean;
+};
+
+export type GetNodeConfig<N> = {
+  name?: string;
+  test?: (node: N) => boolean;
+};
+
+export type RemoveDirectiveConfig = RemoveNodeConfig<DirectiveNode>;
+export type GetDirectiveConfig = GetNodeConfig<DirectiveNode>;
+export type RemoveArgumentsConfig = RemoveNodeConfig<ArgumentNode>;
+export type GetFragmentSpreadConfig = GetNodeConfig<FragmentSpreadNode>;
+export type RemoveFragmentSpreadConfig = RemoveNodeConfig<FragmentSpreadNode>;
+export type RemoveFragmentDefinitionConfig = RemoveNodeConfig<
+  FragmentDefinitionNode
+>;
+export type RemoveVariableDefinitionConfig = RemoveNodeConfig<
+  VariableDefinitionNode
+>;
 
 const TYPENAME_FIELD: FieldNode = {
   kind: 'Field',
@@ -27,156 +55,195 @@ const TYPENAME_FIELD: FieldNode = {
   },
 };
 
-function isNotEmpty(
+function isEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
   fragments: FragmentMap,
-): Boolean {
-  // keep selections that are still valid
-  return (
-    op.selectionSet.selections.filter(
-      selectionSet =>
-        // anything that doesn't match the compound filter is okay
-        !// not an empty array
-        (
-          selectionSet &&
-          // look into fragments to verify they should stay
-          selectionSet.kind === 'FragmentSpread' &&
-          // see if the fragment in the map is valid (recursively)
-          !isNotEmpty(fragments[selectionSet.name.value], fragments)
-        ),
-    ).length > 0
+): boolean {
+  return op.selectionSet.selections.every(
+    selection =>
+      selection.kind === 'FragmentSpread' &&
+      isEmpty(fragments[selection.name.value], fragments),
   );
+}
+
+function nullIfDocIsEmpty(doc: DocumentNode) {
+  return isEmpty(
+    getOperationDefinition(doc) || getFragmentDefinition(doc),
+    createFragmentMap(getFragmentDefinitions(doc)),
+  )
+    ? null
+    : doc;
 }
 
 function getDirectiveMatcher(
   directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
 ) {
-  return function directiveMatcher(directive: DirectiveNode): Boolean {
+  return function directiveMatcher(directive: DirectiveNode) {
     return directives.some(
-      (dir: RemoveDirectiveConfig | GetDirectiveConfig) => {
-        if (dir.name && dir.name === directive.name.value) return true;
-        if (dir.test && dir.test(directive)) return true;
-        return false;
-      },
+      dir =>
+        (dir.name && dir.name === directive.name.value) ||
+        (dir.test && dir.test(directive)),
     );
   };
-}
-
-function addTypenameToSelectionSet(
-  selectionSet: SelectionSetNode,
-  isRoot = false,
-) {
-  if (selectionSet.selections) {
-    if (!isRoot) {
-      const alreadyHasThisField = selectionSet.selections.some(selection => {
-        return (
-          selection.kind === 'Field' &&
-          (selection as FieldNode).name.value === '__typename'
-        );
-      });
-
-      if (!alreadyHasThisField) {
-        selectionSet.selections.push(TYPENAME_FIELD);
-      }
-    }
-
-    selectionSet.selections.forEach(selection => {
-      // Must not add __typename if we're inside an introspection query
-      if (selection.kind === 'Field') {
-        if (
-          selection.name.value.lastIndexOf('__', 0) !== 0 &&
-          selection.selectionSet
-        ) {
-          addTypenameToSelectionSet(selection.selectionSet);
-        }
-      } else if (selection.kind === 'InlineFragment') {
-        if (selection.selectionSet) {
-          addTypenameToSelectionSet(selection.selectionSet);
-        }
-      }
-    });
-  }
-}
-
-export type RemoveDirectiveConfig = {
-  name?: string;
-  test?: (directive: DirectiveNode) => boolean;
-  remove?: boolean;
-};
-
-function removeDirectivesFromSelectionSet(
-  directives: RemoveDirectiveConfig[],
-  selectionSet: SelectionSetNode,
-): SelectionSetNode {
-  if (!selectionSet.selections) return selectionSet;
-  // if any of the directives are set to remove this selectionSet, remove it
-  const agressiveRemove = directives.some(
-    (dir: RemoveDirectiveConfig) => dir.remove,
-  );
-
-  selectionSet.selections = selectionSet.selections
-    .map(selection => {
-      if (
-        selection.kind !== 'Field' ||
-        !(selection as FieldNode) ||
-        !selection.directives
-      )
-        return selection;
-      const directiveMatcher = getDirectiveMatcher(directives);
-      let remove: boolean;
-      selection.directives = selection.directives.filter(directive => {
-        const shouldKeep = !directiveMatcher(directive);
-
-        if (!remove && !shouldKeep && agressiveRemove) remove = true;
-
-        return shouldKeep;
-      });
-
-      return remove ? null : selection;
-    })
-    .filter(x => !!x);
-
-  selectionSet.selections.forEach(selection => {
-    if (
-      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
-      selection.selectionSet
-    ) {
-      removeDirectivesFromSelectionSet(directives, selection.selectionSet);
-    }
-  });
-
-  return selectionSet;
 }
 
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
 ): DocumentNode | null {
-  const docClone = cloneDeep(doc);
+  const variablesInUse: Record<string, boolean> = Object.create(null);
+  let variablesToRemove: RemoveArgumentsConfig[] = [];
 
-  docClone.definitions.forEach((definition: DefinitionNode) => {
-    removeDirectivesFromSelectionSet(
-      directives,
-      (definition as OperationDefinitionNode).selectionSet,
+  const fragmentSpreadsInUse: Record<string, boolean> = Object.create(null);
+  let fragmentSpreadsToRemove: RemoveFragmentSpreadConfig[] = [];
+
+  let modifiedDoc = nullIfDocIsEmpty(
+    visit(doc, {
+      Variable: {
+        enter(node, _key, parent) {
+          // Store each variable that's referenced as part of an argument
+          // (excluding operation definition variables), so we know which
+          // variables are being used. If we later want to remove a variable
+          // we'll fist check to see if it's being used, before continuing with
+          // the removal.
+          if (
+            (parent as VariableDefinitionNode).kind !== 'VariableDefinition'
+          ) {
+            variablesInUse[node.name.value] = true;
+          }
+        },
+      },
+
+      Field: {
+        enter(node) {
+          if (directives && node.directives) {
+            // If `remove` is set to true for a directive, and a directive match
+            // is found for a field, remove the field as well.
+            const shouldRemoveField = directives.some(
+              directive => directive.remove,
+            );
+
+            if (
+              shouldRemoveField &&
+              node.directives &&
+              node.directives.some(getDirectiveMatcher(directives))
+            ) {
+              if (node.arguments) {
+                // Store field argument variables so they can be removed
+                // from the operation definition.
+                node.arguments.forEach(arg => {
+                  if (arg.value.kind === 'Variable') {
+                    variablesToRemove.push({
+                      name: (arg.value as VariableNode).name.value,
+                    });
+                  }
+                });
+              }
+
+              if (node.selectionSet) {
+                // Store fragment spread names so they can be removed from the
+                // docuemnt.
+                getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
+                  frag => {
+                    fragmentSpreadsToRemove.push({
+                      name: frag.name.value,
+                    });
+                  },
+                );
+              }
+
+              // Remove the field.
+              return null;
+            }
+          }
+        },
+      },
+
+      FragmentSpread: {
+        enter(node) {
+          // Keep track of referenced fragment spreads. This is used to
+          // determine if top level fragment definitions should be removed.
+          fragmentSpreadsInUse[node.name.value] = true;
+        },
+      },
+
+      Directive: {
+        enter(node) {
+          // If a matching directive is found, remove it.
+          if (getDirectiveMatcher(directives)(node)) {
+            return null;
+          }
+        },
+      },
+    }),
+  );
+
+  // If we've removed fields with arguments, make sure the associated
+  // variables are also removed from the rest of the document, as long as they
+  // aren't being used elsewhere.
+  if (
+    modifiedDoc &&
+    filterInPlace(variablesToRemove, v => !variablesInUse[v.name]).length
+  ) {
+    modifiedDoc = removeArgumentsFromDocument(variablesToRemove, modifiedDoc);
+  }
+
+  // If we've removed selection sets with fragment spreads, make sure the
+  // associated fragment definitions are also removed from the rest of the
+  // document, as long as they aren't being used elsewhere.
+  if (
+    modifiedDoc &&
+    filterInPlace(fragmentSpreadsToRemove, fs => !fragmentSpreadsInUse[fs.name])
+      .length
+  ) {
+    modifiedDoc = removeFragmentSpreadFromDocument(
+      fragmentSpreadsToRemove,
+      modifiedDoc,
     );
-  });
-  const operation = getOperationDefinitionOrDie(docClone);
-  const fragments = createFragmentMap(getFragmentDefinitions(docClone));
-  return isNotEmpty(operation, fragments) ? docClone : null;
+  }
+
+  return modifiedDoc;
 }
 
-export function addTypenameToDocument(doc: DocumentNode) {
-  checkDocument(doc);
-  const docClone = cloneDeep(doc);
+export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
+  return visit(checkDocument(doc), {
+    SelectionSet: {
+      enter(node, _key, parent) {
+        // Don't add __typename to OperationDefinitions.
+        if (
+          parent &&
+          (parent as OperationDefinitionNode).kind === 'OperationDefinition'
+        ) {
+          return;
+        }
 
-  docClone.definitions.forEach((definition: DefinitionNode) => {
-    const isRoot = definition.kind === 'OperationDefinition';
-    addTypenameToSelectionSet(
-      (definition as OperationDefinitionNode).selectionSet,
-      isRoot,
-    );
+        // No changes if no selections.
+        const { selections } = node;
+        if (!selections) {
+          return;
+        }
+
+        // If selections already have a __typename, or are part of an
+        // introspection query, do nothing.
+        const skip = selections.some(selection => {
+          return (
+            selection.kind === 'Field' &&
+            ((selection as FieldNode).name.value === '__typename' ||
+              (selection as FieldNode).name.value.lastIndexOf('__', 0) === 0)
+          );
+        });
+        if (skip) {
+          return;
+        }
+
+        // Create and return a new SelectionSet with a __typename Field.
+        return {
+          ...node,
+          selections: [...selections, TYPENAME_FIELD],
+        };
+      },
+    },
   });
-  return docClone;
 }
 
 const connectionRemoveConfig = {
@@ -199,27 +266,24 @@ const connectionRemoveConfig = {
 };
 
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
-  checkDocument(doc);
-  return removeDirectivesFromDocument([connectionRemoveConfig], doc);
+  return removeDirectivesFromDocument(
+    [connectionRemoveConfig],
+    checkDocument(doc),
+  );
 }
-
-export type GetDirectiveConfig = {
-  name?: string;
-  test?: (directive: DirectiveNode) => boolean;
-};
 
 function hasDirectivesInSelectionSet(
   directives: GetDirectiveConfig[],
   selectionSet: SelectionSetNode,
   nestedCheck = true,
 ): boolean {
-  if (!(selectionSet && selectionSet.selections)) {
-    return false;
-  }
-  const matchedSelections = selectionSet.selections.filter(selection => {
-    return hasDirectivesInSelection(directives, selection, nestedCheck);
-  });
-  return matchedSelections.length > 0;
+  return (
+    selectionSet &&
+    selectionSet.selections &&
+    selectionSet.selections.some(selection =>
+      hasDirectivesInSelection(directives, selection, nestedCheck),
+    )
+  );
 }
 
 function hasDirectivesInSelection(
@@ -234,10 +298,9 @@ function hasDirectivesInSelection(
   if (!selection.directives) {
     return false;
   }
-  const directiveMatcher = getDirectiveMatcher(directives);
-  const matchedDirectives = selection.directives.filter(directiveMatcher);
+
   return (
-    matchedDirectives.length > 0 ||
+    selection.directives.some(getDirectiveMatcher(directives)) ||
     (nestedCheck &&
       hasDirectivesInSelectionSet(
         directives,
@@ -247,54 +310,224 @@ function hasDirectivesInSelection(
   );
 }
 
-function getDirectivesFromSelectionSet(
-  directives: GetDirectiveConfig[],
-  selectionSet: SelectionSetNode,
-) {
-  selectionSet.selections = selectionSet.selections
-    .filter(selection => {
-      return hasDirectivesInSelection(directives, selection, true);
-    })
-    .map(selection => {
-      if (hasDirectivesInSelection(directives, selection, false)) {
-        return selection;
-      }
-      if (
-        (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
-        selection.selectionSet
-      ) {
-        selection.selectionSet = getDirectivesFromSelectionSet(
-          directives,
-          selection.selectionSet,
-        );
-      }
-      return selection;
-    });
-  return selectionSet;
-}
-
 export function getDirectivesFromDocument(
   directives: GetDirectiveConfig[],
   doc: DocumentNode,
-  includeAllFragments = false,
-): DocumentNode | null {
+): DocumentNode {
   checkDocument(doc);
-  const docClone = cloneDeep(doc);
-  docClone.definitions = docClone.definitions.map(definition => {
-    if (
-      (definition.kind === 'OperationDefinition' ||
-        (definition.kind === 'FragmentDefinition' && !includeAllFragments)) &&
-      definition.selectionSet
-    ) {
-      definition.selectionSet = getDirectivesFromSelectionSet(
-        directives,
-        definition.selectionSet,
-      );
+
+  let parentPath: string;
+
+  return nullIfDocIsEmpty(
+    visit(doc, {
+      SelectionSet: {
+        enter(node, _key, _parent, path) {
+          const currentPath = path.join('-');
+
+          if (
+            !parentPath ||
+            currentPath === parentPath ||
+            !currentPath.startsWith(parentPath)
+          ) {
+            if (node.selections) {
+              const selectionsWithDirectives = node.selections.filter(
+                selection => hasDirectivesInSelection(directives, selection),
+              );
+
+              if (hasDirectivesInSelectionSet(directives, node, false)) {
+                parentPath = currentPath;
+              }
+
+              return {
+                ...node,
+                selections: selectionsWithDirectives,
+              };
+            } else {
+              return null;
+            }
+          }
+        },
+      },
+    }),
+  );
+}
+
+function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
+  return function argumentMatcher(argument: ArgumentNode) {
+    return config.some(
+      (aConfig: RemoveArgumentsConfig) =>
+        argument.value &&
+        argument.value.kind === 'Variable' &&
+        argument.value.name &&
+        (aConfig.name === argument.value.name.value ||
+          (aConfig.test && aConfig.test(argument))),
+    );
+  };
+}
+
+export function removeArgumentsFromDocument(
+  config: RemoveArgumentsConfig[],
+  doc: DocumentNode,
+): DocumentNode {
+  const argMatcher = getArgumentMatcher(config);
+
+  return nullIfDocIsEmpty(
+    visit(doc, {
+      OperationDefinition: {
+        enter(node) {
+          return {
+            ...node,
+            // Remove matching top level variables definitions.
+            variableDefinitions: node.variableDefinitions.filter(
+              varDef =>
+                !config.some(arg => arg.name === varDef.variable.name.value),
+            ),
+          };
+        },
+      },
+
+      Field: {
+        enter(node) {
+          // If `remove` is set to true for an argument, and an argument match
+          // is found for a field, remove the field as well.
+          const shouldRemoveField = config.some(argConfig => argConfig.remove);
+
+          if (shouldRemoveField) {
+            let argMatchCount = 0;
+            node.arguments.forEach(arg => {
+              if (argMatcher(arg)) {
+                argMatchCount += 1;
+              }
+            });
+            if (argMatchCount === 1) {
+              return null;
+            }
+          }
+        },
+      },
+
+      Argument: {
+        enter(node) {
+          // Remove all matching arguments.
+          if (argMatcher(node)) {
+            return null;
+          }
+        },
+      },
+    }),
+  );
+}
+
+export function removeFragmentSpreadFromDocument(
+  config: RemoveFragmentSpreadConfig[],
+  doc: DocumentNode,
+): DocumentNode {
+  function enter(
+    node: FragmentSpreadNode | FragmentDefinitionNode,
+  ): null | void {
+    if (config.some(def => def.name === node.name.value)) {
+      return null;
     }
-    return definition;
+  }
+
+  return nullIfDocIsEmpty(
+    visit(doc, {
+      FragmentSpread: { enter },
+      FragmentDefinition: { enter },
+    }),
+  );
+}
+
+function getAllFragmentSpreadsFromSelectionSet(
+  selectionSet: SelectionSetNode,
+): FragmentSpreadNode[] {
+  const allFragments: FragmentSpreadNode[] = [];
+
+  selectionSet.selections.forEach(selection => {
+    if (
+      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
+      selection.selectionSet
+    ) {
+      getAllFragmentSpreadsFromSelectionSet(selection.selectionSet).forEach(
+        frag => allFragments.push(frag),
+      );
+    } else if (selection.kind === 'FragmentSpread') {
+      allFragments.push(selection);
+    }
   });
 
-  const operation = getOperationDefinitionOrDie(docClone);
-  const fragments = createFragmentMap(getFragmentDefinitions(docClone));
-  return isNotEmpty(operation, fragments) ? docClone : null;
+  return allFragments;
+}
+
+// If the incoming document is a query, return it as is. Otherwise, build a
+// new document containing a query operation based on the selection set
+// of the previous main operation.
+export function buildQueryFromSelectionSet(
+  document: DocumentNode,
+): DocumentNode {
+  const definition = getMainDefinition(document);
+  const definitionOperation = (<OperationDefinitionNode>definition).operation;
+
+  if (definitionOperation === 'query') {
+    // Already a query, so return the existing document.
+    return document;
+  }
+
+  // Build a new query using the selection set of the main operation.
+  const modifiedDoc = visit(document, {
+    OperationDefinition: {
+      enter(node) {
+        return {
+          ...node,
+          operation: 'query',
+        };
+      },
+    },
+  });
+  return modifiedDoc;
+}
+
+// Remove fields / selection sets that include an @client directive.
+export function removeClientSetsFromDocument(
+  document: DocumentNode,
+): DocumentNode | null {
+  checkDocument(document);
+
+  let modifiedDoc = removeDirectivesFromDocument(
+    [
+      {
+        test: (directive: DirectiveNode) => directive.name.value === 'client',
+        remove: true,
+      },
+    ],
+    document,
+  );
+
+  // After a fragment definition has had its @client related document
+  // sets removed, if the only field it has left is a __typename field,
+  // remove the entire fragment operation to prevent it from being fired
+  // on the server.
+  if (modifiedDoc) {
+    modifiedDoc = visit(modifiedDoc, {
+      FragmentDefinition: {
+        enter(node) {
+          if (node.selectionSet) {
+            const isTypenameOnly = node.selectionSet.selections.every(
+              selection => {
+                return (
+                  selection.kind === 'Field' &&
+                  (selection as FieldNode).name.value === '__typename'
+                );
+              },
+            );
+            if (isTypenameOnly) {
+              return null;
+            }
+          }
+        },
+      },
+    });
+  }
+
+  return modifiedDoc;
 }

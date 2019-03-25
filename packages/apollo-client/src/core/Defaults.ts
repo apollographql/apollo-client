@@ -1,4 +1,5 @@
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloCache } from 'apollo-cache';
+import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import { onError } from 'apollo-link-error';
 import { ApolloLink, Operation, NextLink } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
@@ -8,7 +9,7 @@ import { ApolloClientOptions } from '../ApolloClient';
 import { Observable } from '../util/Observable';
 
 export interface ErrorResponse {
-  graphQLErrors?: GraphQLError[];
+  graphQLErrors?: ReadonlyArray<GraphQLError>;
   networkError?: Error;
 }
 
@@ -22,7 +23,7 @@ export default class Defaults<TCacheShape> {
   }
 
   public getCache() {
-    return this.disableDefaults ? null : new InMemoryCache();
+    return new InMemoryCache() as ApolloCache<NormalizedCacheObject>;
   }
 
   public getErrorLink() {

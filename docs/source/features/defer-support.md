@@ -1,5 +1,5 @@
 ---
-title: Deferred Queries
+title: Deferred queries
 description: Optimize data loading with the @defer directive
 ---
 

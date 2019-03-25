@@ -5,10 +5,10 @@
   },
   "dependencies": {
     "gatsby": "^2.2.6",
-    "gatsby-theme-apollo-docs": "^0.2.34"
+    "gatsby-theme-apollo-docs": "^0.2.36"
   },
   "devDependencies": {
     "typedoc": "^0.14.2",
-    "typescript": "^3.3.3333"
+    "typescript": "^3.3.4000"
   }
 }

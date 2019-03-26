@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "gatsby": "^2.2.6",
-    "gatsby-theme-apollo-docs": "^0.2.36"
+    "gatsby-theme-apollo-docs": "^0.2.37"
   },
   "devDependencies": {
     "typedoc": "^0.14.2",

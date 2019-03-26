@@ -412,16 +412,6 @@ export class QueryManager<TStore> {
 
     this.broadcastQueries();
 
-    // If there is no part of the query we need to fetch from the server (or,
-    // fetchPolicy is cache-only), we just write the store result as the final result.
-    const shouldDispatchClientResult =
-      !shouldFetch || fetchPolicy === 'cache-and-network';
-    if (shouldDispatchClientResult) {
-      this.queryStore.markQueryResultClient(queryId, !shouldFetch);
-      this.invalidate(true, queryId, fetchMoreForQueryId);
-      this.broadcastQueries(this.localState.shouldForceResolvers(query));
-    }
-
     if (shouldFetch) {
       const networkResult = this.fetchRequest<T>({
         requestId,
@@ -448,16 +438,67 @@ export class QueryManager<TStore> {
       // returned below from the cache
       if (fetchPolicy !== 'cache-and-network') {
         return networkResult;
-      } else {
-        // however we need to catch the error so it isn't unhandled in case of
-        // network error
-        networkResult.catch(() => {});
       }
+
+      // however we need to catch the error so it isn't unhandled in case of
+      // network error
+      networkResult.catch(() => {});
     }
+
+    // If there is no part of the query we need to fetch from the server (or,
+    // fetchPolicy is cache-only), we just write the store result as the final result.
+    this.queryStore.markQueryResultClient(queryId, !shouldFetch);
+    this.invalidate(true, queryId, fetchMoreForQueryId);
+
+    if (this.transform(query).hasForcedResolvers) {
+      return this.localState.runResolvers({
+        document: query,
+        remoteResult: { data: storeResult },
+        context,
+        variables,
+        onlyRunForcedResolvers: true,
+      }).then((result: FetchResult<T>) => {
+        this.markQueryResult(
+          queryId,
+          result,
+          options,
+          fetchMoreForQueryId,
+        );
+        this.broadcastQueries();
+        return result;
+      });
+    }
+
+    this.broadcastQueries();
 
     // If we have no query to send to the server, we should return the result
     // found within the store.
-    return Promise.resolve({ data: storeResult });
+    return { data: storeResult };
+  }
+
+  private markQueryResult(
+    queryId: string,
+    result: ExecutionResult,
+    {
+      fetchPolicy,
+      variables,
+      errorPolicy,
+    }: WatchQueryOptions,
+    fetchMoreForQueryId?: string,
+  ) {
+    if (fetchPolicy === 'no-cache') {
+      this.setQuery(queryId, () => ({
+        newData: { result: result.data, complete: true },
+      }));
+    } else {
+      this.dataStore.markQueryResult(
+        result,
+        this.getQuery(queryId).document!,
+        variables,
+        fetchMoreForQueryId,
+        errorPolicy === 'ignore' || errorPolicy === 'all',
+      );
+    }
   }
 
   // Returns a query listener that will update the given observer based on the
@@ -471,7 +512,6 @@ export class QueryManager<TStore> {
     return async (
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
-      forceResolvers?: boolean,
     ) => {
       // we're going to take a look at the data, so the query is no longer invalidated
       this.invalidate(false, queryId);
@@ -641,28 +681,6 @@ export class QueryManager<TStore> {
               observableQuery.isDifferentFromLastResult(resultFromStore)
             ) {
               try {
-                // Local resolvers can be forced by using
-                // `@client(always: true)` syntax. If any resolvers are
-                // forced, we'll make sure they're run here to override any
-                // data returned from the cache. Only the selection sets and
-                // fields marked with `@client(always: true)` are overwritten.
-                if (forceResolvers) {
-                  const { query, variables, context } = options;
-
-                  const updatedResult = await this.localState.runResolvers({
-                    document: query,
-                    remoteResult: resultFromStore,
-                    context,
-                    variables,
-                    onlyRunForcedResolvers: forceResolvers,
-                  });
-
-                  resultFromStore = {
-                    ...resultFromStore,
-                    ...updatedResult,
-                  };
-                }
-
                 observer.next(resultFromStore);
               } catch (e) {
                 // Throw error outside this control flow to avoid breaking Apollo's state
@@ -688,6 +706,7 @@ export class QueryManager<TStore> {
     Readonly<{
       document: Readonly<DocumentNode>;
       hasClientExports: boolean;
+      hasForcedResolvers: boolean;
       clientQuery: Readonly<DocumentNode> | null;
       serverQuery: Readonly<DocumentNode> | null;
       defaultVars: Readonly<OperationVariables>;
@@ -708,7 +727,10 @@ export class QueryManager<TStore> {
 
       const cacheEntry = {
         document: transformed,
+        // TODO These two calls (hasClientExports and shouldForceResolvers)
+        // could probably be merged into a single traversal.
         hasClientExports: hasClientExports(transformed),
+        hasForcedResolvers: this.localState.shouldForceResolvers(transformed),
         clientQuery,
         serverQuery,
         defaultVars: getDefaultValues(
@@ -1100,7 +1122,7 @@ export class QueryManager<TStore> {
     };
   }
 
-  public broadcastQueries(forceResolvers = false) {
+  public broadcastQueries() {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
       if (info.invalidated) {
@@ -1108,7 +1130,7 @@ export class QueryManager<TStore> {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
           if (listener) {
-            listener(this.queryStore.get(id), info.newData, forceResolvers);
+            listener(this.queryStore.get(id), info.newData);
           }
         });
       }
@@ -1237,21 +1259,13 @@ export class QueryManager<TStore> {
       };
 
       const subscription = observable.map((result: ExecutionResult) => {
-        // default the lastRequestId to 1
         if (requestId >= this.getQuery(queryId).lastRequestId) {
-          if (fetchPolicy !== 'no-cache') {
-            this.dataStore.markQueryResult(
-              result,
-              document,
-              variables,
-              fetchMoreForQueryId,
-              errorPolicy === 'ignore' || errorPolicy === 'all',
-            );
-          } else {
-            this.setQuery(queryId, () => ({
-              newData: { result: result.data, complete: true },
-            }));
-          }
+          this.markQueryResult(
+            queryId,
+            result,
+            options,
+            fetchMoreForQueryId,
+          );
 
           this.queryStore.markQueryResult(
             queryId,

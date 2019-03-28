@@ -22,20 +22,6 @@ import { withWarning } from '../util/wrap';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
 describe('client', () => {
-  it('creates query manager lazily', () => {
-    const client = new ApolloClient({
-      link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
-    });
-
-    expect(client.queryManager).toBeUndefined();
-
-    // We only create the query manager on the first query
-    client.initQueryManager();
-    expect(client.queryManager).toBeDefined();
-    expect(client.cache).toBeDefined();
-  });
-
   it('can be loaded via require', () => {
     /* tslint:disable */
     const ApolloClientRequire = require('../').default;
@@ -46,10 +32,6 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    expect(client.queryManager).toBeUndefined();
-
-    // We only create the query manager on the first query
-    client.initQueryManager();
     expect(client.queryManager).toBeDefined();
     expect(client.cache).toBeDefined();
   });

@@ -1253,6 +1253,7 @@ export class QueryManager<TStore> {
     const { variables, context, errorPolicy = 'none', fetchPolicy } = options;
     let resultFromStore: any;
     let errorsFromStore: any;
+    let lastRequestId: number;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       let obs: Observable<FetchResult>;
@@ -1282,9 +1283,13 @@ export class QueryManager<TStore> {
           handlingNext = true;
           let updatedResult = result;
 
+          // In case fetchRequest was called by fetchMore we look
+          // at fetchMoreForQueryId to prevent race conditions
+          // Otherwise we look at queryId
           // default the lastRequestId to 1
-          const { lastRequestId } = this.getQuery(queryId);
-          if (requestId >= (lastRequestId || 1)) {
+          lastRequestId = this.getQuery(fetchMoreForQueryId || queryId).lastRequestId || 1;
+
+          if (requestId >= lastRequestId) {
             // Run the query through local client resolvers.
             if (clientQuery && hasDirectives(['client'], clientQuery)) {
               updatedResult = await this.localState
@@ -1390,6 +1395,7 @@ export class QueryManager<TStore> {
               loading: false,
               networkStatus: NetworkStatus.ready,
               stale: false,
+              ignore: requestId < lastRequestId,
             });
           }
           complete = true;

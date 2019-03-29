@@ -51,7 +51,6 @@ db.json
 docs.json
 *.log
 docs/public/*
-!docs/public/_redirects
 .idea/
 
 junit.xml

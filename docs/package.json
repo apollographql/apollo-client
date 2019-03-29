@@ -1,34 +1,14 @@
 {
-  "name": "hexo-site",
-  "version": "0.0.0",
-  "private": true,
-  "hexo": {
-    "version": "3.8.0"
+  "scripts": {
+    "start": "gatsby develop --prefix-paths",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
+  },
+  "dependencies": {
+    "gatsby": "^2.2.6",
+    "gatsby-theme-apollo-docs": "^0.2.43"
   },
   "devDependencies": {
-    "apollo-hexo-config": "1.0.8",
-    "chexo": "1.0.7",
-    "hexo": "3.8.0",
-    "hexo-browsersync": "0.3.0",
-    "hexo-prism-plus": "1.1.0",
-    "hexo-renderer-ejs": "0.3.1",
-    "hexo-renderer-less": "0.2.0",
-    "hexo-renderer-marked": "0.3.2",
-    "hexo-server": "0.3.3",
-    "hexo-typescript-api-box": "0.9.2",
-    "hexo-versioned-netlify-redirects": "^1.1.0",
-    "meteor-theme-hexo": "2.0.1",
-    "poke-site": "1.3.1",
-    "start-server-and-test": "1.7.12",
-    "typedoc": "0.14.2",
-    "typescript": "3.3.4000"
-  },
-  "scripts": {
-    "start": "npm run build && chexo apollo-hexo-config -- server",
-    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
-    "build": "npm run types && chexo apollo-hexo-config -- generate",
-    "clean": "hexo clean",
-    "ci": "npm run clean; start-server-and-test start http-get://localhost:4000 test",
-    "test": "poke http://localhost:4000 --retry https://www.apollographql.com --shallow --method get --skip-images --skip-duplicates"
+    "typedoc": "^0.14.2",
+    "typescript": "^3.3.4000"
   }
 }

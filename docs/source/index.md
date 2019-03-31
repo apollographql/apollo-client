@@ -41,5 +41,5 @@ Most of this sites documentation examples are written using React, but Apollo Cl
 
 <h2 id="graphql-servers">Just using GraphQL?</h2>
 
-We believe that using GraphQL should be easy and fun. One of the ways that Apollo supports this is that you can write your queries in [GraphiQL](https://github.com/graphql/graphiql) and they will just work with Apollo Client! Because Apollo Client doesn't assume anything beyond the official GraphQL specification, it works with every GraphQL server implementation, for *every* language. Apollo Client doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo Client can handle it. You can find a list of
+We believe that using GraphQL should be easy and fun. One of the ways that Apollo supports this is that you can write your queries in [GraphQL](https://github.com/graphql/graphiql) and they will just work with Apollo Client! Because Apollo Client doesn't assume anything beyond the official GraphQL specification, it works with every GraphQL server implementation, for *every* language. Apollo Client doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo Client can handle it. You can find a list of
 GraphQL server implementations at [graphql.org](http://graphql.org/code/#server-libraries).

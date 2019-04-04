@@ -69,6 +69,8 @@ Sometimes when you perform a mutation, your GraphQL server and your Apollo cache
 The update function is called with the Apollo cache as the first argument. The cache has several utility functions such as `cache.readQuery` and `cache.writeQuery` that allow you to read and write queries to the cache with GraphQL as if it were a server.
 There are other cache methods, such as `cache.readFragment`, `cache.writeFragment`, and `cache.writeData`, which you can learn about in our detailed [caching guide](../advanced/caching.html) if you're curious.
 
+**Note**: Notice that update method gets `cache` and not `client`. `cache` is created using `ApolloInMemory` class and then supplied to `ApolloClient` during client instantiation. In case of update function, when you do cache.writeQuery, update internally calls the broadcast and thus, queries listening to the changes will update. However, this behavior of broadcasting changes of `cache.writeQuery` is present only in case of `update` function. Anywhere else, it would just write to cache and the changes won't reflect in view. To avoid this confusion, use `client.writeQuery` when writing to cache.
+
 The second argument to the update function is an object with a data property containing your mutation result. If you specify an [optimistic response](../features/optimistic-ui.html), your update function will be called twice: once with your optimistic result, and another time with your actual result. You can use your mutation result to update the cache with `cache.writeQuery`.
 
 Now that we've learned about the update function, let's implement one for the `Mutation` component we just built!

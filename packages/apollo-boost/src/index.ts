@@ -33,6 +33,7 @@ export interface PresetConfig {
   headers?: any;
   fetch?: GlobalFetch['fetch'];
   fetchOptions?: HttpLink.Options;
+  useGETForQueries?: boolean;
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;
   cacheRedirects?: CacheResolverMap;
@@ -61,6 +62,7 @@ const PRESET_CONFIG_KEYS = [
   'headers',
   'fetch',
   'fetchOptions',
+  'useGETForQueries',
   'clientState',
   'onError',
   'cacheRedirects',
@@ -94,6 +96,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       headers,
       fetch,
       fetchOptions,
+      useGETForQueries,
       clientState,
       cacheRedirects,
       onError: errorCallback,
@@ -165,6 +168,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       uri: uri || '/graphql',
       fetch,
       fetchOptions: fetchOptions || {},
+      useGETForQueries,
       credentials: credentials || 'same-origin',
       headers: headers || {},
     });

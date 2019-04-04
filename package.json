@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@condenast/bundlesize": "0.18.1",
-    "@octokit/rest": "16.20.0",
+    "@octokit/rest": "16.23.2",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.2.0",
     "@types/isomorphic-fetch": "0.0.35",

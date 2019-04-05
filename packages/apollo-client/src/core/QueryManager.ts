@@ -25,6 +25,7 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
+  ErrorPolicy,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -508,8 +509,19 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions,
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
-    let previouslyHadError: boolean = false;
-    return async (
+    function invoke(method: 'next' | 'error', argument: any) {
+      if (observer[method]) {
+        try {
+          observer[method]!(argument);
+        } catch (e) {
+          invariant.error(e);
+        }
+      } else if (method === 'error') {
+        invariant.error(argument);
+      }
+    }
+
+    return (
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
     ) => {
@@ -520,7 +532,7 @@ export class QueryManager<TStore> {
       // reset.
       if (!queryStoreValue) return;
 
-      const { observableQuery } = this.getQuery(queryId);
+      const { observableQuery, document } = this.getQuery(queryId);
 
       const fetchPolicy = observableQuery
         ? observableQuery.options.fetchPolicy
@@ -529,174 +541,100 @@ export class QueryManager<TStore> {
       // don't watch the store for queries on standby
       if (fetchPolicy === 'standby') return;
 
-      const errorPolicy = observableQuery
-        ? observableQuery.options.errorPolicy
-        : options.errorPolicy;
-
-      const lastResult = observableQuery
-        ? observableQuery.getLastResult()
-        : null;
-
-      const lastError = observableQuery ? observableQuery.getLastError() : null;
-
-      let shouldNotifyIfLoading =
-        (!newData && queryStoreValue.previousVariables != null) ||
-        fetchPolicy === 'cache-only' ||
-        fetchPolicy === 'cache-and-network';
-
-      // if this caused by a cache broadcast but the query is still in flight
-      // don't notify the observer
-      // if (
-      //   isCacheBroadcast &&
-      //   isNetworkRequestInFlight(queryStoreValue.networkStatus)
-      // ) {
-      //   shouldNotifyIfLoading = false;
-      // }
-
-      const networkStatusChanged = Boolean(
-        lastResult &&
-          queryStoreValue.networkStatus !== lastResult.networkStatus,
-      );
-
-      const errorStatusChanged =
-        errorPolicy &&
-        (lastError && lastError.graphQLErrors) !==
-          queryStoreValue.graphQLErrors &&
-        errorPolicy !== 'none';
+      const loading = isNetworkRequestInFlight(queryStoreValue.networkStatus);
+      const lastResult = observableQuery && observableQuery.getLastResult();
 
       if (
-        !isNetworkRequestInFlight(queryStoreValue.networkStatus) ||
-        (networkStatusChanged && options.notifyOnNetworkStatusChange) ||
-        shouldNotifyIfLoading
+        loading &&
+        fetchPolicy !== 'cache-only' &&
+        fetchPolicy !== 'cache-and-network' &&
+        (newData || !queryStoreValue.previousVariables) &&
+        !(lastResult &&
+          lastResult.networkStatus !== queryStoreValue.networkStatus &&
+          options.notifyOnNetworkStatusChange)
       ) {
-        // If we have either a GraphQL error or a network error, we create
-        // an error and tell the observer about it.
-        if (
-          ((!errorPolicy || errorPolicy === 'none') &&
-            queryStoreValue.graphQLErrors &&
-            queryStoreValue.graphQLErrors.length > 0) ||
-          queryStoreValue.networkError
-        ) {
-          const apolloError = new ApolloError({
-            graphQLErrors: queryStoreValue.graphQLErrors,
-            networkError: queryStoreValue.networkError,
-          });
-          previouslyHadError = true;
-          if (observer.error) {
-            try {
-              observer.error(apolloError);
-            } catch (e) {
-              // Throw error outside this control flow to avoid breaking Apollo's state
-              setTimeout(() => {
-                throw e;
-              }, 0);
-            }
-          } else {
-            // Throw error outside this control flow to avoid breaking Apollo's state
-            setTimeout(() => {
-              throw apolloError;
-            }, 0);
-            if (process.env.NODE_ENV !== 'production') {
-              /* tslint:disable-next-line */
-              console.info(
-                'An unhandled error was thrown because no error handler is registered ' +
-                  'for the query ' +
-                  JSON.stringify(queryStoreValue.document),
-              );
-            }
+        return;
+      }
+
+      const hasGraphQLErrors =
+        queryStoreValue.graphQLErrors &&
+        queryStoreValue.graphQLErrors.length > 0;
+
+      const errorPolicy: ErrorPolicy = observableQuery
+        && observableQuery.options.errorPolicy
+        || options.errorPolicy
+        || 'none';
+
+      // If we have either a GraphQL error or a network error, we create
+      // an error and tell the observer about it.
+      if (errorPolicy === 'none' && hasGraphQLErrors || queryStoreValue.networkError) {
+        return invoke('error', new ApolloError({
+          graphQLErrors: queryStoreValue.graphQLErrors,
+          networkError: queryStoreValue.networkError,
+        }));
+      }
+
+      try {
+        let data: any;
+        let isMissing: boolean;
+
+        if (newData) {
+          // As long as we're using the cache, clear out the latest
+          // `newData`, since it will now become the current data. We need
+          // to keep the `newData` stored with the query when using
+          // `no-cache` since `getCurrentQueryResult` attemps to pull from
+          // `newData` first, following by trying the cache (which won't
+          // find a hit for `no-cache`).
+          if (fetchPolicy !== 'no-cache' && fetchPolicy !== 'network-only') {
+            this.setQuery(queryId, () => ({ newData: null }));
           }
-          return;
+
+          data = newData.result;
+          isMissing = !newData.complete;
+        } else {
+          const lastError = observableQuery && observableQuery.getLastError();
+          const errorStatusChanged =
+            errorPolicy !== 'none' &&
+            (lastError && lastError.graphQLErrors) !==
+              queryStoreValue.graphQLErrors;
+
+          if (lastResult && lastResult.data && !errorStatusChanged) {
+            data = lastResult.data;
+            isMissing = false;
+          } else {
+            const readResult = this.dataStore.getCache().diff({
+              query: document as DocumentNode,
+              variables:
+                queryStoreValue.previousVariables ||
+                queryStoreValue.variables,
+              optimistic: true,
+            });
+
+            data = readResult.result;
+            isMissing = !readResult.complete;
+          }
         }
 
-        try {
-          let data: any;
-          let isMissing: boolean;
+        // If there is some data missing and the user has told us that they
+        // do not tolerate partial data then we want to return the previous
+        // result and mark it as stale.
+        const stale = isMissing && fetchPolicy !== 'cache-only';
+        const resultFromStore: ApolloQueryResult<T> = {
+          data: stale ? lastResult && lastResult.data : data,
+          loading,
+          networkStatus: queryStoreValue.networkStatus,
+          stale,
+        };
 
-          if (newData) {
-            // As long as we're using the cache, clear out the latest
-            // `newData`, since it will now become the current data. We need
-            // to keep the `newData` stored with the query when using
-            // `no-cache` since `getCurrentQueryResult` attemps to pull from
-            // `newData` first, following by trying the cache (which won't
-            // find a hit for `no-cache`).
-            if (fetchPolicy !== 'no-cache' && fetchPolicy !== 'network-only') {
-              this.setQuery(queryId, () => ({ newData: null }));
-            }
-
-            data = newData.result;
-            isMissing = !newData.complete || false;
-          } else {
-            if (lastResult && lastResult.data && !errorStatusChanged) {
-              data = lastResult.data;
-              isMissing = false;
-            } else {
-              const { document } = this.getQuery(queryId);
-              const readResult = this.dataStore.getCache().diff({
-                query: document as DocumentNode,
-                variables:
-                  queryStoreValue.previousVariables ||
-                  queryStoreValue.variables,
-                optimistic: true,
-              });
-
-              data = readResult.result;
-              isMissing = !readResult.complete;
-            }
-          }
-
-          let resultFromStore: ApolloQueryResult<T>;
-
-          // If there is some data missing and the user has told us that they
-          // do not tolerate partial data then we want to return the previous
-          // result and mark it as stale.
-          if (isMissing && fetchPolicy !== 'cache-only') {
-            resultFromStore = {
-              data: lastResult && lastResult.data,
-              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
-              networkStatus: queryStoreValue.networkStatus,
-              stale: true,
-            };
-          } else {
-            resultFromStore = {
-              data,
-              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
-              networkStatus: queryStoreValue.networkStatus,
-              stale: false,
-            };
-          }
-
-          // if the query wants updates on errors we need to add it to the result
-          if (
-            errorPolicy === 'all' &&
-            queryStoreValue.graphQLErrors &&
-            queryStoreValue.graphQLErrors.length > 0
-          ) {
-            resultFromStore.errors = queryStoreValue.graphQLErrors;
-          }
-
-          if (observer.next) {
-            if (
-              previouslyHadError ||
-              !observableQuery ||
-              observableQuery.isDifferentFromLastResult(resultFromStore)
-            ) {
-              try {
-                observer.next(resultFromStore);
-              } catch (e) {
-                // Throw error outside this control flow to avoid breaking Apollo's state
-                setTimeout(() => {
-                  throw e;
-                }, 0);
-              }
-            }
-          }
-          previouslyHadError = false;
-        } catch (error) {
-          previouslyHadError = true;
-          if (observer.error)
-            observer.error(new ApolloError({ networkError: error }));
-          return;
+        // if the query wants updates on errors we need to add it to the result
+        if (errorPolicy === 'all' && hasGraphQLErrors) {
+          resultFromStore.errors = queryStoreValue.graphQLErrors;
         }
+
+        invoke('next', resultFromStore);
+
+      } catch (networkError) {
+        invoke('error', new ApolloError({ networkError }));
       }
     };
   }

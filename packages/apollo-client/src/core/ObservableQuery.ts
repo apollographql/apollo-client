@@ -582,36 +582,38 @@ export class ObservableQuery<
 
     queryManager.observeQuery<TData>(queryId, this.options, {
       next: (result: ApolloQueryResult<TData>) => {
-        const { query, variables, fetchPolicy } = this.options;
-        const lastVariables = this.variables;
-        const previousResult = this.updateLastResult(result);
+        if (this.lastError || this.isDifferentFromLastResult(result)) {
+          const previousResult = this.updateLastResult(result);
+          const { query, variables, fetchPolicy } = this.options;
 
-        // Before calling `next` on each observer, we need to first see if
-        // the query is using `@client @export` directives, and update
-        // any variables that might have changed. If `@export` variables have
-        // changed, and the query is calling against both local and remote
-        // data, a refetch is needed to pull in new data, using the
-        // updated `@export` variables.
-        if (queryManager.transform(query).hasClientExports) {
-          queryManager.getLocalState().addExportedVariables(
-            query,
-            variables,
-          ).then((variables: TVariables) => {
-            this.variables = this.options.variables = variables;
-            if (
-              !result.loading &&
-              previousResult &&
-              fetchPolicy !== 'cache-only' &&
-              queryManager.transform(query).serverQuery &&
-              !isEqual(lastVariables, variables)
-            ) {
-              this.refetch();
-            } else {
-              iterateObserversSafely(this.observers, 'next', result);
-            }
-          });
-        } else {
-          iterateObserversSafely(this.observers, 'next', result);
+          // Before calling `next` on each observer, we need to first see if
+          // the query is using `@client @export` directives, and update
+          // any variables that might have changed. If `@export` variables have
+          // changed, and the query is calling against both local and remote
+          // data, a refetch is needed to pull in new data, using the
+          // updated `@export` variables.
+          if (queryManager.transform(query).hasClientExports) {
+            queryManager.getLocalState().addExportedVariables(
+              query,
+              variables,
+            ).then((variables: TVariables) => {
+              const previousVariables = this.variables;
+              this.variables = this.options.variables = variables;
+              if (
+                !result.loading &&
+                previousResult &&
+                fetchPolicy !== 'cache-only' &&
+                queryManager.transform(query).serverQuery &&
+                !isEqual(previousVariables, variables)
+              ) {
+                this.refetch();
+              } else {
+                iterateObserversSafely(this.observers, 'next', result);
+              }
+            });
+          } else {
+            iterateObserversSafely(this.observers, 'next', result);
+          }
         }
       },
       error: onError,

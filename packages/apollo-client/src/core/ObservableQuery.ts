@@ -243,8 +243,7 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      this.lastResult = { ...result, stale: false };
-      this.updateLastResultSnapshot();
+      this.updateLastResult({ ...result, stale: false });
     }
 
     return { ...result, partial };
@@ -536,10 +535,13 @@ export class ObservableQuery<
     this.queryManager.startPollingQuery(this.options, this.queryId);
   }
 
-  private updateLastResultSnapshot() {
+  private updateLastResult(newResult: ApolloQueryResult<TData>) {
+    const previousResult = this.lastResult;
+    this.lastResult = newResult;
     this.lastResultSnapshot = this.queryManager.assumeImmutableResults
       ? this.lastResult
       : cloneDeep(this.lastResult);
+    return previousResult;
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
@@ -602,10 +604,7 @@ export class ObservableQuery<
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
         const lastVariables = this.variables;
-        const lastResult = this.lastResult;
-
-        this.lastResult = result;
-        this.updateLastResultSnapshot();
+        const previousResult = this.updateLastResult(result);
 
         // Before calling `next` on each observer, we need to first see if
         // the query is using `@client @export` directives, and update
@@ -614,7 +613,7 @@ export class ObservableQuery<
         // data, a refetch is needed to pull in new data, using the
         // updated `@export` variables.
         this.updateExportVariables().then(hasExports => {
-          this.isRefetchRequired(lastVariables, result, lastResult, hasExports)
+          this.isRefetchRequired(lastVariables, result, previousResult, hasExports)
             ? this.refetch()
             : iterateObserversSafely(this.observers, 'next', result);
         });

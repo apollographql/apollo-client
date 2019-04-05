@@ -538,8 +538,8 @@ export class ObservableQuery<
     const previousResult = this.lastResult;
     this.lastResult = newResult;
     this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-      ? this.lastResult
-      : cloneDeep(this.lastResult);
+      ? newResult
+      : cloneDeep(newResult);
     return previousResult;
   }
 

@@ -713,7 +713,7 @@ export class QueryManager<TStore> {
     }>
   >();
 
-  private transform(document: DocumentNode) {
+  public transform(document: DocumentNode) {
     const { transformCache } = this;
 
     if (!transformCache.has(document)) {

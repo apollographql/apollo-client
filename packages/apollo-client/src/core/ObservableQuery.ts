@@ -3,7 +3,6 @@ import {
   tryFunctionOrLogError,
   cloneDeep,
   getOperationDefinition,
-  hasClientExports,
 } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -573,7 +572,9 @@ export class ObservableQuery<
     }
 
     const observer: Observer<ApolloQueryResult<TData>> = {
-      next: (result: ApolloQueryResult<TData>) => {
+      next: async (result: ApolloQueryResult<TData>): Promise<any> => {
+        const { queryManager } = this;
+        const { query, variables, fetchPolicy } = this.options;
         const lastVariables = this.variables;
         const previousResult = this.updateLastResult(result);
 
@@ -583,34 +584,23 @@ export class ObservableQuery<
         // changed, and the query is calling against both local and remote
         // data, a refetch is needed to pull in new data, using the
         // updated `@export` variables.
+        if (queryManager.transform(query).hasClientExports) {
+          this.variables = this.options.variables = (
+            await queryManager.getLocalState().addExportedVariables(query, variables)
+          ) as TVariables;
 
-        const { query, variables, fetchPolicy } = this.options;
-
-        const updateExportVariables = async () => {
-          const hasExports = hasClientExports(query);
-          this.variables = (hasExports
-            ? await this.queryManager
-                .getLocalState()
-                .addExportedVariables(query, variables)
-            : variables) as TVariables;
-          this.options.variables = this.variables;
-          return hasExports;
-        };
-
-        updateExportVariables().then(hasExports => {
           if (
             !result.loading &&
             previousResult &&
             fetchPolicy !== 'cache-only' &&
-            this.queryManager.getLocalState().serverQuery(query) &&
-            hasExports &&
+            queryManager.transform(query).serverQuery &&
             !isEqual(lastVariables, this.variables)
           ) {
-            this.refetch();
-          } else {
-            iterateObserversSafely(this.observers, 'next', result);
+            return this.refetch();
           }
-        });
+        }
+
+        iterateObserversSafely(this.observers, 'next', result);
       },
       error: (error: ApolloError) => {
         this.lastError = error;

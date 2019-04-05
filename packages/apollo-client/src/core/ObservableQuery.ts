@@ -210,6 +210,7 @@ export class ObservableQuery<
           ...this.options.variables,
           ...(queryStoreValue.variables as TVariables),
         };
+        this.variables = this.options.variables;
       }
 
       result = {
@@ -241,10 +242,7 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      this.lastResult = { ...result, stale: false };
-      this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-        ? this.lastResult
-        : cloneDeep(this.lastResult);
+      this.updateLastResult({ ...result, stale: false });
     }
 
     return { ...result, partial };
@@ -536,6 +534,15 @@ export class ObservableQuery<
     this.queryManager.startPollingQuery(this.options, this.queryId);
   }
 
+  private updateLastResult(newResult: ApolloQueryResult<TData>) {
+    const previousResult = this.lastResult;
+    this.lastResult = newResult;
+    this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+      ? newResult
+      : cloneDeep(newResult);
+    return previousResult;
+  }
+
   private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
     const first = !this.observers.size;
     this.observers.add(observer);
@@ -565,11 +572,34 @@ export class ObservableQuery<
     }
 
     const observer: Observer<ApolloQueryResult<TData>> = {
-      next: (result: ApolloQueryResult<TData>) => {
-        this.lastResult = result;
-        this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-          ? result
-          : cloneDeep(result);
+      next: async (result: ApolloQueryResult<TData>): Promise<any> => {
+        const { queryManager } = this;
+        const { query, variables, fetchPolicy } = this.options;
+        const lastVariables = this.variables;
+        const previousResult = this.updateLastResult(result);
+
+        // Before calling `next` on each observer, we need to first see if
+        // the query is using `@client @export` directives, and update
+        // any variables that might have changed. If `@export` variables have
+        // changed, and the query is calling against both local and remote
+        // data, a refetch is needed to pull in new data, using the
+        // updated `@export` variables.
+        if (queryManager.transform(query).hasClientExports) {
+          this.variables = this.options.variables = (
+            await queryManager.getLocalState().addExportedVariables(query, variables)
+          ) as TVariables;
+
+          if (
+            !result.loading &&
+            previousResult &&
+            fetchPolicy !== 'cache-only' &&
+            queryManager.transform(query).serverQuery &&
+            !isEqual(lastVariables, this.variables)
+          ) {
+            return this.refetch();
+          }
+        }
+
         iterateObserversSafely(this.observers, 'next', result);
       },
       error: (error: ApolloError) => {

@@ -624,4 +624,129 @@ describe('@client @export tests', () => {
       });
     },
   );
+
+  it(
+    'should refetch if an @export variable changes, the current fetch ' +
+    'policy is not cache-only, and the query includes fields that need to ' +
+    'be resolved remotely',
+    done => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthorId @client @export(as: "authorId")
+          postCount(authorId: $authorId)
+        }
+      `;
+
+      const testAuthorId1 = 100;
+      const testPostCount1 = 200;
+
+      const testAuthorId2 = 101;
+      const testPostCount2 = 201;
+
+      let resultCount = 0;
+
+      const link = new ApolloLink(() =>
+        Observable.of({
+          data: {
+            postCount: resultCount === 0 ? testPostCount1 : testPostCount2
+          },
+        }),
+      );
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+        resolvers: {},
+      });
+
+      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+
+      const obs = client.watchQuery({ query });
+      obs.subscribe({
+        next({ data }) {
+          if (resultCount === 0) {
+            expect({ ...data }).toMatchObject({
+              currentAuthorId: testAuthorId1,
+              postCount: testPostCount1,
+            });
+            client.writeData({ data: { currentAuthorId: testAuthorId2 } });
+          } else if (resultCount === 1) {
+            expect({ ...data }).toMatchObject({
+              currentAuthorId: testAuthorId2,
+              postCount: testPostCount2,
+            });
+            done();
+          }
+
+          resultCount +=1;
+        }
+      });
+    }
+  );
+
+  it(
+    'should NOT refetch if an @export variable has not changed, the ' +
+    'current fetch policy is not cache-only, and the query includes fields ' +
+    'that need to be resolved remotely',
+    done => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthorId @client @export(as: "authorId")
+          postCount(authorId: $authorId)
+        }
+      `;
+
+      const testAuthorId1 = 100;
+      const testPostCount1 = 200;
+
+      const testPostCount2 = 201;
+
+      let resultCount = 0;
+
+      let fetchCount = 0;
+      const link = new ApolloLink(() => {
+        fetchCount += 1;
+        return Observable.of({
+          data: {
+            postCount: testPostCount1
+          },
+        });
+      });
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+        resolvers: {},
+      });
+
+      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+
+      const obs = client.watchQuery({ query });
+      obs.subscribe({
+        next(result) {
+          if (resultCount === 0) {
+            expect(fetchCount).toBe(1);
+            expect(result.data).toMatchObject({
+              currentAuthorId: testAuthorId1,
+              postCount: testPostCount1,
+            });
+
+            client.writeQuery({
+              query,
+              variables: { authorId: testAuthorId1 },
+              data: { postCount: testPostCount2 }
+            });
+          } else if (resultCount === 1) {
+            // Should not have refetched
+            expect(fetchCount).toBe(1);
+            done();
+          }
+
+          resultCount +=1;
+        },
+      });
+    }
+  );
 });

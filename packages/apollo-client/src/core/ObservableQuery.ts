@@ -562,35 +562,6 @@ export class ObservableQuery<
     };
   }
 
-  private async updateExportVariables() {
-    const { query, variables } = this.options;
-    const hasExports = hasClientExports(query);
-    this.variables = (hasExports
-      ? await this.queryManager
-          .getLocalState()
-          .addExportedVariables(query, variables)
-      : variables) as TVariables;
-    this.options.variables = this.variables;
-    return hasExports;
-  }
-
-  private isRefetchRequired(
-    lastVariables: TVariables,
-    currentResult: ApolloQueryResult<TData>,
-    lastResult: ApolloQueryResult<TData>,
-    hasExports: boolean,
-  ) {
-    const { fetchPolicy, query } = this.options;
-    return (
-      !currentResult.loading &&
-      lastResult &&
-      fetchPolicy !== 'cache-only' &&
-      this.queryManager.getLocalState().serverQuery(query) &&
-      hasExports &&
-      !isEqual(lastVariables, this.variables)
-    );
-  }
-
   private setUpQuery() {
     if (this.shouldSubscribe) {
       this.queryManager.addObservableQuery<TData>(this.queryId, this);
@@ -612,10 +583,33 @@ export class ObservableQuery<
         // changed, and the query is calling against both local and remote
         // data, a refetch is needed to pull in new data, using the
         // updated `@export` variables.
-        this.updateExportVariables().then(hasExports => {
-          this.isRefetchRequired(lastVariables, result, previousResult, hasExports)
-            ? this.refetch()
-            : iterateObserversSafely(this.observers, 'next', result);
+
+        const { query, variables, fetchPolicy } = this.options;
+
+        const updateExportVariables = async () => {
+          const hasExports = hasClientExports(query);
+          this.variables = (hasExports
+            ? await this.queryManager
+                .getLocalState()
+                .addExportedVariables(query, variables)
+            : variables) as TVariables;
+          this.options.variables = this.variables;
+          return hasExports;
+        };
+
+        updateExportVariables().then(hasExports => {
+          if (
+            !result.loading &&
+            previousResult &&
+            fetchPolicy !== 'cache-only' &&
+            this.queryManager.getLocalState().serverQuery(query) &&
+            hasExports &&
+            !isEqual(lastVariables, this.variables)
+          ) {
+            this.refetch();
+          } else {
+            iterateObserversSafely(this.observers, 'next', result);
+          }
         });
       },
       error: (error: ApolloError) => {

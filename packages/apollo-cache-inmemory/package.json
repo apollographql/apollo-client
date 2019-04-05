@@ -41,7 +41,7 @@
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",
     "apollo-utilities": "file:../apollo-utilities",
-    "optimism": "^0.6.9",
+    "optimism": "^0.9.0",
     "ts-invariant": "^0.3.2",
     "tslib": "^1.9.3"
   },

@@ -23,6 +23,9 @@
 - Perform all `DocumentNode` transforms once, and cache the results. <br/>
   [@benjamn](https://github.com/benjamn) in [#4601](https://github.com/apollographql/apollo-client/pull/4601)
 
+- Accommodate `@client @export` variable changes in `ObservableQuery`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#4604](https://github.com/apollographql/apollo-client/pull/4604)
+
 ### Apollo Cache In-Memory
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>

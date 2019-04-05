@@ -967,11 +967,25 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
+  public observeQuery<T>(
+    queryId: string,
+    options: WatchQueryOptions,
+    observer: Observer<ApolloQueryResult<T>>,
+  ) {
+    this.addQueryListener(
+      queryId,
+      this.queryListenerForObserver(queryId, options, observer),
+    );
+    return this.fetchQuery<T>(queryId, options);
+  }
+
   public startQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
     listener: QueryListener,
   ) {
+    invariant.warn("The QueryManager.startQuery method has been deprecated");
+
     this.addQueryListener(queryId, listener);
 
     this.fetchQuery<T>(queryId, options)

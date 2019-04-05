@@ -503,23 +503,24 @@ export class ObservableQuery<
       options: UpdateQueryOptions<TVariables>,
     ) => TData,
   ): void {
+    const { queryManager } = this;
     const {
       previousResult,
       variables,
       document,
-    } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+    } = queryManager.getQueryWithPreviousResult(this.queryId);
 
     const newResult = tryFunctionOrLogError(() =>
       mapFn(previousResult, { variables: variables as TVariables }),
     );
 
     if (newResult) {
-      this.queryManager.dataStore.markUpdateQueryResult(
+      queryManager.dataStore.markUpdateQueryResult(
         document,
         variables,
         newResult,
       );
-      this.queryManager.broadcastQueries();
+      queryManager.broadcastQueries();
     }
   }
 
@@ -552,7 +553,9 @@ export class ObservableQuery<
     if (observer.error && this.lastError) observer.error(this.lastError);
 
     // setup the query if it hasn't been done before
-    if (first) this.setUpQuery();
+    if (first) {
+      this.setUpQuery();
+    }
 
     return () => {
       if (this.observers.delete(observer) && !this.observers.size) {
@@ -562,18 +565,23 @@ export class ObservableQuery<
   }
 
   private setUpQuery() {
+    const { queryManager, queryId } = this;
+
     if (this.shouldSubscribe) {
-      this.queryManager.addObservableQuery<TData>(this.queryId, this);
+      queryManager.addObservableQuery<TData>(queryId, this);
     }
 
     if (this.options.pollInterval) {
       assertNotCacheFirstOrOnly(this);
-      this.queryManager.startPollingQuery(this.options, this.queryId);
+      queryManager.startPollingQuery(this.options, queryId);
     }
 
-    const observer: Observer<ApolloQueryResult<TData>> = {
-      next: async (result: ApolloQueryResult<TData>): Promise<any> => {
-        const { queryManager } = this;
+    const onError = (error: ApolloError) => {
+      iterateObserversSafely(this.observers, 'error', this.lastError = error);
+    };
+
+    queryManager.observeQuery<TData>(queryId, this.options, {
+      next: (result: ApolloQueryResult<TData>) => {
         const { query, variables, fetchPolicy } = this.options;
         const lastVariables = this.variables;
         const previousResult = this.updateLastResult(result);
@@ -585,51 +593,43 @@ export class ObservableQuery<
         // data, a refetch is needed to pull in new data, using the
         // updated `@export` variables.
         if (queryManager.transform(query).hasClientExports) {
-          this.variables = this.options.variables = (
-            await queryManager.getLocalState().addExportedVariables(query, variables)
-          ) as TVariables;
-
-          if (
-            !result.loading &&
-            previousResult &&
-            fetchPolicy !== 'cache-only' &&
-            queryManager.transform(query).serverQuery &&
-            !isEqual(lastVariables, this.variables)
-          ) {
-            return this.refetch();
-          }
+          queryManager.getLocalState().addExportedVariables(
+            query,
+            variables,
+          ).then((variables: TVariables) => {
+            this.variables = this.options.variables = variables;
+            if (
+              !result.loading &&
+              previousResult &&
+              fetchPolicy !== 'cache-only' &&
+              queryManager.transform(query).serverQuery &&
+              !isEqual(lastVariables, variables)
+            ) {
+              this.refetch();
+            } else {
+              iterateObserversSafely(this.observers, 'next', result);
+            }
+          });
+        } else {
+          iterateObserversSafely(this.observers, 'next', result);
         }
-
-        iterateObserversSafely(this.observers, 'next', result);
       },
-      error: (error: ApolloError) => {
-        this.lastError = error;
-        iterateObserversSafely(this.observers, 'error', error);
-      },
-    };
-
-    this.queryManager.startQuery<TData>(
-      this.queryId,
-      this.options,
-      this.queryManager.queryListenerForObserver(
-        this.queryId,
-        this.options,
-        observer,
-      ),
-    );
+      error: onError,
+    }).catch(onError);
   }
 
   private tearDownQuery() {
+    const { queryManager } = this;
+
     this.isTornDown = true;
-    this.queryManager.stopPollingQuery(this.queryId);
+    queryManager.stopPollingQuery(this.queryId);
 
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();
 
-    this.queryManager.removeObservableQuery(this.queryId);
-
-    this.queryManager.stopQuery(this.queryId);
+    queryManager.removeObservableQuery(this.queryId);
+    queryManager.stopQuery(this.queryId);
 
     this.observers.clear();
   }

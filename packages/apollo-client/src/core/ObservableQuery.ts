@@ -390,7 +390,8 @@ export class ObservableQuery<
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
   public subscribeToMore<
-    TSubscriptionData = TData, TSubscriptionVariables = TVariables
+    TSubscriptionData = TData,
+    TSubscriptionVariables = TVariables,
   >(
     options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData>,
   ) {

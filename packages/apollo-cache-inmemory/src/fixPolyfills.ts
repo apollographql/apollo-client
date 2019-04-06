@@ -49,3 +49,5 @@ try {
   Object.seal = wrap(Object.seal);
   Object.preventExtensions = wrap(Object.preventExtensions);
 }
+
+export {}

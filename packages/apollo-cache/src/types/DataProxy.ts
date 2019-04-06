@@ -92,8 +92,8 @@ export interface DataProxy {
   ): QueryType | null;
 
   /**
-   * Reads a GraphQL fragment from any arbitrary id. If there are more than
-   * one fragments in the provided document then a `fragmentName` must be
+   * Reads a GraphQL fragment from any arbitrary id. If there is more than
+   * one fragment in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
   readFragment<FragmentType, TVariables = any>(
@@ -109,8 +109,8 @@ export interface DataProxy {
   ): void;
 
   /**
-   * Writes a GraphQL fragment to any arbitrary id. If there are more than
-   * one fragments in the provided document then a `fragmentName` must be
+   * Writes a GraphQL fragment to any arbitrary id. If there is more than
+   * one fragment in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
   writeFragment<TData = any, TVariables = any>(

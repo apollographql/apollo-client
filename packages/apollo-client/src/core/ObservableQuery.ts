@@ -364,8 +364,11 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore<TSubscriptionData = TData>(
-    options: SubscribeToMoreOptions<TData, TVariables, TSubscriptionData>,
+  public subscribeToMore<
+    TSubscriptionData = TData,
+    TSubscriptionVariables = TVariables,
+  >(
+    options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData>,
   ) {
     const subscription = this.queryManager
       .startGraphQLSubscription({

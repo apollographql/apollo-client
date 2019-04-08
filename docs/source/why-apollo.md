@@ -126,7 +126,7 @@ This flexibility makes it simple to create your dream client by building extensi
 - [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
 - [AppSync by AWS](https://blog.apollographql.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
 
-When you choose Apollo to manage your data, you also gain the support of our amazing community. There are thousands ov developers in our [Apollo Spectrum community](https://spectrum.chat/apollo) for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://blog.apollographql.com/), updated weekly.
+When you choose Apollo to manage your data, you also gain the support of our amazing community. There are thousands of developers in our [Apollo Spectrum community](https://spectrum.chat/apollo) for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://blog.apollographql.com/), updated weekly.
 
 <h2 id="case-studies">Case studies</h2>
 

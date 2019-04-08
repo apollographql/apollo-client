@@ -220,7 +220,7 @@ cache.writeData({
 });
 ```
 
-Sometimes you may need to [reset the store](/docs/react/features/cache-updates.html#reset-store) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
+Sometimes you may need to [reset the store](/docs/react/api/apollo-client.html#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -412,7 +412,7 @@ const client = new ApolloClient({
   link: new HttpLink({ uri: 'http://localhost:4000/graphql' }),
   cache: new InMemoryCache(),
   resolvers: {
-    Session: {
+    Member: {
       session() {
         return {
           __typename: 'Session',
@@ -589,7 +589,7 @@ export default function Launch({ launchId }) {
 }
 ```
 
-In the above example we're using a React Apollo `Query` component to run the `GET_LAUNCH_DETAILS` query. The `@client` based `isInClient` field is configured to pull its data from the following resolver:
+In the above example we're using a React Apollo `Query` component to run the `GET_LAUNCH_DETAILS` query. The `@client` based `isInCart` field is configured to pull its data from the following resolver:
 
 ```js
 import { GET_CART_ITEMS } from './pages/cart';

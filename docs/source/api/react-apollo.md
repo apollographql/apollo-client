@@ -95,7 +95,7 @@ The render prop function that you pass to the `children` prop of `Query` is call
 
 <dl>
   <dt>`data`: TData</dt>
-  <dd>An object containing the result of your GraphQL query. Defaults to an empty object.</dd>
+  <dd>An object containing the result of your GraphQL query. Defaults to `undefined`.</dd>
   <dt>`loading`: boolean</dt>
   <dd>A boolean that indicates whether the request is in flight</dd>
   <dt>`error`: ApolloError</dt>

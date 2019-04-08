@@ -20,7 +20,7 @@ import { invariant, InvariantError } from 'ts-invariant';
  * ```
  *
  * The target fragment will either be the only fragment in the document, or a
- * fragment specified by the provided `fragmentName`. If there is more then one
+ * fragment specified by the provided `fragmentName`. If there is more than one
  * fragment, but a `fragmentName` was not defined then an error will be thrown.
  */
 export function getFragmentQueryDocument(

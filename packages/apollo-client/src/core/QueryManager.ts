@@ -57,6 +57,7 @@ export class QueryManager<TStore> {
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
   public dataStore: DataStore<TStore>;
+  public readonly assumeImmutableResults: boolean;
 
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
@@ -94,6 +95,7 @@ export class QueryManager<TStore> {
     ssrMode = false,
     clientAwareness = {},
     localState,
+    assumeImmutableResults,
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
@@ -102,6 +104,7 @@ export class QueryManager<TStore> {
     ssrMode?: boolean;
     clientAwareness?: Record<string, string>;
     localState?: LocalState<TStore>;
+    assumeImmutableResults?: boolean;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
@@ -111,6 +114,7 @@ export class QueryManager<TStore> {
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache: store.getCache() });
     this.ssrMode = ssrMode;
+    this.assumeImmutableResults = !!assumeImmutableResults;
   }
 
   /**
@@ -433,7 +437,9 @@ export class QueryManager<TStore> {
     const requestId = this.generateRequestId();
 
     // set up a watcher to listen to cache updates
-    const cancel = this.updateQueryWatch(queryId, query, updatedOptions);
+    const cancel = fetchPolicy !== 'no-cache'
+      ? this.updateQueryWatch(queryId, query, updatedOptions)
+      : undefined;
 
     // Initialize query in store with unique requestId
     this.setQuery(queryId, () => ({
@@ -1157,14 +1163,14 @@ export class QueryManager<TStore> {
     }
   }
 
-  public getQueryWithPreviousResult<T>(
-    queryIdOrObservable: string | ObservableQuery<T>,
+  public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(
+    queryIdOrObservable: string | ObservableQuery<TData, TVariables>,
   ): {
     previousResult: any;
-    variables: OperationVariables | undefined;
+    variables: TVariables | undefined;
     document: DocumentNode;
   } {
-    let observableQuery: ObservableQuery<T>;
+    let observableQuery: ObservableQuery<TData, any>;
     if (typeof queryIdOrObservable === 'string') {
       const { observableQuery: foundObserveableQuery } = this.getQuery(
         queryIdOrObservable,

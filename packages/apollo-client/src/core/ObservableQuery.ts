@@ -11,7 +11,6 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ErrorPolicy,
-  UpdateQueryFn,
 } from './watchQueryOptions';
 
 import { QueryStoreValue } from '../data/queries';
@@ -250,7 +249,8 @@ export class ObservableQuery<
 
     if (!partial) {
       this.lastResult = { ...result, stale: false };
-      this.lastResultSnapshot = cloneDeep(this.lastResult);
+      this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+        ? this.lastResult : cloneDeep(this.lastResult);
     }
 
     return { ...result, partial };
@@ -388,8 +388,15 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore<TSubscriptionData = TData>(
-    options: SubscribeToMoreOptions<TData, TVariables, TSubscriptionData>,
+  public subscribeToMore<
+    TSubscriptionData = TData,
+    TSubscriptionVariables = TVariables
+  >(
+    options: SubscribeToMoreOptions<
+      TData,
+      TSubscriptionVariables,
+      TSubscriptionData
+    >,
   ) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
@@ -398,16 +405,14 @@ export class ObservableQuery<
       })
       .subscribe({
         next: (subscriptionData: { data: TSubscriptionData }) => {
-          if (options.updateQuery) {
-            this.updateQuery((previous, { variables }) =>
-              (options.updateQuery as UpdateQueryFn<
-                TData,
-                TVariables,
-                TSubscriptionData
-              >)(previous, {
-                subscriptionData,
-                variables,
-              }),
+          const { updateQuery } = options;
+          if (updateQuery) {
+            this.updateQuery<TSubscriptionVariables>(
+              (previous, { variables }) =>
+                updateQuery(previous, {
+                  subscriptionData,
+                  variables,
+                }),
             );
           }
         },
@@ -528,20 +533,22 @@ export class ObservableQuery<
     }
   }
 
-  public updateQuery(
+  public updateQuery<TVars = TVariables>(
     mapFn: (
       previousQueryResult: TData,
-      options: UpdateQueryOptions<TVariables>,
+      options: UpdateQueryOptions<TVars>,
     ) => TData,
   ): void {
     const {
       previousResult,
       variables,
       document,
-    } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+    } = this.queryManager.getQueryWithPreviousResult<TData, TVars>(
+      this.queryId,
+    );
 
     const newResult = tryFunctionOrLogError(() =>
-      mapFn(previousResult, { variables: variables as TVariables }),
+      mapFn(previousResult, { variables }),
     );
 
     if (newResult) {
@@ -611,7 +618,8 @@ export class ObservableQuery<
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
         this.lastResult = result;
-        this.lastResultSnapshot = cloneDeep(result);
+        this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+          ? result : cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

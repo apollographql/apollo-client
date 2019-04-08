@@ -26,6 +26,7 @@ import { ObjectCache } from './objectCache';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
+  freezeResults?: boolean;
 }
 
 const defaultConfig: InMemoryCacheConfig = {
@@ -33,6 +34,7 @@ const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
+  freezeResults: false,
 };
 
 export function defaultDataIdFromObject(result: any): string | null {
@@ -128,8 +130,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeReader = new StoreReader(this.cacheKeyRoot);
     this.storeWriter = new StoreWriter();
+    this.storeReader = new StoreReader({
+      cacheKeyRoot: this.cacheKeyRoot,
+      freezeResults: config.freezeResults,
+    });
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;

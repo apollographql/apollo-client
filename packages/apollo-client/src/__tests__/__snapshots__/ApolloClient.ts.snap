@@ -1,32 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[
-  `ApolloClient constructor will throw an error if cache is not passed in 1`
-] = `
-"
-        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
-        This is part of the required upgrade when migrating from Apollo Client 1.0 to Apollo Client 2.0.
-        For more information, please visit:
-          https://www.apollographql.com/docs/react/basics/setup.html
-        to help you get started.
-      "
+exports[`ApolloClient constructor will throw an error if cache is not passed in 1`] = `
+"In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.
+These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.
+For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
 `;
 
-exports[
-  `ApolloClient constructor will throw an error if link is not passed in 1`
-] = `
-"
-        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
-        This is part of the required upgrade when migrating from Apollo Client 1.0 to Apollo Client 2.0.
-        For more information, please visit:
-          https://www.apollographql.com/docs/react/basics/setup.html
-        to help you get started.
-      "
+exports[`ApolloClient constructor will throw an error if link is not passed in 1`] = `
+"In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.
+These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.
+For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
 `;
 
-exports[
-  `ApolloClient write then read will not use a default id getter if either _id or id is present when __typename is not also present 1`
-] = `
+exports[`ApolloClient write then read will not use a default id getter if either _id or id is present when __typename is not also present 1`] = `
 Object {
   "$ROOT_QUERY.bar": Object {
     "foo": Object {
@@ -79,9 +65,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient write then read will not use a default id getter if id and _id are not present 1`
-] = `
+exports[`ApolloClient write then read will not use a default id getter if id and _id are not present 1`] = `
 Object {
   "$ROOT_QUERY.bar": Object {
     "__typename": "bar",
@@ -136,9 +120,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient write then read will use a default id getter if __typename and _id are present 1`
-] = `
+exports[`ApolloClient write then read will use a default id getter if __typename and _id are present 1`] = `
 Object {
   "$ROOT_QUERY.foo": Object {
     "__typename": "foo",
@@ -170,9 +152,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient write then read will use a default id getter if __typename and id are present 1`
-] = `
+exports[`ApolloClient write then read will use a default id getter if __typename and id are present 1`] = `
 Object {
   "$ROOT_QUERY.foo": Object {
     "__typename": "foo",
@@ -204,9 +184,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient write then read will use a default id getter if one is not specified and __typename is present along with either _id or id 1`
-] = `
+exports[`ApolloClient write then read will use a default id getter if one is not specified and __typename is present along with either _id or id 1`] = `
 Object {
   "$ROOT_QUERY.bar": Object {
     "__typename": "bar",
@@ -263,9 +241,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient write then read will write data locally which will then be read back 1`
-] = `
+exports[`ApolloClient write then read will write data locally which will then be read back 1`] = `
 Object {
   "$foo.bar": Object {
     "__typename": "Bar",
@@ -320,9 +296,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeFragment will write some deeply nested data into the store at any id 1`
-] = `
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 1`] = `
 Object {
   "bar": Object {
     "__typename": "Bar",
@@ -341,9 +315,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeFragment will write some deeply nested data into the store at any id 2`
-] = `
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 2`] = `
 Object {
   "bar": Object {
     "__typename": "Bar",
@@ -366,9 +338,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeFragment will write some deeply nested data into the store at any id 3`
-] = `
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 3`] = `
 Object {
   "bar": Object {
     "__typename": "Bar",
@@ -391,9 +361,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeFragment will write some deeply nested data into the store at any id 4`
-] = `
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 4`] = `
 Object {
   "bar": Object {
     "__typename": "Bar",
@@ -416,9 +384,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeFragment will write some deeply nested data into the store at any id 5`
-] = `
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 5`] = `
 Object {
   "bar": Object {
     "__typename": "Bar",
@@ -441,9 +407,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeFragment will write some deeply nested data into the store at any id 6`
-] = `
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 6`] = `
 Object {
   "bar": Object {
     "__typename": "Bar",
@@ -466,9 +430,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeQuery will write some deeply nested data to the store 1`
-] = `
+exports[`ApolloClient writeQuery will write some deeply nested data to the store 1`] = `
 Object {
   "$ROOT_QUERY.d": Object {
     "__typename": "D",
@@ -486,9 +448,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeQuery will write some deeply nested data to the store 2`
-] = `
+exports[`ApolloClient writeQuery will write some deeply nested data to the store 2`] = `
 Object {
   "$ROOT_QUERY.d": Object {
     "__typename": "D",
@@ -516,9 +476,7 @@ Object {
 }
 `;
 
-exports[
-  `ApolloClient writeQuery will write some deeply nested data to the store 3`
-] = `
+exports[`ApolloClient writeQuery will write some deeply nested data to the store 3`] = `
 Object {
   "$ROOT_QUERY.d": Object {
     "__typename": "D",

@@ -1,3 +1,5 @@
-import build from '../../config/rollup.config';
+import { rollup } from '../../config/rollup.config';
 
-export default build('graphqlAnywhere');
+export default [
+  ...rollup({ name: 'graphql-anywhere' }),
+];

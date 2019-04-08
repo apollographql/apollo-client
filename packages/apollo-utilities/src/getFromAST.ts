@@ -4,6 +4,9 @@ import {
   FragmentDefinitionNode,
   ValueNode,
 } from 'graphql';
+
+import { invariant, InvariantError } from 'ts-invariant';
+
 import { assign } from './util/assign';
 
 import { valueToObjectRepresentation, JsonValue } from './storeUtils';
@@ -19,25 +22,24 @@ export function getMutationDefinition(
       definition.operation === 'mutation',
   )[0] as OperationDefinitionNode;
 
-  if (!mutationDef) {
-    throw new Error('Must contain a mutation definition.');
-  }
+  invariant(mutationDef, 'Must contain a mutation definition.');
 
   return mutationDef;
 }
 
 // Checks the document for errors and throws an exception if there is an error.
 export function checkDocument(doc: DocumentNode) {
-  if (doc.kind !== 'Document') {
-    throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
-string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
-  }
+  invariant(
+    doc && doc.kind === 'Document',
+    `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
+string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
+  );
 
   const operations = doc.definitions
     .filter(d => d.kind !== 'FragmentDefinition')
     .map(definition => {
       if (definition.kind !== 'OperationDefinition') {
-        throw new Error(
+        throw new InvariantError(
           `Schema type definitions not allowed in queries. Found: "${
             definition.kind
           }"`,
@@ -46,11 +48,10 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
       return definition;
     });
 
-  if (operations.length > 1) {
-    throw new Error(
-      `Ambiguous GraphQL document: contains ${operations.length} operations`,
-    );
-  }
+  invariant(
+    operations.length <= 1,
+    `Ambiguous GraphQL document: contains ${operations.length} operations`,
+  );
 
   return doc;
 }
@@ -68,9 +69,7 @@ export function getOperationDefinitionOrDie(
   document: DocumentNode,
 ): OperationDefinitionNode {
   const def = getOperationDefinition(document);
-  if (!def) {
-    throw new Error(`GraphQL document is missing an operation`);
-  }
+  invariant(def, `GraphQL document is missing an operation`);
   return def;
 }
 
@@ -97,9 +96,10 @@ export function getFragmentDefinitions(
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
   const queryDef = getOperationDefinition(doc) as OperationDefinitionNode;
 
-  if (!queryDef || queryDef.operation !== 'query') {
-    throw new Error('Must contain a query definition.');
-  }
+  invariant(
+    queryDef && queryDef.operation === 'query',
+    'Must contain a query definition.',
+  );
 
   return queryDef;
 }
@@ -107,20 +107,23 @@ export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
 export function getFragmentDefinition(
   doc: DocumentNode,
 ): FragmentDefinitionNode {
-  if (doc.kind !== 'Document') {
-    throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
-string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
-  }
+  invariant(
+    doc.kind === 'Document',
+    `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
+string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
+  );
 
-  if (doc.definitions.length > 1) {
-    throw new Error('Fragment must have exactly one definition.');
-  }
+  invariant(
+    doc.definitions.length <= 1,
+    'Fragment must have exactly one definition.',
+  );
 
   const fragmentDef = doc.definitions[0] as FragmentDefinitionNode;
 
-  if (fragmentDef.kind !== 'FragmentDefinition') {
-    throw new Error('Must be a fragment definition.');
-  }
+  invariant(
+    fragmentDef.kind === 'FragmentDefinition',
+    'Must be a fragment definition.',
+  );
 
   return fragmentDef as FragmentDefinitionNode;
 }
@@ -159,7 +162,7 @@ export function getMainDefinition(
     return fragmentDefinition;
   }
 
-  throw new Error(
+  throw new InvariantError(
     'Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.',
   );
 }

@@ -22,20 +22,6 @@ import { withWarning } from '../util/wrap';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
 describe('client', () => {
-  it('creates query manager lazily', () => {
-    const client = new ApolloClient({
-      link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
-    });
-
-    expect(client.queryManager).toBeUndefined();
-
-    // We only create the query manager on the first query
-    client.initQueryManager();
-    expect(client.queryManager).toBeDefined();
-    expect(client.cache).toBeDefined();
-  });
-
   it('can be loaded via require', () => {
     /* tslint:disable */
     const ApolloClientRequire = require('../').default;
@@ -46,10 +32,6 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    expect(client.queryManager).toBeUndefined();
-
-    // We only create the query manager on the first query
-    client.initQueryManager();
     expect(client.queryManager).toBeDefined();
     expect(client.cache).toBeDefined();
   });
@@ -84,21 +66,21 @@ describe('client', () => {
     }).toThrowError('You must wrap the query string in a "gql" tag.');
   });
 
-  it('should throw an error if mutation option is missing', () => {
+  it('should throw an error if mutation option is missing', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
 
-    expect(() => {
+    return await expect(
       client.mutate({
         query: gql`
           {
             a
           }
         `,
-      } as any);
-    }).toThrowError(
+      } as any)
+    ).rejects.toThrow(
       'mutation option is required. You must specify your GraphQL document in the mutation option.',
     );
   });
@@ -2365,7 +2347,7 @@ describe('client', () => {
       expect(count).toEqual(2);
 
       try {
-        console.log(client.readQuery({ query }));
+        client.readQuery({ query });
         fail('should not see any data');
       } catch (e) {
         expect(e.message).toMatch(/Can't find field/);
@@ -2378,7 +2360,7 @@ describe('client', () => {
     client.onResetStore(onResetStoreTwo);
 
     let called = false;
-    const next = jest.fn(async d => {
+    const next = jest.fn(d => {
       if (called) {
         expect(onResetStoreOne).toHaveBeenCalled();
       } else {

@@ -94,6 +94,12 @@ type ExecSelectionSetOptions = {
   execContext: ExecContext;
 };
 
+type ExecSubSelectedArrayOptions = {
+  field: FieldNode;
+  array: any[];
+  execContext: ExecContext;
+};
+
 export interface StoreReaderConfig {
   cacheKeyRoot?: KeyTrie<object>;
   freezeResults?: boolean;
@@ -109,6 +115,7 @@ export class StoreReader {
     const {
       executeStoreQuery,
       executeSelectionSet,
+      executeSubSelectedArray,
     } = this;
 
     this.freezeResults = freezeResults;
@@ -128,14 +135,13 @@ export class StoreReader {
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
           return cacheKeyRoot.lookup(
-            query,
             contextValue.store,
+            query,
             fragmentMatcher,
             JSON.stringify(variableValues),
             rootValue.id,
           );
         }
-        return;
       }
     });
 
@@ -149,14 +155,28 @@ export class StoreReader {
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
           return cacheKeyRoot.lookup(
-            selectionSet,
             execContext.contextValue.store,
+            selectionSet,
             execContext.fragmentMatcher,
             JSON.stringify(execContext.variableValues),
             rootValue.id,
           );
         }
-        return;
+      }
+    });
+
+    this.executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
+      return executeSubSelectedArray.call(this, options);
+    }, {
+      makeCacheKey({ field, array, execContext }) {
+        if (execContext.contextValue.store instanceof DepTrackingCache) {
+          return cacheKeyRoot.lookup(
+            execContext.contextValue.store,
+            field,
+            array,
+            JSON.stringify(execContext.variableValues),
+          );
+        }
       }
     });
   }
@@ -420,11 +440,11 @@ export class StoreReader {
     if (Array.isArray(readStoreResult.result)) {
       return this.combineExecResults(
         readStoreResult,
-        this.executeSubSelectedArray(
+        this.executeSubSelectedArray({
           field,
-          readStoreResult.result,
+          array: readStoreResult.result,
           execContext,
-        ),
+        }),
       );
     }
 
@@ -471,11 +491,11 @@ export class StoreReader {
     };
   }
 
-  private executeSubSelectedArray(
-    field: FieldNode,
-    result: any[],
-    execContext: ExecContext,
-  ): ExecResult {
+  private executeSubSelectedArray({
+    field,
+    array,
+    execContext,
+  }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: ExecResultMissingField[] = null;
 
     function handleMissing<T>(childResult: ExecResult<T>): T {
@@ -487,7 +507,7 @@ export class StoreReader {
       return childResult.result;
     }
 
-    result = result.map(item => {
+    array = array.map(item => {
       // null value in array
       if (item === null) {
         return null;
@@ -495,7 +515,11 @@ export class StoreReader {
 
       // This is a nested array, recurse
       if (Array.isArray(item)) {
-        return handleMissing(this.executeSubSelectedArray(field, item, execContext));
+        return handleMissing(this.executeSubSelectedArray({
+          field,
+          array: item,
+          execContext,
+        }));
       }
 
       // This is an object, run the selection set on it
@@ -513,10 +537,10 @@ export class StoreReader {
     });
 
     if (this.freezeResults && process.env.NODE_ENV !== 'production') {
-      Object.freeze(result);
+      Object.freeze(array);
     }
 
-    return { result, missing };
+    return { result: array, missing };
   }
 }
 

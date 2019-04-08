@@ -28,6 +28,9 @@
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>
   [@benjamn](https://github.com/benjamn) in [#4514](https://github.com/apollographql/apollo-client/pull/4514)
 
+- Allow `IntrospectionFragmentMatcher` to match fragments against the root `Query`, as `HeuristicFragmentMatcher` does. <br/>
+  [@rynobax](https://github.com/rynobax) in [#4620](https://github.com/apollographql/apollo-client/pull/4620)
+
 ## Apollo Client 2.5.1
 
 ### apollo-client 2.5.1

@@ -1,6 +1,11 @@
 {
   "extends": "./config/tsconfig.base.json",
-  "compilerOptions": {
-    "noLib": true
-  }
+  "references": [
+    { "path": "packages/apollo-boost" },
+    { "path": "packages/apollo-cache" },
+    { "path": "packages/apollo-cache-inmemory" },
+    { "path": "packages/apollo-client" },
+    { "path": "packages/apollo-utilities" },
+    { "path": "packages/graphql-anywhere" }
+  ]
 }

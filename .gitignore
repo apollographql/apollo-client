@@ -1,5 +1,6 @@
 # fs
 .DS_Store
+.rpt2_cache
 
 # Logs
 logs
@@ -50,7 +51,8 @@ db.json
 docs.json
 *.log
 docs/public/*
-!docs/public/_redirects
 .idea/
 
 junit.xml
+
+.rpt2_cache

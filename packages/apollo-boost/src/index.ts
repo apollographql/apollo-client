@@ -4,20 +4,31 @@ export * from 'apollo-link';
 export * from 'apollo-cache-inmemory';
 
 import { Operation, ApolloLink, Observable } from 'apollo-link';
-import { HttpLink } from 'apollo-link-http';
-import { withClientState, ClientStateConfig } from 'apollo-link-state';
+import { HttpLink, UriFunction } from 'apollo-link-http';
 import { onError, ErrorLink } from 'apollo-link-error';
-
 import { ApolloCache } from 'apollo-cache';
 import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
-import ApolloClient from 'apollo-client';
+import ApolloClient, {
+  Resolvers,
+  LocalStateFragmentMatcher,
+} from 'apollo-client';
+import { DocumentNode } from 'graphql';
+import { invariant } from 'ts-invariant';
 
 export { gql, HttpLink };
 
+type ClientStateConfig = {
+  cache?: ApolloCache<any>;
+  defaults?: Record<string, any>;
+  resolvers?: Resolvers | Resolvers[];
+  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+  fragmentMatcher?: LocalStateFragmentMatcher;
+};
+
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;
-  uri?: string;
+  uri?: string | UriFunction;
   credentials?: string;
   headers?: any;
   fetch?: GlobalFetch['fetch'];
@@ -28,6 +39,9 @@ export interface PresetConfig {
   cache?: ApolloCache<any>;
   name?: string;
   version?: string;
+  resolvers?: Resolvers | Resolvers[];
+  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+  fragmentMatcher?: LocalStateFragmentMatcher;
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -54,6 +68,9 @@ const PRESET_CONFIG_KEYS = [
   'name',
   'version',
   'ssrMode',
+  'resolvers',
+  'typeDefs',
+  'fragmentMatcher',
 ];
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
@@ -64,7 +81,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       );
 
       if (diff.length > 0) {
-        console.warn(
+        invariant.warn(
           'ApolloBoost was initialized with unsupported options: ' +
             `${diff.join(' ')}`,
         );
@@ -84,16 +101,18 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       name,
       version,
       ssrMode,
+      resolvers,
+      typeDefs,
+      fragmentMatcher,
     } = config;
 
     let { cache } = config;
 
-    if (cache && cacheRedirects) {
-      throw new Error(
-        'Incompatible cache configuration. If providing `cache` then ' +
-          'configure the provided instance with `cacheRedirects` instead.',
-      );
-    }
+    invariant(
+      !cache || !cacheRedirects,
+      'Incompatible cache configuration. If providing `cache` then ' +
+        'configure the provided instance with `cacheRedirects` instead.',
+    );
 
     if (!cache) {
       cache = cacheRedirects
@@ -101,17 +120,13 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
         : new InMemoryCache();
     }
 
-    const stateLink = clientState
-      ? withClientState({ ...clientState, cache })
-      : false;
-
     const errorLink = errorCallback
       ? onError(errorCallback)
       : onError(({ graphQLErrors, networkError }) => {
           if (graphQLErrors) {
             graphQLErrors.map(({ message, locations, path }) =>
               // tslint:disable-next-line
-              console.log(
+              invariant.warn(
                 `[GraphQL error]: Message: ${message}, Location: ` +
                   `${locations}, Path: ${path}`,
               ),
@@ -119,7 +134,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
           }
           if (networkError) {
             // tslint:disable-next-line
-            console.log(`[Network error]: ${networkError}`);
+            invariant.warn(`[Network error]: ${networkError}`);
           }
         });
 
@@ -156,14 +171,34 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       headers: headers || {},
     });
 
-    const link = ApolloLink.from([
-      errorLink,
-      requestHandler,
-      stateLink,
-      httpLink,
-    ].filter(x => !!x) as ApolloLink[]);
+    const link = ApolloLink.from([errorLink, requestHandler, httpLink].filter(
+      x => !!x,
+    ) as ApolloLink[]);
+
+    let activeResolvers = resolvers;
+    let activeTypeDefs = typeDefs;
+    let activeFragmentMatcher = fragmentMatcher;
+    if (clientState) {
+      if (clientState.defaults) {
+        cache.writeData({
+          data: clientState.defaults,
+        });
+      }
+      activeResolvers = clientState.resolvers;
+      activeTypeDefs = clientState.typeDefs;
+      activeFragmentMatcher = clientState.fragmentMatcher;
+    }
 
     // super hacky, we will fix the types eventually
-    super({ cache, link, name, version, ssrMode } as any);
+    super({
+      cache,
+      link,
+      name,
+      version,
+      ssrMode,
+      resolvers: activeResolvers,
+      typeDefs: activeTypeDefs,
+      fragmentMatcher: activeFragmentMatcher,
+    } as any);
   }
 }

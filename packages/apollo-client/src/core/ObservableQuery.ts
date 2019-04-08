@@ -2,11 +2,7 @@ import { isEqual, tryFunctionOrLogError, cloneDeep } from 'apollo-utilities';
 import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
-
-import { QueryScheduler } from '../scheduler/scheduler';
-
 import { ApolloError } from '../errors/ApolloError';
-
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, FetchType, OperationVariables } from './types';
 import {
@@ -15,10 +11,11 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ErrorPolicy,
-  UpdateQueryFn,
 } from './watchQueryOptions';
 
 import { QueryStoreValue } from '../data/queries';
+
+import { invariant } from 'ts-invariant';
 
 // XXX remove in the next breaking semver change (3.0)
 // Deprecated, use ApolloCurrentQueryResult
@@ -38,6 +35,7 @@ export type ApolloCurrentQueryResult<T> = {
   networkStatus: NetworkStatus;
   error?: ApolloError;
   partial?: boolean;
+  stale?: boolean;
 };
 
 export interface FetchMoreOptions<
@@ -79,10 +77,8 @@ export class ObservableQuery<
    */
   public variables: TVariables;
 
-  private isCurrentlyPolling: boolean;
   private shouldSubscribe: boolean;
   private isTornDown: boolean;
-  private scheduler: QueryScheduler<any>;
   private queryManager: QueryManager<any>;
   private observers: Observer<ApolloQueryResult<TData>>[];
   private subscriptionHandles: Subscription[];
@@ -92,11 +88,11 @@ export class ObservableQuery<
   private lastError: ApolloError;
 
   constructor({
-    scheduler,
+    queryManager,
     options,
     shouldSubscribe = true,
   }: {
-    scheduler: QueryScheduler<any>;
+    queryManager: QueryManager<any>;
     options: WatchQueryOptions<TVariables>;
     shouldSubscribe?: boolean;
   }) {
@@ -105,18 +101,16 @@ export class ObservableQuery<
     );
 
     // active state
-    this.isCurrentlyPolling = false;
     this.isTornDown = false;
 
     // query information
     this.options = options;
     this.variables = options.variables || ({} as TVariables);
-    this.queryId = scheduler.queryManager.generateQueryId();
+    this.queryId = queryManager.generateQueryId();
     this.shouldSubscribe = shouldSubscribe;
 
     // related classes
-    this.scheduler = scheduler;
-    this.queryManager = scheduler.queryManager;
+    this.queryManager = queryManager;
 
     // interal data stores
     this.observers = [];
@@ -201,6 +195,19 @@ export class ObservableQuery<
       };
     }
 
+    // Variables might have been added dynamically at query time, when
+    // using `@client @export(as: "varname")` for example. When this happens,
+    // the variables have been updated in the query store, but not updated on
+    // the original `ObservableQuery`. We'll update the observable query
+    // variables here to match, so retrieving from the cache doesn't fail.
+    if (queryStoreValue && queryStoreValue.variables) {
+      this.options.variables = Object.assign(
+        {},
+        this.options.variables,
+        queryStoreValue.variables,
+      );
+    }
+
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
 
     const queryLoading =
@@ -242,7 +249,8 @@ export class ObservableQuery<
 
     if (!partial) {
       this.lastResult = { ...result, stale: false };
-      this.lastResultSnapshot = cloneDeep(this.lastResult);
+      this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+        ? this.lastResult : cloneDeep(this.lastResult);
     }
 
     return { ...result, partial };
@@ -330,11 +338,9 @@ export class ObservableQuery<
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     // early return if no update Query
-    if (!fetchMoreOptions.updateQuery) {
-      throw new Error(
-        'updateQuery option is required. This function defines how to update the query data with the new results.',
-      );
-    }
+    invariant(fetchMoreOptions.updateQuery,
+      'updateQuery option is required. This function defines how to update the query data with the new results.',
+    );
 
     let combinedOptions: any;
 
@@ -382,8 +388,15 @@ export class ObservableQuery<
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore<TSubscriptionData = TData>(
-    options: SubscribeToMoreOptions<TData, TVariables, TSubscriptionData>,
+  public subscribeToMore<
+    TSubscriptionData = TData,
+    TSubscriptionVariables = TVariables
+  >(
+    options: SubscribeToMoreOptions<
+      TData,
+      TSubscriptionVariables,
+      TSubscriptionData
+    >,
   ) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
@@ -392,16 +405,14 @@ export class ObservableQuery<
       })
       .subscribe({
         next: (subscriptionData: { data: TSubscriptionData }) => {
-          if (options.updateQuery) {
-            this.updateQuery((previous, { variables }) =>
-              (options.updateQuery as UpdateQueryFn<
-                TData,
-                TVariables,
-                TSubscriptionData
-              >)(previous, {
-                subscriptionData,
-                variables,
-              }),
+          const { updateQuery } = options;
+          if (updateQuery) {
+            this.updateQuery<TSubscriptionVariables>(
+              (previous, { variables }) =>
+                updateQuery(previous, {
+                  subscriptionData,
+                  variables,
+                }),
             );
           }
         },
@@ -522,20 +533,22 @@ export class ObservableQuery<
     }
   }
 
-  public updateQuery(
+  public updateQuery<TVars = TVariables>(
     mapFn: (
       previousQueryResult: TData,
-      options: UpdateQueryOptions<TVariables>,
+      options: UpdateQueryOptions<TVars>,
     ) => TData,
   ): void {
     const {
       previousResult,
       variables,
       document,
-    } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+    } = this.queryManager.getQueryWithPreviousResult<TData, TVars>(
+      this.queryId,
+    );
 
     const newResult = tryFunctionOrLogError(() =>
-      mapFn(previousResult, { variables: variables as TVariables }),
+      mapFn(previousResult, { variables }),
     );
 
     if (newResult) {
@@ -549,30 +562,14 @@ export class ObservableQuery<
   }
 
   public stopPolling() {
-    if (this.isCurrentlyPolling) {
-      this.scheduler.stopPollingQuery(this.queryId);
-      this.options.pollInterval = undefined;
-      this.isCurrentlyPolling = false;
-    }
+    this.queryManager.stopPollingQuery(this.queryId);
+    this.options.pollInterval = undefined;
   }
 
   public startPolling(pollInterval: number) {
-    if (
-      this.options.fetchPolicy === 'cache-first' ||
-      this.options.fetchPolicy === 'cache-only'
-    ) {
-      throw new Error(
-        'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
-      );
-    }
-
-    if (this.isCurrentlyPolling) {
-      this.scheduler.stopPollingQuery(this.queryId);
-      this.isCurrentlyPolling = false;
-    }
+    assertNotCacheFirstOrOnly(this);
     this.options.pollInterval = pollInterval;
-    this.isCurrentlyPolling = true;
-    this.scheduler.startPollingQuery(this.options, this.queryId);
+    this.queryManager.startPollingQuery(this.options, this.queryId);
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
@@ -614,23 +611,15 @@ export class ObservableQuery<
     }
 
     if (!!this.options.pollInterval) {
-      if (
-        this.options.fetchPolicy === 'cache-first' ||
-        this.options.fetchPolicy === 'cache-only'
-      ) {
-        throw new Error(
-          'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
-        );
-      }
-
-      this.isCurrentlyPolling = true;
-      this.scheduler.startPollingQuery<TData>(this.options, this.queryId);
+      assertNotCacheFirstOrOnly(this);
+      this.queryManager.startPollingQuery(this.options, this.queryId);
     }
 
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result: ApolloQueryResult<TData>) => {
         this.lastResult = result;
-        this.lastResultSnapshot = cloneDeep(result);
+        this.lastResultSnapshot = this.queryManager.assumeImmutableResults
+          ? result : cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {
@@ -652,11 +641,7 @@ export class ObservableQuery<
 
   private tearDownQuery() {
     this.isTornDown = true;
-
-    if (this.isCurrentlyPolling) {
-      this.scheduler.stopPollingQuery(this.queryId);
-      this.isCurrentlyPolling = false;
-    }
+    this.queryManager.stopPollingQuery(this.queryId);
 
     // stop all active GraphQL subscriptions
     this.subscriptionHandles.forEach(sub => sub.unsubscribe());
@@ -668,4 +653,14 @@ export class ObservableQuery<
 
     this.observers = [];
   }
+}
+
+function assertNotCacheFirstOrOnly<TData, TVariables>(
+  obsQuery: ObservableQuery<TData, TVariables>,
+) {
+  const { fetchPolicy } = obsQuery.options;
+  invariant(
+    fetchPolicy !== 'cache-first' && fetchPolicy !== 'cache-only',
+    'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
+  );
 }

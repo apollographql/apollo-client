@@ -28,7 +28,7 @@ const client = new ApolloClient({
 To create a basic client with the same defaults as Apollo Boost, first you need to install some packages:
 
 ```bash
-npm install apollo-client apollo-cache-inmemory apollo-link-http apollo-link-error apollo-link --save
+npm install apollo-client apollo-cache-inmemory apollo-link-http apollo-link-error apollo-link graphql-tag --save
 ```
 
 To complete the process, you'll need to manually attach your `cache` and `link` to the client:
@@ -121,7 +121,7 @@ const client = new ApolloClient({
 To create a client with the same defaults as Apollo Boost, first you need to install some packages:
 
 ```bash
-npm install apollo-client apollo-cache-inmemory apollo-link-http apollo-link apollo-link-state apollo-link-error --save
+npm install apollo-client apollo-cache-inmemory apollo-link-http apollo-link apollo-link-state apollo-link-error graphql-tag --save
 ```
 
 Here's how we would create our new client using the configuration options above from Apollo Boost:

@@ -24,3 +24,12 @@
 /docs/react/recipes/prefetching.html /docs/react/features/performance.html#prefetching
 /docs/react/recipes/server-side-rendering.html /docs/react/features/server-side-rendering.html
 /docs/react/recipes/fragment-matching.html /docs/react/advanced/fragments.html
+
+# Ported from old _config.yml
+/docs/react/essentials/get-started.html#api docs/react/api/react-apollo.html
+/docs/react/essentials/queries.html#api docs/react/api/react-apollo.html#graphql-query-options
+/docs/react/basics/mutations.html#api docs/react/api/react-apollo.html#graphql-mutation-options
+/docs/react/recipes/simple-example.html docs/react/essentials/get-started.html
+/docs/react/api/apollo-client.html#FetchPolicy docs/react/api/react-apollo.html#graphql-config-options-fetchPolicy
+/docs/react/api/apollo-client.html#ErrorPolicy docs/react/api/react-apollo.html#graphql-config-options-errorPolicy
+/docs/react/features/performance.html /docs/react/recipes/performance.html

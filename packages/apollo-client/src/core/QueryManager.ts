@@ -1161,14 +1161,14 @@ export class QueryManager<TStore> {
     }
   }
 
-  public getQueryWithPreviousResult<T>(
-    queryIdOrObservable: string | ObservableQuery<T>,
+  public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(
+    queryIdOrObservable: string | ObservableQuery<TData, TVariables>,
   ): {
     previousResult: any;
-    variables: OperationVariables | undefined;
+    variables: TVariables | undefined;
     document: DocumentNode;
   } {
-    let observableQuery: ObservableQuery<T>;
+    let observableQuery: ObservableQuery<TData, any>;
     if (typeof queryIdOrObservable === 'string') {
       const { observableQuery: foundObserveableQuery } = this.getQuery(
         queryIdOrObservable,

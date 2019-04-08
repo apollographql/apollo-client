@@ -16,7 +16,6 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ErrorPolicy,
-  UpdateQueryFn,
 } from './watchQueryOptions';
 
 import { QueryStoreValue } from '../data/queries';
@@ -366,9 +365,13 @@ export class ObservableQuery<
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
   public subscribeToMore<
     TSubscriptionData = TData,
-    TSubscriptionVariables = TVariables,
+    TSubscriptionVariables = TVariables
   >(
-    options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData>,
+    options: SubscribeToMoreOptions<
+      TData,
+      TSubscriptionVariables,
+      TSubscriptionData
+    >,
   ) {
     const subscription = this.queryManager
       .startGraphQLSubscription({
@@ -377,16 +380,14 @@ export class ObservableQuery<
       })
       .subscribe({
         next: (subscriptionData: { data: TSubscriptionData }) => {
-          if (options.updateQuery) {
-            this.updateQuery((previous, { variables }) =>
-              (options.updateQuery as UpdateQueryFn<
-                TData,
-                TVariables,
-                TSubscriptionData
-              >)(previous, {
-                subscriptionData,
-                variables,
-              }),
+          const { updateQuery } = options;
+          if (updateQuery) {
+            this.updateQuery<TSubscriptionVariables>(
+              (previous, { variables }) =>
+                updateQuery(previous, {
+                  subscriptionData,
+                  variables,
+                }),
             );
           }
         },
@@ -500,10 +501,10 @@ export class ObservableQuery<
     ) as Promise<ApolloQueryResult<TData>>;
   }
 
-  public updateQuery(
+  public updateQuery<TVars = TVariables>(
     mapFn: (
       previousQueryResult: TData,
-      options: UpdateQueryOptions<TVariables>,
+      options: UpdateQueryOptions<TVars>,
     ) => TData,
   ): void {
     const { queryManager } = this;
@@ -511,10 +512,12 @@ export class ObservableQuery<
       previousResult,
       variables,
       document,
-    } = queryManager.getQueryWithPreviousResult(this.queryId);
+    } = queryManager.getQueryWithPreviousResult<TData, TVars>(
+      this.queryId,
+    );
 
     const newResult = tryFunctionOrLogError(() =>
-      mapFn(previousResult, { variables: variables as TVariables }),
+      mapFn(previousResult, { variables }),
     );
 
     if (newResult) {

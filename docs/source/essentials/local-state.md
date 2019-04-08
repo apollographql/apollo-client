@@ -412,7 +412,7 @@ const client = new ApolloClient({
   link: new HttpLink({ uri: 'http://localhost:4000/graphql' }),
   cache: new InMemoryCache(),
   resolvers: {
-    Session: {
+    Member: {
       session() {
         return {
           __typename: 'Session',
@@ -589,7 +589,7 @@ export default function Launch({ launchId }) {
 }
 ```
 
-In the above example we're using a React Apollo `Query` component to run the `GET_LAUNCH_DETAILS` query. The `@client` based `isInClient` field is configured to pull its data from the following resolver:
+In the above example we're using a React Apollo `Query` component to run the `GET_LAUNCH_DETAILS` query. The `@client` based `isInCart` field is configured to pull its data from the following resolver:
 
 ```js
 import { GET_CART_ITEMS } from './pages/cart';

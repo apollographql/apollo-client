@@ -437,7 +437,9 @@ export class QueryManager<TStore> {
     const requestId = this.generateRequestId();
 
     // set up a watcher to listen to cache updates
-    const cancel = this.updateQueryWatch(queryId, query, updatedOptions);
+    const cancel = fetchPolicy !== 'no-cache'
+      ? this.updateQueryWatch(queryId, query, updatedOptions)
+      : undefined;
 
     // Initialize query in store with unique requestId
     this.setQuery(queryId, () => ({
@@ -1161,14 +1163,14 @@ export class QueryManager<TStore> {
     }
   }
 
-  public getQueryWithPreviousResult<T>(
-    queryIdOrObservable: string | ObservableQuery<T>,
+  public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(
+    queryIdOrObservable: string | ObservableQuery<TData, TVariables>,
   ): {
     previousResult: any;
-    variables: OperationVariables | undefined;
+    variables: TVariables | undefined;
     document: DocumentNode;
   } {
-    let observableQuery: ObservableQuery<T>;
+    let observableQuery: ObservableQuery<TData, any>;
     if (typeof queryIdOrObservable === 'string') {
       const { observableQuery: foundObserveableQuery } = this.getQuery(
         queryIdOrObservable,

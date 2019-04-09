@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.0.0",
-    "ts-invariant": "^0.3.2",
+    "ts-invariant": "^0.4.0",
     "tslib": "^1.9.3"
   }
 }

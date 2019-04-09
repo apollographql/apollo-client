@@ -72,6 +72,7 @@ export namespace DataProxy {
 
   export type DiffResult<T> = {
     result?: T;
+    involvedFields?: string[];
     complete?: boolean;
   };
 }

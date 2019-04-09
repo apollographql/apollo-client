@@ -77,6 +77,9 @@ export type ExecResult<R = any> = {
   result: R;
   // Empty array if no missing fields encountered while computing result.
   missing?: ExecResultMissingField[];
+
+  // Fields involved in constructing the result for tracking of cache utilization
+  involvedFields: string[];
 };
 
 type ExecStoreQueryOptions = {
@@ -254,6 +257,7 @@ export class StoreReader {
 
     return {
       result: execResult.result,
+      involvedFields: execResult.involvedFields,
       complete: !hasMissingFields,
     };
   }
@@ -308,7 +312,7 @@ export class StoreReader {
     execContext,
   }: ExecSelectionSetOptions): ExecResult {
     const { fragmentMap, contextValue, variableValues: variables } = execContext;
-    const finalResult: ExecResult = { result: null };
+    const finalResult: ExecResult = { result: null, involvedFields: [rootValue.id] };
 
     const objectsToMerge: { [key: string]: any }[] = [];
 
@@ -324,6 +328,8 @@ export class StoreReader {
         finalResult.missing = finalResult.missing || [];
         finalResult.missing.push(...result.missing);
       }
+
+      finalResult.involvedFields.push(...result.involvedFields);
       return result.result;
     }
 
@@ -459,15 +465,19 @@ export class StoreReader {
     ...execResults: ExecResult<T>[]
   ): ExecResult<T> {
     let missing: ExecResultMissingField[] = null;
+    let involvedFields: string[] = [];
     execResults.forEach(execResult => {
       if (execResult.missing) {
         missing = missing || [];
         missing.push(...execResult.missing);
       }
+
+      involvedFields.push(...execResult.involvedFields);
     });
     return {
       result: execResults.pop().result,
       missing,
+      involvedFields,
     };
   }
 
@@ -477,12 +487,15 @@ export class StoreReader {
     execContext: ExecContext,
   ): ExecResult {
     let missing: ExecResultMissingField[] = null;
+    let involvedFields: string[] = [];
 
     function handleMissing<T>(childResult: ExecResult<T>): T {
       if (childResult.missing) {
         missing = missing || [];
         missing.push(...childResult.missing);
       }
+
+      involvedFields.push(...childResult.involvedFields);
 
       return childResult.result;
     }
@@ -516,7 +529,7 @@ export class StoreReader {
       Object.freeze(result);
     }
 
-    return { result, missing };
+    return { result, missing, involvedFields };
   }
 }
 
@@ -598,6 +611,7 @@ function readStoreResolver(
         fieldName: storeKeyName,
         tolerable: false,
       }],
+      involvedFields: [],
     };
   }
 
@@ -607,5 +621,6 @@ function readStoreResolver(
 
   return {
     result: fieldValue,
+    involvedFields: [],
   };
 }

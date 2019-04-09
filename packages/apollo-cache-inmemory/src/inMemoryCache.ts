@@ -5,11 +5,11 @@ import { DocumentNode } from 'graphql';
 
 import { Cache, ApolloCache, Transaction } from 'apollo-cache';
 
-import { addTypenameToDocument } from 'apollo-utilities';
+import { addTypenameToDocument, isIdValue } from 'apollo-utilities';
 
 import { wrap } from 'optimism';
 
-import { invariant, InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {
@@ -228,8 +228,50 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     };
   }
 
-  public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    throw new InvariantError(`eviction is not implemented on InMemory Cache`);
+  public evict(evictee: Cache.EvictOptions): Cache.EvictionResult {
+    let keys = this.diff({
+        query: evictee.query,
+        variables: evictee.variables,
+        optimistic: false,
+      }).involvedFields;
+    const unique = new Set(keys);
+    //Don't delete the root
+    unique.delete('ROOT_QUERY');
+
+    //Delete each part
+    unique.forEach(k => {
+      this.data.delete(k);
+    });
+
+    this.cleanupCacheReferences();
+
+    return { success: true };
+  }
+
+  //Garbage Collect Cache entries that are not being watched
+  public gc() {
+    let keys: string[] = [];
+    this.watches.forEach(c => {
+      const d = this.diff({
+        query: c.query,
+        variables: c.variables,
+        previousResult: c.previousResult && c.previousResult(),
+        optimistic: c.optimistic,
+      });
+      keys.push(...d.involvedFields);
+    });
+    const unique = new Set(keys);
+
+    const cacheObject = this.data.toObject();
+    const cacheKeys = Object.keys(cacheObject);
+
+    for(let k of cacheKeys) {
+      if( !unique.has(k) ) {
+        this.data.delete(k);
+      }
+    }
+
+    this.cleanupCacheReferences();
   }
 
   public reset(): Promise<void> {
@@ -329,6 +371,60 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (!this.silenceBroadcast) {
       this.watches.forEach(c => this.maybeBroadcastWatch(c));
     }
+  }
+
+  protected cleanupCacheReferences() {
+    const cacheObject = this.data.toObject();
+    const cacheKeys = Object.keys(cacheObject);
+
+    //See if the array is invalid
+    //Note: Types don't permit nested arrays
+    function checkArray(ary: any[]): boolean {
+      for(let v of ary) {
+        if( Array.isArray(v) ) {
+          if( checkArray(v) ) {
+            return true;
+          }
+        } else if( isIdValue(v) ) {
+          if( !cacheKeys.includes(v.id) ) {
+            return true;
+          }
+        } else {
+          //Nothing to do
+        }
+      }
+      return false;
+    }
+
+    cacheKeys.forEach(k => {
+      const item = this.data.get(k);
+      let newItem = null;
+
+      for(let field in item) {
+        const value = item[field];
+
+        if( Array.isArray(value) ) {
+          const invalid = checkArray(value);
+          if( invalid ) {
+            if( !newItem ) newItem = {...item};
+            delete newItem[field];
+            console.log('deleted ' + field)
+          }
+        } else if( isIdValue(value) ) {
+          if( !cacheKeys.includes(value.id) ) {
+            if( !newItem ) newItem = {...item};
+            delete newItem[field];
+            console.log('deleted ' + field)
+          }
+        } else {
+          //Nothing to do
+        }
+      }
+
+      if(newItem) {
+        this.data.set(k, newItem);
+      }
+    });
   }
 
   // This method is wrapped in the constructor so that it will be called only

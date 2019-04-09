@@ -23,6 +23,9 @@
 - Avoid updating (and later invalidating) cache watches when `fetchPolicy` is `'no-cache'`. <br/>
   [@bradleyayers](https://github.com/bradleyayers) in [PR #4573](https://github.com/apollographql/apollo-client/pull/4573), part of [issue #3452](https://github.com/apollographql/apollo-client/issues/3452)
 
+- Remove temporary `queryId` after `fetchMore` completes. <br/>
+  [@doomsower](https://github.com/doomsower) in [#4440](https://github.com/apollographql/apollo-client/pull/4440)
+
 ### Apollo Cache In-Memory
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>

@@ -19,13 +19,19 @@ export {
 } from './core/watchQueryOptions';
 export { NetworkStatus } from './core/networkStatus';
 export * from './core/types';
+export {
+  Resolver,
+  FragmentMatcher as LocalStateFragmentMatcher,
+} from './core/LocalState';
 
 export { isApolloError, ApolloError } from './errors/ApolloError';
 
-import ApolloClient, { ApolloClientOptions } from './ApolloClient';
+import ApolloClient, {
+  ApolloClientOptions,
+  DefaultOptions,
+} from './ApolloClient';
+export { ApolloClientOptions, DefaultOptions };
 
-export { ApolloClientOptions };
-
-// export the client as both default and named
+// Export the client as both default and named.
 export { ApolloClient };
 export default ApolloClient;

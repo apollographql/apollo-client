@@ -1,4 +1,5 @@
 import { DocumentNode, FragmentDefinitionNode } from 'graphql';
+import { invariant, InvariantError } from 'ts-invariant';
 
 /**
  * Returns a query document which adds a single query operation that only
@@ -19,7 +20,7 @@ import { DocumentNode, FragmentDefinitionNode } from 'graphql';
  * ```
  *
  * The target fragment will either be the only fragment in the document, or a
- * fragment specified by the provided `fragmentName`. If there is more then one
+ * fragment specified by the provided `fragmentName`. If there is more than one
  * fragment, but a `fragmentName` was not defined then an error will be thrown.
  */
 export function getFragmentQueryDocument(
@@ -36,7 +37,7 @@ export function getFragmentQueryDocument(
     // Throw an error if we encounter an operation definition because we will
     // define our own operation definition later on.
     if (definition.kind === 'OperationDefinition') {
-      throw new Error(
+      throw new InvariantError(
         `Found a ${definition.operation} operation${
           definition.name ? ` named '${definition.name.value}'` : ''
         }. ` +
@@ -53,13 +54,12 @@ export function getFragmentQueryDocument(
   // If the user did not give us a fragment name then let us try to get a
   // name from a single fragment in the definition.
   if (typeof actualFragmentName === 'undefined') {
-    if (fragments.length !== 1) {
-      throw new Error(
-        `Found ${
-          fragments.length
-        } fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
-      );
-    }
+    invariant(
+      fragments.length === 1,
+      `Found ${
+        fragments.length
+      } fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
+    );
     actualFragmentName = fragments[0].name.value;
   }
 

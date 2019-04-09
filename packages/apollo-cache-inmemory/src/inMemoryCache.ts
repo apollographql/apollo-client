@@ -230,10 +230,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public evict(evictee: Cache.EvictOptions): Cache.EvictionResult {
     let keys = this.diff({
-        query: evictee.query,
-        variables: evictee.variables,
-        optimistic: false,
-      }).involvedFields;
+      query: evictee.query,
+      variables: evictee.variables,
+      optimistic: false,
+    }).involvedFields;
     const unique = new Set(keys);
     //Don't delete the root
     unique.delete('ROOT_QUERY');
@@ -265,8 +265,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     const cacheObject = this.data.toObject();
     const cacheKeys = Object.keys(cacheObject);
 
-    for(let k of cacheKeys) {
-      if( !unique.has(k) ) {
+    for (let k of cacheKeys) {
+      if (!unique.has(k)) {
         this.data.delete(k);
       }
     }
@@ -380,13 +380,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     //See if the array is invalid
     //Note: Types don't permit nested arrays
     function checkArray(ary: any[]): boolean {
-      for(let v of ary) {
-        if( Array.isArray(v) ) {
-          if( checkArray(v) ) {
+      for (let v of ary) {
+        if (Array.isArray(v)) {
+          if (checkArray(v)) {
             return true;
           }
-        } else if( isIdValue(v) ) {
-          if( !cacheKeys.includes(v.id) ) {
+        } else if (isIdValue(v)) {
+          if (!cacheKeys.includes(v.id)) {
             return true;
           }
         } else {
@@ -400,28 +400,26 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       const item = this.data.get(k);
       let newItem = null;
 
-      for(let field in item) {
+      for (let field in item) {
         const value = item[field];
 
-        if( Array.isArray(value) ) {
+        if (Array.isArray(value)) {
           const invalid = checkArray(value);
-          if( invalid ) {
-            if( !newItem ) newItem = {...item};
+          if (invalid) {
+            if (!newItem) newItem = { ...item };
             delete newItem[field];
-            console.log('deleted ' + field)
           }
-        } else if( isIdValue(value) ) {
-          if( !cacheKeys.includes(value.id) ) {
-            if( !newItem ) newItem = {...item};
+        } else if (isIdValue(value)) {
+          if (!cacheKeys.includes(value.id)) {
+            if (!newItem) newItem = { ...item };
             delete newItem[field];
-            console.log('deleted ' + field)
           }
         } else {
           //Nothing to do
         }
       }
 
-      if(newItem) {
+      if (newItem) {
         this.data.set(k, newItem);
       }
     });

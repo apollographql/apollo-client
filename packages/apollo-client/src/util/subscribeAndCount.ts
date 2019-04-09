@@ -1,6 +1,6 @@
-import { ObservableQuery } from '../../src/core/ObservableQuery';
-import { ApolloQueryResult } from '../../src/core/types';
-import { Subscription } from '../../src/util/Observable';
+import { ObservableQuery } from '../core/ObservableQuery';
+import { ApolloQueryResult } from '../core/types';
+import { Subscription } from '../util/Observable';
 
 export default function subscribeAndCount(
   done: jest.DoneCallback,

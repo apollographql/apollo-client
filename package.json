@@ -96,7 +96,7 @@
     "rollup-plugin-terser": "^4.0.3",
     "rollup-plugin-typescript2": "0.18.1",
     "rxjs": "6.4.0",
-    "ts-jest": "23.1.4",
+    "ts-jest": "24.0.2",
     "tsc-watch": "^2.1.2",
     "tslib": "1.9.3",
     "tslint": "5.14.0",

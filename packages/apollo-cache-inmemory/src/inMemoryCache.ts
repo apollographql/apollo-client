@@ -9,6 +9,8 @@ import { addTypenameToDocument } from 'apollo-utilities';
 
 import { wrap } from 'optimism';
 
+import { invariant, InvariantError } from 'ts-invariant';
+
 import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {
   ApolloReducerConfig,
@@ -24,6 +26,7 @@ import { ObjectCache } from './objectCache';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
+  freezeResults?: boolean;
 }
 
 const defaultConfig: InMemoryCacheConfig = {
@@ -31,6 +34,7 @@ const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
+  freezeResults: false,
 };
 
 export function defaultDataIdFromObject(result: any): string | null {
@@ -97,14 +101,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     // backwards compat
     if ((this.config as any).customResolvers) {
-      console.warn(
+      invariant.warn(
         'customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version.',
       );
       this.config.cacheRedirects = (this.config as any).customResolvers;
     }
 
     if ((this.config as any).cacheResolvers) {
-      console.warn(
+      invariant.warn(
         'cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.',
       );
       this.config.cacheRedirects = (this.config as any).cacheResolvers;
@@ -126,8 +130,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeReader = new StoreReader(this.cacheKeyRoot);
     this.storeWriter = new StoreWriter();
+    this.storeReader = new StoreReader({
+      cacheKeyRoot: this.cacheKeyRoot,
+      freezeResults: config.freezeResults,
+    });
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
@@ -222,7 +229,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    throw new Error(`eviction is not implemented on InMemory Cache`);
+    throw new InvariantError(`eviction is not implemented on InMemory Cache`);
   }
 
   public reset(): Promise<void> {

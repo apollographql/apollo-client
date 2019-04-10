@@ -12,6 +12,7 @@ import {
   removeConnectionDirectiveFromDocument,
   removeArgumentsFromDocument,
   removeFragmentSpreadFromDocument,
+  removeClientSetsFromDocument,
 } from '../transform';
 import { getQueryDefinition } from '../getFromAST';
 
@@ -503,6 +504,29 @@ describe('removeDirectivesFromDocument', () => {
     );
 
     expect(doc).toBe(null);
+  });
+
+  it('should not throw in combination with addTypenameToDocument', () => {
+    const query = gql`
+      query Simple {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on Thing {
+        ...inDirection
+      }
+
+      fragment inDirection on Thing {
+        field @storage
+      }
+    `;
+
+    expect(() => {
+      removeDirectivesFromDocument(
+        [{ name: 'storage', remove: true }],
+        addTypenameToDocument(query),
+      );
+    }).not.toThrow();
   });
 });
 
@@ -1178,5 +1202,41 @@ describe('getDirectivesFromDocument', () => {
       const doc = getDirectivesFromDocument([{ name: 'client' }], query, true);
       expect(print(doc)).toBe(print(expected));
     });
+  });
+});
+
+describe('removeClientSetsFromDocument', () => {
+  it('should remove @client fields from document', () => {
+    const query = gql`
+      query Author {
+        name
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query Author {
+        name
+      }
+    `;
+    const doc = removeClientSetsFromDocument(query);
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it('should remove @client fields from fragments', () => {
+    const query = gql`
+      fragment authorInfo on Author {
+        name
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      fragment authorInfo on Author {
+        name
+      }
+    `;
+    const doc = removeClientSetsFromDocument(query);
+    expect(print(doc)).toBe(print(expected));
   });
 });

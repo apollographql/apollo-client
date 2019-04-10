@@ -20,6 +20,8 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   toIdValue,
+  mergeDeepArray,
+  maybeDeepFreeze,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -39,11 +41,10 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import { wrap, CacheKeyNode } from './optimism';
-export { OptimisticWrapperFunction } from './optimism';
-
+import { wrap } from 'optimism';
+import { CacheKeyNode } from './cacheKeys';
 import { DepTrackingCache } from './depTrackingCache';
-import { QueryKeyMaker } from './queryKeyMaker';
+import { invariant, InvariantError } from 'ts-invariant';
 
 export type VariableMap = { [name: string]: any };
 
@@ -93,19 +94,24 @@ type ExecSelectionSetOptions = {
   execContext: ExecContext;
 };
 
-export class StoreReader {
-  private keyMaker: QueryKeyMaker;
+export interface StoreReaderConfig {
+  cacheKeyRoot?: CacheKeyNode;
+  freezeResults?: boolean;
+};
 
-  constructor(
-    private cacheKeyRoot = new CacheKeyNode,
-  ) {
-    const reader = this;
+export class StoreReader {
+  private freezeResults: boolean;
+
+  constructor({
+    cacheKeyRoot = new CacheKeyNode,
+    freezeResults = false,
+  }: StoreReaderConfig = {}) {
     const {
       executeStoreQuery,
       executeSelectionSet,
-    } = reader;
+    } = this;
 
-    reader.keyMaker = new QueryKeyMaker(cacheKeyRoot);
+    this.freezeResults = freezeResults;
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
       return executeStoreQuery.call(this, options);
@@ -121,8 +127,8 @@ export class StoreReader {
         // underlying store is capable of tracking dependencies and invalidating
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
-          return reader.cacheKeyRoot.lookup(
-            reader.keyMaker.forQuery(query).lookupQuery(query),
+          return cacheKeyRoot.lookup(
+            query,
             contextValue.store,
             fragmentMatcher,
             JSON.stringify(variableValues),
@@ -142,8 +148,8 @@ export class StoreReader {
         execContext,
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
-          return reader.cacheKeyRoot.lookup(
-            reader.keyMaker.forQuery(execContext.query).lookupSelectionSet(selectionSet),
+          return cacheKeyRoot.lookup(
+            selectionSet,
             execContext.contextValue.store,
             execContext.fragmentMatcher,
             JSON.stringify(execContext.variableValues),
@@ -230,7 +236,7 @@ export class StoreReader {
     if (hasMissingFields && ! returnPartialData) {
       execResult.missing.forEach(info => {
         if (info.tolerable) return;
-        throw new Error(
+        throw new InvariantError(
           `Can't find field ${info.fieldName} on object ${JSON.stringify(
             info.object,
             null,
@@ -302,9 +308,7 @@ export class StoreReader {
     execContext,
   }: ExecSelectionSetOptions): ExecResult {
     const { fragmentMap, contextValue, variableValues: variables } = execContext;
-    const finalResult: ExecResult = {
-      result: {},
-    };
+    const finalResult: ExecResult = { result: null };
 
     const objectsToMerge: { [key: string]: any }[] = [];
 
@@ -350,7 +354,7 @@ export class StoreReader {
           fragment = fragmentMap[selection.name.value];
 
           if (!fragment) {
-            throw new Error(`No fragment named ${selection.name.value}`);
+            throw new InvariantError(`No fragment named ${selection.name.value}`);
           }
         }
 
@@ -380,7 +384,11 @@ export class StoreReader {
 
     // Perform a single merge at the end so that we can avoid making more
     // defensive shallow copies than necessary.
-    merge(finalResult.result, objectsToMerge);
+    finalResult.result = mergeDeepArray(objectsToMerge);
+
+    if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+      Object.freeze(finalResult.result);
+    }
 
     return finalResult;
   }
@@ -423,6 +431,9 @@ export class StoreReader {
     // Handle all scalar types here
     if (!field.selectionSet) {
       assertSelectionSetForIdValue(field, readStoreResult.result);
+      if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+        maybeDeepFreeze(readStoreResult);
+      }
       return readStoreResult;
     }
 
@@ -501,6 +512,10 @@ export class StoreReader {
       return item;
     });
 
+    if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+      Object.freeze(result);
+    }
+
     return { result, missing };
   }
 }
@@ -510,7 +525,7 @@ function assertSelectionSetForIdValue(
   value: any,
 ) {
   if (!field.selectionSet && isIdValue(value)) {
-    throw new Error(
+    throw new InvariantError(
       `Missing selection set for object of type ${
         value.typename
       } returned for query field ${field.name.value}`
@@ -523,11 +538,10 @@ function defaultFragmentMatcher() {
 }
 
 export function assertIdValue(idValue: IdValue) {
-  if (!isIdValue(idValue)) {
-    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
+  invariant(isIdValue(idValue), `\
+Encountered a sub-selection on the query, but the store doesn't have \
 an object reference. This should never happen during normal use unless you have custom code \
 that is directly manipulating the store; please file an issue.`);
-  }
 }
 
 function readStoreResolver(
@@ -594,72 +608,4 @@ function readStoreResolver(
   return {
     result: fieldValue,
   };
-}
-
-const hasOwn = Object.prototype.hasOwnProperty;
-
-function merge(
-  target: { [key: string]: any },
-  sources: { [key: string]: any }[]
-) {
-  const pastCopies: any[] = [];
-  sources.forEach(source => {
-    mergeHelper(target, source, pastCopies);
-  });
-  return target;
-}
-
-function mergeHelper(
-  target: { [key: string]: any },
-  source: { [key: string]: any },
-  pastCopies: any[],
-) {
-  if (source !== null && typeof source === 'object') {
-    // In case the target has been frozen, make an extensible copy so that
-    // we can merge properties into the copy.
-    if (Object.isExtensible && !Object.isExtensible(target)) {
-      target = shallowCopyForMerge(target, pastCopies);
-    }
-
-    Object.keys(source).forEach(sourceKey => {
-      const sourceValue = source[sourceKey];
-      if (hasOwn.call(target, sourceKey)) {
-        const targetValue = target[sourceKey];
-        if (sourceValue !== targetValue) {
-          // When there is a key collision, we need to make a shallow copy of
-          // target[sourceKey] so the merge does not modify any source objects.
-          // To avoid making unnecessary copies, we use a simple array to track
-          // past copies, instead of a Map, since the number of copies should
-          // be relatively small, and some Map polyfills modify their keys.
-          target[sourceKey] = mergeHelper(
-            shallowCopyForMerge(targetValue, pastCopies),
-            sourceValue,
-            pastCopies,
-          );
-        }
-      } else {
-        // If there is no collision, the target can safely share memory with
-        // the source, and the recursion can terminate here.
-        target[sourceKey] = sourceValue;
-      }
-    });
-  }
-
-  return target;
-}
-
-function shallowCopyForMerge<T>(value: T, pastCopies: any[]): T {
-  if (
-    value !== null &&
-    typeof value === 'object' &&
-    pastCopies.indexOf(value) < 0
-  ) {
-    if (Array.isArray(value)) {
-      value = (value as any).slice(0);
-    } else {
-      value = { ...(value as any) };
-    }
-    pastCopies.push(value);
-  }
-  return value;
 }

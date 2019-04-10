@@ -5,12 +5,13 @@
     "noUnusedLocals": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "importHelpers": true,
     "removeComments": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
     "target": "es5",
-    "module": "es2015",
+    "module": "commonjs",
     "esModuleInterop": true
   }
 }

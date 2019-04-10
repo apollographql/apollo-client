@@ -2,7 +2,7 @@ import { MockedResponse } from './mockLinks';
 
 import mockQueryManager from './mockQueryManager';
 
-import { ObservableQuery } from '../../src/core/ObservableQuery'; // tslint:disable-line
+import { ObservableQuery } from '../core/ObservableQuery';
 
 export default (...mockedResponses: MockedResponse[]): ObservableQuery<any> => {
   const queryManager = mockQueryManager(...mockedResponses);

@@ -344,20 +344,31 @@ export class ObservableQuery<
       fetchPolicy: 'network-only',
     } as WatchQueryOptions;
 
-    return this.queryManager.fetchQuery(
-      this.queryManager.generateQueryId(),
-      combinedOptions,
-      FetchType.normal,
-      this.queryId,
-    ).then(fetchMoreResult => {
-      this.updateQuery((previousResult: any) =>
-        fetchMoreOptions.updateQuery(previousResult, {
-          fetchMoreResult: fetchMoreResult.data as TData,
-          variables: combinedOptions.variables as TVariables,
-        }),
+    const qid = this.queryManager.generateQueryId();
+
+    return this.queryManager
+      .fetchQuery(
+        qid,
+        combinedOptions,
+        FetchType.normal,
+        this.queryId,
+      )
+      .then(
+        fetchMoreResult => {
+          this.updateQuery((previousResult: any) =>
+            fetchMoreOptions.updateQuery(previousResult, {
+              fetchMoreResult: fetchMoreResult.data as TData,
+              variables: combinedOptions.variables as TVariables,
+            }),
+          );
+          this.queryManager.stopQuery(qid);
+          return fetchMoreResult as ApolloQueryResult<TData>;
+        },
+        error => {
+          this.queryManager.stopQuery(qid);
+          throw error;
+        },
       );
-      return fetchMoreResult as ApolloQueryResult<TData>;
-    });
   }
 
   // XXX the subscription variables are separate from the query variables.

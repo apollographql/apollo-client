@@ -3,6 +3,7 @@ test
 typings
 .gitignore
 .travis.yml
+.rpt2_cache
 ambient.d.ts
 CHANGELOG.md
 design.md

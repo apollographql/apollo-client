@@ -1,11 +1,94 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (vNext)
+## Apollo Client vNEXT
 
-### Apollo Client (vNext)
+- In production, `invariant(condition, message)` failures will now include
+  a unique error code that can be used to trace the error back to the
+  point of failure. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4521](https://github.com/apollographql/apollo-client/pull/4521)
+
+### Apollo Client
+
+- Update the React Native docs to remove the request for external example
+  apps that we can link to. We're no longer going to manage a list of
+  external example apps.  <br />
+  [@hwillson](https://github.com/hwillson) in [#4531](https://github.com/apollographql/apollo-client/pull/4531)
+
+- If you can be sure your application code does not modify cache result objects (see `freezeResults` note below), you can unlock substantial performance improvements by communicating this assumption via
+  ```ts
+  new ApolloClient({ assumeImmutableResults: true })
+  ```
+  which allows the client to avoid taking defensive snapshots of past results using `cloneDeep`, as explained by [@benjamn](https://github.com/benjamn) in [#4543](https://github.com/apollographql/apollo-client/pull/4543).
+
+- Avoid updating (and later invalidating) cache watches when `fetchPolicy` is `'no-cache'`. <br/>
+  [@bradleyayers](https://github.com/bradleyayers) in [PR #4573](https://github.com/apollographql/apollo-client/pull/4573), part of [issue #3452](https://github.com/apollographql/apollo-client/issues/3452)
+
+- Remove temporary `queryId` after `fetchMore` completes. <br/>
+  [@doomsower](https://github.com/doomsower) in [#4440](https://github.com/apollographql/apollo-client/pull/4440)
+
+### Apollo Cache In-Memory
+
+- Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4514](https://github.com/apollographql/apollo-client/pull/4514)
+
+- Allow `IntrospectionFragmentMatcher` to match fragments against the root `Query`, as `HeuristicFragmentMatcher` does. <br/>
+  [@rynobax](https://github.com/rynobax) in [#4620](https://github.com/apollographql/apollo-client/pull/4620)
+
+## Apollo Client 2.5.1
+
+### apollo-client 2.5.1
+
+- Fixes `A tuple type element list cannot be empty` issue.  <br/>
+  [@benjamn](https://github.com/benjamn) in [#4502](https://github.com/apollographql/apollo-client/pull/4502)
+
+### graphql-anywhere 4.2.1
+
+- Adds back the missing `graphql-anywhere/lib/async` entry point.  <br/>
+  [@benjamn](https://github.com/benjamn) in [#4503](https://github.com/apollographql/apollo-client/pull/4503)
+
+
+## Apollo Client (2.5.0)
+
+### Apollo Client (2.5.0)
+
+- Introduces new local state management features (client-side schema
+  and local resolver / `@client` support) and many overall code improvements,
+  to help reduce the Apollo Client bundle size.  <br/>
+  [#4361](https://github.com/apollographql/apollo-client/pull/4361)
+- Revamped CJS and ESM bundling approach with Rollup.  <br/>
+  [@rosskevin](https://github.com/rosskevin) in [#4261](https://github.com/apollographql/apollo-client/pull/4261)
+- Fixes an issue where the `QueryManager` was accidentally returning cached
+  data for `network-only` queries.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4352](https://github.com/apollographql/apollo-client/pull/4352)
+- Fixed an issue in the repo `.gitattributes` that was causing binary files
+  to have their line endings adjusted, and cleaned up corrupted documentation
+  images (ref: https://github.com/apollographql/apollo-client/pull/4232).  <br/>
+  [@rajington](https://github.com/rajington) in [#4438](https://github.com/apollographql/apollo-client/pull/4438)
+- Improve (and shorten) query polling implementation.  <br/>
+  [PR #4337](https://github.com/apollographql/apollo-client/pull/4337)
+
+
+## Apollo Client (2.4.13)
+
+### Apollo Client (2.4.13)
+
+- Resolve "invalidate" -> "invalidated" typo in `QueryManager`.  <br/>
+  [@quazzie](https://github.com/quazzie) in [#4041](https://github.com/apollographql/apollo-client/pull/4041)
+
+- Properly type `setQuery` and fix now typed callers.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4369](https://github.com/apollographql/apollo-client/pull/4369)
+
+- Align with the React Apollo decision that result `data` should be
+  `TData | undefined` instead of `TData | {}`.  <br/>
+  [@danilobuerger](https://github.com/danilobuerger) in [#4356](https://github.com/apollographql/apollo-client/pull/4356)
 
 - Documentation updates.  <br/>
-  [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)
+  [@danilobuerger](https://github.com/danilobuerger) in [#4340](https://github.com/apollographql/apollo-client/pull/4340)  <br />
+  [@justyn-clark](https://github.com/justyn-clark) in [#4383](https://github.com/apollographql/apollo-client/pull/4383)  <br />
+  [@jtassin](https://github.com/jtassin) in [#4287](https://github.com/apollographql/apollo-client/pull/4287)  <br />
+  [@Gongreg](https://github.com/Gongreg) in [#4386](https://github.com/apollographql/apollo-client/pull/4386)  <br />
+  [@davecardwell](https://github.com/davecardwell) in [#4399](https://github.com/apollographql/apollo-client/pull/4399)  <br />
+  [@michaelknoch](https://github.com/michaelknoch) in [#4384](https://github.com/apollographql/apollo-client/pull/4384)  <br />
 
 ## Apollo Client (2.4.12)
 

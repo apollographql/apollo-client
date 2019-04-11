@@ -104,6 +104,8 @@ If the `id` field on both results matches up, then the `score` field everywhere 
 
 To interact directly with your cache, you can use the Apollo Client class methods readQuery, readFragment, writeQuery, and writeFragment. These methods are available to us via the `DataProxy` interface. Accessing these methods will vary slightly based on your view layer implementation. If you are using React, you can wrap your component in the `withApollo` higher order component, which will give you access to `this.props.client`. From there, you can use the methods to control your data.
 
+**Note**: The `cache` you created with `new InMemoryCache(...)` class is not meant to be used directly, but passed to the `ApolloClient` constructor. The client then accesses the `cache` using methods like `readQuery` and `writeQuery`. The difference between `cache.writeQuery` and `client.writeQuery` is that the client version also performs a broadcast after writing to the cache. This broadcast ensures your data is refreshed in the view layer after the `client.writeQuery` operation. If you only use `cache.writeQuery`, the changes may not be immediately reflected in the view layer. This behavior is sometimes useful in scenarios where you want to perform multiple cache writes without immediately updating the view layer.
+
 Any code demonstration in the following sections will assume that we have already initialized an instance of  `ApolloClient` and that we have imported the `gql` tag from `graphql-tag`.
 
 <h3 id="readquery">readQuery</h3>
@@ -254,7 +256,7 @@ client.writeQuery({
 Here are some common situations where you would need to access the cache directly. If you're manipulating the cache in an interesting way and would like your example to be featured, please send in a pull request!
 
 <h3 id="ignore">Bypassing the cache</h3>
-Sometimes it makes sense to not use the cache for a specfic operation. This can be done using either the `network-only` or `no-cache` fetchPolicy. The key difference between these two policies is that `network-only` still saves the response to the cache for later use, bypassing the reading and forcing a network request. The `no-cache` policy does not read, nor does it write to the cache with the response. This may be useful for sensitive data like passwords that you don't want to keep in the cache.
+Sometimes it makes sense to not use the cache for a specific operation. This can be done using either the `network-only` or `no-cache` fetchPolicy. The key difference between these two policies is that `network-only` still saves the response to the cache for later use, bypassing the reading and forcing a network request. The `no-cache` policy does not read, nor does it write to the cache with the response. This may be useful for sensitive data like passwords that you don't want to keep in the cache.
 
 <h3 id="after-mutations">Updating after a mutation</h3>
 
@@ -416,7 +418,7 @@ Fundamentally, paginated queries are the same as any other query with the except
 
 To solve this Apollo Client 1.6 introduced the `@connection` directive to specify a custom store key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
 
-To have a stable cache location for query results, Apollo Client 1.6 introduced the `@connection` directive, which can be used to specify a custom store key for results. To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
 ```
 const query = gql`query Feed($type: FeedType!, $offset: Int, $limit: Int) {

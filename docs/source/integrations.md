@@ -28,5 +28,8 @@ There are two [Ember](http://emberjs.com/) integrations available:
 
 <h2 id="web-components" title="Web Components">Web Components</h2>
 
-- **Polymer:** A [Polymer](https://www.polymer-project.org/) integration is maintained by Arun Kumar T K ([@aruntk](https://github.com/aruntk)). See the Github [repository](https://github.com/aruntk/polymer-apollo) for more details.
-- **lit-apollo:** A set of custom-element base classes that extend from LitElement which let you easily compose front-end apps in a framework-agnostic way. [`lit-apollo`](https://github.com/bennypowers/lit-apollo) is maintained by Benny Powers ([@bennypowers](https://github.com/bennypowers)).
+Web components are the browser-built-in component APIs. They are defined in a framework-agnostic way, using either vanilla JS or libraries like [`lit-element`](https://lit-element.polymer-project.org) or [`hybrids`](https://hybrids.js.org).
+
+- [apollo-elements](https://github.com/apollo-elements/apollo-elements) includes support for `lit-element`, `gluon`, `hybrids`, and `polymer`, as well as providing class mixin functions so you can integrate Apollo into vanilla elements or any other web component library. Apollo Elements is maintained by Benny Powers ([@bennypowers](https://github.com/bennypowers)).
+
+- [polymer-apollo](https://github.com/aruntk/polymer-apollo) is a separate [Polymer](https://www.polymer-project.org/) integration maintained by Arun Kumar T K ([@aruntk](https://github.com/aruntk)).

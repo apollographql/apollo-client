@@ -1,4 +1,5 @@
 .gitignore
+.rpt2_cache
 CHANGELOG.md
 design.md
 rollup.config.js

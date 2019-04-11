@@ -1,4 +1,4 @@
-# [Apollo Client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack) [![Open Source Helpers](https://www.codetriage.com/apollographql/apollo-client/badges/users.svg)](https://www.codetriage.com/apollographql/apollo-client)
+# [Apollo Client](https://www.apollographql.com/client/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Open Source Helpers](https://www.codetriage.com/apollographql/apollo-client/badges/users.svg)](https://www.codetriage.com/apollographql/apollo-client)
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
@@ -88,7 +88,7 @@ To learn more about all of the features available to you through the `apollo-cli
 - [Angular](http://apollographql.com/docs/angular/)
 - [Vue](https://github.com/Akryum/vue-apollo)
 - [Ember](https://github.com/bgentry/ember-apollo-client)
-- [Polymer](https://github.com/aruntk/polymer-apollo)
+- [Web Components](https://github.com/apollo-elements/apollo-elements)
 - [Meteor](http://apollographql.com/docs/react/recipes/meteor.html)
 - [Blaze](http://github.com/Swydo/blaze-apollo)
 - [Vanilla JS](https://www.apollographql.com/docs/react/api/apollo-client.html)

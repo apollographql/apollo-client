@@ -473,6 +473,41 @@ describe('fetchMore on an observable query', () => {
       },
     });
   });
+
+  it('will not leak fetchMore query', () => {
+    latestResult = null;
+    var beforeQueryCount;
+    return setup({
+      request: {
+        query,
+        variables: variablesMore,
+      },
+      result: resultMore,
+    })
+      .then(watchedQuery => {
+        beforeQueryCount = Object.keys(
+          client.queryManager.queryStore.getStore(),
+        ).length;
+        return watchedQuery.fetchMore({
+          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+          updateQuery: (prev, options) => {
+            const state = cloneDeep(prev) as any;
+            state.entry.comments = [
+              ...state.entry.comments,
+              ...(options.fetchMoreResult as any).entry.comments,
+            ];
+            return state;
+          },
+        });
+      })
+      .then(data => {
+        var afterQueryCount = Object.keys(
+          client.queryManager.queryStore.getStore(),
+        ).length;
+        expect(afterQueryCount).toBe(beforeQueryCount);
+        unsetup();
+      });
+  });
 });
 
 describe('fetchMore on an observable query with connection', () => {

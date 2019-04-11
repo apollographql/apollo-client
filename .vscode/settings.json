@@ -7,6 +7,7 @@
   "files.exclude": {
     "**/.git": true,
     "**/.DS_Store": true,
+    "**/.rpt2_cache": true,
     "node_modules": true,
     "test-lib": true,
     "lib": true,

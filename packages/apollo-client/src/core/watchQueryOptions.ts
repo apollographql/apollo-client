@@ -15,7 +15,6 @@ import { PureQueryOptions, OperationVariables } from './types';
  * - network-only: return result from network, fail if network call doesn't succeed, save to cache
  * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */
-
 export type FetchPolicy =
   | 'cache-first'
   | 'cache-and-network'
@@ -30,7 +29,6 @@ export type FetchPolicy =
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
  */
-
 export type ErrorPolicy = 'none' | 'ignore' | 'all';
 
 /**
@@ -113,22 +111,26 @@ export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   variables?: Pick<TVariables, K>;
 }
 
-export type UpdateQueryFn<TData = any, TVariables = OperationVariables, TSubscriptionData = TData> = (
+export type UpdateQueryFn<
+  TData = any,
+  TSubscriptionVariables = OperationVariables,
+  TSubscriptionData = TData
+> = (
   previousQueryResult: TData,
   options: {
     subscriptionData: { data: TSubscriptionData };
-    variables?: TVariables;
+    variables?: TSubscriptionVariables;
   },
 ) => TData;
 
 export type SubscribeToMoreOptions<
   TData = any,
-  TVariables = OperationVariables,
+  TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData
 > = {
   document: DocumentNode;
-  variables?: TVariables;
-  updateQuery?: UpdateQueryFn<TData, TVariables, TSubscriptionData>;
+  variables?: TSubscriptionVariables;
+  updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
 };
 
@@ -183,7 +185,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: ExecutionResult) => RefetchQueryDescription)
+    | ((result: ExecutionResult<T>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**

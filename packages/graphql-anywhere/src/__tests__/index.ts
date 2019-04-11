@@ -844,5 +844,5 @@ describe('basic operations done sync', execute(require('../').default, x => x));
 
 describe(
   'basic operations done async',
-  execute(require('../graphql-async').graphql, x => Promise.resolve(x)),
+  execute(require('../async').graphql, x => Promise.resolve(x)),
 );

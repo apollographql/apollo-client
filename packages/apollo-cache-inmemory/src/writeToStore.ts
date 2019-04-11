@@ -27,6 +27,8 @@ import {
   isEqual,
 } from 'apollo-utilities';
 
+import { invariant } from 'ts-invariant';
+
 import { ObjectCache } from './objectCache';
 import { defaultNormalizedCacheFactory } from './depTrackingCache';
 
@@ -177,27 +179,38 @@ export class StoreWriter {
             context,
           });
         } else {
-          // if this is a defered field we don't need to throw / wanr
-          const isDefered =
-            selection.directives &&
-            selection.directives.length &&
-            selection.directives.some(
+          let isDefered = false;
+          let isClient = false;
+          if (selection.directives && selection.directives.length) {
+            // If this is a defered field we don't need to throw / warn.
+            isDefered = selection.directives.some(
               directive => directive.name && directive.name.value === 'defer',
             );
 
-          if (!isDefered && context.fragmentMatcherFunction) {
+            // When using the @client directive, it might be desirable in
+            // some cases to want to write a selection set to the store,
+            // without having all of the selection set values available.
+            // This is because the @client field values might have already
+            // been written to the cache separately (e.g. via Apollo
+            // Cache's `writeData` capabilities). Because of this, we'll
+            // skip the missing field warning for fields with @client
+            // directives.
+            isClient = selection.directives.some(
+              directive => directive.name && directive.name.value === 'client',
+            );
+          }
+
+          if (!isDefered && !isClient && context.fragmentMatcherFunction) {
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.
             //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
-            if (!isProduction()) {
-              console.warn(
-                `Missing field ${resultFieldKey} in ${JSON.stringify(
-                  result,
-                  null,
-                  2,
-                ).substring(0, 100)}`,
-              );
-            }
+            invariant.warn(
+              `Missing field ${resultFieldKey} in ${JSON.stringify(
+                result,
+                null,
+                2,
+              ).substring(0, 100)}`,
+            );
           }
         }
       } else {
@@ -209,10 +222,7 @@ export class StoreWriter {
         } else {
           // Named fragment
           fragment = (fragmentMap || {})[selection.name.value];
-
-          if (!fragment) {
-            throw new Error(`No fragment named ${selection.name.value}.`);
-          }
+          invariant(fragment, `No fragment named ${selection.name.value}.`);
         }
 
         let matches = true;
@@ -233,7 +243,7 @@ export class StoreWriter {
             fakeContext,
           );
           if (!isProduction() && match === 'heuristic') {
-            console.error('WARNING: heuristic fragment matching going on!');
+            invariant.error('WARNING: heuristic fragment matching going on!');
           }
           matches = !!match;
         }
@@ -306,11 +316,10 @@ export class StoreWriter {
         // because we use that character to designate an Apollo-generated id
         // and we use the distinction between user-desiginated and application-provided
         // ids when managing overwrites.
-        if (semanticId && isGeneratedId(semanticId)) {
-          throw new Error(
-            'IDs returned by dataIdFromObject cannot begin with the "$" character.',
-          );
-        }
+        invariant(
+          !semanticId || !isGeneratedId(semanticId),
+          'IDs returned by dataIdFromObject cannot begin with the "$" character.',
+        );
 
         if (
           semanticId ||
@@ -352,27 +361,24 @@ export class StoreWriter {
         // One exception we allow is when the typename has changed, which occurs
         // when schema defines a union, both with and without an ID in the same place.
         // checks if we "lost" the read id
-        if (generated && !escapedId.generated && !typenameChanged) {
-          throw new Error(
-            `Store error: the application attempted to write an object with no provided id` +
-              ` but the store already contains an id of ${
-                escapedId.id
-              } for this object. The selectionSet` +
-              ` that was trying to be written is:\n` +
-              JSON.stringify(field),
-          );
-        }
+        invariant(
+          !generated || escapedId.generated || typenameChanged,
+          `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${
+            escapedId.id
+          } for this object. The selectionSet that was trying to be written is:\n${
+            JSON.stringify(field)
+          }`,
+        );
+
         // checks if we "lost" the typename
-        if (hadTypename && !hasTypename) {
-          throw new Error(
-            `Store error: the application attempted to write an object with no provided typename` +
-              ` but the store already contains an object with typename of ${
-                escapedId.typename
-              } for the object of id ${escapedId.id}. The selectionSet` +
-              ` that was trying to be written is:\n` +
-              JSON.stringify(field),
-          );
-        }
+        invariant(
+          !hadTypename || hasTypename,
+          `Store error: the application attempted to write an object with no provided typename but the store already contains an object with typename of ${
+            escapedId.typename
+          } for the object of id ${escapedId.id}. The selectionSet that was trying to be written is:\n${
+            JSON.stringify(field)
+          }`,
+        );
 
         if (escapedId.generated) {
           // We should only merge if it's an object of the same type,

@@ -12,7 +12,7 @@ If you're an advanced user who would like to configure Apollo Client from scratc
 First, let's install some packages!
 
 ```bash
-npm install apollo-boost react-apollo graphql --save
+npm install apollo-boost react-apollo graphql
 ```
 
 - `apollo-boost`: Package containing everything you need to set up Apollo Client

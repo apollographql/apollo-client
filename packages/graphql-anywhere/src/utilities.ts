@@ -1,6 +1,6 @@
 import { DocumentNode, DirectiveNode } from 'graphql';
 
-import { getInclusionDirectives, InclusionDirectives } from 'apollo-utilities';
+import { getInclusionDirectives } from 'apollo-utilities';
 
 import { graphql, VariableMap, ExecInfo, ExecContext } from './graphql';
 
@@ -58,15 +58,8 @@ export function check(
 function hasVariableInclusions(
   directives: ReadonlyArray<DirectiveNode>,
 ): boolean {
-  if (!directives || !directives.length) {
-    return false;
-  }
-  const inclusionDirectives: InclusionDirectives = getInclusionDirectives(
-    directives,
-  );
-  return inclusionDirectives.some(
-    ({ ifArgument }) =>
-      ifArgument.value && ifArgument.value.kind === 'Variable',
+  return getInclusionDirectives(directives).some(
+    ({ ifArgument }) => ifArgument.value && ifArgument.value.kind === 'Variable',
   );
 }
 

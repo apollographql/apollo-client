@@ -105,19 +105,16 @@ export type InclusionDirectives = Array<{
 export function getInclusionDirectives(
   directives: ReadonlyArray<DirectiveNode>,
 ): InclusionDirectives {
-  const result: InclusionDirectives = [];
   if (!directives || !directives.length) {
-    return result;
+    return [];
   }
-  directives.forEach(directive => {
-    if (!isInclusionDirective(directive)) {
-      return;
-    }
-    const directiveArguments = directive.arguments || [];
+
+  return directives.filter(isInclusionDirective).map(directive => {
+    const directiveArguments = directive.arguments;
     const directiveName = directive.name.value;
 
     invariant(
-      directiveArguments.length === 1,
+      directiveArguments && directiveArguments.length === 1,
       `Incorrect number of arguments for the @${directiveName} directive.`,
     );
 
@@ -135,10 +132,9 @@ export function getInclusionDirectives(
         (ifValue.kind === 'Variable' || ifValue.kind === 'BooleanValue'),
       `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
     );
-    result.push({ directive, ifArgument });
-  });
 
-  return result;
+    return { directive, ifArgument };
+  });
 }
 
 export function isInclusionDirective(directive: DirectiveNode): boolean {

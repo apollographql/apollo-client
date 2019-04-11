@@ -4,6 +4,10 @@ import { getInclusionDirectives } from 'apollo-utilities';
 
 import { graphql, VariableMap, ExecInfo, ExecContext } from './graphql';
 
+import { invariant } from 'ts-invariant';
+
+const { hasOwnProperty } = Object.prototype;
+
 export function filter<FD = any, D extends FD = any>(
   doc: DocumentNode,
   data: D,
@@ -40,13 +44,13 @@ export function check(
     context: any,
     info: any,
   ) => {
-    if (!{}.hasOwnProperty.call(root, info.resultKey)) {
-      // When variables is null, fields with @include/skip directives that
-      // reference variables are considered optional.
-      if (variables || !hasVariableInclusions(info.field.directives)) {
-        throw new Error(`${info.resultKey} missing on ${JSON.stringify(root)}`);
-      }
-    }
+    // When variables is null, fields with @include/skip directives that
+    // reference variables are considered optional.
+    invariant(
+      hasOwnProperty.call(root, info.resultKey) ||
+        (!variables && hasVariableInclusions(info.field.directives)),
+      `${info.resultKey} missing on ${JSON.stringify(root)}`,
+    );
     return root[info.resultKey];
   };
 

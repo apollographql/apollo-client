@@ -50,10 +50,12 @@ describe('ObservableQuery', () => {
     return new QueryManager({
       link: link || mockSingleLink(),
       assumeImmutableResults: true,
-      store: new DataStore(new InMemoryCache({
-        addTypename: false,
-        freezeResults: true,
-      })),
+      store: new DataStore(
+        new InMemoryCache({
+          addTypename: false,
+          freezeResults: true,
+        }),
+      ),
     });
   };
 
@@ -1582,6 +1584,57 @@ describe('ObservableQuery', () => {
           query,
           variables,
           fetchPolicy: 'network-only',
+        });
+        expect(stripSymbols(observable.getCurrentResult())).toEqual({
+          data: undefined,
+          loading: true,
+          networkStatus: 1,
+          partial: false,
+        });
+
+        subscribeAndCount(done, observable, (handleCount, subResult) => {
+          const {
+            data,
+            loading,
+            networkStatus,
+          } = observable.getCurrentResult();
+          expect(subResult).toEqual({
+            data,
+            loading,
+            networkStatus,
+            stale: false,
+          });
+
+          if (handleCount === 2) {
+            expect(stripSymbols(subResult)).toEqual({
+              data: dataTwo,
+              loading: false,
+              networkStatus: 7,
+              stale: false,
+            });
+            done();
+          }
+        });
+      });
+    });
+
+    it('returns loading on no-cache fetchPolicy queries when calling getCurrentResult', done => {
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query, variables },
+          result: { data: dataTwo },
+        },
+      );
+
+      queryManager.query({ query, variables }).then(() => {
+        const observable = queryManager.watchQuery({
+          query,
+          variables,
+          fetchPolicy: 'no-cache',
         });
         expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: undefined,

@@ -42,12 +42,9 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
   ): boolean | 'heuristic' {
     const obj = context.store.get(idValue.id);
 
-    if (!obj && idValue.id === 'ROOT_QUERY') {
-      return true;
-    }
-
     if (!obj) {
-      return false;
+      // https://github.com/apollographql/apollo-client/pull/3507
+      return idValue.id === 'ROOT_QUERY';
     }
 
     if (!obj.__typename) {
@@ -125,7 +122,8 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
     const obj = context.store.get(idValue.id);
 
     if (!obj) {
-      return false;
+      // https://github.com/apollographql/apollo-client/pull/4620
+      return idValue.id === 'ROOT_QUERY';
     }
 
     invariant(

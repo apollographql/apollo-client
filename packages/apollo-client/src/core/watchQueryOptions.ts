@@ -166,7 +166,7 @@ export interface MutationBaseOptions<
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: Object | Function;
+  optimisticResponse?: T | ((vars: TVariables) => T);
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to

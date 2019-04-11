@@ -213,10 +213,12 @@ export class ObservableQuery<
     const queryLoading =
       !queryStoreValue ||
       queryStoreValue.networkStatus === NetworkStatus.loading;
+    
+    const { fetchPolicy } = this.options;
 
     const isNetworkFetchPolicy =
-      this.options.fetchPolicy === 'network-only' ||
-      this.options.fetchPolicy === 'no-cache';
+      fetchPolicy === 'network-only' ||
+      fetchPolicy === 'no-cache';
 
     // We need to be careful about the loading state we show to the user, to try
     // and be vaguely in line with what the user would have seen from .subscribe()
@@ -226,7 +228,7 @@ export class ObservableQuery<
     // Basically: is there a query in flight right now (modolo the next tick)?
     const loading =
       (isNetworkFetchPolicy && queryLoading) ||
-      (partial && this.options.fetchPolicy !== 'cache-only');
+      (partial && fetchPolicy !== 'cache-only');
 
     // if there is nothing in the query store, it means this query hasn't fired yet or it has been cleaned up. Therefore the
     // network status is dependent on queryLoading.

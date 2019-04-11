@@ -42,7 +42,7 @@ export function shouldInclude(
   selection: SelectionNode,
   variables: { [name: string]: any } = {},
 ): boolean {
-  return !selection.directives || getInclusionDirectives(
+  return getInclusionDirectives(
     selection.directives,
   ).every(({ directive, ifArgument }) => {
     let evaledValue: boolean = false;
@@ -93,11 +93,7 @@ export type InclusionDirectives = Array<{
 export function getInclusionDirectives(
   directives: ReadonlyArray<DirectiveNode>,
 ): InclusionDirectives {
-  if (!directives || !directives.length) {
-    return [];
-  }
-
-  return directives.filter(isInclusionDirective).map(directive => {
+  return directives ? directives.filter(isInclusionDirective).map(directive => {
     const directiveArguments = directive.arguments;
     const directiveName = directive.name.value;
 
@@ -122,9 +118,9 @@ export function getInclusionDirectives(
     );
 
     return { directive, ifArgument };
-  });
+  }) : [];
 }
 
-export function isInclusionDirective(directive: DirectiveNode): boolean {
-  return directive.name.value === 'skip' || directive.name.value === 'include';
+function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
+  return value === 'skip' || value === 'include';
 }

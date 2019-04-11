@@ -80,7 +80,7 @@
     "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",
     "jest": "24.7.1",
-    "jest-junit": "5.2.0",
+    "jest-junit": "6.3.0",
     "lerna": "3.13.2",
     "lint-staged": "8.1.5",
     "lodash": "4.17.11",

@@ -42,32 +42,20 @@ export function shouldInclude(
   selection: SelectionNode,
   variables: { [name: string]: any } = {},
 ): boolean {
-  if (!selection.directives) {
-    return true;
-  }
-
-  const inclusionDirectives: InclusionDirectives = getInclusionDirectives(
+  return !selection.directives || getInclusionDirectives(
     selection.directives,
-  );
-
-  if (!inclusionDirectives.length) {
-    return true;
-  }
-  return inclusionDirectives.every(({ directive, ifArgument }) => {
-    const directiveName = directive.name.value;
-
+  ).every(({ directive, ifArgument }) => {
     let evaledValue: boolean = false;
     if (ifArgument.value.kind === 'Variable') {
       evaledValue = variables[(ifArgument.value as VariableNode).name.value];
       invariant(
         evaledValue !== void 0,
-        `Invalid variable referenced in @${directiveName} directive.`,
+        `Invalid variable referenced in @${directive.name.value} directive.`,
       );
     } else {
       evaledValue = (ifArgument.value as BooleanValueNode).value;
     }
-
-    return directiveName === 'skip' ? !evaledValue : evaledValue;
+    return directive.name.value === 'skip' ? !evaledValue : evaledValue;
   });
 }
 

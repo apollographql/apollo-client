@@ -213,6 +213,12 @@ export class ObservableQuery<
     const queryLoading =
       !queryStoreValue ||
       queryStoreValue.networkStatus === NetworkStatus.loading;
+    
+    const { fetchPolicy } = this.options;
+
+    const isNetworkFetchPolicy =
+      fetchPolicy === 'network-only' ||
+      fetchPolicy === 'no-cache';
 
     // We need to be careful about the loading state we show to the user, to try
     // and be vaguely in line with what the user would have seen from .subscribe()
@@ -221,8 +227,8 @@ export class ObservableQuery<
     // See more: https://github.com/apollostack/apollo-client/issues/707
     // Basically: is there a query in flight right now (modolo the next tick)?
     const loading =
-      (this.options.fetchPolicy === 'network-only' && queryLoading) ||
-      (partial && this.options.fetchPolicy !== 'cache-only');
+      (isNetworkFetchPolicy && queryLoading) ||
+      (partial && fetchPolicy !== 'cache-only');
 
     // if there is nothing in the query store, it means this query hasn't fired yet or it has been cleaned up. Therefore the
     // network status is dependent on queryLoading.
@@ -250,7 +256,8 @@ export class ObservableQuery<
     if (!partial) {
       this.lastResult = { ...result, stale: false };
       this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-        ? this.lastResult : cloneDeep(this.lastResult);
+        ? this.lastResult
+        : cloneDeep(this.lastResult);
     }
 
     return { ...result, partial };
@@ -338,7 +345,8 @@ export class ObservableQuery<
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     // early return if no update Query
-    invariant(fetchMoreOptions.updateQuery,
+    invariant(
+      fetchMoreOptions.updateQuery,
       'updateQuery option is required. This function defines how to update the query data with the new results.',
     );
 
@@ -372,22 +380,24 @@ export class ObservableQuery<
           this.queryId,
         );
       })
-      .then(fetchMoreResult => {
-        this.updateQuery((previousResult: any) =>
-          fetchMoreOptions.updateQuery(previousResult, {
-            fetchMoreResult: fetchMoreResult.data as TData,
-            variables: combinedOptions.variables,
-          }),
-        );
+      .then(
+        fetchMoreResult => {
+          this.updateQuery((previousResult: any) =>
+            fetchMoreOptions.updateQuery(previousResult, {
+              fetchMoreResult: fetchMoreResult.data as TData,
+              variables: combinedOptions.variables,
+            }),
+          );
 
-        this.queryManager.stopQuery(qid);
+          this.queryManager.stopQuery(qid);
 
-        return fetchMoreResult as ApolloQueryResult<TData>;
-
-      }, error => {
-        this.queryManager.stopQuery(qid);
-        throw error;
-      });
+          return fetchMoreResult as ApolloQueryResult<TData>;
+        },
+        error => {
+          this.queryManager.stopQuery(qid);
+          throw error;
+        },
+      );
   }
 
   // XXX the subscription variables are separate from the query variables.
@@ -624,7 +634,8 @@ export class ObservableQuery<
       next: (result: ApolloQueryResult<TData>) => {
         this.lastResult = result;
         this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-          ? result : cloneDeep(result);
+          ? result
+          : cloneDeep(result);
         this.observers.forEach(obs => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {

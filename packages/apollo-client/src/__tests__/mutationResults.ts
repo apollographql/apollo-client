@@ -117,13 +117,13 @@ describe('mutation results', () => {
     },
   };
 
-  let client: ApolloClient;
+  let client: ApolloClient<any>;
   let link: any;
 
   function setupObsHandle(...mockedResponses: any[]) {
     link = mockSingleLink(
       {
-        request: { query: queryWithTypename },
+        request: { query: queryWithTypename } as any,
         result,
       },
       ...mockedResponses,
@@ -150,7 +150,7 @@ describe('mutation results', () => {
   function setupDelayObsHandle(delay: number, ...mockedResponses: any[]) {
     link = mockSingleLink(
       {
-        request: { query: queryWithTypename },
+        request: { query: queryWithTypename } as any,
         result,
         delay,
       },
@@ -250,7 +250,7 @@ describe('mutation results', () => {
         request: {
           query,
           variables: { id: 1 },
-        },
+        } as any,
         delay: 100,
         result: {
           data: { mini: { id: 1, cover: 'image', __typename: 'Mini' } },
@@ -260,7 +260,7 @@ describe('mutation results', () => {
         request: {
           query: mutation,
           variables: { signature: '1234' },
-        },
+        } as any,
         delay: 150,
         result: {
           data: { mini: { id: 1, cover: 'image2', __typename: 'Mini' } },
@@ -268,6 +268,9 @@ describe('mutation results', () => {
       },
     );
 
+    interface Data {
+      mini: { id: number; cover: string; __typename: string };
+    }
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
@@ -280,7 +283,7 @@ describe('mutation results', () => {
       }),
     });
 
-    const obs = client.watchQuery({
+    const obs = client.watchQuery<Data>({
       query,
       variables: { id: 1 },
       notifyOnNetworkStatusChange: false,
@@ -292,6 +295,13 @@ describe('mutation results', () => {
         if (count === 0) {
           client.mutate({ mutation, variables: { signature: '1234' } });
           expect(result.data.mini.cover).toBe('image');
+
+          setTimeout(() => {
+            if (count === 0)
+              done.fail(
+                new Error('mutate did not re-call observable with next value'),
+              );
+          }, 250);
         }
         if (count === 1) {
           expect(result.data.mini.cover).toBe('image2');
@@ -742,15 +752,15 @@ describe('mutation results', () => {
 
     link = mockSingleLink(
       {
-        request: { query: variableQuery, variables: variables1 },
+        request: { query: variableQuery, variables: variables1 } as any,
         result: result1,
       },
       {
-        request: { query: variableQuery, variables: variables2 },
+        request: { query: variableQuery, variables: variables2 } as any,
         result: result2,
       },
       {
-        request: { query: resetMutation },
+        request: { query: resetMutation } as any,
         result: resetMutationResult,
       },
     );
@@ -806,7 +816,7 @@ describe('mutation results', () => {
     client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
-        ({ variables }) =>
+        ({ variables }: any) =>
           new Observable(observer => {
             switch (count++) {
               case 0:
@@ -838,7 +848,7 @@ describe('mutation results', () => {
                 return;
             }
           }),
-      ]),
+      ] as any),
     });
 
     const mutation = gql`
@@ -884,7 +894,7 @@ describe('mutation results', () => {
     client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
-        ({ variables }) =>
+        ({ variables }: any) =>
           new Observable(observer => {
             switch (count++) {
               case 0:
@@ -918,7 +928,7 @@ describe('mutation results', () => {
                 return;
             }
           }),
-      ]),
+      ] as any),
     });
 
     const mutation = gql`
@@ -960,7 +970,7 @@ describe('mutation results', () => {
     client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
-        ({ variables }) =>
+        ({ variables }: any) =>
           new Observable(observer => {
             switch (count++) {
               case 0:
@@ -995,7 +1005,7 @@ describe('mutation results', () => {
                 return;
             }
           }),
-      ]),
+      ] as any),
     });
 
     const mutation = gql`
@@ -1306,7 +1316,6 @@ describe('mutation results', () => {
         },
       });
     });
-
     it('error handling in reducer functions', () => {
       const oldError = console.error;
       const errors: any[] = [];

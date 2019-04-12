@@ -145,8 +145,9 @@ describe('config', () => {
       version,
     });
 
-    expect(client.clientAwareness.name).toEqual(name);
-    expect(client.clientAwareness.version).toEqual(version);
+    const { clientAwareness } = client.queryManager as any;
+    expect(clientAwareness.name).toEqual(name);
+    expect(clientAwareness.version).toEqual(version);
   });
 
   const makePromise = res =>

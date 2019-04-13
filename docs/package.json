@@ -4,11 +4,11 @@
     "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
-    "gatsby": "^2.2.6",
-    "gatsby-theme-apollo-docs": "^0.2.47"
+    "gatsby": "2.2.11",
+    "gatsby-theme-apollo-docs": "0.2.47"
   },
   "devDependencies": {
-    "typedoc": "^0.14.2",
-    "typescript": "^3.3.4000"
+    "typedoc": "0.14.2",
+    "typescript": "3.3.4000"
   }
 }

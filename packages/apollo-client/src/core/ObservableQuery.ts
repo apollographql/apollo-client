@@ -184,6 +184,12 @@ export class ObservableQuery<
     const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
     let result: ApolloQueryResult<TData>;
 
+    const { fetchPolicy } = this.options;
+
+    const isNetworkFetchPolicy =
+      fetchPolicy === 'network-only' ||
+      fetchPolicy === 'no-cache';
+
     if (queryStoreValue) {
       const { networkStatus } = queryStoreValue;
 
@@ -221,6 +227,7 @@ export class ObservableQuery<
       if (queryStoreValue.graphQLErrors && this.options.errorPolicy === 'all') {
         result.errors = queryStoreValue.graphQLErrors;
       }
+
     } else {
       // We need to be careful about the loading state we show to the user, to try
       // and be vaguely in line with what the user would have seen from .subscribe()
@@ -228,9 +235,7 @@ export class ObservableQuery<
       // will not end up hitting the server.
       // See more: https://github.com/apollostack/apollo-client/issues/707
       // Basically: is there a query in flight right now (modolo the next tick)?
-      const { fetchPolicy } = this.options;
-      const loading =
-        fetchPolicy === 'network-only' ||
+      const loading = isNetworkFetchPolicy ||
         (partial && fetchPolicy !== 'cache-only');
 
       result = {

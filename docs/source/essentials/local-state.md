@@ -782,7 +782,7 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 <h2 id="managing-the-cache">Managing the cache</h2>
 
-When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](/docs/react/features/caching.html) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
+When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](/docs/react/advanced/caching.html) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
 
 <h3 id="write-data">writeData</h3>
 

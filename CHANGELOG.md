@@ -26,6 +26,9 @@
 - Remove temporary `queryId` after `fetchMore` completes. <br/>
   [@doomsower](https://github.com/doomsower) in [#4440](https://github.com/apollographql/apollo-client/pull/4440)
 
+- Call `clearStore` callbacks after clearing store. <br/>
+  [@ds8k](https://github.com/ds8k) in [#4695](https://github.com/apollographql/apollo-client/pull/4695)
+
 ### Apollo Cache In-Memory
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>

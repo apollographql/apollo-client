@@ -2296,6 +2296,7 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
     client.queryManager = {
+      reFetchObservableQueries() {},
       clearStore: () => {
         done();
       },

@@ -2,24 +2,23 @@ import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { stripSymbols } from 'apollo-utilities';
-
 import { withWarning } from '../util/wrap';
-
 import ApolloClient from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
+import { DataProxy } from 'apollo-cache';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
     it('will throw an error if link is not passed in', () => {
       expect(() => {
-        const client = new ApolloClient({ cache: new InMemoryCache() });
+        new ApolloClient({ cache: new InMemoryCache() } as any);
       }).toThrowErrorMatchingSnapshot();
     });
 
     it('will throw an error if cache is not passed in', () => {
       expect(() => {
-        const client = new ApolloClient({ link: new ApolloLink.empty() });
+        new ApolloClient({ link: ApolloLink.empty() } as any);
       }).toThrowErrorMatchingSnapshot();
     });
   });
@@ -1091,7 +1090,7 @@ describe('ApolloClient', () => {
       }, /Missing field e/);
     });
 
-    it('will correctly call the next observable after a change', done => {
+    describe('change will call observable next', () => {
       const query = gql`
         query nestedData {
           people {
@@ -1103,74 +1102,287 @@ describe('ApolloClient', () => {
           }
         }
       `;
+
+      interface Friend {
+        id: number;
+        type: string;
+        __typename: string;
+      }
+      interface Data {
+        people: {
+          id: number;
+          __typename: string;
+          friends: Friend[];
+        };
+      }
+      const bestFriend = {
+        id: 1,
+        type: 'best',
+        __typename: 'Friend',
+      };
+      const badFriend = {
+        id: 2,
+        type: 'bad',
+        __typename: 'Friend',
+      };
       const data = {
         people: {
           id: 1,
           __typename: 'Person',
-          friends: [
-            { id: 1, type: 'best', __typename: 'Friend' },
-            { id: 2, type: 'bad', __typename: 'Friend' },
-          ],
+          friends: [bestFriend, badFriend],
         },
       };
       const link = new ApolloLink(() => {
         return Observable.of({ data });
       });
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({
-          dataIdFromObject: result => {
-            if (result.id && result.__typename) {
-              return result.__typename + result.id;
-            }
-            return null;
-          },
-          addTypename: true,
-        }),
+      function newClient() {
+        return new ApolloClient({
+          link,
+          cache: new InMemoryCache({
+            dataIdFromObject: result => {
+              if (result.id && result.__typename) {
+                return result.__typename + result.id;
+              }
+              return null;
+            },
+            addTypename: true,
+          }),
+        });
+      }
+
+      describe('using writeQuery', () => {
+        it('with a replacement of nested array (wq)', done => {
+          let count = 0;
+          const client = newClient();
+          const observable = client.watchQuery<Data>({ query });
+          const subscription = observable.subscribe({
+            next(nextResult) {
+              ++count;
+              if (count === 1) {
+                expect(stripSymbols(nextResult.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+
+                const readData = stripSymbols(
+                  client.readQuery<Data>({ query }),
+                );
+                expect(stripSymbols(readData)).toEqual(data);
+
+                // modify readData and writeQuery
+                const bestFriends = readData.people.friends.filter(
+                  x => x.type === 'best',
+                );
+                // this should re call next
+                client.writeQuery<Data>({
+                  query,
+                  data: {
+                    people: {
+                      id: 1,
+                      friends: bestFriends,
+                      __typename: 'Person',
+                    },
+                  },
+                });
+              } else if (count === 2) {
+                const expectation = {
+                  people: {
+                    id: 1,
+                    friends: [bestFriend],
+                    __typename: 'Person',
+                  },
+                };
+                expect(stripSymbols(nextResult.data)).toEqual(expectation);
+                expect(stripSymbols(client.readQuery<Data>({ query }))).toEqual(
+                  expectation,
+                );
+                subscription.unsubscribe();
+                done();
+              }
+            },
+          });
+        });
+
+        it('with a value change inside a nested array (wq)', done => {
+          let count = 0;
+          const client = newClient();
+          const observable = client.watchQuery<Data>({ query });
+          observable.subscribe({
+            next: nextResult => {
+              count++;
+              if (count === 1) {
+                expect(stripSymbols(nextResult.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+
+                const readData = stripSymbols(
+                  client.readQuery<Data>({ query }),
+                );
+                expect(stripSymbols(readData)).toEqual(data);
+
+                // modify readData and writeQuery
+                const friends = readData.people.friends;
+                friends[0].type = 'okayest';
+                friends[1].type = 'okayest';
+
+                // this should re call next
+                client.writeQuery<Data>({
+                  query,
+                  data: {
+                    people: {
+                      id: 1,
+                      friends,
+                      __typename: 'Person',
+                    },
+                  },
+                });
+
+                setTimeout(() => {
+                  if (count === 1)
+                    done.fail(
+                      new Error(
+                        'writeFragment did not re-call observable with next value',
+                      ),
+                    );
+                }, 250);
+              }
+
+              if (count === 2) {
+                const expectation0 = {
+                  ...bestFriend,
+                  type: 'okayest',
+                };
+                const expectation1 = {
+                  ...badFriend,
+                  type: 'okayest',
+                };
+                const nextFriends = stripSymbols(
+                  nextResult.data.people.friends,
+                );
+                expect(nextFriends[0]).toEqual(expectation0);
+                expect(nextFriends[1]).toEqual(expectation1);
+
+                const readFriends = stripSymbols(
+                  client.readQuery<Data>({ query }).people.friends,
+                );
+                expect(readFriends[0]).toEqual(expectation0);
+                expect(readFriends[1]).toEqual(expectation1);
+                done();
+              }
+            },
+          });
+        });
       });
+      describe('using writeFragment', () => {
+        it('with a replacement of nested array (wf)', done => {
+          let count = 0;
+          const client = newClient();
+          const observable = client.watchQuery<Data>({ query });
+          observable.subscribe({
+            next: result => {
+              count++;
+              if (count === 1) {
+                expect(stripSymbols(result.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+                const bestFriends = result.data.people.friends.filter(
+                  x => x.type === 'best',
+                );
+                // this should re call next
+                client.writeFragment({
+                  id: `Person${result.data.people.id}`,
+                  fragment: gql`
+                    fragment bestFriends on Person {
+                      friends {
+                        id
+                      }
+                    }
+                  `,
+                  data: {
+                    friends: bestFriends,
+                    __typename: 'Person',
+                  },
+                });
 
-      let count = 0;
-      const observable = client.watchQuery({ query });
-      observable.subscribe({
-        next: result => {
-          count++;
-          if (count === 1) {
-            expect(stripSymbols(result.data)).toEqual(data);
-            expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-              data,
-            );
-            const bestFriends = result.data.people.friends.filter(
-              x => x.type === 'best',
-            );
-            // this should re call next
-            client.writeFragment({
-              id: `Person${result.data.people.id}`,
-              fragment: gql`
-                fragment bestFriends on Person {
-                  friends {
-                    id
-                  }
-                }
-              `,
-              data: {
-                friends: bestFriends,
-                __typename: 'Person',
-              },
-            });
+                setTimeout(() => {
+                  if (count === 1)
+                    done.fail(
+                      new Error(
+                        'writeFragment did not re-call observable with next value',
+                      ),
+                    );
+                }, 50);
+              }
 
-            setTimeout(() => {
-              if (count === 1)
-                done.fail(new Error('fragment did not recall observable'));
-            }, 50);
-          }
+              if (count === 2) {
+                expect(stripSymbols(result.data.people.friends)).toEqual([
+                  bestFriend,
+                ]);
+                done();
+              }
+            },
+          });
+        });
 
-          if (count === 2) {
-            expect(stripSymbols(result.data.people.friends)).toEqual([
-              data.people.friends[0],
-            ]);
-            done();
-          }
-        },
+        it('with a value change inside a nested array (wf)', done => {
+          let count = 0;
+          const client = newClient();
+          const observable = client.watchQuery<Data>({ query });
+          observable.subscribe({
+            next: result => {
+              count++;
+              if (count === 1) {
+                expect(stripSymbols(result.data)).toEqual(data);
+                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                  data,
+                );
+                const friends = result.data.people.friends;
+                friends[0].type = 'okayest';
+                friends[1].type = 'okayest';
+
+                // this should re call next
+                client.writeFragment({
+                  id: `Person${result.data.people.id}`,
+                  fragment: gql`
+                    fragment bestFriends on Person {
+                      friends {
+                        id
+                      }
+                    }
+                  `,
+                  data: {
+                    friends,
+                    __typename: 'Person',
+                  },
+                });
+
+                setTimeout(() => {
+                  if (count === 1)
+                    done.fail(
+                      new Error(
+                        'writeFragment did not re-call observable with next value',
+                      ),
+                    );
+                }, 50);
+              }
+
+              if (count === 2) {
+                const nextFriends = stripSymbols(result.data.people.friends);
+                expect(nextFriends[0]).toEqual({
+                  ...bestFriend,
+                  type: 'okayest',
+                });
+                expect(nextFriends[1]).toEqual({
+                  ...badFriend,
+                  type: 'okayest',
+                });
+                done();
+              }
+            },
+          });
+        });
       });
     });
   });
@@ -2203,8 +2415,10 @@ describe('ApolloClient', () => {
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-
-      client.writeQuery({
+      interface Data {
+        a: number;
+      }
+      client.writeQuery<Data>({
         data: { a: 1 },
         query: gql`
           {
@@ -2213,14 +2427,14 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(client.cache.data.data).toEqual({
+      expect((client.cache as any).data.data).toEqual({
         ROOT_QUERY: {
           a: 1,
         },
       });
 
       await client.clearStore();
-      expect(client.cache.data.data).toEqual({});
+      expect((client.cache as any).data.data).toEqual({});
     });
   });
 });

@@ -95,7 +95,7 @@ The render prop function that you pass to the `children` prop of `Query` is call
 
 <dl>
   <dt>`data`: TData</dt>
-  <dd>An object containing the result of your GraphQL query. Defaults to an empty object.</dd>
+  <dd>An object containing the result of your GraphQL query. Defaults to `undefined`.</dd>
   <dt>`loading`: boolean</dt>
   <dd>A boolean that indicates whether the request is in flight</dd>
   <dt>`error`: ApolloError</dt>
@@ -148,7 +148,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dt>`context`: Record<string, any></dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
   <dt>`client`: ApolloClient</dt>
-  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
+  <dd>An `ApolloClient` instance. By default `Mutation` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="mutation-render-prop">Render prop function</h3>
@@ -197,7 +197,7 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dt>`fetchPolicy`: FetchPolicy</dt>
   <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
   <dt>`client`: ApolloClient</dt>
-  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
+  <dd>An `ApolloClient` instance. By default `Subscription` uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 <h3 id="subscription-render-prop">Render prop function</h3>
@@ -225,6 +225,7 @@ The `<MockedProvider />` component takes the following props:
 
 - `addTypename`: A boolean indicating whether or not `__typename` are injected into the documents sent to graphql. This **defaults to true**.
 - `defaultOptions`: An object containing options to pass directly to the `ApolloClient`instance. See documentation [here](./apollo-client.html#apollo-client).
+- `cache`: A custom cache object to be used in your test. Defaults to `InMemoryCache`. Useful when you need to define a custom `dataIdFromObject` function for automatic cache updates.
 - `mocks`: An array containing a request object and the corresponding response. You can define mocks in the following shape:.
 
 ```js
@@ -362,7 +363,7 @@ export default graphql(gql`{ ... }`, {
 
 <h3 id="graphql-config-props">`config.props`</h3>
 
-The `config.props` property allows you to define a map function that takes your props including the props added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new props object that will be provided to the component that `graphql()` is wrapping.
+The `config.props` property allows you to define a map function that takes the `props` (and optionally `lastProps`) added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new `props` (and optionally `lastProps`) object that will be provided to the component that `graphql()` is wrapping.
 
 The function you define behaves almost exactly like [`mapProps` from Recompose][] providing the same benefits without the need for another library.
 
@@ -400,6 +401,17 @@ To access props that are not added by the `graphql()` function, use the `ownProp
 export default graphql(gql`{ ... }`, {
   props: ({ data: { liveImage }, ownProps: { loadingImage } }) => ({
     image: liveImage || loadingImage,
+  }),
+})(MyComponent);
+```
+
+To access `lastProps`, use the second argument of `config.props`. For example:
+
+```js
+export default graphql(gql`{ ... }`, {
+  props: ({ data: { liveImage } }, lastProps) => ({
+    image: liveImage,
+    lastImage: lastProps.data.liveImage
   }),
 })(MyComponent);
 ```
@@ -1321,7 +1333,7 @@ import { compose } from 'react-apollo';
 
 For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`](#graphql), [`withApollo()`](#withApollo), or [Redux `connect()`][] enhancers. This should clean up your code when you use multiple enhancers. [Redux][] also exports a `compose` function, and so does [Recompose][] so you may choose to use the function from whichever library feels most appropriate.
 
-An important note is that `compose()` executes the last enhancer _first_ and works its way backwards through the list of enhancers. To illustrate calling three functions like this: `funcC(funcB(funcA(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`. If this does not make sense to you consider using [`flowRight()` from Lodash][] which otherwise has the same behavior.
+An important note is that `compose()` executes the first enhancer _first_ and works its way forwards through the list of enhancers. In other words, calling three functions like this: `funcA(funcB(funcC(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`.
 
 [Redux `connect()`]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
 [Redux]: http://redux.js.org/

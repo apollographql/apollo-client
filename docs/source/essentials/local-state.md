@@ -220,7 +220,7 @@ cache.writeData({
 });
 ```
 
-Sometimes you may need to [reset the store](/docs/react/features/cache-updates.html#reset-store) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
+Sometimes you may need to [reset the store](/docs/react/api/apollo-client.html#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -589,7 +589,7 @@ export default function Launch({ launchId }) {
 }
 ```
 
-In the above example we're using a React Apollo `Query` component to run the `GET_LAUNCH_DETAILS` query. The `@client` based `isInClient` field is configured to pull its data from the following resolver:
+In the above example we're using a React Apollo `Query` component to run the `GET_LAUNCH_DETAILS` query. The `@client` based `isInCart` field is configured to pull its data from the following resolver:
 
 ```js
 import { GET_CART_ITEMS } from './pages/cart';
@@ -782,7 +782,7 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 <h2 id="managing-the-cache">Managing the cache</h2>
 
-When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](/docs/react/features/caching.html) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
+When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](/docs/react/advanced/caching.html) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
 
 <h3 id="write-data">writeData</h3>
 

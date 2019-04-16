@@ -337,4 +337,76 @@ describe('subscribeToMore', () => {
     done();
   });
   // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.
+
+  it('allows specification of custom types for variables and payload (#4246)', done => {
+    interface TypedOperation extends Operation {
+      variables: {
+        someNumber: number;
+      };
+    }
+    const typedReq = {
+      request: { query, variables: { someNumber: 1 } } as TypedOperation,
+      result,
+    };
+    interface TypedSubscriptionVariables {
+      someString: string;
+    }
+
+    let latestResult: any = null;
+    const wSLink = mockObservableLink();
+    const httpLink = mockSingleLink(typedReq);
+
+    const link = ApolloLink.split(isSub, wSLink, httpLink);
+    let counter = 0;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
+
+    const obsHandle = client.watchQuery<
+      typeof typedReq['result']['data'],
+      typeof typedReq['request']['variables']
+    >({
+      query,
+      variables: { someNumber: 1 },
+    });
+
+    const sub = obsHandle.subscribe({
+      next(queryResult) {
+        latestResult = queryResult;
+        counter++;
+      },
+    });
+
+    obsHandle.subscribeToMore<SubscriptionData, TypedSubscriptionVariables>({
+      document: gql`
+        subscription newValues {
+          name
+        }
+      `,
+      variables: {
+        someString: 'foo',
+      },
+      updateQuery: (_, { subscriptionData }) => {
+        return { entry: { value: subscriptionData.data.name } };
+      },
+    });
+
+    setTimeout(() => {
+      sub.unsubscribe();
+      expect(counter).toBe(3);
+      expect(stripSymbols(latestResult)).toEqual({
+        data: { entry: { value: 'Amanda Liu' } },
+        loading: false,
+        networkStatus: 7,
+        stale: false,
+      });
+      done();
+    }, 15);
+
+    for (let i = 0; i < 2; i++) {
+      wSLink.simulateResult(results[i]);
+    }
+  });
 });

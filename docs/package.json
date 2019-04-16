@@ -1,6 +1,7 @@
 {
   "scripts": {
     "start": "gatsby develop",
+    "postinstall": "npm run types",
     "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {

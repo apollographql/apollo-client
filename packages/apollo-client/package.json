@@ -51,7 +51,7 @@
     "apollo-link-dedup": "^1.0.0",
     "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
-    "ts-invariant": "^0.3.2",
+    "ts-invariant": "^0.4.0",
     "tslib": "^1.9.3",
     "zen-observable": "^0.8.0"
   },

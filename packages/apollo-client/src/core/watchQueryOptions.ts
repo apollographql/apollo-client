@@ -113,24 +113,24 @@ export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
 
 export type UpdateQueryFn<
   TData = any,
-  TVariables = OperationVariables,
+  TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData
 > = (
   previousQueryResult: TData,
   options: {
     subscriptionData: { data: TSubscriptionData };
-    variables?: TVariables;
+    variables?: TSubscriptionVariables;
   },
 ) => TData;
 
 export type SubscribeToMoreOptions<
   TData = any,
-  TVariables = OperationVariables,
+  TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData
 > = {
   document: DocumentNode;
-  variables?: TVariables;
-  updateQuery?: UpdateQueryFn<TData, TVariables, TSubscriptionData>;
+  variables?: TSubscriptionVariables;
+  updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
 };
 
@@ -166,7 +166,7 @@ export interface MutationBaseOptions<
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: Object | Function;
+  optimisticResponse?: T | ((vars: TVariables) => T);
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to
@@ -185,7 +185,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: ExecutionResult) => RefetchQueryDescription)
+    | ((result: ExecutionResult<T>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**

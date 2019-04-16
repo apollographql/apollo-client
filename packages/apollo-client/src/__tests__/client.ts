@@ -277,6 +277,78 @@ describe('client', () => {
   });
 
   it('should allow fragments on root query', () => {
+    const query = gql`
+      query {
+        ...QueryFragment
+      }
+
+      fragment QueryFragment on Query {
+        records {
+          id
+          name
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const data = {
+      records: [
+        { id: 1, name: 'One', __typename: 'Record' },
+        { id: 2, name: 'Two', __typename: 'Record' },
+      ],
+      __typename: 'Query',
+    };
+
+    return clientRoundtrip(query, { data }, null);
+  });
+
+  it('should allow fragments on root query with ifm', () => {
+    const query = gql`
+      query {
+        ...QueryFragment
+      }
+
+      fragment QueryFragment on Query {
+        records {
+          id
+          name
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const data = {
+      records: [
+        { id: 1, name: 'One', __typename: 'Record' },
+        { id: 2, name: 'Two', __typename: 'Record' },
+      ],
+      __typename: 'Query',
+    };
+
+    const ifm = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: {
+        __schema: {
+          types: [
+            {
+              kind: 'UNION',
+              name: 'Query',
+              possibleTypes: [
+                {
+                  name: 'Record',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    return clientRoundtrip(query, { data }, null, ifm);
+  });
+
+  it('should merge fragments on root query', () => {
     // The fragment should be used after the selected fields for the query.
     // Otherwise, the results aren't merged.
     // see: https://github.com/apollographql/apollo-client/issues/1479
@@ -2224,6 +2296,7 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
     client.queryManager = {
+      reFetchObservableQueries() {},
       clearStore: () => {
         done();
       },

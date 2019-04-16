@@ -4,7 +4,7 @@ export * from 'apollo-link';
 export * from 'apollo-cache-inmemory';
 
 import { Operation, ApolloLink, Observable } from 'apollo-link';
-import { HttpLink } from 'apollo-link-http';
+import { HttpLink, UriFunction } from 'apollo-link-http';
 import { onError, ErrorLink } from 'apollo-link-error';
 import { ApolloCache } from 'apollo-cache';
 import { InMemoryCache, CacheResolverMap } from 'apollo-cache-inmemory';
@@ -28,7 +28,7 @@ type ClientStateConfig = {
 
 export interface PresetConfig {
   request?: (operation: Operation) => Promise<void>;
-  uri?: string;
+  uri?: string | UriFunction;
   credentials?: string;
   headers?: any;
   fetch?: GlobalFetch['fetch'];

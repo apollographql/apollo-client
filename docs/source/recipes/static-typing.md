@@ -37,7 +37,7 @@ interface Variables {
   first: number;
 };
 
-const allPeopleComponent = <Query<Data, Variables> query={ALL_PEOPLE_QUERY}>
+const AllPeopleComponent = <Query<Data, Variables> query={ALL_PEOPLE_QUERY}>
   {({ loading, error, data }) => { ... }}
 </Query>
 ```

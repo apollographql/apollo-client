@@ -16,9 +16,20 @@ The most common need when using type systems with GraphQL is to type the results
 Using Apollo together with TypeScript couldn't be easier than using it with component API released in React Apollo 2.1:
 
 ```js
+const ALL_PEOPLE_QUERY = gql`
+  query All_People_Query {
+    allPeople {
+      people {
+        id
+        name
+      }
+    }
+  }
+`;
+
 interface Data {
   allPeople: {
-    people: Array<{ name: string }>;
+    people: Array<{ id: string; name: string }>;
   };
 };
 
@@ -26,13 +37,16 @@ interface Variables {
   first: number;
 };
 
-class AllPeopleQuery extends Query<Data, Variables> {}
+const AllPeopleComponent = <Query<Data, Variables> query={ALL_PEOPLE_QUERY}>
+  {({ loading, error, data }) => { ... }}
+</Query>
 ```
 
-Now we can use `AllPeopleQuery` in place of `Query` in our tree to get full TypeScript support! Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables required for it to work! Everything else is handled by React Apollo's robust type definitions.
+Now the `<Query />` component render prop function arguments are typed. Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for full typing to work! Everything else is handled by React Apollo's robust type definitions.
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
+> Note: It is also possible to extend a `class` with the `<Query />` component as follows: `class AllPeopleQuery extends Query<Data, Variables> {}`. This `class` can be exported and used in a component tree with full TypeScript support
 
 <h2 id="operation-result">Typing the Higher Order Components</h2>
 

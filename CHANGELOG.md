@@ -26,6 +26,9 @@
 - Remove temporary `queryId` after `fetchMore` completes. <br/>
   [@doomsower](https://github.com/doomsower) in [#4440](https://github.com/apollographql/apollo-client/pull/4440)
 
+- Call `clearStore` callbacks after clearing store. <br/>
+  [@ds8k](https://github.com/ds8k) in [#4695](https://github.com/apollographql/apollo-client/pull/4695)
+
 - Perform all `DocumentNode` transforms once, and cache the results. <br/>
   [@benjamn](https://github.com/benjamn) in [#4601](https://github.com/apollographql/apollo-client/pull/4601)
 

@@ -254,9 +254,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * to dispose of this `ApolloClient` instance.
    */
   public stop() {
-    if (this.queryManager) {
-      this.queryManager.stop();
-    }
+    this.queryManager.stop();
   }
 
   /**
@@ -495,10 +493,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * Remove all data from the store. Unlike `resetStore`, `clearStore` will
    * not refetch any active queries.
    */
-  public clearStore(): Promise<void | null> {
+  public clearStore(): Promise<any[]> {
     return Promise.resolve()
-      .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())))
-      .then(() => this.queryManager.clearStore());
+      .then(() => this.queryManager.clearStore())
+      .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())));
   }
 
   /**

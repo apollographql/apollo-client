@@ -363,7 +363,7 @@ export default graphql(gql`{ ... }`, {
 
 <h3 id="graphql-config-props">`config.props`</h3>
 
-The `config.props` property allows you to define a map function that takes your props including the new props and the lastest props added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new props and a last props object that will be provided to the component that `graphql()` is wrapping.
+The `config.props` property allows you to define a map function that takes the `props` (and optionally `lastProps`) added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new `props` (and optionally `lastProps`) object that will be provided to the component that `graphql()` is wrapping.
 
 The function you define behaves almost exactly like [`mapProps` from Recompose][] providing the same benefits without the need for another library.
 
@@ -405,10 +405,11 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-To access the latest props, use the second argument of `config.props`. For exmaple:
+To access `lastProps`, use the second argument of `config.props`. For example:
+
 ```js
 export default graphql(gql`{ ... }`, {
-  props: ({ data: { liveImage } }, lastProps = { data : { liveImage: {} } }) => ({
+  props: ({ data: { liveImage } }, lastProps) => ({
     image: liveImage,
     lastImage: lastProps.data.liveImage
   }),

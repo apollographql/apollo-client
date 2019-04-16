@@ -273,9 +273,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * to dispose of this `ApolloClient` instance.
    */
   public stop() {
-    if (this.queryManager) {
-      this.queryManager.stop();
-    }
+    this.queryManager.stop();
   }
 
   /**
@@ -505,31 +503,19 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
     return Promise.resolve()
-      .then(() => {
-        return this.queryManager
-          ? this.queryManager.clearStore()
-          : Promise.resolve(null);
-      })
+      .then(() => this.queryManager.clearStore())
       .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
-      .then(() => {
-        return this.queryManager && this.queryManager.reFetchObservableQueries
-          ? this.queryManager.reFetchObservableQueries()
-          : Promise.resolve(null);
-      });
+      .then(() => this.queryManager.reFetchObservableQueries());
   }
 
   /**
    * Remove all data from the store. Unlike `resetStore`, `clearStore` will
    * not refetch any active queries.
    */
-  public clearStore(): Promise<void | null> {
-    const { queryManager } = this;
+  public clearStore(): Promise<any[]> {
     return Promise.resolve()
-      .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())))
-      .then(
-        () =>
-          queryManager ? queryManager.clearStore() : Promise.resolve(null),
-      );
+      .then(() => this.queryManager.clearStore())
+      .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())));
   }
 
   /**
@@ -571,9 +557,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public reFetchObservableQueries(
     includeStandby?: boolean,
   ): Promise<ApolloQueryResult<any>[]> | Promise<null> {
-    return this.queryManager
-      ? this.queryManager.reFetchObservableQueries(includeStandby)
-      : Promise.resolve(null);
+    return this.queryManager.reFetchObservableQueries(includeStandby);
   }
 
   /**

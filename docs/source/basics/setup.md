@@ -1,31 +1,27 @@
 ---
-title: Setup and options
+title: Setup and options - Simple and Advanced
 ---
 
-<h2 id="installation">Installation</h2>
+<h2 id="installation">Simple Installation - With Apollo Boost</h2>
 
-To get started with Apollo and React, you will need to install a few packages from npm or use [`apollo-boost`](https://www.npmjs.com/package/apollo-boost).
+To get started quickly and easily with Apollo and React, you should use [`apollo-boost`](https://www.npmjs.com/package/apollo-boost).
 
-> If you are first getting started with Apollo Client, the preset package is a quick and easy way to try it out!
+> If you are first getting started with Apollo Client, Apollo Boost is the best package to start with, because it offers a preconfigured GraphQL Client for you! You'll notice within the docs, where we interchange `apollo-boost` and `apollo-client` packages. The `apollo-client` examples are for the more advanced use cases, the `apollo-boost` examples are for the simpler ones. 
+
+If you are now ready to move forward with Apollo Boost, [then let's go to that section of the docs and get started](https://github.com/apollographql/apollo-client/blob/master/docs/source/essentials/get-started.md)! 
+
+The rest of this page is for more advanced use cases and for those who want to dive into the deep end first. 
+
+<h3 id="creating-client">Installation with Apollo Client - For Advanced Use</h3>
+
+First, let's get our packages installed: 
 
 ```bash
-# installing the preset package and react integration
-npm install apollo-boost react-apollo graphql --save
-
-# installing each piece independently
+# install the necessary packages
 npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag graphql --save
 ```
 
-> Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.
-
-To get started using Apollo with React, we need to create an `ApolloClient` and an `ApolloProvider`. The `ApolloProvider` is specific to the React integration, to learn how to include Apollo Client with your view layer of choice, see the corresponding guide!
-
-- `ApolloClient` is the center of using GraphQL in your app! It manages all of your data so you can focus on features!
-- `ApolloProvider` makes it easy to use Apollo anywhere in your React component hierarchy.
-
-<h3 id="creating-client">Creating a client</h3>
-
-To get started, create an [`ApolloClient`](#ApolloClient) instance and point it at your GraphQL server:
+Now, let's create an [`ApolloClient`](#ApolloClient) instance and point it at your GraphQL server directly with the `apollo-client` package:
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -460,7 +456,7 @@ class MyContainerComponent extends Component {
 
 <h3 id="graphql-config-alias">`config.alias`</h3>
 
-By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more then one higher order components and you look at the [React Devtools][].
+By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more than one higher order component and you look at the [React Devtools][].
 
 [React Devtools]: https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434
 

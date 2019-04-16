@@ -80,7 +80,7 @@ const DogPhoto = ({ breed }) => (
   <Query query={GET_DOG_PHOTO} variables={{ breed }}>
     {({ loading, error, data }) => {
       if (loading) return null;
-      if (error) return `Error!: ${error}`;
+      if (error) return `Error! ${error}`;
 
       return (
         <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
@@ -112,7 +112,7 @@ const DogPhoto = ({ breed }) => (
   >
     {({ loading, error, data, startPolling, stopPolling }) => {
       if (loading) return null;
-      if (error) return `Error!: ${error}`;
+      if (error) return `Error! ${error}`;
 
       return (
         <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
@@ -135,7 +135,7 @@ const DogPhoto = ({ breed }) => (
   >
     {({ loading, error, data, refetch }) => {
       if (loading) return null;
-      if (error) return `Error!: ${error}`;
+      if (error) return `Error! ${error}`;
 
       return (
         <div>
@@ -172,7 +172,7 @@ const DogPhoto = ({ breed }) => (
     {({ loading, error, data, refetch, networkStatus }) => {
       if (networkStatus === 4) return "Refetching!";
       if (loading) return null;
-      if (error) return `Error!: ${error}`;
+      if (error) return `Error! ${error}`;
 
       return (
         <div>

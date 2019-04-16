@@ -59,7 +59,7 @@ export default graphql(currentUserQuery)(Profile)
 
 ## Create-React-App
 
-[create-react-app](https://github.com/facebook/create-react-app/) can't use the Webpack loaders unless ejected. To make the same transformation work in create-react-app without ejecting, use [graphql.macro](https://github.com/evenchange4/graphql.macro).
+[create-react-app](https://github.com/facebook/create-react-app/) can't use the Webpack loaders unless ejected. To make the same transformation work in `create-react-app` without ejecting, use [graphql.macro](https://github.com/evenchange4/graphql.macro).
 
 ```javascript
 import { loader } from 'graphql.macro';

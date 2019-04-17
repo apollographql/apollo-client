@@ -53,6 +53,7 @@ export type ExecInfo = {
   isLeaf: boolean;
   resultKey: string;
   directives: DirectiveInfo;
+  field: FieldNode;
 };
 
 export type ExecOptions = {
@@ -81,7 +82,7 @@ export function graphql(
   document: DocumentNode,
   rootValue?: any,
   contextValue?: any,
-  variableValues?: VariableMap,
+  variableValues: VariableMap = {},
   execOptions: ExecOptions = {},
 ) {
   const mainDefinition = getMainDefinition(document);
@@ -120,8 +121,8 @@ function executeSelectionSet(
   const result = {};
 
   selectionSet.selections.forEach(selection => {
-    if (!shouldInclude(selection, variables)) {
-      // Skip this entirely
+    if (variables && !shouldInclude(selection, variables)) {
+      // Skip selection sets which we're able to determine should not be run
       return;
     }
 
@@ -186,6 +187,7 @@ function executeField(
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
     directives: getDirectiveInfoFromField(field, variables),
+    field,
   };
 
   const result = resolver(fieldName, rootValue, args, contextValue, info);

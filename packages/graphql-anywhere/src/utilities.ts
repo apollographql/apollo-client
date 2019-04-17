@@ -1,31 +1,42 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, DirectiveNode } from 'graphql';
 
-import { graphql } from './graphql';
+import { getInclusionDirectives } from 'apollo-utilities';
+
+import { graphql, VariableMap, ExecInfo, ExecContext } from './graphql';
+
+import { invariant } from 'ts-invariant';
+
+const { hasOwnProperty } = Object.prototype;
 
 export function filter<FD = any, D extends FD = any>(
   doc: DocumentNode,
   data: D,
+  variableValues: VariableMap = {},
 ): FD {
   const resolver = (
     fieldName: string,
     root: any,
-    args: any,
-    context: any,
-    info: any,
+    args: Object,
+    context: ExecContext,
+    info: ExecInfo,
   ) => {
     return root[info.resultKey];
   };
 
   return Array.isArray(data)
-    ? data.map(dataObj => graphql(resolver, doc, dataObj))
-    : graphql(resolver, doc, data);
+    ? data.map(dataObj => graphql(resolver, doc, dataObj, null, variableValues))
+    : graphql(resolver, doc, data, null, variableValues);
 }
 
 // TODO: we should probably make check call propType and then throw,
 // rather than the other way round, to avoid constructing stack traces
 // for things like oneOf uses in React. At this stage I doubt many people
 // are using this like that, but in the future, who knows?
-export function check(doc: DocumentNode, data: any): void {
+export function check(
+  doc: DocumentNode,
+  data: any,
+  variables: VariableMap = {},
+): void {
   const resolver = (
     fieldName: string,
     root: any,
@@ -33,21 +44,26 @@ export function check(doc: DocumentNode, data: any): void {
     context: any,
     info: any,
   ) => {
-    if (!{}.hasOwnProperty.call(root, info.resultKey)) {
-      throw new Error(`${info.resultKey} missing on ${JSON.stringify(root)}`);
-    }
+    // When variables is null, fields with @include/skip directives that
+    // reference variables are considered optional.
+    invariant(
+      hasOwnProperty.call(root, info.resultKey) ||
+        (!variables && hasVariableInclusions(info.field.directives)),
+      `${info.resultKey} missing on ${JSON.stringify(root)}`,
+    );
     return root[info.resultKey];
   };
 
-  graphql(
-    resolver,
-    doc,
-    data,
-    {},
-    {},
-    {
-      fragmentMatcher: () => false,
-    },
+  graphql(resolver, doc, data, {}, variables, {
+    fragmentMatcher: () => false,
+  });
+}
+
+function hasVariableInclusions(
+  directives: ReadonlyArray<DirectiveNode>,
+): boolean {
+  return getInclusionDirectives(directives).some(
+    ({ ifArgument }) => ifArgument.value && ifArgument.value.kind === 'Variable',
   );
 }
 
@@ -104,12 +120,15 @@ function createChainableTypeChecker(validate) {
   return chainedCheckType;
 }
 
-export function propType(doc) {
+export function propType(
+  doc: DocumentNode,
+  mapPropsToVariables = props => null,
+) {
   return createChainableTypeChecker((props, propName) => {
     const prop = props[propName];
     try {
       if (!prop.loading) {
-        check(doc, prop);
+        check(doc, prop, mapPropsToVariables(props));
       }
       return null;
     } catch (e) {

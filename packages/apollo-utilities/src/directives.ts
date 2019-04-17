@@ -90,6 +90,10 @@ export type InclusionDirectives = Array<{
   ifArgument: ArgumentNode;
 }>;
 
+function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
+  return value === 'skip' || value === 'include';
+}
+
 export function getInclusionDirectives(
   directives: ReadonlyArray<DirectiveNode>,
 ): InclusionDirectives {
@@ -121,6 +125,3 @@ export function getInclusionDirectives(
   }) : [];
 }
 
-function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
-  return value === 'skip' || value === 'include';
-}

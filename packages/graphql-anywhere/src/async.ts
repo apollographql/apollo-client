@@ -157,6 +157,7 @@ async function executeField(
     isLeaf: !field.selectionSet,
     resultKey: resultKeyNameFromField(field),
     directives: getDirectiveInfoFromField(field, variables),
+    field,
   };
 
   const result = await resolver(fieldName, rootValue, args, contextValue, info);

@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`utilities with a single query can check propTypes for fragments 1`] = `
+Array [
+  "Warning: Failed prop type: alias missing on {}",
+]
+`;
+
+exports[`utilities with a single query can check propTypes for fragments with variables 1`] = `
+Array [
+  "Warning: Failed prop type: height missing on {\\"alias\\":\\"Bob\\",\\"avatar\\":{\\"square\\":\\"abc\\"}}",
+]
+`;

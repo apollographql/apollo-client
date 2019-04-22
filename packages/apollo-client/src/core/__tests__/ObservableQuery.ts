@@ -1483,6 +1483,79 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('returns partial data from the store immediately', done => {
+      const superQuery = gql`
+        query superQuery($id: ID!) {
+          people_one(id: $id) {
+            name
+            age
+          }
+        }
+      `;
+
+      const superDataOne = {
+        people_one: {
+          name: 'Luke Skywalker',
+          age: 21,
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query: superQuery, variables },
+          result: { data: superDataOne },
+        },
+      );
+
+      queryManager.query({ query, variables }).then(result => {
+        const observable = queryManager.watchQuery({
+          query: superQuery,
+          variables,
+          returnPartialData: true,
+        });
+
+        expect(observable.currentResult()).toEqual({
+          data: dataOne,
+          loading: true,
+          networkStatus: 1,
+          partial: true,
+        });
+
+        // we can use this to trigger the query
+        subscribeAndCount(done, observable, (handleCount, subResult) => {
+          const { data, loading, networkStatus } = observable.currentResult();
+          expect(subResult).toEqual({
+            data,
+            loading,
+            networkStatus,
+            stale: false,
+          });
+
+          if (handleCount === 1) {
+            expect(subResult).toEqual({
+              data: dataOne,
+              loading: true,
+              networkStatus: 1,
+              stale: false,
+            });
+
+          } else if (handleCount === 2) {
+            expect(subResult).toEqual({
+              data: superDataOne,
+              loading: false,
+              networkStatus: 7,
+              stale: false,
+            });
+            done();
+          }
+        });
+      });
+    });
+
     it('returns loading even if full data is available when using network-only fetchPolicy', done => {
       const queryManager = mockQueryManager(
         {

@@ -1217,6 +1217,76 @@ describe('QueryManager', () => {
     });
   });
 
+  it('supports returnPartialData #193', () => {
+    const primeQuery = gql`
+      query primeQuery {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const diffedQuery = gql`
+      query complexQuery {
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      vader: {
+        name: 'Darth Vader',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: primeQuery },
+        result: { data: data1 },
+      },
+      {
+        request: { query: diffedQuery },
+        result: { data: data2 },
+        delay: 5,
+      },
+    );
+
+    // First, prime the store so that query diffing removes the query
+    return queryManager
+      .query<any>({
+        query: primeQuery,
+      })
+      .then(() => {
+        const handle = queryManager.watchQuery<any>({
+          query: complexQuery,
+          returnPartialData: true,
+        });
+
+        return handle.result().then(result => {
+          expect(result.data['luke'].name).toBe('Luke Skywalker');
+          expect(result.data).not.toHaveProperty('vader');
+        });
+      });
+  });
+
   it('can handle null values in arrays (#1551)', done => {
     const query = gql`
       {
@@ -2122,6 +2192,120 @@ describe('QueryManager', () => {
         },
         result => {
           expect(stripSymbols(result)).toEqual({
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+      ),
+    ]);
+  });
+
+  it('should return partial data when configured when we orphan a real-id node in the store with a real-id node', () => {
+    const query1 = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+          age
+          id
+          __typename
+        }
+      }
+    `;
+    const query2 = gql`
+      query {
+        author {
+          name {
+            firstName
+          }
+          id
+          __typename
+        }
+      }
+    `;
+    const data1 = {
+      author: {
+        name: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        age: 18,
+        id: '187',
+        __typename: 'Author',
+      },
+    };
+    const data2 = {
+      author: {
+        name: {
+          firstName: 'John',
+        },
+        id: '197',
+        __typename: 'Author',
+      },
+    };
+
+    const queryManager = createQueryManager({
+      link: mockSingleLink(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+        },
+      ),
+    });
+
+    const observable1 = queryManager.watchQuery<any>({
+      query: query1,
+      returnPartialData: true,
+    });
+    const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise(
+        {
+          observable: observable1,
+          wait: 60,
+        },
+        result => {
+          expect(result).toEqual({
+            data: {},
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            stale: false,
+          });
+        },
+        result => {
+          expect(result).toEqual({
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+        result => {
+          expect(result).toEqual({
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+      ),
+      observableToPromise(
+        {
+          observable: observable2,
+          wait: 60,
+        },
+        result => {
+          expect(result).toEqual({
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -3912,6 +4096,61 @@ describe('QueryManager', () => {
         });
     });
 
+    it('should be passed to the observer as true if we are returning partial data', () => {
+      const fortuneCookie =
+        'You must stick to your goal but rethink your approach';
+      const primeQuery = gql`
+        query {
+          fortuneCookie
+        }
+      `;
+      const primeData = { fortuneCookie };
+
+      const author = { name: 'John' };
+      const query = gql`
+        query {
+          fortuneCookie
+          author {
+            name
+          }
+        }
+      `;
+      const fullData = { fortuneCookie, author };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data: fullData },
+          delay: 5,
+        },
+        {
+          request: { query: primeQuery },
+          result: { data: primeData },
+        },
+      );
+
+      return queryManager
+        .query<any>({ query: primeQuery })
+        .then(primeResult => {
+          const observable = queryManager.watchQuery<any>({
+            query,
+            returnPartialData: true,
+          });
+
+          return observableToPromise(
+            { observable },
+            result => {
+              expect(result.loading).toBe(true);
+              expect(result.data).toEqual(primeData);
+            },
+            result => {
+              expect(result.loading).toBe(false);
+              expect(result.data).toEqual(fullData);
+            },
+          );
+        });
+    });
+
     it('should be passed to the observer as false if we are returning all the data', done => {
       assertWithObserver({
         done,
@@ -3999,6 +4238,64 @@ describe('QueryManager', () => {
           },
           error: error => done.fail(error),
         });
+    });
+
+    it('will be true when partial data may be returned', done => {
+      const query1 = gql`{
+        a { x1 y1 z1 }
+      }`;
+      const query2 = gql`{
+        a { x1 y1 z1 }
+        b { x2 y2 z2 }
+      }`;
+      const data1 = {
+        a: { x1: 1, y1: 2, z1: 3 },
+      };
+      const data2 = {
+        a: { x1: 1, y1: 2, z1: 3 },
+        b: { x2: 3, y2: 2, z2: 1 },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+          delay: 5,
+        },
+      );
+
+      queryManager
+        .query({ query: query1 })
+        .then(result1 => {
+          expect(result1.loading).toBe(false);
+          expect(result1.data).toEqual(data1);
+
+          let count = 0;
+          queryManager
+            .watchQuery({ query: query2, returnPartialData: true })
+            .subscribe({
+              next: result2 => {
+                switch (count++) {
+                  case 0:
+                    expect(result2.loading).toBe(true);
+                    expect(result2.data).toEqual(data1);
+                    break;
+                  case 1:
+                    expect(result2.loading).toBe(false);
+                    expect(result2.data).toEqual(data2);
+                    done();
+                    break;
+                  default:
+                    done(new Error('`next` was called to many times.'));
+                }
+              },
+              error: error => done(error),
+            });
+        })
+        .catch(done);
     });
   });
 

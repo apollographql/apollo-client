@@ -11,19 +11,14 @@ const haveWarned = Object.create({});
  * @param type warn or error (will call console.warn or console.error)
  */
 export function warnOnceInDevelopment(msg: string, type = 'warn') {
-  if (isProduction()) {
-    return;
-  }
-  if (!haveWarned[msg]) {
+  if (!isProduction() && !haveWarned[msg]) {
     if (!isTest()) {
       haveWarned[msg] = true;
     }
-    switch (type) {
-      case 'error':
-        console.error(msg);
-        break;
-      default:
-        console.warn(msg);
+    if (type === 'error') {
+      console.error(msg);
+    } else {
+      console.warn(msg);
     }
   }
 }

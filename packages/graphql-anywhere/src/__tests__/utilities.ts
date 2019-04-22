@@ -1,9 +1,10 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
+import { checkPropTypes } from 'prop-types';
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
-import { filter, check } from '../utilities';
+import { filter, check, propType } from '../utilities';
 
 describe('utilities', () => {
   describe('with a single query', () => {
@@ -12,6 +13,24 @@ describe('utilities', () => {
         alias: name
         height(unit: METERS)
         avatar {
+          square
+        }
+      }
+    `;
+    const fragment = gql`
+      fragment foo on Foo {
+        alias: name
+        height(unit: METERS)
+        avatar {
+          square
+        }
+      }
+    `;
+    const fragmentWithAVariable = gql`
+      fragment foo on Foo {
+        alias: name
+        height(unit: METERS)
+        avatar @include(if: $foo) {
           square
         }
       }
@@ -72,6 +91,15 @@ describe('utilities', () => {
       },
     ];
 
+    beforeEach(() => {
+      checkPropTypes.resetWarningCache();
+      jest.spyOn(global.console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      global.console.error.mockRestore();
+    });
+
     it('can filter data', () => {
       expect(filter(doc, data)).toEqual(filteredData);
     });
@@ -80,8 +108,72 @@ describe('utilities', () => {
       expect(filter(doc, arrayData)).toEqual(filteredArrayData);
     });
 
+    it('can filter data for fragments ', () => {
+      expect(filter(fragment, data)).toEqual(filteredData);
+    });
+
+    it('can filter data for fragments with variables', () => {
+      expect(filter(fragmentWithAVariable, data, { foo: true })).toEqual(
+        filteredData,
+      );
+    });
+
+    it('can generate propTypes for fragments', () => {
+      expect(propType(fragment)).toEqual(expect.any(Function));
+    });
+
+    it('can check propTypes for fragments', () => {
+      const propTypes = {
+        foo: propType(fragment),
+      };
+      checkPropTypes(propTypes, filteredData, 'prop', 'MyComponent');
+      expect(global.console.error).not.toHaveBeenCalled();
+      checkPropTypes(propTypes, { foo: {} }, 'prop', 'MyComponent');
+      expect(global.console.error.mock.calls[0]).toMatchSnapshot();
+    });
+
+    it('can generate propTypes for fragments with variables', () => {
+      expect(propType(fragmentWithAVariable)).toEqual(expect.any(Function));
+    });
+
+    it('can check propTypes for fragments with variables', () => {
+      const mapPropsToVariables = () => null;
+      const propTypes = {
+        foo: propType(fragmentWithAVariable, mapPropsToVariables),
+      };
+      checkPropTypes(propTypes, { foo: filteredData }, 'prop', 'MyComponent');
+      expect(global.console.error).not.toHaveBeenCalled();
+      const badProps = { foo: { ...filteredData } };
+      delete badProps.foo.height;
+      checkPropTypes(propTypes, badProps, 'prop', 'MyComponent');
+      expect(global.console.error).toHaveBeenCalled();
+      expect(global.console.error.mock.calls[0]).toMatchSnapshot();
+    });
+
+    it('makes variable inclusion props optional, when no variables are passed', () => {
+      const propTypes = {
+        foo: propType(fragmentWithAVariable),
+      };
+      const propsWithoutAvatar = { foo: { ...filteredData } };
+      delete propsWithoutAvatar.foo.avatar;
+      checkPropTypes(propTypes, propsWithoutAvatar, 'prop', 'MyComponent');
+      expect(global.console.error).not.toHaveBeenCalled();
+    });
+
     it('can check matching data', () => {
       check(doc, filteredData);
+    });
+
+    it('can check matching data for fragments with variables', () => {
+      check(doc, filteredData, { foo: true });
+    });
+
+    it('throws when checking non-matching data for fragments with variables', () => {
+      const badFilteredData = { ...filteredData };
+      delete badFilteredData.avatar;
+      expect(() => {
+        check(doc, badFilteredData);
+      }).toThrow();
     });
 
     // This doesn't throw but potentially it should?

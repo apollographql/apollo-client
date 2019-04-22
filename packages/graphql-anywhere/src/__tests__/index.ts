@@ -214,7 +214,7 @@ const execute = (graphql, r) => () => {
       }
     `;
 
-    const result = await graphql(resolver, query, null, null, null);
+    const result = await graphql(resolver, query, null, null);
 
     expect(result).toEqual({
       a: {
@@ -423,7 +423,7 @@ const execute = (graphql, r) => () => {
     });
   });
 
-  it('passes info including isLeaf, resultKey and directives', async () => {
+  it('passes info including isLeaf, resultKey, directives, and field', async () => {
     const leafMap: { [s: string]: ExecInfo } = {};
 
     const resolver: Resolver = (fieldName, root, args, context, info) => {
@@ -450,6 +450,8 @@ const execute = (graphql, r) => () => {
         isLeaf: false,
 
         resultKey: 'alias',
+
+        field: expect.any(Object),
       },
 
       b: {
@@ -458,6 +460,8 @@ const execute = (graphql, r) => () => {
         isLeaf: true,
 
         resultKey: 'b',
+
+        field: expect.any(Object),
       },
 
       hasDirective: {
@@ -470,6 +474,8 @@ const execute = (graphql, r) => () => {
         isLeaf: true,
 
         resultKey: 'hasDirective',
+
+        field: expect.any(Object),
       },
     });
   });

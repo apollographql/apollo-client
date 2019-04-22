@@ -97,6 +97,12 @@ export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
    * Whether or not updates to the network status should trigger next on the observer of this query
    */
   notifyOnNetworkStatusChange?: boolean;
+
+  /**
+   * Allow returning incomplete data from the cache when a larger query cannot
+   * be fully satisfied by the cache, instead of returning nothing.
+   */
+  returnPartialData?: boolean;
 }
 
 /**

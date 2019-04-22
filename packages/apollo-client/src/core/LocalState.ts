@@ -262,6 +262,7 @@ export class LocalState<TCacheShape> {
     return this.cache.diff({
       query: buildQueryFromSelectionSet(document),
       variables,
+      returnPartialData: true,
       optimistic: false,
     }).result;
   }

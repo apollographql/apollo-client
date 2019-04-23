@@ -35,6 +35,9 @@
 - Accommodate `@client @export` variable changes in `ObservableQuery`. <br/>
   [@hwillson](https://github.com/hwillson) in [#4604](https://github.com/apollographql/apollo-client/pull/4604)
 
+- Support the `returnPartialData` option for watched queries again. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4743](https://github.com/apollographql/apollo-client/pull/4743)
+
 ### Apollo Cache In-Memory
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>

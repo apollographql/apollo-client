@@ -43,6 +43,14 @@
 - Allow `IntrospectionFragmentMatcher` to match fragments against the root `Query`, as `HeuristicFragmentMatcher` does. <br/>
   [@rynobax](https://github.com/rynobax) in [#4620](https://github.com/apollographql/apollo-client/pull/4620)
 
+### GraphQL Anywhere
+
+- The `graphql` function can now be configured to ignore `@include` and
+  `@skip` directives (useful when walking a fragment to generate prop types
+  or filter result data).  <br/>
+  [@GreenGremlin](https://github.com/GreenGremlin) in [#4373](https://github.com/apollographql/apollo-client/pull/4373)
+
+
 ## Apollo Client 2.5.1
 
 ### apollo-client 2.5.1

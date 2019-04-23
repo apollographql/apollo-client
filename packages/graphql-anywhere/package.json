@@ -38,6 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "apollo-utilities": "file:../apollo-utilities",
+    "ts-invariant": "^0.3.2",
     "tslib": "^1.9.3"
   }
 }

@@ -59,7 +59,12 @@ export default graphql(currentUserQuery)(Profile)
 
 ## Create-React-App
 
-[react-app-rewire-inline-import-graphql-ast](https://github.com/detrohutt/react-app-rewire-inline-import-graphql-ast/) is available for users of [create-react-app](https://github.com/facebook/create-react-app/) that would like to use graphql files without needing to eject the app first.
+[create-react-app](https://github.com/facebook/create-react-app/) can't use the Webpack loaders unless ejected. To make the same transformation work in `create-react-app` without ejecting, use [graphql.macro](https://github.com/evenchange4/graphql.macro).
+
+```javascript
+import { loader } from 'graphql.macro';
+const currentUserQuery = loader('./currentUser.graphql');
+```
 
 ## Fragments
 

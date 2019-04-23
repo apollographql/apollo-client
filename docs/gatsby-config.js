@@ -10,7 +10,17 @@ module.exports = {
         contentDir: 'docs/source',
         basePath: '/docs/react',
         githubRepo: 'apollographql/apollo-client',
-        versions: ['2.4', '2.5'],
+        versions: [
+          {
+            value: '2.4',
+            ref: 'origin/version-2.4',
+          },
+          {
+            value: '2.5',
+            ref: 'HEAD',
+            default: true,
+          },
+        ],
         typescriptApiBox: {
           filepathPrefix: 'packages/apollo-client/src/',
         },

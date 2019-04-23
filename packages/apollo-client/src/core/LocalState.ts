@@ -250,10 +250,6 @@ export class LocalState<TCacheShape> {
     return forceResolvers;
   }
 
-  public shouldForceResolver(field: FieldNode) {
-    return this.shouldForceResolvers(field);
-  }
-
   // Query the cache and return matching data.
   private buildRootValueFromCache(
     document: DocumentNode,
@@ -384,7 +380,7 @@ export class LocalState<TCacheShape> {
     // `@client(always: true)`), then we'll skip running non-forced resolvers.
     if (
       !execContext.onlyRunForcedResolvers ||
-      this.shouldForceResolver(field)
+      this.shouldForceResolvers(field)
     ) {
       const resolverType =
         rootValue.__typename || execContext.defaultOperationType;

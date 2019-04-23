@@ -117,31 +117,27 @@ export class DataStore<TSerialized> {
   }) {
     // Incorporate the result from this mutation into the store
     if (!graphQLResultHasError(mutation.result)) {
-      const cacheWrites: Cache.WriteOptions[] = [];
-      cacheWrites.push({
+      const cacheWrites: Cache.WriteOptions[] = [{
         result: mutation.result.data,
         dataId: 'ROOT_MUTATION',
         query: mutation.document,
         variables: mutation.variables,
-      });
+      }];
 
-      if (mutation.updateQueries) {
-        Object.keys(mutation.updateQueries)
-          .filter(id => mutation.updateQueries[id])
-          .forEach(queryId => {
-            const { query, updater } = mutation.updateQueries[queryId];
-            // Read the current query result from the store.
-            const { result: currentQueryResult, complete } = this.cache.diff({
-              query: query.document,
-              variables: query.variables,
-              returnPartialData: true,
-              optimistic: false,
-            });
+      const { updateQueries } = mutation;
+      if (updateQueries) {
+        Object.keys(updateQueries).forEach(id => {
+          const { query, updater } = updateQueries[id];
 
-            if (!complete) {
-              return;
-            }
+          // Read the current query result from the store.
+          const { result: currentQueryResult, complete } = this.cache.diff({
+            query: query.document,
+            variables: query.variables,
+            returnPartialData: true,
+            optimistic: false,
+          });
 
+          if (complete) {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = tryFunctionOrLogError(() =>
               updater(currentQueryResult, {
@@ -160,7 +156,8 @@ export class DataStore<TSerialized> {
                 variables: query.variables,
               });
             }
-          });
+          }
+        });
       }
 
       this.cache.performTransaction(c => {
@@ -184,8 +181,9 @@ export class DataStore<TSerialized> {
     mutationId: string;
     optimisticResponse?: any;
   }) {
-    if (!optimisticResponse) return;
-    this.cache.removeOptimistic(mutationId);
+    if (optimisticResponse) {
+      this.cache.removeOptimistic(mutationId);
+    }
   }
 
   public markUpdateQueryResult(

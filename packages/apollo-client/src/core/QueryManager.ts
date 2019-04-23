@@ -403,7 +403,7 @@ export class QueryManager<TStore> {
       cancel,
     }));
 
-    this.invalidate(true, fetchMoreForQueryId);
+    this.invalidate(fetchMoreForQueryId);
 
     this.queryStore.initQuery({
       queryId,
@@ -433,7 +433,8 @@ export class QueryManager<TStore> {
         } else {
           if (requestId >= this.getQuery(queryId).lastRequestId) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
-            this.invalidate(true, queryId, fetchMoreForQueryId);
+            this.invalidate(queryId);
+            this.invalidate(fetchMoreForQueryId);
             this.broadcastQueries();
           }
           throw new ApolloError({ networkError: error });
@@ -454,7 +455,8 @@ export class QueryManager<TStore> {
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
     this.queryStore.markQueryResultClient(queryId, !shouldFetch);
-    this.invalidate(true, queryId, fetchMoreForQueryId);
+    this.invalidate(queryId);
+    this.invalidate(fetchMoreForQueryId);
 
     if (this.transform(query).hasForcedResolvers) {
       return this.localState.runResolvers({
@@ -531,7 +533,7 @@ export class QueryManager<TStore> {
       newData?: Cache.DiffResult<T>,
     ) => {
       // we're going to take a look at the data, so the query is no longer invalidated
-      this.invalidate(false, queryId);
+      this.invalidate(queryId, false);
 
       // The query store value can be undefined in the event of a store
       // reset.
@@ -799,7 +801,7 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     this.stopPollingQuery(queryId);
     this.queryStore.stopQuery(queryId);
-    this.invalidate(true, queryId);
+    this.invalidate(queryId);
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -908,7 +910,7 @@ export class QueryManager<TStore> {
         }
 
         this.setQuery(queryId, () => ({ newData: null }));
-        this.invalidate(true, queryId);
+        this.invalidate(queryId);
       }
     });
 
@@ -1075,11 +1077,8 @@ export class QueryManager<TStore> {
     }
 
     const { variables, query } = observableQuery.options;
-
-    const { data } = this.getCurrentQueryResult(observableQuery, false);
-
     return {
-      previousResult: data,
+      previousResult: this.getCurrentQueryResult(observableQuery, false).data,
       variables,
       document: query,
     };
@@ -1236,7 +1235,8 @@ export class QueryManager<TStore> {
             fetchMoreForQueryId,
           );
 
-          this.invalidate(true, queryId, fetchMoreForQueryId);
+          this.invalidate(queryId);
+          this.invalidate(fetchMoreForQueryId);
 
           this.broadcastQueries();
         }
@@ -1316,14 +1316,11 @@ export class QueryManager<TStore> {
   }
 
   private invalidate(
-    invalidated: boolean,
-    queryId?: string,
-    fetchMoreForQueryId?: string,
+    queryId: string | undefined,
+    invalidated = true,
   ) {
-    if (queryId) this.setQuery(queryId, () => ({ invalidated }));
-
-    if (fetchMoreForQueryId) {
-      this.setQuery(fetchMoreForQueryId, () => ({ invalidated }));
+    if (queryId) {
+      this.setQuery(queryId, () => ({ invalidated }));
     }
   }
 

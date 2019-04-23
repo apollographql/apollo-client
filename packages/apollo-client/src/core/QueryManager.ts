@@ -37,6 +37,7 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 import { asyncMap, multiplex } from '../util/observables';
+import { isNonEmptyArray } from '../util/arrays';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -285,30 +286,32 @@ export class QueryManager<TStore> {
             ApolloQueryResult<any>[] | ApolloQueryResult<{}>
           >[] = [];
 
-          refetchQueries.forEach(refetchQuery => {
-            if (typeof refetchQuery === 'string') {
-              self.queries.forEach(({ observableQuery }) => {
-                if (
-                  observableQuery &&
-                  observableQuery.queryName === refetchQuery
-                ) {
-                  refetchQueryPromises.push(observableQuery.refetch());
+          if (isNonEmptyArray(refetchQueries)) {
+            refetchQueries.forEach(refetchQuery => {
+              if (typeof refetchQuery === 'string') {
+                self.queries.forEach(({ observableQuery }) => {
+                  if (
+                    observableQuery &&
+                    observableQuery.queryName === refetchQuery
+                  ) {
+                    refetchQueryPromises.push(observableQuery.refetch());
+                  }
+                });
+              } else {
+                const queryOptions: QueryOptions = {
+                  query: refetchQuery.query,
+                  variables: refetchQuery.variables,
+                  fetchPolicy: 'network-only',
+                };
+
+                if (refetchQuery.context) {
+                  queryOptions.context = refetchQuery.context;
                 }
-              });
-            } else {
-              const queryOptions: QueryOptions = {
-                query: refetchQuery.query,
-                variables: refetchQuery.variables,
-                fetchPolicy: 'network-only',
-              };
 
-              if (refetchQuery.context) {
-                queryOptions.context = refetchQuery.context;
+                refetchQueryPromises.push(self.query(queryOptions));
               }
-
-              refetchQueryPromises.push(self.query(queryOptions));
-            }
-          });
+            });
+          }
 
           Promise.all(
             awaitRefetchQueries ? refetchQueryPromises : [],
@@ -558,9 +561,7 @@ export class QueryManager<TStore> {
         return;
       }
 
-      const hasGraphQLErrors =
-        queryStoreValue.graphQLErrors &&
-        queryStoreValue.graphQLErrors.length > 0;
+      const hasGraphQLErrors = isNonEmptyArray(queryStoreValue.graphQLErrors);
 
       const errorPolicy: ErrorPolicy = observableQuery
         && observableQuery.options.errorPolicy
@@ -1232,10 +1233,10 @@ export class QueryManager<TStore> {
           this.broadcastQueries();
         }
 
-        if (result.errors && errorPolicy === 'none') {
-          throw new ApolloError({
+        if (errorPolicy === 'none' && isNonEmptyArray(result.errors)) {
+          return reject(new ApolloError({
             graphQLErrors: result.errors,
-          });
+          }));
         }
 
         if (errorPolicy === 'all') {
@@ -1259,16 +1260,13 @@ export class QueryManager<TStore> {
             // tslint:disable-next-line
           } catch (e) {}
         }
-
-        return resultFromStore;
-
       }).subscribe({
-        error: (error: ApolloError) => {
+        error(error: ApolloError) {
           cleanup();
           reject(error);
         },
 
-        complete: () => {
+        complete() {
           cleanup();
           resolve({
             data: resultFromStore,

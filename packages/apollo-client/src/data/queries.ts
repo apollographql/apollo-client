@@ -2,6 +2,7 @@ import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
 import { isEqual } from 'apollo-utilities';
 import { InvariantError } from 'ts-invariant';
 import { NetworkStatus } from '../core/networkStatus';
+import { isNonEmptyArray } from '../util/arrays';
 
 export type QueryStoreValue = {
   document: DocumentNode;
@@ -119,8 +120,7 @@ export class QueryStore {
     if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
-    this.store[queryId].graphQLErrors =
-      result.errors && result.errors.length ? result.errors : [];
+    this.store[queryId].graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
     this.store[queryId].previousVariables = null;
     this.store[queryId].networkStatus = NetworkStatus.ready;
 

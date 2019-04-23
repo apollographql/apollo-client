@@ -21,6 +21,7 @@ import {
 import { QueryStoreValue } from '../data/queries';
 
 import { invariant, InvariantError } from 'ts-invariant';
+import { isNonEmptyArray } from '../util/arrays';
 
 // XXX remove in the next breaking semver change (3.0)
 // Deprecated, use ApolloCurrentQueryResult
@@ -63,12 +64,10 @@ export interface UpdateQueryOptions<TVariables> {
 export const hasError = (
   storeValue: QueryStoreValue,
   policy: ErrorPolicy = 'none',
-) =>
-  storeValue &&
-  ((storeValue.graphQLErrors &&
-    storeValue.graphQLErrors.length > 0 &&
-    policy === 'none') ||
-    storeValue.networkError);
+) => storeValue && (
+  storeValue.networkError ||
+  (policy === 'none' && isNonEmptyArray(storeValue.graphQLErrors))
+);
 
 export class ObservableQuery<
   TData = any,
@@ -567,6 +566,15 @@ export class ObservableQuery<
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
+    // Zen Observable has its own error function, so in order to log correctly
+    // we need to provide a custom error callback.
+    try {
+      var subObserver = (observer as any)._subscription._observer;
+      if (subObserver && !subObserver.error) {
+        subObserver.error = defaultSubscriptionObserverErrorCallback;
+      }
+    } catch {}
+
     const first = !this.observers.size;
     this.observers.add(observer);
 
@@ -657,6 +665,10 @@ export class ObservableQuery<
 
     this.observers.clear();
   }
+}
+
+function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
+  invariant.error('Unhandled error', error.message, error.stack);
 }
 
 function iterateObserversSafely<E, A>(

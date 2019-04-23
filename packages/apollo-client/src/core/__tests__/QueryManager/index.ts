@@ -1626,7 +1626,7 @@ describe('QueryManager', () => {
       queryManager.mutate({
         // Bamboozle TypeScript into letting us do this
         mutation: ('string' as any) as DocumentNode,
-      })
+      }),
     ).rejects.toThrow(/wrap the query string in a "gql" tag/);
 
     expect(() => {
@@ -2315,10 +2315,17 @@ describe('QueryManager', () => {
 
     const handle = queryManager.watchQuery<any>(request);
 
+    const checkError = error => {
+      expect(error.graphQLErrors).toEqual([
+        {
+          name: 'PeopleError',
+          message: 'This is not the person you are looking for.',
+        },
+      ]);
+    };
+
     handle.subscribe({
-      error: () => {
-        /* nothing */
-      },
+      error: checkError,
     });
 
     handle
@@ -2327,12 +2334,7 @@ describe('QueryManager', () => {
         done.fail(new Error('Error on refetch should reject promise'));
       })
       .catch(error => {
-        expect(error.graphQLErrors).toEqual([
-          {
-            name: 'PeopleError',
-            message: 'This is not the person you are looking for.',
-          },
-        ]);
+        checkError(error);
         done();
       });
 
@@ -3526,7 +3528,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it.only('should only refetch once when we refetch observable queries', (done) => {
+    it('should only refetch once when we refetch observable queries', done => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {

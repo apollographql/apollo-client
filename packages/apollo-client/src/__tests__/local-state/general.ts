@@ -415,6 +415,79 @@ describe('Cache manipulation', () => {
         expect({ ...data }).toMatchObject({ field: '1234' });
       });
   });
+
+  it("should read @client fields from cache on refetch (#4741)", function (done) {
+    const query = gql`
+      query FetchInitialData {
+        serverData @client {
+          id
+          title
+        }
+        selectedItemId @client
+      }
+    `;
+
+    const mutation = gql`
+      mutation Select {
+        select(itemId: $id) @client
+      }
+    `;
+
+    const serverData = {
+      __typename: "ServerData",
+      id: 123,
+      title: "Oyez and Onoz",
+    };
+
+    let selectedItemId = -1;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      resolvers: {
+        Query: {
+          serverData() {
+            return serverData;
+          },
+          selectedItemId() {
+            return selectedItemId;
+          },
+        },
+        Mutation: {
+          select(_, { itemId }) {
+            selectedItemId = itemId;
+          }
+        }
+      },
+    });
+
+    client.watchQuery({ query }).subscribe({
+      next(result) {
+        expect(result).toEqual({
+          data: {
+            serverData,
+            selectedItemId,
+          },
+          loading: false,
+          networkStatus: 7,
+          stale: false,
+        });
+
+        if (selectedItemId !== 123) {
+          client.mutate({
+            mutation,
+            variables: {
+              id: 123,
+            },
+            refetchQueries: [
+              "FetchInitialData",
+            ],
+          });
+        } else {
+          done();
+        }
+      },
+    });
+  });
 });
 
 describe('Sample apps', () => {

@@ -359,17 +359,13 @@ export class QueryManager<TStore> {
     options = { ...options, variables };
 
     let storeResult: any;
-    let needToFetch: boolean =
+    const isNetworkOnly =
       fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
+    let needToFetch = isNetworkOnly;
 
-    // If this is not a force fetch, we want to diff the query against the
-    // store before we fetch it from the network interface.
-    // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if (
-      fetchType !== FetchType.refetch &&
-      fetchPolicy !== 'network-only' &&
-      fetchPolicy !== 'no-cache'
-    ) {
+    // Unless we are completely skipping the cache, we want to diff the query
+    // against the cache before we fetch it from the network interface.
+    if (!isNetworkOnly) {
       const { complete, result } = this.dataStore.getCache().diff({
         query,
         variables,

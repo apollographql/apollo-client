@@ -1,4 +1,5 @@
 module.exports = {
+  pathPrefix: '/docs/react',
   __experimentalThemes: [
     {
       resolve: 'gatsby-theme-apollo-docs',
@@ -8,7 +9,6 @@ module.exports = {
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',
         contentDir: 'docs/source',
-        basePath: '/docs/react',
         githubRepo: 'apollographql/apollo-client',
         versions: [
           {

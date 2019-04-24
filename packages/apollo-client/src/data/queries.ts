@@ -1,6 +1,6 @@
 import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
 import { isEqual } from 'apollo-utilities';
-import { InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 import { NetworkStatus } from '../core/networkStatus';
 import { isNonEmptyArray } from '../util/arrays';
 
@@ -37,18 +37,15 @@ export class QueryStore {
   }) {
     const previousQuery = this.store[query.queryId];
 
-    if (
-      previousQuery &&
-      previousQuery.document !== query.document &&
-      !isEqual(previousQuery.document, query.document)
-    ) {
-      // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
-      // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
-      // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
-      throw new InvariantError(
-        'Internal Error: may not update existing query string in store',
-      );
-    }
+    // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
+    // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
+    // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
+    invariant(
+      !previousQuery ||
+      previousQuery.document === query.document ||
+      isEqual(previousQuery.document, query.document),
+      'Internal Error: may not update existing query string in store',
+    );
 
     let isSetVariables = false;
 
@@ -168,22 +165,13 @@ export class QueryStore {
   }
 
   public reset(observableQueryIds: string[]) {
-    // keep only the queries with query ids that are associated with observables
-    this.store = Object.keys(this.store)
-      .filter(queryId => {
-        return observableQueryIds.indexOf(queryId) > -1;
-      })
-      .reduce(
-        (res, key) => {
-          // XXX set loading to true so listeners don't trigger unless they want results with partial data
-          res[key] = {
-            ...this.store[key],
-            networkStatus: NetworkStatus.loading,
-          };
-
-          return res;
-        },
-        {} as { [queryId: string]: QueryStoreValue },
-      );
+    Object.keys(this.store).forEach(queryId => {
+      if (observableQueryIds.indexOf(queryId) < 0) {
+        this.stopQuery(queryId);
+      } else {
+        // XXX set loading to true so listeners don't trigger unless they want results with partial data
+        this.store[queryId].networkStatus = NetworkStatus.loading;
+      }
+    });
   }
 }

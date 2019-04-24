@@ -399,7 +399,7 @@ export class QueryManager<TStore> {
       cancel,
     }));
 
-    this.invalidate(true, fetchMoreForQueryId);
+    this.invalidate(fetchMoreForQueryId);
 
     this.queryStore.initQuery({
       queryId,
@@ -429,7 +429,8 @@ export class QueryManager<TStore> {
         } else {
           if (requestId >= this.getQuery(queryId).lastRequestId) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
-            this.invalidate(true, queryId, fetchMoreForQueryId);
+            this.invalidate(queryId);
+            this.invalidate(fetchMoreForQueryId);
             this.broadcastQueries();
           }
           throw new ApolloError({ networkError: error });
@@ -450,7 +451,8 @@ export class QueryManager<TStore> {
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
     this.queryStore.markQueryResultClient(queryId, !shouldFetch);
-    this.invalidate(true, queryId, fetchMoreForQueryId);
+    this.invalidate(queryId);
+    this.invalidate(fetchMoreForQueryId);
 
     if (this.transform(query).hasForcedResolvers) {
       return this.localState.runResolvers({
@@ -527,7 +529,7 @@ export class QueryManager<TStore> {
       newData?: Cache.DiffResult<T>,
     ) => {
       // we're going to take a look at the data, so the query is no longer invalidated
-      this.invalidate(false, queryId);
+      this.invalidate(queryId, false);
 
       // The query store value can be undefined in the event of a store
       // reset.
@@ -545,15 +547,19 @@ export class QueryManager<TStore> {
       const loading = isNetworkRequestInFlight(queryStoreValue.networkStatus);
       const lastResult = observableQuery && observableQuery.getLastResult();
 
-      if (
-        loading &&
-        fetchPolicy !== 'cache-only' &&
-        fetchPolicy !== 'cache-and-network' &&
-        (newData || !queryStoreValue.previousVariables) &&
-        !(lastResult &&
-          lastResult.networkStatus !== queryStoreValue.networkStatus &&
-          options.notifyOnNetworkStatusChange)
-      ) {
+      const networkStatusChanged = !!(
+        lastResult &&
+        lastResult.networkStatus !== queryStoreValue.networkStatus
+      );
+
+      const shouldNotifyIfLoading =
+        options.returnPartialData ||
+        (!newData && queryStoreValue.previousVariables) ||
+        (networkStatusChanged && options.notifyOnNetworkStatusChange) ||
+        fetchPolicy === 'cache-only' ||
+        fetchPolicy === 'cache-and-network';
+
+      if (loading && !shouldNotifyIfLoading) {
         return;
       }
 
@@ -601,23 +607,28 @@ export class QueryManager<TStore> {
             data = lastResult.data;
             isMissing = false;
           } else {
-            const readResult = this.dataStore.getCache().diff({
+            const diffResult = this.dataStore.getCache().diff({
               query: document as DocumentNode,
               variables:
                 queryStoreValue.previousVariables ||
                 queryStoreValue.variables,
+              returnPartialData: true,
               optimistic: true,
             });
 
-            data = readResult.result;
-            isMissing = !readResult.complete;
+            data = diffResult.result;
+            isMissing = !diffResult.complete;
           }
         }
 
         // If there is some data missing and the user has told us that they
         // do not tolerate partial data then we want to return the previous
         // result and mark it as stale.
-        const stale = isMissing && fetchPolicy !== 'cache-only';
+        const stale = isMissing && !(
+          options.returnPartialData ||
+          fetchPolicy === 'cache-only'
+        );
+
         const resultFromStore: ApolloQueryResult<T> = {
           data: stale ? lastResult && lastResult.data : data,
           loading,
@@ -786,7 +797,7 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     this.stopPollingQuery(queryId);
     this.queryStore.stopQuery(queryId);
-    this.invalidate(true, queryId);
+    this.invalidate(queryId);
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -895,7 +906,7 @@ export class QueryManager<TStore> {
         }
 
         this.setQuery(queryId, () => ({ newData: null }));
-        this.invalidate(true, queryId);
+        this.invalidate(queryId);
       }
     });
 
@@ -1014,31 +1025,30 @@ export class QueryManager<TStore> {
     data: T | undefined;
     partial: boolean;
   } {
-    const { variables, query, fetchPolicy } = observableQuery.options;
+    const { variables, query, fetchPolicy, returnPartialData } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
 
-    // XXX test this
     if (newData && newData.complete) {
       return { data: newData.result, partial: false };
-    } else if (fetchPolicy === 'no-cache' || fetchPolicy === 'network-only') {
-      return { data: undefined, partial: false };
-    } else {
-      try {
-        // the query is brand new, so we read from the store to see if anything is there
-        const data =
-          this.dataStore.getCache().read<T>({
-            query,
-            variables,
-            previousResult: lastResult ? lastResult.data : undefined,
-            optimistic,
-          }) || undefined;
-
-        return { data, partial: false };
-      } catch (e) {
-        return { data: undefined, partial: true };
-      }
     }
+
+    if (fetchPolicy === 'no-cache' || fetchPolicy === 'network-only') {
+      return { data: undefined, partial: false };
+    }
+
+    const { result, complete } = this.dataStore.getCache().diff<T>({
+      query,
+      variables,
+      previousResult: lastResult ? lastResult.data : undefined,
+      returnPartialData: true,
+      optimistic,
+    });
+
+    return {
+      data: (complete || returnPartialData) ? result : void 0,
+      partial: !complete,
+    };
   }
 
   public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(
@@ -1063,11 +1073,8 @@ export class QueryManager<TStore> {
     }
 
     const { variables, query } = observableQuery.options;
-
-    const { data } = this.getCurrentQueryResult(observableQuery, false);
-
     return {
-      previousResult: data,
+      previousResult: this.getCurrentQueryResult(observableQuery, false).data,
       variables,
       document: query,
     };
@@ -1224,7 +1231,8 @@ export class QueryManager<TStore> {
             fetchMoreForQueryId,
           );
 
-          this.invalidate(true, queryId, fetchMoreForQueryId);
+          this.invalidate(queryId);
+          this.invalidate(fetchMoreForQueryId);
 
           this.broadcastQueries();
         }
@@ -1244,17 +1252,17 @@ export class QueryManager<TStore> {
           // the original result in case an @connection directive is used.
           resultFromStore = result.data;
         } else {
-          try {
-            // ensure result is combined with data already in store
-            resultFromStore = this.dataStore.getCache().read({
-              variables,
-              query: document,
-              optimistic: false,
-            });
-            // this will throw an error if there are missing fields in
-            // the results which can happen with errors from the server.
-            // tslint:disable-next-line
-          } catch (e) {}
+          // ensure result is combined with data already in store
+          const { result, complete } = this.dataStore.getCache().diff<T>({
+            variables,
+            query: document,
+            optimistic: false,
+            returnPartialData: true,
+          });
+
+          if (complete || options.returnPartialData) {
+            resultFromStore = result;
+          }
         }
       }).subscribe({
         error(error: ApolloError) {
@@ -1304,14 +1312,11 @@ export class QueryManager<TStore> {
   }
 
   private invalidate(
-    invalidated: boolean,
-    queryId?: string,
-    fetchMoreForQueryId?: string,
+    queryId: string | undefined,
+    invalidated = true,
   ) {
-    if (queryId) this.setQuery(queryId, () => ({ invalidated }));
-
-    if (fetchMoreForQueryId) {
-      this.setQuery(fetchMoreForQueryId, () => ({ invalidated }));
+    if (queryId) {
+      this.setQuery(queryId, () => ({ invalidated }));
     }
   }
 

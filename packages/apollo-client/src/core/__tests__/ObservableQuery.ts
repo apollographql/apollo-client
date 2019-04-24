@@ -698,14 +698,14 @@ describe('ObservableQuery', () => {
         },
       );
 
-      subscribeAndCount(done, observable, (handleCount, result) => {
+      subscribeAndCount(done, observable, async (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(dataOne);
           expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
             dataOne,
           );
-          observable.setVariables(differentVariables);
-          expect(observable.getCurrentResult().data).toEqual(undefined);
+          await observable.setVariables(differentVariables);
+          expect(observable.getCurrentResult().data).toEqual({});
           expect(observable.getCurrentResult().loading).toBe(true);
         }
         // after loading is false and data has returned
@@ -772,7 +772,7 @@ describe('ObservableQuery', () => {
             dataOne,
           );
           await observable.setVariables(differentVariables);
-          expect(observable.getCurrentResult().data).toEqual(undefined);
+          expect(observable.getCurrentResult().data).toEqual({});
           expect(observable.getCurrentResult().loading).toBe(true);
         }
         // after loading is false and data has returned
@@ -1354,6 +1354,7 @@ describe('ObservableQuery', () => {
         networkStatus: 1,
         partial: true,
       });
+
       setTimeout(
         wrap(done, () => {
           expect(observable.getCurrentResult()).toEqual({
@@ -1479,6 +1480,79 @@ describe('ObservableQuery', () => {
         expect(currentResult.loading).toBe(false);
         expect(currentResult.errors).toBeUndefined();
         expect(currentResult.error).toBeUndefined();
+      });
+    });
+
+    it('returns partial data from the store immediately', done => {
+      const superQuery = gql`
+        query superQuery($id: ID!) {
+          people_one(id: $id) {
+            name
+            age
+          }
+        }
+      `;
+
+      const superDataOne = {
+        people_one: {
+          name: 'Luke Skywalker',
+          age: 21,
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query: superQuery, variables },
+          result: { data: superDataOne },
+        },
+      );
+
+      queryManager.query({ query, variables }).then(result => {
+        const observable = queryManager.watchQuery({
+          query: superQuery,
+          variables,
+          returnPartialData: true,
+        });
+
+        expect(observable.currentResult()).toEqual({
+          data: dataOne,
+          loading: true,
+          networkStatus: 1,
+          partial: true,
+        });
+
+        // we can use this to trigger the query
+        subscribeAndCount(done, observable, (handleCount, subResult) => {
+          const { data, loading, networkStatus } = observable.currentResult();
+          expect(subResult).toEqual({
+            data,
+            loading,
+            networkStatus,
+            stale: false,
+          });
+
+          if (handleCount === 1) {
+            expect(subResult).toEqual({
+              data: dataOne,
+              loading: true,
+              networkStatus: 1,
+              stale: false,
+            });
+
+          } else if (handleCount === 2) {
+            expect(subResult).toEqual({
+              data: superDataOne,
+              loading: false,
+              networkStatus: 7,
+              stale: false,
+            });
+            done();
+          }
+        });
       });
     });
 

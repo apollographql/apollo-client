@@ -68,7 +68,7 @@ const resolvers = {
 
 > _Note:_ the faker.js library comes bundled with lots and lots of strings that can consume precious bundle bytes. For this reason you should make sure to only include the faker.js dependency in development mode and take care not to include this in your production bundle.
 
-## 3. Query the mocked field with the @client directive.
+## 3. Query the mocked field with the `@client` directive.
 
 Now, you’re ready to query your new field inside the `RocketDetails` component. Just add your new field to the query and specify the `@client` directive, and start using it in your UI.
 
@@ -98,7 +98,7 @@ export default function RocketDetails({ rocketId }) {
 
 ## 4. Toggle on “real” data.
 
-Once the feature is ready on the backend, just remove the @client directive from your query. You should now be able to see your real production data returned instead.
+Once the feature is ready on the backend, just remove the `@client` directive from your query. You should now be able to see your real production data returned instead.
 
 There you have it, a workflow for developing new features with new schema fields ahead of the actual schema implementation. For further reading, visit the [tutorial guide](https://www.apollographql.com/docs/tutorial/local-state.html#virtual-fields) which describes how to use client fields to manage local state in greater depth.
 

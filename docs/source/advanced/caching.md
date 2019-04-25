@@ -422,19 +422,21 @@ To solve this Apollo Client 1.6 introduced the `@connection` directive to specif
 
 To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
-```
-const query = gql`query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-  feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed", filter: ["type"]) {
-    ...FeedEntry
+```js
+const query = gql`
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed", filter: ["type"]) {
+      ...FeedEntry
+    }
   }
-}`
+`
 ```
 
 With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values. In this example, we also use the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key, which results in multiple store values that accumulate queries from each type of feed.
 
 Now that we have a stable store key, we can easily use `writeQuery` to perform a store update, in this case clearing out the feed.
 
-```
+```js
 client.writeQuery({
   query: gql`
     query Feed($type: FeedType!) {
@@ -458,7 +460,7 @@ Note that because we are only using the `type` argument in the store key, we don
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 
-```
+```graphql
 query ListView {
   books {
     id
@@ -470,7 +472,7 @@ query ListView {
 
 When a specific book is selected, the detail view displays an individual item using this query:
 
-```
+```graphql
 query DetailView {
   book(id: $id) {
     id
@@ -484,7 +486,7 @@ query DetailView {
 
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
-```
+```js
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const cache = new InMemoryCache({
@@ -503,7 +505,7 @@ Apollo Client will use the ID returned by the custom resolver to look up the ite
 
 To figure out what you should put in the `__typename` property run one of the queries in GraphiQL and get the `__typename` field:
 
-```
+```graphql
 query ListView {
   books {
     __typename
@@ -523,7 +525,7 @@ The value that's returned (the name of your type) is what you need to put into t
 
 It is also possible to return a list of IDs:
 
-```
+```js
 cacheRedirects: {
   Query: {
     books: (_, args, { getCacheKey }) =>
@@ -637,7 +639,6 @@ persistCache({
 }).then(() => {
   // Continue setting up Apollo as usual.
 })
-
 ```
 
 For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).

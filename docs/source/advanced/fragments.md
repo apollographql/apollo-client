@@ -172,7 +172,7 @@ When loading `.graphql` files with [graphql-tag/loader](https://github.com/apoll
 
 Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](../recipes/webpack.html#Fragments) section for additional details.
 
-<h2 id="fragment-matcher">Fragments on unions and interfaces</h2>
+## Fragments on unions and interfaces
 
 > This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration.html).
 

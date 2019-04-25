@@ -4,14 +4,14 @@ subtitle: Subtitle
 description: Description
 ---
 
-<h2 title="topic">Topic</h2>
+## Topic
 
-<h3 title="subtopic">Sub Topic</h3>
+### Sub Topic
 
 ```js
 // code block
 ```
 
-<h2 title="best-practices">Best Practices</h2>
+## Best Practices
 
-<h2 title="API">API Documentation</h2>
+## API Documentation

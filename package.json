@@ -90,7 +90,7 @@
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "rollup": "1.10.1",
-    "rollup-plugin-invariant": "0.5.2",
+    "rollup-plugin-invariant": "0.5.3",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "4.2.3",
     "rollup-plugin-sourcemaps": "0.4.2",

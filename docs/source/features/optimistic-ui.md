@@ -17,7 +17,7 @@ Here's what this looks like in the code:
 ```js
 const UPDATE_COMMENT = gql`
   mutation UpdateComment($commentId: ID!, $commentContent: String!) {
-    updateComment(commentId: $commentId, commentContent: $commentContent) {
+    updateComment(commentId: $commentId, content: $commentContent) {
       id
       __typename
       content

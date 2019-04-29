@@ -95,7 +95,7 @@ Then add the plugin in your `.babelrc` configuration file:
 
 Now any `import` statements importing from a GraphQL file type will return a ready-to-use GraphQL DocumentNode object.
 
-```javascript
+```jsx
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
 import myImportedQuery from './productsQuery.graphql';

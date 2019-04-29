@@ -2,7 +2,7 @@
 title: Setup and options - Simple and Advanced
 ---
 
-<h2 id="installation">Simple Installation - With Apollo Boost</h2>
+## Simple Installation - With Apollo Boost
 
 To get started quickly and easily with Apollo and React, you should use [`apollo-boost`](https://www.npmjs.com/package/apollo-boost).
 
@@ -12,7 +12,7 @@ If you are now ready to move forward with Apollo Boost, [then let's go to that s
 
 The rest of this page is for more advanced use cases and for those who want to dive into the deep end first. 
 
-<h3 id="creating-client">Installation with Apollo Client - For Advanced Use</h3>
+### Installation with Apollo Client - For Advanced Use
 
 First, let's get our packages installed: 
 
@@ -51,8 +51,7 @@ const client = new ApolloClient({
 
 `ApolloClient` has some other options which control the behavior of the client, and we'll see examples of their use throughout this guide.
 
-
-<h3 id="creating-provider">Creating a provider</h3>
+### Creating a provider
 
 To connect your client to your component tree, use an `ApolloProvider` component. We suggest putting the `ApolloProvider` somewhere high in your app, above any places where you need to access GraphQL data. For example, it could be outside of your root route component if you're using React Router.
 
@@ -75,7 +74,8 @@ ReactDOM.render(
 )
 
 ```
-<h3 id="gql">Creating Operations using `graphql-tag`</h3>
+
+### Creating Operations using `graphql-tag`
 
 ```js
 import gql from 'graphql-tag';
@@ -119,11 +119,12 @@ const query = gql`
 
 For more information about using fragments, checkout the [guide](../advanced/fragments.html) and even some of the different ways to write GraphQL operations in your app using [babel](../recipes/babel.html) or [webpack](../recipes/webpack.html).
 
-<h2 id="connecting-data">Requesting data</h2>
+## Requesting data
 
 Apollo Client makes it super easy to request data using GraphQL. You can [read](./queries.html), [update](./mutations.html), and even [subscribe](../advanced/subscriptions.html) to whatever information your app needs using the client directly, or integrating it with your components.
 
-<h3 id="basic-operations">Basic Operations</h3>
+### Basic Operations
+
 If you want to see how easy it is to fetch data from a GraphQL server with Apollo, you can use the `query` method on your client. It is as easy as this:
 
 ```js
@@ -139,7 +140,8 @@ const client = new ApolloClient({
 client.query({ query: gql`{ hello }` }).then(console.log);
 ```
 
-<h3 id="in-your-ui">Describe your data</h3>
+### Describe your data
+
 Most of the time, you want to use Apollo Client to fetch data for your UI which is even easier using the `graphql()` container from `react-apollo`. The `graphql()` container is the recommended approach for using Apollo with React and it is a React [Higher Order Component](https://facebook.github.io/react/blog/2016/07/13/mixins-considered-harmful.html#subscriptions-and-side-effects).
 
 The basic usage of `graphql()` is as follows:
@@ -155,17 +157,18 @@ const MY_QUERY = gql`query { todos { text } }`;
 // We then can use the graphql container to pass the query results returned by MY_QUERY
 // to a component as a prop (and update them as the results change)
 const MyComponentWithData = graphql(MY_QUERY)(props => <div>...</div>);
-
 ```
 
 The overall idea of using `graphql` is to pair a description (GraphQL Operation) of data you want, with the presentation (React Component) you want to show to your users! That is what makes the API as simple as `graphql` + `(operation)` + `(component)`! Over the course of the rest of the docs, you will see the `graphql` function used almost everywhere as the best way to use Apollo and React together.
 
-<h3 id="ready">Ready for more?</h3>
+### Ready for more?
+
 At this point you are ready to start building something with Apollo! Checkout the [queries](./queries.html) guide to start writing queries instead of a lot of code to get your data!
 
-<h2 id="api" title="API Reference">API Reference</h2>
+## API Reference
 
-<h3 id="ApolloClient">`ApolloClient`</h3>
+### `ApolloClient`
+
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.
 
 - `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more information about creating links, read the [docs](/docs/link).
@@ -194,8 +197,8 @@ const defaultOptions = {
 
 These options will be merged with options supplied with each request.
 
+### `ApolloProvider`
 
-<h3 id="ApolloProvider" title="ApolloProvider">`ApolloProvider`</h3>
 React-Apollo includes a component for providing a client instance to a React component tree, and a higher-order component for retrieving that client instance.
 
 ```js
@@ -205,7 +208,6 @@ import { ApolloProvider } from 'react-apollo';
 Makes the GraphQL client available to any of your components enhanced by the `graphql()` function. The `<ApolloProvider/>` component works the same as the [`react-redux` `<Provider/>` component][]. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`](#graphql) function, or the [`withApollo`](#withApollo) function.
 
 If you do not add this component to the root of your React tree then your components enhanced with Apollo capabilities will not be able to function.
-
 
 The `<ApolloProvider/>` component takes the following props:
 
@@ -224,7 +226,7 @@ ReactDOM.render(
 );
 ```
 
-<h3 id="graphql" title="graphql(...)">`graphql(query, [config])(component)`</h3>
+### `graphql(query, [config])(component)`
 
 ```js
 import { graphql } from 'react-apollo';
@@ -279,7 +281,7 @@ The behavior of your component enhanced with the `graphql()` function will be di
 
 Before we look into the specific behaviors of each operation, let us look at the `config` object.
 
-<h2 id="graphql-config">Query Configuration</h2>
+## Query Configuration
 
 The `config` object is the second argument you pass into the `graphql()` function, after your GraphQL document. The config is optional and allows you to add some custom behavior to your higher order component.
 
@@ -292,7 +294,7 @@ export default graphql(
 
 Lets go through all of the properties that may live on your `config` object.
 
-<h3 id="graphql-config-options">`config.options`</h3>
+### `config.options`
 
 `config.options` is an object or a function that allows you to define the specific behavior your component should use in handling your GraphQL data.
 
@@ -318,7 +320,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-config-props">`config.props`</h3>
+### `config.props`
 
 The `config.props` property allows you to define a map function that takes your props including the props added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new props object that will be provided to the component that `graphql()` is wrapping.
 
@@ -352,7 +354,7 @@ function MyComponent({ onLoadMore }) {
 }
 ```
 
-<h3 id="graphql-config-skip">`config.skip`</h3>
+### `config.skip`
 
 If `config.skip` is true then all of the React Apollo code will be skipped *entirely*. It will be as if the `graphql()` function were a simple identity function. Your component will behave as if the `graphql()` function were not there at all.
 
@@ -383,7 +385,7 @@ function MyComponent({ data }) {
 }
 ```
 
-<h3 id="graphql-config-name">`config.name`</h3>
+### `config.name`
 
 This property allows you to configure the name of the prop that gets passed down to your component. By default if the GraphQL document you pass into `graphql()` is a query then your prop will be named [`data`](#graphql-query-data). If you pass a mutation then your prop will be named [`mutate`](#graphql-mutation-mutate). While appropriate these default names collide when you are trying to use multiple queries or mutations with the same component. To avoid collisions you may use `config.name` to provide the prop from each query or mutation HOC a new name.
 
@@ -409,7 +411,7 @@ function MyComponent(props) {
 }
 ```
 
-<h3 id="graphql-config-withRef">`config.withRef`</h3>
+### `config.withRef`
 
 By setting `config.withRef` to true you will be able to get the instance of your wrapped component from your higher-order GraphQL component using a `getWrappedInstance` method available on the instance of your higher-order GraphQL component.
 
@@ -454,7 +456,7 @@ class MyContainerComponent extends Component {
 }
 ```
 
-<h3 id="graphql-config-alias">`config.alias`</h3>
+### `config.alias`
 
 By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more than one higher order component and you look at the [React Devtools][].
 
@@ -473,7 +475,7 @@ export default compose(
 )(MyComponent);
 ```
 
-<h2 id="compose" title="compose(...)">`compose(...enhancers)(component)`</h2>
+## `compose(...enhancers)(component)`
 
 ```js
 import { compose } from 'react-apollo';
@@ -499,7 +501,7 @@ export default compose(
 )(MyComponent);
 ```
 
-<h2 id="withApollo">`withApollo(component)`</h2>
+## `withApollo(component)`
 
 ```js
 import { withApollo } from 'react-apollo';

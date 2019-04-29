@@ -11,7 +11,7 @@ The following examples assume that you've already set up Apollo Client and have 
 
 > If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/j2ly83749w) on CodeSandbox and our sample GraphQL server on [this CodeSandbox](https://codesandbox.io/s/32ypr38l61). You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
 
-<h2 id="basic">The Query component</h2>
+## The Query component
 
 The `Query` component is one of the most important building blocks of your Apollo application. To create a `Query` component, just pass a GraphQL query string wrapped with the `gql` function to `this.props.query` and provide a function to `this.props.children` that tells React what to render. The `Query` component is an example of a React component that uses the [render prop](https://reactjs.org/docs/render-props.html) pattern. React will call the render prop function you provide with an object from Apollo Client containing loading, error, and data properties that you can use to render your UI. Let's look at an example:
 
@@ -56,7 +56,7 @@ If you render `Dogs` within your `App` component, you'll first see a loading sta
 
 In the next step, we're going to hook our form up to a more complex query with variables by building a `DogPhoto` component.
 
-<h2 id="data">Receiving data</h2>
+## Receiving data
 
 You've already seen a preview of how to work with the result of your query in the render prop function. Let's dive deeper into what's happening behind the scenes with Apollo Client when we fetch data from a `Query` component.
 
@@ -96,7 +96,7 @@ Try selecting "bulldog" from the list to see its photo show up. Then, switch to 
 
 Next, let's learn some techniques for ensuring our data is fresh, such as polling and refetching.
 
-<h2 id="refetching">Polling and refetching</h2>
+## Polling and refetching
 
 It's awesome that Apollo Client caches your data for you, but what should we do when we want fresh data? Two solutions are polling and refetching.
 
@@ -153,7 +153,7 @@ const DogPhoto = ({ breed }) => (
 
 If you click the button, you'll notice that our UI updates with a new dog photo. Refetching is an excellent way to guarantee fresh data, but it introduces some added complexity with loading state. In the next section, you'll learn strategies to handle complex loading and error state.
 
-<h2 id="loading">Loading and error state</h2>
+## Loading and error state
 
 We've already seen how Apollo Client exposes our query's loading and error state in the render prop function. These properties are helpful for when the query initially loads, but what happens to our loading state when we're refetching or polling?
 
@@ -192,7 +192,7 @@ The `networkStatus` property is an enum with number values from 1-8 representing
 
 While not as complex as loading state, responding to errors in your component is also customizable via the `errorPolicy` prop on the `Query` component. The default value for `errorPolicy` is "none" in which we treat all GraphQL errors as runtime errors. In the event of an error, Apollo Client will discard any data that came back with the request and set the `error` property in the render prop function to true. If you'd like to show any partial data along with any error information, set the `errorPolicy` to "all".
 
-<h2 id="manual-query">Manually firing a query</h2>
+## Manually firing a query
 
 When React mounts a `Query` component, Apollo Client automatically fires off your query. What if you wanted to delay firing your query until the user performs an action, such as clicking on a button? For this scenario, we want to use an `ApolloConsumer` component and directly call `client.query()` instead.
 
@@ -234,11 +234,11 @@ Fetching this way is quite verbose, so we recommend trying to use a `Query` comp
 
 > If you'd like to view a complete version of the app we just built, you can check out the CodeSandbox [here](https://codesandbox.io/s/n3jykqpxwm).
 
-<h2 id="api">Query API overview</h2>
+## Query API overview
 
 If you're looking for an overview of all the props `Query` accepts and its render prop function, look no further! Most `Query` components will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `Query` component API in more detail with usage examples, visit our [reference guide](../api/react-apollo.html).
 
-<h3 id="props">Props</h3>
+### Props
 
 The Query component accepts the following props. Only `query` and `children` are **required**.
 
@@ -273,7 +273,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>If <code>true</code>, perform a query <code>refetch</code> if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client <code>QueryManager</code> (due to a cache miss). The default value is <code>false</code> for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
 </dl>
 
-<h3 id="render-prop">Render prop function</h3>
+### Render prop function
 
 The render prop function that you pass to the `children` prop of `Query` is called with an object (`QueryResult`) that has the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
@@ -304,7 +304,7 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>Your <code>ApolloClient</code> instance. Useful for manually firing queries or writing data to the cache.</dd>
 </dl>
 
-<h2 id="next-steps">Next steps</h2>
+## Next steps
 
 Learning how to build `Query` components to fetch data is one of the most important skills to mastering development with Apollo Client. Now that you're a pro at fetching data, why not try building `Mutation` components to update your data? Here are some resources we think will help you level up your skills:
 

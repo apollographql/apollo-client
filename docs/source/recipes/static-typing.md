@@ -11,11 +11,11 @@ These docs assume you already have TypeScript configured in your project, if not
 
 The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can even generate TypeScript definitions automatically using a tool like [apollo-codegen](https://github.com/apollographql/apollo-codegen). In these docs however, we will be writing result types manually.
 
-<h2 id="typing-components">Typing the Component APIs</h2>
+## Typing the Component APIs
 
 Using Apollo together with TypeScript couldn't be easier than using it with component API released in React Apollo 2.1:
 
-```js
+```tsx
 const ALL_PEOPLE_QUERY = gql`
   query All_People_Query {
     allPeople {
@@ -48,11 +48,11 @@ This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcr
 
 > Note: It is also possible to extend a `class` with the `<Query />` component as follows: `class AllPeopleQuery extends Query<Data, Variables> {}`. This `class` can be exported and used in a component tree with full TypeScript support
 
-<h2 id="operation-result">Typing the Higher Order Components</h2>
+## Typing the Higher Order Components
 
 Since the result of a query will be sent to the wrapped component as props, we want to be able to tell our type system the shape of those props. Here is an example setting types for an operation using the `graphql` higher order component (**note**: the follow sections also work for the query, mutation, and subscription hocs):
 
-```javascript
+```tsx
 import React from "react";
 import gql from "graphql-tag";
 import { ChildDataProps, graphql } from "react-apollo";
@@ -105,11 +105,11 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
-<h3 id="options">Options</h3>
+### Options
 
 Typically, variables to the query will be computed from the props of the wrapper component. Wherever the component is used in your application, the caller would pass arguments that we want our type system to validate what the shape of these props could look like. Here is an example setting the type of props:
 
-```javascript
+```tsx
 import React from "react";
 import gql from "graphql-tag";
 import { ChildDataProps, graphql } from "react-apollo";
@@ -164,7 +164,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 
 This is especially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
 
-```javascript
+```tsx
 import React from "react";
 import { ApolloClient } from "apollo-client";
 import { createHttpLink } from "apollo-link-http";
@@ -189,13 +189,13 @@ export default () =>
   </ApolloProvider>;
 ```
 
-<h3 id="props">Props</h3>
+### Props
 
 One of the most powerful feature of the React integration is the `props` function which allows you to reshape the result data from an operation into a new shape of props for the wrapped component. GraphQL is awesome at allowing you to only request the data you want from the server. The client still often needs to reshape or do client side calculations based on these results. The return value can even differ depending on the state of the operation (i.e loading, error, recieved data), so informing our type system of choice of these possible values is really important to make sure our components won't have runtime errors.
 
 The `graphql` wrapper from `react-apollo` supports manually declaring the shape of your result props.
 
-```javascript
+```tsx
 import React from "react";
 import gql from "graphql-tag";
 import { graphql, ChildDataProps } from "react-apollo";
@@ -251,7 +251,7 @@ export default withCharacter(({ loading, hero, error }) => {
 
 Since we have typed the response shape, the props shape, and the shape of what will be passed to the client, we can prevent errors in multiple places. Our options and props function within the `graphql` wrapper are now type safe, our rendered component is protected, and our tree of components have their required props enforced.
 
-```javascript
+```ts
 export const withCharacter = graphql<InputProps, Response, Variables, Props>(HERO_QUERY, {
   options: ({ episode }) => ({
     variables: { episode }
@@ -268,11 +268,11 @@ export const withCharacter = graphql<InputProps, Response, Variables, Props>(HER
 
 With this addition, the entirety of the integration between Apollo and React can be statically typed. When combined with the strong tooling each system provides, it can make for a much improved application and developer experience.
 
-<h3 id="classes-vs-functions">Classes vs Functions</h3>
+### Classes vs Functions
 
 All of the above examples show wrapping a component which is just a function using the result of a `graphql` wrapper. Sometimes, components that depend on GraphQL data require state and are formed using the `class MyComponent extends React.Component` practice. In these use cases, TypeScript requires adding prop shape to the class instance. In order to support this, `react-apollo` exports types to support creating result types easily.
 
-```javascript
+```tsx
 import { ChildProps } from "react-apollo";
 
 const withCharacter = graphql<InputProps, Response>(HERO_QUERY, {
@@ -293,10 +293,11 @@ class Character extends React.Component<ChildProps<InputProps, Response>, {}> {
 export default withCharacter(Character);
 ```
 
-<h3 id="using-name">Using the `name` property</h3>
+### Using the `name` property
+
 If you are using the `name` property in the configuration of the `graphql` wrapper, you will need to manually attach the type of the response to the `props` function. An example using TypeScript would be like this:
 
-```javascript
+```ts
 import { NamedProps, QueryProps } from 'react-apollo';
 
 export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY, {

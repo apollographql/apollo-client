@@ -20,7 +20,7 @@ GraphQL mutations represent two things in one query string:
 
 The above mutation will submit a new GitHub repository to GitHunt, saving an entry to the database. The result might be:
 
-```
+```json
 {
   "data": {
     "submitRepository": {
@@ -33,7 +33,7 @@ The above mutation will submit a new GitHub repository to GitHunt, saving an ent
 
 When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](../advanced/caching.html#normalization), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation. Alternatively, you can use [fragments](../advanced/fragments.html) to share the fields between a query and a mutation that updates that query.
 
-<h2 id="basics">Basic mutations</h2>
+## Basic mutations
 
 Using `graphql` with mutations makes it easy to bind actions to your components. Unlike queries, which provide a complicated object with lots of metadata and methods, mutations provide only a simple function to the wrapped component, in a prop called `mutate`.
 
@@ -57,7 +57,7 @@ const NewEntryWithData = graphql(submitRepository)(NewEntry);
 
 The component created above will receive a prop called `mutate` which is a function that returns a promise of the mutation result.
 
-<h2 id="calling-mutations">Calling mutations</h2>
+## Calling mutations
 
 Most mutations will require arguments in the form of query variables, and you may wish to also provide other options as well. [See the complete set of mutation options in the API docs.](#graphql-mutation-options)
 
@@ -96,7 +96,7 @@ const submitRepository = gql`
 const NewEntryWithData = graphql(submitRepository)(NewEntry);
 ```
 
-<h3 id="custom-arguments">Custom arguments</h3>
+### Custom arguments
 
 While the above approach with the default prop works just fine, typically you'd want to keep the concern of formatting the mutation options out of your presentational component. The best way to do this is to use the [`props`](setup.html#graphql-config-props) config to wrap the mutation in a function that accepts exactly the arguments it needs:
 
@@ -132,7 +132,7 @@ const NewEntryWithData = graphql(submitRepository, {
 
 Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, there are [several different options for updating the store after a mutation](../advanced/caching.html#after-mutations). That way, you can keep your UI components as stateless and declarative as possible.
 
-<h2 id="multiple-mutations">Multiple mutations</h2>
+## Multiple mutations
 
 If you need more than one mutation on a component, you can make a graphql container for each:
 
@@ -159,7 +159,8 @@ const ComponentWithMutations = compose(
 This does the exact same thing as the previous snippet, but with a nicer syntax that flattens things out.
 
 If you need to run multiple mutations in one query you can do that like so:
-```
+
+```js
 const replaceUser = gql`
   mutation replaceUser($userToAdd: User!, $userToRemove: User! ) {
     submitNewUser(newUser: $userToAdd){
@@ -180,7 +181,7 @@ const ReplaceCurrentUser = graphql(replaceUser, {
 ```
 These mutations will be run in series, so the first one is guaranteed to succeed before the second one will start. This is useful if you have multiple mutations that need to be run at the same time and that are dependant on each other. You can use [mutation batching](../advanced/network-layer.html#MutationBatching) if the order doesn't matter and your server supports batching.
 
-<h2 id="optimistic-ui">Optimistic UI</h2>
+## Optimistic UI
 
 Sometimes your client code can easily predict the result of a successful mutation even before the server responds with the result. For instance, in GitHunt, when a user comments on a repository, we want to show the new comment in the UI immediately, without waiting on the latency of a round trip to the server, giving the user a faster UI experience. This is what we call [Optimistic UI](../features/optimistic-ui.html). This is possible with Apollo if the client can predict an *optimistic response* for the mutation.
 
@@ -229,7 +230,7 @@ const CommentPageWithData = graphql(submitComment, {
 
 For the example above, it is easy to construct an optimistic response, since we know the shape of the new comment and can approximately predict the created data. The optimistic response doesn't have to be exactly correct because it will always will be replaced with the real result from the server, but it should be close enough to make users feel like there is no delay.
 
-<h2 id="mutation-results">Designing mutation results</h2>
+## Designing mutation results
 
 When people talk about GraphQL, they often focus on the data fetching side of things, because that's where GraphQL brings the most value. Mutations can be pretty elegant if done well, but the principles of designing good mutations, and especially good mutation result types, are not yet well-understood in the open source community. So when you are working with mutations it might often feel like you need to make a lot of application-specific decisions.
 
@@ -237,8 +238,7 @@ In GraphQL, mutations can return any type, and that type can be queried just lik
 
 In most cases, the data available from a mutation result should be the server developer's best guess of the data a client would need to understand what happened on the server. For example, a mutation that creates a new comment on a blog post might return the comment itself. A mutation that reorders an array might need to return the whole array.
 
-
-<h2 id="store-updates">Updating the cache after a mutation</h2>
+## Updating the cache after a mutation
 
 Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update our cached data: after a mutation. As such, Apollo Client has optimized the experience for updating your cache with the read and write methods after a mutation with the `update` function. Let us say that we have the following GraphQL mutation:
 
@@ -290,9 +290,9 @@ client.mutate({
 });
 ```
 
-<h2 title="API Reference" id="api">API Reference</h2>
+## API Reference
 
-<h3 id="graphql-mutation-mutate">`props.mutate`</h3>
+### `props.mutate`
 
 The higher order component created when you pass a mutation to `graphql()` will provide your component with a single prop named `mutate`. Unlike the `data` prop which you get when you pass a query to `graphql()`, `mutate` is a function.
 
@@ -306,7 +306,7 @@ The reason the `mutate` function accepts the same options is that it will use th
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ mutate }) {
   return (
     <button onClick={() => {
@@ -323,7 +323,7 @@ export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
 
 
-<h3 id="graphql-mutation-options">`config.options`</h3>
+### `config.options`
 
 An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 
@@ -351,7 +351,7 @@ export default graphql(gql`mutation { ... }`, {
 })(MyComponent);
 ```
 
-```js
+```jsx
 function MyComponent({ mutate }) {
   return (
     <button onClick={() => {
@@ -367,7 +367,7 @@ function MyComponent({ mutate }) {
 export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options-variables">`options.variables`</h3>
+### `options.variables`
 
 The variables which will be used to execute the mutation operation. These variables should correspond to the variables that your mutation definition accepts. If you define `config.options` as a function, or you pass variables into the [`props.mutate`](#graphql-mutation-mutate) function then you may compute your variables from props and component state.
 
@@ -388,7 +388,7 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options-optimisticResponse">`options.optimisticResponse`</h3>
+### `options.optimisticResponse`
 
 Often when you mutate data it is fairly easy to predict what the response of the mutation will be before asking your server. The optimistic response option allows you to make your mutations feel faster by simulating the result of your mutation in your UI before the mutation actually finishes.
 
@@ -398,7 +398,7 @@ This optimistic response will be used with [`options.update`](#graphql-mutation-
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ newText, mutate }) {
   return (
     <button onClick={() => {
@@ -433,7 +433,7 @@ export default graphql(gql`
 `)(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options-update">`options.update`</h3>
+### `options.update`
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
 
@@ -471,7 +471,7 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options-refetchQueries">`options.refetchQueries`</h3>
+### `options.refetchQueries`
 
 Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`](#graphql-mutation-options-updateQueries), and [`options.update`](#graphql-mutation-options-update). However, you can update the data in your cache more reliably at the cost of efficiency by using `options.refetchQueries`.
 
@@ -537,9 +537,7 @@ export default graphql(gql`mutation { ... }`, {
 })(MyComponent);
 ```
 
-
-
-<h3 id="graphql-mutation-options-updateQueries">`options.updateQueries`</h3>
+### `options.updateQueries`
 
 **Note: We recommend using [update](#graphql-mutation-options-update) instead of `updateQueries`. `updateQueries` will be removed in the next version of Apollo Client**
 

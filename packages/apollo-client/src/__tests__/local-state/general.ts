@@ -419,7 +419,7 @@ describe('Cache manipulation', () => {
   it("should read @client fields from cache on refetch (#4741)", function (done) {
     const query = gql`
       query FetchInitialData {
-        serverData @client {
+        serverData {
           id
           title
         }
@@ -442,12 +442,9 @@ describe('Cache manipulation', () => {
     let selectedItemId = -1;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
+      link: new ApolloLink(() => Observable.of({ data: { serverData } })),
       resolvers: {
         Query: {
-          serverData() {
-            return serverData;
-          },
           selectedItemId() {
             return selectedItemId;
           },

@@ -267,7 +267,6 @@ const GET_LAUNCH_DETAILS = gql`
 This query includes a mixture of both remote and local fields. `isInCart` is the only field marked with an `@client` directive, so it's the field we'll focus on. When Apollo Client executes this query and tries to find a result for the `isInCart` field, it runs through the following steps:
 
 1. Has a resolver function been set (either through the `ApolloClient` constructor `resolvers` parameter or Apollo Client's `setResolvers` / `addResolvers` methods) that is associated with the field name `isInCart`? If yes, run and return the result from the resolver function.
-
 2. If a matching resolver function can't be found, check the Apollo Client cache to see if a `isInCart` value can be found directly. If so, return that value.
 
 Let's look at both of these steps more closely.
@@ -1036,8 +1035,7 @@ While `apollo-link-state` achieved some of the goals of local state handling, th
 Updating your application to use Apollo Client's local state management features, instead of `apollo-link-state`, is fairly straightforward. The necessary steps are outlined below.
 
 1. Including `apollo-link-state` as a dependency, and importing it to use `withClientState`, is no longer necessary. You can remove the `apollo-link-state` dependency since local state management is included with `apollo-client` >= 2.5.0.
-
-2. Using `withClientState` is no longer supported. The following
+2. Using `withClientState` is no longer supported. The following:
 
   ```js
   const cache = new InMemoryCache();
@@ -1092,7 +1090,6 @@ Updating your application to use Apollo Client's local state management features
   ```
 
 4. If you're using Apollo Boost, you shouldn't have to change anything. Apollo Boost has been updated to use Apollo Client's integrated local state handling, which means it is no longer using `apollo-link-state`. Behind the scenes, the Apollo Boost `clientState` constructor parameter now feeds the necessary local state initialization directly into Apollo Client.
-
 5. Test thoroughly! 🙂
 
 ## Next steps

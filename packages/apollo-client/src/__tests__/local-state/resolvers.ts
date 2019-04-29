@@ -986,6 +986,49 @@ describe('Force local resolvers', () => {
       });
     },
   );
+
+  it('should allow client-only virtual resolvers (#4731)', function() {
+    const query = gql`
+      query UserData {
+        userData @client {
+          firstName
+          lastName
+          fullName
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      resolvers: {
+        Query: {
+          userData() {
+            return {
+              __typename: 'User',
+              firstName: 'Ben',
+              lastName: 'Newman',
+            };
+          },
+        },
+        User: {
+          fullName(data) {
+            return data.firstName + ' ' + data.lastName;
+          },
+        },
+      },
+    });
+
+    return client.query({ query }).then(result => {
+      expect(result.data).toEqual({
+        userData: {
+          __typename: 'User',
+          firstName: 'Ben',
+          lastName: 'Newman',
+          fullName: 'Ben Newman',
+        },
+      });
+    });
+  });
 });
 
 describe('Async resolvers', () => {

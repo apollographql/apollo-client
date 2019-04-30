@@ -153,10 +153,10 @@ export class QueryStore {
   public markQueryResultClient(queryId: string, complete: boolean) {
     const storeValue = this.store && this.store[queryId];
     if (storeValue) {
-      this.store[queryId].networkError = null;
-      this.store[queryId].previousVariables = null;
+      storeValue.networkError = null;
+      storeValue.previousVariables = null;
       if (complete) {
-        this.store[queryId].networkStatus = NetworkStatus.ready;
+        storeValue.networkStatus = NetworkStatus.ready;
       }
     }
   }

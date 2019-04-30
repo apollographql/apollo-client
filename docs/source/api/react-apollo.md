@@ -579,17 +579,17 @@ render() {
   const { data: { loading, error, todos } } = this.props;
   if (loading) {
     return <p>Loading...</p>;
-  } else if (error) {
-    return <p>Error!</p>;
-  } else {
-    return (
-      <ul>
-        {todos.map(({ id, text }) => (
-          <li key={id}>{text}</li>
-        ))}
-      </ul>
-    );
   }
+  if (error) {
+    return <p>Error!</p>;
+  }
+  return (
+    <ul>
+      {todos.map(({ id, text }) => (
+        <li key={id}>{text}</li>
+      ))}
+    </ul>
+  );
 }
 ```
 

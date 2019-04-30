@@ -13,7 +13,7 @@ module.exports = {
         versions: [
           {
             value: '2.4',
-            ref: 'origin/version-2.4',
+            ref: 'version-2.4',
           },
           {
             value: '2.5',

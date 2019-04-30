@@ -151,13 +151,14 @@ export class QueryStore {
   }
 
   public markQueryResultClient(queryId: string, complete: boolean) {
-    if (!this.store || !this.store[queryId]) return;
-
-    this.store[queryId].networkError = null;
-    this.store[queryId].previousVariables = null;
-    this.store[queryId].networkStatus = complete
-      ? NetworkStatus.ready
-      : NetworkStatus.loading;
+    const storeValue = this.store && this.store[queryId];
+    if (storeValue) {
+      storeValue.networkError = null;
+      storeValue.previousVariables = null;
+      if (complete) {
+        storeValue.networkStatus = NetworkStatus.ready;
+      }
+    }
   }
 
   public stopQuery(queryId: string) {

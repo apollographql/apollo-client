@@ -38,6 +38,9 @@
 - Support the `returnPartialData` option for watched queries again. <br/>
   [@benjamn](https://github.com/benjamn) in [#4743](https://github.com/apollographql/apollo-client/pull/4743)
 
+- Preserve `networkStatus` for incomplete `cache-and-network` queries. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4765](https://github.com/apollographql/apollo-client/pull/4765)
+
 ### Apollo Cache In-Memory
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>

@@ -1725,18 +1725,36 @@ describe('client', () => {
       },
     };
 
+    function checkWarning(callback: () => any, message: string) {
+      const { warn } = console;
+      const messages: string[] = [];
+      console.warn = (message: string) => messages.push(message);
+      try {
+        callback();
+      } finally {
+        console.warn = warn;
+      }
+      expect(messages).toContain(message);
+    }
+
+    const cacheAndNetworkWarning =
+      'The cache-and-network fetchPolicy has been converted to cache-first, ' +
+      'since client.query can only return a single result. Please use watchQuery ' +
+      'instead to receive multiple results from the cache and the network.';
+
     // Test that cache-and-network can only be used on watchQuery, not query.
-    it('errors when being used on query', () => {
+    it('warns when used with client.query', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-      expect(() => {
-        client.query({ query, fetchPolicy: 'cache-and-network' });
-      }).toThrowError(/cache-and-network fetchPolicy/);
+      checkWarning(
+        () => client.query({ query, fetchPolicy: 'cache-and-network' }),
+        cacheAndNetworkWarning,
+      );
     });
 
-    it('errors when being used on query with defaultOptions', () => {
+    it('warns when used with client.query with defaultOptions', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
@@ -1746,9 +1764,7 @@ describe('client', () => {
           },
         },
       });
-      expect(() => {
-        client.query({ query });
-      }).toThrowError(/cache-and-network fetchPolicy/);
+      checkWarning(() => client.query({ query }), cacheAndNetworkWarning);
     });
 
     it('fetches from cache first, then network', done => {

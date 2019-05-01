@@ -316,15 +316,22 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       >;
     }
 
-    invariant(
-      options.fetchPolicy !== 'cache-and-network',
-      'cache-and-network fetchPolicy can only be used with watchQuery'
-    );
+    const accidentallyCacheAndNetwork =
+      options.fetchPolicy === 'cache-and-network';
 
-    // XXX Overwriting options is probably not the best way to do this long
-    // term...
-    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
+    if (
+      accidentallyCacheAndNetwork ||
+      (this.disableNetworkFetches && options.fetchPolicy === 'network-only')
+    ) {
       options = { ...options, fetchPolicy: 'cache-first' };
+    }
+
+    if (accidentallyCacheAndNetwork) {
+      invariant.warn(
+        'The cache-and-network fetchPolicy has been converted to cache-first, ' +
+        'since client.query can only return a single result. Please use watchQuery ' +
+        'instead to receive multiple results from the cache and the network.'
+      );
     }
 
     return this.queryManager.query<T>(options);

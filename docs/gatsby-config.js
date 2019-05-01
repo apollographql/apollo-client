@@ -5,7 +5,6 @@ module.exports = {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
         root: __dirname,
-        docs: require('./docs.json'),
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',
         contentDir: 'docs/source',
@@ -22,6 +21,7 @@ module.exports = {
           },
         ],
         typescriptApiBox: {
+          data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',
         },
         sidebarCategories: {

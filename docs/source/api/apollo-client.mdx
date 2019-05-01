@@ -40,6 +40,14 @@ These options will be merged with options supplied with each request.
 
 The `ApolloClient` class is the core API for Apollo, and the one you'll need to use no matter which integration you are using:
 
+import {TypescriptApiBox, TypescriptApiBoxContext} from 'gatsby-theme-apollo-docs';
+
+<TypescriptApiBoxContext.Provider value={props.typescriptApiBox}>
+  <TypescriptApiBox name="ApolloClient.constructor" />
+  <TypescriptApiBox name="ApolloClient.watchQuery" />
+  <TypescriptApiBox name="ApolloClient.query" />
+</TypescriptApiBoxContext.Provider>
+
 {% tsapibox ApolloClient.constructor %}
 {% tsapibox ApolloClient.watchQuery %}
 {% tsapibox ApolloClient.query %}

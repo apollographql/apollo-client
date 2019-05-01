@@ -11,7 +11,6 @@ import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, FetchType, OperationVariables } from './types';
 import {
-  ModifiableWatchQueryOptions,
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
@@ -427,7 +426,7 @@ export class ObservableQuery<
   // Note: if the query is not active (there are no subscribers), the promise
   // will return null immediately.
   public setOptions(
-    opts: ModifiableWatchQueryOptions,
+    opts: WatchQueryOptions,
   ): Promise<ApolloQueryResult<TData> | void> {
     const { fetchPolicy: oldFetchPolicy } = this.options;
     this.options = {

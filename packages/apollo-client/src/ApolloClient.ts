@@ -20,24 +20,21 @@ import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
 
 import {
-  QueryBaseOptions,
   QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  ModifiableWatchQueryOptions,
-  MutationBaseOptions,
+  WatchQueryFetchPolicy,
 } from './core/watchQueryOptions';
 
 import { DataStore } from './data/store';
 
 import { version } from './version';
 
-
 export interface DefaultOptions {
-  watchQuery?: ModifiableWatchQueryOptions;
-  query?: QueryBaseOptions;
-  mutate?: MutationBaseOptions;
+  watchQuery?: Partial<WatchQueryOptions>;
+  query?: Partial<QueryOptions>;
+  mutate?: Partial<MutationOptions>;
 }
 
 let hasSuggestedDevtools = false;
@@ -316,22 +313,16 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       >;
     }
 
-    const accidentallyCacheAndNetwork =
-      options.fetchPolicy === 'cache-and-network';
+    invariant(
+      (options.fetchPolicy as WatchQueryFetchPolicy) !== 'cache-and-network',
+      'The cache-and-network fetchPolicy does not work with client.query, because ' +
+      'client.query can only return a single result. Please use client.watchQuery ' +
+      'to receive multiple results from the cache and the network, or consider ' +
+      'using a different fetchPolicy, such as cache-first or network-only.'
+    );
 
-    if (
-      accidentallyCacheAndNetwork ||
-      (this.disableNetworkFetches && options.fetchPolicy === 'network-only')
-    ) {
+    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = { ...options, fetchPolicy: 'cache-first' };
-    }
-
-    if (accidentallyCacheAndNetwork) {
-      invariant.warn(
-        'The cache-and-network fetchPolicy has been converted to cache-first, ' +
-        'since client.query can only return a single result. Please use watchQuery ' +
-        'instead to receive multiple results from the cache and the network.'
-      );
     }
 
     return this.queryManager.query<T>(options);

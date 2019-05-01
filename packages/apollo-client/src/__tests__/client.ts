@@ -10,7 +10,7 @@ import {
 import { stripSymbols } from 'apollo-utilities';
 
 import { QueryManager } from '../core/QueryManager';
-import { WatchQueryOptions } from '../core/watchQueryOptions';
+import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
 
 import { ApolloError } from '../errors/ApolloError';
 
@@ -1725,22 +1725,20 @@ describe('client', () => {
       },
     };
 
-    function checkWarning(callback: () => any, message: string) {
-      const { warn } = console;
-      const messages: string[] = [];
-      console.warn = (message: string) => messages.push(message);
+    const cacheAndNetworkError =
+      'The cache-and-network fetchPolicy does not work with client.query, because ' +
+      'client.query can only return a single result. Please use client.watchQuery ' +
+      'to receive multiple results from the cache and the network, or consider ' +
+      'using a different fetchPolicy, such as cache-first or network-only.';
+
+    function checkCacheAndNetworkError(callback: () => any) {
       try {
         callback();
-      } finally {
-        console.warn = warn;
+        throw new Error('not reached');
+      } catch (thrown) {
+        expect(thrown.message).toBe(cacheAndNetworkError);
       }
-      expect(messages).toContain(message);
     }
-
-    const cacheAndNetworkWarning =
-      'The cache-and-network fetchPolicy has been converted to cache-first, ' +
-      'since client.query can only return a single result. Please use watchQuery ' +
-      'instead to receive multiple results from the cache and the network.';
 
     // Test that cache-and-network can only be used on watchQuery, not query.
     it('warns when used with client.query', () => {
@@ -1748,9 +1746,12 @@ describe('client', () => {
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-      checkWarning(
-        () => client.query({ query, fetchPolicy: 'cache-and-network' }),
-        cacheAndNetworkWarning,
+
+      checkCacheAndNetworkError(
+        () => client.query({
+          query,
+          fetchPolicy: 'cache-and-network' as FetchPolicy,
+        }),
       );
     });
 
@@ -1760,11 +1761,12 @@ describe('client', () => {
         cache: new InMemoryCache(),
         defaultOptions: {
           query: {
-            fetchPolicy: 'cache-and-network',
+            fetchPolicy: 'cache-and-network' as FetchPolicy,
           },
         },
       });
-      checkWarning(() => client.query({ query }), cacheAndNetworkWarning);
+
+      checkCacheAndNetworkError(() => client.query({ query }));
     });
 
     it('fetches from cache first, then network', done => {

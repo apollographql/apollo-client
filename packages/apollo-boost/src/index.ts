@@ -27,7 +27,7 @@ type ClientStateConfig = {
 };
 
 export interface PresetConfig {
-  request?: (operation: Operation) => Promise<void>;
+  request?: (operation: Operation) => Promise<void> | void;
   uri?: string | UriFunction;
   credentials?: string;
   headers?: any;

@@ -528,6 +528,7 @@ export class QueryManager<TStore> {
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
       forceResolvers?: boolean,
+      isClient?: boolean,
     ) => {
       // we're going to take a look at the data, so the query is no longer invalidated
       this.invalidate(false, queryId);
@@ -667,7 +668,7 @@ export class QueryManager<TStore> {
           // result and mark it as stale.
           if (isMissing && fetchPolicy !== 'cache-only') {
             resultFromStore = {
-              data: lastResult && lastResult.data,
+              data: lastResult ? lastResult.data : isClient && data,
               loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
               networkStatus: queryStoreValue.networkStatus,
               stale: true,
@@ -1195,7 +1196,7 @@ export class QueryManager<TStore> {
     };
   }
 
-  public broadcastQueries(forceResolvers = false) {
+  public broadcastQueries(forceResolvers = false, isClient?: boolean) {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
       if (!info.invalidated || !info.listeners) return;
@@ -1204,7 +1205,7 @@ export class QueryManager<TStore> {
         // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
         .filter((x: QueryListener) => !!x)
         .forEach((listener: QueryListener) => {
-          listener(this.queryStore.get(id), info.newData, forceResolvers);
+          listener(this.queryStore.get(id), info.newData, forceResolvers, isClient);
         });
     });
   }
@@ -1330,8 +1331,7 @@ export class QueryManager<TStore> {
             );
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
-
-            this.broadcastQueries();
+            this.broadcastQueries(undefined, hasDirectives(['client'], clientQuery));
           }
 
           if (updatedResult.errors && errorPolicy === 'none') {

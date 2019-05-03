@@ -200,6 +200,7 @@ export class StoreWriter {
             );
           }
 
+          // Should not throw for children of clients either...
           if (!isDefered && !isClient && context.fragmentMatcherFunction) {
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.

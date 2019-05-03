@@ -8,6 +8,7 @@ export type QueryListener = (
   queryStoreValue: QueryStoreValue,
   newData?: any,
   forceResolvers?: boolean,
+  isClient?: boolean
 ) => void;
 
 export type OperationVariables = { [key: string]: any };

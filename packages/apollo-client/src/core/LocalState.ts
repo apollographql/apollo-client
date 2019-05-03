@@ -374,7 +374,7 @@ export class LocalState<TCacheShape> {
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
     const aliasUsed = fieldName !== aliasedFieldName;
-    const defaultResult = rootValue[aliasedFieldName] || rootValue[fieldName];
+    const defaultResult = rootValue && (rootValue[aliasedFieldName] || rootValue[fieldName]);
     let resultPromise = Promise.resolve(defaultResult);
 
     // Usually all local resolvers are run when passing through here, but

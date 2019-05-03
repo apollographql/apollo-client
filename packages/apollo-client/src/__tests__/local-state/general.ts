@@ -770,6 +770,37 @@ describe('Combining client and server state/operations', () => {
     done();
   });
 
+  it('should handle a simple query with nullish fields', done => {
+    const query = gql`
+      query {
+        apollo @client {
+          cool
+          bug
+        }
+      }
+    `;
+    const cache = new InMemoryCache();
+
+    const client = new ApolloClient({
+      cache,
+      resolvers: {
+        Query: {
+          apollo: () => ({
+            cool: true,
+            __typename: 'Apollo',
+          }),
+        }
+      },
+    });
+
+    client.watchQuery({ query }).subscribe({
+      next: ({ data }) => {
+        expect({ ...data }).toMatchObject({ apollo: { cool: true, __typename: 'Apollo' } });
+        done();
+      },
+    });
+  });
+
   it('should handle a simple query with both server and client fields', done => {
     const query = gql`
       query GetCount {

@@ -60,9 +60,9 @@ describe('General functionality', () => {
       expect(result.data).toEqual({ field: 'local' });
       expect(messages).toEqual([
         'Found @client directives in a query but no ApolloClient resolvers ' +
-        'were specified. This means ApolloClient local resolver handling ' +
-        'has been disabled, and @client directives will be passed through ' +
-        'to your link chain.',
+          'were specified. This means ApolloClient local resolver handling ' +
+          'has been disabled, and @client directives will be passed through ' +
+          'to your link chain.',
       ]);
     } finally {
       console.warn = warn;
@@ -789,13 +789,15 @@ describe('Combining client and server state/operations', () => {
             cool: true,
             __typename: 'Apollo',
           }),
-        }
+        },
       },
     });
 
     client.watchQuery({ query }).subscribe({
       next: ({ data }) => {
-        expect({ ...data }).toMatchObject({ apollo: { cool: true, __typename: 'Apollo' } });
+        expect({ ...data }).toMatchObject({
+          apollo: { cool: true, __typename: 'Apollo' },
+        });
         done();
       },
     });
@@ -919,21 +921,23 @@ describe('Combining client and server state/operations', () => {
     `;
 
     let watchCount = 0;
-    const link = new ApolloLink((operation: Operation): Observable<{}> => {
-      if (operation.operationName === 'SampleQuery') {
+    const link = new ApolloLink(
+      (operation: Operation): Observable<{}> => {
+        if (operation.operationName === 'SampleQuery') {
+          return Observable.of({
+            data: { user: { __typename: 'User', firstName: 'John' } },
+          });
+        }
+        if (operation.operationName === 'SampleMutation') {
+          return Observable.of({
+            data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
+          });
+        }
         return Observable.of({
-          data: { user: { __typename: 'User', firstName: 'John' } },
+          errors: [new Error(`Unknown operation ${operation.operationName}`)],
         });
-      }
-      if (operation.operationName === 'SampleMutation') {
-        return Observable.of({
-          data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
-        });
-      }
-      return Observable.of({
-        errors: [new Error(`Unknown operation ${operation.operationName}`)],
-      })
-    });
+      },
+    );
 
     const cache = new InMemoryCache();
     const client = new ApolloClient({

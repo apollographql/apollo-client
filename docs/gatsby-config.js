@@ -9,17 +9,10 @@ module.exports = {
         description: 'A guide to using the Apollo GraphQL Client with React',
         contentDir: 'docs/source',
         githubRepo: 'apollographql/apollo-client',
-        versions: [
-          {
-            value: '2.4',
-            ref: 'version-2.4',
-          },
-          {
-            value: '2.5',
-            ref: 'HEAD',
-            default: true,
-          },
-        ],
+        defaultVersion: '2.5',
+        versions: {
+          '2.4': 'version-2.4',
+        },
         typescriptApiBox: {
           data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',

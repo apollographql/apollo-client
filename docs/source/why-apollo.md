@@ -9,7 +9,7 @@ Data management shouldn't have to be so difficult! If you're wondering how to si
 
 With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated in a single Query component. This encapsulation makes composing your Query components with your presentational components a breeze! Let's see what this looks like in practice with React Apollo:
 
-```js
+```jsx
 const Feed = () => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {

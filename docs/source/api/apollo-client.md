@@ -4,7 +4,7 @@ order: 11
 description: Apollo Client API reference
 ---
 
-<h2 id="apollo-client">ApolloClient</h2>
+## ApolloClient
 
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.
 
@@ -56,7 +56,7 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClient.stop %}
 {% tsapibox ApolloClient.reFetchObservableQueries %}
 
-<h2 id="ObservableQuery">ObservableQuery</h2>
+## ObservableQuery
 
 `ApolloClient` Observables extend the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional context and API options.
 
@@ -72,7 +72,7 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ObservableQuery.stopPolling %}
 {% tsapibox ObservableQuery.subscribeToMore %}
 
-<h2 id="types">Types</h2>
+## Types
 
 {% tsapibox ApolloClientOptions %}
 {% tsapibox DefaultOptions %}

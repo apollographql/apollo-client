@@ -55,6 +55,7 @@ module.exports = {
           Recipes: [
             'recipes/authentication',
             'recipes/testing',
+            'recipes/client-schema-mocking',
             'recipes/static-typing',
             'recipes/performance',
             'recipes/react-native',

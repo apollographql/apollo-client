@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.2.2-rc.n",
+  "version": "4.2.2-rc.1",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.cjs.js",
   "module": "./lib/bundle.esm.js",

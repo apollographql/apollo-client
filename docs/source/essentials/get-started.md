@@ -7,7 +7,7 @@ The simplest way to get started with Apollo Client is by using Apollo Boost, our
 
 If you're an advanced user who would like to configure Apollo Client from scratch, head on over to our [Apollo Boost migration guide](../advanced/boost-migration.html). For the majority of users, Apollo Boost should meet your needs, so we don't recommend switching unless you absolutely need more customization.
 
-<h2 id="installation">Installation</h2>
+## Installation
 
 First, let's install some packages!
 
@@ -21,7 +21,7 @@ npm install apollo-boost react-apollo graphql --save
 
 > If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/create-a-new-react-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this CodeSandbox](https://codesandbox.io/s/48p1r2roz4) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
 
-<h2 id="creating-client">Create a client</h2>
+## Create a client
 
 Great, now that you have all the dependencies you need, let's create your Apollo Client. The only thing you need to get started is the endpoint for your [GraphQL server](https://codesandbox.io/s/48p1r2roz4). If you don't pass in `uri` directly, it defaults to the `/graphql` endpoint on the same host your app is served from.
 
@@ -57,7 +57,7 @@ client
 
 Open up your console and inspect the result object. You should see a `data` property with `rates` attached, along with some other properties like `loading` and `networkStatus`. While you don't need React or another front-end framework just to fetch data with Apollo Client, our view layer integrations make it easier to bind your queries to your UI and reactively update your components with data. Let's learn how to connect Apollo Client to React so we can start building query components with `react-apollo`.
 
-<h2 id="creating-provider">Connect your client to React</h2>
+## Connect your client to React
 
 To connect Apollo Client to React, you will need to use the `ApolloProvider` component exported from `react-apollo`. The `ApolloProvider` is similar to React's [context provider](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md). It wraps your React app and places the client on the context, which allows you to access it from anywhere in your component tree.
 
@@ -80,7 +80,7 @@ const App = () => (
 render(<App />, document.getElementById("root"));
 ```
 
-<h2 id="request">Request data</h2>
+## Request data
 
 Once your `ApolloProvider` is hooked up, you're ready to start requesting data with `Query` components! `Query` is a React component exported from `react-apollo` that uses the [render prop pattern](https://reactjs.org/docs/render-props.html) to share GraphQL data with your UI.
 
@@ -122,15 +122,16 @@ Congrats, you just made your first `Query` component! 🎉 If you render your `E
 If you'd like to play around with the app we just built, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4). Don't stop there! Try building more `Query` components and experimenting with the concepts you just learned.
 
 If you'd like to explore further, here are more versions of the example app featuring different front-end libraries:
+
 - React Native Web: https://codesandbox.io/s/xk7zw3n4
 - Vue: https://codesandbox.io/s/3vm8vq6kwq
 - Angular (Ionic): https://github.com/aaronksaunders/ionicLaunchpadApp
 
-<h2 id="apollo-boost">Apollo Boost</h2>
+## Apollo Boost
 
 In our example app, we used Apollo Boost in order to quickly set up Apollo Client. While your GraphQL server endpoint is the only configuration option you need to get started, there are some other options we've included so you can quickly implement features like local state management, authentication, and error handling.
 
-<h3 id="packages">What's included</h3>
+### What's included
 
 Apollo Boost includes some packages that we think are essential to developing with Apollo Client. Here's what's included:
 
@@ -142,7 +143,7 @@ Apollo Boost includes some packages that we think are essential to developing wi
 
 The awesome thing about Apollo Boost is that you don't have to set any of this up yourself! Just specify a few options if you'd like to use these features and we'll take care of the rest.
 
-<h3 id="configuration">Configuration options</h3>
+### Configuration options
 
 Here are the options you can pass to the `ApolloClient` exported from `apollo-boost`. All of them are optional.
 
@@ -169,7 +170,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   <dd>A custom instance of `ApolloCache` to be used. The default value is `InMemoryCache` from `apollo-cache-inmemory`. This option is quite useful for using a custom cache with `apollo-cache-persist`.</dd>
 </dl>
 
-<h2 id="next-steps">Next steps</h2>
+## Next steps
 
 Now that you've learned how to fetch data with Apollo Client, you're ready to dive deeper into creating more complex queries and mutations. After this section, we recommend moving onto:
 

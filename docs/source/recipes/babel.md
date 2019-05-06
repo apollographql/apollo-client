@@ -75,7 +75,7 @@ const query = gql`
 
 Install the plugin in your dev dependencies:
 
-```
+```sh
 # with npm
 npm install --save-dev babel-plugin-import-graphql
 
@@ -85,7 +85,7 @@ yarn add --dev babel-plugin-import-graphql
 
 Then add the plugin in your `.babelrc` configuration file:
 
-```
+```json
 {
   "plugins": [
     "import-graphql"
@@ -95,7 +95,7 @@ Then add the plugin in your `.babelrc` configuration file:
 
 Now any `import` statements importing from a GraphQL file type will return a ready-to-use GraphQL DocumentNode object.
 
-```javascript
+```jsx
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
 import myImportedQuery from './productsQuery.graphql';

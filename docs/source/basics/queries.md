@@ -6,7 +6,7 @@ On this page, you can learn how to use Apollo Client to attach GraphQL query res
 
 One of our core values is "it's just GraphQL". When using Apollo Client, you don't have to learn anything special about the query syntax, since everything is just standard GraphQL. Anything you can type into the GraphiQL query IDE, you can also put into your Apollo Client code.
 
-<h2 id="basics">Basic queries</h2>
+## Basic queries
 
 When we are running a basic query we can use the `graphql` container in a very simple way. We simply parse our query using the `gql` template literal and then pass it into the `graphql` container as the first argument.
 
@@ -50,7 +50,7 @@ In addition to the `currentUser` field selected in the query, the `data` prop al
 
 The `data.currentUser` prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent.
 
-<h2 id="default-result-props" title="The data prop">The structure of the `data` prop</h2>
+## The structure of the `data` prop
 
 As seen above, `graphql` will pass the result of the query to the wrapped component in a prop called `data`. It will also pass through all of the props of the parent container.
 
@@ -88,7 +88,7 @@ data: {
 
 If you use the `props` option to the wrapper to specify [custom `props`](#graphql-props) for your child component, this object will be passed to the `props` option on the parameter named `data`.
 
-<h2 id="graphql-options">Variables and options</h2>
+## Variables and options
 
 If you want to configure the query, you can provide an `options` key on the second argument to `graphql`, and your options will be passed along to [`ApolloClient.watchQuery`](#watchQuery). If your query requires variables, this is the place to pass them in:
 
@@ -106,14 +106,13 @@ const CurrentUserForLayout = gql`
 const ProfileWithData = graphql(CurrentUserForLayout, {
   options: { variables: { avatarSize: 100 } },
 })(Profile);
-
 ```
 
-<h2 id="options-from-props">Computing from props</h2>
+## Computing from props
 
 Typically, variables to the query will be computed from the `props` of the wrapper component. Wherever the component is used in your application, the caller would pass arguments. So `options` can be a function that takes the props passed into the component:
 
-```js
+```jsx
 // The caller could do something like:
 <ProfileWithData avatarSize={300} />
 
@@ -125,7 +124,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 By default, `graphql` will attempt to pick up any missing variables from the query from `ownProps`. So in our example above, we could have used the simpler `graphql(CurrentUserForLayout)(Profile);`. However, if you need to change the name of a variable, compute the value, or just want to be more explicit about things, the `options` function is the place to do it.
 
-<h2 id="other-graphql-options">Other options</h2>
+## Other options
 
 There are a lot of other options you can pass in other than just `variables`, for example `pollInterval`:
 
@@ -140,7 +139,7 @@ If you use a function to compute options from props, all of these `options` will
 
 [Read about all of the query options in the API documentation.](#graphql-query-options)
 
-<h2 id="graphql-skip">Skipping an operation</h2>
+## Skipping an operation
 
 The `graphql` container API is intentionally fully static, so you can't dynamically change the query or wrapped component at runtime without generating a new React component. However, sometimes you may want to do some conditional logic to skip a query based on the passed in props. To do this you can use the `skip` config.
 
@@ -162,13 +161,13 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 Passing the `skip` config completely bypasses the higher-order component, as if it weren't there at all. This means your child component doesn't get a `data` prop at all, and the `options` or `props` methods are not called.
 
-<h2 id="graphql-props">Controlling child props</h2>
+## Controlling child props
 
 By default, `graphql` used with a query will provide a `data` prop to the wrapped component with various information about the state of the query. We'll also see that [mutations](mutations.html) provide a callback on the `mutate` prop. It's possible to write your whole app just using these default prop names.
 
 However, if you want to decouple your UI components from Apollo and make them more reusable in different contexts, you may want to modify these default props and wrap them with your own custom objects and functions.
 
-<h2 id="graphql-name">Changing the prop name</h2>
+## Changing the prop name
 
 If you want to change the name of the default `data` prop, but keep the exact same shape, you can use `name` option to the `graphql` container. This is especially useful when one component is using multiple queries via nested `graphql` containers, where the `data` prop would otherwise be overwritten.
 
@@ -194,12 +193,11 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 })(Profile);
 ```
 
-<h2 id="graphql-props-option">Arbitrary transformation</h2>
+## Arbitrary transformation
 
 If you want complete control over the props of the child component, use the `props` option to map the query `data` object into any number of props that will be passed into the child:
 
 ```js
-
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
@@ -230,9 +228,9 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 This style of usage leads to the greatest decoupling between your presentational component (`Profile`) and Apollo.
 
-<h2 title="API" id="api">API Reference</h2>
+## API Reference
 
-<h3 id="graphql-query-data">`props.data`</h3>
+### `props.data`
 
 The higher-order component created when using `graphql()` will feed a `data` prop into your component. Like so:
 
@@ -266,7 +264,7 @@ The `data` prop has some other useful properties which can be accessed directly 
 
 Make sure to always check `data.loading` and `data.error` in your components before rendering. Properties like `data.todos` which contain your app’s data may be undefined while your component is performing its initial fetch. Checking `data.loading` and `data.error` helps you avoid any issues with undefined data. Such checks may look like:
 
-```js
+```jsx
 render() {
   const { data: { loading, error, todos } } = this.props;
   if (loading) {
@@ -285,7 +283,7 @@ render() {
 }
 ```
 
-<h3 id="graphql-query-data-loading">`data.loading`</h3>
+### `data.loading`
 
 A boolean representing whether or not a query request is currently in flight for this component. This means that a query request has been sent using your network interface, and we have not yet gotten a response back. Use this property to render a loading component.
 
@@ -295,7 +293,7 @@ There are multiple different network states that your query may be in. If you wa
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ data: { loading } }) {
   if (loading) {
     return <div>Loading...</div>;
@@ -307,13 +305,13 @@ function MyComponent({ data: { loading } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-error">`data.error`</h3>
+### `data.error`
 
 If an error occurred then this property will be an instance of `ApolloError`. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ data: { error } }) {
   if (error) {
     return <div>Error!</div>;
@@ -325,7 +323,7 @@ function MyComponent({ data: { error } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-networkStatus">`data.networkStatus`</h3>
+### `data.networkStatus`
 
 `data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`](#graphql-query-data-loading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
 
@@ -342,7 +340,7 @@ If the network status is less then 7 then it is equivalent to [`data.loading`](#
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ data: { networkStatus } }) {
   if (networkStatus === 6) {
     return <div>Polling!</div>;
@@ -356,13 +354,13 @@ function MyComponent({ data: { networkStatus } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-variables">`data.variables`</h3>
+### `data.variables`
 
 The variables that Apollo used to fetch data from your GraphQL endpoint. This property is helpful if you want to render some information based on the variables that were used to make a request against your server.
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ data: { variables } }) {
   return (
     <div>
@@ -375,7 +373,7 @@ function MyComponent({ data: { variables } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-refetch">`data.refetch(variables)`</h3>
+### `data.refetch(variables)`
 
 Forces your component to refetch the query you defined in the `graphql()` function. This method is helpful when you want to reload the data in your component, or retry a fetch after an error.
 
@@ -385,7 +383,7 @@ The `data.refetch` function takes a single `variables` object argument. The `var
 
 **Example:**
 
-```js
+```jsx
 function MyComponent({ data: { refetch } }) {
   return (
     <button onClick={() => refetch()}>
@@ -397,7 +395,7 @@ function MyComponent({ data: { refetch } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-fetchMore">`data.fetchMore(options)`</h3>
+### `data.fetchMore(options)`
 
 The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](../features/pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
 
@@ -423,7 +421,7 @@ data.fetchMore({
 });
 ```
 
-<h3 id="graphql-query-data-subscribeToMore">`data.subscribeToMore(options)`</h3>
+### `data.subscribeToMore(options)`
 
 This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](../advanced/caching.html#Subscriptions) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
 
@@ -470,8 +468,7 @@ class SubscriptionComponent extends Component {
 }
 ```
 
-
-<h3 id="graphql-query-data-startPolling">`data.startPolling(interval)`</h3>
+### `data.startPolling(interval)`
 
 This function will set up an interval and send a fetch request every time that interval ellapses. The function takes only one integer argument which allows you to configure how often you want your query to be executed in milliseconds. In other words, the `interval` argument represents the milliseconds between polls.
 
@@ -500,13 +497,13 @@ class MyComponent extends Component {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-stopPolling">`data.stopPolling()`</h3>
+### `data.stopPolling()`
 
 By calling this function you will stop any current polling process. Your query will not start polling again until you call `data.startPolling`.
 
 **Example:**
 
-```js
+```jsx
 class MyComponent extends Component {
   render() {
     return (
@@ -529,11 +526,11 @@ class MyComponent extends Component {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-updateQuery">`data.updateQuery(updaterFn)`</h3>
+### `data.updateQuery(updaterFn)`
 
 This function allows you to update the data for your query outside of the context of any mutation, subscription, or fetch. This function only takes a single argument which will be another function. The argument function has the following signature:
 
-```
+```js
 (previousResult, { variables }) => nextResult
 ```
 
@@ -552,7 +549,7 @@ data.updateQuery((previousResult) => ({
 }));
 ```
 
-<h3 id="graphql-query-options">`config.options`</h3>
+### `config.options`
 
 An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 
@@ -578,7 +575,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-config-options-variables">`options.variables`</h3>
+### `options.variables`
 
 The variables that will be used when executing the query operation. These variables should correspond with the variables that your query definition accepts. If you define `config.options` as a function then you may compute your variables from your props.
 
@@ -599,7 +596,7 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-<h3 id="graphql-config-options-fetchPolicy">`options.fetchPolicy`</h3>
+### `options.fetchPolicy`
 
 The fetch policy is an option which allows you to specify how you want your component to interact with the Apollo data cache. By default your component will try to read from the cache first, and if the full data for your query is in the cache then Apollo simply returns the data from the cache. If the full data for your query is *not* in the cache then Apollo will execute your request using your network interface. By changing this option you can change this behavior.
 
@@ -622,7 +619,7 @@ export default graphql(gql`query { ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-config-options-errorPolicy">`options.errorPolicy`</h3>
+### `options.errorPolicy`
 
 The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
 
@@ -632,7 +629,6 @@ Valid `errorPolicy` values are:
 - `ignore`: Much like `none`, this causes Apollo to ignore any data from your server, but it also won't update your UI aside from setting the loading state back to false.
 - `all`: Selecting all means you want to be notified any time there are any GraphQL errors. It will render your component with any data from the request and any errors with their information. It is particularly helpful for server side rendering so your UI always shows something
 
-
 **Example:**
 
 ```js
@@ -641,8 +637,7 @@ export default graphql(gql`query { ... }`, {
 })(MyComponent);
 ```
 
-
-<h3 id="graphql-config-options-pollInterval">`options.pollInterval`</h3>
+### `options.pollInterval`
 
 The interval in milliseconds at which you want to start polling. Whenever that number of milliseconds elapses your query will be executed using the network interface and another execution will be scheduled using the configured number of milliseconds.
 
@@ -658,7 +653,7 @@ export default graphql(gql`query { ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-config-options-notifyOnNetworkStatusChange">`options.notifyOnNetworkStatusChange`</h3>
+### `options.notifyOnNetworkStatusChange`
 
 Whether or not updates to the network status or network error should trigger re-rendering of your component.
 
@@ -672,5 +667,6 @@ export default graphql(gql`query { ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-config-options-context">`options.context`</h3>
+### `options.context`
+
 With the flexiblity and power of [Apollo Link](/docs/link) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](/docs/link/overview.html#context)

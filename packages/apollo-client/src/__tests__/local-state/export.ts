@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import ApolloClient from '../..';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloLink, Observable } from 'apollo-link';
+import { print } from 'graphql/language/printer';
 
 describe('@client @export tests', () => {
   it(
@@ -156,7 +157,7 @@ describe('@client @export tests', () => {
       cache.writeData({
         data: {
           currentAuthor: testAuthor,
-        }
+        },
       });
 
       return client.query({ query }).then(({ data }: any) => {
@@ -571,6 +572,79 @@ describe('@client @export tests', () => {
       });
     },
   );
+
+  it('should not add __typename to @export-ed objects (#4691)', () => {
+    const query = gql`
+      query GetListItems($where: LessonFilter) {
+        currentFilter @client @export(as: "where") {
+          title_contains
+          enabled
+        }
+        lessonCollection(where: $where) {
+          items {
+            title
+            slug
+          }
+        }
+      }
+    `;
+
+    const expectedServerQuery = gql`
+      query GetListItems($where: LessonFilter) {
+        lessonCollection(where: $where) {
+          items {
+            title
+            slug
+            __typename
+          }
+          __typename
+        }
+      }
+    `;
+
+    const currentFilter = {
+      title_contains: 'full',
+      enabled: true,
+    };
+
+    const data = {
+      lessonCollection: {
+        __typename: 'LessonCollection',
+        items: [
+          {
+            __typename: 'ListItem',
+            title: 'full title',
+            slug: 'slug-title',
+          },
+        ],
+      },
+    };
+
+    const client = new ApolloClient({
+      link: new ApolloLink(request => {
+        expect(request.variables.where).toEqual(currentFilter);
+        expect(print(request.query)).toBe(print(expectedServerQuery));
+        return Observable.of({ data });
+      }),
+      cache: new InMemoryCache({
+        addTypename: true,
+      }),
+      resolvers: {
+        Query: {
+          currentFilter() {
+            return currentFilter;
+          },
+        },
+      },
+    });
+
+    return client.query({ query }).then(result => {
+      expect(result.data).toEqual({
+        currentFilter,
+        ...data,
+      });
+    });
+  });
 
   it(
     'should use the value of the last @export variable defined, if multiple ' +

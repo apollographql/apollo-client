@@ -24,6 +24,7 @@ import {
 } from './getFromAST';
 import { filterInPlace } from './util/filterInPlace';
 import { invariant } from 'ts-invariant';
+import { isField, isInlineFragment } from './storeUtils';
 
 export type RemoveNodeConfig<N> = {
   name?: string;
@@ -228,12 +229,23 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
         // introspection query, do nothing.
         const skip = selections.some(selection => {
           return (
-            selection.kind === 'Field' &&
-            ((selection as FieldNode).name.value === '__typename' ||
-              (selection as FieldNode).name.value.lastIndexOf('__', 0) === 0)
+            isField(selection) &&
+            (selection.name.value === '__typename' ||
+              selection.name.value.lastIndexOf('__', 0) === 0)
           );
         });
         if (skip) {
+          return;
+        }
+
+        // If this SelectionSet is @export-ed as an input variable, it should
+        // not have a __typename field (see issue #4691).
+        const field = parent as FieldNode;
+        if (
+          isField(field) &&
+          field.directives &&
+          field.directives.some(d => d.name.value === 'export')
+        ) {
           return;
         }
 
@@ -292,7 +304,7 @@ function hasDirectivesInSelection(
   selection: SelectionNode,
   nestedCheck = true,
 ): boolean {
-  if (selection.kind !== 'Field' || !(selection as FieldNode)) {
+  if (!isField(selection)) {
     return true;
   }
 
@@ -446,7 +458,7 @@ function getAllFragmentSpreadsFromSelectionSet(
 
   selectionSet.selections.forEach(selection => {
     if (
-      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
+      (isField(selection) || isInlineFragment(selection)) &&
       selection.selectionSet
     ) {
       getAllFragmentSpreadsFromSelectionSet(selection.selectionSet).forEach(
@@ -514,12 +526,8 @@ export function removeClientSetsFromDocument(
         enter(node) {
           if (node.selectionSet) {
             const isTypenameOnly = node.selectionSet.selections.every(
-              selection => {
-                return (
-                  selection.kind === 'Field' &&
-                  (selection as FieldNode).name.value === '__typename'
-                );
-              },
+              selection =>
+                isField(selection) && selection.name.value === '__typename',
             );
             if (isTypenameOnly) {
               return null;

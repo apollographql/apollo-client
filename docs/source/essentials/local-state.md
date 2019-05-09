@@ -1152,7 +1152,7 @@ client.setResolvers({ ... });
   <dt>`getResolvers`</dt>
   <dd>Get the currently defined resolver map.</dd>
   <dt>`setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher)`</dt>
-  <dd>Set a custom `FragmentMatcher` to be used when resolving local state queries involving [fragments on unions or interfaces](/docs/react/advanced/fragments.html#fragment-matcher).</dd>
+  <dd>Set a custom `FragmentMatcher` to be used when resolving local state queries involving [fragments on unions or interfaces](/advanced/fragments#fragments-on-unions-and-interfaces).</dd>
 </dl>
 
 **Typescript interfaces/types:**

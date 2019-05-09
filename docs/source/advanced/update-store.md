@@ -29,7 +29,7 @@ By default, Apollo identifies objects based on two properties: The `__typename` 
 'Person:1234'
 ```
 
-You can also specify a custom function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.
+You can also specify a custom function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](/advanced/initialization#creating-client), if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.
 
 ```js
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -44,6 +44,7 @@ const cache = new InMemoryCache({
 These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
 If you want to get the dataIdFromObjectFunction (for instance when using the [`readFragment` function](LINK PLZ)), you can import it from the InMemoryCache package;
+
 ```js
 import { defaultDataIdFromObject } from 'apollo-cache-inmemory';
 const person = {

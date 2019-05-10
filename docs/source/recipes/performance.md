@@ -214,7 +214,7 @@ query SeriesEpisodes($seriesId: Int!) {
 }
 ```
 
-By adding a [custom resolver](../advanced/caching.html#cacheRedirect) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
+By adding a [custom resolver](/advanced/caching#cache-redirects-with-cacheredirects) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
 
 ```javascript
 import { ApolloClient } from 'apollo-client';

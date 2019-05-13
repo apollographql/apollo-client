@@ -108,7 +108,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     invariant(
       !cache || !cacheRedirects,
-      'Incompatible cache configuration. If providing `cache` then ' +
+      'Incompatible cache configuration. When not providing `cache`, ' +
         'configure the provided instance with `cacheRedirects` instead.',
     );
 

@@ -124,7 +124,7 @@ If you'd like to play around with the app we just built, you can view it on [Cod
 
 If you'd like to explore further, here are more versions of the example app featuring different front-end libraries:
 - React Native Web: https://codesandbox.io/s/xk7zw3n4
-- Vue: https://codesandbox.io/s/3vm8vq6kwq
+<!-- - Vue: https://codesandbox.io/s/3vm8vq6kwq -->
 - Angular (Ionic): https://github.com/aaronksaunders/ionicLaunchpadApp
 
 ## Apollo Boost

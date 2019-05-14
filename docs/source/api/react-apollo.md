@@ -277,7 +277,7 @@ it("runs the mocked query", () => {
 import { graphql } from 'react-apollo';
 ```
 
-The `graphql()` function is the most important thing exported by `react-apollo`. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql()` function returns a function which will “enhance” any component with reactive GraphQL capabilities. This follows the React [higher-order component](https://facebook.github.io/react/docs/higher-order-components.html) pattern which is also used by [`react-redux`’s `connect`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options) function.
+The `graphql()` function is the most important thing exported by `react-apollo`. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql()` function returns a function which will “enhance” any component with reactive GraphQL capabilities. This follows the React [higher-order component](https://facebook.github.io/react/docs/higher-order-components.html) pattern which is also used by [`react-redux`’s `connect`](https://github.com/reduxjs/react-redux/blob/master/docs/api/connect.md) function.
 
 The `graphql()` function may be used like this:
 
@@ -1314,7 +1314,7 @@ export default graphql(gql`
 import { compose } from 'react-apollo';
 ```
 
-For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`][], [`withApollo()`][], or [Redux `connect()`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options) enhancers. This should clean up your code when you use multiple enhancers. [Redux](http://redux.js.org/) also exports a `compose` function, and so does [Recompose](https://github.com/acdlite/recompose) so you may choose to use the function from whichever library feels most appropriate.
+For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`][], [`withApollo()`][], or [Redux `connect()`](https://github.com/reduxjs/react-redux/blob/master/docs/api/connect.md) enhancers. This should clean up your code when you use multiple enhancers. [Redux](http://redux.js.org/) also exports a `compose` function, and so does [Recompose](https://github.com/acdlite/recompose) so you may choose to use the function from whichever library feels most appropriate.
 
 An important note is that `compose()` executes the first enhancer _first_ and works its way forwards through the list of enhancers. In other words, calling three functions like this: `funcA(funcB(funcC(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`.
 

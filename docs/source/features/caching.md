@@ -6,9 +6,7 @@ description: Read and write functions for fine-grained cache access.
 
 Apollo Client normalizes all of your data so that if any data you previously fetched from your GraphQL server is updated in a later data fetch from your server then your data will be updated with the latest truth from your server.
 
-This normalization process is constantly happening behind the scenes when you call `watchQuery` or use a view integration library like [`react-apollo`][], but this process is often not enough to describe the updates to your data model as the result of a mutation. For example, if you wanted to add an item to the end of an array fetched by one of your queries. You also might want to read data from the normalized Apollo Client store at a specific id without making another GraphQL server fetch.
-
-[`react-apollo`]: http://github.com/apollographql/react-apollo
+This normalization process is constantly happening behind the scenes when you call `watchQuery` or use a view integration library like [`react-apollo`](http://github.com/apollographql/react-apollo), but this process is often not enough to describe the updates to your data model as the result of a mutation. For example, if you wanted to add an item to the end of an array fetched by one of your queries. You also might want to read data from the normalized Apollo Client store at a specific id without making another GraphQL server fetch.
 
 To interact directly with your data in the Apollo Client store you may use the methods `readQuery`, `readFragment`, `writeQuery`, and `writeFragment` that are accessible from the `ApolloClient` class. This article will teach you how to use these methods to control your data.
 

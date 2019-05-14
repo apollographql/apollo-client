@@ -1,13 +1,16 @@
 {
   "scripts": {
     "start": "gatsby develop",
-    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
+    "links:internal": "blc $DEPLOY_PRIME_URL -ero",
+    "links:external": "blc $DEPLOY_PRIME_URL -iro"
   },
   "dependencies": {
     "gatsby": "^2.4.2",
     "gatsby-theme-apollo-docs": "^1.0.0-alpha.40"
   },
   "devDependencies": {
+    "broken-link-checker": "^0.7.8",
     "typedoc": "0.14.2",
     "typescript": "3.4.5"
   }

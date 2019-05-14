@@ -771,7 +771,7 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 1. Apollo Client currently only supports using the `@export` directive to store variables for local data. `@export` must be used with `@client`.
 
-2. `@client @export` use might appear to go against the GraphQL specification, given that the execution order of an operation looks like it could affect the result. From the [Normal and Serial Execution](https://facebook.github.io/graphql/draft/#sec-Normal-and-Serial-Execution) section of the GraphQL spec:
+2. `@client @export` use might appear to go against the GraphQL specification, given that the execution order of an operation looks like it could affect the result. From the [Normal and Serial Execution](https://graphql.github.io/graphql-spec/draft/#sec-Normal-and-Serial-Execution) section of the GraphQL spec:
 
   > ... the resolution of fields other than top‐level mutation fields must always be side effect‐free and idempotent, the execution order must not affect the result, and hence the server has the freedom to execute the field entries in whatever order it deems optimal.
 

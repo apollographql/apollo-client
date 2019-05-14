@@ -28,3 +28,11 @@ Documentation repositories should be setup with a "deploy preview" feature which
 
 In the event that it's not possible to run the documentation locally, pushing changes to the branch for a pull-request can be a suitable alternative that ensures changes to the documentation are properly rendered.
 
+## Check for broken links
+
+We use [`broken-link-checker`](https://github.com/stevenvachon/broken-link-checker) to keep track of broken links within the docs. To check the links, we first need to build the site and serve it locally:
+
+1. `npm run build`
+2. `npm run serve`
+3. `npm run links:internal` should always pass with 0 broken links
+4. `npm run links:external` has a bigger margin for false positives, and broken links should be manually confirmed

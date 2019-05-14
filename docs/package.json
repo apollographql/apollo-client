@@ -1,9 +1,11 @@
 {
   "scripts": {
     "start": "gatsby develop",
-    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
-    "links:internal": "blc $DEPLOY_PRIME_URL -ero",
-    "links:external": "blc $DEPLOY_PRIME_URL -iro"
+    "build": "gatsby build",
+    "serve": "gatsby serve",
+    "links:internal": "blc http://localhost:9000 -ero",
+    "links:external": "blc http://localhost:9000 -iro",
+    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
     "gatsby": "^2.4.2",

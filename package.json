@@ -72,7 +72,7 @@
     "@types/react-dom": "16.8.4",
     "benchmark": "2.1.4",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
-    "codecov": "3.3.0",
+    "codecov": "3.4.0",
     "danger": "7.1.4",
     "fetch-mock": "7.3.3",
     "flow-bin": "0.98.1",

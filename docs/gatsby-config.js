@@ -7,7 +7,6 @@ module.exports = {
         root: __dirname,
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',
-        contentDir: 'docs/source',
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: '2.5',
         versions: {

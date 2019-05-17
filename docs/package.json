@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "gatsby": "^2.4.6",
-    "gatsby-theme-apollo-docs": "^1.0.0-alpha.42"
+    "gatsby-theme-apollo-docs": "^1.0.0-alpha.48"
   },
   "devDependencies": {
     "broken-link-checker": "^0.7.8",

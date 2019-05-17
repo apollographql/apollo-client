@@ -3,8 +3,6 @@
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "links:internal": "blc http://localhost:9000 -ero",
-    "links:external": "blc http://localhost:9000 -iro",
     "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
@@ -12,7 +10,6 @@
     "gatsby-theme-apollo-docs": "^1.0.0-alpha.48"
   },
   "devDependencies": {
-    "broken-link-checker": "^0.7.8",
     "typedoc": "0.14.2",
     "typescript": "3.4.5"
   }

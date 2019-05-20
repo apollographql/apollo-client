@@ -61,11 +61,11 @@
   },
   "devDependencies": {
     "@condenast/bundlesize": "0.18.1",
-    "@octokit/rest": "16.25.4",
+    "@octokit/rest": "16.25.5",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.2.0",
     "@types/isomorphic-fetch": "0.0.35",
-    "@types/jest": "24.0.12",
+    "@types/jest": "24.0.13",
     "@types/lodash": "4.14.126",
     "@types/node": "11.13.10",
     "@types/react": "16.8.17",

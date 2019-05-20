@@ -96,7 +96,7 @@ const CommentsPageWithMutations = ({ currentUser }) => (
               // Write our data back to the cache with the new comment in it
               proxy.writeQuery({ query: CommentAppQuery, data: {
                 ...data,
-                comments: data.comments.concat([submitComment])
+                comments: [...data.comments, submitComment]
               }});
             }
           })

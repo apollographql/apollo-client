@@ -93,10 +93,11 @@ const CommentsPageWithMutations = ({ currentUser }) => (
             update: (proxy, { data: { submitComment } }) => {
               // Read the data from our cache for this query.
               const data = proxy.readQuery({ query: CommentAppQuery });
-              // Add our comment from the mutation to the end.
-              data.comments.push(submitComment);
-              // Write our data back to the cache.
-              proxy.writeQuery({ query: CommentAppQuery, data });
+              // Write our data back to the cache with the new comment in it
+              proxy.writeQuery({ query: CommentAppQuery, data: {
+                ...data,
+                comments: [...data.comments, submitComment]
+              }});
             }
           })
         }

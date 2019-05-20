@@ -298,7 +298,8 @@ export class ObservableQuery<
 
     // Override fetchPolicy for this call only
     // only network-only and no-cache are safe to use
-    if (fetchPolicy !== 'no-cache') {
+    if (fetchPolicy !== 'no-cache' &&
+        fetchPolicy !== 'cache-and-network') {
       fetchPolicy = 'network-only';
     }
 

@@ -18,6 +18,7 @@ import ApolloClient from '../../';
 import wrap from '../../util/wrap';
 import subscribeAndCount from '../../util/subscribeAndCount';
 import { stripSymbols } from 'apollo-utilities';
+import { ApolloError } from '../../errors/ApolloError';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests
@@ -1070,7 +1071,7 @@ describe('ObservableQuery', () => {
       const observable = queryManager.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: 'cache-first',
       });
 
       const origFetchQuery = queryManager.fetchQuery;
@@ -1198,6 +1199,131 @@ describe('ObservableQuery', () => {
           expect(result.loading).toBe(false);
           done();
         }
+      });
+    });
+
+    it('cache-and-network refetch should run @client(always: true) resolvers when network request fails', done => {
+      const query = gql`
+        query MixedQuery {
+          counter @client(always: true)
+          name
+        }
+      `;
+
+      let count = 0;
+
+      let linkObservable = Observable.of({
+        data: {
+          name: 'Ben',
+        },
+      });
+
+      const intentionalNetworkFailure = new ApolloError({
+        networkError: new Error('intentional network failure'),
+      });
+
+      const errorObservable: typeof linkObservable = new Observable(
+        observer => {
+          observer.error(intentionalNetworkFailure);
+        },
+      );
+
+      const client = new ApolloClient({
+        link: new ApolloLink(request => linkObservable),
+        cache: new InMemoryCache(),
+        resolvers: {
+          Query: {
+            counter() {
+              return ++count;
+            },
+          },
+        },
+      });
+
+      const observable = client.watchQuery({
+        query,
+        fetchPolicy: 'cache-and-network',
+        returnPartialData: true,
+      });
+
+      let handleCount = 0;
+      observable.subscribe({
+        error(error) {
+          expect(error).toBe(intentionalNetworkFailure);
+        },
+
+        next(result) {
+          ++handleCount;
+
+          if (handleCount === 1) {
+            expect(result).toEqual({
+              data: {},
+              loading: true,
+              networkStatus: NetworkStatus.loading,
+              stale: false,
+            });
+          } else if (handleCount === 2) {
+            expect(result).toEqual({
+              data: {
+                counter: 1,
+              },
+              loading: true,
+              networkStatus: NetworkStatus.loading,
+              stale: false,
+            });
+          } else if (handleCount === 3) {
+            expect(result).toEqual({
+              data: {
+                counter: 2,
+                name: 'Ben',
+              },
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              stale: false,
+            });
+
+            // Make the next network request fail.
+            linkObservable = errorObservable;
+
+            observable.refetch().then(
+              result => {
+                expect(result).toEqual({
+                  data: {
+                    counter: 3,
+                    name: 'Ben',
+                  },
+                });
+              },
+              error => {
+                expect(error).toBe(intentionalNetworkFailure);
+              },
+            );
+          } else if (handleCount === 4) {
+            expect(result).toEqual({
+              data: {
+                counter: 2,
+                name: 'Ben',
+              },
+              loading: true,
+              networkStatus: NetworkStatus.refetch,
+              stale: false,
+            });
+          } else if (handleCount === 5) {
+            expect(result).toEqual({
+              data: {
+                counter: 3,
+                name: 'Ben',
+              },
+              loading: true,
+              networkStatus: NetworkStatus.refetch,
+              stale: false,
+            });
+
+            done();
+          } else if (handleCount > 5) {
+            done.fail(new Error('should not get here'));
+          }
+        },
       });
     });
   });

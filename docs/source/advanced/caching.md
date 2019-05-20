@@ -147,6 +147,8 @@ const { todo } = client.readQuery({
 });
 ```
 
+Note that you should not modify the return value of `readQuery` because the same object may be reused between components.  If you want to update the data in the cache, create a new replacement object and pass it to `writeQuery`.
+
 <h3 id="readfragment">readFragment</h3>
 
 This method allows you great flexibility around the data in your cache. Whereas `readQuery` only allowed you to read data from your root query type, `readFragment` allows you to read data from _any node you have queried_. This is incredibly powerful. You use this method as follows:

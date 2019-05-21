@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-inmemory",
-  "version": "1.5.1",
+  "version": "1.6.0-rc.2",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -41,7 +41,7 @@
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",
     "apollo-utilities": "file:../apollo-utilities",
-    "optimism": "^0.6.9",
+    "optimism": "^0.9.0",
     "ts-invariant": "^0.4.0",
     "tslib": "^1.9.3"
   },

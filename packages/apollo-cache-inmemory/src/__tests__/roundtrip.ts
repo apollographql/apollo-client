@@ -98,25 +98,8 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     return;
   }
 
-  function expectStrictEqualExceptArrays(a, b) {
-    if (Array.isArray(a)) {
-      // The caching system caches result objects but not result arrays, so we
-      // recursively compare array elements using expectStrictEqualExceptArrays.
-      expect(Array.isArray(b)).toBe(true);
-      expect(a.length).toBe(b.length);
-      a.forEach((aItem, index) => {
-        expectStrictEqualExceptArrays(aItem, b[index]);
-      });
-    } else {
-      expect(a).toBe(b);
-    }
-  }
-
   Object.keys(result).forEach(key => {
-    expectStrictEqualExceptArrays(
-      deletedRootResult[key],
-      reconstructedResult[key],
-    );
+    expect(deletedRootResult[key]).toBe(reconstructedResult[key]);
   });
 }
 

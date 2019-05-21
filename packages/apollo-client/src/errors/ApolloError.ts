@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { isNonEmptyArray } from '../util/arrays';
 
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty('graphQLErrors');
@@ -11,7 +12,7 @@ export function isApolloError(err: Error): err is ApolloError {
 const generateErrorMessage = (err: ApolloError) => {
   let message = '';
   // If we have GraphQL errors present, add that to the error message.
-  if (Array.isArray(err.graphQLErrors) && err.graphQLErrors.length !== 0) {
+  if (isNonEmptyArray(err.graphQLErrors)) {
     err.graphQLErrors.forEach((graphQLError: GraphQLError) => {
       const errorMessage = graphQLError
         ? graphQLError.message

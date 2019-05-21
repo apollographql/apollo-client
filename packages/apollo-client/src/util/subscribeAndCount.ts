@@ -1,6 +1,7 @@
 import { ObservableQuery } from '../core/ObservableQuery';
 import { ApolloQueryResult } from '../core/types';
 import { Subscription } from '../util/Observable';
+import { asyncMap } from './observables';
 
 export default function subscribeAndCount(
   done: jest.DoneCallback,
@@ -8,11 +9,11 @@ export default function subscribeAndCount(
   cb: (handleCount: number, result: ApolloQueryResult<any>) => any,
 ): Subscription {
   let handleCount = 0;
-  const subscription = observable.subscribe({
-    next(result: ApolloQueryResult<any>) {
+  const subscription = asyncMap(
+    observable,
+    (result: ApolloQueryResult<any>) => {
       try {
-        handleCount++;
-        cb(handleCount, result);
+        return cb(++handleCount, result);
       } catch (e) {
         // Wrap in a `setImmediate` so that we will unsubscribe on the next
         // tick so that we can make sure that the `subscription` has a chance
@@ -23,6 +24,7 @@ export default function subscribeAndCount(
         });
       }
     },
+  ).subscribe({
     error: done.fail,
   });
   return subscription;

@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import ApolloClient from '../..';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloLink, Observable } from 'apollo-link';
+import { print } from 'graphql/language/printer';
 
 describe('@client @export tests', () => {
   it(
@@ -156,7 +157,7 @@ describe('@client @export tests', () => {
       cache.writeData({
         data: {
           currentAuthor: testAuthor,
-        }
+        },
       });
 
       return client.query({ query }).then(({ data }: any) => {
@@ -572,6 +573,79 @@ describe('@client @export tests', () => {
     },
   );
 
+  it('should not add __typename to @export-ed objects (#4691)', () => {
+    const query = gql`
+      query GetListItems($where: LessonFilter) {
+        currentFilter @client @export(as: "where") {
+          title_contains
+          enabled
+        }
+        lessonCollection(where: $where) {
+          items {
+            title
+            slug
+          }
+        }
+      }
+    `;
+
+    const expectedServerQuery = gql`
+      query GetListItems($where: LessonFilter) {
+        lessonCollection(where: $where) {
+          items {
+            title
+            slug
+            __typename
+          }
+          __typename
+        }
+      }
+    `;
+
+    const currentFilter = {
+      title_contains: 'full',
+      enabled: true,
+    };
+
+    const data = {
+      lessonCollection: {
+        __typename: 'LessonCollection',
+        items: [
+          {
+            __typename: 'ListItem',
+            title: 'full title',
+            slug: 'slug-title',
+          },
+        ],
+      },
+    };
+
+    const client = new ApolloClient({
+      link: new ApolloLink(request => {
+        expect(request.variables.where).toEqual(currentFilter);
+        expect(print(request.query)).toBe(print(expectedServerQuery));
+        return Observable.of({ data });
+      }),
+      cache: new InMemoryCache({
+        addTypename: true,
+      }),
+      resolvers: {
+        Query: {
+          currentFilter() {
+            return currentFilter;
+          },
+        },
+      },
+    });
+
+    return client.query({ query }).then(result => {
+      expect(result.data).toEqual({
+        currentFilter,
+        ...data,
+      });
+    });
+  });
+
   it(
     'should use the value of the last @export variable defined, if multiple ' +
       'variables are defined with the same name',
@@ -623,5 +697,130 @@ describe('@client @export tests', () => {
         done();
       });
     },
+  );
+
+  it(
+    'should refetch if an @export variable changes, the current fetch ' +
+    'policy is not cache-only, and the query includes fields that need to ' +
+    'be resolved remotely',
+    done => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthorId @client @export(as: "authorId")
+          postCount(authorId: $authorId)
+        }
+      `;
+
+      const testAuthorId1 = 100;
+      const testPostCount1 = 200;
+
+      const testAuthorId2 = 101;
+      const testPostCount2 = 201;
+
+      let resultCount = 0;
+
+      const link = new ApolloLink(() =>
+        Observable.of({
+          data: {
+            postCount: resultCount === 0 ? testPostCount1 : testPostCount2
+          },
+        }),
+      );
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+        resolvers: {},
+      });
+
+      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+
+      const obs = client.watchQuery({ query });
+      obs.subscribe({
+        next({ data }) {
+          if (resultCount === 0) {
+            expect({ ...data }).toMatchObject({
+              currentAuthorId: testAuthorId1,
+              postCount: testPostCount1,
+            });
+            client.writeData({ data: { currentAuthorId: testAuthorId2 } });
+          } else if (resultCount === 1) {
+            expect({ ...data }).toMatchObject({
+              currentAuthorId: testAuthorId2,
+              postCount: testPostCount2,
+            });
+            done();
+          }
+
+          resultCount +=1;
+        }
+      });
+    }
+  );
+
+  it(
+    'should NOT refetch if an @export variable has not changed, the ' +
+    'current fetch policy is not cache-only, and the query includes fields ' +
+    'that need to be resolved remotely',
+    done => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthorId @client @export(as: "authorId")
+          postCount(authorId: $authorId)
+        }
+      `;
+
+      const testAuthorId1 = 100;
+      const testPostCount1 = 200;
+
+      const testPostCount2 = 201;
+
+      let resultCount = 0;
+
+      let fetchCount = 0;
+      const link = new ApolloLink(() => {
+        fetchCount += 1;
+        return Observable.of({
+          data: {
+            postCount: testPostCount1
+          },
+        });
+      });
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+        resolvers: {},
+      });
+
+      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+
+      const obs = client.watchQuery({ query });
+      obs.subscribe({
+        next(result) {
+          if (resultCount === 0) {
+            expect(fetchCount).toBe(1);
+            expect(result.data).toMatchObject({
+              currentAuthorId: testAuthorId1,
+              postCount: testPostCount1,
+            });
+
+            client.writeQuery({
+              query,
+              variables: { authorId: testAuthorId1 },
+              data: { postCount: testPostCount2 }
+            });
+          } else if (resultCount === 1) {
+            // Should not have refetched
+            expect(fetchCount).toBe(1);
+            done();
+          }
+
+          resultCount +=1;
+        },
+      });
+    }
   );
 });

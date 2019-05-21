@@ -296,8 +296,9 @@ export class ObservableQuery<
       ));
     }
 
-    // Override fetchPolicy for this call only
-    // only network-only and no-cache are safe to use
+    // Unless the provided fetchPolicy always consults the network
+    // (no-cache, network-only, or cache-and-network), override it with
+    // network-only to force the refetch for this fetchQuery call.
     if (fetchPolicy !== 'no-cache' &&
         fetchPolicy !== 'cache-and-network') {
       fetchPolicy = 'network-only';

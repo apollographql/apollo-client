@@ -56,9 +56,8 @@ describe('updateQuery on a simple query', () => {
           res.entry.value = 2;
           return res;
         });
-
-        expect(latestResult.data.entry.value).toBe(2);
       })
+      .then(() => expect(latestResult.data.entry.value).toBe(2))
       .then(() => sub.unsubscribe());
   });
 });
@@ -123,9 +122,8 @@ describe('updateQuery on a query with required and optional variables', () => {
           res.entry.value = 2;
           return res;
         });
-
-        expect(latestResult.data.entry.value).toBe(2);
       })
+      .then(() => expect(latestResult.data.entry.value).toBe(2))
       .then(() => sub.unsubscribe());
   });
 });

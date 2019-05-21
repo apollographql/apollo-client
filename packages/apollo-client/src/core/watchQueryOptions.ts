@@ -17,11 +17,12 @@ import { PureQueryOptions, OperationVariables } from './types';
  */
 export type FetchPolicy =
   | 'cache-first'
-  | 'cache-and-network'
   | 'network-only'
   | 'cache-only'
   | 'no-cache'
   | 'standby';
+
+export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
 
 /**
  * errorPolicy determines the level of events for errors in the execution result. The options are:
@@ -36,15 +37,18 @@ export type ErrorPolicy = 'none' | 'ignore' | 'all';
  */
 export interface QueryBaseOptions<TVariables = OperationVariables> {
   /**
+   * A GraphQL document that consists of a single query to be sent down to the
+   * server.
+   */
+  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a
+  // lot of tests.
+  query: DocumentNode;
+
+  /**
    * A map going from variable name to variable value, where the variables are used
    * within the GraphQL query.
    */
   variables?: TVariables;
-
-  /**
-   * Specifies the {@link FetchPolicy} to be used for this query
-   */
-  fetchPolicy?: FetchPolicy;
 
   /**
    * Specifies the {@link ErrorPolicy} to be used for this query
@@ -55,20 +59,6 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
    * Whether or not to fetch results
    */
   fetchResults?: boolean;
-}
-
-/**
- * Query options.
- */
-export interface QueryOptions<TVariables = OperationVariables>
-  extends QueryBaseOptions<TVariables> {
-  /**
-   * A GraphQL document that consists of a single query to be sent down to the
-   * server.
-   */
-  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a
-  // lot of tests.
-  query: DocumentNode;
 
   /**
    * Arbitrary metadata stored in the store with this query.  Designed for debugging,
@@ -80,6 +70,17 @@ export interface QueryOptions<TVariables = OperationVariables>
    * Context to be passed to link execution chain
    */
   context?: any;
+}
+
+/**
+ * Query options.
+ */
+export interface QueryOptions<TVariables = OperationVariables>
+  extends QueryBaseOptions<TVariables> {
+  /**
+   * Specifies the {@link FetchPolicy} to be used for this query
+   */
+  fetchPolicy?: FetchPolicy;
 }
 
 /**
@@ -97,14 +98,25 @@ export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
    * Whether or not updates to the network status should trigger next on the observer of this query
    */
   notifyOnNetworkStatusChange?: boolean;
+
+  /**
+   * Allow returning incomplete data from the cache when a larger query cannot
+   * be fully satisfied by the cache, instead of returning nothing.
+   */
+  returnPartialData?: boolean;
 }
 
 /**
  * Watched query options.
  */
 export interface WatchQueryOptions<TVariables = OperationVariables>
-  extends QueryOptions<TVariables>,
-    ModifiableWatchQueryOptions<TVariables> {}
+  extends QueryBaseOptions<TVariables>,
+    ModifiableWatchQueryOptions<TVariables> {
+  /**
+   * Specifies the {@link FetchPolicy} to be used for this query
+   */
+  fetchPolicy?: WatchQueryFetchPolicy;
+}
 
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   query?: DocumentNode;

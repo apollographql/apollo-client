@@ -87,23 +87,19 @@ export class DataStore<TSerialized> {
         optimistic = mutation.optimisticResponse;
       }
 
-      const changeFn = () => {
-        this.markMutationResult({
-          mutationId: mutation.mutationId,
-          result: { data: optimistic },
-          document: mutation.document,
-          variables: mutation.variables,
-          updateQueries: mutation.updateQueries,
-          update: mutation.update,
-        });
-      };
-
       this.cache.recordOptimisticTransaction(c => {
         const orig = this.cache;
         this.cache = c;
 
         try {
-          changeFn();
+          this.markMutationResult({
+            mutationId: mutation.mutationId,
+            result: { data: optimistic },
+            document: mutation.document,
+            variables: mutation.variables,
+            updateQueries: mutation.updateQueries,
+            update: mutation.update,
+          });
         } finally {
           this.cache = orig;
         }
@@ -121,31 +117,27 @@ export class DataStore<TSerialized> {
   }) {
     // Incorporate the result from this mutation into the store
     if (!graphQLResultHasError(mutation.result)) {
-      const cacheWrites: Cache.WriteOptions[] = [];
-      cacheWrites.push({
+      const cacheWrites: Cache.WriteOptions[] = [{
         result: mutation.result.data,
         dataId: 'ROOT_MUTATION',
         query: mutation.document,
         variables: mutation.variables,
-      });
+      }];
 
-      if (mutation.updateQueries) {
-        Object.keys(mutation.updateQueries)
-          .filter(id => mutation.updateQueries[id])
-          .forEach(queryId => {
-            const { query, updater } = mutation.updateQueries[queryId];
-            // Read the current query result from the store.
-            const { result: currentQueryResult, complete } = this.cache.diff({
-              query: query.document,
-              variables: query.variables,
-              returnPartialData: true,
-              optimistic: false,
-            });
+      const { updateQueries } = mutation;
+      if (updateQueries) {
+        Object.keys(updateQueries).forEach(id => {
+          const { query, updater } = updateQueries[id];
 
-            if (!complete) {
-              return;
-            }
+          // Read the current query result from the store.
+          const { result: currentQueryResult, complete } = this.cache.diff({
+            query: query.document,
+            variables: query.variables,
+            returnPartialData: true,
+            optimistic: false,
+          });
 
+          if (complete) {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = tryFunctionOrLogError(() =>
               updater(currentQueryResult, {
@@ -164,22 +156,21 @@ export class DataStore<TSerialized> {
                 variables: query.variables,
               });
             }
-          });
+          }
+        });
       }
 
       this.cache.performTransaction(c => {
         cacheWrites.forEach(write => c.write(write));
-      });
 
-      // If the mutation has some writes associated with it then we need to
-      // apply those writes to the store by running this reducer again with a
-      // write action.
-      const update = mutation.update;
-      if (update) {
-        this.cache.performTransaction(c => {
+        // If the mutation has some writes associated with it then we need to
+        // apply those writes to the store by running this reducer again with a
+        // write action.
+        const { update } = mutation;
+        if (update) {
           tryFunctionOrLogError(() => update(c, mutation.result));
-        });
-      }
+        }
+      });
     }
   }
 
@@ -190,8 +181,9 @@ export class DataStore<TSerialized> {
     mutationId: string;
     optimisticResponse?: any;
   }) {
-    if (!optimisticResponse) return;
-    this.cache.removeOptimistic(mutationId);
+    if (optimisticResponse) {
+      this.cache.removeOptimistic(mutationId);
+    }
   }
 
   public markUpdateQueryResult(

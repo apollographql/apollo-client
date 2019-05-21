@@ -26,24 +26,18 @@ export class MutationStore {
 
   public markMutationError(mutationId: string, error: Error) {
     const mutation = this.store[mutationId];
-
-    if (!mutation) {
-      return;
+    if (mutation) {
+      mutation.loading = false;
+      mutation.error = error;
     }
-
-    mutation.loading = false;
-    mutation.error = error;
   }
 
   public markMutationResult(mutationId: string) {
     const mutation = this.store[mutationId];
-
-    if (!mutation) {
-      return;
+    if (mutation) {
+      mutation.loading = false;
+      mutation.error = null;
     }
-
-    mutation.loading = false;
-    mutation.error = null;
   }
 
   public reset() {

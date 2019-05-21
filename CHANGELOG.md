@@ -1,24 +1,22 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client vNEXT
+## Apollo Client (2.6.0)
 
 - In production, `invariant(condition, message)` failures will now include
   a unique error code that can be used to trace the error back to the
   point of failure. <br/>
   [@benjamn](https://github.com/benjamn) in [#4521](https://github.com/apollographql/apollo-client/pull/4521)
 
-### Apollo Client
-
-- Update the React Native docs to remove the request for external example
-  apps that we can link to. We're no longer going to manage a list of
-  external example apps.  <br />
-  [@hwillson](https://github.com/hwillson) in [#4531](https://github.com/apollographql/apollo-client/pull/4531)
+### Apollo Client 2.6.0
 
 - If you can be sure your application code does not modify cache result objects (see `freezeResults` note below), you can unlock substantial performance improvements by communicating this assumption via
   ```ts
   new ApolloClient({ assumeImmutableResults: true })
   ```
   which allows the client to avoid taking defensive snapshots of past results using `cloneDeep`, as explained by [@benjamn](https://github.com/benjamn) in [#4543](https://github.com/apollographql/apollo-client/pull/4543).
+
+- Identical overlapping queries are now deduplicated internally by `apollo-client`, rather than using the `apollo-link-dedup` package. <br/>
+  [@benjamn](https://github.com/benjamn) in commit [7cd8479f](https://github.com/apollographql/apollo-client/pull/4586/commits/7cd8479f27ce38930f122e4f703c4081a75a63a7)
 
 - Avoid updating (and later invalidating) cache watches when `fetchPolicy` is `'no-cache'`. <br/>
   [@bradleyayers](https://github.com/bradleyayers) in [PR #4573](https://github.com/apollographql/apollo-client/pull/4573), part of [issue #3452](https://github.com/apollographql/apollo-client/issues/3452)
@@ -44,7 +42,13 @@
 - Preserve `cache-and-network` `fetchPolicy` when refetching. <br/>
   [@benjamn](https://github.com/benjamn) in [#4840](https://github.com/apollographql/apollo-client/pull/4840)
 
-### Apollo Cache In-Memory
+- Update the React Native docs to remove the request for external example apps that we can link to. We're no longer going to manage a list of external example apps. <br />
+  [@hwillson](https://github.com/hwillson) in [#4531](https://github.com/apollographql/apollo-client/pull/4531)
+
+- Polling queries are no longer batched together, so their scheduling should be more predictable. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4800](https://github.com/apollographql/apollo-client/pull/4800)
+
+### Apollo Cache In-Memory 1.6.0
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>
   [@benjamn](https://github.com/benjamn) in [#4514](https://github.com/apollographql/apollo-client/pull/4514)
@@ -52,7 +56,13 @@
 - Allow `IntrospectionFragmentMatcher` to match fragments against the root `Query`, as `HeuristicFragmentMatcher` does. <br/>
   [@rynobax](https://github.com/rynobax) in [#4620](https://github.com/apollographql/apollo-client/pull/4620)
 
-### GraphQL Anywhere
+- Rerential identity (`===`) of arrays in cache results will now be preserved for unchanged data. <br/>
+  [@benjamn](https://github.com/benjamn) in commit [f3091d6a](https://github.com/apollographql/apollo-client/pull/4586/commits/f3091d6a7e91be98549baea58903282cc540f460)
+
+- Avoid adding `__typename` field to `@client` selection sets that have been `@export`ed as input variables. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4784](https://github.com/apollographql/apollo-client/pull/4784)
+
+### GraphQL Anywhere 4.2.2
 
 - The `graphql` function can now be configured to ignore `@include` and
   `@skip` directives (useful when walking a fragment to generate prop types

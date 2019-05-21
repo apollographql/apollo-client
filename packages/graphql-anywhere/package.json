@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/bundle.cjs.js",
   "module": "./lib/bundle.esm.js",
@@ -20,8 +20,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "apollographql/graphql-anywhere"
+    "url": "git+https://github.com/apollographql/apollo-client.git"
   },
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-client/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-client/tree/master/packages/graphql-anywhere",
   "keywords": [
     "ecmascript",
     "es2015",

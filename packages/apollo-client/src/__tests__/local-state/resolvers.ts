@@ -361,6 +361,130 @@ describe('Basic resolver capabilities', () => {
         done();
       });
   });
+
+  it('should handle nested asynchronous @client resolvers (issue #4841)', () => {
+    const query = gql`
+      query DeveloperTicketComments($id: ID) {
+        developer(id: $id) @client {
+          id
+          handle
+          tickets @client {
+            id
+            comments @client {
+              id
+            }
+          }
+        }
+      }
+    `;
+
+    function randomDelay(range: number) {
+      return new Promise(resolve =>
+        setTimeout(resolve, Math.round(Math.random() * range)),
+      );
+    }
+
+    function uuid() {
+      return Math.random()
+        .toString(36)
+        .slice(2);
+    }
+
+    const developerId = uuid();
+
+    function times<T>(n: number, thunk: () => T): Promise<T[]> {
+      const result: T[] = [];
+      for (let i = 0; i < n; ++i) {
+        result.push(thunk());
+      }
+      return Promise.all(result);
+    }
+
+    const ticketsPerDev = 5;
+    const commentsPerTicket = 5;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      resolvers: {
+        Query: {
+          async developer(_, { id }) {
+            await randomDelay(50);
+            expect(id).toBe(developerId);
+            return {
+              __typename: 'Developer',
+              id,
+              handle: '@benjamn',
+            };
+          },
+        },
+        Developer: {
+          async tickets(developer) {
+            await randomDelay(50);
+            expect(developer.__typename).toBe('Developer');
+            return times(ticketsPerDev, () => ({
+              __typename: 'Ticket',
+              id: uuid(),
+            }));
+          },
+        },
+        Ticket: {
+          async comments(ticket) {
+            await randomDelay(50);
+            expect(ticket.__typename).toBe('Ticket');
+            return times(commentsPerTicket, () => ({
+              __typename: 'Comment',
+              id: uuid(),
+            }));
+          },
+        },
+      },
+    });
+
+    function check(result: ApolloQueryResult<any>) {
+      return new Promise(resolve => {
+        expect(result.data.developer.id).toBe(developerId);
+        expect(result.data.developer.handle).toBe('@benjamn');
+        expect(result.data.developer.tickets.length).toBe(ticketsPerDev);
+        const commentIds = new Set<string>();
+        result.data.developer.tickets.forEach((ticket: any) => {
+          expect(ticket.__typename).toBe('Ticket');
+          expect(ticket.comments.length).toBe(commentsPerTicket);
+          ticket.comments.forEach((comment: any) => {
+            expect(comment.__typename).toBe('Comment');
+            commentIds.add(comment.id);
+          });
+        });
+        expect(commentIds.size).toBe(ticketsPerDev * commentsPerTicket);
+        resolve();
+      });
+    }
+
+    return Promise.all([
+      new Promise((resolve, reject) => {
+        client
+          .watchQuery({
+            query,
+            variables: {
+              id: developerId,
+            },
+          })
+          .subscribe({
+            next(result) {
+              check(result).then(resolve, reject);
+            },
+            error: reject,
+          });
+      }),
+      client
+        .query({
+          query,
+          variables: {
+            id: developerId,
+          },
+        })
+        .then(check),
+    ]);
+  });
 });
 
 describe('Writing cache data from resolvers', () => {

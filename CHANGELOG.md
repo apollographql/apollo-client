@@ -41,6 +41,9 @@
 - Preserve `networkStatus` for incomplete `cache-and-network` queries. <br/>
   [@benjamn](https://github.com/benjamn) in [#4765](https://github.com/apollographql/apollo-client/pull/4765)
 
+- Preserve `cache-and-network` `fetchPolicy` when refetching. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4840](https://github.com/apollographql/apollo-client/pull/4840)
+
 ### Apollo Cache In-Memory
 
 - Support `new InMemoryCache({ freezeResults: true })` to help enforce immutability. <br/>

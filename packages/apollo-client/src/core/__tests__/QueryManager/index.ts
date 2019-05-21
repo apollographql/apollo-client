@@ -3526,7 +3526,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it.only('should only refetch once when we refetch observable queries', (done) => {
+    it('should only refetch once when we refetch observable queries', (done) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {

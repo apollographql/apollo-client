@@ -18,6 +18,22 @@
 - Identical overlapping queries are now deduplicated internally by `apollo-client`, rather than using the `apollo-link-dedup` package. <br/>
   [@benjamn](https://github.com/benjamn) in commit [7cd8479f](https://github.com/apollographql/apollo-client/pull/4586/commits/7cd8479f27ce38930f122e4f703c4081a75a63a7)
 
+- The `FetchPolicy` type has been split into two types, so that passing `cache-and-network` to `ApolloClient#query` is now forbidden at the type level, whereas previously it was forbidden by a runtime `invariant` assertion:
+  ```ts
+  export type FetchPolicy =
+    | 'cache-first'
+    | 'network-only'
+    | 'cache-only'
+    | 'no-cache'
+    | 'standby';
+
+  export type WatchQueryFetchPolicy =
+    | FetchPolicy
+    | 'cache-and-network';
+  ```
+  The exception thrown if you ignore the type error has also been improved to explain the motivation behind this restriction. <br/>
+  [Issue #3130 (comment)](https://github.com/apollographql/apollo-client/issues/3130#issuecomment-478409066) and commit [cf069bc7](github.com/apollographql/apollo-client/commit/cf069bc7ee6577092234b0eb0ac32e05d50f5a1c)
+
 - Avoid updating (and later invalidating) cache watches when `fetchPolicy` is `'no-cache'`. <br/>
   [@bradleyayers](https://github.com/bradleyayers) in [PR #4573](https://github.com/apollographql/apollo-client/pull/4573), part of [issue #3452](https://github.com/apollographql/apollo-client/issues/3452)
 

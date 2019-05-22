@@ -73,7 +73,7 @@ describe('abstract cache', () => {
 
     it('defaults optimistic to false', () => {
       const test = new TestCache();
-      test.read = ({ optimistic }) => optimistic;
+      test.read = ({ optimistic }) => optimistic as any;
 
       expect(test.readQuery({} as any)).toBe(false);
       expect(test.readQuery({} as any, true)).toBe(true);
@@ -99,7 +99,7 @@ describe('abstract cache', () => {
 
     it('defaults optimistic to false', () => {
       const test = new TestCache();
-      test.read = ({ optimistic }) => optimistic;
+      test.read = ({ optimistic }) => optimistic as any;
       const fragment = {
         id: 'frag',
         fragment: gql`

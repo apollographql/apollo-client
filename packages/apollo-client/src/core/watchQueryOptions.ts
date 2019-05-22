@@ -17,9 +17,10 @@ import { PureQueryOptions, OperationVariables } from './types';
  */
 export type FetchPolicy =
   | 'cache-first'
-  | 'network-only'
+  | 'cache-and-network'
   | 'cache-only'
   | 'no-cache'
+  | 'network-only'
   | 'standby';
 
 export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';

@@ -5,6 +5,6 @@
     "outDir": "lib",
     "lib": ["es6", "dom", "es2017.object"]
   },
-  "include": ["src/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["src/__tests__/**/*"]
 }

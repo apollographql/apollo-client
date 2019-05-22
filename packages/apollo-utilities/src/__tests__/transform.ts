@@ -1166,7 +1166,7 @@ describe('getDirectivesFromDocument', () => {
           }
         }
       `;
-      const doc = getDirectivesFromDocument([{ name: 'client' }], query, false);
+      const doc = getDirectivesFromDocument([{ name: 'client' }], query);
       expect(print(doc)).toBe(print(expected));
     });
 
@@ -1199,7 +1199,7 @@ describe('getDirectivesFromDocument', () => {
           }
         }
       `;
-      const doc = getDirectivesFromDocument([{ name: 'client' }], query, true);
+      const doc = getDirectivesFromDocument([{ name: 'client' }], query);
       expect(print(doc)).toBe(print(expected));
     });
   });

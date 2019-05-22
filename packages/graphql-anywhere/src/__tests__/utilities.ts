@@ -1,5 +1,5 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
-import { checkPropTypes } from 'prop-types';
+import { checkPropTypes, resetWarningCache } from 'prop-types';
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
@@ -92,12 +92,12 @@ describe('utilities', () => {
     ];
 
     beforeEach(() => {
-      checkPropTypes.resetWarningCache();
+      resetWarningCache();
       jest.spyOn(global.console, 'error').mockImplementation(() => {});
     });
 
     afterEach(() => {
-      global.console.error.mockRestore();
+      (global.console.error as any).mockRestore();
     });
 
     it('can filter data', () => {
@@ -129,7 +129,7 @@ describe('utilities', () => {
       checkPropTypes(propTypes, filteredData, 'prop', 'MyComponent');
       expect(global.console.error).not.toHaveBeenCalled();
       checkPropTypes(propTypes, { foo: {} }, 'prop', 'MyComponent');
-      expect(global.console.error.mock.calls[0]).toMatchSnapshot();
+      expect((global.console.error as any).mock.calls[0]).toMatchSnapshot();
     });
 
     it('can generate propTypes for fragments with variables', () => {
@@ -147,7 +147,7 @@ describe('utilities', () => {
       delete badProps.foo.height;
       checkPropTypes(propTypes, badProps, 'prop', 'MyComponent');
       expect(global.console.error).toHaveBeenCalled();
-      expect(global.console.error.mock.calls[0]).toMatchSnapshot();
+      expect((global.console.error as any).mock.calls[0]).toMatchSnapshot();
     });
 
     it('makes variable inclusion props optional, when no variables are passed', () => {

@@ -85,9 +85,9 @@ describe('isEqual', () => {
   });
 
   it('should correctly handle modified prototypes', () => {
-    Array.prototype.foo = null;
+    (Array.prototype as any).foo = null;
     expect(isEqual([1, 2, 3], [1, 2, 3])).toBe(true);
     expect(!isEqual([1, 2, 3], [1, 2, 4])).toBe(true);
-    delete Array.prototype.foo;
+    delete (Array.prototype as any).foo;
   });
 });

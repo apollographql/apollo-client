@@ -56,3 +56,4 @@ docs/public/*
 junit.xml
 
 .rpt2_cache
+tsconfig.tsbuildinfo

@@ -41,13 +41,16 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     context: ReadStoreContext,
   ): boolean | 'heuristic' {
     const obj = context.store.get(idValue.id);
+    const isRootQuery = idValue.id === 'ROOT_QUERY';
 
     if (!obj) {
       // https://github.com/apollographql/apollo-client/pull/3507
-      return idValue.id === 'ROOT_QUERY';
+      return isRootQuery;
     }
 
-    if (!obj.__typename) {
+    const { __typename = isRootQuery && 'Query' } = obj;
+
+    if (!__typename) {
       if (shouldWarn()) {
         invariant.warn(`You're using fragments in your queries, but either don't have the addTypename:
   true option set in Apollo Client, or you are trying to write a fragment to the store without the __typename.
@@ -67,7 +70,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
       return 'heuristic';
     }
 
-    if (obj.__typename === typeCondition) {
+    if (__typename === typeCondition) {
       return true;
     }
 
@@ -120,25 +123,28 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
     );
 
     const obj = context.store.get(idValue.id);
+    const isRootQuery = idValue.id === 'ROOT_QUERY';
 
     if (!obj) {
       // https://github.com/apollographql/apollo-client/pull/4620
-      return idValue.id === 'ROOT_QUERY';
+      return isRootQuery;
     }
 
+    const { __typename = isRootQuery && 'Query' } = obj;
+
     invariant(
-      obj.__typename,
+      __typename,
       `Cannot match fragment because __typename property is missing: ${JSON.stringify(
         obj,
       )}`,
     );
 
-    if (obj.__typename === typeCondition) {
+    if (__typename === typeCondition) {
       return true;
     }
 
     const implementingTypes = this.possibleTypesMap[typeCondition];
-    if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
+    if (implementingTypes && implementingTypes.indexOf(__typename) > -1) {
       return true;
     }
 

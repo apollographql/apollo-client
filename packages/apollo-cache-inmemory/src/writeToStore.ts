@@ -230,11 +230,12 @@ export class StoreWriter {
           // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
           // Right now we have to pretend that we're passing in an idValue and that there's a store
           // on the context.
-          const idValue = toIdValue({ id: 'self', typename: undefined });
+          const id = dataId || 'self';
+          const idValue = toIdValue({ id, typename: undefined });
           const fakeContext: ReadStoreContext = {
             // NOTE: fakeContext always uses ObjectCache
             // since this is only to ensure the return value of 'matches'
-            store: new ObjectCache({ self: result }),
+            store: new ObjectCache({ [id]: result }),
             cacheRedirects: {},
           };
           const match = context.fragmentMatcherFunction(

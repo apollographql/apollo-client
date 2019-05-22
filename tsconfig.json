@@ -5,7 +5,8 @@
     { "path": "packages/apollo-cache" },
     { "path": "packages/apollo-cache-inmemory" },
     { "path": "packages/apollo-client" },
-    { "path": "packages/apollo-utilities" }
+    { "path": "packages/apollo-utilities" },
     { "path": "packages/graphql-anywhere" }
-  ]
+  ],
+  "files": []
 }

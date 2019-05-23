@@ -1,9 +1,8 @@
 import { IntrospectionFragmentMatcher } from '../fragmentMatcher';
 import { defaultNormalizedCacheFactory } from '../objectCache';
-import { ReadStoreContext } from '..';
+import { ReadStoreContext } from '../types';
 import { InMemoryCache } from '../inMemoryCache';
 import gql from 'graphql-tag';
-import { print } from 'graphql';
 
 describe('FragmentMatcher', () => {
   it('can match against the root Query', () => {

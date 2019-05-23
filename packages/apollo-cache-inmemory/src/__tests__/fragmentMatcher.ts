@@ -1,5 +1,6 @@
 import { IntrospectionFragmentMatcher } from '../fragmentMatcher';
 import { defaultNormalizedCacheFactory } from '../objectCache';
+import { ReadStoreContext } from '..';
 
 describe('IntrospectionFragmentMatcher', () => {
   it('will throw an error if match is called if it is not ready', () => {
@@ -41,12 +42,12 @@ describe('IntrospectionFragmentMatcher', () => {
       generated: false,
     };
 
-    const readStoreContext = {
+    const readStoreContext: ReadStoreContext = {
       store,
       returnPartialData: false,
       hasMissingField: false,
       customResolvers: {},
-    };
+    } as any;
 
     expect(ifm.match(idValue as any, 'Item', readStoreContext)).toBe(true);
     expect(ifm.match(idValue as any, 'NotAnItem', readStoreContext)).toBe(

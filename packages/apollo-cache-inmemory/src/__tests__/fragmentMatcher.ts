@@ -1,5 +1,6 @@
 import { IntrospectionFragmentMatcher } from '../fragmentMatcher';
 import { defaultNormalizedCacheFactory } from '../objectCache';
+import { ReadStoreContext } from '..';
 import { InMemoryCache } from '../inMemoryCache';
 import gql from 'graphql-tag';
 import { print } from 'graphql';
@@ -91,7 +92,7 @@ describe('IntrospectionFragmentMatcher', () => {
       returnPartialData: false,
       hasMissingField: false,
       cacheRedirects: {},
-    };
+    } as ReadStoreContext;
 
     expect(ifm.match(idValue as any, 'Item', readStoreContext)).toBe(true);
     expect(ifm.match(idValue as any, 'NotAnItem', readStoreContext)).toBe(

@@ -1,27 +1,17 @@
-import { getFragmentDefinitions, createFragmentMap } from 'apollo-utilities';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { stripSymbols } from 'apollo-utilities';
 
 import { withError } from './diffAgainstStore';
 import { withWarning } from './writeToStore';
 
 import { DepTrackingCache } from '../depTrackingCache';
 
-import {
-  HeuristicFragmentMatcher,
-  StoreReader,
-  StoreWriter,
-} from '../';
+import { HeuristicFragmentMatcher, StoreReader, StoreWriter } from '../';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
-  if (
-    value !== null &&
-    typeof value === 'object' &&
-    stack.indexOf(value) < 0
-  ) {
+  if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
     expect(Object.isExtensible(value)).toBe(false);
     expect(Object.isFrozen(value)).toBe(true);
     stack.push(value);
@@ -50,7 +40,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     fragmentMatcherFunction,
   };
 
-  const reconstructedResult = reader.readQueryFromStore(readOptions);
+  const reconstructedResult = reader.readQueryFromStore<any>(readOptions);
   expect(reconstructedResult).toEqual(result);
 
   // Make sure the result is identical if we haven't written anything new
@@ -65,8 +55,8 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     try {
       // Note: this illegal assignment will only throw in strict mode, but that's
       // safe to assume because this test file is a module.
-      (immutableResult as any).illegal = "this should not work";
-      throw new Error("unreached");
+      (immutableResult as any).illegal = 'this should not work';
+      throw new Error('unreached');
     } catch (e) {
       expect(e.message).not.toMatch(/unreached/);
       expect(e).toBeInstanceOf(TypeError);
@@ -86,7 +76,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     `,
   });
 
-  const deletedRootResult = reader.readQueryFromStore(readOptions);
+  const deletedRootResult = reader.readQueryFromStore<any>(readOptions);
   expect(deletedRootResult).toEqual(result);
 
   if (deletedRootResult === reconstructedResult) {
@@ -230,7 +220,7 @@ describe('roundtrip', () => {
         confirmationEmailCopy: null,
         emailDomains: null,
       },
-    };
+    } as any;
 
     storeRoundtrip(
       gql`

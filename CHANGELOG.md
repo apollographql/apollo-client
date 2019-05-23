@@ -1,5 +1,12 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client (vNEXT)
+
+### Apollo Cache In-Memory
+
+- Pretend that `__typename` exists on the root Query when matching fragments. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4853](https://github.com/apollographql/apollo-client/pull/4853)
+
 ## Apollo Client (2.6.0)
 
 - In production, `invariant(condition, message)` failures will now include

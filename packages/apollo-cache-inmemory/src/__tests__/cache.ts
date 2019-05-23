@@ -1,9 +1,8 @@
-import { ApolloCache } from 'apollo-cache';
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
 import { cloneDeep } from 'lodash';
 
-import { InMemoryCache, InMemoryCacheConfig, NormalizedCache } from '..';
+import { InMemoryCache, InMemoryCacheConfig } from '..';
 
 disableFragmentWarnings();
 

@@ -374,7 +374,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-The following example uses the [`compose()`](#compose) function to use multiple `graphql()` enhancers at once.
+The following example uses the [`compose()`][] function to use multiple `graphql()` enhancers at once.
 
 ```js
 export default compose(
@@ -395,7 +395,7 @@ This property allows you to configure the name of the prop that gets passed down
 
 **Example:**
 
-This example uses the [`compose`](#compose) function to use multiple `graphql()` HOCs together.
+This example uses the [`compose()`][] function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -462,15 +462,15 @@ class MyContainerComponent extends Component {
 
 ### `config.alias`
 
-By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more then one higher order components and you look at the [React Devtools][].
-
-[React Devtools]: https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434
+By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more then one higher order components and you look at the [React Devtools](https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434).
 
 To configure the name of your higher order component wrapper, you may use the `config.alias` property. So for example, if you set `config.alias` to `'withCurrentUser'` your wrapper component display name would be `withCurrentUser(${WrappedComponent.displayName})` instead of `Apollo(${WrappedComponent.displayName})`.
 
 **Example:**
 
-This example uses the [`compose`](#compose) function to use multiple `graphql()` HOCs together.
+This example uses the [`compose()`][] function to use multiple `graphql()` HOCs together.
+
+[`compose()`]: #composeenhancerscomponent
 
 ```js
 export default compose(

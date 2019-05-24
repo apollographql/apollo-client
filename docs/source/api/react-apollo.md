@@ -1,4 +1,4 @@
----
+(---
 title: React Apollo
 description: React Apollo API reference
 ---
@@ -356,7 +356,7 @@ export default graphql(gql`{ ... }`, {
 
 ### `config.props`
 
-The `config.props` property allows you to define a map function that takes your props including the props added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new props object that will be provided to the component that `graphql()` is wrapping.
+The `config.props` property allows you to define a map function that takes your props including the props added by the `graphql()` function ([`props.data`](#propsdata) for queries and [`props.mutate`][] for mutations) and allows you to compute a new props object that will be provided to the component that `graphql()` is wrapping.
 
 The function you define behaves almost exactly like [`mapProps` from Recompose](https://github.com/acdlite/recompose/blob/2e71fdf4270cc8022a6574aaf00731bfc25dcae6/docs/API.md#mapprops) providing the same benefits without the need for another library.
 
@@ -366,7 +366,7 @@ Another benefit of `config.props` is that it also allows you to decouple your pu
 
 **Example:**
 
-This example uses [`props.data.fetchMore`](#graphql-query-data-fetchMore).
+This example uses [`props.data.fetchMore`](#datafetchmoreoptions).
 
 ```jsx
 export default graphql(gql`{ ... }`, {
@@ -429,7 +429,7 @@ function MyComponent({ data }) {
 
 ### `config.name`
 
-This property allows you to configure the name of the prop that gets passed down to your component. By default if the GraphQL document you pass into `graphql()` is a query then your prop will be named [`data`](#graphql-query-data). If you pass a mutation then your prop will be named [`mutate`](#graphql-mutation-mutate). While appropriate these default names collide when you are trying to use multiple queries or mutations with the same component. To avoid collisions you may use `config.name` to provide the prop from each query or mutation HOC a new name.
+This property allows you to configure the name of the prop that gets passed down to your component. By default if the GraphQL document you pass into `graphql()` is a query then your prop will be named [`data`](#propsdata). If you pass a mutation then your prop will be named [`mutate`](#propsmutate). While appropriate these default names collide when you are trying to use multiple queries or mutations with the same component. To avoid collisions you may use `config.name` to provide the prop from each query or mutation HOC a new name.
 
 **Example:**
 
@@ -575,7 +575,7 @@ A boolean representing whether or not a query request is currently in flight for
 
 However, just because `data.loading` is true it does not mean that you won’t have data. For instance, if you already have `data.todos`, but you want to get the latest todos from your API `data.loading` might be true, but you will still have the todos from your previous request.
 
-There are multiple different network states that your query may be in. If you want to see what the network state of your component is in more detail then refer to [`data.networkStatus`](#graphql-query-data-networkStatus).
+There are multiple different network states that your query may be in. If you want to see what the network state of your component is in more detail then refer to [`data.networkStatus`](#datanetworkstatus).
 
 **Example:**
 
@@ -611,10 +611,10 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 ### `data.networkStatus`
 
-`data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`](#graphql-query-data-loading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
+`data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`][] does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
 
 1. `loading`: The query has never been run before and the request is now pending. A query will still have this network status even if a result was returned from the cache, but a query was dispatched anyway.
-2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#graphql-config-options-variables) changes on their queries.
+2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#optionsvariables) changes on their queries.
 3. `fetchMore`: Indicates that `fetchMore` was called on this query and that the network request created is currently in flight.
 4. `refetch`: It means that `refetch` was called on a query and the refetch request is currently in flight.
 5. Unused.
@@ -622,7 +622,9 @@ export default graphql(gql`query { ... }`)(MyComponent);
 7. `ready`: No request is in flight for this query, and no errors happened. Everything is OK.
 8. `error`: No request is in flight for this query, but one or more errors were detected.
 
-If the network status is less then 7 then it is equivalent to [`data.loading`](#graphql-query-data-loading) being true. In fact you could replace all of your `data.loading` checks with `data.networkStatus < 7` and you would not see a difference. It is recommended that you use `data.loading`, however.
+If the network status is less then 7 then it is equivalent to [`data.loading`][] being true. In fact you could replace all of your `data.loading` checks with `data.networkStatus < 7` and you would not see a difference. It is recommended that you use `data.loading`, however.
+
+[`data.loading`](#dataloading)
 
 **Example:**
 
@@ -717,7 +719,7 @@ A common practice is to wrap the `subscribeToMore` call within `getDerivedStateF
 
 - `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
-- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback.
+- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#datafetchmoreoptions) callback.
 - `[onError]`: An optional error callback.
 
 In order to update the query's store with the result of the subscription, you must specify either the `updateQuery` option in `subscribeToMore` or the `reducer` option in your `graphql()` function.
@@ -776,9 +778,11 @@ Polling is a good way to keep the data in your UI fresh. By refetching your data
 
 If you call `data.startPolling` when your query is already polling then the current polling process will be cancelled and a new process will be started with the interval you specified.
 
-You may also use [`options.pollInterval`](#graphql-config-options-pollInterval) to start polling immediately after your component mounts. It is recommend that you use [`options.pollInterval`](#graphql-config-options-pollInterval) if you don’t need to arbitrarily start and stop polling.
+You may also use [`options.pollInterval`][] to start polling immediately after your component mounts. It is recommend that you use [`options.pollInterval`][] if you don’t need to arbitrarily start and stop polling.
 
 If you set your `interval` to 0 then that means no polling instead of executing a request every JavaScript event loop tick.
+
+[`options.pollInterval`]: #optionspollinterval
 
 **Example:**
 
@@ -855,7 +859,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`][].
 
 **Example:**
 
@@ -938,7 +942,7 @@ export default graphql(gql`query { ... }`, {
 
 The interval in milliseconds at which you want to start polling. Whenever that number of milliseconds elapses your query will be executed using the network interface and another execution will be scheduled using the configured number of milliseconds.
 
-This option will start polling your query immediately when the component mounts. If you want to start and stop polling dynamically then you may use [`data.stopPolling`](#graphql-query-data-startPolling) and [`data.startPolling`](#graphql-query-data-stopPolling).
+This option will start polling your query immediately when the component mounts. If you want to start and stop polling dynamically then you may use [`data.startPolling`](#datastartpollinginterval) and [`data.stopPolling`](#datastoppolling).
 
 If you set `options.pollInterval` to 0 then that means no polling instead of executing a request every JavaScript event loop tick.
 
@@ -992,9 +996,11 @@ The `mutate` function will actually execute your mutation using the network inte
 
 To learn more about how mutations work, be sure to check out the [mutations usage documentation](/essentials/mutations/).
 
-The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-config-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
+The `mutate` function accepts the same options that [`config.options`][] for mutations accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
 
-The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`](#graphql-mutation-config-options) _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`](#graphql-mutation-config-options).
+The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`][] _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`][].
+
+[`config.options`]: #configoptions-2
 
 **Example:**
 
@@ -1020,9 +1026,12 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`][].
 
-The properties accepted in this options object may also be accepted by the [`props.mutate`](#graphql-mutation-mutate) function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
+The properties accepted in this options object may also be accepted by the [`props.mutate`][] function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
+
+[`config.options`]: #configoptions
+[`props.mutate`]: #propsmutate
 
 **Example:**
 
@@ -1060,7 +1069,7 @@ export default graphql(gql`mutation { ... }`)(MyComponent);
 
 ### `options.variables`
 
-The variables which will be used to execute the mutation operation. These variables should correspond to the variables that your mutation definition accepts. If you define `config.options` as a function, or you pass variables into the [`props.mutate`](#graphql-mutation-mutate) function then you may compute your variables from props and component state.
+The variables which will be used to execute the mutation operation. These variables should correspond to the variables that your mutation definition accepts. If you define `config.options` as a function, or you pass variables into the [`props.mutate`][] function then you may compute your variables from props and component state.
 
 **Example:**
 
@@ -1085,7 +1094,9 @@ Often when you mutate data it is fairly easy to predict what the response of the
 
 To learn more about the benefits of optimistic data and how to use it be sure to read the recipe on [Optimistic UI](/features/optimistic-ui/).
 
-This optimistic response will be used with [`options.update`](#graphql-mutation-options-update) and [`options.updateQueries`](#graphql-mutation-options-updateQueries) to apply an update to your cache which will be rolled back before applying the update from the actual response.
+This optimistic response will be used with [`options.update`][] and [`options.updateQueries`][] to apply an update to your cache which will be rolled back before applying the update from the actual response.
+
+[`options.updateQueries`]: #optionsupdatequeries
 
 **Example:**
 
@@ -1128,7 +1139,7 @@ export default graphql(gql`
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
 
-`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](#mutation-render-prop) section for more details).
+`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](#render-prop-function-1) section for more details).
 
 In order to change the data in your store call methods on your [`DataProxy`][] instance like [`writeQuery and `writeFragment`](/advanced/caching/#writequery-and-writefragment). This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
 
@@ -1160,7 +1171,7 @@ export default graphql(gql`
 
 ### `options.refetchQueries`
 
-Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`](#graphql-mutation-options-updateQueries), and [`options.update`](#graphql-mutation-options-update). However, you can update the data in your cache more reliably at the cost of efficiency by using `options.refetchQueries`.
+Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`][], and [`options.update`][]. However, you can update the data in your cache more reliably at the cost of efficiency by using `options.refetchQueries`.
 
 `options.refetchQueries` will execute one or more queries using your network interface and will then normalize the results of those queries into your cache. Allowing you to potentially refetch queries you had fetched before, or fetch brand new queries.
 
@@ -1174,6 +1185,8 @@ If `options.refetchQueries` is an array of objects then the objects must have tw
 - `[variables]`: Is an optional object of variables that is required when `query` accepts some variables.
 
 If an array of objects with this shape is specified then Apollo Client will refetch these queries with their variables.
+
+[`options.update`]: #optionsupdate
 
 **Example:**
 
@@ -1225,15 +1238,15 @@ export default graphql(gql`mutation { ... }`, {
 })(MyComponent);
 ```
 
-Please note that refetched queries are handled asynchronously, and by default are not necessarily completed before the mutation has completed. If you want to make sure refetched queries are completed before the mutation is considered done (or resolved), set [`options.awaitRefetchQueries`](#graphql-mutation-options-awaitRefetchQueries) to `true`.
+Please note that refetched queries are handled asynchronously, and by default are not necessarily completed before the mutation has completed. If you want to make sure refetched queries are completed before the mutation is considered done (or resolved), set [`options.awaitRefetchQueries`](#optionsawaitrefetchqueries) to `true`.
 
 ### `options.awaitRefetchQueries`
 
-Queries refetched using [`options.refetchQueries`](#graphql-mutation-options-refetchQueries) are handled asynchronously, which means by default they are not necessarily completed before the mutation has completed. Setting `options.awaitRefetchQueries` to `true` will make sure refetched queries are completed before the mutation is considered done (or resolved). `options.awaitRefetchQueries` is `false` by default.
+Queries refetched using [`options.refetchQueries`](#optionsrefetchqueries) are handled asynchronously, which means by default they are not necessarily completed before the mutation has completed. Setting `options.awaitRefetchQueries` to `true` will make sure refetched queries are completed before the mutation is considered done (or resolved). `options.awaitRefetchQueries` is `false` by default.
 
 ### `options.updateQueries`
 
-**Note: We recommend using [update](#graphql-mutation-options-update) instead of `updateQueries`. `updateQueries` will be removed in the next version of Apollo Client**
+**Note: We recommend using [update](#optionsupdate) instead of `updateQueries`. `updateQueries` will be removed in the next version of Apollo Client**
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.updateQueries` function.
 
@@ -1263,7 +1276,7 @@ The first argument to the function you provide as the value for your object will
 
 The second argument to your function value will be an object with three properties:
 
-- `mutationResult`: The `mutationResult` property will represent the result of your mutation after hitting the server. If you provided an [`options.optimisticResponse`](#graphql-mutation-options-optimisticResponse) then `mutationResult` may be that object.
+- `mutationResult`: The `mutationResult` property will represent the result of your mutation after hitting the server. If you provided an [`options.optimisticResponse`](#optionsoptimisticresponse) then `mutationResult` may be that object.
 - `queryVariables`: The last set of variables that the query was executed with. This is helpful because when you specify the query name it will only update the data in the store for your current variable set.
 - `queryName`: This is the name of the query you are updating. It is the same name as the key you provided to `options.updateQueries`.
 
@@ -1344,3 +1357,4 @@ function MyComponent({ client }) {
 
 export default withApollo(MyComponent);
 ```
+)

@@ -17,7 +17,7 @@ A [Vue.js](https://vuejs.org/) integration is maintained by Guillaume Chau ([@Ak
 
 ## Angular
 
-To use Apollo with the [Angular](https://angular.io) rendering library, see the [Angular guide](/docs/angular);
+To use Apollo with the [Angular](https://angular.io) rendering library, see the [Angular guide](https://www.apollographql.com/docs/angular);
 
 ## Ember
 

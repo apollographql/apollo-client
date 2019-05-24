@@ -129,7 +129,7 @@ mutate({
 
 ### `update`
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-apollo/mutations.html#graphql-mutation-options-update).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-apollo/#optionsupdate).
 
 ```javascript
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -173,7 +173,7 @@ const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
 
 **NOTE: We recommend using the more flexible `update` API instead of `updateQueries`. The `updateQueries` API may be deprecated in the future.**
 
-As its name suggests, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI will update automatically based on mutation results, as long as the object IDs in the result match up with the IDs you already have in your store. See the [`normalization`](#normalization) documentation above for more information about how to take advantage of this feature.
+As its name suggests, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI will update automatically based on mutation results, as long as the object IDs in the result match up with the IDs you already have in your store. See the [`normalization`](#normalization-with-dataidfromobject) documentation above for more information about how to take advantage of this feature.
 
 However, if you are removing or adding items to a list with a mutation or can't assign object identifiers to the relevant objects, you'll have to use `updateQueries` to make sure that your UI reflects the change correctly.
 
@@ -480,7 +480,7 @@ cacheResolvers: {
 
 ## Resetting the store
 
-Sometimes, you may want to reset the store entirely, such as [when a user logs out](../recipes/authentication.html#login-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
+Sometimes, you may want to reset the store entirely, such as [when a user logs out](/recipes/authentication.html#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {

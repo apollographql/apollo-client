@@ -122,7 +122,7 @@ Apollo Client is easy to get started with, but extensible for when you need to b
 
 This flexibility makes it simple to create your dream client by building extensions on top of Apollo. We're always really impressed by what our contributors have built on top of Apollo - check out some of their packages:
 
-- [Apollo Link community links](/docs/link/links/community.html): Pluggable links created by the community
+- [Apollo Link community links](https://www.apollographql.com/docs/link/links/community/): Pluggable links created by the community
 - [apollo-cache-persist](https://blog.apollographql.com/announcing-apollo-cache-persist-cb05aec16325): Simple persistence for your Apollo cache ([@jamesreggio](https://github.com/jamesreggio))
 - [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
 - [AppSync by AWS](https://blog.apollographql.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood

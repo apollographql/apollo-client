@@ -11,7 +11,7 @@ React-Apollo includes a component for providing a client instance to a React com
 import { ApolloProvider } from 'react-apollo';
 ```
 
-Makes the GraphQL client available to any of your components enhanced by the `graphql()` function. The `<ApolloProvider/>` component works the same as the `react-redux` `<Provider/>` component. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`](#graphql) function, or the [`withApollo`](#withApollo) function.
+Makes the GraphQL client available to any of your components enhanced by the `graphql()` function. The `<ApolloProvider/>` component works the same as the `react-redux` `<Provider/>` component. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`][] function, or the [`withApollo()`][] function.
 
 If you do not add this component to the root of your React tree then your components enhanced with Apollo capabilities will not be able to function.
 
@@ -19,7 +19,7 @@ The `<ApolloProvider/>` component takes the following props:
 
 - `client`: The required [`ApolloClient`][] instance. This [`ApolloClient`][] instance will be used by all of your components enhanced with GraphQL capabilties.
 
-If you want to get direct access to your [`ApolloClient`][] instance that is provided by `<ApolloProvider/>` in your components then be sure to look at the [`withApollo()`](#withApollo) enhancer function.
+If you want to get direct access to your [`ApolloClient`][] instance that is provided by `<ApolloProvider/>` in your components then be sure to look at the [`withApollo()`][] enhancer function.
 
 **Example:**
 
@@ -106,13 +106,13 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dt>`refetch`: (variables?: TVariables) => Promise<ApolloQueryResult></dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
   <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
-  <dd>A function that enables [pagination](../features/pagination.html) for your query</dd>
+  <dd>A function that enables [pagination](/features/pagination/) for your query</dd>
   <dt>`startPolling`: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
   <dt>`stopPolling`: () => void</dt>
   <dd>This function stops the query from polling.</dd>
   <dt>`subscribeToMore`: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
-  <dd>A function that sets up a [subscription](../advanced/subscriptions.html). `subscribeToMore` returns a function that you can use to unsubscribe.</dd>
+  <dd>A function that sets up a [subscription](/advanced/subscriptions/). `subscribeToMore` returns a function that you can use to unsubscribe.</dd>
   <dt>`updateQuery`: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
   <dd>A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription</dd>
   <dt>`client`: ApolloClient</dt>
@@ -137,7 +137,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dt>`ignoreResults`: boolean</dt>
   <dd>If true, the `data` property on the render prop function will not update with the mutation result.</dd>
   <dt>`optimisticResponse`: Object</dt>
-  <dd>Provide a [mutation response](../features/optimistic-ui.html) before the result comes back from the server</dd>
+  <dd>Provide a [mutation response](/features/optimistic-ui/) before the result comes back from the server</dd>
   <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables}></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
   <dt>`onCompleted`: (data: TData) => void</dt>
@@ -218,12 +218,12 @@ The render prop function that you pass to the `children` prop of `Subscription` 
 import { MockedProvider } from "react-apollo/test-utils";
 ```
 
-The Mocked provider is a test-utility that allows you to create a mocked version of the `ApolloProvider ` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
+The Mocked provider is a test-utility that allows you to create a mocked version of the `ApolloProvider` that doesn't send out network requests to your API but rather allows you to specify the exact response payload for a given request.
 
 The `<MockedProvider />` component takes the following props:
 
 - `addTypename`: A boolean indicating whether or not `__typename` are injected into the documents sent to graphql. This **defaults to true**.
-- `defaultOptions`: An object containing options to pass directly to the `ApolloClient`instance. See documentation [here](./apollo-client.html#apollo-client).
+- `defaultOptions`: An object containing options to pass directly to the `ApolloClient`instance. See documentation [here](/api/apollo-client/#apolloclient).
 - `mocks`: An array containing a request object and the corresponding response. You can define mocks in the following shape:.
 
 ```js
@@ -275,10 +275,7 @@ it("runs the mocked query", () => {
 import { graphql } from 'react-apollo';
 ```
 
-The `graphql()` function is the most important thing exported by `react-apollo`. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql()` function returns a function which will “enhance” any component with reactive GraphQL capabilities. This follows the React [higher-order component][] pattern which is also used by [`react-redux`’s `connect`][] function.
-
-[higher-order component]: https://facebook.github.io/react/docs/higher-order-components.html
-[`react-redux`’s `connect`]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
+The `graphql()` function is the most important thing exported by `react-apollo`. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql()` function returns a function which will “enhance” any component with reactive GraphQL capabilities. This follows the React [higher-order component](https://facebook.github.io/react/docs/higher-order-components.html) pattern which is also used by [`react-redux`’s `connect`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options) function.
 
 The `graphql()` function may be used like this:
 
@@ -316,11 +313,9 @@ const TodoAppWithData = withTodoAppQuery(TodoApp);
 export default TodoAppWithData;
 ```
 
-The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](#ApolloProvider) component higher up in your tree to provide an [`ApolloClient`][] instance that will be used to fetch your data.
+The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`][] component higher up in your tree to provide an [`ApolloClient`][] instance that will be used to fetch your data.
 
-[`ApolloClient`]: #ApolloClient
-
-The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](../essentials/queries.html), a [mutation](../essentials/mutations.html), or a [subscription](../advanced/subscriptions.html). Go to the appropriate API documentation for more information about the functionality and available options for each type.
+The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](/essentials/queries/), a [mutation](/essentials/mutations/), or a [subscription](/advanced/subscriptions/). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
 Before we look into the specific behaviors of each operation, let us look at the `config` object. The `config` object is the second argument you pass into the `graphql()` function, after your GraphQL document. The config is optional and allows you to add some custom behavior to your higher order component.
 
@@ -337,7 +332,7 @@ Lets go through all of the properties that may live on your `config` object.
 
 `config.options` is an object or a function that allows you to define the specific behavior your component should use in handling your GraphQL data.
 
-The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](../essentials/queries.html) and [mutations](../essentials/mutations.html).
+The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](/essentials/queries/) and [mutations](/essentials/mutations/).
 
 You can define `config.options` as a plain object, or you can compute your options from a function that takes the component’s props as an argument.
 
@@ -363,9 +358,7 @@ export default graphql(gql`{ ... }`, {
 
 The `config.props` property allows you to define a map function that takes your props including the props added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new props object that will be provided to the component that `graphql()` is wrapping.
 
-The function you define behaves almost exactly like [`mapProps` from Recompose][] providing the same benefits without the need for another library.
-
-[`mapProps` from Recompose]: https://github.com/acdlite/recompose/blob/2e71fdf4270cc8022a6574aaf00731bfc25dcae6/docs/API.md#mapprops
+The function you define behaves almost exactly like [`mapProps` from Recompose](https://github.com/acdlite/recompose/blob/2e71fdf4270cc8022a6574aaf00731bfc25dcae6/docs/API.md#mapprops) providing the same benefits without the need for another library.
 
 `config.props` is most useful when you want to abstract away complex functions calls into a simple prop that you can pass down to your component.
 
@@ -419,7 +412,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-The following example uses the [`compose()`](#compose) function to use multiple `graphql()` enhancers at once.
+The following example uses the [`compose()`][] function to use multiple `graphql()` enhancers at once.
 
 ```js
 export default compose(
@@ -440,7 +433,7 @@ This property allows you to configure the name of the prop that gets passed down
 
 **Example:**
 
-This example uses the [`compose`](#compose) function to use multiple `graphql()` HOCs together.
+This example uses the [`compose()`][] function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -470,9 +463,7 @@ Below you can see an example of this behavior.
 
 **Example:**
 
-This example uses the [React `ref` feature][].
-
-[React `ref` feature]: https://facebook.github.io/react/docs/refs-and-the-dom.html
+This example uses the [React `ref` feature](https://facebook.github.io/react/docs/refs-and-the-dom.html).
 
 ```jsx
 class MyComponent extends Component {
@@ -508,15 +499,13 @@ class MyContainerComponent extends Component {
 
 ### `config.alias`
 
-By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more than one higher order component and you look at the [React Devtools][].
-
-[React Devtools]: https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434
+By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more than one higher order component and you look at the [React Devtools](https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434).
 
 To configure the name of your higher order component wrapper, you may use the `config.alias` property. So for example, if you set `config.alias` to `'withCurrentUser'` your wrapper component display name would be `withCurrentUser(${WrappedComponent.displayName})` instead of `Apollo(${WrappedComponent.displayName})`.
 
 **Example:**
 
-This example uses the [`compose`](#compose) function to use multiple `graphql()` HOCs together.
+This example uses the [`compose()`][] function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -694,7 +683,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 ### `data.fetchMore(options)`
 
-The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](../features/pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
+The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](/features/pagination/) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
 
 `data.fetchMore` returns a promise that resolves once the query executed to fetch more data has resolved.
 
@@ -702,7 +691,7 @@ The `data.fetchMore` function takes a single `options` object argument. The `opt
 
 - `[query]`: This is an optional GraphQL document created with the `gql` GraphQL tag. If you specify a `query` then that query will be fetched when you call `data.fetchMore`. If you do not specify a `query`, then the query from your `graphql()` HOC will be used.
 - `[variables]`: The optional variables you may provide that will be used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`).
-- `updateQuery(previousResult, { fetchMoreResult, variables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `variables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `variables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](../features/pagination.html) recipe which has a full example.
+- `updateQuery(previousResult, { fetchMoreResult, variables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `variables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `variables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](/features/pagination/) recipe which has a full example.
 
 **Example:**
 
@@ -720,7 +709,7 @@ data.fetchMore({
 
 ### `data.subscribeToMore(options)`
 
-This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](../advanced/caching.html#Subscriptions) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
+This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](/advanced/subscriptions/) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
 
 This function returns an `unsubscribe` function handler which can be used to unsubscribe later.
 
@@ -916,7 +905,7 @@ Valid `fetchPolicy` values are:
 - `cache-first`: This is the default value where we always try reading data from your cache first. If all the data needed to fulfill your query is in the cache then that data will be returned. Apollo will only fetch from the network if a cached result is not available. This fetch policy aims to minimize the number of network requests sent when rendering your component.
 - `cache-and-network`: This fetch policy will have Apollo first trying to read data from your cache. If all the data needed to fulfill your query is in the cache then that data will be returned. However, regardless of whether or not the full data is in your cache this `fetchPolicy` will *always* execute query with the network interface unlike `cache-first` which will only execute your query if the query data is not in your cache. This fetch policy optimizes for users getting a quick response while also trying to keep cached data consistent with your server data at the cost of extra network requests.
 - `network-only`: This fetch policy will *never* return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
-- `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()` and `readFragment()`](../advanced/caching.html#readquery) methods available to you on your `ApolloClient` instance.
+- `cache-only`: This fetch policy will *never* execute a query using your network interface. Instead it will always try reading from the cache. If the data for your query does not exist in the cache then an error will be thrown. This fetch policy allows you to only interact with data in your local client cache without making any network requests which keeps your component fast, but means your local data might not be consistent with what is on the server. If you are interested in only interacting with data in your Apollo Client cache also be sure to look at the [`readQuery()` and `readFragment()`](/advanced/caching/#readquery) methods available to you on your `ApolloClient` instance.
 - `no-cache`: This fetch policy will *never* return your initial data from the cache. Instead it will always make a request using your network interface to the server. Unlike the `network-only` policy, it also will not write any data to the cache after the query completes.
 
 **Example:**
@@ -977,7 +966,7 @@ export default graphql(gql`query { ... }`, {
 
 ### `options.context`
 
-With the flexiblity and power of [Apollo Link](/docs/link) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](/docs/link/overview.html#context)
+With the flexiblity and power of [Apollo Link](https://www.apollographql.com/docs/link) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](https://www.apollographql.com/docs/link/overview/#context)
 
 ### `partialRefetch`
 
@@ -1001,7 +990,7 @@ The higher order component created when you pass a mutation to `graphql()` will 
 
 The `mutate` function will actually execute your mutation using the network interface therefore mutating your data. The `mutate` function will also then update your cache in ways you define.
 
-To learn more about how mutations work, be sure to check out the [mutations usage documentation](../essentials/mutations.html).
+To learn more about how mutations work, be sure to check out the [mutations usage documentation](/essentials/mutations/).
 
 The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-config-options) accepts, so make sure to read through the documentation for that to know what you can pass into the `mutate` function.
 
@@ -1094,7 +1083,7 @@ export default graphql(gql`
 
 Often when you mutate data it is fairly easy to predict what the response of the mutation will be before asking your server. The optimistic response option allows you to make your mutations feel faster by simulating the result of your mutation in your UI before the mutation actually finishes.
 
-To learn more about the benefits of optimistic data and how to use it be sure to read the recipe on [Optimistic UI](../features/optimistic-ui.html).
+To learn more about the benefits of optimistic data and how to use it be sure to read the recipe on [Optimistic UI](/features/optimistic-ui/).
 
 This optimistic response will be used with [`options.update`](#graphql-mutation-options-update) and [`options.updateQueries`](#graphql-mutation-options-updateQueries) to apply an update to your cache which will be rolled back before applying the update from the actual response.
 
@@ -1139,19 +1128,15 @@ export default graphql(gql`
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
 
-`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](./react-apollo.html#mutation-render-prop) section for more details).
+`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](#mutation-render-prop) section for more details).
 
-In order to change the data in your store call methods on your [`DataProxy`][] instance like [`writeQuery`][] and [`writeFragment`][]. This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
+In order to change the data in your store call methods on your [`DataProxy`][] instance like [`writeQuery and `writeFragment`](/advanced/caching/#writequery-and-writefragment). This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
 
-To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`][] and [`readFragment`][].
+To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`](/advanced/caching/#readquery) and [`readFragment`](/advanced/caching/#readfragment).
 
-For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../advanced/caching.html#updating-the-cache-after-a-mutation).
+For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](/advanced/caching/#updating-after-a-mutation).
 
-[`DataProxy`]: ../advanced/caching.html#direct
-[`writeQuery`]: ../advanced/caching.html#writequery-and-writefragment
-[`writeFragment`]: ../advanced/caching.html#writequery-and-writefragment
-[`readQuery`]: ../advanced/caching.html#readquery
-[`readFragment`]: ../advanced/caching.html#readfragment
+[`DataProxy`]: /advanced/caching/#direct-cache-access
 
 **Example:**
 
@@ -1317,14 +1302,9 @@ export default graphql(gql`
 import { compose } from 'react-apollo';
 ```
 
-For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`](#graphql), [`withApollo()`](#withApollo), or [Redux `connect()`][] enhancers. This should clean up your code when you use multiple enhancers. [Redux][] also exports a `compose` function, and so does [Recompose][] so you may choose to use the function from whichever library feels most appropriate.
+For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`][], [`withApollo()`][], or [Redux `connect()`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options) enhancers. This should clean up your code when you use multiple enhancers. [Redux](http://redux.js.org/) also exports a `compose` function, and so does [Recompose](https://github.com/acdlite/recompose) so you may choose to use the function from whichever library feels most appropriate.
 
-An important note is that `compose()` executes the last enhancer _first_ and works its way backwards through the list of enhancers. To illustrate calling three functions like this: `funcC(funcB(funcA(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`. If this does not make sense to you consider using [`flowRight()` from Lodash][] which otherwise has the same behavior.
-
-[Redux `connect()`]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
-[Redux]: http://redux.js.org/
-[Recompose]: https://github.com/acdlite/recompose
-[`flowRight()` from Lodash]: https://lodash.com/docs/4.17.4#flowRight
+An important note is that `compose()` executes the last enhancer _first_ and works its way backwards through the list of enhancers. To illustrate calling three functions like this: `funcC(funcB(funcA(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`. If this does not make sense to you consider using [`flowRight()` from Lodash](https://lodash.com/docs/4.17.4#flowRight) which otherwise has the same behavior.
 
 **Example:**
 
@@ -1343,13 +1323,17 @@ export default compose(
 import { withApollo } from 'react-apollo';
 ```
 
-A simple enhancer which provides direct access to your [`ApolloClient`](apollo-client.html) instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`](apollo-client.html) as a `client` prop.
+A simple enhancer which provides direct access to your [`ApolloClient`](/api/apollo-client/) instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`](/api/apollo-client/) as a `client` prop.
 
-If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphql) the answer is that most of the time you will want to use [`graphql()`](#graphql). [`graphql()`](#graphql) provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
+If you are wondering when to use `withApollo()` and when to use [`graphql()`][] the answer is that most of the time you will want to use [`graphql()`][]. [`graphql()`][] provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
 
-This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](#ApolloProvider) component higher up in your tree to actually provide the client.
+This will only be able to provide access to your client if there is an [`<ApolloProvider/>`][] component higher up in your tree to actually provide the client.
 
-[`ApolloClient`]: #ApolloClient
+[`ApolloClient`]: #apolloclient
+[`<ApolloProvider/>`]: #apolloprovider
+[`graphql()`]: #graphqlquery-configcomponent
+[`withApollo()`]: #withapollocomponent
+[`compose()`]: #composeenhancerscomponent
 
 **Example:**
 

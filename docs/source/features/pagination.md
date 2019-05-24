@@ -10,7 +10,7 @@ In this article, we'll cover the technical details of using Apollo to implement 
 
 ## Using `fetchMore`
 
-In Apollo, the easiest way to do pagination is with a function called [`fetchMore`](../advanced/caching.html#fetchMore), which is provided on the `data` prop by the `graphql` higher order component. This basically allows you to do a new GraphQL query and merge the result into the original result.
+In Apollo, the easiest way to do pagination is with a function called [`fetchMore`](/v2.4/advanced/caching/#incremental-loading-fetchmore), which is provided on the `data` prop by the `graphql` higher order component. This basically allows you to do a new GraphQL query and merge the result into the original result.
 
 You can specify what query and variables to use for the new query, and how to merge the new query result with the existing data on the client. How exactly you do that will determine what kind of pagination you are implementing.
 

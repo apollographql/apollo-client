@@ -35,12 +35,12 @@ The three options you can pass to `clientState` are:
   <dt>[`resolvers`](#resolvers): Object</dt>
   <dd>A map of functions that your GraphQL queries and mutations call in order to read and write to the cache</dd>
   <dt>[`typeDefs`](#schema): string | Array<string></dt>
-  <dd>A string representing your client-side schema written in [Schema Definition Language](/docs/graphql-tools/generate-schema.html#schema-language). This schema is not used for validation (yet!), but is used for introspection in Apollo DevTools</dd>
+  <dd>A string representing your client-side schema written in [Schema Definition Language](https://www.apollographql.com/docs/graphql-tools/generate-schema.html#schema-language). This schema is not used for validation (yet!), but is used for introspection in Apollo DevTools</dd>
 </dl>
 
 None of these options are required. If you don't specify anything, you will still be able to use the `@client` directive to query the cache.
 
-If you'd like a deep dive into the `clientState` config properties, we recommend checking out the [`apollo-link-state` docs](/docs/link/links/state.html). Otherwise, get ready to learn about these properties gradually as we build `Query` and `Mutation` components for local data.
+If you'd like a deep dive into the `clientState` config properties, we recommend checking out the [`apollo-link-state` docs](https://www.apollographql.com/docs/link/links/state/). Otherwise, get ready to learn about these properties gradually as we build `Query` and `Mutation` components for local data.
 
 > If you'd like to follow along, please open our [example app](https://codesandbox.io/s/github/apollographql/apollo-link-state/tree/master/examples/todo) on CodeSandbox. Since this example lives in the `apollo-link-state` repository, it does not use Apollo Boost for setup.
 
@@ -111,7 +111,7 @@ You'll notice in our query that we have an `@client` directive next to our `visi
 
 If you'd like to implement your local state update as a GraphQL mutation, then you'll need to specify a function in your resolver map. The resolver map is an object with resolver functions for each GraphQL object type. You can think of a GraphQL query or mutation as a tree of function calls for each field. These function calls resolve to data or another function call.
 
-The signature of a resolver function is the exact same as resolver functions on the server built with [`graphql-tools`](/docs/graphql-tools/resolvers.html#Resolver-function-signature). Let's quickly recap the four parameters of a resolver function:
+The signature of a resolver function is the exact same as resolver functions on the server built with [`graphql-tools`](https://www.apollographql.com/docs/graphql-tools/resolvers/#Resolver-function-signature). Let's quickly recap the four parameters of a resolver function:
 
 ```js
 fieldName: (obj, args, context, info) => result;
@@ -119,7 +119,7 @@ fieldName: (obj, args, context, info) => result;
 
 1. `obj`: The object containing the result returned from the resolver on the parent field or the `ROOT_QUERY` object in the case of a top-level query or mutation. Don't worry about this one too much for `apollo-link-state`.
 2. `args`: An object containing all of the arguments passed into the field. For example, if you called a mutation with `updateNetworkStatus(isConnected: true)`, the `args` object would be `{ isConnected: true }`.
-3. `context`: The context object, which is shared between your React components and your Apollo Client network stack. The most important thing to note here is that we've added the Apollo cache to the context for you, so you can manipulate the cache with `readQuery`, `writeQuery`, `readFragment`, `writeFragment`, and `writeData`. Learn more about those methods [here](../advanced/caching.html#direct).
+3. `context`: The context object, which is shared between your React components and your Apollo Client network stack. The most important thing to note here is that we've added the Apollo cache to the context for you, so you can manipulate the cache with `readQuery`, `writeQuery`, `readFragment`, `writeFragment`, and `writeData`. Learn more about those methods [here](/v2.4/advanced/caching/#direct-cache-access).
 4. `info`: Information about the execution state of the query. You will probably never have to use this one.
 
 Let's take a look at an example of a resolver where we toggle a todo's completed status:
@@ -236,7 +236,7 @@ Your defaults are written to the cache upon initialization of `apollo-link-state
 
 You can optionally pass a client-side schema to the `typeDefs` config property. This schema is not used for validation like it is on the server because the `graphql-js` modules for schema validation would dramatically increase your bundle size. Instead, your client-side schema is used for introspection in Apollo DevTools, where you can explore your schema in GraphiQL.
 
-Your schema should be written in [Schema Definition Language](/docs/graphql-tools/generate-schema.html#schema-language). Let's view our schema for our todo app:
+Your schema should be written in [Schema Definition Language](https://www.apollographql.com/docs/graphql-tools/generate-schema/#schema-language). Let's view our schema for our todo app:
 
 ```js
 const typeDefs = `
@@ -325,6 +325,6 @@ const Detail = ({ match: { params: { breed, id } } }) => (
 
 Managing your local data with Apollo Client can simplify your state management code since the Apollo cache is your single source of truth for all data in your application. If you'd like to learn more about `apollo-link-state`, check out:
 
-- [`apollo-link-state` docs](/docs/link/links/state.html): Dive deeper into the concepts we just learned, such as resolvers and mixed queries, by taking a look at the `apollo-link-state` docs.
+- [`apollo-link-state` docs](https://www.apollographql.com/docs/link/links/state/): Dive deeper into the concepts we just learned, such as resolvers and mixed queries, by taking a look at the `apollo-link-state` docs.
 - [The future of state management](https://blog.apollographql.com/the-future-of-state-management-dd410864cae2): Read about our vision for the future of state management with GraphQL in the `apollo-link-state` announcement post.
 - [Tutorial video by Sara Vieira](https://youtu.be/2RvRcnD8wHY): Check out this tutorial video by Sara Vieira if you'd like a step-by-step walkthrough on building an app with `apollo-link-state`.

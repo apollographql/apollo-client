@@ -131,7 +131,7 @@ There are a lot of different ways to anticipate that the user will end up needin
 2. The route of a call-to-action button
 3. All of the data for a sub-area of the application, to make navigating within that area instant
 
-If you have some other ideas, please send a PR to this article, and maybe add some more code snippets. A special form of prefetching is [store hydration from the server](./server-side-rendering.html#store-rehydration), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
+If you have some other ideas, please send a PR to this article, and maybe add some more code snippets. A special form of prefetching is [store hydration from the server](/v2.4/features/server-side-rendering/#store-rehydration), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
 
 ## Query splitting
 
@@ -213,7 +213,7 @@ query SeriesEpisodes($seriesId: Int!) {
 }
 ```
 
-By adding a [custom resolver](../advanced/caching.html#cacheRedirect) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
+By adding a [custom resolver](/v2.4/advanced/caching/#cache-redirects-with-cacheredirect) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
 
 ```javascript
 import { ApolloClient } from 'apollo-client';
@@ -294,4 +294,4 @@ const SeriesDetailView = ({ seriesId }) => (
 );
 ```
 
-Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/docs/link/links/batch-http.html) those two queries can be send to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](https://www.apollographql.com/docs/link/links/batch-http/) those two queries can be send to the server in one network request.

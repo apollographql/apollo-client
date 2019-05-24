@@ -47,7 +47,7 @@ export default enhancedComponent;
 
 This way, our wrapped component is only rendered outside of the loading state. That means we only need to take care of 2 states: error or successful load.
 
-> Note: `loading` is only `true` during the first fetch for a particular query. But if you enable [options.notifyOnNetworkStatusChange](../basics/queries.html#graphql-config-options-notifyOnNetworkStatusChange) you can keep track of other loading status using the [data.networkStatus](../basics/queries.html#graphql-query-data-networkStatus) field. You can use a similar pattern to the above.
+> Note: `loading` is only `true` during the first fetch for a particular query. But if you enable [options.notifyOnNetworkStatusChange](/v2.4/api/react-apollo/#optionsnotifyonnetworkstatuschange) you can keep track of other loading status using the [data.networkStatus](/v2.4/api/react-apollo/#datanetworkstatus) field. You can use a similar pattern to the above.
 
 ## Error handling
 

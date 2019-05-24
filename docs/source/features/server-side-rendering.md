@@ -56,9 +56,9 @@ In order to render your application on the server, you need to handle a HTTP req
 
 We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
 
-1. When [creating an Apollo Client instance](../basics/setup.html) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
+1. When [creating an Apollo Client instance](/v2.4/basics/setup/) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
 2. Since you only want to fetch each query result once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid repeated force-fetching.
-3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](../recipes/authentication.html).
+3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](/v2.4/recipes/authentication/).
 
 Once you put that all together, you'll end up with initialization code that looks like this:
 
@@ -219,7 +219,7 @@ function Html({ content, state }) {
 
 If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work.
 
-One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](https://www.apollographql.com/docs/link/links/schema.html) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
+One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](https://www.apollographql.com/docs/link/links/schema/) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
 
 ```js
 import { ApolloClient } from 'apollo-client'

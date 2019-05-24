@@ -4,7 +4,7 @@ title: Authentication
 
 Unless all of the data you are loading is completely public, your app has some sort of users, accounts and permissions systems. If different users have different permissions in your application, then you need a way to tell the server which user is associated with each request.
 
-Apollo Client uses the ultra flexible [Apollo Link](/docs/link) that includes several options for authentication.
+Apollo Client uses the ultra flexible [Apollo Link](https://www.apollographql.com/docs/link/) that includes several options for authentication.
 
 ## Cookie
 
@@ -67,7 +67,7 @@ const client = new ApolloClient({
 });
 ```
 
-Note that the above example is using `ApolloClient` from the `apollo-client` package. Headers can still be modified using `ApolloClient` from the `apollo-boost` package, but since `apollo-boost` doesn't allow the `HttpLink` instance it uses to be modified, headers have to be passed in as a config parameter. See the Apollo Boost [Configuration options](../essentials/get-started.html#configuration) section for more details.
+Note that the above example is using `ApolloClient` from the `apollo-client` package. Headers can still be modified using `ApolloClient` from the `apollo-boost` package, but since `apollo-boost` doesn't allow the `HttpLink` instance it uses to be modified, headers have to be passed in as a config parameter. See the Apollo Boost [Configuration options](/v2.4/essentials/get-started/#configuration-options) section for more details.
 
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 

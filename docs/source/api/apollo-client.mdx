@@ -40,42 +40,44 @@ These options will be merged with options supplied with each request.
 
 The `ApolloClient` class is the core API for Apollo, and the one you'll need to use no matter which integration you are using:
 
-{% tsapibox ApolloClient.constructor %}
-{% tsapibox ApolloClient.watchQuery %}
-{% tsapibox ApolloClient.query %}
-{% tsapibox ApolloClient.mutate %}
-{% tsapibox ApolloClient.subscribe %}
-{% tsapibox ApolloClient.readQuery %}
-{% tsapibox ApolloClient.readFragment %}
-{% tsapibox ApolloClient.writeQuery %}
-{% tsapibox ApolloClient.writeFragment %}
-{% tsapibox ApolloClient.resetStore %}
-{% tsapibox ApolloClient.onResetStore %}
-{% tsapibox ApolloClient.clearStore %}
-{% tsapibox ApolloClient.onClearStore %}
-{% tsapibox ApolloClient.stop %}
-{% tsapibox ApolloClient.reFetchObservableQueries %}
+import {TypescriptApiBox} from 'gatsby-theme-apollo-docs';
+
+<TypescriptApiBox name="ApolloClient.constructor" />
+<TypescriptApiBox name="ApolloClient.watchQuery" />
+<TypescriptApiBox name="ApolloClient.query" />
+<TypescriptApiBox name="ApolloClient.mutate" />
+<TypescriptApiBox name="ApolloClient.subscribe" />
+<TypescriptApiBox name="ApolloClient.readQuery" />
+<TypescriptApiBox name="ApolloClient.readFragment" />
+<TypescriptApiBox name="ApolloClient.writeQuery" />
+<TypescriptApiBox name="ApolloClient.writeFragment" />
+<TypescriptApiBox name="ApolloClient.resetStore" />
+<TypescriptApiBox name="ApolloClient.onResetStore" />
+<TypescriptApiBox name="ApolloClient.clearStore" />
+<TypescriptApiBox name="ApolloClient.onClearStore" />
+<TypescriptApiBox name="ApolloClient.stop" />
+<TypescriptApiBox name="ApolloClient.reFetchObservableQueries" />
 
 ## ObservableQuery
 
 `ApolloClient` Observables extend the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional context and API options.
 
-{% tsapibox ObservableQuery.variables %}
-{% tsapibox ObservableQuery.result %}
-{% tsapibox ObservableQuery.getCurrentResult %}
-{% tsapibox ObservableQuery.refetch %}
-{% tsapibox ObservableQuery.setOptions %}
-{% tsapibox ObservableQuery.setVariables %}
-{% tsapibox ObservableQuery.fetchMore %}
-{% tsapibox ObservableQuery.updateQuery %}
-{% tsapibox ObservableQuery.startPolling %}
-{% tsapibox ObservableQuery.stopPolling %}
-{% tsapibox ObservableQuery.subscribeToMore %}
+<TypescriptApiBox name="ObservableQuery.variables" />
+<TypescriptApiBox name="ObservableQuery.result" />
+<TypescriptApiBox name="ObservableQuery.getCurrentResult" />
+<TypescriptApiBox name="ObservableQuery.refetch" />
+<TypescriptApiBox name="ObservableQuery.setOptions" />
+<TypescriptApiBox name="ObservableQuery.setVariables" />
+<TypescriptApiBox name="ObservableQuery.fetchMore" />
+<TypescriptApiBox name="ObservableQuery.updateQuery" />
+<TypescriptApiBox name="ObservableQuery.startPolling" />
+<TypescriptApiBox name="ObservableQuery.stopPolling" />
+<TypescriptApiBox name="ObservableQuery.subscribeToMore" />
 
 ## Types
 
-{% tsapibox ApolloClientOptions %}
-{% tsapibox DefaultOptions %}
-{% tsapibox NetworkStatus %}
-{% tsapibox ApolloQueryResult %}
-{% tsapibox ApolloCurrentQueryResult %}
+<TypescriptApiBox name="ApolloClientOptions" />
+<TypescriptApiBox name="DefaultOptions" />
+<TypescriptApiBox name="NetworkStatus" />
+<TypescriptApiBox name="ApolloQueryResult" />
+<TypescriptApiBox name="ApolloCurrentQueryResult" />

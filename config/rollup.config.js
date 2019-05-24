@@ -49,28 +49,13 @@ export function rollup({
     return './lib/' + outputPrefix + '.' + format + '.js';
   }
 
-  function convert(format) {
+  function fromSource(format) {
     return {
-      input: outputFile('esm'),
+      input,
       external,
       output: {
         file: outputFile(format),
         format,
-        sourcemap: true,
-        name,
-        globals,
-      },
-      onwarn,
-    };
-  }
-
-  return [
-    {
-      input,
-      external,
-      output: {
-        file: outputFile('esm'),
-        format: 'esm',
         sourcemap: true,
       },
       plugins: [
@@ -90,14 +75,58 @@ export function rollup({
         }),
       ],
       onwarn,
-    },
-    convert('umd'),
-    convert('cjs'),
+    };
+  }
+
+  function fromESM(toFormat) {
+    return {
+      input: outputFile('esm'),
+      output: {
+        file: outputFile(toFormat),
+        format: 'esm',
+        sourcemap: true,
+      },
+      plugins: [{
+        transform(source, id) {
+          const output = typescript.transpileModule(source, {
+            compilerOptions: {
+              // This code has already been compiled to ES5+modules, so we don't
+              // need to compile all the way to ES5 again.
+              target: 'es2018',
+              module: toFormat,
+              // Since we already import helpers from tslib in the .esm.js
+              // bundle, importing helpers at this step tends to duplicate the
+              // require('tslib') call. Since we should only need helpers for
+              // importing and exporting, it should be fine to inline them.
+              // importHelpers: true,
+              allowJs: true,
+              checkJs: false,
+              sourceMap: true,
+            },
+          });
+
+          return {
+            code: output.outputText,
+            // Note: this is the source map from the .esm.js bundle to the
+            // .cjs.js or .umd.js output bundle. We should compose the TS-ESM
+            // and ESM-CJS source maps together, ideally, but I haven't been
+            // able to get that to work yet.
+            map: output.sourceMapText,
+          };
+        }
+      }],
+    }
+  }
+
+  return [
+    fromSource('esm'),
+    fromESM('cjs'),
+    fromESM('umd'),
     {
       input: outputFile('cjs'),
       output: {
         file: outputFile('cjs.min'),
-        format: 'cjs',
+        format: 'esm',
       },
       plugins: [
         minify({

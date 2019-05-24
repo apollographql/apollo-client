@@ -12,6 +12,7 @@ module.exports = {
         versions: {
           '2.4': 'version-2.4-mdx',
         },
+        checkLinksExceptions: ['/api/apollo-client/', '/v2.4/api/apollo-client/'],
         typescriptApiBox: {
           data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',

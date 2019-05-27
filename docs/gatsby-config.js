@@ -43,7 +43,6 @@ module.exports = {
             'features/optimistic-ui',
             'features/server-side-rendering',
             'features/developer-tooling',
-            'features/defer-support',
           ],
           Advanced: [
             'advanced/boost-migration',

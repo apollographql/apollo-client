@@ -133,7 +133,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.storeWriter = new StoreWriter();
     this.storeReader = new StoreReader({
       cacheKeyRoot: this.cacheKeyRoot,
-      freezeResults: config.freezeResults,
+      freezeResults: this.config.freezeResults,
     });
 
     const cache = this;

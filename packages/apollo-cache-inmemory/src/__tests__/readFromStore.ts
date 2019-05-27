@@ -3,7 +3,7 @@ import { IdValue, JsonValue } from 'apollo-utilities';
 import gql from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
 
-import { NormalizedCache, StoreObject, HeuristicFragmentMatcher } from '../';
+import { StoreObject, HeuristicFragmentMatcher } from '../';
 import { StoreReader } from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../objectCache';
 

@@ -89,7 +89,7 @@
     "prop-types": "15.7.2",
     "react": "16.8.6",
     "react-dom": "16.8.6",
-    "rollup": "1.12.3",
+    "rollup": "1.12.4",
     "rollup-plugin-invariant": "0.5.4",
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-node-resolve": "5.0.0",

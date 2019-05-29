@@ -5,11 +5,11 @@ description: Why choose Apollo Client to manage your data?
 
 Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've come to the right place. Through practical examples inspired by our [example app Pupstagram](https://codesandbox.io/s/r5qp83z0yq), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
 
-<h2 id="declarative-data">Declarative data fetching</h2>
+## Declarative data fetching
 
 With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated in a single Query component. This encapsulation makes composing your Query components with your presentational components a breeze! Let's see what this looks like in practice with React Apollo:
 
-```js
+```jsx
 const Feed = () => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {
@@ -28,7 +28,7 @@ Apollo Client takes care of the request cycle from start to finish, including tr
 
 You'll find that when you switch to Apollo Client, you'll be able to delete a lot of unnecessary code related to data management. The exact amount will vary depending on your application, but some teams have reported up to thousands of lines. While you'll find yourself writing less code with Apollo, that doesn't mean you have to compromise on features! Advanced features like optimistic UI, refetching, and pagination are all easily accessible from the Query component props.
 
-<h2 id="caching">Zero-config caching</h2>
+## Zero-config caching
 
 One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Just by setting up Apollo Client, you get an intelligent cache out of the box with no additional configuration required. From the home page of the [Pupstagram example app](https://codesandbox.io/s/r5qp83z0yq), click one of the dogs to see its detail page. Then, go back to the home page. You'll notice that the images on the home page load instantaneously, thanks to the Apollo cache.
 
@@ -94,7 +94,7 @@ const client = new ApolloClient({
 })
 ```
 
-<h2 id="combine-data">Combine local & remote data</h2>
+## Combine local & remote data
 
 Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? This is where `apollo-link-state` comes in, our solution for local state management that allows you to use your Apollo cache as the single source of truth for data in your application.
 
@@ -116,19 +116,19 @@ const GET_DOG = gql`
 
 With `apollo-link-state`, you can add client-side only fields to your remote data seamlessly and query them from your components. In this example, we're querying the client-only field `isLiked` alongside our server data. Your components are made up of local and remote data, now your queries can be too!
 
-<h2 id="ecosystem">Vibrant ecosystem</h2>
+## Vibrant ecosystem
 
 Apollo Client is easy to get started with, but extensible for when you need to build out more advanced features. If you need custom functionality that isn't covered with `apollo-boost`, such as app-specific middleware or cache persistence, you can create your own client by plugging in an Apollo cache and chaining together your network stack with Apollo Link.
 
 This flexibility makes it simple to create your dream client by building extensions on top of Apollo. We're always really impressed by what our contributors have built on top of Apollo - check out some of their packages:
-- [Apollo Link community links](/docs/link/links/community.html): Pluggable links created by the community
+- [Apollo Link community links](https://www.apollographql.com/docs/link/links/community): Pluggable links created by the community
 - [apollo-cache-persist](https://blog.apollographql.com/announcing-apollo-cache-persist-cb05aec16325): Simple persistence for your Apollo cache ([@jamesreggio](https://github.com/jamesreggio))
 - [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
 - [AppSync by AWS](https://blog.apollographql.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
 
 When you choose Apollo to manage your data, you also gain the support of our amazing community. There are thousands of developers in our [Apollo Spectrum community](https://spectrum.chat/apollo) for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://blog.apollographql.com/), updated weekly.
 
-<h2 id="case-studies">Case studies</h2>
+## Case studies
 
 Companies ranging from enterprises to startups trust Apollo Client to power their most critical web & native applications. If you'd like to learn more about how transitioning to GraphQL and Apollo simplified their engineers' workflows and improved their products, check out these case studies:
 

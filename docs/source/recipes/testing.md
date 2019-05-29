@@ -348,4 +348,4 @@ For a working example showing how to test components, check out this project on 
 
 [![Edit React-Apollo Testing](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/40k7j708n4)
 
-<!-- Refer to the [docs](../api/react-apollo.html#MockedProvider) for more information on the API for `<MockedProvider />`. -->
+<!-- Refer to the [docs](/api/react-apollo#mockedprovider) for more information on the API for `<MockedProvider />`. -->

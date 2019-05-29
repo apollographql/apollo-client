@@ -7,11 +7,11 @@ Now that we've learned how to fetch data with Apollo Client, what happens when w
 
 This page assumes some familiarity with building GraphQL mutations. If you'd like a refresher, we recommend [reading this guide](http://graphql.org/learn/queries/#mutations).
 
-The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](./get-started.html) guide if you need help with either of those steps. Let's dive in!
+The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](/essentials/get-started/) guide if you need help with either of those steps. Let's dive in!
 
 > If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/znl94y0vp) on CodeSandbox, and our sample GraphQL server on [this CodeSandBox](https://codesandbox.io/s/plp0mopxq). You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
 
-<h2 id="basic">The Mutation component</h2>
+## The Mutation component
 
 The `Mutation` component is what you'll use to trigger mutations from your UI. To create a `Mutation` component, just pass a GraphQL mutation string wrapped with the `gql` function to `this.props.mutation` and provide a function to `this.props.children` that tells React what to render. The `Mutation` component is an example of a React component that uses the [render prop](https://reactjs.org/docs/render-props.html) pattern. React will call the render prop function you provide with a mutate function and an object with your mutation result containing loading, error, called, and data properties. Let's look at an example:
 
@@ -62,16 +62,16 @@ The second argument to the render prop function is an object with your mutation 
 
 If you're following along with the example on CodeSandbox, you probably noticed that the UI reflecting the list of todos did not update with our newly created todo when you submitted the form. This is because the todos query in the Apollo cache does not know about our newly created todo. In the next section, we'll learn when and how to update the Apollo cache after a mutation.
 
-<h2 id="update">Updating the cache</h2>
+## Updating the cache
 
 Sometimes when you perform a mutation, your GraphQL server and your Apollo cache become out of sync. This happens when the update you're performing depends on data that is already in the cache; for example, deleting and adding items to a list. We need a way to tell Apollo Client to update the query for the list of items. This is where the `update` function comes in! `update` functions aren't required to update the cache for all mutations, but our `addTodo` mutation is an example of where it comes in handy.
 
 The update function is called with the Apollo cache as the first argument. The cache has several utility functions such as `cache.readQuery` and `cache.writeQuery` that allow you to read and write queries to the cache with GraphQL as if it were a server.
-There are other cache methods, such as `cache.readFragment`, `cache.writeFragment`, and `cache.writeData`, which you can learn about in our detailed [caching guide](../advanced/caching.html) if you're curious.
+There are other cache methods, such as `cache.readFragment`, `cache.writeFragment`, and `cache.writeData`, which you can learn about in our detailed [caching guide](/advanced/caching/) if you're curious.
 
 **Note**: The `update` function receives `cache` rather than `client` as its first parameter. This `cache` is typically an instance of `InMemoryCache`, as supplied to the `ApolloClient` constructor when the client was created. In case of the `update` function, when you call `cache.writeQuery`, the update internally calls `broadcastQueries`, so queries listening to the changes will update. However, this behavior of broadcasting changes after `cache.writeQuery` happens only with the `update` function. Anywhere else, `cache.writeQuery` would just write to the cache, and the changes would not be immediately broadcast to the view layer. To avoid this confusion, prefer `client.writeQuery` when writing to cache.
 
-The second argument to the update function is an object with a data property containing your mutation result. If you specify an [optimistic response](../features/optimistic-ui.html), your update function will be called twice: once with your optimistic result, and another time with your actual result. You can use your mutation result to update the cache with `cache.writeQuery`.
+The second argument to the update function is an object with a data property containing your mutation result. If you specify an [optimistic response](/features/optimistic-ui/), your update function will be called twice: once with your optimistic result, and another time with your actual result. You can use your mutation result to update the cache with `cache.writeQuery`.
 
 Now that we've learned about the update function, let's implement one for the `Mutation` component we just built!
 
@@ -172,9 +172,9 @@ const Todos = () => (
 );
 ```
 
-If you try updating a todo, you'll notice that the UI updates immediately. Even though we don't plan on using the mutation return result in our UI, we still need to return the `id` and the property we updated in order for our UI to update reactively. Here, we don't need to specify an update function since the todos query will automatically reconstruct the query result with the updated todo's entry in the cache. If you'd like to dive deeper into the Apollo cache's normalization strategy, check out our advanced [caching guide](../advanced/caching.html).
+If you try updating a todo, you'll notice that the UI updates immediately. Even though we don't plan on using the mutation return result in our UI, we still need to return the `id` and the property we updated in order for our UI to update reactively. Here, we don't need to specify an update function since the todos query will automatically reconstruct the query result with the updated todo's entry in the cache. If you'd like to dive deeper into the Apollo cache's normalization strategy, check out our advanced [caching guide](/advanced/caching/).
 
-<h2 id="errors">Loading and error state</h2>
+## Loading and error state
 
 How do we know that our mutation has completed? What happens when your mutation doesn't complete successfully? We need a way to track loading and error state. Luckily, the Mutation component allows you to do just that. Let's look at the `Todos` component from the previous example:
 
@@ -221,11 +221,11 @@ const Todos = () => (
 
 In the render prop function, we can destructure `loading` and `error` properties off the mutation result in order to track the state of our mutation in our UI. The `Mutation` component also has `onCompleted` and `onError` props in case you would like to provide callbacks instead. Additionally, the mutation result object also has a `called` boolean that tracks whether or not the mutate function has been called.
 
-<h2 id="api">Mutation API overview</h2>
+## Mutation API overview
 
-If you're looking for an overview of all the props `Mutation` accepts and its render prop function, look no further! Most `Mutation` components will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `Mutation` component API in more detail with usage examples, visit our [reference guide](../api/react-apollo.html).
+If you're looking for an overview of all the props `Mutation` accepts and its render prop function, look no further! Most `Mutation` components will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `Mutation` component API in more detail with usage examples, visit our [reference guide](/api/react-apollo/).
 
-<h3 id="props">Props</h3>
+### Props
 
 The Mutation component accepts the following props. Only `mutation` and `children` are **required**.
 
@@ -241,7 +241,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dt>`ignoreResults`: boolean</dt>
   <dd>If true, the `data` property on the render prop function will not update with the mutation result.</dd>
   <dt>`optimisticResponse`: Object</dt>
-  <dd>Provide a [mutation response](../features/optimistic-ui.html) before the result comes back from the server</dd>
+  <dd>Provide a [mutation response](/features/optimistic-ui/) before the result comes back from the server</dd>
   <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables} | string></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
   <dt>`awaitRefetchQueries`: boolean</dt>
@@ -254,7 +254,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
 
-<h3 id="render-prop">Render prop function</h3>
+### Render prop function
 
 The render prop function that you pass to the `children` prop of `Mutation` is called with the `mutate` function and an object with the mutation result. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
 
@@ -280,11 +280,11 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
   <dd>Your `ApolloClient` instance. Useful for invoking cache methods outside the context of the update function, such as `client.writeData` and `client.readQuery`.</dd>
 </dl>
 
-<h2 id="next-steps">Next steps</h2>
+## Next steps
 
 Learning how to build `Mutation` components to update your data is an important part of developing applications with Apollo Client. Now that you're well-versed in updating data, why not try executing client-side mutations with `apollo-link-state`? Here are some resources we think will help you level up your skills:
 
-- [Optimistic UI](../features/optimistic-ui.html): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
-- [Local state](./local-state.html): Manage your local state with Apollo by executing client-side mutations with `apollo-link-state`.
-- [Caching in Apollo](../advanced/caching.html): Dive deep into the Apollo cache and how it's normalized in our advanced guide on caching. Understanding the cache is helpful when writing your mutation's `update` function!
+- [Optimistic UI](/features/optimistic-ui/): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
+- [Local state](/essentials/local-state/): Manage your local state with Apollo by executing client-side mutations with `apollo-link-state`.
+- [Caching in Apollo](/advanced/caching/): Dive deep into the Apollo cache and how it's normalized in our advanced guide on caching. Understanding the cache is helpful when writing your mutation's `update` function!
 - [Mutation component video by Sara Vieira](https://youtu.be/2SYa0F50Mb4): If you need a refresher or learn best by watching videos, check out this tutorial on `Mutation` components by Sara!

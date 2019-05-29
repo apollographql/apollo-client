@@ -1,27 +1,23 @@
 module.exports = {
+  pathPrefix: '/docs/react',
   __experimentalThemes: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
         root: __dirname,
-        docs: require('./docs.json'),
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',
-        contentDir: 'docs/source',
-        basePath: '/docs/react',
         githubRepo: 'apollographql/apollo-client',
-        versions: [
-          {
-            value: '2.4',
-            ref: 'version-2.4',
-          },
-          {
-            value: '2.5',
-            ref: 'HEAD',
-            default: true,
-          },
+        defaultVersion: 2.5,
+        versions: {
+          2.4: 'version-2.4',
+        },
+        checkLinksExceptions: [
+          '/api/apollo-client/',
+          '/v2.4/api/apollo-client/',
         ],
         typescriptApiBox: {
+          data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',
         },
         sidebarCategories: {

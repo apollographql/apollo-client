@@ -4,11 +4,11 @@ title: Recompose patterns
 
 [Recompose](https://github.com/acdlite/recompose) is a toolbelt for working with React components in a reusable, functional way. The workflow is similar to libraries like Underscore or Lodash, which can help you avoid re-implementing common patterns and keep your code [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself). Check out the [Recompose API](https://github.com/acdlite/recompose/blob/master/docs/API.md) for all the details.
 
-<h2 id="loading-status">Loading status</h2>
+## Loading status
 
 A common use-case when using the `graphql` HOC is to display a "loading" screen while your data is being fetched. We often end up with something like this:
 
-```js
+```jsx
 const Component = props => {
   if (props.data.loading) {
     return <LoadingPlaceholder>
@@ -47,9 +47,9 @@ export default enhancedComponent;
 
 This way, our wrapped component is only rendered outside of the loading state. That means we only need to take care of 2 states: error or successful load.
 
-> Note: `loading` is only `true` during the first fetch for a particular query. But if you enable [options.notifyOnNetworkStatusChange](../basics/queries.html#graphql-config-options-notifyOnNetworkStatusChange) you can keep track of other loading status using the [data.networkStatus](../basics/queries.html#graphql-query-data-networkStatus) field. You can use a similar pattern to the above.
+> Note: `loading` is only `true` during the first fetch for a particular query. But if you enable [options.notifyOnNetworkStatusChange](/api/react-apollo/#optionsnotifyonnetworkstatuschange) you can keep track of other loading status using the [data.networkStatus](/api/react-apollo/#datanetworkstatus) field. You can use a similar pattern to the above.
 
-<h2 id="error-handling">Error handling</h2>
+## Error handling
 
 Similar to the loading state above, we might want to display a different component in the case of an error, or let the user `refetch()`. We will use `withProps()` to include the refetch method directly in the props. This way our universal error handler can always expect it to be there and is more decoupled.
 
@@ -82,7 +82,7 @@ export default enhancedComponent;
 
 Now we can count on results being available for our default component and don't have to manually check for loading state or errors inside the `render` function.
 
-<h2 id="query-lifecycle">Query lifecycle</h2>
+## Query lifecycle
 
 There are some use-cases when we need to execute code after a query finishes fetching. From the example above, we would render our default component only when there is no error and loading is finished.
 
@@ -112,7 +112,7 @@ There is one caveat: we need to be aware that the query can skip the loading sta
 
 We will also use recompose's `withState()` to keep value for our option picker. For this example we will assume the default `data` prop name is unchanged.
 
-```js
+```jsx
 const DEFAULT_PICK = "orange";
 const withPickerValue = withState("pickerValue", "setPickerValue", null);
 
@@ -166,7 +166,7 @@ const enhancedComponent = compose(
 )(Component);
 ```
 
-<h2 id="controlling-poll-interval">Controlling pollInterval</h2>
+## Controlling pollInterval
 
 This case is borrowed from [David Glasser's post on the Apollo blog](https://blog.apollographql.com/dynamic-graphql-polling-with-react-and-apollo-client-fb36e390d250) about the Meteor's Galaxy UI migrations panel implementation. In the post, he says:
 
@@ -229,16 +229,17 @@ const withData = compose(
     }
   })
 );
+
 const MigrationPanelWithData = withData(MigrationPanel);
 ```
 
 Note that we check the current value of `pollInterval` before changing it because, by default in React, nested components will get re-rendered any time we change state, even if you change it to the same value. You can deal with this using `shouldComponentUpdate` or `React.PureComponent`, but in this case it’s straightforward just to only set the state when it’s actually changing.
 
-<h2 id="other">Other use-cases</h2>
+## Other use-cases
 
 Recompose is a powerful tool and can be applied to all sorts of other cases. Here are a few final examples.
 
-Normally, if you wanted to add side effects to the `mutate` function, you would manage them in the `graphql` HOC's [`props` option](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-config-props) by doing something like `{ mutate: () => mutate().then(sideEffectHandler) }`. But that's not very reusable. Using recompose's `withHandlers()` you can compose the same prop manipulation in any number of components. You can see a more detailed example [here](https://medium.com/front-end-developers/how-i-write-mutations-in-apollo-w-recompose-1c0ab06ef4ea).
+Normally, if you wanted to add side effects to the `mutate` function, you would manage them in the `graphql` HOC's [`props` option](/api/react-apollo/#configprops) by doing something like `{ mutate: () => mutate().then(sideEffectHandler) }`. But that's not very reusable. Using recompose's `withHandlers()` you can compose the same prop manipulation in any number of components. You can see a more detailed example [here](https://medium.com/front-end-developers/how-i-write-mutations-in-apollo-w-recompose-1c0ab06ef4ea).
 
 Mutations can also be tracked using recompose's `withState`, since it has no effect on your query's `loading` state. For example, you could use it to disable buttons while submitting form data.
 

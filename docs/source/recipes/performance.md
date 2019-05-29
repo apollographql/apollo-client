@@ -2,11 +2,11 @@
 title: Improving performance
 ---
 
-<h2 id="cache-redirects">Redirecting to cached data</h2>
+## Redirecting to cached data
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 
-```
+```graphql
 query ListView {
   books {
     id
@@ -18,7 +18,7 @@ query ListView {
 
 When a specific book is selected, the detail view displays an individual item using this query:
 
-```
+```graphql
 query DetailView {
   book(id: $id) {
     id
@@ -51,7 +51,7 @@ Apollo Client will use the return value of the custom resolver to look up the it
 
 To figure out what you should put in the `__typename` property run one of the queries in GraphiQL and get the `__typename` field:
 
-```
+```graphql
 query ListView {
   books {
     __typename
@@ -71,7 +71,7 @@ The value that's returned (the name of your type) is what you need to put into t
 
 It is also possible to return a list of IDs:
 
-```
+```js
 cacheRedirects: {
   Query: {
     books: (_, args) => args.ids.map(id =>
@@ -80,7 +80,7 @@ cacheRedirects: {
 },
 ```
 
-<h2 id="prefetching">Prefetching data</h2>
+## Prefetching data
 
 Prefetching is one of the easiest ways to make your application's UI feel a lot faster with Apollo Client. Prefetching simply means loading data into the cache before it needs to be rendered on the screen. Essentially, we want to load all data required for a view as soon as we can guess that a user will navigate to it.
 
@@ -131,9 +131,9 @@ There are a lot of different ways to anticipate that the user will end up needin
 2. The route of a call-to-action button
 3. All of the data for a sub-area of the application, to make navigating within that area instant
 
-If you have some other ideas, please send a PR to this article, and maybe add some more code snippets. A special form of prefetching is [store hydration from the server](./server-side-rendering.html#store-rehydration), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
+If you have some other ideas, please send a PR to this article, and maybe add some more code snippets. A special form of prefetching is [store hydration from the server](/features/server-side-rendering/#store-rehydration), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
 
-<h2 id="query-splitting">Query splitting</h2>
+## Query splitting
 
 Prefetching is an easy way to make your applications UI feel faster. You can use mouse events to predict the data that could be needed.
 This is powerful and works perfectly on the browser, but can not be applied to a mobile device.
@@ -141,12 +141,14 @@ This is powerful and works perfectly on the browser, but can not be applied to a
 One solution for improving the UI experience would be the usage of fragments to preload more data in a query, but loading huge amounts of data (that you probably never show to the user) is expensive.
 
 Another solution would be to split huge queries into two smaller queries:
+
 - The first one could load data which is already in the store. This means that it can be displayed instantly.
 - The second query could load data which is not in the store yet and must be fetched from the server first.
 
 This solution gives you the benefit of not fetching too much data, as well as the possibility to show some part of the views data before the server responds.
 
 Lets say you have the following schema:
+
 ```graphql
 type Series {
   id: Int!
@@ -169,10 +171,12 @@ type Query {
 ```
 
 And you have two Views:
+
 1. Series Overview: List of all Series with their description and cover
 2. Series DetailView: Detail View of a Series with its description, cover and a list of episodes
 
 The query for the Series Overview would look like the following:
+
 ```graphql
 query SeriesOverviewData {
   series {
@@ -185,6 +189,7 @@ query SeriesOverviewData {
 ```
 
 The queries for the Series DetailView would look like this:
+
 ```graphql
 query SeriesDetailData($seriesId: Int!) {
   oneSeries(id: $seriesId) {
@@ -209,7 +214,7 @@ query SeriesEpisodes($seriesId: Int!) {
 }
 ```
 
-By adding a [custom resolver](../advanced/caching.html#cacheRedirect) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
+By adding a [custom resolver](/advanced/caching/#cache-redirects-with-cacheredirects) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
 
 ```javascript
 import { ApolloClient } from 'apollo-client';
@@ -232,6 +237,7 @@ const client = new ApolloClient({
 ```
 
 A component for the second view that implements the two queries could look like this:
+
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`
   query SeriesDetailData($seriesId: Int!) {
@@ -289,4 +295,4 @@ const SeriesDetailView = ({ seriesId }) => (
 );
 ```
 
-Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/docs/link/links/batch-http.html) those two queries can be send to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](https://www.apollographql.com/docs/link/links/batch-http) those two queries can be send to the server in one network request.

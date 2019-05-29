@@ -7,11 +7,11 @@ React Apollo was designed from the beginning to make using Apollo with React the
 
 **Important**: The 2.1 version only introduces new features, it doesn't remove, break, or deprecate any existing usage of the `graphql` higher order component. You should be able to start using the new features as they make sense without worrying about a full rewrite of your app!
 
-<h2 id="query-component">The Query Component</h2>
+## The Query Component
 
 Thinking in components is one of the many amazing things that React brings to teams building applications. With React Apollo 2.1, you can now easily manage your data just using components as well. It is incredibly simple to get started, all you need is a GraphQL query and the new `<Query />` component (note: this assumes you have setup the ApolloProvider in your tree).
 
-```js
+```jsx
 const GET_DOGS = gql`
   query GetDogs {
     dogs {
@@ -33,13 +33,13 @@ const GoodDogsBrent = () => (
 )
 ```
 
-<h3 id="upgrading-from-graphql-to-query">Upgrading from `graphql` to `<Query />`</h3>
+### Upgrading from `graphql` to `<Query />`
 
 You may love the Query component enough to start rewriting parts of your app to use it ([I know we do!](https://github.com/apollographql/GitHunt-React/pull/275)). Upgrading existing connected components is really easy! Let's take a look at what a refactor could look like:
 
 First let's start with a graphql connected component that uses props for the fetchPolicy and passes the loading and currentUser to its wrapped component:
 
-```js
+```jsx
 const PROFILE_QUERY = gql`
   query GetUser {
     currentUser {
@@ -66,7 +66,7 @@ export default graphql(PROFILE_QUERY, {
 
 Writing this with the Query component would look something like this:
 
-```js
+```jsx
 const PROFILE_QUERY = gql`
   query GetUser {
     currentUser {
@@ -90,11 +90,11 @@ const Profile = ({ refetch }) => (
 
 And just like that we have the same UI but everything is a component!
 
-<h3 id="compose-to-render-composition">Updating multiple connected components with compose</h3>
+### Updating multiple connected components with compose
 
 In some cases, it may make sense to split your queries into different operations for reuse, better performance, and separation of concerns. In the past, to easily group all of those data requirements together meant using the `compose` function from React Apollo. Now, you can just compose them directly in your render function! Take a look at this simple example:
 
-```js
+```jsx
 const QueryOne = gql`
   query One {
     one
@@ -160,17 +160,17 @@ const NumbersWithData = () => (
 
 And just like that, we have two composed queries! To explore more migration examples, take a look at each individual commit on this [pull request](https://github.com/apollographql/GitHunt-React/pull/275). It shows a number of use cases being refactored to the new components.
 
-For more information on how to use the new Query component, read the [full guide](./essentials/queries.html)!
+For more information on how to use the new Query component, read the [full guide](/essentials/queries/)!
 
+## The Mutation and Subscription Components
 
-<h2 id="components">The Mutation and Subscription Components</h2>
+Much like the Query component, the Mutation and Subscription component are ways to use Apollo directly within your React tree. They simplify integrating with Apollo, and keep your React app written in React! For more information on the Mutation component, [check out the usage guide](/essentials/mutations/) or if you are wanting to learn about the Subscription component, [read how to here](/advanced/subscriptions/).
 
-Much like the Query component, the Mutation and Subscription component are ways to use Apollo directly within your React tree. They simplify integrating with Apollo, and keep your React app written in React! For more information on the Mutation component, [check out the usage guide](./essentials/mutations.html) or if you are wanting to learn about the Subscription component, [read how to here](./advanced/subscriptions.html).
+## ApolloConsumer
 
-<h2 id="context">ApolloConsumer</h2>
 With upcoming versions of React (starting in React 16.3), there is a new version of context that makes it easier than ever to use components connected to state higher in the tree. While the 2.1 doesn't require React 16.3, we are making it easier than ever to start writing in this style with the `<ApolloConsumer>` component. This is just like the `withApollo` higher order component, just in a normal React component! It takes no props and expects a child function which receives the instance of Apollo Client in your tree. For example:
 
-```js
+```jsx
 const MyClient = () => (
   <ApolloConsumer>
     {(client) => (
@@ -183,5 +183,4 @@ const MyClient = () => (
 )
 ```
 
-For more usage tips on the ApolloConsumer component, checkout the guide [here](./essentials/local-state.html)
-
+For more usage tips on the ApolloConsumer component, checkout the guide [here](/essentials/local-state/)

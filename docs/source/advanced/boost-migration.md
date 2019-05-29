@@ -7,11 +7,11 @@ Apollo Boost is a great way to get started with Apollo Client quickly, but there
 
 We're working on an eject feature for Apollo Boost that will make migration easier in the future, but for now, let's walk through how to migrate off of Apollo Boost.
 
-<h2 id="basic-migration">Basic migration</h2>
+## Basic migration
 
 If you're not using any configuration options on Apollo Boost, migration should be relatively simple. All you will have to change is the file where you initialize `ApolloClient`.
 
-<h3 id="before">Before</h3>
+### Before
 
 Here's what client initialization looks like with Apollo Boost:
 
@@ -23,7 +23,7 @@ const client = new ApolloClient({
 });
 ```
 
-<h3 id="after">After</h3>
+### After
 
 To create a basic client with the same defaults as Apollo Boost, first you need to install some packages:
 
@@ -60,13 +60,13 @@ const client = new ApolloClient({
 });
 ```
 
-The `InMemoryCache` is our recommended cache implementation for Apollo Client. The `HttpLink` is an Apollo Link that sends HTTP requests. Your network stack can be made up of one or more links, which you can chain together to create a customizable network stack. Learn more in our [network layer](./network-layer.html) guide or the [Apollo Link](/docs/link.html) docs.
+The `InMemoryCache` is our recommended cache implementation for Apollo Client. The `HttpLink` is an Apollo Link that sends HTTP requests. Your network stack can be made up of one or more links, which you can chain together to create a customizable network stack. Learn more in our [network layer](/advanced/network-layer/) guide or the [Apollo Link](https://www.apollographql.com/docs/link) docs.
 
-<h2 id="advanced-migration">Advanced migration</h2>
+## Advanced migration
 
 If you are using configuration options on Apollo Boost, your migration path will vary depending on which ones you use. The next example will show an Apollo Boost client configured with every possible option.
 
-<h3 id="before">Before</h3>
+### Before
 
 Here's what client initialization looks like with Apollo Boost:
 
@@ -116,7 +116,7 @@ const client = new ApolloClient({
 });
 ```
 
-<h3 id="after">After</h3>
+### After
 
 To create a client with the same defaults as Apollo Boost, first you need to install some packages:
 

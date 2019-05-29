@@ -264,7 +264,7 @@ export interface MutationOptions<
    * initialized with (since the intitial context is stored as part of the
    * `ObservableQuery` instance). If a specific context is needed when
    * refetching queries, make sure it is configured (via the
-   * [`query` `context` option](/docs/react/api/apollo-client.html#ApolloClient.query))
+   * [`query` `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))
    * when the query is first initialized/run.
    */
   context?: any;

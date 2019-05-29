@@ -28,7 +28,7 @@ There are two principal uses for fragments in Apollo:
 
 In this document we'll outline patterns to do both; we'll also make use of utilities in the [`graphql-anywhere`](https://github.com/apollographql/apollo-client/tree/master/packages/graphql-anywhere) and [`graphql-tag`](https://github.com/apollographql/graphql-tag) packages which aim to help us, especially with the second problem.
 
-<h2 id="reusing-fragments">Reusing fragments</h2>
+## Reusing fragments
 
 The most straightforward use of fragments is to reuse parts of queries (or mutations or subscriptions) in various parts of your application. For instance, in GitHunt on the comments page, we want to fetch the same fields after posting a comment as we originally query. This way we can be sure that we render consistent comment objects as the data changes.
 
@@ -83,7 +83,7 @@ export const COMMENT_QUERY = gql`
 
 You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollographql/GitHunt-React/blob/master/src/routes/CommentsPage.js).
 
-<h2 id="colocating-fragments">Colocating fragments</h2>
+## Colocating fragments
 
 A key advantage of GraphQL is the tree-like nature of the response data, which in many cases mirrors your rendered component hierarchy. This, combined with GraphQL's support for fragments, allows you to split your queries up in such a way that the various fields fetched by the queries are located right alongside the code that uses the field.
 
@@ -103,7 +103,7 @@ The `FeedPage` conducts a query to fetch a list of `Entry`s, and each of the sub
 
 The `graphql-anywhere` package gives us tools to easily construct a single query that provides all the fields that each subcomponent needs, and allows to easily pass the exact field that a component needs to it.
 
-<h3 id="creating-fragments">Creating fragments</h3>
+### Creating fragments
 
 To create the fragments, we again use the `gql` helper and attach to subfields of `ComponentClass.fragments`, for example:
 
@@ -143,7 +143,7 @@ FeedEntry.fragments = {
 };
 ```
 
-<h3 id="filtering-with-fragments">Filtering with fragments</h3>
+### Filtering with fragments
 
 We can also use the `graphql-anywhere` package to filter the exact fields from the `entry` before passing them to the subcomponent. So when we render a `VoteButtons`, we can simply do:
 
@@ -162,7 +162,7 @@ import { filter } from 'graphql-anywhere';
 
 The `filter()` function will grab exactly the fields from the `entry` that the fragment defines.
 
-<h3 id="webpack-importing-fragments" title="Fragments with Webpack">Importing fragments when using Webpack</h3>
+### Importing fragments when using Webpack
 
 When loading `.graphql` files with [graphql-tag/loader](https://github.com/apollographql/graphql-tag/blob/master/loader.js), we can include fragments using `import` statements. For example:
 
@@ -170,15 +170,15 @@ When loading `.graphql` files with [graphql-tag/loader](https://github.com/apoll
 #import "./someFragment.graphql"
 ```
 
-Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](../recipes/webpack.html#Fragments) section for additional details.
+Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](/recipes/webpack/#fragments) section for additional details.
 
-<h2 id="fragment-matcher">Fragments on unions and interfaces</h2>
+## Fragments on unions and interfaces
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration.html).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/advanced/boost-migration/).
 
 By default, Apollo Client doesn't require any knowledge of the GraphQL schema, which means it's very easy to set up and works with any server and supports even the largest schemas. However, as your usage of Apollo and GraphQL becomes more sophisticated, you may start using fragments on interfaces or unions. Here's an example of a query that uses fragments on an interface:
 
-```
+```graphql
 query {
   all_people {
     ... on Character {
@@ -192,7 +192,6 @@ query {
     }
   }
 }
-
 ```
 
 In the query above, `all_people` returns a result of type `Character[]`. Both `Jedi` and `Droid` are possible concrete types of `Character`, but on the client there is no way to know that without having some information about the schema. By default, Apollo Client's cache will use a heuristic fragment matcher, which assumes that a fragment matched if the result included all the fields in its selection set, and didn't match when any field was missing. This works in most cases, but it also means that Apollo Client cannot check the server response for you, and it cannot tell you when you're manually writing an invalid data into the store using `update`, `updateQuery`, `writeQuery`, etc.

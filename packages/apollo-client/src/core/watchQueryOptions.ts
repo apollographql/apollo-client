@@ -17,6 +17,7 @@ import { PureQueryOptions, OperationVariables } from './types';
  */
 export type FetchPolicy =
   | 'cache-first'
+  | 'cache-and-network'
   | 'network-only'
   | 'cache-only'
   | 'no-cache'

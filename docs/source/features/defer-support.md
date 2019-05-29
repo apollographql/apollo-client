@@ -3,7 +3,7 @@ title: Deferred queries
 description: Optimize data loading with the @defer directive
 ---
 
-<h2 id="defer-setup">Setting up</h2>
+## Setting up
 
 Note: `@defer` support is an experimental feature that is only available in the alpha preview of Apollo Server and Apollo Client.
 
@@ -22,7 +22,7 @@ Note: `@defer` support is an experimental feature that is only available in the 
   npm install apollo-client@alpha apollo-cache-inmemory@alpha apollo-link-http@alpha apollo-link-error apollo-link
   ```
 
-<h2 id="defer">The `@defer` Directive</h2>
+## The `@defer` Directive
 
 Many applications that use Apollo fetch data from a variety of microservices, which may each have varying latencies and cache characteristics. Apollo comes with a built-in directive for deferring parts of your GraphQL query in a declarative way, so that fields that take a long time to resolve do not need to slow down your entire query.
 
@@ -58,7 +58,7 @@ query NewsFeed {
 
 It is likely that the time needed for different fields in a query to resolve are significantly different. `stories` is highly public data that we can cache in CDNs (fast), while `recommendedForYou` is personalized and may need to be computed for every user (slooow). Also, we might not need `comments` to be displayed immediately, so slowing down our query to wait for them to be fetched is not the best idea.
 
-<h2 id="defer-how">How to use `@defer`</h2>
+## How to use `@defer`
 
 We can optimize the above query with `@defer`:
 
@@ -140,13 +140,13 @@ If an error is thrown within a resolver, the error gets sent along with its clos
 }
 ```
 
-<h3 id="defer-loadingstate">Distinguishing between "pending" and "null"</h3>
+### Distinguishing between "pending" and "null"
 
 You may have noticed that deferred fields are returned as `null` in the initial response. So how can we know which fields are pending so that we can show some loading indicator? To deal with that, Apollo Client now exposes field-level loading information in a new property called `loadingState` that you can check for in your UI components. The shape of `loadingState` mirrors that of your data. For example, if `data.newsFeed.stories` is ready, `loadingState.newsFeed.stories` will be `true`.
 
 You can use it in a React component like this:
 
-```jsx harmony
+```jsx
 <Query query={query}>
   {({ loading, error, data, loadingState }) => {
     if (loading) return 'loading...';
@@ -159,7 +159,7 @@ You can use it in a React component like this:
 </Query>
 ```
 
-<h2 id="defer-usage">Where is `@defer` allowed?</h2>
+## Where is `@defer` allowed?
 
 - `@defer` can be applied on any `FIELD` of a `Query` operation. It also takes an optional argument `if`, that is a `boolean` controlling whether it is active, similar to `@include`.
 
@@ -191,15 +191,15 @@ You can use it in a React component like this:
 
   A common pattern around fragments is to bind it to a component and reuse them across different parts of your UI. This is why it would be ideal to make sure that the `@defer` behavior of fields in a fragment is not overridden.
 
-<h2 id="defer-transport">Transport</h2>
+## Transport
 
 There is no additional setup for the transport required to use `@defer`. By default, deferred responses are transmitted using [Multipart HTTP](https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html). For browsers that do not support the [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) API used to read streaming responses, we will just fallback to normal query execution ignoring `@defer`.
 
-<h2 id="defer-performance">Performance Considerations</h2>
+## Performance Considerations
 
 `@defer` is one of those features that work best if used in moderation. If it is used too granularly (on many nested fields), the overhead of performing patching and re-rendering could be worse than just waiting for the full query to resolve. Try to limit `@defer` to fields that take a significantly longer time to load. This is super easy to figure out if you have Apollo Engine set up!
 
-<h2 id="defer-servers">Use with other GraphQL servers</h2>
+## Use with other GraphQL servers
 
 If you are sending queries to a GraphQL server that does not support `@defer`, it is likely that the `@defer` directive is simply ignored, or a GraphQL validation error is thrown.
 

@@ -4,13 +4,13 @@ title: Integrating with React Native
 
 You can use Apollo with React Native exactly as you would with React Web.
 
-To introduce Apollo to your app, install `react-apollo` from npm and use them in your app as outlined in the [setup](../essentials/get-started.html) article:
+To introduce Apollo to your app, install `react-apollo` from npm and use them in your app as outlined in the [setup](/v2.4/essentials/get-started/) article:
 
 ```bash
 npm install react-apollo --save
 ```
 
-```js
+```jsx
 import React from 'react';
 import { AppRegistry } from 'react-native';
 import { ApolloClient } from 'apollo-client';
@@ -28,9 +28,9 @@ const App = () => (
 AppRegistry.registerComponent('MyApplication', () => App);
 ```
 
-If you are new to using Apollo with React, you should probably read the [React guide](../index.html).
+If you are new to using Apollo with React, you should probably read the [React guide](/v2.4/).
 
-<h2 id="examples">Examples</h2>
+## Examples
 
 There are some Apollo examples written in React Native that you may wish to refer to:
 
@@ -39,7 +39,7 @@ There are some Apollo examples written in React Native that you may wish to refe
 
 > If you've got an example to post here, please hit the "Edit on GitHub" button above and let us know!
 
-<h2 id="apollo-dev-tools">Apollo Dev Tools</h2>
+## Apollo Dev Tools
 
 [React Native Debugger](https://github.com/jhen0409/react-native-debugger) supports the [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools):
 

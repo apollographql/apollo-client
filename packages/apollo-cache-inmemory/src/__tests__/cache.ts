@@ -1156,4 +1156,20 @@ describe('Cache', () => {
       expect(numBroadcasts).toEqual(1);
     });
   });
+
+  itWithInitialData(
+    'will read some data from the store without quuery',
+    [
+      {
+        a: 1,
+        b: 2,
+        c: 3,
+      },
+    ],
+    proxy => {
+      expect(
+        proxy.read({ rootId: 'a', query: undefined, optimistic: false }),
+      ).toEqual(1);
+    },
+  );
 });

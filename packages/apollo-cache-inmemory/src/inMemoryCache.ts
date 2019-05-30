@@ -178,9 +178,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    if (typeof options.rootId === 'string' &&
-        typeof this.data.get(options.rootId) === 'undefined') {
-      return null;
+    if (typeof options.rootId === 'string') {
+      const data = this.data.get(options.rootId);
+      if (typeof data === 'undefined') {
+        return null;
+      }
+      if (!options.query) {
+        return data as any;
+      }
     }
 
     return this.storeReader.readQueryFromStore({

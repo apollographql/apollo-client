@@ -1195,14 +1195,14 @@ cache.writeData({
 ```
 
 <dl>
-  <dt>`writeData({ id, data })`</dt>
+  <dt>`writeData(&#123; id, data })`</dt>
   <dd>Write data directly to the root of the cache without having to pass in a query. Great for prepping the cache with initial data. If you would like to write data to an existing entry in the cache, pass in the entry's cache key to `id`.</dd>
-  <dt>`writeQuery({ query, variables, data })`</dt>
+  <dt>`writeQuery(&#123; query, variables, data })`</dt>
   <dd>Similar to `writeData` (writes data to the root of the cache) but uses the specified query to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the query.</dd>
-  <dt>`readQuery({ query, variables })`</dt>
+  <dt>`readQuery(&#123; query, variables })`</dt>
   <dd>Read data from the cache for the specified query.</dd>
-  <dt>`writeFragment({ id, fragment, fragmentName, variables, data })`</dt>
+  <dt>`writeFragment(&#123; id, fragment, fragmentName, variables, data })`</dt>
   <dd>Similar to `writeData` (writes data to an existing entry in the cache) but uses the specified fragment to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the fragment.</dd>
-  <dt>`readFragment({ id, fragment, fragmentName, variables })`</dt>
+  <dt>`readFragment(&#123; id, fragment, fragmentName, variables })`</dt>
   <dd>Read data from the cache for the specified fragment.</dd>
 </dl>

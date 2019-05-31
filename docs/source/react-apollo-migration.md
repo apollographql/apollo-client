@@ -164,7 +164,7 @@ For more information on how to use the new Query component, read the [full guide
 
 ## The Mutation and Subscription Components
 
-Much like the Query component, the Mutation and Subscription component are ways to use Apollo directly within your React tree. They simplify integrating with Apollo, and keep your React app written in React! For more information on the Mutation component, [check out the usage guide](/essentials/mutations/) or if you are wanting to learn about the Subscription component, [read how to here](/advanced/subscriptions/).
+Much like the Query component, the Mutation and Subscription components are ways to use Apollo directly within your React tree. They simplify integrating with Apollo, and keep your React app written in React! For more information on the Mutation component, [check out the usage guide](/essentials/mutations/) or if you are wanting to learn about the Subscription component, [read how to here](/advanced/subscriptions/).
 
 ## ApolloConsumer
 

@@ -247,7 +247,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A GraphQL query document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
   <dt><code>children</code>: (result: QueryResult) => React.ReactNode</dt>
   <dd>A function returning the UI you want to render based on your query result. <strong>Required</strong></dd>
-  <dt><code>variables</code>: { [key: string]: any }</dt>
+  <dt><code>variables</code>: &#123; [key: string]: any }</dt>
   <dd>An object containing all of the variables your query needs to execute</dd>
   <dt><code>pollInterval</code>: number</dt>
   <dd>Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling).</dd>
@@ -267,7 +267,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed once your query successfully completes.</dd>
   <dt><code>onError</code>: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error.</dd>
-  <dt><code>context</code>: Record<string, any></dt>
+  <dt><code>context</code>: Record&lt;string, any></dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the <code>request</code> function of Apollo Boost.</dd>
   <dt><code>partialRefetch</code>: boolean</dt>
   <dd>If <code>true</code>, perform a query <code>refetch</code> if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client <code>QueryManager</code> (due to a cache miss). The default value is <code>false</code> for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
@@ -284,21 +284,21 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>A boolean that indicates whether the request is in flight</dd>
   <dt><code>error</code>: ApolloError</dt>
   <dd>A runtime error with <code>graphQLErrors</code> and <code>networkError</code> properties</dd>
-  <dt><code>variables</code>: { [key: string]: any }</dt>
+  <dt><code>variables</code>: &#123; [key: string]: any }</dt>
   <dd>An object containing the variables the query was called with</dd>
   <dt><code>networkStatus</code>: NetworkStatus</dt>
   <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the <code>notifyOnNetworkStatusChange</code> prop.</dd>
-  <dt><code>refetch</code>: (variables?: TVariables) => Promise<ApolloQueryResult></dt>
+  <dt><code>refetch</code>: (variables?: TVariables) => Promise&lt;ApolloQueryResult></dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
-  <dt><code>fetchMore</code>: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
+  <dt><code>fetchMore</code>: (&#123; query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult></dt>
   <dd>A function that enables <a href="/features/pagination/">pagination</a> for your query</dd>
   <dt><code>startPolling</code>: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
   <dt><code>stopPolling</code>: () => void</dt>
   <dd>This function stops the query from polling.</dd>
-  <dt><code>subscribeToMore</code>: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
+  <dt><code>subscribeToMore</code>: (options: &#123; document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
   <dd>A function that sets up a <a href="/advanced/subscriptions/">subscription</a>. <code>subscribeToMore</code> returns a function that you can use to unsubscribe.</dd>
-  <dt><code>updateQuery</code>: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
+  <dt><code>updateQuery</code>: (previousResult: TData, options: &#123; variables: TVariables }) => TData</dt>
   <dd>A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription</dd>
   <dt><code>client</code>: ApolloClient</dt>
   <dd>Your <code>ApolloClient</code> instance. Useful for manually firing queries or writing data to the cache.</dd>

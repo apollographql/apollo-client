@@ -234,7 +234,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>A GraphQL mutation document parsed into an AST by `graphql-tag`. **Required**</dd>
   <dt>`children`: (mutate: Function, result: MutationResult) => React.ReactNode</dt>
   <dd>A function that allows you to trigger a mutation from your UI. **Required**</dd>
-  <dt>`variables`: { [key: string]: any }</dt>
+  <dt>`variables`: &#123; [key: string]: any }</dt>
   <dd>An object containing all of the variables your mutation needs to execute</dd>
   <dt>`update`: (cache: DataProxy, mutationResult: FetchResult)</dt>
   <dd>A function used to update the cache after a mutation occurs</dd>
@@ -242,7 +242,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>If true, the `data` property on the render prop function will not update with the mutation result.</dd>
   <dt>`optimisticResponse`: Object</dt>
   <dd>Provide a [mutation response](/features/optimistic-ui/) before the result comes back from the server</dd>
-  <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables} | string></dt>
+  <dt>`refetchQueries`: (mutationResult: FetchResult) => Array&lt;&#123; query: DocumentNode, variables?: TVariables} | string></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
   <dt>`awaitRefetchQueries`: boolean</dt>
   <dd>Queries refetched as part of `refetchQueries` are handled asynchronously, and are not waited on before the mutation is completed (resolved). Setting this to `true` will make sure refetched queries are completed before the mutation is considered done. `false` by default.</dd>
@@ -250,7 +250,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>A callback executed once your mutation successfully completes</dd>
   <dt>`onError`: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error</dd>
-  <dt>`context`: Record<string, any></dt>
+  <dt>`context`: Record&lt;string, any></dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
 
@@ -261,7 +261,7 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 **Mutate function:**
 
 <dl>
-  <dt>`mutate`: (options?: MutationOptions) => Promise<FetchResult></dt>
+  <dt>`mutate`: (options?: MutationOptions) => Promise&lt;FetchResult></dt>
   <dd>A function to trigger a mutation from your UI. You can optionally pass `variables`, `optimisticResponse`, `refetchQueries`, and `update` in as options, which will override any props passed to the `Mutation` component. The function returns a promise that fulfills with your mutation result.</dd>
 </dl>
 

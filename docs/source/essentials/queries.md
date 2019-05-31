@@ -21,7 +21,7 @@ We also need to provide a function as a child to our `Query` component that will
 
 ```jsx
 import gql from "graphql-tag";
-import { Query } from "react-apollo";
+import { Query } from "react-apollo"; // highlight-line
 
 const GET_DOGS = gql`
   {

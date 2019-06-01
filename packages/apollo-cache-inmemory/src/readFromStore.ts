@@ -12,7 +12,6 @@ import {
   getQueryDefinition,
   getStoreKeyName,
   IdValue,
-  isEqual,
   isField,
   isIdValue,
   isInlineFragment,
@@ -24,7 +23,7 @@ import {
   StoreValue,
   toIdValue,
 } from 'apollo-utilities';
-
+import isEqual from 'lodash.isequal';
 import { Cache } from 'apollo-cache';
 
 import {
@@ -103,7 +102,7 @@ type ExecSubSelectedArrayOptions = {
 export interface StoreReaderConfig {
   cacheKeyRoot?: KeyTrie<object>;
   freezeResults?: boolean;
-};
+}
 
 export class StoreReader {
   private freezeResults: boolean;
@@ -120,65 +119,74 @@ export class StoreReader {
 
     this.freezeResults = freezeResults;
 
-    this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
-      return executeStoreQuery.call(this, options);
-    }, {
-      makeCacheKey({
-        query,
-        rootValue,
-        contextValue,
-        variableValues,
-        fragmentMatcher,
-      }: ExecStoreQueryOptions) {
-        // The result of executeStoreQuery can be safely cached only if the
-        // underlying store is capable of tracking dependencies and invalidating
-        // the cache when relevant data have changed.
-        if (contextValue.store instanceof DepTrackingCache) {
-          return cacheKeyRoot.lookup(
-            contextValue.store,
-            query,
-            fragmentMatcher,
-            JSON.stringify(variableValues),
-            rootValue.id,
-          );
-        }
-      }
-    });
+    this.executeStoreQuery = wrap(
+      (options: ExecStoreQueryOptions) => {
+        return executeStoreQuery.call(this, options);
+      },
+      {
+        makeCacheKey({
+          query,
+          rootValue,
+          contextValue,
+          variableValues,
+          fragmentMatcher,
+        }: ExecStoreQueryOptions) {
+          // The result of executeStoreQuery can be safely cached only if the
+          // underlying store is capable of tracking dependencies and invalidating
+          // the cache when relevant data have changed.
+          if (contextValue.store instanceof DepTrackingCache) {
+            return cacheKeyRoot.lookup(
+              contextValue.store,
+              query,
+              fragmentMatcher,
+              JSON.stringify(variableValues),
+              rootValue.id,
+            );
+          }
+        },
+      },
+    );
 
-    this.executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
-      return executeSelectionSet.call(this, options);
-    }, {
-      makeCacheKey({
-        selectionSet,
-        rootValue,
-        execContext,
-      }: ExecSelectionSetOptions) {
-        if (execContext.contextValue.store instanceof DepTrackingCache) {
-          return cacheKeyRoot.lookup(
-            execContext.contextValue.store,
-            selectionSet,
-            execContext.fragmentMatcher,
-            JSON.stringify(execContext.variableValues),
-            rootValue.id,
-          );
-        }
-      }
-    });
+    this.executeSelectionSet = wrap(
+      (options: ExecSelectionSetOptions) => {
+        return executeSelectionSet.call(this, options);
+      },
+      {
+        makeCacheKey({
+          selectionSet,
+          rootValue,
+          execContext,
+        }: ExecSelectionSetOptions) {
+          if (execContext.contextValue.store instanceof DepTrackingCache) {
+            return cacheKeyRoot.lookup(
+              execContext.contextValue.store,
+              selectionSet,
+              execContext.fragmentMatcher,
+              JSON.stringify(execContext.variableValues),
+              rootValue.id,
+            );
+          }
+        },
+      },
+    );
 
-    this.executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
-      return executeSubSelectedArray.call(this, options);
-    }, {
-      makeCacheKey({ field, array, execContext }) {
-        if (execContext.contextValue.store instanceof DepTrackingCache) {
-          return cacheKeyRoot.lookup(
-            execContext.contextValue.store,
-            field,
-            array,
-            JSON.stringify(execContext.variableValues),
-          );
-        }
-      }
-    });
+    this.executeSubSelectedArray = wrap(
+      (options: ExecSubSelectedArrayOptions) => {
+        return executeSubSelectedArray.call(this, options);
+      },
+      {
+        makeCacheKey({ field, array, execContext }) {
+          if (execContext.contextValue.store instanceof DepTrackingCache) {
+            return cacheKeyRoot.lookup(
+              execContext.contextValue.store,
+              field,
+              array,
+              JSON.stringify(execContext.variableValues),
+            );
+          }
+        },
+      },
+    );
   }
 
   /**
@@ -196,9 +204,7 @@ export class StoreReader {
    * If nothing in the store changed since that previous result then values from the previous result
    * will be returned to preserve referential equality.
    */
-  public readQueryFromStore<QueryType>(
-    options: ReadQueryOptions,
-  ): QueryType {
+  public readQueryFromStore<QueryType>(options: ReadQueryOptions): QueryType {
     const optsPatch = { returnPartialData: false };
 
     return this.diffQueryAgainstStore<QueryType>({
@@ -253,7 +259,7 @@ export class StoreReader {
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
 
-    if (hasMissingFields && ! returnPartialData) {
+    if (hasMissingFields && !returnPartialData) {
       execResult.missing.forEach(info => {
         if (info.tolerable) return;
         throw new InvariantError(
@@ -327,7 +333,11 @@ export class StoreReader {
     rootValue,
     execContext,
   }: ExecSelectionSetOptions): ExecResult {
-    const { fragmentMap, contextValue, variableValues: variables } = execContext;
+    const {
+      fragmentMap,
+      contextValue,
+      variableValues: variables,
+    } = execContext;
     const finalResult: ExecResult = { result: null };
 
     const objectsToMerge: { [key: string]: any }[] = [];
@@ -363,7 +373,6 @@ export class StoreReader {
             [resultKeyNameFromField(selection)]: fieldResult,
           });
         }
-
       } else {
         let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
@@ -374,13 +383,19 @@ export class StoreReader {
           fragment = fragmentMap[selection.name.value];
 
           if (!fragment) {
-            throw new InvariantError(`No fragment named ${selection.name.value}`);
+            throw new InvariantError(
+              `No fragment named ${selection.name.value}`,
+            );
           }
         }
 
         const typeCondition = fragment.typeCondition.name.value;
 
-        const match = execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+        const match = execContext.fragmentMatcher(
+          rootValue,
+          typeCondition,
+          contextValue,
+        );
         if (match) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
@@ -515,20 +530,24 @@ export class StoreReader {
 
       // This is a nested array, recurse
       if (Array.isArray(item)) {
-        return handleMissing(this.executeSubSelectedArray({
-          field,
-          array: item,
-          execContext,
-        }));
+        return handleMissing(
+          this.executeSubSelectedArray({
+            field,
+            array: item,
+            execContext,
+          }),
+        );
       }
 
       // This is an object, run the selection set on it
       if (field.selectionSet) {
-        return handleMissing(this.executeSelectionSet({
-          selectionSet: field.selectionSet,
-          rootValue: item,
-          execContext,
-        }));
+        return handleMissing(
+          this.executeSelectionSet({
+            selectionSet: field.selectionSet,
+            rootValue: item,
+            execContext,
+          }),
+        );
       }
 
       assertSelectionSetForIdValue(field, item);
@@ -544,15 +563,12 @@ export class StoreReader {
   }
 }
 
-function assertSelectionSetForIdValue(
-  field: FieldNode,
-  value: any,
-) {
+function assertSelectionSetForIdValue(field: FieldNode, value: any) {
   if (!field.selectionSet && isIdValue(value)) {
     throw new InvariantError(
       `Missing selection set for object of type ${
         value.typename
-      } returned for query field ${field.name.value}`
+      } returned for query field ${field.name.value}`,
     );
   }
 }
@@ -562,10 +578,13 @@ function defaultFragmentMatcher() {
 }
 
 export function assertIdValue(idValue: IdValue) {
-  invariant(isIdValue(idValue), `\
+  invariant(
+    isIdValue(idValue),
+    `\
 Encountered a sub-selection on the query, but the store doesn't have \
 an object reference. This should never happen during normal use unless you have custom code \
-that is directly manipulating the store; please file an issue.`);
+that is directly manipulating the store; please file an issue.`,
+  );
 }
 
 function readStoreResolver(
@@ -617,11 +636,13 @@ function readStoreResolver(
   if (typeof fieldValue === 'undefined') {
     return {
       result: fieldValue,
-      missing: [{
-        object,
-        fieldName: storeKeyName,
-        tolerable: false,
-      }],
+      missing: [
+        {
+          object,
+          fieldName: storeKeyName,
+          tolerable: false,
+        },
+      ],
     };
   }
 

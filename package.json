@@ -44,10 +44,10 @@
   ],
   "lint-staged": {
     "*.ts*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
+      "prettier --ignore-path \"./config/prettierignore\" --write"
     ],
     "*.js*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
+      "prettier --ignore-path \"./config/prettierignore\" --write"
     ]
   },
   "pre-commit": "lint-staged",

@@ -8,7 +8,6 @@ export * from './util/canUse';
 export * from './util/cloneDeep';
 export * from './util/environment';
 export * from './util/errorHandling';
-export * from './util/isEqual';
 export * from './util/maybeDeepFreeze';
 export * from './util/mergeDeep';
 export * from './util/warnOnce';

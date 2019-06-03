@@ -102,7 +102,7 @@
     "tslib": "1.9.3",
     "tslint": "5.16.0",
     "typescript": "3.4.5",
-    "uglify-js": "3.5.15",
+    "uglify-js": "3.6.0",
     "webpack": "4.32.2",
     "webpack-bundle-analyzer": "3.3.2"
   },

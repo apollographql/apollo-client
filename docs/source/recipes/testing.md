@@ -79,7 +79,7 @@ it('renders without error', () => {
 
 The `react-apollo/test-utils` module exports a `MockedProvider` component which simplifies the testing of React components by mocking calls to the GraphQL endpoint.  This allows the tests to be run in isolation and provides consistent results on every run by removing the dependence on remote data.
 
-By using this `MockedProvider` component, it's possible to specify the exact results that should be returned for a certain query using the `mocks` prop.  
+By using this `MockedProvider` component, it's possible to specify the exact results that should be returned for a certain query using the `mocks` prop.
 
 Here's an example of a test for the above `Dog` component using `MockedProvider`, which shows how to define the mocked response for `GET_DOG_QUERY`:
 
@@ -213,13 +213,13 @@ it('should show error UI', async () => {
 
 Here, whenever the `MockedProvider` receives a `GET_DOG_QUERY` with matching `variables`, it will return the error assigned to the `error` property in the mock. This forces the component into the error state, allowing verification that it's being handled gracefully.
 
-To simulate GraphQL errors, simply define `errors` along with any data in your result.
+To simulate GraphQL errors, define `errors` with an instantiated `GraphQLError` object that represents your error, along with any data in your result.
 
 ```js
 const dogMock = {
   // ...
   result: {
-    errors: [{ message: "Error!" }],
+    errors: [new GraphQLError('Error!')],
   },
 };
 ```

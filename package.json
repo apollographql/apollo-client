@@ -100,7 +100,7 @@
     "ts-jest": "23.10.5",
     "tsc-watch": "2.2.1",
     "tslib": "1.9.3",
-    "tslint": "5.16.0",
+    "tslint": "5.17.0",
     "typescript": "3.4.5",
     "uglify-js": "3.6.0",
     "webpack": "4.32.2",

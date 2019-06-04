@@ -10,6 +10,11 @@
 - Pretend that `__typename` exists on the root Query when matching fragments. <br/>
   [@benjamn](https://github.com/benjamn) in [#4853](https://github.com/apollographql/apollo-client/pull/4853)
 
+### Apollo Utilities
+
+- The `isEqual` function has been reimplemented using the `lodash.isequal` npm package, to better support circular references. Since the `lodash.isequal` package is already used by `react-apollo`, this change is likely to decrease total bundle size. <br/>
+  [@capaj](https://github.com/capaj) in [#4915](https://github.com/apollographql/apollo-client/pull/4915)
+
 ## Apollo Client (2.6.0)
 
 - In production, `invariant(condition, message)` failures will now include

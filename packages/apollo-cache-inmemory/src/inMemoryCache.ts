@@ -229,7 +229,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    if(this.data.get(query.rootId)){
+    if(query.rootId && this.data.get(query.rootId)){
       this.data.delete(query.rootId);
       this.broadcastWatches();
       return { success: true };

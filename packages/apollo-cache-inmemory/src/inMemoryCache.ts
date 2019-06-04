@@ -80,16 +80,16 @@ export class OptimisticCacheLayer extends ObjectCache {
 }
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: NormalizedCache;
-  private optimisticData: NormalizedCache;
+  protected data: NormalizedCache;
+  protected optimisticData: NormalizedCache;
 
-  protected config: InMemoryCacheConfig;
-  private watches = new Set<Cache.WatchOptions>();
+  private config: InMemoryCacheConfig;
+  protected watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
-  private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
-  private storeReader: StoreReader;
-  private storeWriter: StoreWriter;
-  private cacheKeyRoot = new KeyTrie<object>(canUseWeakMap);
+  protected typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
+  protected storeReader: StoreReader;
+  protected storeWriter: StoreWriter;
+  protected cacheKeyRoot = new KeyTrie<object>(canUseWeakMap);
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!

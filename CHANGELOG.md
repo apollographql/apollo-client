@@ -2,6 +2,9 @@
 
 ## Apollo Client (vNEXT)
 
+- In all Apollo Client packages, the compilation of `lib/bundle.esm.js` to `lib/bundle.cjs.js` and `lib/bundle.umd.js` now uses Babel instead of Rollup, since Babel correctly compiles some [edge cases](https://github.com/apollographql/apollo-client/issues/4843#issuecomment-495717720) that neither Rollup nor TypeScript compile correctly. <br/>
+  [@benjamn](https://github.com/benjamn) in [#4911](https://github.com/apollographql/apollo-client/pull/4911)
+
 ### Apollo Cache In-Memory
 
 - Pretend that `__typename` exists on the root Query when matching fragments. <br/>

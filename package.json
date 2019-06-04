@@ -29,7 +29,7 @@
     {
       "name": "apollo-cache-inmemory",
       "path": "./packages/apollo-cache-inmemory/lib/bundle.cjs.min.js",
-      "maxSize": "5 kB"
+      "maxSize": "5.05 kB"
     },
     {
       "name": "apollo-client",
@@ -60,6 +60,9 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
+    "@babel/core": "7.4.5",
+    "@babel/plugin-transform-modules-commonjs": "7.4.4",
+    "@babel/plugin-transform-modules-umd": "7.2.0",
     "@condenast/bundlesize": "0.18.1",
     "@octokit/rest": "16.27.3",
     "@types/benchmark": "1.0.31",

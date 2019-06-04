@@ -229,7 +229,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    throw new InvariantError(`eviction is not implemented on InMemory Cache`);
+    if(this.data.get(query.rootId)){
+      this.data.delete(query.rootId);
+      this.broadcastWatches();
+      return { success: true };
+    }
+    return { success:false };
   }
 
   public reset(): Promise<void> {

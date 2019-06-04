@@ -9,7 +9,7 @@ import { addTypenameToDocument, canUseWeakMap } from 'apollo-utilities';
 
 import { wrap } from 'optimism';
 
-import { invariant, InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {

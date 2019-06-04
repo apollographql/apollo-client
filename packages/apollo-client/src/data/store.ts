@@ -117,12 +117,14 @@ export class DataStore<TSerialized> {
   }) {
     // Incorporate the result from this mutation into the store
     if (!graphQLResultHasError(mutation.result)) {
-      const cacheWrites: Cache.WriteOptions[] = [{
-        result: mutation.result.data,
-        dataId: 'ROOT_MUTATION',
-        query: mutation.document,
-        variables: mutation.variables,
-      }];
+      const cacheWrites: Cache.WriteOptions[] = [
+        {
+          result: mutation.result.data,
+          dataId: 'ROOT_MUTATION',
+          query: mutation.document,
+          variables: mutation.variables,
+        },
+      ];
 
       const { updateQueries } = mutation;
       if (updateQueries) {

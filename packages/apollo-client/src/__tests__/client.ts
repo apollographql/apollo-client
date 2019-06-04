@@ -1747,8 +1747,8 @@ describe('client', () => {
         cache: new InMemoryCache(),
       });
 
-      checkCacheAndNetworkError(
-        () => client.query({
+      checkCacheAndNetworkError(() =>
+        client.query({
           query,
           fetchPolicy: 'cache-and-network' as FetchPolicy,
         }),

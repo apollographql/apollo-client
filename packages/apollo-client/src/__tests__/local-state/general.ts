@@ -60,9 +60,9 @@ describe('General functionality', () => {
       expect(result.data).toEqual({ field: 'local' });
       expect(messages).toEqual([
         'Found @client directives in a query but no ApolloClient resolvers ' +
-        'were specified. This means ApolloClient local resolver handling ' +
-        'has been disabled, and @client directives will be passed through ' +
-        'to your link chain.',
+          'were specified. This means ApolloClient local resolver handling ' +
+          'has been disabled, and @client directives will be passed through ' +
+          'to your link chain.',
       ]);
     } finally {
       console.warn = warn;
@@ -416,7 +416,7 @@ describe('Cache manipulation', () => {
       });
   });
 
-  it("should read @client fields from cache on refetch (#4741)", function (done) {
+  it('should read @client fields from cache on refetch (#4741)', function(done) {
     const query = gql`
       query FetchInitialData {
         serverData {
@@ -434,9 +434,9 @@ describe('Cache manipulation', () => {
     `;
 
     const serverData = {
-      __typename: "ServerData",
+      __typename: 'ServerData',
       id: 123,
-      title: "Oyez and Onoz",
+      title: 'Oyez and Onoz',
     };
 
     let selectedItemId = -1;
@@ -452,8 +452,8 @@ describe('Cache manipulation', () => {
         Mutation: {
           select(_, { itemId }) {
             selectedItemId = itemId;
-          }
-        }
+          },
+        },
       },
     });
 
@@ -475,9 +475,7 @@ describe('Cache manipulation', () => {
             variables: {
               id: 123,
             },
-            refetchQueries: [
-              "FetchInitialData",
-            ],
+            refetchQueries: ['FetchInitialData'],
           });
         } else {
           done();
@@ -958,21 +956,23 @@ describe('Combining client and server state/operations', () => {
     `;
 
     let watchCount = 0;
-    const link = new ApolloLink((operation: Operation): Observable<{}> => {
-      if (operation.operationName === 'SampleQuery') {
+    const link = new ApolloLink(
+      (operation: Operation): Observable<{}> => {
+        if (operation.operationName === 'SampleQuery') {
+          return Observable.of({
+            data: { user: { __typename: 'User', firstName: 'John' } },
+          });
+        }
+        if (operation.operationName === 'SampleMutation') {
+          return Observable.of({
+            data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
+          });
+        }
         return Observable.of({
-          data: { user: { __typename: 'User', firstName: 'John' } },
+          errors: [new Error(`Unknown operation ${operation.operationName}`)],
         });
-      }
-      if (operation.operationName === 'SampleMutation') {
-        return Observable.of({
-          data: { updateUser: { __typename: 'User', firstName: 'Harry' } },
-        });
-      }
-      return Observable.of({
-        errors: [new Error(`Unknown operation ${operation.operationName}`)],
-      })
-    });
+      },
+    );
 
     const cache = new InMemoryCache();
     const client = new ApolloClient({

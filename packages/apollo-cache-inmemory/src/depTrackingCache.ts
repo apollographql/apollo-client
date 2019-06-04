@@ -9,13 +9,11 @@ export class DepTrackingCache implements NormalizedCache {
   private depend: OptimisticWrapperFunction<[string], StoreObject>;
 
   constructor(private data: NormalizedCacheObject = Object.create(null)) {
-    this.depend = wrap((
-      dataId: string,
-    ) => this.data[dataId], {
+    this.depend = wrap((dataId: string) => this.data[dataId], {
       disposable: true,
       makeCacheKey(dataId: string) {
         return dataId;
-      }
+      },
     });
   }
 
@@ -53,7 +51,7 @@ export class DepTrackingCache implements NormalizedCache {
         this.set(dataId, newData[dataId]);
       });
       Object.keys(this.data).forEach(dataId => {
-        if (! hasOwn.call(newData, dataId)) {
+        if (!hasOwn.call(newData, dataId)) {
           this.delete(dataId);
         }
       });

@@ -4241,13 +4241,29 @@ describe('QueryManager', () => {
     });
 
     it('will be true when partial data may be returned', done => {
-      const query1 = gql`{
-        a { x1 y1 z1 }
-      }`;
-      const query2 = gql`{
-        a { x1 y1 z1 }
-        b { x2 y2 z2 }
-      }`;
+      const query1 = gql`
+        {
+          a {
+            x1
+            y1
+            z1
+          }
+        }
+      `;
+      const query2 = gql`
+        {
+          a {
+            x1
+            y1
+            z1
+          }
+          b {
+            x2
+            y2
+            z2
+          }
+        }
+      `;
       const data1 = {
         a: { x1: 1, y1: 2, z1: 3 },
       };

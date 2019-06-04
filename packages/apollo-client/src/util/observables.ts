@@ -7,17 +7,19 @@ export function multiplex<T>(inner: Observable<T>): Observable<T> {
   let sub: Subscription | null = null;
   return new Observable<T>(observer => {
     observers.add(observer);
-    sub = sub || inner.subscribe({
-      next(value) {
-        observers.forEach(obs => obs.next && obs.next(value));
-      },
-      error(error) {
-        observers.forEach(obs => obs.error && obs.error(error));
-      },
-      complete() {
-        observers.forEach(obs => obs.complete && obs.complete());
-      },
-    });
+    sub =
+      sub ||
+      inner.subscribe({
+        next(value) {
+          observers.forEach(obs => obs.next && obs.next(value));
+        },
+        error(error) {
+          observers.forEach(obs => obs.error && obs.error(error));
+        },
+        complete() {
+          observers.forEach(obs => obs.complete && obs.complete());
+        },
+      });
     return () => {
       if (observers.delete(observer) && !observers.size && sub) {
         sub.unsubscribe();

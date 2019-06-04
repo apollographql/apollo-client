@@ -42,8 +42,8 @@ export class QueryStore {
     // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
     invariant(
       !previousQuery ||
-      previousQuery.document === query.document ||
-      isEqual(previousQuery.document, query.document),
+        previousQuery.document === query.document ||
+        isEqual(previousQuery.document, query.document),
       'Internal Error: may not update existing query string in store',
     );
 
@@ -117,7 +117,9 @@ export class QueryStore {
     if (!this.store || !this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
-    this.store[queryId].graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+    this.store[queryId].graphQLErrors = isNonEmptyArray(result.errors)
+      ? result.errors
+      : [];
     this.store[queryId].previousVariables = null;
     this.store[queryId].networkStatus = NetworkStatus.ready;
 

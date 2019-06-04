@@ -701,8 +701,8 @@ describe('@client @export tests', () => {
 
   it(
     'should refetch if an @export variable changes, the current fetch ' +
-    'policy is not cache-only, and the query includes fields that need to ' +
-    'be resolved remotely',
+      'policy is not cache-only, and the query includes fields that need to ' +
+      'be resolved remotely',
     done => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -722,7 +722,7 @@ describe('@client @export tests', () => {
       const link = new ApolloLink(() =>
         Observable.of({
           data: {
-            postCount: resultCount === 0 ? testPostCount1 : testPostCount2
+            postCount: resultCount === 0 ? testPostCount1 : testPostCount2,
           },
         }),
       );
@@ -753,16 +753,16 @@ describe('@client @export tests', () => {
             done();
           }
 
-          resultCount +=1;
-        }
+          resultCount += 1;
+        },
       });
-    }
+    },
   );
 
   it(
     'should NOT refetch if an @export variable has not changed, the ' +
-    'current fetch policy is not cache-only, and the query includes fields ' +
-    'that need to be resolved remotely',
+      'current fetch policy is not cache-only, and the query includes fields ' +
+      'that need to be resolved remotely',
     done => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -783,7 +783,7 @@ describe('@client @export tests', () => {
         fetchCount += 1;
         return Observable.of({
           data: {
-            postCount: testPostCount1
+            postCount: testPostCount1,
           },
         });
       });
@@ -810,7 +810,7 @@ describe('@client @export tests', () => {
             client.writeQuery({
               query,
               variables: { authorId: testAuthorId1 },
-              data: { postCount: testPostCount2 }
+              data: { postCount: testPostCount2 },
             });
           } else if (resultCount === 1) {
             // Should not have refetched
@@ -818,9 +818,9 @@ describe('@client @export tests', () => {
             done();
           }
 
-          resultCount +=1;
+          resultCount += 1;
         },
       });
-    }
+    },
   );
 });

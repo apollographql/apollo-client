@@ -1,20 +1,11 @@
-import {
-  ApolloLink,
-  FetchResult,
-  GraphQLRequest,
-  execute,
-} from 'apollo-link';
+import { ApolloLink, FetchResult, GraphQLRequest, execute } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
 
 import { invariant, InvariantError } from 'ts-invariant';
 
 import { QueryManager } from './core/QueryManager';
-import {
-  ApolloQueryResult,
-  OperationVariables,
-  Resolvers,
-} from './core/types';
+import { ApolloQueryResult, OperationVariables, Resolvers } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
@@ -138,8 +129,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     if (!link || !cache) {
       throw new InvariantError(
         "In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.\n" +
-        "These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.\n" +
-        "For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
+          'These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.\n' +
+          'For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup',
       );
     }
 
@@ -316,9 +307,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     invariant(
       (options.fetchPolicy as WatchQueryFetchPolicy) !== 'cache-and-network',
       'The cache-and-network fetchPolicy does not work with client.query, because ' +
-      'client.query can only return a single result. Please use client.watchQuery ' +
-      'to receive multiple results from the cache and the network, or consider ' +
-      'using a different fetchPolicy, such as cache-first or network-only.'
+        'client.query can only return a single result. Please use client.watchQuery ' +
+        'to receive multiple results from the cache and the network, or consider ' +
+        'using a different fetchPolicy, such as cache-first or network-only.',
     );
 
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {

@@ -1668,7 +1668,6 @@ describe('ObservableQuery', () => {
               networkStatus: 1,
               stale: false,
             });
-
           } else if (handleCount === 2) {
             expect(subResult).toEqual({
               data: superDataOne,

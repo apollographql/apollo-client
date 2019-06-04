@@ -63,7 +63,8 @@ function hasVariableInclusions(
   directives: ReadonlyArray<DirectiveNode>,
 ): boolean {
   return getInclusionDirectives(directives).some(
-    ({ ifArgument }) => ifArgument.value && ifArgument.value.kind === 'Variable',
+    ({ ifArgument }) =>
+      ifArgument.value && ifArgument.value.kind === 'Variable',
   );
 }
 

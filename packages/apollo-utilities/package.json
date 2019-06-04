@@ -40,7 +40,11 @@
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.0.0",
+    "lodash.isequal": "^4.5.0",
     "ts-invariant": "^0.4.0",
     "tslib": "^1.9.3"
+  },
+  "devDependencies": {
+    "@types/lodash.isequal": "^4.5.5"
   }
 }

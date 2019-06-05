@@ -10,7 +10,7 @@ module.exports = {
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: 2.5,
         versions: {
-          2.4: 'version-2.4',
+          2.4: 'version-2.4-update',
         },
         checkLinksExceptions: [
           '/api/apollo-client/',

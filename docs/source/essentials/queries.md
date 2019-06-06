@@ -267,7 +267,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed once your query successfully completes.</dd>
   <dt><code>onError</code>: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error.</dd>
-  <dt><code>context</code>: Record<string, any></dt>
+  <dt><code>context</code>: Record&lt;string, any&gt;</dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the <code>request</code> function of Apollo Boost.</dd>
   <dt><code>partialRefetch</code>: boolean</dt>
   <dd>If <code>true</code>, perform a query <code>refetch</code> if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client <code>QueryManager</code> (due to a cache miss). The default value is <code>false</code> for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
@@ -288,9 +288,9 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>An object containing the variables the query was called with</dd>
   <dt><code>networkStatus</code>: NetworkStatus</dt>
   <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the <code>notifyOnNetworkStatusChange</code> prop.</dd>
-  <dt><code>refetch</code>: (variables?: TVariables) => Promise<ApolloQueryResult></dt>
+  <dt><code>refetch</code>: (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
-  <dt><code>fetchMore</code>: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
+  <dt><code>fetchMore</code>: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that enables <a href="/features/pagination/">pagination</a> for your query</dd>
   <dt><code>startPolling</code>: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>

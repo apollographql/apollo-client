@@ -1125,7 +1125,7 @@ const client = new ApolloClient({
 <dl>
   <dt>`resolvers?`: Resolvers | Resolvers[]</dt>
   <dd>A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache.</dd>
-  <dt>`typeDefs?`: string | string[] | DocumentNode | DocumentNode[];<string></dt>
+  <dt>`typeDefs?`: string | string[] | DocumentNode | DocumentNode[];&lt;string&gt;</dt>
   <dd>A string representing your client-side schema written in the [Schema Definition Language](https://www.apollographql.com/docs/graphql-tools/generate-schema#schema-language). This schema is not used for validation, but is used for introspection by the [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools).</dd>
 </dl>
 

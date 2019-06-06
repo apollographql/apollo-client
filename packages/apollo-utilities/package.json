@@ -45,6 +45,6 @@
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "@types/lodash.isequal": "^4.5.5"
+    "@types/lodash.isequal": "4.5.5"
   }
 }

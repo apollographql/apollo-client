@@ -234,10 +234,10 @@ const client = new ApolloClient({
 
 const data = {
   todos: [],
-    visibilityFilter: 'SHOW_ALL',
-    networkStatus: {
-      __typename: 'NetworkStatus',
-      isConnected: false,
+  visibilityFilter: 'SHOW_ALL',
+  networkStatus: {
+    __typename: 'NetworkStatus',
+    isConnected: false,
   },
 };
 

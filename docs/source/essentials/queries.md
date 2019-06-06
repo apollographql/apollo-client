@@ -267,7 +267,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed once your query successfully completes.</dd>
   <dt>`onError`: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error.</dd>
-  <dt>`context`: Record<string, any></dt>
+  <dt>`context`: Record&lt;string, any&gt;</dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
   <dt>`partialRefetch`: boolean</dt>
   <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
@@ -288,9 +288,9 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>An object containing the variables the query was called with</dd>
   <dt>`networkStatus`: NetworkStatus</dt>
   <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the `notifyOnNetworkStatusChange` prop.</dd>
-  <dt>`refetch`: (variables?: TVariables) => Promise<ApolloQueryResult></dt>
+  <dt>`refetch`: (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
-  <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
+  <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that enables [pagination](/v2.4/features/pagination/) for your query</dd>
   <dt>`startPolling`: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>

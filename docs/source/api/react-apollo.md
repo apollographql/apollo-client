@@ -104,9 +104,9 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>An object containing the variables the query was called with</dd>
   <dt>`networkStatus`: NetworkStatus</dt>
   <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the `notifyOnNetworkStatusChange` prop.</dd>
-  <dt>`refetch`: (variables?: TVariables) => Promise<ApolloQueryResult></dt>
+  <dt>`refetch`: (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
-  <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult></dt>
+  <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that enables [pagination](/features/pagination/) for your query</dd>
   <dt>`startPolling`: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
@@ -158,7 +158,7 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 **Mutate function:**
 
 <dl>
-  <dt>`mutate`: (options?: MutationOptions) => Promise<FetchResult></dt>
+  <dt>`mutate`: (options?: MutationOptions) => Promise&lt;FetchResult&gt;</dt>
   <dd>A function to trigger a mutation from your UI. You can optionally pass `variables`, `optimisticResponse`, `refetchQueries`, and `update` in as options, which will override any props passed to the `Mutation` component. The function returns a promise that fulfills with your mutation result.</dd>
 </dl>
 
@@ -192,7 +192,7 @@ The Subscription component accepts the following props. Only `subscription` and 
   <dd>An object containing all of the variables your subscription needs to execute</dd>
   <dt>`shouldResubscribe`: boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
-  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
+  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions&lt;TData&gt;) => any</dt>
   <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
   <dt>`fetchPolicy`: FetchPolicy</dt>
   <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>

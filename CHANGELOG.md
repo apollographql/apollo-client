@@ -1,5 +1,9 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client (2.6.3)
+
+- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br /> [@peoplenarthax](https://github.com/peoplenarthax)
+
 ## Apollo Client (2.6.2)
 
 ### Apollo Utilities 1.3.2

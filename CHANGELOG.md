@@ -1,5 +1,13 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client (vNext)
+
+### Apollo Client (vNext)
+
+- Documentation updates.  <br/>
+  [@michael-watson](https://github.com/michael-watson) in [#4940](https://github.com/apollographql/apollo-client/pull/4940)
+
+
 ## Apollo Client (2.6.2)
 
 ### Apollo Utilities 1.3.2

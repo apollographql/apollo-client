@@ -42,29 +42,44 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 
 ### `constructor`
 
-Constructs an instance of [ApolloClient](#apolloclient).
+Constructs an instance of [ApolloClient][].
 
 ### `watchQuery(options): ObservableQuery <, >`
 
 This watches the cache store of the query according to the options specified and returns an [ObservableQuery][]. We can subscribe to this [ObservableQuery][] and receive updated results through a GraphQL observer when the cache store changes.
 
-| Option                        | Type                                                                                           | Description                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `context`                     | `any`                                                                                          | Context to be passed to link execution chain                                                          |
-| `errorPolicy`                 | `"none" | "ignore" | "all"`                                                                    | Specifies the ErrorPolicy to be used for this query                                                   |
-| `fetchPolicy`                 | `"cache-first" | "network-only" | "cache-only" | "no-cache" | "standby" | "cache-and-network"` | Specifies the FetchPolicy to be used for this query                                                   |
-| `fetchResults`                | `any`                                                                                          | Whether or not to fetch results                                                                       |
-| `metadata`                    | `any`                                                                                          | Arbitrary metadata stored in the store with this query. Designed for debugging, developer tools, etc. |
-| `notifyOnNetworkStatusChange` | `any`                                                                                          | Whether or not updates to the network status should trigger next on the observer of this query        |
-| `pollInterval` | `any` | The time interval (in milliseconds) on which this query should be refetched from the server. |
-| `query` | `DocumentNode` | A GraphQL document that consists of a single query to be sent down to the server. |
-| `returnPartialData` | `any` | Allow returning incomplete data from the cache when a larger query cannot be fully satisfied by the cache, instead of returning nothing. |
-| `variables` | `TVariables` | A map going from variable name to variable value, where the variables are used within the GraphQL query. |
+| Option                        | Type                                                                                           | Description                                                                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `context`                     | `any`                                                                                          | Context to be passed to link execution chain                                                                                             |
+| `errorPolicy`                 | `"none" | "ignore" | "all"`                                                                    | Specifies the ErrorPolicy to be used for this query                                                                                      |
+| `fetchPolicy`                 | `"cache-first" | "network-only" | "cache-only" | "no-cache" | "standby" | "cache-and-network"` | Specifies the FetchPolicy to be used for this query                                                                                      |
+| `fetchResults`                | `any`                                                                                          | Whether or not to fetch results                                                                                                          |
+| `metadata`                    | `any`                                                                                          | Arbitrary metadata stored in the store with this query. Designed for debugging, developer tools, etc.                                    |
+| `notifyOnNetworkStatusChange` | `any`                                                                                          | Whether or not updates to the network status should trigger next on the observer of this query                                           |
+| `pollInterval`                | `any`                                                                                          | The time interval (in milliseconds) on which this query should be refetched from the server.                                             |
+| `query`                       | `DocumentNode`                                                                                 | A GraphQL document that consists of a single query to be sent down to the server.                                                        |
+| `returnPartialData`           | `any`                                                                                          | Allow returning incomplete data from the cache when a larger query cannot be fully satisfied by the cache, instead of returning nothing. |
+| `variables`                   | `TVariables`                                                                                   | A map going from variable name to variable value, where the variables are used within the GraphQL query.                                 |
 
-[ObservableQuery]: #observablequery
+### `query(options): Promise<ApolloQueryResult>`
+
+This resolves a single query according to the options specified and returns a Promise which is either resolved with the resulting data or rejected with an error.
+
+| Options        | Type                                                                     | Description                                                                                              |
+| -------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `context`      | `any`                                                                    | Context to be passed to link execution chain                                                             |
+| `errorPolicy`  | `"none" | "ignore" | "all"`                                              | Specifies the ErrorPolicy to be used for this query                                                      |
+| `fetchPolicy`  | `"cache-first" | "network-only" | "cache-only" | "no-cache" | "standby"` | Specifies the FetchPolicy to be used for this query                                                      |
+| `fetchResults` | `any`                                                                    | Whether or not to fetch results                                                                          |
+| `metadata`     | `any`                                                                    | Arbitrary metadata stored in the store with this query. Designed for debugging, developer tools, etc.    |
+| `query`        | `DocumentNode`                                                           | A GraphQL document that consists of a single query to be sent down to the server.                        |
+| `variables`    | `TVariables`                                                             | A map going from variable name to variable value, where the variables are used within the GraphQL query. |
 
 ## `ObservableQuery`
 
 `ApolloClient` Observables extend the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional context and API options.
 
 ## Types
+
+[ApolloClient]: #apolloclient
+[ObservableQuery]: #observablequery

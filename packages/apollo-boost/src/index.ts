@@ -42,6 +42,7 @@ export interface PresetConfig {
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: LocalStateFragmentMatcher;
+  assumeImmutableResults?: boolean;
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -70,6 +71,7 @@ const PRESET_CONFIG_KEYS = [
   'resolvers',
   'typeDefs',
   'fragmentMatcher',
+  'assumeImmutableResults',
 ];
 
 export default class DefaultClient<TCache> extends ApolloClient<TCache> {
@@ -102,6 +104,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       resolvers,
       typeDefs,
       fragmentMatcher,
+      assumeImmutableResults,
     } = config;
 
     let { cache } = config;
@@ -196,6 +199,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       resolvers: activeResolvers,
       typeDefs: activeTypeDefs,
       fragmentMatcher: activeFragmentMatcher,
+      assumeImmutableResults,
     } as any);
   }
 }

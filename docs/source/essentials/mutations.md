@@ -250,7 +250,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>A callback executed once your mutation successfully completes</dd>
   <dt>`onError`: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error</dd>
-  <dt>`context`: Record<string, any></dt>
+  <dt>`context`: Record&lt;string, any&gt;</dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
 </dl>
 
@@ -261,7 +261,7 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 **Mutate function:**
 
 <dl>
-  <dt>`mutate`: (options?: MutationOptions) => Promise<FetchResult></dt>
+  <dt>`mutate`: (options?: MutationOptions) => Promise&lt;FetchResult&gt;</dt>
   <dd>A function to trigger a mutation from your UI. You can optionally pass `variables`, `optimisticResponse`, `refetchQueries`, and `update` in as options, which will override any props passed to the `Mutation` component. The function returns a promise that fulfills with your mutation result.</dd>
 </dl>
 

@@ -102,7 +102,7 @@
     "rxjs": "6.5.2",
     "ts-jest": "23.10.5",
     "tsc-watch": "2.2.1",
-    "tslib": "1.9.3",
+    "tslib": "1.10.0",
     "tslint": "5.17.0",
     "typescript": "3.5.1",
     "uglify-js": "3.6.0",

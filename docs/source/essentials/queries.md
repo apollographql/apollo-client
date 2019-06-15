@@ -271,6 +271,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the <code>request</code> function of Apollo Boost.</dd>
   <dt><code>partialRefetch</code>: boolean</dt>
   <dd>If <code>true</code>, perform a query <code>refetch</code> if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client <code>QueryManager</code> (due to a cache miss). The default value is <code>false</code> for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
+  <dt><code>returnPartialData</code>: boolean</dt>
+  <dd>Opt into receiving partial results from the cache for queries that are not fully satisfied by the cache. <code>false</code> by default.</dd>
 </dl>
 
 ### Render prop function

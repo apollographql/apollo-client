@@ -2036,11 +2036,8 @@ describe('ObservableQuery', () => {
           const { queryManager } = (observable as any);
           const queryStore = queryManager.queryStore.get(observable.queryId);
           queryStore.networkError = networkError;
-          expect(queryStore.networkError).toEqual(networkError);
-
           observable.resetQueryStoreErrors();
           expect(queryStore.networkError).toBeNull();
-
           done();
         }
       });

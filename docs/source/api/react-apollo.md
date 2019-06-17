@@ -87,6 +87,8 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
   <dt>`client`: ApolloClient</dt>
   <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
+  <dt>`returnPartialData`: boolean</dt>
+  <dd>Opt into receiving partial results from the cache for queries that are not fully satisfied by the cache. `false` by default.</dd>
 </dl>
 
 ### Render prop function

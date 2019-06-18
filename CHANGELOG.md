@@ -1,8 +1,8 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (2.6.2)
+## Apollo Client (2.6.3)
 
-### Apollo Client (2.6.2)
+### Apollo Client (2.6.3)
 
 - A new `ObservableQuery.resetQueryStoreErrors()` method is now available that
   can be used to clear out `ObservableQuery` query store errors.  <br/>

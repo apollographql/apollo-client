@@ -1120,15 +1120,15 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query, variables: { id: 1}},
+        request: { query, variables: { id: 1 } },
         result: { data: data1 },
       },
       {
-        request: { query, variables: { id: 2} },
+        request: { query, variables: { id: 2 } },
         result: { data: data2 },
       },
       {
-        request: { query, variables: { id: 2} },
+        request: { query, variables: { id: 2 } },
         result: { data: data3 },
       },
     );
@@ -1138,7 +1138,7 @@ describe('QueryManager', () => {
       query,
       pollInterval: 200,
       notifyOnNetworkStatusChange: false,
-      variables: { id: 1 }
+      variables: { id: 1 },
     });
 
     return observableToPromise(
@@ -4245,13 +4245,29 @@ describe('QueryManager', () => {
     });
 
     it('will be true when partial data may be returned', done => {
-      const query1 = gql`{
-        a { x1 y1 z1 }
-      }`;
-      const query2 = gql`{
-        a { x1 y1 z1 }
-        b { x2 y2 z2 }
-      }`;
+      const query1 = gql`
+        {
+          a {
+            x1
+            y1
+            z1
+          }
+        }
+      `;
+      const query2 = gql`
+        {
+          a {
+            x1
+            y1
+            z1
+          }
+          b {
+            x2
+            y2
+            z2
+          }
+        }
+      `;
       const data1 = {
         a: { x1: 1, y1: 2, z1: 3 },
       };

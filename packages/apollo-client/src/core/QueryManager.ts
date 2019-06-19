@@ -414,6 +414,18 @@ export class QueryManager<TStore> {
 
     this.broadcastQueries();
 
+    // if this query is polled right now we need to update query info
+    if (this.pollingInfoByQueryId.has(queryId)) {
+      const info = this.pollingInfoByQueryId.get(queryId)!;
+      this.pollingInfoByQueryId.set(queryId, {
+        ...info,
+        options: {
+          ...info.options,
+          variables,
+        },
+      })
+    }
+
     if (shouldFetch) {
       const networkResult = this.fetchRequest<T>({
         requestId,
@@ -474,7 +486,6 @@ export class QueryManager<TStore> {
     }
 
     this.broadcastQueries();
-
     // If we have no query to send to the server, we should return the result
     // found within the store.
     return { data: storeResult };

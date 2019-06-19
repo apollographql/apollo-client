@@ -1091,10 +1091,10 @@ describe('QueryManager', () => {
     );
   });
 
-  it('continues to poll after refetch', () => {
+  it('continues to poll with right parameters after refetch', () => {
     const query = gql`
-      {
-        people_one(id: 1) {
+      query($id: ID!) {
+        people_one(id: $id) {
           name
         }
       }
@@ -1120,34 +1120,38 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query },
+        request: { query, variables: { id: 1}},
         result: { data: data1 },
       },
       {
-        request: { query },
+        request: { query, variables: { id: 2} },
         result: { data: data2 },
       },
       {
-        request: { query },
+        request: { query, variables: { id: 2} },
         result: { data: data3 },
       },
     );
 
     const observable = queryManager.watchQuery<any>({
+      fetchPolicy: 'network-only',
       query,
       pollInterval: 200,
       notifyOnNetworkStatusChange: false,
+      variables: { id: 1 }
     });
 
     return observableToPromise(
       { observable },
       result => {
         expect(stripSymbols(result.data)).toEqual(data1);
-        observable.refetch();
+        observable.refetch({ id: 2 });
       },
       result => expect(stripSymbols(result.data)).toEqual(data2),
       result => {
+        const { options } = observable;
         expect(stripSymbols(result.data)).toEqual(data3);
+        expect(options.variables).toEqual({ id: 2 });
         observable.stopPolling();
       },
     );

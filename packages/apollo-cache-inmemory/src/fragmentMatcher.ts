@@ -74,11 +74,20 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
       return true;
     }
 
-    // XXX here we reach an issue - we don't know if this fragment should match or not. It's either:
-    // 1. A fragment on a non-matching concrete type or interface or union
-    // 2. A fragment on a matching interface or union
-    // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
-    // difference, so we warn the user, but still try to match it (backcompat).
+    // At this point we don't know if this fragment should match or not. It's
+    // either:
+    //
+    // 1. (GOOD) A fragment on a matching interface or union.
+    // 2. (BAD) A fragment on a non-matching concrete type or interface or union.
+    //
+    // If it's 2, we don't want it to match. If it's 1, we want it to match. We
+    // can't tell the difference, so we warn the user, but still try to match
+    // it (for backwards compatibility reasons). This unfortunately means that
+    // using the `HeuristicFragmentMatcher` with unions and interfaces is
+    // very unreliable. This will be addressed in a future major version of
+    // Apollo Client, but for now the recommendation is to use the
+    // `IntrospectionFragmentMatcher` when working with unions/interfaces.
+
     if (shouldWarn()) {
       invariant.error(
         'You are using the simple (heuristic) fragment matcher, but your ' +

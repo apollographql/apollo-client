@@ -166,7 +166,115 @@ Refetches all of your active queries.
 
 `ApolloClient` Observables extend the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional context and API options.
 
+### `variables`
+
+The current value of the variables for this query. Can change.
+
+### `result(): Promise<ApolloQueryResult>`
+
+### `getCurrentResult(): ApolloCurrentQueryResult<>`
+
+Return the result of the query from the local cache as well as some fetching status `loading` and `networkStatus` allow to know if a request is in flight `partial` lets you know if the result from the local cache is complete or partial.
+
+### `refetch(variables): Promise<ApolloQueryResult>`
+
+Update the variables of this observable query, and fetch the new results. This method should be preferred over `setVariables` in most use cases.
+
+| Argument   | Type       |
+| ---------- | ---------- |
+| `variable` | TVariables |
+
+### `setOptions(opts): Promise<>`
+
+| Argument | Type              |
+| -------- | ----------------- |
+| `opts`   | WatchQueryOptions |
+
+### `setVariables(variables, tryFetch, fetchResults): Promise<>`
+
+This is for _internal_ use only. Most users should instead use `refetch` in order to be properly notified of results even when they come from cache.
+
+| Argument       | Type |
+| -------------- | ---- |
+| `variables`    | any  |
+| `tryFetch`     | any  |
+| `fetchResults` | any  |
+
+### `fetchMore(fetchMoreOptions): Promise<ApolloQueryResult>`
+
+| Argument           | Type |
+| ------------------ | ---- |
+| `fetchMoreOptions` | any  |
+
+### `updateQuery(mapFn): any`
+
+| Argument | Type                               |
+| -------- | ---------------------------------- |
+| `mapFn`  | (any, UpdateQueryOptions<>) => any |
+
+### `startPolling(pollInterval): any`
+
+| Argument       | Type |
+| -------------- | ---- |
+| `pollInterval` | any  |
+
+### `stopPolling(): any`
+
+### `subscribeToMore(options): (Anonymous function)`
+
 ## Types
+
+### `ApolloClientOptions`
+
+| Property                 | Type                   |
+| ------------------------ | ---------------------- |
+| `assumeImmutableResults` | any                    |
+| `cache`                  | ApolloCache<>          |
+| `connectToDevTools`      | any                    |
+| `defaultOptions`         | DefaultOptions         |
+| `fragmentMatcher`        | (any, any, any) => any |
+| `link`                   | ApolloLink             |
+| `name`                   | any                    |
+| `queryDeduplication`     | any                    |
+| `resolvers`              | any                    |
+| `ssrForceFetchDelay`     | any                    |
+| `ssrMode`                | any                    |
+| `typeDefs`               | any                    |
+| `version`                | any                    |
+
+### `DefaultOptions`
+
+| Property     | Type                       |
+| ------------ | -------------------------- |
+| `mutate`     | Partial<MutationOptions>   |
+| `query`      | Partial<QueryOptions>      |
+| `watchQuery` | Partial<WatchQueryOptions> |
+
+### `NetworkStatus`
+
+The current status of a query’s execution in our system.
+
+### `ApolloQueryResult`
+
+| Property        | Type                        |
+| --------------- | --------------------------- |
+| `data`          | any                         |
+| `errors`        | ReadonlyArray<GraphQLError> |
+| `loading`       | any                         |
+| `networkStatus` | NetworkStatus               |
+| `stale`         | any                         |
+
+### `ApolloCurrentQueryResult`
+
+| Property        | Type                        |
+| --------------- | --------------------------- |
+| `data`          | any                         |
+| `error`         | ApolloError                 |
+| `errors`        | ReadonlyArray<GraphQLError> |
+| `loading`       | any                         |
+| `networkStatus` | NetworkStatus               |
+| `partial`       | any                         |
+| `stale`         | any                         |
 
 [ApolloClient]: #apolloclient
 [ObservableQuery]: #observablequery

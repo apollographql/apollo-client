@@ -3,6 +3,8 @@ title: Queries
 description: Learn how to fetch data with Query components
 ---
 
+import {MultiCodeBlock} from 'gatsby-theme-apollo-docs';
+
 Fetching data in a simple, predictable way is one of the core features of Apollo Client. In this guide, you'll learn how to build Query components in order to fetch GraphQL data and attach the result to your UI. You'll also learn how Apollo Client simplifies your data management code by tracking error and loading states for you.
 
 This page assumes some familiarity with building GraphQL queries. If you'd like a refresher, we recommend [reading this guide](http://graphql.org/learn/queries/) and practicing [running queries in GraphiQL](/features/developer-tooling/#features). Since Apollo Client queries are just standard GraphQL, you can be sure that any query that successfully runs in GraphiQL will also run in an Apollo Query component.
@@ -18,6 +20,8 @@ The `Query` component is one of the most important building blocks of your Apoll
 First, let's create our GraphQL query. Remember to wrap your query string in the `gql` function in order to parse it into a query document. Once we have our GraphQL query, let's attach it to our `Query` component by passing it to the `query` prop.
 
 We also need to provide a function as a child to our `Query` component that will tell React what we want to render. We can use the `loading`, `error`, and `data` properties that the `Query` component provides for us in order to intelligently render different UI depending on the state of our query. Let's see what this looks like!
+
+<MultiCodeBlock>
 
 ```jsx
 import gql from "graphql-tag";
@@ -51,6 +55,43 @@ const Dogs = ({ onDogSelected }) => (
   </Query>
 );
 ```
+
+<div data-language="hooks-js">
+
+```jsx
+import gql from "graphql-tag";
+import { useQuery } from "@apollo/react-hooks";
+
+const GET_DOGS = gql`
+  {
+    dogs {
+      id
+      breed
+    }
+  }
+`;
+
+function Dogs(props) {
+  const { loading, error, data } = useQuery(GET_DOGS);
+
+  if (loading) return "Loading...";
+  if (error) return `Error! ${error.message}`;
+
+  return (
+    <select name="dog" onChange={props.onDogSelected}>
+      {data.dogs.map(dog => (
+        <option key={dog.id} value={dog.breed}>
+          {dog.breed}
+        </option>
+      ))}
+    </select>
+  );
+}
+```
+
+</div>
+
+</MultiCodeBlock>
 
 If you render `Dogs` within your `App` component, you'll first see a loading state and then a form with a list of dog breeds once Apollo Client receives the data from the server. When the form value changes, we're going to send the value to a parent component via `this.props.onDogSelected`, which will eventually pass the value to a `DogPhoto` component.
 
@@ -247,7 +288,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A GraphQL query document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
   <dt><code>children</code>: (result: QueryResult) => React.ReactNode</dt>
   <dd>A function returning the UI you want to render based on your query result. <strong>Required</strong></dd>
-  <dt><code>variables</code>: { [key: string]: any }</dt>
+  <dt><code>variables</code>: &#123; [key: string]: any &#124;</dt>
   <dd>An object containing all of the variables your query needs to execute</dd>
   <dt><code>pollInterval</code>: number</dt>
   <dd>Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling).</dd>
@@ -263,7 +304,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>The name of your component to be displayed in React DevTools. Defaults to 'Query'.</dd>
   <dt><code>skip</code>: boolean</dt>
   <dd>If skip is true, the query will be skipped entirely.</dd>
-  <dt><code>onCompleted</code>: (data: TData | {}) => void</dt>
+  <dt><code>onCompleted</code>: (data: TData | &#123;&#124;) => void</dt>
   <dd>A callback executed once your query successfully completes.</dd>
   <dt><code>onError</code>: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error.</dd>
@@ -286,21 +327,21 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dd>A boolean that indicates whether the request is in flight</dd>
   <dt><code>error</code>: ApolloError</dt>
   <dd>A runtime error with <code>graphQLErrors</code> and <code>networkError</code> properties</dd>
-  <dt><code>variables</code>: { [key: string]: any }</dt>
+  <dt><code>variables</code>: &#123; [key: string]: any &#124;</dt>
   <dd>An object containing the variables the query was called with</dd>
   <dt><code>networkStatus</code>: NetworkStatus</dt>
   <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the <code>notifyOnNetworkStatusChange</code> prop.</dd>
   <dt><code>refetch</code>: (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
-  <dt><code>fetchMore</code>: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt;</dt>
+  <dt><code>fetchMore</code>: (&#123; query?: DocumentNode, variables?: TVariables, updateQuery: Function&#124;) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that enables <a href="/features/pagination/">pagination</a> for your query</dd>
   <dt><code>startPolling</code>: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
   <dt><code>stopPolling</code>: () => void</dt>
   <dd>This function stops the query from polling.</dd>
-  <dt><code>subscribeToMore</code>: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
+  <dt><code>subscribeToMore</code>: (options: &#123; document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function&#124;) => () => void</dt>
   <dd>A function that sets up a <a href="/advanced/subscriptions/">subscription</a>. <code>subscribeToMore</code> returns a function that you can use to unsubscribe.</dd>
-  <dt><code>updateQuery</code>: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
+  <dt><code>updateQuery</code>: (previousResult: TData, options: &#123; variables: TVariables &#124;) => TData</dt>
   <dd>A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription</dd>
   <dt><code>client</code>: ApolloClient</dt>
   <dd>Your <code>ApolloClient</code> instance. Useful for manually firing queries or writing data to the cache.</dd>

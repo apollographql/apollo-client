@@ -66,7 +66,7 @@ module.exports = {
             'api/react-components',
             'api/react-hoc',
             'api/react-ssr',
-            'api/react-testing'
+            'api/react-testing',
           ],
         },
       },

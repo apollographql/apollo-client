@@ -60,7 +60,14 @@ module.exports = {
             'recipes/recompose',
             'recipes/2.0-migration',
           ],
-          API: ['api/apollo-client', 'api/react-apollo'],
+          API: [
+            'api/apollo-client',
+            'api/react-hooks',
+            'api/react-components',
+            'api/react-hoc',
+            'api/react-ssr',
+            'api/react-testing'
+          ],
         },
       },
     },

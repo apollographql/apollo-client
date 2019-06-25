@@ -51,29 +51,37 @@ This watches the cache store of the query according to the options specified and
 | Option                        | Type                                                                                           | Description                                                                                                                              |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `context`                     | `any`                                                                                          | Context to be passed to link execution chain                                                                                             |
-| `errorPolicy`                 | `"none" | "ignore" | "all"`                                                                    | Specifies the ErrorPolicy to be used for this query                                                                                      |
-| `fetchPolicy`                 | `"cache-first" | "network-only" | "cache-only" | "no-cache" | "standby" | "cache-and-network"` | Specifies the FetchPolicy to be used for this query                                                                                      |
-| `fetchResults`                | `any`                                                                                          | Whether or not to fetch results                                                                                                          |
-| `metadata`                    | `any`                                                                                          | Arbitrary metadata stored in the store with this query. Designed for debugging, developer tools, etc.                                    |
-| `notifyOnNetworkStatusChange` | `any`                                                                                          | Whether or not updates to the network status should trigger next on the observer of this query                                           |
-| `pollInterval`                | `any`                                                                                          | The time interval (in milliseconds) on which this query should be refetched from the server.                                             |
-| `query`                       | `DocumentNode`                                                                                 | A GraphQL document that consists of a single query to be sent down to the server.                                                        |
-| `returnPartialData`           | `any`                                                                                          | Allow returning incomplete data from the cache when a larger query cannot be fully satisfied by the cache, instead of returning nothing. |
-| `variables`                   | `TVariables`                                                                                   | A map going from variable name to variable value, where the variables are used within the GraphQL query.                                 |
+| `errorPolicy`                 | "none" &#124; "ignore" &#124; "all"                                                                    | Specifies the ErrorPolicy to be used for this query                                                                                      |
+| `fetchPolicy`                 | "cache-first" &#124; "network-only" &#124; "cache-only" &#124; "no-cache" &#124; "standby" &#124; "cache-and-network" | Specifies the FetchPolicy to be used for this query                                                                                      |
+| `fetchResults`                | any                                                                                          | Whether or not to fetch results                                                                                                          |
+| `metadata`                    | any                                                                                          | Arbitrary metadata stored in the store with this query. Designed for debugging, developer tools, etc.                                    |
+| `notifyOnNetworkStatusChange` | any                                                                                          | Whether or not updates to the network status should trigger next on the observer of this query                                           |
+| `pollInterval`                | any                                                                                          | The time interval (in milliseconds) on which this query should be refetched from the server.                                             |
+| `query`                       | DocumentNode                                                                                 | A GraphQL document that consists of a single query to be sent down to the server.                                                        |
+| `returnPartialData`           | any                                                                                          | Allow returning incomplete data from the cache when a larger query cannot be fully satisfied by the cache, instead of returning nothing. |
+| `variables`                   | TVariables                                                                                  | A map going from variable name to variable value, where the variables are used within the GraphQL query.                                 |
 
 ### `query(options): Promise<ApolloQueryResult>`
 
 This resolves a single query according to the options specified and returns a Promise which is either resolved with the resulting data or rejected with an error.
 
-| Options        | Type                                                                     | Description                                                                                              |
+| Option        | Type                                                                     | Description                                                                                              |
 | -------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `context`      | `any`                                                                    | Context to be passed to link execution chain                                                             |
-| `errorPolicy`  | `"none" | "ignore" | "all"`                                              | Specifies the ErrorPolicy to be used for this query                                                      |
-| `fetchPolicy`  | `"cache-first" | "network-only" | "cache-only" | "no-cache" | "standby"` | Specifies the FetchPolicy to be used for this query                                                      |
-| `fetchResults` | `any`                                                                    | Whether or not to fetch results                                                                          |
-| `metadata`     | `any`                                                                    | Arbitrary metadata stored in the store with this query. Designed for debugging, developer tools, etc.    |
-| `query`        | `DocumentNode`                                                           | A GraphQL document that consists of a single query to be sent down to the server.                        |
-| `variables`    | `TVariables`                                                             | A map going from variable name to variable value, where the variables are used within the GraphQL query. |
+| `context`      | any                                                                    | Context to be passed to link execution chain                                                             |
+| `errorPolicy`  | "none" &#124; "ignore" &#124; "all"                                              | Specifies the ErrorPolicy to be used for this query                                                      |
+| `fetchPolicy`  | "cache-first" &#124; "network-only" &#124; "cache-only" &#124; "no-cache" &#124; "standby" | Specifies the FetchPolicy to be used for this query                                                      |
+| `fetchResults` | any                                                                    | Whether or not to fetch results                                                                          |
+| `metadata`     | any                                                                    | Arbitrary metadata stored in the store with this query. Designed for debugging, developer tools, etc.    |
+| `query`        | DocumentNode                                                           | A GraphQL document that consists of a single query to be sent down to the server.                        |
+| `variables`    | TVariables                                                             | A map going from variable name to variable value, where the variables are used within the GraphQL query. |
+
+### `mutate(options): Promise<FetchResult>`
+
+This resolves a single mutation according to the options specified and returns a Promise which is either resolved with the resulting data or rejected with an error.
+
+| Option | Type | Description |
+| `awaitRefetchQueries` | any | By default, `refetchQueries` does not wait for the refetched queries to be completed, before resolving the mutation `Promise`. This ensures that query refetching does not hold up mutation response handling (query refetching is handled asynchronously). Set `awaitRefetchQueries` to `true` if you would like to wait for the refetched queries to complete, before the mutation can be marked as resolved. |
+
 
 ## `ObservableQuery`
 

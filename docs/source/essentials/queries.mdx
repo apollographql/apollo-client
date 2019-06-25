@@ -3,7 +3,7 @@ title: Queries
 description: Learn how to fetch data with Query components
 ---
 
-import {MultiCodeBlock} from 'gatsby-theme-apollo-docs';
+import {CodeBlockContext, MultiCodeBlock} from 'gatsby-theme-apollo-docs';
 
 Fetching data in a simple, predictable way is one of the core features of Apollo Client. In this guide, you'll learn how to build Query components in order to fetch GraphQL data and attach the result to your UI. You'll also learn how Apollo Client simplifies your data management code by tracking error and loading states for you.
 
@@ -20,6 +20,8 @@ The `Query` component is one of the most important building blocks of your Apoll
 First, let's create our GraphQL query. Remember to wrap your query string in the `gql` function in order to parse it into a query document. Once we have our GraphQL query, let's attach it to our `Query` component by passing it to the `query` prop.
 
 We also need to provide a function as a child to our `Query` component that will tell React what we want to render. We can use the `loading`, `error`, and `data` properties that the `Query` component provides for us in order to intelligently render different UI depending on the state of our query. Let's see what this looks like!
+
+<CodeBlockContext.Provider value={{filename: 'dogs.js'}}>
 
 <MultiCodeBlock>
 
@@ -92,6 +94,8 @@ function Dogs(props) {
 </div>
 
 </MultiCodeBlock>
+
+</CodeBlockContext.Provider>
 
 If you render `Dogs` within your `App` component, you'll first see a loading state and then a form with a list of dog breeds once Apollo Client receives the data from the server. When the form value changes, we're going to send the value to a parent component via `this.props.onDogSelected`, which will eventually pass the value to a `DogPhoto` component.
 

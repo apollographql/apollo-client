@@ -2437,4 +2437,108 @@ describe('ApolloClient', () => {
       expect((client.cache as any).data.data).toEqual({});
     });
   });
+
+  describe('wrong operation types', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const mutation = gql`
+      mutation makeListPrivate {
+        makeListPrivate(id: "5")
+      }
+    `;
+
+    const subscription = gql`
+      subscription {
+        commentAdded {
+          id
+          content
+        }
+      }
+    `;
+
+    it('query rejects mutation', () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      return expect(
+        Promise.resolve().then(() => {
+          return client.query({ query: mutation });
+        }),
+      ).rejects.toThrowError(/must contain a GraphQL query operation/);
+    });
+
+    it('query rejects subscription', () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      return expect(
+        Promise.resolve().then(() => {
+          return client.query({ query: subscription });
+        }),
+      ).rejects.toThrowError(/must contain a GraphQL query operation/);
+    });
+
+    it('mutation rejects query', () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      return expect(
+        Promise.resolve().then(() => {
+          return client.mutate({ mutation: query });
+        }),
+      ).rejects.toThrowError(/must contain a GraphQL mutation operation/);
+    });
+
+    it('mutation rejects subscription', () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      return expect(
+        Promise.resolve().then(() => {
+          return client.mutate({ mutation: subscription });
+        }),
+      ).rejects.toThrowError(/must contain a GraphQL mutation operation/);
+    });
+
+    it('subscription rejects query', () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      return expect(
+        Promise.resolve().then(() => {
+          return client.subscribe({ query });
+        }),
+      ).rejects.toThrowError(/must contain a GraphQL subscription operation/);
+    });
+
+    it('subscription rejects mutation', () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      return expect(
+        Promise.resolve().then(() => {
+          return client.subscribe({ query: mutation });
+        }),
+      ).rejects.toThrowError(/must contain a GraphQL subscription operation/);
+    });
+  });
 });

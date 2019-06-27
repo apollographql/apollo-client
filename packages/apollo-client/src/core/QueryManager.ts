@@ -147,6 +147,11 @@ export class QueryManager<TStore> {
     );
 
     invariant(
+      (getOperationDefinition(mutation) || { operation: '' }).operation === 'mutation',
+      'options.mutation must contain a GraphQL mutation operation',
+    );
+
+    invariant(
       !fetchPolicy || fetchPolicy === 'no-cache',
       "fetchPolicy for mutations currently only supports the 'no-cache' policy"
     );
@@ -758,6 +763,11 @@ export class QueryManager<TStore> {
     );
 
     invariant(
+      (getOperationDefinition(options.query) || { operation: '' }).operation === 'query',
+      'options.query must contain a GraphQL query operation',
+    );
+
+    invariant(
       !(options as any).returnPartialData,
       'returnPartialData option only supported on watchQuery.',
     );
@@ -949,6 +959,11 @@ export class QueryManager<TStore> {
     fetchPolicy,
     variables,
   }: SubscriptionOptions): Observable<FetchResult<T>> {
+    invariant(
+      (getOperationDefinition(query) || { operation: '' }).operation === 'subscription',
+      'options.query must contain a GraphQL subscription operation',
+    );
+
     query = this.transform(query).document;
     variables = this.getVariables(query, variables);
 

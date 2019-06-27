@@ -4,7 +4,50 @@ description: React Hooks API reference
 ---
 
 import QueryProps from '../../shared/query-props.mdx';
+import QueryResult from '../../shared/query-result.mdx';
+import MutationProps from '../../shared/mutation-props.mdx';
+import MutationResult from '../../shared/mutation-result.mdx';
+import SubscriptionProps from '../../shared/subscription-props.mdx';
+import SubscriptionResult from '../../shared/subscription-result.mdx';
 
 ## `useQuery`
 
+```js
+import {useQuery} from '@apollo/react-hooks';
+```
+
+### Options
+
 <QueryProps />
+
+### Return value
+
+<QueryResult />
+
+## `useMutation`
+
+```js
+import {useMutation} from '@apollo/react-hooks';
+```
+
+### Options
+
+<MutationProps />
+
+### Return value
+
+<MutationResult />
+
+## `useSubscription`
+
+```js
+import {useSubscription} from '@apollo/react-hooks';
+```
+
+### Options
+
+<SubscriptionProps />
+
+### Return value
+
+<SubscriptionResult />

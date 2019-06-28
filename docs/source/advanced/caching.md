@@ -617,7 +617,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check our our more in depth guide [here](/features/server-side-rendering/).
+If you would like to learn more about server side rendering, please check out our more in depth guide [here](/features/server-side-rendering/).
 
 ### Cache persistence
 

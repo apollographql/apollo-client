@@ -301,7 +301,7 @@ export class QueryManager<TStore> {
                 const queryOptions: QueryOptions = {
                   query: refetchQuery.query,
                   variables: refetchQuery.variables,
-                  fetchPolicy: 'network-only',
+                  fetchPolicy: refetchQuery.fetchPolicy || 'network-only',
                 };
 
                 if (refetchQuery.context) {

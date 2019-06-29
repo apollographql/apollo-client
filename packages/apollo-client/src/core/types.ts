@@ -16,6 +16,7 @@ export type PureQueryOptions = {
   query: DocumentNode;
   variables?: { [key: string]: any };
   context?: any;
+  fetchPolicy: string;
 };
 
 export type ApolloQueryResult<T> = {

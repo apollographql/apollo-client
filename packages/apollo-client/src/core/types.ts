@@ -3,6 +3,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
+import { FetchPolicy } from './watchQueryOptions';
 
 export type QueryListener = (
   queryStoreValue: QueryStoreValue,
@@ -16,7 +17,7 @@ export type PureQueryOptions = {
   query: DocumentNode;
   variables?: { [key: string]: any };
   context?: any;
-  fetchPolicy: string;
+  fetchPolicy: FetchPolicy;
 };
 
 export type ApolloQueryResult<T> = {

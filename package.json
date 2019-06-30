@@ -79,7 +79,7 @@
     "danger": "7.1.4",
     "fetch-mock": "7.3.3",
     "flow-bin": "0.102.0",
-    "graphql": "14.4.0",
+    "graphql": "14.4.1",
     "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",
     "jest": "24.8.0",

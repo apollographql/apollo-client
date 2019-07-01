@@ -296,6 +296,7 @@ const wsLink = new WebSocketLink({
     connectionParams: {
         authToken: user.authToken,
     },
+  }
 });
 ```
 

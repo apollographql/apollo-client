@@ -5,3 +5,4 @@ design.md
 rollup.*.js
 tsconfig.json
 tslint.json
+**/__tests__/**

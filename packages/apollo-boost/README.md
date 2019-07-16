@@ -75,4 +75,4 @@ Apollo Boost includes some packages that we think are essential to developing wi
 - `apollo-link-state`: An Apollo Link for local state management
 - `graphql-tag`: Exports the `gql` function for your queries & mutations
 
-The awesome thing about Apollo Boost is that you don't have to set any of this up yourself! Just specify a few options if you'd like to use these features and we'll take care of the rest. For a full list of available options, please refer to the Apollo Boost [configuration options](https://www.apollographql.com/docs/react/essentials/get-started.html#configuration) documentation.
+The awesome thing about Apollo Boost is that you don't have to set any of this up yourself! Just specify a few options if you'd like to use these features and we'll take care of the rest. For a full list of available options, please refer to the Apollo Boost [configuration options](https://www.apollographql.com/docs/react/essentials/get-started.html#configuration-options) documentation.

@@ -4,14 +4,12 @@ import { toIdValue } from 'apollo-utilities';
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
-import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 import { defaultDataIdFromObject } from '../inMemoryCache';
 import { NormalizedCache } from '../types';
 
-const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
-
 disableFragmentWarnings();
-export function withError(func: Function, regex: RegExp) {
+
+export function withError(func: Function, regex?: RegExp) {
   let message: string = null as never;
   const { error } = console;
   console.error = (m: any) => {
@@ -20,7 +18,9 @@ export function withError(func: Function, regex: RegExp) {
 
   try {
     const result = func();
-    expect(message).toMatch(regex);
+    if (regex) {
+      expect(message).toMatch(regex);
+    }
     return result;
   } finally {
     console.error = error;
@@ -53,7 +53,6 @@ describe('diffing queries against the store', () => {
             }
           }
         `,
-        fragmentMatcherFunction,
         config: {
           dataIdFromObject: defaultDataIdFromObject,
         },
@@ -99,7 +98,6 @@ describe('diffing queries against the store', () => {
             }
           }
         `,
-        fragmentMatcherFunction,
         config: {
           dataIdFromObject: defaultDataIdFromObject,
         },
@@ -253,11 +251,10 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         returnPartialData: false,
-        fragmentMatcherFunction,
       });
 
       expect(complete).toBe(false);
-    }, /IntrospectionFragmentMatcher/);
+    });
   });
 
   it('does not error on a query with fields missing from all but one named fragment', () => {

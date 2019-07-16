@@ -11,7 +11,6 @@ import { wrap } from 'optimism';
 
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {
   ApolloReducerConfig,
   NormalizedCache,
@@ -30,7 +29,6 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 }
 
 const defaultConfig: InMemoryCacheConfig = {
-  fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
@@ -183,24 +181,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return null;
     }
 
-    const { fragmentMatcher } = this.config;
-    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
-
     return this.storeReader.readQueryFromStore({
       store: options.optimistic ? this.optimisticData : this.data,
       query: this.transformDocument(options.query),
       variables: options.variables,
       rootId: options.rootId,
-      fragmentMatcherFunction,
       previousResult: options.previousResult,
       config: this.config,
     }) || null;
   }
 
   public write(write: Cache.WriteOptions): void {
-    const { fragmentMatcher } = this.config;
-    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
-
     this.storeWriter.writeResultToStore({
       dataId: write.dataId,
       result: write.result,
@@ -208,23 +199,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
-      fragmentMatcherFunction,
+      possibleTypes: this.config.possibleTypes,
     });
 
     this.broadcastWatches();
   }
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
-    const { fragmentMatcher } = this.config;
-    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
-
     return this.storeReader.diffQueryAgainstStore({
       store: query.optimistic ? this.optimisticData : this.data,
       query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
-      fragmentMatcherFunction,
       config: this.config,
     });
   }

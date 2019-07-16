@@ -45,21 +45,15 @@ import {
 import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
 import { invariant, InvariantError } from 'ts-invariant';
+import { fragmentMatches } from './fragments';
 
 export type VariableMap = { [name: string]: any };
-
-export type FragmentMatcher = (
-  rootValue: any,
-  typeCondition: string,
-  context: ReadStoreContext,
-) => boolean | 'heuristic';
 
 type ExecContext = {
   query: DocumentNode;
   fragmentMap: FragmentMap;
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
-  fragmentMatcher: FragmentMatcher;
 };
 
 type ExecInfo = {
@@ -84,8 +78,6 @@ type ExecStoreQueryOptions = {
   rootValue: IdValue;
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
-  // Default matcher always matches all fragments
-  fragmentMatcher?: FragmentMatcher;
 };
 
 type ExecSelectionSetOptions = {
@@ -128,7 +120,6 @@ export class StoreReader {
         rootValue,
         contextValue,
         variableValues,
-        fragmentMatcher,
       }: ExecStoreQueryOptions) {
         // The result of executeStoreQuery can be safely cached only if the
         // underlying store is capable of tracking dependencies and invalidating
@@ -137,7 +128,6 @@ export class StoreReader {
           return cacheKeyRoot.lookup(
             contextValue.store,
             query,
-            fragmentMatcher,
             JSON.stringify(variableValues),
             rootValue.id,
           );
@@ -157,7 +147,6 @@ export class StoreReader {
           return cacheKeyRoot.lookup(
             execContext.contextValue.store,
             selectionSet,
-            execContext.fragmentMatcher,
             JSON.stringify(execContext.variableValues),
             rootValue.id,
           );
@@ -220,7 +209,6 @@ export class StoreReader {
     previousResult,
     returnPartialData = true,
     rootId = 'ROOT_QUERY',
-    fragmentMatcherFunction,
     config,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     // Throw the right validation error by trying to find a query in the document
@@ -233,6 +221,7 @@ export class StoreReader {
       store,
       dataIdFromObject: config && config.dataIdFromObject,
       cacheRedirects: (config && config.cacheRedirects) || {},
+      possibleTypes: config && config.possibleTypes,
     };
 
     const execResult = this.executeStoreQuery({
@@ -245,7 +234,6 @@ export class StoreReader {
       },
       contextValue: context,
       variableValues: variables,
-      fragmentMatcher: fragmentMatcherFunction,
     });
 
     const hasMissingFields =
@@ -299,8 +287,6 @@ export class StoreReader {
     rootValue,
     contextValue,
     variableValues,
-    // Default matcher always matches all fragments
-    fragmentMatcher = defaultFragmentMatcher,
   }: ExecStoreQueryOptions): ExecResult {
     const mainDefinition = getMainDefinition(query);
     const fragments = getFragmentDefinitions(query);
@@ -310,7 +296,6 @@ export class StoreReader {
       fragmentMap,
       contextValue,
       variableValues,
-      fragmentMatcher,
     };
 
     return this.executeSelectionSet({
@@ -376,14 +361,13 @@ export class StoreReader {
           }
         }
 
-        const typeCondition =
-          fragment.typeCondition && fragment.typeCondition.name.value;
+        const match = fragmentMatches(
+          fragment,
+          typename,
+          execContext.contextValue.possibleTypes,
+        );
 
-        const match =
-          !typeCondition ||
-          execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
-
-        if (match) {
+        if (match && (object || typename === 'Query')) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
             rootValue,
@@ -557,10 +541,6 @@ function assertSelectionSetForIdValue(
       } returned for query field ${field.name.value}`
     );
   }
-}
-
-function defaultFragmentMatcher() {
-  return true;
 }
 
 export function assertIdValue(idValue: IdValue) {

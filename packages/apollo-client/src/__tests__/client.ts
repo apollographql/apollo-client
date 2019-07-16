@@ -2,11 +2,7 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
-import {
-  InMemoryCache,
-  IntrospectionFragmentMatcher,
-  FragmentMatcherInterface,
-} from 'apollo-cache-inmemory';
+import { InMemoryCache, PossibleTypesMap } from 'apollo-cache-inmemory';
 import { stripSymbols } from 'apollo-utilities';
 
 import { QueryManager } from '../core/QueryManager';
@@ -327,25 +323,9 @@ describe('client', () => {
       __typename: 'Query',
     };
 
-    const ifm = new IntrospectionFragmentMatcher({
-      introspectionQueryResultData: {
-        __schema: {
-          types: [
-            {
-              kind: 'UNION',
-              name: 'Query',
-              possibleTypes: [
-                {
-                  name: 'Record',
-                },
-              ],
-            },
-          ],
-        },
-      },
+    return clientRoundtrip(query, { data }, null, {
+      Query: ['Record'],
     });
-
-    return clientRoundtrip(query, { data }, null, ifm);
   });
 
   it('should merge fragments on root query', () => {
@@ -378,25 +358,9 @@ describe('client', () => {
       __typename: 'Query',
     };
 
-    const ifm = new IntrospectionFragmentMatcher({
-      introspectionQueryResultData: {
-        __schema: {
-          types: [
-            {
-              kind: 'UNION',
-              name: 'Query',
-              possibleTypes: [
-                {
-                  name: 'Record',
-                },
-              ],
-            },
-          ],
-        },
-      },
+    return clientRoundtrip(query, { data }, null, {
+      Query: ['Record'],
     });
-
-    return clientRoundtrip(query, { data }, null, ifm);
   });
 
   it('store can be rehydrated from the server', () => {
@@ -1218,33 +1182,6 @@ describe('client', () => {
       ],
     };
 
-    const fancyFragmentMatcher = (
-      idValue: any, // TODO types, please.
-      typeCondition: string,
-      context: any,
-    ): boolean => {
-      const obj = context.store.get(idValue.id);
-
-      if (!obj) {
-        return false;
-      }
-
-      const implementingTypesMap: { [key: string]: string[] } = {
-        Item: ['ColorItem', 'MonochromeItem'],
-      };
-
-      if (obj.__typename === typeCondition) {
-        return true;
-      }
-
-      const implementingTypes = implementingTypesMap[typeCondition];
-      if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
-        return true;
-      }
-
-      return false;
-    };
-
     const link = mockSingleLink({
       request: { query },
       result: { data: result },
@@ -1252,7 +1189,9 @@ describe('client', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
-        fragmentMatcher: { match: fancyFragmentMatcher },
+        possibleTypes: {
+          Item: ['ColorItem', 'MonochromeItem'],
+        },
       }),
     });
     return client.query({ query }).then((actualResult: any) => {
@@ -1297,30 +1236,13 @@ describe('client', () => {
       result: { data: result },
     });
 
-    const ifm = new IntrospectionFragmentMatcher({
-      introspectionQueryResultData: {
-        __schema: {
-          types: [
-            {
-              kind: 'UNION',
-              name: 'Item',
-              possibleTypes: [
-                {
-                  name: 'ColorItem',
-                },
-                {
-                  name: 'MonochromeItem',
-                },
-              ],
-            },
-          ],
-        },
-      },
-    });
-
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm }),
+      cache: new InMemoryCache({
+        possibleTypes: {
+          Item: ['ColorItem', 'MonochromeItem'],
+        },
+      }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1380,30 +1302,13 @@ describe('client', () => {
       },
     );
 
-    const ifm = new IntrospectionFragmentMatcher({
-      introspectionQueryResultData: {
-        __schema: {
-          types: [
-            {
-              kind: 'UNION',
-              name: 'Item',
-              possibleTypes: [
-                {
-                  name: 'ColorItem',
-                },
-                {
-                  name: 'MonochromeItem',
-                },
-              ],
-            },
-          ],
-        },
-      },
-    });
-
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm }),
+      cache: new InMemoryCache({
+        possibleTypes: {
+          Item: ['ColorItem', 'MonochromeItem'],
+        },
+      }),
     });
 
     const queryUpdaterSpy = jest.fn();
@@ -2663,7 +2568,10 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({
+        // Passing an empty map enables the warning:
+        possibleTypes: {},
+      }),
     });
 
     return withWarning(
@@ -2952,19 +2860,18 @@ function clientRoundtrip(
   query: DocumentNode,
   data: ExecutionResult,
   variables?: any,
-  fragmentMatcher?: FragmentMatcherInterface,
+  possibleTypes?: PossibleTypesMap,
 ) {
   const link = mockSingleLink({
     request: { query: cloneDeep(query) },
     result: data,
   });
 
-  const config = {};
-  if (fragmentMatcher) config.fragmentMatcher = fragmentMatcher;
-
   const client = new ApolloClient({
     link,
-    cache: new InMemoryCache(config),
+    cache: new InMemoryCache({
+      possibleTypes,
+    }),
   });
 
   return client.query({ query, variables }).then(result => {

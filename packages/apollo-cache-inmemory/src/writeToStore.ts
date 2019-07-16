@@ -5,7 +5,6 @@ import {
   InlineFragmentNode,
   FragmentDefinitionNode,
 } from 'graphql';
-import { FragmentMatcher } from './readFromStore';
 
 import {
   assign,
@@ -18,7 +17,6 @@ import {
   isField,
   isIdValue,
   isInlineFragment,
-  isProduction,
   resultKeyNameFromField,
   shouldInclude,
   storeKeyNameFromField,
@@ -29,15 +27,15 @@ import {
 
 import { invariant } from 'ts-invariant';
 
-import { ObjectCache } from './objectCache';
 import { defaultNormalizedCacheFactory } from './depTrackingCache';
 
 import {
   IdGetter,
   NormalizedCache,
-  ReadStoreContext,
   StoreObject,
+  PossibleTypesMap,
 } from './types';
+import { fragmentMatches } from './fragments';
 
 export class WriteError extends Error {
   public type = 'WriteError';
@@ -59,7 +57,7 @@ export type WriteContext = {
   readonly variables?: any;
   readonly dataIdFromObject?: IdGetter;
   readonly fragmentMap?: FragmentMap;
-  readonly fragmentMatcherFunction?: FragmentMatcher;
+  readonly possibleTypes?: PossibleTypesMap;
 };
 
 export class StoreWriter {
@@ -86,14 +84,14 @@ export class StoreWriter {
     store = defaultNormalizedCacheFactory(),
     variables,
     dataIdFromObject,
-    fragmentMatcherFunction,
+    possibleTypes,
   }: {
     query: DocumentNode;
     result: Object;
     store?: NormalizedCache;
     variables?: Object;
     dataIdFromObject?: IdGetter;
-    fragmentMatcherFunction?: FragmentMatcher;
+    possibleTypes?: PossibleTypesMap;
   }): NormalizedCache {
     return this.writeResultToStore({
       dataId: 'ROOT_QUERY',
@@ -102,7 +100,7 @@ export class StoreWriter {
       store,
       variables,
       dataIdFromObject,
-      fragmentMatcherFunction,
+      possibleTypes,
     });
   }
 
@@ -113,7 +111,7 @@ export class StoreWriter {
     store = defaultNormalizedCacheFactory(),
     variables,
     dataIdFromObject,
-    fragmentMatcherFunction,
+    possibleTypes,
   }: {
     dataId: string;
     result: any;
@@ -121,7 +119,7 @@ export class StoreWriter {
     store?: NormalizedCache;
     variables?: Object;
     dataIdFromObject?: IdGetter;
-    fragmentMatcherFunction?: FragmentMatcher;
+    possibleTypes?: PossibleTypesMap;
   }): NormalizedCache {
     // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
     const operationDefinition = getOperationDefinition(document)!;
@@ -141,7 +139,7 @@ export class StoreWriter {
           ),
           dataIdFromObject,
           fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-          fragmentMatcherFunction,
+          possibleTypes,
         },
       });
     } catch (e) {
@@ -178,40 +176,26 @@ export class StoreWriter {
             field: selection,
             context,
           });
-        } else {
-          let isDefered = false;
-          let isClient = false;
-          if (selection.directives && selection.directives.length) {
-            // If this is a defered field we don't need to throw / warn.
-            isDefered = selection.directives.some(
-              directive => directive.name && directive.name.value === 'defer',
-            );
-
-            // When using the @client directive, it might be desirable in
-            // some cases to want to write a selection set to the store,
-            // without having all of the selection set values available.
-            // This is because the @client field values might have already
-            // been written to the cache separately (e.g. via Apollo
-            // Cache's `writeData` capabilities). Because of this, we'll
-            // skip the missing field warning for fields with @client
-            // directives.
-            isClient = selection.directives.some(
-              directive => directive.name && directive.name.value === 'client',
-            );
-          }
-
-          if (!isDefered && !isClient && context.fragmentMatcherFunction) {
-            // XXX We'd like to throw an error, but for backwards compatibility's sake
-            // we just print a warning for the time being.
-            //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
-            invariant.warn(
-              `Missing field ${resultFieldKey} in ${JSON.stringify(
-                result,
-                null,
-                2,
-              ).substring(0, 100)}`,
-            );
-          }
+        } else if (
+          context.possibleTypes &&
+          !(
+            selection.directives &&
+            selection.directives.some(
+              ({ name }) =>
+                name && (name.value === 'defer' || name.value === 'client'),
+            )
+          )
+        ) {
+          // XXX We'd like to throw an error, but for backwards compatibility's sake
+          // we just print a warning for the time being.
+          //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
+          invariant.warn(
+            `Missing field ${resultFieldKey} in ${JSON.stringify(
+              result,
+              null,
+              2,
+            ).substring(0, 100)}`,
+          );
         }
       } else {
         // This is not a field, so it must be a fragment, either inline or named
@@ -225,31 +209,18 @@ export class StoreWriter {
           invariant(fragment, `No fragment named ${selection.name.value}.`);
         }
 
-        let matches = true;
-        if (context.fragmentMatcherFunction && fragment.typeCondition) {
-          // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
-          // Right now we have to pretend that we're passing in an idValue and that there's a store
-          // on the context.
-          const id = dataId || 'self';
-          const idValue = toIdValue({ id, typename: undefined });
-          const fakeContext: ReadStoreContext = {
-            // NOTE: fakeContext always uses ObjectCache
-            // since this is only to ensure the return value of 'matches'
-            store: new ObjectCache({ [id]: result }),
-            cacheRedirects: {},
-          };
-          const match = context.fragmentMatcherFunction(
-            idValue,
-            fragment.typeCondition.name.value,
-            fakeContext,
-          );
-          if (!isProduction() && match === 'heuristic') {
-            invariant.error('WARNING: heuristic fragment matching going on!');
-          }
-          matches = !!match;
-        }
+        const typename =
+          (result && result.__typename) ||
+          (dataId === 'ROOT_QUERY' && 'Query') ||
+          void 0;
 
-        if (matches) {
+        const match = fragmentMatches(
+          fragment,
+          typename,
+          context.possibleTypes,
+        );
+
+        if (match && (result || typename === 'Query')) {
           this.writeSelectionSetToStore({
             result,
             selectionSet: fragment.selectionSet,

@@ -5,8 +5,6 @@ import { print } from 'graphql/language/printer';
 import { ApolloLink, Observable } from 'apollo-link';
 import {
   InMemoryCache,
-  IntrospectionFragmentMatcher,
-  FragmentMatcherInterface,
 } from 'apollo-cache-inmemory';
 import { stripSymbols } from 'apollo-utilities';
 

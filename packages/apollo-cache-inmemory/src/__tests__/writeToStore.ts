@@ -1329,7 +1329,7 @@ describe('writing to the store', () => {
         ROOT_QUERY: {
           author: {
             type: 'id',
-            id: dataIdFromObject(data.author),
+            id: dataIdFromObject(data.author)!,
             generated: false,
             typename: 'Author',
           },
@@ -1374,7 +1374,7 @@ describe('writing to the store', () => {
         ROOT_QUERY: {
           author: {
             type: 'id',
-            id: dataIdFromObject(data.author),
+            id: dataIdFromObject(data.author)!,
             generated: false,
             typename: 'Author',
           },

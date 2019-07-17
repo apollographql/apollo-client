@@ -876,7 +876,7 @@ const client = new ApolloClient({
 });
 ```
 
-In order to add our todo to the list, we need the todos that are currently in the cache, which is why we call `cache.readQuery` to retrieve them. `cache.readQuery` will throw an error if the data isn't in the cache, so we need to provide an initial state. This is why we're returning an empty array in our `Query.todos` resolver.
+In order to add our todo to the list, we need the todos that are currently in the cache, which is why we call `cache.readQuery` to retrieve them. `cache.readQuery` will throw an error if the data isn't in the cache, so we need to provide an initial state. This is why we're calling `cache.writeData` with the empty array of todos after creating the `InMemoryCache`.
 
 To write the data to the cache, you can use either `cache.writeQuery` or `cache.writeData`. The only difference between the two is that `cache.writeQuery` requires that you pass in a query to validate that the shape of the data you're writing to the cache is the same as the shape of the data required by the query. Under the hood, `cache.writeData` automatically constructs a query from the `data` object you pass in and calls `cache.writeQuery`.
 

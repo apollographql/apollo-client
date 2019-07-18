@@ -134,6 +134,54 @@ describe('fragment matching', () => {
     expect(cache.readQuery({ query })).toEqual(data);
   });
 
+  it('can match indirect subtypes while avoiding cycles', () => {
+    const cache = new InMemoryCache({
+      addTypename: true,
+      possibleTypes: {
+        Animal: ['Animal', 'Bug', 'Mammal'],
+        Bug: ['Ant', 'Spider', 'RolyPoly'],
+        Mammal: ['Dog', 'Cat', 'Human'],
+        Cat: ['Calico', 'Siamese', 'Sphynx', 'Tabby'],
+      },
+    });
+
+    const query = gql`
+      query {
+        animals {
+          ... on Mammal {
+            hasFur
+            bodyTemperature
+          }
+          ... on Bug {
+            isVenomous
+          }
+        }
+      }
+    `;
+
+    const data = {
+      animals: [
+        {
+          __typename: 'Sphynx',
+          hasFur: false,
+          bodyTemperature: 99,
+        },
+        {
+          __typename: 'Dog',
+          hasFur: true,
+          bodyTemperature: 102,
+        },
+        {
+          __typename: 'Spider',
+          isVenomous: 'maybe',
+        },
+      ],
+    };
+
+    cache.writeQuery({ query, data });
+    expect(cache.readQuery({ query })).toEqual(data);
+  });
+
   it('can match against the root Query', () => {
     const cache = new InMemoryCache({
       addTypename: true,

@@ -64,7 +64,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.5.0",
     "@babel/plugin-transform-modules-umd": "7.2.0",
     "@condenast/bundlesize": "0.18.1",
-    "@octokit/rest": "16.28.2",
+    "@octokit/rest": "16.28.4",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.2.2",
     "@types/isomorphic-fetch": "0.0.35",

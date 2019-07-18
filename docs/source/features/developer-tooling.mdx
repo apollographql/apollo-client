@@ -3,6 +3,8 @@ title: Developer tools
 description: How to use extensions and developer tools to analyze your data
 ---
 
+import {MultiCodeBlock} from 'gatsby-theme-apollo-docs';
+
 ## Apollo Engine
 
 [Apollo Engine](https://www.apollographql.com/platform/) is the best way to run GraphQL in production. It is a GraphQL gateway that helps you implement and run GraphQL over REST or any other backend with confidence. With Engine, you get a number of incredible features to help you understand your GraphQL service, and to make it run faster!
@@ -188,6 +190,8 @@ export type CharactersQuery = {
 
 This type can then be used as follows to ensure that all possible types are handled:
 
+<MultiCodeBlock>
+
 ```tsx
 function CharacterFigures({ characters }: CharactersQuery) {
   return characters.map(character => {
@@ -200,3 +204,5 @@ function CharacterFigures({ characters }: CharactersQuery) {
   });
 }
 ```
+
+</MultiCodeBlock>

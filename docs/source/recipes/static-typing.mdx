@@ -3,6 +3,8 @@ title: Using Apollo with TypeScript
 sidebar_title: Using TypeScript
 ---
 
+import {MultiCodeBlock} from 'gatsby-theme-apollo-docs';
+
 **Note: Apollo no longer ships with Flow types. If you want to help contribute to add these, please reach out!**
 
 As your application grows, you may find it helpful to include a type system to assist in development. Apollo supports type definitions for TypeScript out of the box. Both `apollo-client` and `react-apollo` ship with definitions in their npm packages, so installation should be done for you after the libraries are included in your project.
@@ -14,6 +16,8 @@ The most common need when using type systems with GraphQL is to type the results
 ## Typing the Component APIs
 
 Using Apollo together with TypeScript couldn't be easier than using it with component API released in React Apollo 2.1:
+
+<MultiCodeBlock>
 
 ```tsx
 const ALL_PEOPLE_QUERY = gql`
@@ -42,6 +46,8 @@ const AllPeopleComponent = <Query<Data, Variables> query={ALL_PEOPLE_QUERY}>
 </Query>
 ```
 
+</MultiCodeBlock>
+
 Now the `<Query />` component render prop function arguments are typed. Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for full typing to work! Everything else is handled by React Apollo's robust type definitions.
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
@@ -51,6 +57,8 @@ This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcr
 ## Typing the Higher Order Components
 
 Since the result of a query will be sent to the wrapped component as props, we want to be able to tell our type system the shape of those props. Here is an example setting types for an operation using the `graphql` higher order component (**note**: the follow sections also work for the query, mutation, and subscription hocs):
+
+<MultiCodeBlock>
 
 ```tsx
 import React from "react";
@@ -93,17 +101,19 @@ type ChildProps = ChildDataProps<{}, Response, Variables>;
 // example (in the "Options" section) shows how the type safety of incoming
 // props can be ensured.
 const withCharacter = graphql<{}, Response, Variables, ChildProps>(HERO_QUERY, {
-  options: () => ({
+  options: {
     variables: { episode: "JEDI" }
-  })
+  }
 });
 
 export default withCharacter(({ data: { loading, hero, error } }) => {
   if (loading) return <div>Loading</div>;
   if (error) return <h1>ERROR</h1>;
-  return ...// actual component with data;
+  return hero.name; // actual component with data;
 });
 ```
+
+</MultiCodeBlock>
 
 ### Options
 

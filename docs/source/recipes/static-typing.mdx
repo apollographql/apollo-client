@@ -111,7 +111,7 @@ const withCharacter = graphql<{}, Response, Variables, ChildProps>(HERO_QUERY, {
 export default withCharacter(({ data: { loading, hero, error } }) => {
   if (loading) return <div>Loading</div>;
   if (error) return <h1>ERROR</h1>;
-  return hero.name; // actual component with data;
+  return <div>hero.name</div>; // actual component with data
 });
 ```
 
@@ -120,6 +120,8 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 ### Options
 
 Typically, variables to the query will be computed from the props of the wrapper component. Wherever the component is used in your application, the caller would pass arguments that we want our type system to validate what the shape of these props could look like. Here is an example setting the type of props:
+
+<MultiCodeBlock>
 
 ```tsx
 import React from "react";
@@ -170,11 +172,15 @@ const withCharacter = graphql<InputProps, Response, Variables, ChildProps>(HERO_
 export default withCharacter(({ data: { loading, hero, error } }) => {
   if (loading) return <div>Loading</div>;
   if (error) return <h1>ERROR</h1>;
-  return ...// actual component with data;
+  return <div>hero.name</div>; // actual component with data
 });
 ```
 
+</MultiCodeBlock>
+
 This is especially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
+
+<MultiCodeBlock>
 
 ```tsx
 import React from "react";
@@ -194,18 +200,23 @@ export const client = new ApolloClient({
   link,
 });
 
-export default () =>
+export default () => (
   <ApolloProvider client={client}>
-    // $ExpectError property `episode`. Property not found in. See: src/Character.js:43
+    {/* $ExpectError property `episode`. Property not found in. See: src/Character.js:43 */}
     <Character />
-  </ApolloProvider>;
+  </ApolloProvider>
+);
 ```
+
+</MultiCodeBlock>
 
 ### Props
 
 One of the most powerful feature of the React integration is the `props` function which allows you to reshape the result data from an operation into a new shape of props for the wrapped component. GraphQL is awesome at allowing you to only request the data you want from the server. The client still often needs to reshape or do client side calculations based on these results. The return value can even differ depending on the state of the operation (i.e loading, error, recieved data), so informing our type system of choice of these possible values is really important to make sure our components won't have runtime errors.
 
 The `graphql` wrapper from `react-apollo` supports manually declaring the shape of your result props.
+
+<MultiCodeBlock>
 
 ```tsx
 import React from "react";
@@ -257,11 +268,15 @@ const withCharacter = graphql<InputProps, Response, Variables, ChildProps>(HERO_
 export default withCharacter(({ loading, hero, error }) => {
   if (loading) return <div>Loading</div>;
   if (error) return <h1>ERROR</h1>;
-  return ...// actual component with data;
+  return <div>{hero.name}</div>; // actual component with data
 });
 ```
 
+</MultiCodeBlock>
+
 Since we have typed the response shape, the props shape, and the shape of what will be passed to the client, we can prevent errors in multiple places. Our options and props function within the `graphql` wrapper are now type safe, our rendered component is protected, and our tree of components have their required props enforced.
+
+<MultiCodeBlock>
 
 ```ts
 export const withCharacter = graphql<InputProps, Response, Variables, Props>(HERO_QUERY, {
@@ -278,11 +293,15 @@ export const withCharacter = graphql<InputProps, Response, Variables, Props>(HER
 });
 ```
 
+</MultiCodeBlock>
+
 With this addition, the entirety of the integration between Apollo and React can be statically typed. When combined with the strong tooling each system provides, it can make for a much improved application and developer experience.
 
 ### Classes vs Functions
 
 All of the above examples show wrapping a component which is just a function using the result of a `graphql` wrapper. Sometimes, components that depend on GraphQL data require state and are formed using the `class MyComponent extends React.Component` practice. In these use cases, TypeScript requires adding prop shape to the class instance. In order to support this, `react-apollo` exports types to support creating result types easily.
+
+<MultiCodeBlock>
 
 ```tsx
 import { ChildProps } from "react-apollo";
@@ -298,23 +317,27 @@ class Character extends React.Component<ChildProps<InputProps, Response>, {}> {
     const { loading, hero, error } = this.props.data;
     if (loading) return <div>Loading</div>;
     if (error) return <h1>ERROR</h1>;
-    return ...// actual component with data;
+    return <div>{hero.name}</div>; // actual component with data
   }
 }
 
 export default withCharacter(Character);
 ```
 
+</MultiCodeBlock>
+
 ### Using the `name` property
 
 If you are using the `name` property in the configuration of the `graphql` wrapper, you will need to manually attach the type of the response to the `props` function. An example using TypeScript would be like this:
+
+<MultiCodeBlock>
 
 ```ts
 import { NamedProps, QueryProps } from 'react-apollo';
 
 export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY, {
   name: 'character',
-  props: ({ character, ownProps }: NamedProps<{ character: QueryProps & Response }, Props) => ({
+  props: ({ character, ownProps }: NamedProps<{ character: QueryProps & Response }>, Props) => ({
     ...character,
     // $ExpectError [string] This type cannot be compared to number
     episode: ownProps.episode > 1,
@@ -323,3 +346,5 @@ export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY,
   })
 });
 ```
+
+</MultiCodeBlock>

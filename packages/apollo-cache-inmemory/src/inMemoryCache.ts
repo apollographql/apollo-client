@@ -15,6 +15,7 @@ import {
   ApolloReducerConfig,
   NormalizedCache,
   NormalizedCacheObject,
+  PossibleTypesMap,
 } from './types';
 
 import { StoreReader } from './readFromStore';
@@ -84,6 +85,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
+  private possibleTypes?: {
+    [supertype: string]: {
+      [subtype: string]: true;
+    };
+  };
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
@@ -114,6 +120,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.addTypename = !!this.config.addTypename;
 
+    if (this.config.possibleTypes) {
+      this.addPossibleTypes(this.config.possibleTypes);
+    }
+
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
@@ -128,10 +138,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeWriter = new StoreWriter();
+    this.storeWriter = new StoreWriter({
+      possibleTypes: this.possibleTypes,
+    });
+
     this.storeReader = new StoreReader({
       cacheKeyRoot: this.cacheKeyRoot,
       freezeResults: config.freezeResults,
+      possibleTypes: this.possibleTypes,
     });
 
     const cache = this;
@@ -199,7 +213,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
-      possibleTypes: this.config.possibleTypes,
     });
 
     this.broadcastWatches();
@@ -319,6 +332,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
+  }
+
+  public addPossibleTypes(possibleTypes: PossibleTypesMap) {
+    if (!this.possibleTypes) this.possibleTypes = Object.create(null);
+    Object.keys(possibleTypes).forEach(supertype => {
+      let subtypeSet = this.possibleTypes[supertype];
+      if (!subtypeSet) {
+        subtypeSet = this.possibleTypes[supertype] = Object.create(null);
+      }
+      possibleTypes[supertype].forEach(subtype => {
+        subtypeSet[subtype] = true;
+      });
+    });
   }
 
   protected broadcastWatches() {

@@ -92,17 +92,21 @@ type ExecSubSelectedArrayOptions = {
   execContext: ExecContext;
 };
 
+type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 export interface StoreReaderConfig {
   cacheKeyRoot?: KeyTrie<object>;
   freezeResults?: boolean;
+  possibleTypes?: PossibleTypes;
 }
 
 export class StoreReader {
   private freezeResults: boolean;
+  private possibleTypes?: PossibleTypes;
 
   constructor({
     cacheKeyRoot = new KeyTrie<object>(canUseWeakMap),
     freezeResults = false,
+    possibleTypes,
   }: StoreReaderConfig = {}) {
     const {
       executeStoreQuery,
@@ -111,6 +115,7 @@ export class StoreReader {
     } = this;
 
     this.freezeResults = freezeResults;
+    this.possibleTypes = possibleTypes;
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
       return executeStoreQuery.call(this, options);
@@ -221,7 +226,6 @@ export class StoreReader {
       store,
       dataIdFromObject: config && config.dataIdFromObject,
       cacheRedirects: (config && config.cacheRedirects) || {},
-      possibleTypes: config && config.possibleTypes,
     };
 
     const execResult = this.executeStoreQuery({
@@ -364,7 +368,7 @@ export class StoreReader {
         const match = fragmentMatches(
           fragment,
           typename,
-          execContext.contextValue.possibleTypes,
+          this.possibleTypes,
         );
 
         if (match && (object || typename === 'Query')) {

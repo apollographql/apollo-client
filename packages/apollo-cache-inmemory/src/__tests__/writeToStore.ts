@@ -1676,13 +1676,16 @@ describe('writing to the store', () => {
         ],
       };
 
+      const writer = new StoreWriter({
+        possibleTypes: {},
+      });
+
       return withWarning(() => {
         const newStore = writer.writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
           document: query,
           dataIdFromObject: getIdField,
-          possibleTypes: {},
         });
 
         expect(newStore.get('1')).toEqual(result.todos[0]);
@@ -1724,15 +1727,21 @@ describe('writing to the store', () => {
         ],
       };
 
+      const writer = new StoreWriter({
+        possibleTypes: {
+          Todo: {
+            ShoppingCartItem: true,
+            TaskItem: true,
+          },
+        },
+      });
+
       return withWarning(() => {
         const newStore = writer.writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
           document: queryWithInterface,
           dataIdFromObject: getIdField,
-          possibleTypes: {
-            Todo: ['ShoppingCartItem', 'TaskItem'],
-          },
         });
 
         expect(newStore.get('1')).toEqual(result.todos[0]);
@@ -1750,13 +1759,16 @@ describe('writing to the store', () => {
         ],
       };
 
+      const writer = new StoreWriter({
+        possibleTypes: {},
+      });
+
       return withWarning(() => {
         const newStore = writer.writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
           document: addTypenameToDocument(query),
           dataIdFromObject: getIdField,
-          possibleTypes: {},
         });
 
         expect(newStore.get('1')).toEqual(result.todos[0]);

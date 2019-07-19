@@ -33,7 +33,6 @@ import {
   IdGetter,
   NormalizedCache,
   StoreObject,
-  PossibleTypesMap,
 } from './types';
 import { fragmentMatches } from './fragments';
 
@@ -57,10 +56,16 @@ export type WriteContext = {
   readonly variables?: any;
   readonly dataIdFromObject?: IdGetter;
   readonly fragmentMap?: FragmentMap;
-  readonly possibleTypes?: PossibleTypesMap;
 };
 
+type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
+export interface StoreWriterConfig {
+  possibleTypes?: PossibleTypes;
+}
+
 export class StoreWriter {
+  constructor(private config: StoreWriterConfig = {}) {}
+
   /**
    * Writes the result of a query to the store.
    *
@@ -84,14 +89,12 @@ export class StoreWriter {
     store = defaultNormalizedCacheFactory(),
     variables,
     dataIdFromObject,
-    possibleTypes,
   }: {
     query: DocumentNode;
     result: Object;
     store?: NormalizedCache;
     variables?: Object;
     dataIdFromObject?: IdGetter;
-    possibleTypes?: PossibleTypesMap;
   }): NormalizedCache {
     return this.writeResultToStore({
       dataId: 'ROOT_QUERY',
@@ -100,7 +103,6 @@ export class StoreWriter {
       store,
       variables,
       dataIdFromObject,
-      possibleTypes,
     });
   }
 
@@ -111,7 +113,6 @@ export class StoreWriter {
     store = defaultNormalizedCacheFactory(),
     variables,
     dataIdFromObject,
-    possibleTypes,
   }: {
     dataId: string;
     result: any;
@@ -119,7 +120,6 @@ export class StoreWriter {
     store?: NormalizedCache;
     variables?: Object;
     dataIdFromObject?: IdGetter;
-    possibleTypes?: PossibleTypesMap;
   }): NormalizedCache {
     // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
     const operationDefinition = getOperationDefinition(document)!;
@@ -139,7 +139,6 @@ export class StoreWriter {
           ),
           dataIdFromObject,
           fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-          possibleTypes,
         },
       });
     } catch (e) {
@@ -177,7 +176,7 @@ export class StoreWriter {
             context,
           });
         } else if (
-          context.possibleTypes &&
+          this.config.possibleTypes &&
           !(
             selection.directives &&
             selection.directives.some(
@@ -217,7 +216,7 @@ export class StoreWriter {
         const match = fragmentMatches(
           fragment,
           typename,
-          context.possibleTypes,
+          this.config.possibleTypes,
         );
 
         if (match && (result || typename === 'Query')) {

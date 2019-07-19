@@ -74,7 +74,6 @@ export type ReadStoreContext = {
   readonly store: NormalizedCache;
   readonly cacheRedirects: CacheResolverMap;
   readonly dataIdFromObject?: IdGetter;
-  readonly possibleTypes?: PossibleTypesMap;
 };
 
 export type PossibleTypesMap = { [key: string]: string[] };

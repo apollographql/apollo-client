@@ -1,10 +1,10 @@
 import { InlineFragmentNode, FragmentDefinitionNode } from 'graphql';
-import { PossibleTypesMap } from './types';
+type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 
 export function fragmentMatches(
   fragment: InlineFragmentNode | FragmentDefinitionNode,
   typename: string,
-  possibleTypes?: PossibleTypesMap,
+  possibleTypes?: PossibleTypes,
 ) {
   if (!fragment.typeCondition) {
     return true;
@@ -22,9 +22,9 @@ export function fragmentMatches(
     for (let i = 0; i < workQueue.length; ++i) {
       const subtypes = workQueue[i];
       if (subtypes) {
-        if (subtypes.indexOf(typename) >= 0) return true;
-        for (let { length } = subtypes, j = 0; j < length; ++j) {
-          const subsubtypes = possibleTypes[subtypes[j]];
+        if (subtypes[typename] === true) return true;
+        for (const subtype in subtypes) {
+          const subsubtypes = possibleTypes[subtype];
           // If this subtype has subtypes of its own, and we haven't considered
           // this array of sub-subtypes before, add them the queue.
           if (subsubtypes && workQueue.indexOf(subsubtypes) < 0) {

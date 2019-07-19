@@ -42,7 +42,9 @@ interface Variables {
 };
 
 const AllPeopleComponent = <Query<Data, Variables> query={ALL_PEOPLE_QUERY}>
-  {({ loading, error, data }) => { ... }}
+  {({ loading, error, data }) => {
+    // ...
+  }}
 </Query>
 ```
 

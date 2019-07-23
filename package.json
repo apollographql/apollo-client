@@ -66,7 +66,7 @@
     "@condenast/bundlesize": "0.18.1",
     "@octokit/rest": "16.28.5",
     "@types/benchmark": "1.0.31",
-    "@types/graphql": "14.2.2",
+    "@types/graphql": "14.2.3",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jest": "24.0.15",
     "@types/lodash": "4.14.136",

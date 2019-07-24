@@ -58,7 +58,7 @@ const AddTodo = () => {
 
 First, create your GraphQL mutation, wrap it in `gql`, and pass it to the `mutation` prop on the `Mutation` component. The `Mutation` component also requires a function as a child (also called the render prop function). The first argument of the render prop function is the mutate function, which you call to tell Apollo Client that you'd like to trigger a mutation. The mutate function optionally takes `variables`, `optimisticResponse`, `refetchQueries`, and `update`; however, you can also pass in those values as props to the `Mutation` component. In the example, notice how we use the mutate function (called `addTodo`) to submit the form with our variables.
 
-The second argument to the render prop function is an object with your mutation result on the `data` property, as well as booleans for `loading` and if the mutate function was `called`, in addition to `error`. If you'd like to ignore the result of the mutation, pass `ignoreResults` as a prop to the mutation component.
+The second argument to the render prop function is an object with your mutation result on the `data` property, as well as booleans for `loading` and `error` if the mutate function was called. If you'd like to ignore the result of the mutation, pass `ignoreResults` as a prop to the mutation component.
 
 If you're following along with the example on CodeSandbox, you probably noticed that the UI reflecting the list of todos did not update with our newly created todo when you submitted the form. This is because the todos query in the Apollo cache does not know about our newly created todo. In the next section, we'll learn when and how to update the Apollo cache after a mutation.
 

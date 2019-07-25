@@ -21,6 +21,11 @@ import { QueryStoreValue } from '../data/queries';
 
 import { invariant, InvariantError } from 'ts-invariant';
 import { isNonEmptyArray } from '../util/arrays';
+import {
+  perfStart,
+  extractPerfEntriesFor,
+  isPerformanceSupported,
+} from './performance';
 
 // XXX remove in the next breaking semver change (3.0)
 // Deprecated, use ApolloCurrentQueryResult
@@ -95,10 +100,12 @@ export class ObservableQuery<
     queryManager,
     options,
     shouldSubscribe = true,
+    queryId = queryManager.generateQueryId(),
   }: {
     queryManager: QueryManager<any>;
     options: WatchQueryOptions<TVariables>;
     shouldSubscribe?: boolean;
+    queryId?: string;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) =>
       this.onSubscribe(observer),
@@ -110,7 +117,7 @@ export class ObservableQuery<
     // query information
     this.options = options;
     this.variables = options.variables || ({} as TVariables);
-    this.queryId = queryManager.generateQueryId();
+    this.queryId = queryId;
     this.shouldSubscribe = shouldSubscribe;
 
     const opDef = getOperationDefinition(options.query);
@@ -597,6 +604,7 @@ export class ObservableQuery<
 
   private setUpQuery() {
     const { queryManager, queryId } = this;
+    const perfEnd = perfStart({ queryId, name: 'ObservableQuery.setUpQuery' });
 
     if (this.shouldSubscribe) {
       queryManager.addObservableQuery<TData>(queryId, this);
@@ -614,6 +622,13 @@ export class ObservableQuery<
     queryManager
       .observeQuery<TData>(queryId, this.options, {
         next: (result: ApolloQueryResult<TData>) => {
+          // Measure the first update with data
+          if (!result.loading && !this.lastResult) {
+            perfEnd();
+            if (isPerformanceSupported())
+              result.performanceEntries = extractPerfEntriesFor(queryId);
+          }
+
           if (this.lastError || this.isDifferentFromLastResult(result)) {
             const previousResult = this.updateLastResult(result);
             const { query, variables, fetchPolicy } = this.options;
@@ -624,7 +639,7 @@ export class ObservableQuery<
             // changed, and the query is calling against both local and remote
             // data, a refetch is needed to pull in new data, using the
             // updated `@export` variables.
-            if (queryManager.transform(query).hasClientExports) {
+            if (queryManager.transform(query, queryId).hasClientExports) {
               queryManager
                 .getLocalState()
                 .addExportedVariables(query, variables)
@@ -635,7 +650,7 @@ export class ObservableQuery<
                     !result.loading &&
                     previousResult &&
                     fetchPolicy !== 'cache-only' &&
-                    queryManager.transform(query).serverQuery &&
+                    queryManager.transform(query, queryId).serverQuery &&
                     !isEqual(previousVariables, variables)
                   ) {
                     this.refetch();

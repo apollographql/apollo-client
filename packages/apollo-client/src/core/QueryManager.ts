@@ -38,6 +38,7 @@ import {
 import { LocalState } from './LocalState';
 import { asyncMap, multiplex } from '../util/observables';
 import { isNonEmptyArray } from '../util/arrays';
+import { perfStart } from './performance';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -156,9 +157,9 @@ export class QueryManager<TStore> {
 
     this.setQuery(mutationId, () => ({ document: mutation }));
 
-    variables = this.getVariables(mutation, variables);
+    variables = this.getVariables(mutation, variables, mutationId);
 
-    if (this.transform(mutation).hasClientExports) {
+    if (this.transform(mutation, mutationId).hasClientExports) {
       variables = await this.localState.addExportedVariables(
         mutation,
         variables,
@@ -220,6 +221,7 @@ export class QueryManager<TStore> {
           },
           variables,
           false,
+          mutationId,
         )
         .subscribe({
           next(result: ExecutionResult) {
@@ -350,11 +352,11 @@ export class QueryManager<TStore> {
       context = {},
     } = options;
 
-    const query = this.transform(options.query).document;
+    const query = this.transform(options.query, queryId).document;
 
-    let variables = this.getVariables(query, options.variables);
+    let variables = this.getVariables(query, options.variables, queryId);
 
-    if (this.transform(query).hasClientExports) {
+    if (this.transform(query, queryId).hasClientExports) {
       variables = await this.localState.addExportedVariables(
         query,
         variables,
@@ -372,12 +374,17 @@ export class QueryManager<TStore> {
     // Unless we are completely skipping the cache, we want to diff the query
     // against the cache before we fetch it from the network interface.
     if (!isNetworkOnly) {
+      const perfEnd = perfStart({
+        queryId,
+        name: 'ApolloCache.diff',
+      });
       const { complete, result } = this.dataStore.getCache().diff({
         query,
         variables,
         returnPartialData: true,
         optimistic: false,
       });
+      perfEnd();
 
       // If we're in here, only fetch if we have missing fields
       needToFetch = !complete || fetchPolicy === 'cache-and-network';
@@ -388,7 +395,12 @@ export class QueryManager<TStore> {
       needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
 
     // we need to check to see if this is an operation that uses the @live directive
+    const perfEnd = perfStart({
+      queryId,
+      name: "hasDirectives(['live'])",
+    });
     if (hasDirectives(['live'], query)) shouldFetch = true;
+    perfEnd();
 
     const requestId = this.idCounter++;
 
@@ -461,7 +473,7 @@ export class QueryManager<TStore> {
     this.invalidate(queryId);
     this.invalidate(fetchMoreForQueryId);
 
-    if (this.transform(query).hasForcedResolvers) {
+    if (this.transform(query, queryId).hasForcedResolvers) {
       return this.localState
         .runResolvers({
           document: query,
@@ -490,6 +502,10 @@ export class QueryManager<TStore> {
     { fetchPolicy, variables, errorPolicy }: WatchQueryOptions,
     fetchMoreForQueryId?: string,
   ) {
+    const perfEnd = perfStart({
+      queryId,
+      name: 'QueryManager.markQueryResult',
+    });
     if (fetchPolicy === 'no-cache') {
       this.setQuery(queryId, () => ({
         newData: { result: result.data, complete: true },
@@ -503,6 +519,7 @@ export class QueryManager<TStore> {
         errorPolicy === 'ignore' || errorPolicy === 'all',
       );
     }
+    perfEnd();
   }
 
   // Returns a query listener that will update the given observer based on the
@@ -663,30 +680,76 @@ export class QueryManager<TStore> {
     }>
   >();
 
-  public transform(document: DocumentNode) {
+  public transform(document: DocumentNode, operationId?: string) {
     const { transformCache } = this;
 
     if (!transformCache.has(document)) {
       const cache = this.dataStore.getCache();
+
+      const perfEndTransformDocument = perfStart({
+        operationId,
+        name: 'cache.transformDocument',
+      });
       const transformed = cache.transformDocument(document);
+      perfEndTransformDocument();
+
+      const perfEndRemoveConnection = perfStart({
+        operationId,
+        name: 'removeConnectionDirectiveFromDocument',
+      });
       const forLink = removeConnectionDirectiveFromDocument(
         cache.transformForLink(transformed),
       );
+      perfEndRemoveConnection();
 
+      const perfEndClientQuery = perfStart({
+        operationId,
+        name: 'clientQuery',
+      });
       const clientQuery = this.localState.clientQuery(transformed);
+      perfEndClientQuery();
+
+      const perfEndServerQuery = perfStart({
+        operationId,
+        name: 'serverQuery',
+      });
       const serverQuery = this.localState.serverQuery(forLink);
+      perfEndServerQuery();
+
+      const perfEndHasClientExports = perfStart({
+        operationId,
+        name: 'hasClientExports',
+      });
+      const documentHasClientExports = hasClientExports(transformed);
+      perfEndHasClientExports();
+
+      const perfEndHasForcedResolvers = perfStart({
+        operationId,
+        name: 'hasForcedResolvers',
+      });
+      const hasForcedResolvers = this.localState.shouldForceResolvers(
+        transformed,
+      );
+      perfEndHasForcedResolvers();
+
+      const perfEndGetDefaultValues = perfStart({
+        operationId,
+        name: 'getDefaultValues',
+      });
+      const defaultVars = getDefaultValues(
+        getOperationDefinition(transformed),
+      ) as OperationVariables;
+      perfEndGetDefaultValues();
 
       const cacheEntry = {
         document: transformed,
         // TODO These two calls (hasClientExports and shouldForceResolvers)
         // could probably be merged into a single traversal.
-        hasClientExports: hasClientExports(transformed),
-        hasForcedResolvers: this.localState.shouldForceResolvers(transformed),
+        hasClientExports: documentHasClientExports,
+        hasForcedResolvers,
         clientQuery,
         serverQuery,
-        defaultVars: getDefaultValues(
-          getOperationDefinition(transformed),
-        ) as OperationVariables,
+        defaultVars,
       };
 
       const add = (doc: DocumentNode | null) => {
@@ -709,11 +772,17 @@ export class QueryManager<TStore> {
   private getVariables(
     document: DocumentNode,
     variables?: OperationVariables,
+    queryId?: string,
   ): OperationVariables {
-    return {
-      ...this.transform(document).defaultVars,
+    const perfEnd = perfStart({ queryId, name: 'QueryManager.getVariables' });
+
+    const result = {
+      ...this.transform(document, queryId).defaultVars,
       ...variables,
     };
+    perfEnd();
+
+    return result;
   }
 
   // The shouldSubscribe option is a temporary fix that tells us whether watchQuery was called
@@ -732,20 +801,40 @@ export class QueryManager<TStore> {
       'client.watchQuery cannot be called with fetchPolicy set to "standby"',
     );
 
+    const queryId = this.generateQueryId();
+
+    const perfEnd = perfStart({ queryId, name: 'QueryManager.watchQuery' });
+
+    const perfListener: QueryListener = (_, newData) => {
+      if (newData && newData.complete) {
+        perfEnd();
+        this.removeQueryListener(queryId, perfListener);
+      }
+    };
+
+    this.addQueryListener(queryId, perfListener);
+
     // assign variable default values if supplied
-    options.variables = this.getVariables(options.query, options.variables);
+    options.variables = this.getVariables(
+      options.query,
+      options.variables,
+      queryId,
+    );
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
       options.notifyOnNetworkStatusChange = false;
     }
 
-    let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
+    const transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
 
-    return new ObservableQuery<T, TVariables>({
+    const observableQuery = new ObservableQuery<T, TVariables>({
+      queryId,
       queryManager: this,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
     });
+
+    return observableQuery;
   }
 
   public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {
@@ -806,6 +895,13 @@ export class QueryManager<TStore> {
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.setQuery(queryId, ({ listeners }) => {
       listeners.add(listener);
+      return { invalidated: false };
+    });
+  }
+
+  public removeQueryListener(queryId: string, listener: QueryListener) {
+    this.setQuery(queryId, ({ listeners }) => {
+      listeners.delete(listener);
       return { invalidated: false };
     });
   }
@@ -954,26 +1050,30 @@ export class QueryManager<TStore> {
     fetchPolicy,
     variables,
   }: SubscriptionOptions): Observable<FetchResult<T>> {
-    query = this.transform(query).document;
-    variables = this.getVariables(query, variables);
+    const queryId = this.generateQueryId();
+
+    query = this.transform(query, queryId).document;
+    variables = this.getVariables(query, variables, queryId);
 
     const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<T>(query, {}, variables, false).map(result => {
-        if (!fetchPolicy || fetchPolicy !== 'no-cache') {
-          this.dataStore.markSubscriptionResult(result, query, variables);
-          this.broadcastQueries();
-        }
+      this.getObservableFromLink<T>(query, {}, variables, false, queryId).map(
+        result => {
+          if (!fetchPolicy || fetchPolicy !== 'no-cache') {
+            this.dataStore.markSubscriptionResult(result, query, variables);
+            this.broadcastQueries();
+          }
 
-        if (graphQLResultHasError(result)) {
-          throw new ApolloError({
-            graphQLErrors: result.errors,
-          });
-        }
+          if (graphQLResultHasError(result)) {
+            throw new ApolloError({
+              graphQLErrors: result.errors,
+            });
+          }
 
-        return result;
-      });
+          return result;
+        },
+      );
 
-    if (this.transform(query).hasClientExports) {
+    if (this.transform(query, queryId).hasClientExports) {
       const observablePromise = this.localState
         .addExportedVariables(query, variables)
         .then(makeObservable);
@@ -1109,12 +1209,25 @@ export class QueryManager<TStore> {
     context: any,
     variables?: OperationVariables,
     deduplication: boolean = this.queryDeduplication,
+    operationId?: string,
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
 
-    const { serverQuery } = this.transform(query);
+    const { serverQuery } = this.transform(query, operationId);
     if (serverQuery) {
-      const { inFlightLinkObservables, link } = this;
+      const { inFlightLinkObservables, link: originalLink } = this;
+
+      const perfLink = new ApolloLink((operation, forward) => {
+        if (!forward) return null;
+
+        const perfEnd = perfStart({ operationId, name: 'ApolloLink.execute' });
+        return forward(operation).map(data => {
+          perfEnd();
+          return data;
+        });
+      });
+
+      const link = perfLink.concat(originalLink);
 
       const operation = {
         query: serverQuery,
@@ -1166,7 +1279,7 @@ export class QueryManager<TStore> {
       context = this.prepareContext(context);
     }
 
-    const { clientQuery } = this.transform(query);
+    const { clientQuery } = this.transform(query, operationId);
     if (clientQuery) {
       observable = asyncMap(observable, result => {
         return this.localState.runResolvers({
@@ -1202,11 +1315,20 @@ export class QueryManager<TStore> {
     let errorsFromStore: any;
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+      const perfEnd = perfStart({
+        queryId,
+        name: 'QueryManager.getObservableFromLink',
+      });
+
       const observable = this.getObservableFromLink(
         document,
         options.context,
         variables,
+        undefined,
+        queryId,
       );
+
+      perfEnd();
 
       const fqrfId = `fetchRequest:${queryId}`;
       this.fetchQueryRejectFns.set(fqrfId, reject);

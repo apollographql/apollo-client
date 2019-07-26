@@ -153,7 +153,11 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
     }
 
     const implementingTypes = this.possibleTypesMap[typeCondition];
-    if (implementingTypes && implementingTypes.indexOf(__typename) > -1) {
+    if (
+      __typename &&
+      implementingTypes &&
+      implementingTypes.indexOf(__typename) > -1
+    ) {
       return true;
     }
 

@@ -6,8 +6,9 @@ export class ObjectCache implements NormalizedCache {
   public toObject() {
     return this.data;
   }
+
   public get(dataId: string) {
-    return this.data[dataId];
+    return this.data[dataId]!;
   }
 
   public set(dataId: string, value: StoreObject) {

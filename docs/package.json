@@ -10,7 +10,7 @@
     "gatsby-theme-apollo-docs": "1.2.0"
   },
   "devDependencies": {
-    "typedoc": "0.14.2",
+    "typedoc": "0.15.0",
     "typescript": "3.5.3"
   }
 }

@@ -64,7 +64,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.5.0",
     "@babel/plugin-transform-modules-umd": "7.2.0",
     "@condenast/bundlesize": "0.18.1",
-    "@octokit/rest": "16.28.6",
+    "@octokit/rest": "16.28.7",
     "@types/benchmark": "1.0.31",
     "@types/graphql": "14.2.3",
     "@types/isomorphic-fetch": "0.0.35",
@@ -78,7 +78,7 @@
     "codecov": "3.5.0",
     "danger": "7.1.4",
     "fetch-mock": "7.3.9",
-    "flow-bin": "0.103.0",
+    "flow-bin": "0.104.0",
     "graphql": "14.4.2",
     "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",
@@ -106,7 +106,7 @@
     "tslint": "5.18.0",
     "typescript": "3.5.3",
     "uglify-js": "3.6.0",
-    "webpack": "4.37.0",
+    "webpack": "4.38.0",
     "webpack-bundle-analyzer": "3.3.2"
   },
   "renovate": {

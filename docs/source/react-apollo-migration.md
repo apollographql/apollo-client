@@ -158,7 +158,7 @@ const NumbersWithData = () => (
 );
 ```
 
-And just like that, we have two composed queries! To explore more migration examples, take a look at each individual commit on this [pull request](https://github.com/apollographql/GitHunt-React/pull/275). It shows a number of use cases being refactored to the new components.
+And just like that, we have two composed queries!
 
 For more information on how to use the new Query component, read the [full guide](/essentials/queries/)!
 

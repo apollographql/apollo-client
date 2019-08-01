@@ -3,11 +3,9 @@ import { IdValue, JsonValue } from 'apollo-utilities';
 import gql from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
 
-import { StoreObject, HeuristicFragmentMatcher } from '../';
+import { StoreObject } from '../';
 import { StoreReader } from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../objectCache';
-
-const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 import { withError } from './diffAgainstStore';
 
 describe('reading from the store', () => {
@@ -62,7 +60,6 @@ describe('reading from the store', () => {
             }
           }
         `,
-        fragmentMatcherFunction,
       });
 
       expect(stripSymbols(queryResult)).toEqual({
@@ -70,7 +67,7 @@ describe('reading from the store', () => {
           innerArray: [{ id: 'abcdef', someField: 3 }],
         },
       });
-    }, /queries contain union or interface types/);
+    });
   });
 
   it('rejects malformed queries', () => {

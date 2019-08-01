@@ -2,7 +2,6 @@ import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
 import {
   InMemoryCache,
-  IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';
 import { GraphQLError } from 'graphql';
 
@@ -1411,19 +1410,9 @@ describe('ObservableQuery', () => {
       const client = new ApolloClient({
         link: ni,
         cache: new InMemoryCache({
-          fragmentMatcher: new IntrospectionFragmentMatcher({
-            introspectionQueryResultData: {
-              __schema: {
-                types: [
-                  {
-                    kind: 'UNION',
-                    name: 'Creature',
-                    possibleTypes: [{ name: 'Pet' }],
-                  },
-                ],
-              },
-            },
-          }),
+          possibleTypes: {
+            Creature: ['Pet'],
+          },
         }),
       });
 

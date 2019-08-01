@@ -19,20 +19,18 @@ import { StoreWriter } from '../writeToStore';
 
 import { defaultNormalizedCacheFactory } from '../objectCache';
 
-import {
-  HeuristicFragmentMatcher,
-  IntrospectionFragmentMatcher,
-  StoreObject,
-} from '../';
+import { StoreObject } from '../';
 
-export function withWarning(func: Function, regex: RegExp) {
+export function withWarning(func: Function, regex?: RegExp) {
   let message: string = null as never;
   const oldWarn = console.warn;
 
   console.warn = (m: string) => (message = m);
 
   return Promise.resolve(func()).then(val => {
-    expect(message).toMatch(regex);
+    if (regex) {
+      expect(message).toMatch(regex);
+    }
     console.warn = oldWarn;
     return val;
   });
@@ -1669,8 +1667,6 @@ describe('writing to the store', () => {
     });
 
     it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
-      const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
-
       const result = {
         todos: [
           {
@@ -1680,13 +1676,16 @@ describe('writing to the store', () => {
         ],
       };
 
+      const writer = new StoreWriter({
+        possibleTypes: {},
+      });
+
       return withWarning(() => {
         const newStore = writer.writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
           document: query,
           dataIdFromObject: getIdField,
-          fragmentMatcherFunction,
         });
 
         expect(newStore.get('1')).toEqual(result.todos[0]);
@@ -1694,23 +1693,6 @@ describe('writing to the store', () => {
     });
 
     it('should warn when it receives the wrong data inside a fragment (using an introspection matcher)', () => {
-      const fragmentMatcherFunction = new IntrospectionFragmentMatcher({
-        introspectionQueryResultData: {
-          __schema: {
-            types: [
-              {
-                kind: 'UNION',
-                name: 'Todo',
-                possibleTypes: [
-                  { name: 'ShoppingCartItem' },
-                  { name: 'TaskItem' },
-                ],
-              },
-            ],
-          },
-        },
-      }).match;
-
       const queryWithInterface = gql`
         query {
           todos {
@@ -1745,13 +1727,21 @@ describe('writing to the store', () => {
         ],
       };
 
+      const writer = new StoreWriter({
+        possibleTypes: {
+          Todo: {
+            ShoppingCartItem: true,
+            TaskItem: true,
+          },
+        },
+      });
+
       return withWarning(() => {
         const newStore = writer.writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
           document: queryWithInterface,
           dataIdFromObject: getIdField,
-          fragmentMatcherFunction,
         });
 
         expect(newStore.get('1')).toEqual(result.todos[0]);
@@ -1759,8 +1749,6 @@ describe('writing to the store', () => {
     });
 
     it('should warn if a result is missing __typename when required (using an heuristic matcher)', () => {
-      const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
-
       const result: any = {
         todos: [
           {
@@ -1771,13 +1759,16 @@ describe('writing to the store', () => {
         ],
       };
 
+      const writer = new StoreWriter({
+        possibleTypes: {},
+      });
+
       return withWarning(() => {
         const newStore = writer.writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
           document: addTypenameToDocument(query),
           dataIdFromObject: getIdField,
-          fragmentMatcherFunction,
         });
 
         expect(newStore.get('1')).toEqual(result.todos[0]);
@@ -1811,13 +1802,11 @@ describe('writing to the store', () => {
         id: 1,
       };
 
-      const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
       const newStore = writer.writeResultToStore({
         dataId: 'ROOT_QUERY',
         result,
         document: defered,
         dataIdFromObject: getIdField,
-        fragmentMatcherFunction,
       });
 
       expect(newStore.get('ROOT_QUERY')).toEqual({ id: 1 });

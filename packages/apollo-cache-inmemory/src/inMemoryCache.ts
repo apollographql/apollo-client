@@ -11,11 +11,11 @@ import { wrap } from 'optimism';
 
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { HeuristicFragmentMatcher } from './fragmentMatcher';
 import {
   ApolloReducerConfig,
   NormalizedCache,
   NormalizedCacheObject,
+  PossibleTypesMap,
 } from './types';
 
 import { StoreReader } from './readFromStore';
@@ -30,7 +30,6 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 }
 
 const defaultConfig: InMemoryCacheConfig = {
-  fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
@@ -86,6 +85,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
+  private possibleTypes?: {
+    [supertype: string]: {
+      [subtype: string]: true;
+    };
+  };
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
@@ -116,6 +120,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.addTypename = !!this.config.addTypename;
 
+    if (this.config.possibleTypes) {
+      this.addPossibleTypes(this.config.possibleTypes);
+    }
+
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
@@ -130,10 +138,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeWriter = new StoreWriter();
+    this.storeWriter = new StoreWriter({
+      possibleTypes: this.possibleTypes,
+    });
+
     this.storeReader = new StoreReader({
       cacheKeyRoot: this.cacheKeyRoot,
       freezeResults: config.freezeResults,
+      possibleTypes: this.possibleTypes,
     });
 
     const cache = this;
@@ -183,24 +195,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return null;
     }
 
-    const { fragmentMatcher } = this.config;
-    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
-
     return this.storeReader.readQueryFromStore({
       store: options.optimistic ? this.optimisticData : this.data,
       query: this.transformDocument(options.query),
       variables: options.variables,
       rootId: options.rootId,
-      fragmentMatcherFunction,
       previousResult: options.previousResult,
       config: this.config,
     }) || null;
   }
 
   public write(write: Cache.WriteOptions): void {
-    const { fragmentMatcher } = this.config;
-    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
-
     this.storeWriter.writeResultToStore({
       dataId: write.dataId,
       result: write.result,
@@ -208,23 +213,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
-      fragmentMatcherFunction,
     });
 
     this.broadcastWatches();
   }
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
-    const { fragmentMatcher } = this.config;
-    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
-
     return this.storeReader.diffQueryAgainstStore({
       store: query.optimistic ? this.optimisticData : this.data,
       query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
-      fragmentMatcherFunction,
       config: this.config,
     });
   }
@@ -332,6 +332,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
+  }
+
+  public addPossibleTypes(possibleTypes: PossibleTypesMap) {
+    if (!this.possibleTypes) this.possibleTypes = Object.create(null);
+    Object.keys(possibleTypes).forEach(supertype => {
+      let subtypeSet = this.possibleTypes[supertype];
+      if (!subtypeSet) {
+        subtypeSet = this.possibleTypes[supertype] = Object.create(null);
+      }
+      possibleTypes[supertype].forEach(subtype => {
+        subtypeSet[subtype] = true;
+      });
+    });
   }
 
   protected broadcastWatches() {

@@ -794,7 +794,10 @@ describe('ApolloClient', () => {
     it('should warn when the data provided does not match the query shape', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({
+          // Passing an empty map enables the warning:
+          possibleTypes: {},
+        }),
       });
 
       return withWarning(() => {
@@ -1073,7 +1076,10 @@ describe('ApolloClient', () => {
     it('should warn when the data provided does not match the fragment shape', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({
+          // Passing an empty map enables the warning:
+          possibleTypes: {},
+        }),
       });
 
       return withWarning(() => {

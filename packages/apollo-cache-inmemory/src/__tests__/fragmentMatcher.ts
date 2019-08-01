@@ -1,10 +1,187 @@
-import { IntrospectionFragmentMatcher } from '../fragmentMatcher';
-import { defaultNormalizedCacheFactory } from '../objectCache';
-import { ReadStoreContext } from '../types';
 import { InMemoryCache } from '../inMemoryCache';
 import gql from 'graphql-tag';
 
-describe('FragmentMatcher', () => {
+describe('fragment matching', () => {
+  it('can match exact types with or without possibleTypes', () => {
+    const cacheWithoutPossibleTypes = new InMemoryCache({
+      addTypename: true,
+    });
+
+    const cacheWithPossibleTypes = new InMemoryCache({
+      addTypename: true,
+      possibleTypes: {
+        Animal: ['Cat', 'Dog'],
+      },
+    });
+
+    const query = gql`
+      query AnimalNames {
+        animals {
+          id
+          name
+          ...CatDetails
+        }
+      }
+      fragment CatDetails on Cat {
+        livesLeft
+        killsToday
+      }
+    `;
+
+    const data = {
+      animals: [
+        {
+          __typename: 'Cat',
+          id: 1,
+          name: 'Felix',
+          livesLeft: 8,
+          killsToday: 2,
+        },
+        {
+          __typename: 'Dog',
+          id: 2,
+          name: 'Baxter',
+        },
+      ],
+    };
+
+    cacheWithoutPossibleTypes.writeQuery({ query, data });
+    expect(cacheWithoutPossibleTypes.readQuery({ query })).toEqual(data);
+
+    cacheWithPossibleTypes.writeQuery({ query, data });
+    expect(cacheWithPossibleTypes.readQuery({ query })).toEqual(data);
+  });
+
+  it('can match interface subtypes', () => {
+    const cache = new InMemoryCache({
+      addTypename: true,
+      possibleTypes: {
+        Animal: ['Cat', 'Dog'],
+      },
+    });
+
+    const query = gql`
+      query BestFriend {
+        bestFriend {
+          id
+          ...AnimalName
+        }
+      }
+      fragment AnimalName on Animal {
+        name
+      }
+    `;
+
+    const data = {
+      bestFriend: {
+        __typename: 'Dog',
+        id: 2,
+        name: 'Beckett',
+      },
+    };
+
+    cache.writeQuery({ query, data });
+    expect(cache.readQuery({ query })).toEqual(data);
+  });
+
+  it('can match union member types', () => {
+    const cache = new InMemoryCache({
+      addTypename: true,
+      possibleTypes: {
+        Status: ['PASSING', 'FAILING', 'SKIPPED'],
+      },
+    });
+
+    const query = gql`
+      query {
+        testResults {
+          id
+          output {
+            ... on Status {
+              stdout
+            }
+            ... on FAILING {
+              stderr
+            }
+          }
+        }
+      }
+    `;
+
+    const data = {
+      testResults: [
+        {
+          __typename: 'TestResult',
+          id: 123,
+          output: {
+            __typename: 'PASSING',
+            stdout: 'ok!',
+          },
+        },
+        {
+          __typename: 'TestResult',
+          id: 456,
+          output: {
+            __typename: 'FAILING',
+            stdout: '',
+            stderr: 'oh no',
+          },
+        },
+      ],
+    };
+
+    cache.writeQuery({ query, data });
+    expect(cache.readQuery({ query })).toEqual(data);
+  });
+
+  it('can match indirect subtypes while avoiding cycles', () => {
+    const cache = new InMemoryCache({
+      addTypename: true,
+      possibleTypes: {
+        Animal: ['Animal', 'Bug', 'Mammal'],
+        Bug: ['Ant', 'Spider', 'RolyPoly'],
+        Mammal: ['Dog', 'Cat', 'Human'],
+        Cat: ['Calico', 'Siamese', 'Sphynx', 'Tabby'],
+      },
+    });
+
+    const query = gql`
+      query {
+        animals {
+          ... on Mammal {
+            hasFur
+            bodyTemperature
+          }
+          ... on Bug {
+            isVenomous
+          }
+        }
+      }
+    `;
+
+    const data = {
+      animals: [
+        {
+          __typename: 'Sphynx',
+          hasFur: false,
+          bodyTemperature: 99,
+        },
+        {
+          __typename: 'Dog',
+          hasFur: true,
+          bodyTemperature: 102,
+        },
+        {
+          __typename: 'Spider',
+          isVenomous: 'maybe',
+        },
+      ],
+    };
+
+    cache.writeQuery({ query, data });
+    expect(cache.readQuery({ query })).toEqual(data);
+  });
+
   it('can match against the root Query', () => {
     const cache = new InMemoryCache({
       addTypename: true,
@@ -43,59 +220,5 @@ describe('FragmentMatcher', () => {
 
     cache.writeQuery({ query, data });
     expect(cache.readQuery({ query })).toEqual(data);
-  });
-});
-
-describe('IntrospectionFragmentMatcher', () => {
-  it('will throw an error if match is called if it is not ready', () => {
-    const ifm = new IntrospectionFragmentMatcher();
-    expect(() => (ifm.match as any)()).toThrowError(/called before/);
-  });
-
-  it('can be seeded with an introspection query result', () => {
-    const ifm = new IntrospectionFragmentMatcher({
-      introspectionQueryResultData: {
-        __schema: {
-          types: [
-            {
-              kind: 'UNION',
-              name: 'Item',
-              possibleTypes: [
-                {
-                  name: 'ItemA',
-                },
-                {
-                  name: 'ItemB',
-                },
-              ],
-            },
-          ],
-        },
-      },
-    });
-
-    const store = defaultNormalizedCacheFactory({
-      a: {
-        __typename: 'ItemB',
-      },
-    });
-
-    const idValue = {
-      type: 'id',
-      id: 'a',
-      generated: false,
-    };
-
-    const readStoreContext = {
-      store,
-      returnPartialData: false,
-      hasMissingField: false,
-      cacheRedirects: {},
-    } as ReadStoreContext;
-
-    expect(ifm.match(idValue as any, 'Item', readStoreContext)).toBe(true);
-    expect(ifm.match(idValue as any, 'NotAnItem', readStoreContext)).toBe(
-      false,
-    );
   });
 });

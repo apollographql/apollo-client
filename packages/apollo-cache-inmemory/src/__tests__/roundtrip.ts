@@ -6,9 +6,7 @@ import { withWarning } from './writeToStore';
 
 import { DepTrackingCache } from '../depTrackingCache';
 
-import { HeuristicFragmentMatcher, StoreReader, StoreWriter } from '../';
-
-const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+import { StoreReader, StoreWriter } from '../';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
@@ -37,7 +35,6 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     store,
     query,
     variables,
-    fragmentMatcherFunction,
   };
 
   const reconstructedResult = reader.readQueryFromStore<any>(readOptions);
@@ -335,7 +332,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }, /using fragments/);
+      });
     });
 
     // XXX this test is weird because it assumes the server returned an incorrect result
@@ -398,7 +395,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }, /IntrospectionFragmentMatcher/);
+      });
     });
 
     it('should resolve on union types with spread fragments', () => {
@@ -437,7 +434,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }, /IntrospectionFragmentMatcher/);
+      });
     });
 
     it('should work with a fragment on the actual interface or union', () => {
@@ -476,7 +473,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }, /IntrospectionFragmentMatcher/);
+      });
     });
 
     it('should throw on error on two of the same spread fragment types', () => {

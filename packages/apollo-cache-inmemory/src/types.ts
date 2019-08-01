@@ -1,7 +1,6 @@
 import { DocumentNode } from 'graphql';
-import { FragmentMatcher } from './readFromStore';
 import { Transaction } from 'apollo-cache';
-import { IdValue, StoreValue } from 'apollo-utilities';
+import { StoreValue } from 'apollo-utilities';
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -54,7 +53,6 @@ export type OptimisticStoreItem = {
 export type ReadQueryOptions = {
   store: NormalizedCache;
   query: DocumentNode;
-  fragmentMatcherFunction?: FragmentMatcher;
   variables?: Object;
   previousResult?: any;
   rootId?: string;
@@ -67,9 +65,9 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
-  fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
   cacheRedirects?: CacheResolverMap;
+  possibleTypes?: PossibleTypesMap;
 };
 
 export type ReadStoreContext = {
@@ -78,27 +76,7 @@ export type ReadStoreContext = {
   readonly dataIdFromObject?: IdGetter;
 };
 
-export interface FragmentMatcherInterface {
-  match(
-    idValue: IdValue,
-    typeCondition: string,
-    context: ReadStoreContext,
-  ): boolean | 'heuristic';
-}
-
 export type PossibleTypesMap = { [key: string]: string[] };
-
-export type IntrospectionResultData = {
-  __schema: {
-    types: {
-      kind: string;
-      name: string;
-      possibleTypes: {
-        name: string;
-      }[];
-    }[];
-  };
-};
 
 export type CacheResolver = (
   rootValue: any,

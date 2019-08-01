@@ -6,7 +6,6 @@ import ApolloClient from '../..';
 import { ApolloCache } from 'apollo-cache';
 import {
   InMemoryCache,
-  IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';
 import { ApolloLink, Observable, Operation } from 'apollo-link';
 import { hasDirectives } from 'apollo-utilities';
@@ -227,19 +226,9 @@ describe('General functionality', () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        fragmentMatcher: new IntrospectionFragmentMatcher({
-          introspectionQueryResultData: {
-            __schema: {
-              types: [
-                {
-                  kind: 'UnionTypeDefinition',
-                  name: 'Foo',
-                  possibleTypes: [{ name: 'Bar' }, { name: 'Baz' }],
-                },
-              ],
-            },
-          },
-        }),
+        possibleTypes: {
+          Foo: ['Bar', 'Baz'],
+        },
       }),
       link,
       resolvers,

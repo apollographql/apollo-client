@@ -138,6 +138,8 @@ describe('mutation results', () => {
           }
           return null;
         },
+        // Passing an empty map enables warnings about missing fields:
+        possibleTypes: {},
       }),
     });
 
@@ -166,6 +168,8 @@ describe('mutation results', () => {
           }
           return null;
         },
+        // Passing an empty map enables warnings about missing fields:
+        possibleTypes: {},
       }),
     });
 

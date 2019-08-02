@@ -161,6 +161,7 @@ export class StoreWriter {
     const newFields = this.processSelectionSet({
       result,
       dataId,
+      storeObject: store.get(dataId),
       selectionSet,
       context,
     });
@@ -171,19 +172,20 @@ export class StoreWriter {
   private processSelectionSet({
     result,
     dataId,
+    storeObject,
     selectionSet,
     context,
   }: {
     result: any;
     dataId: string;
+    storeObject: StoreObject;
     selectionSet: SelectionSetNode;
     context: WriteContext;
   }) {
-    const { variables, store, fragmentMap } = context;
+    const { variables, fragmentMap } = context;
     const newFields: {
       [storeFieldName: string]: StoreValue;
     } = Object.create(null);
-    const storeObject = store.get(dataId);
 
     selectionSet.selections.forEach(selection => {
       if (!shouldInclude(selection, variables)) {

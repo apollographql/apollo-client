@@ -252,12 +252,16 @@ export class StoreWriter {
         );
 
         if (match && (result || typename === 'Query')) {
-          this.writeSelectionSetToStore({
-            result,
-            selectionSet: fragment.selectionSet,
-            dataId,
-            context,
-          });
+          Object.assign(
+            newFields,
+            this.processSelectionSet({
+              result,
+              selectionSet: fragment.selectionSet,
+              dataId,
+              storeObject,
+              context,
+            }),
+          )
         }
       }
     });

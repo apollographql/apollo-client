@@ -161,6 +161,7 @@ export class StoreWriter {
     const newFields: {
       [storeFieldName: string]: StoreValue;
     } = Object.create(null);
+    const storeObject = store.get(dataId);
 
     selectionSet.selections.forEach(selection => {
       if (!shouldInclude(selection, variables)) {
@@ -176,6 +177,7 @@ export class StoreWriter {
             newFields,
             this.writeFieldToStore({
               dataId,
+              storeObject,
               value,
               field: selection,
               context,
@@ -245,17 +247,18 @@ export class StoreWriter {
     field,
     value,
     dataId,
+    storeObject,
     context,
   }: {
     field: FieldNode;
     value: any;
     dataId: string;
+    storeObject: StoreObject;
     context: WriteContext;
   }) {
     const { variables, dataIdFromObject, store } = context;
 
     let storeValue: StoreValue;
-    let storeObject: StoreObject;
 
     const storeFieldName: string = storeKeyNameFromField(field, variables);
 
@@ -320,7 +323,6 @@ export class StoreWriter {
       // check if there was a generated id at the location where we're
       // about to place this new id. If there was, we have to merge the
       // data from that id with the data we're about to write in the store.
-      storeObject = store.get(dataId);
       const escapedId =
         storeObject && (storeObject[storeFieldName] as IdValue | undefined);
       if (escapedId !== storeValue && isReference(escapedId)) {

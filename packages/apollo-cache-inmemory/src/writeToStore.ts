@@ -157,6 +157,28 @@ export class StoreWriter {
     selectionSet: SelectionSetNode;
     context: WriteContext;
   }): NormalizedCache {
+    const { store } = context;
+    const newFields = this.processSelectionSet({
+      result,
+      dataId,
+      selectionSet,
+      context,
+    });
+    store.set(dataId, mergeDeep(store.get(dataId), newFields));
+    return store;
+  }
+
+  private processSelectionSet({
+    result,
+    dataId,
+    selectionSet,
+    context,
+  }: {
+    result: any;
+    dataId: string;
+    selectionSet: SelectionSetNode;
+    context: WriteContext;
+  }) {
     const { variables, store, fragmentMap } = context;
     const newFields: {
       [storeFieldName: string]: StoreValue;
@@ -238,9 +260,7 @@ export class StoreWriter {
       }
     });
 
-    store.set(dataId, mergeDeep(store.get(dataId), newFields));
-
-    return store;
+    return newFields;
   }
 
   private writeFieldToStore({

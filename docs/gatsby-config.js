@@ -56,8 +56,7 @@ module.exports = {
             'recipes/babel',
             'recipes/webpack',
             'recipes/meteor',
-            'recipes/recompose',
-            'recipes/2.0-migration',
+            'recipes/recompose'
           ],
           API: ['api/apollo-client', 'api/react-apollo'],
         },

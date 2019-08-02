@@ -242,7 +242,7 @@ export class StoreWriter {
 
         const typename =
           (result && result.__typename) ||
-          (dataId === 'ROOT_QUERY' && 'Query') ||
+          (storeObject && storeObject.__typename) ||
           void 0;
 
         const match = fragmentMatches(

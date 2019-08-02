@@ -3,6 +3,8 @@ title: Subscriptions
 description: Learn how to achieve realtime data with GraphQL subscriptions
 ---
 
+import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
+
 In addition to fetching data using queries and modifying data using mutations, the GraphQL spec supports a third operation type, called `subscription`.
 
 GraphQL subscriptions are a way to push data from the server to the clients that choose to listen to real time messages from the server. Subscriptions are similar to queries in that they specify a set of fields to be delivered to the client, but instead of immediately returning a single answer, a result is sent every time a particular event happens on the server.
@@ -118,11 +120,36 @@ const link = split(
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
 
-## Subscription Component
+## useSubscription Hook
 
-The easiest way to bring live data to your UI is using the Subscription component from React Apollo. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
+The easiest way to bring live data to your UI is by using React Apollo's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
 
-```js
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription onCommentAdded($repoFullName: String!) {
+    commentAdded(repoFullName: $repoFullName) {
+      id
+      content
+    }
+  }
+`;
+
+function DontReadTheComments({ repoFullName }) {
+  const { data: { commentAdded }, loading } = useSubscription(
+    COMMENTS_SUBSCRIPTION,
+    { variables: { repoFullName } }
+  );
+  return <h4>New comment: {!loading && commentAdded.content}</h4>;
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
 const COMMENTS_SUBSCRIPTION = gql`
   subscription onCommentAdded($repoFullName: String!) {
     commentAdded(repoFullName: $repoFullName) {
@@ -144,41 +171,35 @@ const DontReadTheComments = ({ repoFullName }) => (
 );
 ```
 
-## Subscription Component API overview
+</div>
+</MultiCodeBlock>
 
-If you're looking for an overview of all the props `Subscription` accepts and its render prop function, look no further!
+## useSubscription API overview
 
-### Props
+If you're looking for an overview of all the options `useSubscription` accepts, and its result properties, look no further!
 
-The Subscription component accepts the following props. Only `subscription` and `children` are **required**.
+> **Note:** If you're using React Apollo's `Subscription` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `subscription` prop (which holds a GraphQL subscription document parsed into an AST by `graphql-tag`) is also required.
 
-<dl>
-  <dt>`subscription`: DocumentNode</dt>
-  <dd>A GraphQL subscription document parsed into an AST by `graphql-tag`. **Required**</dd>
-  <dt>`children`: (result: SubscriptionResult) => React.ReactNode</dt>
-  <dd>A function returning the UI you want to render based on your subscription result.</dd>
-  <dt>`variables`: { [key: string]: any }</dt>
-  <dd>An object containing all of the variables your subscription needs to execute</dd>
-  <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>
-  <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
-  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions&lt;TData&gt;) => any</dt>
-  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
-  <dt>`fetchPolicy`: FetchPolicy</dt>
-  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
-</dl>
+<h3>Options</h3>
 
-### Render prop function
+The `useSubscription` Hook accepts the following options.
 
-The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties
+| Option | Type | Description |
+| - | - | - |
+| `variables` | { [key: string]: any } | An object containing all of the variables your subscription needs to execute |
+| `shouldResubscribe` | boolean \| (currentProps: Object, nextProps: Object) => boolean | Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or subscription document change. |
+| `onSubscriptionData` | (options: OnSubscriptionDataOptions&lt;TData&gt;) => any | Allows the registration of a callback function, that will be triggered each time the `useSubscription` Hook receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`. |
+| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. Defaults to "cache-first". |
 
-<dl>
-  <dt>`data`: TData</dt>
-  <dd>An object containing the result of your GraphQL subscription. Defaults to an empty object.</dd>
-  <dt>`loading`: boolean</dt>
-  <dd>A boolean that indicates whether any initial data has been returned</dd>
-  <dt>`error`: ApolloError</dt>
-  <dd>A runtime error with `graphQLErrors` and `networkError` properties</dd>
-</dl>
+<h3>Result</h3>
+
+After being called the `useSubscription` Hook will return a result object with the following properties.
+
+| Option | Type | Description |
+| - | - | - |
+| `data` | TData | An object containing the result of your GraphQL subscription. Defaults to an empty object. |
+| `loading` | boolean | A boolean that indicates whether any initial data has been returned |
+| `error` | ApolloError | A runtime error with `graphQLErrors` and `networkError` properties |
 
 ## subscribeToMore
 
@@ -189,11 +210,38 @@ With GraphQL subscriptions your client will be alerted on push from the server a
 
 With `subscribeToMore`, you can easily do the latter.
 
-`subscribeToMore` is a function available on every query result in `react-apollo`. It works just like [`fetchMore`](/advanced/caching/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
+`subscribeToMore` is a function available on every query result in React Apollo. It works just like [`fetchMore`](/advanced/caching/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 
-```js
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const COMMENT_QUERY = gql`
+  query Comment($repoName: String!) {
+    entry(repoFullName: $repoName) {
+      comments {
+        id
+        content
+      }
+    }
+  }
+`;
+
+function CommentsPageWithData({ params }) {
+  const result = useQuery(
+    COMMENT_QUERY,
+    { variables: { repoName: `${params.org}/${params.repoName}` } }
+  );
+  return <CommentsPage {...result} />;
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
     entry(repoFullName: $repoName) {
@@ -215,13 +263,73 @@ const CommentsPageWithData = ({ params }) => (
 );
 ```
 
+</div>
+</MultiCodeBlock>
+
 Now, let's add the subscription.
 
 Add a function called `subscribeToNewComments` that will subscribe using `subscribeToMore` and update the query's store with the new data using `updateQuery`.
 
 Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
 
-```js
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const COMMENT_QUERY = gql`
+  query Comment($repoName: String!) {
+    entry(repoFullName: $repoName) {
+      comments {
+        id
+        content
+      }
+    }
+  }
+`;
+
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription onCommentAdded($repoName: String!) {
+    commentAdded(repoName: $repoName) {
+      id
+      content
+    }
+  }
+`;
+
+function CommentsPageWithData({ params }) {
+  const { subscribeToMore, ...result } = useQuery(
+    COMMENT_QUERY,
+    { variables: { repoName: `${params.org}/${params.repoName}` } }
+  );
+
+  return (
+    <CommentsPage
+      {...result}
+      subscribeToNewComments={() =>
+        subscribeToMore({
+          document: COMMENTS_SUBSCRIPTION,
+          variables: { repoName: params.repoName },
+          updateQuery: (prev, { subscriptionData }) => {
+            if (!subscriptionData.data) return prev;
+            const newFeedItem = subscriptionData.data.commentAdded;
+
+            return Object.assign({}, prev, {
+              entry: {
+                comments: [newFeedItem, ...prev.entry.comments]
+              }
+            });
+          }
+        })
+      }
+    />
+  );
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
     entry(repoFullName: $repoName) {
@@ -271,6 +379,9 @@ const CommentsPageWithData = ({ params }) => (
   </Query>
 );
 ```
+
+</div>
+</MultiCodeBlock>
 
 and start the actual subscription by calling the `subscribeToNewComments` function with the subscription variables:
 

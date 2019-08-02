@@ -25,7 +25,6 @@ module.exports = {
             'index',
             'why-apollo',
             'integrations',
-            'react-apollo-migration',
           ],
           Essentials: [
             'essentials/get-started',

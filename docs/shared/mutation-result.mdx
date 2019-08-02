@@ -1,0 +1,15 @@
+**Mutate function:**
+
+| Property | Type | Description |
+| - | - | - |
+| `mutate` | (options?: MutationOptions) => Promise&lt;FetchResult&gt; | A function to trigger a mutation from your UI. You can optionally pass `variables`, `optimisticResponse`, `refetchQueries`, and `update` in as options, which will override options passed to the `useMutation` Hook. The function returns a promise that fulfills with your mutation result. |
+
+**Mutation result:**
+
+| Property | Type | Description |
+| - | - | - |
+| `data` | TData | The data returned from your mutation. It can be undefined if `ignoreResults` is true. |
+| `loading` | boolean | A boolean indicating whether your mutation is in flight |
+| `error` | ApolloError | Any errors returned from the mutation |
+| `called` | boolean | A boolean indicating if the mutate function has been called |
+| `client` | ApolloClient | Your `ApolloClient` instance. Useful for invoking cache methods outside the context of the update function, such as `client.writeData` and `client.readQuery`. |

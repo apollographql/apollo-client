@@ -252,13 +252,7 @@ export class StoreWriter {
 
     // If this is a scalar value...
     if (!field.selectionSet || value === null) {
-      storeValue =
-        value != null && typeof value === 'object'
-          ? // If the scalar value is a JSON blob, we have to "escape" it so it can’t pretend to be
-            // an id.
-            { type: 'json', json: value }
-          : // Otherwise, just store the scalar directly in the store.
-            value;
+      storeValue = value;
     } else if (Array.isArray(value)) {
       const generatedId = `${dataId}.${storeFieldName}`;
 

@@ -610,16 +610,7 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: [
-            result.simpleArray[0],
-            result.simpleArray[1],
-            result.simpleArray[2],
-          ],
-        },
-      }),
+      ROOT_QUERY: result,
     });
   });
 
@@ -648,16 +639,7 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: [
-            result.simpleArray[0],
-            result.simpleArray[1],
-            result.simpleArray[2],
-          ],
-        },
-      }),
+      ROOT_QUERY: result,
     });
   });
 
@@ -1267,7 +1249,7 @@ describe('writing to the store', () => {
       ).toEqual(expStore.toObject());
     });
 
-    it('should correctly escape json blobs', () => {
+    it('should not need to escape json blobs', () => {
       const query = gql`
         query {
           author {
@@ -1293,10 +1275,7 @@ describe('writing to the store', () => {
         [dataIdFromObject(data.author)!]: {
           __typename: data.author.__typename,
           id: data.author.id,
-          info: {
-            type: 'json',
-            json: data.author.info,
-          },
+          info: data.author.info,
         },
       });
       expect(

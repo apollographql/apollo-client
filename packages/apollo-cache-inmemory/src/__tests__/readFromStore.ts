@@ -1,5 +1,4 @@
 import { assign, omit } from 'lodash';
-import { JsonValue } from 'apollo-utilities';
 import gql from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
 
@@ -613,12 +612,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: result.simpleArray,
-        } as JsonValue,
-      }) as StoreObject,
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({
@@ -650,12 +644,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: result.simpleArray,
-        } as JsonValue,
-      }) as StoreObject,
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({

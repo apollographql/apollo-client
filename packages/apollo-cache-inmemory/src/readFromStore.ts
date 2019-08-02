@@ -15,7 +15,6 @@ import {
   isEqual,
   isField,
   isInlineFragment,
-  isJsonValue,
   maybeDeepFreeze,
   mergeDeepArray,
   resultKeyNameFromField,
@@ -601,10 +600,6 @@ function readStoreResolver(
         tolerable: false,
       }],
     };
-  }
-
-  if (isJsonValue(fieldValue)) {
-    fieldValue = fieldValue.json;
   }
 
   return {

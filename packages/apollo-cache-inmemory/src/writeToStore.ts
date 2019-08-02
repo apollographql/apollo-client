@@ -21,6 +21,7 @@ import {
   storeKeyNameFromField,
   StoreValue,
   isEqual,
+  mergeDeep,
 } from 'apollo-utilities';
 
 import { invariant } from 'ts-invariant';
@@ -157,6 +158,9 @@ export class StoreWriter {
     context: WriteContext;
   }): NormalizedCache {
     const { variables, store, fragmentMap } = context;
+    const newFields: {
+      [storeFieldName: string]: StoreValue;
+    } = Object.create(null);
 
     selectionSet.selections.forEach(selection => {
       if (!shouldInclude(selection, variables)) {
@@ -168,12 +172,15 @@ export class StoreWriter {
         const value: any = result[resultFieldKey];
 
         if (typeof value !== 'undefined') {
-          this.writeFieldToStore({
-            dataId,
-            value,
-            field: selection,
-            context,
-          });
+          Object.assign(
+            newFields,
+            this.writeFieldToStore({
+              dataId,
+              value,
+              field: selection,
+              context,
+            }),
+          );
         } else if (
           this.config.possibleTypes &&
           !(
@@ -228,6 +235,8 @@ export class StoreWriter {
         }
       }
     });
+
+    store.set(dataId, mergeDeep(store.get(dataId), newFields));
 
     return store;
   }
@@ -361,13 +370,9 @@ export class StoreWriter {
       }
     }
 
-    storeObject = store.get(dataId);
-    if (!storeObject || !isEqual(storeValue, storeObject[storeFieldName])) {
-      store.set(dataId, {
-        ...storeObject,
-        [storeFieldName]: storeValue,
-      });
-    }
+    return {
+      [storeFieldName]: storeValue,
+    };
   }
 
   private processArrayValue(

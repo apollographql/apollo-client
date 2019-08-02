@@ -14,7 +14,6 @@ import {
   IdValue,
   isEqual,
   isField,
-  isIdValue,
   isInlineFragment,
   isJsonValue,
   maybeDeepFreeze,
@@ -22,7 +21,6 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   StoreValue,
-  toIdValue,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -46,6 +44,7 @@ import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
 import { invariant, InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
+import { isReference, makeReference } from './references';
 
 export type VariableMap = { [name: string]: any };
 
@@ -230,12 +229,7 @@ export class StoreReader {
 
     const execResult = this.executeStoreQuery({
       query,
-      rootValue: {
-        type: 'id',
-        id: rootId,
-        generated: true,
-        typename: 'Query',
-      },
+      rootValue: makeReference(rootId, 'Query', true),
       contextValue: context,
       variableValues: variables,
     });
@@ -538,7 +532,7 @@ function assertSelectionSetForIdValue(
   field: FieldNode,
   value: any,
 ) {
-  if (!field.selectionSet && isIdValue(value)) {
+  if (!field.selectionSet && isReference(value)) {
     throw new InvariantError(
       `Missing selection set for object of type ${
         value.typename
@@ -548,7 +542,7 @@ function assertSelectionSetForIdValue(
 }
 
 export function assertIdValue(idValue: IdValue) {
-  invariant(isIdValue(idValue), `\
+  invariant(isReference(idValue), `\
 Encountered a sub-selection on the query, but the store doesn't have \
 an object reference. This should never happen during normal use unless you have custom code \
 that is directly manipulating the store; please file an issue.`);
@@ -590,10 +584,7 @@ function readStoreResolver(
           fieldValue = resolver(object, args, {
             getCacheKey(storeObj: StoreObject) {
               const id = context.dataIdFromObject!(storeObj);
-              return id && toIdValue({
-                id,
-                typename: storeObj.__typename,
-              });
+              return id && makeReference(id, storeObj.__typename);
             },
           });
         }

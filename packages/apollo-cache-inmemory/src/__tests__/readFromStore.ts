@@ -1,5 +1,5 @@
 import { assign, omit } from 'lodash';
-import { IdValue, JsonValue } from 'apollo-utilities';
+import { JsonValue } from 'apollo-utilities';
 import gql from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
 
@@ -7,6 +7,7 @@ import { StoreObject } from '../';
 import { StoreReader } from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { withError } from './diffAgainstStore';
+import { makeReference } from '../references';
 
 describe('reading from the store', () => {
   const reader = new StoreReader();
@@ -16,13 +17,11 @@ describe('reading from the store', () => {
       const store = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          nestedObj: { type: 'id', id: 'abcde', generated: false },
+          nestedObj: makeReference('abcde'),
         } as StoreObject,
         abcde: {
           id: 'abcde',
-          innerArray: [
-            { type: 'id', generated: true, id: 'abcde.innerArray.0' } as any,
-          ],
+          innerArray: [makeReference('abcde.innerArray.0', void 0, true)],
         } as StoreObject,
         'abcde.innerArray.0': {
           id: 'abcdef',
@@ -255,11 +254,7 @@ describe('reading from the store', () => {
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: 'abcde',
-          generated: false,
-        },
+        nestedObj: makeReference('abcde'),
       } as StoreObject),
       abcde: result.nestedObj,
     });
@@ -316,19 +311,11 @@ describe('reading from the store', () => {
         assign({}, omit(result, 'nestedObj', 'deepNestedObj')),
         {
           __typename: 'Query',
-          nestedObj: {
-            type: 'id',
-            id: 'abcde',
-            generated: false,
-          },
+          nestedObj: makeReference('abcde'),
         } as StoreObject,
       ),
       abcde: assign({}, result.nestedObj, {
-        deepNestedObj: {
-          type: 'id',
-          id: 'abcdef',
-          generated: false,
-        },
+        deepNestedObj: makeReference('abcdef'),
       }) as StoreObject,
       abcdef: result.deepNestedObj as StoreObject,
     });
@@ -409,8 +396,8 @@ describe('reading from the store', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
-          { type: 'id', generated: true, id: 'abcd.nestedArray.0' } as IdValue,
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
+          makeReference('abcd.nestedArray.0', void 0, true),
+          makeReference('abcd.nestedArray.1', void 0, true),
         ],
       }) as StoreObject,
       'abcd.nestedArray.0': result.nestedArray[0],
@@ -468,7 +455,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
+          makeReference('abcd.nestedArray.1', void 0, true),
         ],
       }) as StoreObject,
       'abcd.nestedArray.1': result.nestedArray[1],
@@ -521,7 +508,7 @@ describe('reading from the store', () => {
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [null, { type: 'id', generated: false, id: 'abcde' }],
+        nestedArray: [null, makeReference('abcde')],
       }) as StoreObject,
       abcde: result.nestedArray[1],
     });
@@ -717,19 +704,11 @@ describe('reading from the store', () => {
         assign({}, omit(data, 'nestedObj', 'deepNestedObj')),
         {
           __typename: 'Query',
-          nestedObj: {
-            type: 'id',
-            id: 'abcde',
-            generated: false,
-          } as IdValue,
+          nestedObj: makeReference('abcde'),
         },
       ) as StoreObject,
       abcde: assign({}, data.nestedObj, {
-        deepNestedObj: {
-          type: 'id',
-          id: 'abcdef',
-          generated: false,
-        },
+        deepNestedObj: makeReference('abcdef'),
       }) as StoreObject,
       abcdef: data.deepNestedObj as StoreObject,
     });
@@ -784,13 +763,7 @@ describe('reading from the store', () => {
   it('properly handles the connection directive', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        abc: [
-          {
-            generated: true,
-            id: 'ROOT_QUERY.abc.0',
-            type: 'id',
-          },
-        ],
+        abc: [makeReference('ROOT_QUERY.abc.0', void 0, true)],
       },
       'ROOT_QUERY.abc.0': {
         name: 'efgh',

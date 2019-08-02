@@ -7,7 +7,7 @@ Object {
   },
   "foo": Object {
     "e": 4,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -28,7 +28,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -49,7 +49,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -70,7 +70,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -91,7 +91,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -112,7 +112,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -129,7 +129,7 @@ Object {
   },
   "foo": Object {
     "e": 4,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -150,7 +150,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -171,7 +171,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -192,7 +192,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -213,7 +213,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -234,7 +234,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -251,7 +251,7 @@ Object {
   },
   "foo": Object {
     "e": 4,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -272,7 +272,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -293,7 +293,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -314,7 +314,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -335,7 +335,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",
@@ -356,7 +356,7 @@ Object {
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": Object {
+    "h": Reference {
       "generated": false,
       "id": "bar",
       "type": "id",

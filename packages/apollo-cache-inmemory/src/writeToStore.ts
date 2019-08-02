@@ -15,13 +15,11 @@ import {
   getOperationDefinition,
   IdValue,
   isField,
-  isIdValue,
   isInlineFragment,
   resultKeyNameFromField,
   shouldInclude,
   storeKeyNameFromField,
   StoreValue,
-  toIdValue,
   isEqual,
 } from 'apollo-utilities';
 
@@ -35,6 +33,7 @@ import {
   StoreObject,
 } from './types';
 import { fragmentMatches } from './fragments';
+import { makeReference, isReference } from './references';
 
 export class WriteError extends Error {
   public type = 'WriteError';
@@ -313,7 +312,7 @@ export class StoreWriter {
       // We take the id and escape it (i.e. wrap it with an enclosing object).
       // This allows us to distinguish IDs from normal scalars.
       const typename = value.__typename;
-      storeValue = toIdValue({ id: valueDataId, typename }, generated);
+      storeValue = makeReference(valueDataId, typename, generated);
 
       // check if there was a generated id at the location where we're
       // about to place this new id. If there was, we have to merge the
@@ -321,7 +320,7 @@ export class StoreWriter {
       storeObject = store.get(dataId);
       const escapedId =
         storeObject && (storeObject[storeFieldName] as IdValue | undefined);
-      if (escapedId !== storeValue && isIdValue(escapedId)) {
+      if (escapedId !== storeValue && isReference(escapedId)) {
         const hadTypename = escapedId.typename !== undefined;
         const hasTypename = typename !== undefined;
         const typenameChanged =
@@ -414,10 +413,7 @@ export class StoreWriter {
         });
       }
 
-      return toIdValue(
-        { id: itemDataId, typename: item.__typename },
-        generated,
-      );
+      return makeReference(itemDataId, item.__typename, generated);
     });
   }
 }
@@ -446,9 +442,9 @@ function mergeWithGenerated(
     const realValue = real[key];
 
     if (
-      isIdValue(value) &&
+      isReference(value) &&
       isGeneratedId(value.id) &&
-      isIdValue(realValue) &&
+      isReference(realValue) &&
       !isEqual(value, realValue) &&
       mergeWithGenerated(value.id, realValue.id, cache)
     ) {

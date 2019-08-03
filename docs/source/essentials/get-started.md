@@ -160,7 +160,7 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
   <dt>`clientState`: { resolvers?: Object, defaults?: Object, typeDefs?: string | Array &lt;string&gt; }</dt>
   <dd>An object representing your configuration for `apollo-link-state`. This is useful if you would like to use the Apollo cache for local state management. Learn more in our <a href="/docs/link/links/state.html#start">quick start</a>.</dd>
   <dt>`cacheRedirects`: Object</dt>
-  <dd>A map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that <a href="/features/performance/#cache-redirects-with-cacheredirects">here</a>.</dd>
+  <dd>A map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that <a href="/docs/react/recipes/performance">here</a>.</dd>
   <dt>`credentials`: string</dt>
   <dd>Is set to `same-origin` by default. This option can be used to indicate whether the user agent should send cookies with requests. See <a href="https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials">Request.credentials</a> for more details.</dd>
   <dt>`headers`: Object</dt>

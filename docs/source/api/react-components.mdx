@@ -1,0 +1,57 @@
+---
+title: React Components
+description: React Apollo Components API reference
+---
+
+import QueryOptions from '../../shared/query-options.mdx';
+import QueryResult from '../../shared/query-result.mdx';
+import MutationOptions from '../../shared/mutation-options.mdx';
+import MutationResult from '../../shared/mutation-result.mdx';
+import SubscriptionOptions from '../../shared/subscription-options.mdx';
+import SubscriptionResult from '../../shared/subscription-result.mdx';
+
+## Package
+
+Npm: [`@apollo/react-components`](https://www.npmjs.com/package/@apollo/react-components)
+
+## `Query`
+
+### Props
+
+The `Query` component accepts the following props. `query` is **required**.
+
+<QueryOptions />
+
+### Render prop function
+
+The render prop function that you pass to the `children` prop of `Query` is called with an object (`QueryResult`) that has the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
+
+<QueryResult />
+
+## `Mutation`
+
+The Mutation component accepts the following props. Only `mutation` is **required**.
+
+<MutationOptions />
+
+### Render prop function
+
+The render prop function that you pass to the `children` prop of `Mutation` is called with the `mutate` function and an object with the mutation result. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
+
+<MutationResult />
+
+## `Subscription`
+
+### Props
+
+The Subscription component accepts the following props. Only `subscription` is **required**.
+
+<SubscriptionOptions />
+
+### Render prop function
+
+The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties.
+
+<SubscriptionResult />
+
+

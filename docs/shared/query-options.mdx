@@ -1,5 +1,6 @@
 | Option | Type | Description |
 | - | - | - |
+| `query` | DocumentNode | A GraphQL query document parsed into an AST by `graphql-tag`. **Optional** for the `useQuery` Hook since the query can be passed in as the first parameter to the Hook. **Required** for the `Query` component. |
 | `variables` | { [key: string]: any } | An object containing all of the variables your query needs to execute |
 | `pollInterval` | number | Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling). |
 | `notifyOnNetworkStatusChange` | boolean | Whether updates to the network status or network error should re-render your component. Defaults to false. |
@@ -12,6 +13,6 @@
 | `onError` | (error: ApolloError) => void | A callback executed in the event of an error. |
 | `context` | Record&lt;string, any&gt; | Shared context between your component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost. |
 | `partialRefetch` | boolean | If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases. |
-| `client` | ApolloClient | An `ApolloClient` instance. By default `useQuery` uses the client passed down via context, but a different client can be passed in. |
+| `client` | ApolloClient | An `ApolloClient` instance. By default `useQuery` / `Query` uses the client passed down via context, but a different client can be passed in. |
 | `returnPartialData` | boolean | Opt into receiving partial results from the cache for queries that are not fully satisfied by the cache. false by default. |
 

@@ -1,5 +1,6 @@
 | Option | Type | Description |
 | - | - | - |
+| `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `graphql-tag`. **Optional** for the `useMutation` Hook since the mutation can be passed in as the first parameter to the Hook. **Required** for the `Mutation` component. |
 | `variables` | { [key: string]: any } | An object containing all of the variables your mutation needs to execute |
 | `update` | (cache: DataProxy, mutationResult: FetchResult) | A function used to update the cache after a mutation occurs |
 | `ignoreResults`| boolean | If true, the returned `data` property will not update with the mutation result. |
@@ -9,4 +10,4 @@
 | `onCompleted` | (data: TData) => void | A callback executed once your mutation successfully completes |
 | `onError` | (error: ApolloError) => void | A callback executed in the event of an error. |
 | `context` | Record&lt;string, any&gt; | Shared context between your component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost. |
-| `client` | ApolloClient | An `ApolloClient` instance. By default `useMutation` uses the client passed down via context, but a different client can be passed in. |
+| `client` | ApolloClient | An `ApolloClient` instance. By default `useMutation` / `Mutation` uses the client passed down via context, but a different client can be passed in. |

@@ -4,6 +4,8 @@ description: Learn how to achieve realtime data with GraphQL subscriptions
 ---
 
 import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
+import SubscriptionOptions from '../../shared/subscription-options.mdx';
+import SubscriptionResult from '../../shared/subscription-result.mdx';
 
 In addition to fetching data using queries and modifying data using mutations, the GraphQL spec supports a third operation type, called `subscription`.
 
@@ -184,22 +186,13 @@ If you're looking for an overview of all the options `useSubscription` accepts, 
 
 The `useSubscription` Hook accepts the following options.
 
-| Option | Type | Description |
-| - | - | - |
-| `variables` | { [key: string]: any } | An object containing all of the variables your subscription needs to execute |
-| `shouldResubscribe` | boolean \| (currentProps: Object, nextProps: Object) => boolean | Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or subscription document change. |
-| `onSubscriptionData` | (options: OnSubscriptionDataOptions&lt;TData&gt;) => any | Allows the registration of a callback function, that will be triggered each time the `useSubscription` Hook receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`. |
-| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. Defaults to "cache-first". |
+<SubscriptionOptions />
 
 <h3>Result</h3>
 
 After being called the `useSubscription` Hook will return a result object with the following properties.
 
-| Option | Type | Description |
-| - | - | - |
-| `data` | TData | An object containing the result of your GraphQL subscription. Defaults to an empty object. |
-| `loading` | boolean | A boolean that indicates whether any initial data has been returned |
-| `error` | ApolloError | A runtime error with `graphQLErrors` and `networkError` properties |
+<SubscriptionResult />
 
 ## subscribeToMore
 

@@ -52,7 +52,7 @@ You can render your entire React-based Apollo application on a Node server using
 
 No changes are required to client queries to support this, so your Apollo-based React UI should support SSR out of the box.
 
-### Server initialization
+<h3>Server initialization</h3>
 
 In order to render your application on the server, you need to handle a HTTP request (using a server like Express, and a server-capable Router like React-Router), and then render your application to a string to pass back on the response.
 
@@ -171,7 +171,7 @@ export default routes;
 
 Next we'll see what that rendering code actually does.
 
-### Using `getDataFromTree`
+<h3>Using `getDataFromTree`</h3>
 
 The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all. It does this recursively down the whole tree if you have nested queries. It returns a promise which resolves when the data is ready in your Apollo Client store.
 
@@ -213,7 +213,7 @@ function Html({ content, state }) {
 }
 ```
 
-### Avoiding the network for local queries
+<h3>Avoiding the network for local queries</h3>
 
 If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work.
 
@@ -233,7 +233,7 @@ const client = new ApolloClient({
 });
 ```
 
-### Skipping queries for SSR
+<h3>Skipping queries for SSR</h3>
 
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
@@ -261,7 +261,7 @@ const withClientOnlyUser = () => (
 </div>
 </MultiCodeBlock>
 
-### Using `renderToStringWithData`
+<h3>Using `renderToStringWithData`</h3>
 
 The `renderToStringWithData` function simplifies the above and simply returns the content string  that you need to render. So it reduces the number of steps slightly:
 

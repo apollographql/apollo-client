@@ -43,7 +43,7 @@ import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
 import { invariant, InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
-import { isReference, makeReference } from './references';
+import { isReference, makeReference, Reference } from './references';
 
 export type VariableMap = { [name: string]: any };
 
@@ -73,14 +73,14 @@ export type ExecResult<R = any> = {
 
 type ExecStoreQueryOptions = {
   query: DocumentNode;
-  rootValue: IdValue;
+  objectOrReference: StoreObject | Reference;
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
 };
 
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
-  rootValue: any;
+  objectOrReference: StoreObject | Reference;
   execContext: ExecContext;
 };
 
@@ -120,7 +120,7 @@ export class StoreReader {
     }, {
       makeCacheKey({
         query,
-        rootValue,
+        objectOrReference,
         contextValue,
         variableValues,
       }: ExecStoreQueryOptions) {
@@ -132,7 +132,7 @@ export class StoreReader {
             contextValue.store,
             query,
             JSON.stringify(variableValues),
-            rootValue.id,
+            isReference(objectOrReference) ? objectOrReference.id : objectOrReference,
           );
         }
       }
@@ -143,7 +143,7 @@ export class StoreReader {
     }, {
       makeCacheKey({
         selectionSet,
-        rootValue,
+        objectOrReference,
         execContext,
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
@@ -151,7 +151,7 @@ export class StoreReader {
             execContext.contextValue.store,
             selectionSet,
             JSON.stringify(execContext.variableValues),
-            rootValue.id,
+            isReference(objectOrReference) ? objectOrReference.id : objectOrReference,
           );
         }
       }
@@ -228,7 +228,9 @@ export class StoreReader {
 
     const execResult = this.executeStoreQuery({
       query,
-      rootValue: makeReference(rootId, 'Query', true),
+      objectOrReference: rootId === 'ROOT_QUERY'
+        ? makeReference('ROOT_QUERY', 'Query', true)
+        : store.get(rootId) || makeReference(rootId),
       contextValue: context,
       variableValues: variables,
     });
@@ -281,7 +283,7 @@ export class StoreReader {
    */
   private executeStoreQuery({
     query,
-    rootValue,
+    objectOrReference,
     contextValue,
     variableValues,
   }: ExecStoreQueryOptions): ExecResult {
@@ -297,27 +299,31 @@ export class StoreReader {
 
     return this.executeSelectionSet({
       selectionSet: mainDefinition.selectionSet,
-      rootValue,
+      objectOrReference,
       execContext,
     });
   }
 
   private executeSelectionSet({
     selectionSet,
-    rootValue,
+    objectOrReference,
     execContext,
   }: ExecSelectionSetOptions): ExecResult {
-    const { fragmentMap, contextValue, variableValues: variables } = execContext;
+    const { fragmentMap, variableValues: variables } = execContext;
     const finalResult: ExecResult = { result: null };
-
     const objectsToMerge: { [key: string]: any }[] = [];
 
-    const object: StoreObject = contextValue.store.get(rootValue.id);
-
-    const typename =
-      (object && object.__typename) ||
-      (rootValue.id === 'ROOT_QUERY' && 'Query') ||
-      void 0;
+    let object: StoreObject;
+    let typename: string;
+    if (isReference(objectOrReference)) {
+      object = execContext.contextValue.store.get(objectOrReference.id);
+      typename =
+        (object && object.__typename) ||
+        (objectOrReference.id === 'ROOT_QUERY' && 'Query');
+    } else {
+      object = objectOrReference;
+      typename = object && object.__typename;
+    }
 
     function handleMissing<T>(result: ExecResult<T>): T {
       if (result.missing) {
@@ -367,7 +373,7 @@ export class StoreReader {
         if (match && (object || typename === 'Query')) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
-            rootValue,
+            objectOrReference: object,
             execContext,
           });
 
@@ -452,7 +458,7 @@ export class StoreReader {
       readStoreResult,
       this.executeSelectionSet({
         selectionSet: field.selectionSet,
-        rootValue: readStoreResult.result,
+        objectOrReference: readStoreResult.result as StoreObject | Reference,
         execContext,
       }),
     );
@@ -509,7 +515,7 @@ export class StoreReader {
       if (field.selectionSet) {
         return handleMissing(this.executeSelectionSet({
           selectionSet: field.selectionSet,
-          rootValue: item,
+          objectOrReference: item,
           execContext,
         }));
       }
@@ -553,7 +559,7 @@ function readStoreResolver(
   fieldName: string,
   args: any,
   context: ReadStoreContext,
-  { resultKey, directives }: ExecInfo,
+  { directives }: ExecInfo,
 ): ExecResult<StoreValue> {
   let storeKeyName = fieldName;
   if (args || directives) {

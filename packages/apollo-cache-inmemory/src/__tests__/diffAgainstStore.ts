@@ -957,13 +957,11 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const config = { dataIdFromObject, cacheRedirects };
-
       const { result } = reader.diffQueryAgainstStore({
         store,
         query: itemQuery,
         previousResult,
-        config,
+        config: { dataIdFromObject, cacheRedirects },
       });
 
       expect(result).toEqual(previousResult);

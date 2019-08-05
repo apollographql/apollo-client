@@ -752,9 +752,9 @@ describe('reading from the store', () => {
   it('properly handles the connection directive', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        abc: [makeReference('$ROOT_QUERY.abc.0', void 0, true)],
+        abc: [makeReference('ROOT_QUERY.abc.0', void 0, true)],
       },
-      '$ROOT_QUERY.abc.0': {
+      'ROOT_QUERY.abc.0': {
         name: 'efgh',
       },
     });

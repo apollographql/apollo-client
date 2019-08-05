@@ -29,11 +29,11 @@ To help reduce application bundle sizes, React Apollo 3 introduces a new package
 - [@apollo/react-ssr](https://www.npmjs.com/package/@apollo/react-ssr)
 - [@apollo/react-testing](https://www.npmjs.com/package/@apollo/react-testing)
 
-You can use the umbrella `react-apollo` package to get access to the `graphql` HOC, `Query` / `Mutation` / `Subscription` render prop components, and the new Hooks. If you're using or are planning on using each of these 3 different paradigms in your application, then the `react-apollo` package should work well. If you're only planning on using some of this functionality however, like just the new Hooks, then you'll want to install the individual paradigm package instead of `react-apollo` (to help reduce your application's overall bundle size).
+You can use the umbrella `react-apollo` package to get access to the `graphql` HOC, `Query` / `Mutation` / `Subscription` render prop components, and the new hooks. If you're using or are planning on using each of these 3 different paradigms in your application, then the `react-apollo` package should work well. If you're only planning on using some of this functionality however, like just the new hooks, then you'll want to install the individual paradigm package instead of `react-apollo` (to help reduce your application's overall bundle size).
 
 ### Installation/upgrade scenarios
 
-**I just want to use React Apollo Hooks:**
+**I just want to use React Apollo hooks:**
 
 ```
 npm install @apollo/react-hooks
@@ -65,7 +65,7 @@ npm install react-apollo
 
 ### Bundle size note
 
-React Apollo 3 uses Hooks behind the scenes for everything, including the `graphql` HOC and render prop components. While installing and using only the paradigm package(s) that interest you will save on bundle size, the savings will vary based on the packages you're using. This is because the HOC package depends on the Components package, and the Components package depends on the Hooks package. In other words:
+React Apollo 3 uses hooks behind the scenes for everything, including the `graphql` HOC and render prop components. While installing and using only the paradigm package(s) that interest you will save on bundle size, the savings will vary based on the packages you're using. This is because the HOC package depends on the Components package, and the Components package depends on the hooks package. In other words:
 
 ```
 @apollo/react-hoc <-- @apollo/react-components <-- @apollo/react-hooks

@@ -9,9 +9,9 @@ These docs assume you already have TypeScript configured in your project, if not
 
 The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can even generate TypeScript definitions automatically using a tool like [apollo-codegen](https://github.com/apollographql/apollo-codegen). In these docs however, we will be writing result types manually.
 
-## Typing Hooks
+## Typing hooks
 
-React Apollo's `useQuery`, `useMutation` and `useSubscription` Hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. React Apollo Hook options and result types are listed in the [Hooks API](/api/react-apollo) section of the docs. You can find a typed example of each Hook below.
+React Apollo's `useQuery`, `useMutation` and `useSubscription` hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. React Apollo Hook options and result types are listed in the [Hooks API](/api/react-apollo) section of the docs. You can find a typed example of each Hook below.
 
 ### `useQuery`
 

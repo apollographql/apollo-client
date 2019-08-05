@@ -354,23 +354,24 @@ export class StoreWriter {
       return value;
     }
 
+    // Prepend the '$' only if valueDataId isn't already a generated id.
+    if (!isGeneratedId(generatedId)) {
+      generatedId = '$' + generatedId;
+    }
+
     if (Array.isArray(value)) {
-      return this.processArrayValue(
-        value,
-        generatedId,
-        field.selectionSet,
-        context,
-      );
+      return value.map((item, index) => {
+        return this.processFieldValue(
+          item,
+          `${generatedId}.${index}`,
+          field,
+          context,
+        );
+      });
     }
 
     // It's an object
     let generated = true;
-
-    // We only prepend the '$' if the valueDataId isn't already a generated
-    // id.
-    if (!isGeneratedId(generatedId)) {
-      generatedId = '$' + generatedId;
-    }
 
     if (context.dataIdFromObject) {
       const semanticId = context.dataIdFromObject(value);
@@ -405,47 +406,6 @@ export class StoreWriter {
     // We take the id and escape it (i.e. wrap it with an enclosing object).
     // This allows us to distinguish IDs from normal scalars.
     return makeReference(generatedId, value.__typename, generated);
-  }
-
-  private processArrayValue(
-    value: any[],
-    generatedId: string,
-    selectionSet: SelectionSetNode,
-    context: WriteContext,
-  ): any[] {
-    return value.map((item: any, index: any) => {
-      if (item === null) {
-        return null;
-      }
-
-      let itemDataId = `${generatedId}.${index}`;
-
-      if (Array.isArray(item)) {
-        return this.processArrayValue(item, itemDataId, selectionSet, context);
-      }
-
-      let generated = true;
-
-      if (context.dataIdFromObject) {
-        const semanticId = context.dataIdFromObject(item);
-
-        if (semanticId) {
-          itemDataId = semanticId;
-          generated = false;
-        }
-      }
-
-      if (!isDataProcessed(itemDataId, selectionSet, context.processedData)) {
-        this.writeSelectionSetToStore({
-          dataId: itemDataId,
-          result: item,
-          selectionSet,
-          context,
-        });
-      }
-
-      return makeReference(itemDataId, item.__typename, generated);
-    });
   }
 }
 

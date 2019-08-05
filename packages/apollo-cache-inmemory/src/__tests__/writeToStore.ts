@@ -529,8 +529,8 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
-          makeReference('ROOT_QUERY.nestedArray.0', void 0, true),
-          makeReference('ROOT_QUERY.nestedArray.1', void 0, true),
+          makeReference('$ROOT_QUERY.nestedArray.0', void 0, true),
+          makeReference('$ROOT_QUERY.nestedArray.1', void 0, true),
         ],
       }),
       'ROOT_QUERY.nestedArray.0': result.nestedArray[0],
@@ -577,10 +577,10 @@ describe('writing to the store', () => {
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          makeReference('ROOT_QUERY.nestedArray.1', void 0, true),
+          makeReference('$ROOT_QUERY.nestedArray.1', void 0, true),
         ],
       }),
-      'ROOT_QUERY.nestedArray.1': result.nestedArray[1],
+      '$ROOT_QUERY.nestedArray.1': result.nestedArray[1],
     });
   });
 
@@ -1783,9 +1783,9 @@ describe('writing to the store', () => {
 
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
-        abc: [makeReference('ROOT_QUERY.abc.0', void 0, true)],
+        abc: [makeReference('$ROOT_QUERY.abc.0', void 0, true)],
       },
-      'ROOT_QUERY.abc.0': {
+      '$ROOT_QUERY.abc.0': {
         name: 'efgh',
       },
     });
@@ -1823,9 +1823,9 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       '$ROOT_QUERY.animals.0.species': { name: 'cat' },
       ROOT_QUERY: {
-        animals: [makeReference('ROOT_QUERY.animals.0', 'Animal', true)],
+        animals: [makeReference('$ROOT_QUERY.animals.0', 'Animal', true)],
       },
-      'ROOT_QUERY.animals.0': {
+      '$ROOT_QUERY.animals.0': {
         species: makeReference('$ROOT_QUERY.animals.0.species', 'Cat', true),
       },
     });
@@ -1849,9 +1849,9 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       '$ROOT_QUERY.animals.0.species': { name: 'dog' },
       ROOT_QUERY: {
-        animals: [makeReference('ROOT_QUERY.animals.0', 'Animal', true)],
+        animals: [makeReference('$ROOT_QUERY.animals.0', 'Animal', true)],
       },
-      'ROOT_QUERY.animals.0': {
+      '$ROOT_QUERY.animals.0': {
         species: makeReference('$ROOT_QUERY.animals.0.species', 'Dog', true),
       },
     });
@@ -1898,9 +1898,9 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       '$ROOT_QUERY.animals.0.species': { name: 'cat' },
       ROOT_QUERY: {
-        animals: [makeReference('ROOT_QUERY.animals.0', 'Animal', true)],
+        animals: [makeReference('$ROOT_QUERY.animals.0', 'Animal', true)],
       },
-      'ROOT_QUERY.animals.0': {
+      '$ROOT_QUERY.animals.0': {
         species: makeReference('$ROOT_QUERY.animals.0.species', 'Cat', true),
       },
     });
@@ -1930,9 +1930,9 @@ describe('writing to the store', () => {
         name: 'dog',
       },
       ROOT_QUERY: {
-        animals: [makeReference('ROOT_QUERY.animals.0', 'Animal', true)],
+        animals: [makeReference('$ROOT_QUERY.animals.0', 'Animal', true)],
       },
-      'ROOT_QUERY.animals.0': {
+      '$ROOT_QUERY.animals.0': {
         species: makeReference('Dog__dog-species', 'Dog'),
       },
     });

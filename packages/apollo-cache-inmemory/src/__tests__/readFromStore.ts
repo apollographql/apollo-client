@@ -20,11 +20,12 @@ describe('reading from the store', () => {
         } as StoreObject,
         abcde: {
           id: 'abcde',
-          innerArray: [makeReference('abcde.innerArray.0', void 0, true)],
-        } as StoreObject,
-        'abcde.innerArray.0': {
-          id: 'abcdef',
-          someField: 3,
+          innerArray: [
+            {
+              id: 'abcdef',
+              someField: 3,
+            },
+          ],
         } as StoreObject,
       });
 
@@ -393,14 +394,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          makeReference('abcd.nestedArray.0', void 0, true),
-          makeReference('abcd.nestedArray.1', void 0, true),
-        ],
-      }) as StoreObject,
-      'abcd.nestedArray.0': result.nestedArray[0],
-      'abcd.nestedArray.1': result.nestedArray[1],
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({
@@ -451,13 +445,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          null,
-          makeReference('abcd.nestedArray.1', void 0, true),
-        ],
-      }) as StoreObject,
-      'abcd.nestedArray.1': result.nestedArray[1],
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({
@@ -752,10 +740,11 @@ describe('reading from the store', () => {
   it('properly handles the connection directive', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        abc: [makeReference('ROOT_QUERY.abc.0', void 0, true)],
-      },
-      'ROOT_QUERY.abc.0': {
-        name: 'efgh',
+        abc: [
+          {
+            name: 'efgh',
+          },
+        ],
       },
     });
 

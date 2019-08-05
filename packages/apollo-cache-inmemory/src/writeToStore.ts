@@ -19,15 +19,13 @@ import {
   shouldInclude,
   storeKeyNameFromField,
   StoreValue,
-  isEqual,
-  mergeDeep,
 } from 'apollo-utilities';
 
 import { invariant } from 'ts-invariant';
 
 import { defaultNormalizedCacheFactory } from './depTrackingCache';
 
-import { IdGetter, NormalizedCache } from './types';
+import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';
 import { makeReference, isReference } from './references';
 import { defaultDataIdFromObject } from './inMemoryCache';
@@ -155,120 +153,56 @@ export class StoreWriter {
   }): NormalizedCache {
     const { store } = context;
     const storeObject = store.get(dataId);
-    const typename: string | undefined =
+    const typename = dataId === 'ROOT_QUERY' ? 'Query' :
       (result && result.__typename) ||
       (storeObject && storeObject.__typename);
 
     const newFields = this.processSelectionSet({
       result,
-      dataId,
       typename,
       selectionSet,
       context,
     });
 
-    Object.keys(newFields).forEach(storeFieldName => {
-      const oldStoreValue = storeObject && storeObject[storeFieldName];
-      const newStoreValue = newFields[storeFieldName];
-      if (
-        newStoreValue === oldStoreValue ||
-        !isReference(oldStoreValue) ||
-        !isReference(newStoreValue)
-      ) {
-        return;
-      }
-
-      // check if there was a generated id at the location where we're
-      // about to place this new id. If there was, we have to merge the
-      // data from that id with the data we're about to write in the store.
-      const hadTypename = oldStoreValue.typename !== void 0;
-      const hasTypename = newStoreValue.typename !== void 0;
-      const typenameChanged =
-        hadTypename &&
-        hasTypename &&
-        oldStoreValue.typename !== newStoreValue.typename;
-
-      // If there is already a real id in the store and the current id we
-      // are dealing with is generated, we throw an error.
-      // One exception we allow is when the typename has changed, which occurs
-      // when schema defines a union, both with and without an ID in the same place.
-      // checks if we "lost" the read id
-      invariant(
-        !newStoreValue.generated || oldStoreValue.generated || typenameChanged,
-        `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${
-          oldStoreValue.id
-        } for this object.`,
-      );
-
-      // checks if we "lost" the typename
-      invariant(
-        !hadTypename || hasTypename,
-        `Store error: the application attempted to write an object with no provided typename but the store already contains an object with typename of ${
-          oldStoreValue.typename
-        } for the object of id ${oldStoreValue.id}.`,
-      );
-
-      if (oldStoreValue.generated) {
-        // We should only merge if it's an object of the same type,
-        // otherwise we should delete the generated object
-        if (typenameChanged) {
-          // Only delete the generated object when the old object was
-          // inlined, and the new object is not. This is indicated by
-          // the old id being generated, and the new id being real.
-          if (!newStoreValue.generated) {
-            store.delete(oldStoreValue.id);
-          }
-        } else {
-          mergeWithGenerated(oldStoreValue.id, newStoreValue.id, store);
-        }
-      }
-    });
-
-    store.set(dataId, mergeDeep(store.get(dataId), newFields));
+    store.set(dataId, mergeStoreObjects(store, store.get(dataId), newFields));
 
     return store;
   }
 
   private processSelectionSet({
     result,
-    dataId,
     selectionSet,
     typename = result && result.__typename,
     context,
   }: {
     result: any;
-    dataId: string;
     selectionSet: SelectionSetNode;
-    typename: string;
+    typename?: string;
     context: WriteContext;
-  }) {
-    const { variables, fragmentMap } = context;
+  }): StoreObject {
     const newFields: {
       [storeFieldName: string]: StoreValue;
     } = Object.create(null);
 
     selectionSet.selections.forEach(selection => {
-      if (!shouldInclude(selection, variables)) {
+      if (!shouldInclude(selection, context.variables)) {
         return;
       }
 
       if (isField(selection)) {
-        const resultFieldKey: string = resultKeyNameFromField(selection);
-        const value: any = result[resultFieldKey];
+        const resultFieldKey = resultKeyNameFromField(selection);
+        const value = result[resultFieldKey];
 
         if (typeof value !== 'undefined') {
           const storeFieldName = storeKeyNameFromField(
             selection,
             context.variables,
           );
-          Object.assign(newFields, {
-            [storeFieldName]: this.processFieldValue(
-              value,
-              `${dataId}.${storeFieldName}`,
-              selection,
-              context,
-            ),
-          });
+          newFields[storeFieldName] = this.processFieldValue(
+            value,
+            selection,
+            context,
+          );
         } else if (
           this.config.possibleTypes &&
           !(
@@ -298,7 +232,7 @@ export class StoreWriter {
           fragment = selection;
         } else {
           // Named fragment
-          fragment = (fragmentMap || {})[selection.name.value];
+          fragment = (context.fragmentMap || {})[selection.name.value];
           invariant(fragment, `No fragment named ${selection.name.value}.`);
         }
 
@@ -314,7 +248,6 @@ export class StoreWriter {
             this.processSelectionSet({
               result,
               selectionSet: fragment.selectionSet,
-              dataId,
               typename,
               context,
             }),
@@ -328,7 +261,6 @@ export class StoreWriter {
 
   private processFieldValue(
     value: any,
-    generatedId: string,
     field: FieldNode,
     context: WriteContext,
   ): StoreValue {
@@ -338,82 +270,106 @@ export class StoreWriter {
 
     if (Array.isArray(value)) {
       return value.map((item, index) => {
-        return this.processFieldValue(
-          item,
-          `${generatedId}.${index}`,
-          field,
-          context,
-        );
+        return this.processFieldValue(item, field, context);
       });
     }
 
-    // It's an object
-    let generated = true;
-
-    if (context.dataIdFromObject) {
-      const semanticId = context.dataIdFromObject(value);
-
-      if (
-        semanticId ||
-        (typeof semanticId === 'number' && semanticId === 0)
-      ) {
-        generatedId = semanticId;
-        generated = false;
+    if (value && context.dataIdFromObject) {
+      const dataId = context.dataIdFromObject(value);
+      if (dataId || dataId === '' || (dataId as any) === 0) {
+        if (!isDataProcessed(dataId, field, context.processedData)) {
+          this.writeSelectionSetToStore({
+            dataId,
+            result: value,
+            selectionSet: field.selectionSet,
+            context,
+          });
+        }
+        return makeReference(dataId, value.__typename);
       }
     }
 
-    if (!isDataProcessed(generatedId, field, context.processedData)) {
-      this.writeSelectionSetToStore({
-        dataId: generatedId,
-        result: value,
-        selectionSet: field.selectionSet,
-        context,
-      });
-    }
-
-    // We take the id and escape it (i.e. wrap it with an enclosing object).
-    // This allows us to distinguish IDs from normal scalars.
-    return makeReference(generatedId, value.__typename, generated);
+    return this.processSelectionSet({
+      result: value,
+      selectionSet: field.selectionSet,
+      context,
+    });
   }
 }
 
-function mergeWithGenerated(
-  generatedKey: string,
-  realKey: string,
-  cache: NormalizedCache,
-): boolean {
-  if (generatedKey === realKey) {
-    return false;
-  }
+const { hasOwnProperty } = Object.prototype;
 
-  const generated = cache.get(generatedKey);
-  const real = cache.get(realKey);
-  let madeChanges = false;
+function mergeStoreObjects(
+  store: NormalizedCache,
+  existing: StoreObject,
+  incoming: StoreObject,
+): StoreObject {
+  return mergeHelper(store, existing, incoming);
+}
 
-  Object.keys(generated).forEach(key => {
-    const value = generated[key];
-    const realValue = real[key];
-
-    if (
-      isReference(value) &&
-      value.generated &&
-      isReference(realValue) &&
-      !isEqual(value, realValue) &&
-      mergeWithGenerated(value.id, realValue.id, cache)
-    ) {
-      madeChanges = true;
+function mergeHelper(
+  store: NormalizedCache,
+  existing: any,
+  incoming: any,
+): any {
+  if (existing && incoming && existing !== incoming) {
+    if (isReference(incoming)) {
+      if (isReference(existing)) {
+        // Incoming references always overwrite existing references.
+        return incoming;
+      }
+      // Incoming references merge with some existing non-reference data.
+      store.set(
+        incoming.id,
+        mergeHelper(store, existing, store.get(incoming.id)),
+      );
+      return incoming;
     }
-  });
 
-  cache.delete(generatedKey);
-  const newRealValue = { ...generated, ...real };
+    if (typeof incoming === 'object') {
+      if (typeof existing !== 'object') {
+        return incoming;
+      }
 
-  if (isEqual(newRealValue, real)) {
-    return madeChanges;
+      const eTypename = isReference(existing) && existing.typename || existing.__typename;
+      const iTypename = isReference(incoming) && incoming.typename || incoming.__typename;
+      const hadTypename = typeof eTypename === 'string';
+      const hasTypename = typeof iTypename === 'string';
+
+      // The typename can change when a different subtype of a union or interface
+      // is written to the cache.
+      if (hadTypename && hasTypename && eTypename !== iTypename) {
+        return incoming;
+      }
+
+      invariant(
+        !isReference(existing),
+        `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.id} for this object.`,
+      );
+
+      let merged: any;
+
+      if (Array.isArray(incoming)) {
+        if (!Array.isArray(existing)) {
+          return incoming;
+        }
+        merged = existing.slice(0);
+      } else {
+        merged = { ...existing };
+      }
+
+      Object.keys(incoming).forEach(storeFieldName => {
+        const incomingChild = incoming[storeFieldName];
+        merged[storeFieldName] = hasOwnProperty.call(existing, storeFieldName)
+          ? mergeHelper(store, existing[storeFieldName], incomingChild)
+          : incomingChild;
+      });
+
+      return merged;
+    }
   }
 
-  cache.set(realKey, newRealValue);
-  return true;
+  return incoming;
 }
 
 function isDataProcessed(

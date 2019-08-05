@@ -229,7 +229,7 @@ export class StoreReader {
     const execResult = this.executeStoreQuery({
       query,
       objectOrReference: rootId === 'ROOT_QUERY'
-        ? makeReference('ROOT_QUERY', 'Query', true)
+        ? makeReference('ROOT_QUERY', 'Query')
         : store.get(rootId) || makeReference(rootId),
       contextValue: context,
       variableValues: variables,

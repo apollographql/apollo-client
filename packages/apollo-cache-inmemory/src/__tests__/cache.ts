@@ -683,10 +683,9 @@ describe('Cache', () => {
         expect((proxy as InMemoryCache).extract()).toEqual({
           ROOT_QUERY: {
             a: 1,
-            d: makeReference('ROOT_QUERY.d', void 0, true),
-          },
-          'ROOT_QUERY.d': {
-            e: 4,
+            d: {
+              e: 4,
+            },
           },
         });
 
@@ -707,14 +706,12 @@ describe('Cache', () => {
         expect((proxy as InMemoryCache).extract()).toEqual({
           ROOT_QUERY: {
             a: 1,
-            d: makeReference('ROOT_QUERY.d', void 0, true),
-          },
-          'ROOT_QUERY.d': {
-            e: 4,
-            h: makeReference('ROOT_QUERY.d.h', void 0, true),
-          },
-          'ROOT_QUERY.d.h': {
-            i: 7,
+            d: {
+              e: 4,
+              h: {
+                i: 7,
+              },
+            },
           },
         });
 
@@ -749,18 +746,16 @@ describe('Cache', () => {
             a: 1,
             b: 2,
             c: 3,
-            d: makeReference('ROOT_QUERY.d', void 0, true),
-          },
-          'ROOT_QUERY.d': {
-            e: 4,
-            f: 5,
-            g: 6,
-            h: makeReference('ROOT_QUERY.d.h', void 0, true),
-          },
-          'ROOT_QUERY.d.h': {
-            i: 7,
-            j: 8,
-            k: 9,
+            d: {
+              e: 4,
+              f: 5,
+              g: 6,
+              h: {
+                i: 7,
+                j: 8,
+                k: 9,
+              },
+            },
           },
         });
       },

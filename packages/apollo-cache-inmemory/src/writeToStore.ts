@@ -333,74 +333,78 @@ export class StoreWriter {
     dataId: string;
     context: WriteContext;
   }) {
-    const { variables, dataIdFromObject } = context;
+    const storeFieldName = storeKeyNameFromField(field, context.variables);
+    return {
+      [storeFieldName]: this.processFieldValue(
+        value,
+        `${dataId}.${storeFieldName}`,
+        field,
+        context,
+      ),
+    };
+  }
 
-    let storeValue: StoreValue;
-
-    const storeFieldName: string = storeKeyNameFromField(field, variables);
-
-    // If this is a scalar value...
+  private processFieldValue(
+    value: any,
+    generatedId: string,
+    field: FieldNode,
+    context: WriteContext,
+  ): StoreValue {
     if (!field.selectionSet || value === null) {
-      storeValue = value;
-    } else if (Array.isArray(value)) {
-      const generatedId = `${dataId}.${storeFieldName}`;
+      return value;
+    }
 
-      storeValue = this.processArrayValue(
+    if (Array.isArray(value)) {
+      return this.processArrayValue(
         value,
         generatedId,
         field.selectionSet,
         context,
       );
-    } else {
-      // It's an object
-      let valueDataId = `${dataId}.${storeFieldName}`;
-      let generated = true;
-
-      // We only prepend the '$' if the valueDataId isn't already a generated
-      // id.
-      if (!isGeneratedId(valueDataId)) {
-        valueDataId = '$' + valueDataId;
-      }
-
-      if (dataIdFromObject) {
-        const semanticId = dataIdFromObject(value);
-
-        // We throw an error if the first character of the id is '$. This is
-        // because we use that character to designate an Apollo-generated id
-        // and we use the distinction between user-desiginated and application-provided
-        // ids when managing overwrites.
-        invariant(
-          !semanticId || !isGeneratedId(semanticId),
-          'IDs returned by dataIdFromObject cannot begin with the "$" character.',
-        );
-
-        if (
-          semanticId ||
-          (typeof semanticId === 'number' && semanticId === 0)
-        ) {
-          valueDataId = semanticId;
-          generated = false;
-        }
-      }
-
-      if (!isDataProcessed(valueDataId, field, context.processedData)) {
-        this.writeSelectionSetToStore({
-          dataId: valueDataId,
-          result: value,
-          selectionSet: field.selectionSet,
-          context,
-        });
-      }
-
-      // We take the id and escape it (i.e. wrap it with an enclosing object).
-      // This allows us to distinguish IDs from normal scalars.
-      const typename = value.__typename;
-      storeValue = makeReference(valueDataId, typename, generated);
     }
 
-    return {
-      [storeFieldName]: storeValue,
-    };
+    // It's an object
+    let generated = true;
+
+    // We only prepend the '$' if the valueDataId isn't already a generated
+    // id.
+    if (!isGeneratedId(generatedId)) {
+      generatedId = '$' + generatedId;
+    }
+
+    if (context.dataIdFromObject) {
+      const semanticId = context.dataIdFromObject(value);
+
+      // We throw an error if the first character of the id is '$. This is
+      // because we use that character to designate an Apollo-generated id
+      // and we use the distinction between user-desiginated and application-provided
+      // ids when managing overwrites.
+      invariant(
+        !semanticId || !isGeneratedId(semanticId),
+        'IDs returned by dataIdFromObject cannot begin with the "$" character.',
+      );
+
+      if (
+        semanticId ||
+        (typeof semanticId === 'number' && semanticId === 0)
+      ) {
+        generatedId = semanticId;
+        generated = false;
+      }
+    }
+
+    if (!isDataProcessed(generatedId, field, context.processedData)) {
+      this.writeSelectionSetToStore({
+        dataId: generatedId,
+        result: value,
+        selectionSet: field.selectionSet,
+        context,
+      });
+    }
+
+    // We take the id and escape it (i.e. wrap it with an enclosing object).
+    // This allows us to distinguish IDs from normal scalars.
+    return makeReference(generatedId, value.__typename, generated);
   }
 
   private processArrayValue(

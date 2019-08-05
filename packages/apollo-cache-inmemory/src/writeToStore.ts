@@ -13,7 +13,6 @@ import {
   getDefaultValues,
   getFragmentDefinitions,
   getOperationDefinition,
-  IdValue,
   isField,
   isInlineFragment,
   resultKeyNameFromField,
@@ -28,11 +27,7 @@ import { invariant } from 'ts-invariant';
 
 import { defaultNormalizedCacheFactory } from './depTrackingCache';
 
-import {
-  IdGetter,
-  NormalizedCache,
-  StoreObject,
-} from './types';
+import { IdGetter, NormalizedCache } from './types';
 import { fragmentMatches } from './fragments';
 import { makeReference, isReference } from './references';
 
@@ -158,28 +153,92 @@ export class StoreWriter {
     context: WriteContext;
   }): NormalizedCache {
     const { store } = context;
+    const storeObject = store.get(dataId);
+    const typename: string | undefined =
+      (result && result.__typename) ||
+      (storeObject && storeObject.__typename);
+
     const newFields = this.processSelectionSet({
       result,
       dataId,
-      storeObject: store.get(dataId),
+      typename,
       selectionSet,
       context,
     });
+
+    Object.keys(newFields).forEach(storeFieldName => {
+      const oldStoreValue = storeObject && storeObject[storeFieldName];
+      const newStoreValue = newFields[storeFieldName];
+      if (
+        newStoreValue === oldStoreValue ||
+        !isReference(oldStoreValue) ||
+        !isReference(newStoreValue)
+      ) {
+        return;
+      }
+
+      // check if there was a generated id at the location where we're
+      // about to place this new id. If there was, we have to merge the
+      // data from that id with the data we're about to write in the store.
+      const hadTypename = oldStoreValue.typename !== void 0;
+      const hasTypename = newStoreValue.typename !== void 0;
+      const typenameChanged =
+        hadTypename &&
+        hasTypename &&
+        oldStoreValue.typename !== newStoreValue.typename;
+
+      // If there is already a real id in the store and the current id we
+      // are dealing with is generated, we throw an error.
+      // One exception we allow is when the typename has changed, which occurs
+      // when schema defines a union, both with and without an ID in the same place.
+      // checks if we "lost" the read id
+      invariant(
+        !newStoreValue.generated || oldStoreValue.generated || typenameChanged,
+        `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${
+          oldStoreValue.id
+        } for this object.`,
+      );
+
+      // checks if we "lost" the typename
+      invariant(
+        !hadTypename || hasTypename,
+        `Store error: the application attempted to write an object with no provided typename but the store already contains an object with typename of ${
+          oldStoreValue.typename
+        } for the object of id ${oldStoreValue.id}.`,
+      );
+
+      if (oldStoreValue.generated) {
+        // We should only merge if it's an object of the same type,
+        // otherwise we should delete the generated object
+        if (typenameChanged) {
+          // Only delete the generated object when the old object was
+          // inlined, and the new object is not. This is indicated by
+          // the old id being generated, and the new id being real.
+          if (!newStoreValue.generated) {
+            store.delete(oldStoreValue.id);
+          }
+        } else {
+          mergeWithGenerated(oldStoreValue.id, newStoreValue.id, store);
+        }
+      }
+    });
+
     store.set(dataId, mergeDeep(store.get(dataId), newFields));
+
     return store;
   }
 
   private processSelectionSet({
     result,
     dataId,
-    storeObject,
     selectionSet,
+    typename = result && result.__typename,
     context,
   }: {
     result: any;
     dataId: string;
-    storeObject: StoreObject;
     selectionSet: SelectionSetNode;
+    typename: string;
     context: WriteContext;
   }) {
     const { variables, fragmentMap } = context;
@@ -201,7 +260,6 @@ export class StoreWriter {
             newFields,
             this.writeFieldToStore({
               dataId,
-              storeObject,
               value,
               field: selection,
               context,
@@ -240,11 +298,6 @@ export class StoreWriter {
           invariant(fragment, `No fragment named ${selection.name.value}.`);
         }
 
-        const typename =
-          (result && result.__typename) ||
-          (storeObject && storeObject.__typename) ||
-          void 0;
-
         const match = fragmentMatches(
           fragment,
           typename,
@@ -258,10 +311,10 @@ export class StoreWriter {
               result,
               selectionSet: fragment.selectionSet,
               dataId,
-              storeObject,
+              typename,
               context,
             }),
-          )
+          );
         }
       }
     });
@@ -273,16 +326,14 @@ export class StoreWriter {
     field,
     value,
     dataId,
-    storeObject,
     context,
   }: {
     field: FieldNode;
     value: any;
     dataId: string;
-    storeObject: StoreObject;
     context: WriteContext;
   }) {
-    const { variables, dataIdFromObject, store } = context;
+    const { variables, dataIdFromObject } = context;
 
     let storeValue: StoreValue;
 
@@ -345,57 +396,6 @@ export class StoreWriter {
       // This allows us to distinguish IDs from normal scalars.
       const typename = value.__typename;
       storeValue = makeReference(valueDataId, typename, generated);
-
-      // check if there was a generated id at the location where we're
-      // about to place this new id. If there was, we have to merge the
-      // data from that id with the data we're about to write in the store.
-      const escapedId =
-        storeObject && (storeObject[storeFieldName] as IdValue | undefined);
-      if (escapedId !== storeValue && isReference(escapedId)) {
-        const hadTypename = escapedId.typename !== undefined;
-        const hasTypename = typename !== undefined;
-        const typenameChanged =
-          hadTypename && hasTypename && escapedId.typename !== typename;
-
-        // If there is already a real id in the store and the current id we
-        // are dealing with is generated, we throw an error.
-        // One exception we allow is when the typename has changed, which occurs
-        // when schema defines a union, both with and without an ID in the same place.
-        // checks if we "lost" the read id
-        invariant(
-          !generated || escapedId.generated || typenameChanged,
-          `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${
-            escapedId.id
-          } for this object. The selectionSet that was trying to be written is:\n${
-            JSON.stringify(field)
-          }`,
-        );
-
-        // checks if we "lost" the typename
-        invariant(
-          !hadTypename || hasTypename,
-          `Store error: the application attempted to write an object with no provided typename but the store already contains an object with typename of ${
-            escapedId.typename
-          } for the object of id ${escapedId.id}. The selectionSet that was trying to be written is:\n${
-            JSON.stringify(field)
-          }`,
-        );
-
-        if (escapedId.generated) {
-          // We should only merge if it's an object of the same type,
-          // otherwise we should delete the generated object
-          if (typenameChanged) {
-            // Only delete the generated object when the old object was
-            // inlined, and the new object is not. This is indicated by
-            // the old id being generated, and the new id being real.
-            if (!generated) {
-              store.delete(escapedId.id);
-            }
-          } else {
-            mergeWithGenerated(escapedId.id, (storeValue as IdValue).id, store);
-          }
-        }
-      }
     }
 
     return {

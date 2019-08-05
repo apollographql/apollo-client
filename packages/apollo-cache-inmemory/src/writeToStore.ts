@@ -256,15 +256,18 @@ export class StoreWriter {
         const value: any = result[resultFieldKey];
 
         if (typeof value !== 'undefined') {
-          Object.assign(
-            newFields,
-            this.writeFieldToStore({
-              dataId,
-              value,
-              field: selection,
-              context,
-            }),
+          const storeFieldName = storeKeyNameFromField(
+            selection,
+            context.variables,
           );
+          Object.assign(newFields, {
+            [storeFieldName]: this.processFieldValue(
+              value,
+              `${dataId}.${storeFieldName}`,
+              selection,
+              context,
+            ),
+          });
         } else if (
           this.config.possibleTypes &&
           !(
@@ -320,28 +323,6 @@ export class StoreWriter {
     });
 
     return newFields;
-  }
-
-  private writeFieldToStore({
-    field,
-    value,
-    dataId,
-    context,
-  }: {
-    field: FieldNode;
-    value: any;
-    dataId: string;
-    context: WriteContext;
-  }) {
-    const storeFieldName = storeKeyNameFromField(field, context.variables);
-    return {
-      [storeFieldName]: this.processFieldValue(
-        value,
-        `${dataId}.${storeFieldName}`,
-        field,
-        context,
-      ),
-    };
   }
 
   private processFieldValue(

@@ -1,0 +1,8 @@
+| Option | Type | Description |
+| - | - | - |
+| `subscription` | DocumentNode | A GraphQL subscription document parsed into an AST by `graphql-tag`. **Optional** for the `useSubscription` Hook since the subscription can be passed in as the first parameter to the Hook. **Required** for the `Subscription` component. |
+| `variables` | { [key: string]: any } | An object containing all of the variables your subscription needs to execute |
+| `shouldResubscribe` | boolean | Determines if your subscription should be unsubscribed and subscribed again |
+| `onSubscriptionData` | (options: OnSubscriptionDataOptions&lt;TData&gt;) => any | Allows the registration of a callback function, that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`. |
+| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. Defaults to "cache-first". |
+| `client` | ApolloClient | An `ApolloClient` instance. By default `useSubscription` / `Subscription` uses the client passed down via context, but a different client can be passed in. |

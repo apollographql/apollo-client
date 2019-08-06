@@ -1,13 +1,13 @@
 ---
 title: Queries
-description: Learn how to fetch data with the useQuery Hook
+description: Learn how to fetch data with the useQuery hook
 ---
 
 import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 import QueryOptions from '../../shared/query-options.mdx';
 import QueryResult from '../../shared/query-result.mdx';
 
-Fetching data in a simple, predictable way is one of the core features of Apollo Client. In this guide, you'll learn how to fetch GraphQL data with the `useQuery` Hook and attach the result to your UI. You'll also learn how Apollo Client simplifies your data management code by tracking error and loading states for you.
+Fetching data in a simple, predictable way is one of the core features of Apollo Client. In this guide, you'll learn how to fetch GraphQL data with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies your data management code by tracking error and loading states for you.
 
 This page assumes some familiarity with building GraphQL queries. If you'd like a refresher, we recommend [reading this guide](http://graphql.org/learn/queries/) and practicing [running queries in GraphiQL](/features/developer-tooling/#features). Since Apollo Client queries are just standard GraphQL, you can be sure that any query that successfully runs in GraphiQL will also run when used with `useQuery`.
 
@@ -15,18 +15,18 @@ The following examples assume that you've already set up Apollo Client and have 
 
 > If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/j2ly83749w) on CodeSandbox and our sample GraphQL server on [this CodeSandbox](https://codesandbox.io/s/32ypr38l61). You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
 
-## The `useQuery` Hook
+## The `useQuery` hook
 
-The `useQuery` Hook, which is based on React's [Hooks API](https://reactjs.org/docs/hooks-intro.html), is one of the most important building blocks of your Apollo application. To run a query, just pass a GraphQL query string wrapped with the `gql` function into `useQuery` as the first parameter, when you call `useQuery` within a React component. When your component renders, `useQuery` will return an object from Apollo Client containing `loading`, `error`, and `data` properties that you can use to render your UI. Let's look at an example:
+The `useQuery` hook, which is based on React's [Hooks API](https://reactjs.org/docs/hooks-intro.html), is one of the most important building blocks of your Apollo application. To run a query, just pass a GraphQL query string wrapped with the `gql` function into `useQuery` as the first parameter, when you call `useQuery` within a React component. When your component renders, `useQuery` will return an object from Apollo Client containing `loading`, `error`, and `data` properties that you can use to render your UI. Let's look at an example:
 
-First, let's create our GraphQL query. Remember to wrap your query string in the `gql` function in order to parse it into a query document. Once we have our GraphQL query, let's pass it into our `useQuery` Hook. When we get back the `loading`, `error`, and `data` properties that the `useQuery` Hook provides for us, we can intelligently render different UI elements depending on the state of our query. Let's see what this looks like!
+First, let's create our GraphQL query. Remember to wrap your query string in the `gql` function in order to parse it into a query document. Once we have our GraphQL query, let's pass it into our `useQuery` hook. When we get back the `loading`, `error`, and `data` properties that the `useQuery` hook provides for us, we can intelligently render different UI elements depending on the state of our query. Let's see what this looks like!
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
 
 ```tsx
-import gql from "graphql-tag";
-import { useQuery } from "@apollo/react-hooks";
+import gql from 'graphql-tag';
+import { useQuery } from '@apollo/react-hooks';
 
 const GET_DOGS = gql`
   {
@@ -40,7 +40,7 @@ const GET_DOGS = gql`
 function Dogs({ onDogSelected }) {
   const { loading, error, data } = useQuery(GET_DOGS);
 
-  if (loading) return "Loading...";
+  if (loading) return 'Loading...';
   if (error) return `Error! ${error.message}`;
 
   return (
@@ -52,15 +52,15 @@ function Dogs({ onDogSelected }) {
       ))}
     </select>
   );
- }
- ```
+}
+```
 
 </div>
 <div data-language="Render Props (JavaScript)">
 
 ```tsx
-import gql from "graphql-tag";
-import { Query } from "react-apollo";
+import gql from 'graphql-tag';
+import { Query } from 'react-apollo';
 
 const GET_DOGS = gql`
   {
@@ -74,7 +74,7 @@ const GET_DOGS = gql`
 const Dogs = ({ onDogSelected }) => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {
-      if (loading) return "Loading...";
+      if (loading) return 'Loading...';
       if (error) return `Error! ${error.message}`;
 
       return (
@@ -100,11 +100,11 @@ In the next step, we're going to hook our form up to a more complex query with v
 
 ## Receiving data
 
-You've already seen a preview of how to work with the result of your query returned by the `useQuery` Hook. Let's dive deeper into what's happening behind the scenes with Apollo Client when we fetch data with `useQuery`.
+You've already seen a preview of how to work with the result of your query returned by the `useQuery` hook. Let's dive deeper into what's happening behind the scenes with Apollo Client when we fetch data with `useQuery`.
 
 1. When `useQuery` is called the first time, Apollo Client creates an observable for our query. Our component subscribes to the result of the query via the Apollo Client cache.
 2. Initially, we try to load the query result from the Apollo cache. If it's not in there, we send the request to the server.
-3. Once the data comes back, we normalize it and store it in the Apollo cache. Since the `useQuery` Hook subscribes to the result internally, it updates with the data reactively.
+3. Once the data comes back, we normalize it and store it in the Apollo cache. Since the `useQuery` hook subscribes to the result internally, it updates with the data reactively.
 
 To see Apollo Client's caching in action, let's build our `DogPhoto` component. `DogPhoto` accepts a prop called `breed` that reflects the current value of our form from the `Dogs` component above.
 
@@ -122,10 +122,9 @@ const GET_DOG_PHOTO = gql`
 `;
 
 function DogPhoto({ breed }) {
-  const { loading, error, data } = useQuery(
-    GET_DOG_PHOTO,
-    { variables: { breed } }
-  );
+  const { loading, error, data } = useQuery(GET_DOG_PHOTO, {
+    variables: { breed },
+  });
 
   if (loading) return null;
   if (error) return `Error! ${error}`;
@@ -166,7 +165,7 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-You'll notice that we're using a new configuration option with our `useQuery` Hook. The `variables` option is an object containing the variables we want to pass to our GraphQL query. In this case, we want to pass the breed from the form into our query.
+You'll notice that we're using a new configuration option with our `useQuery` hook. The `variables` option is an object containing the variables we want to pass to our GraphQL query. In this case, we want to pass the breed from the form into our query.
 
 Try selecting "bulldog" from the list to see its photo show up. Then, switch to another breed and switch back to "bulldog". You'll notice that the bulldog photo loads instantaneously the second time around. This is the Apollo cache at work!
 
@@ -176,7 +175,7 @@ Next, let's learn some techniques for ensuring our data is fresh, such as pollin
 
 It's awesome that Apollo Client caches your data for you, but what should we do when we want fresh data? Two solutions are polling and refetching.
 
-Polling can help us achieve near real-time data by causing the query to refetch on a specified interval. To implement polling, simply pass a `pollInterval` option into the `useQuery` Hook with the interval in ms. If you pass in 0, the query will not poll. You can also implement dynamic polling by using the `startPolling` and `stopPolling` functions that are returned by the `useQuery` Hook.
+Polling can help us achieve near real-time data by causing the query to refetch on a specified interval. To implement polling, simply pass a `pollInterval` option into the `useQuery` hook with the interval in ms. If you pass in 0, the query will not poll. You can also implement dynamic polling by using the `startPolling` and `stopPolling` functions that are returned by the `useQuery` hook.
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
@@ -188,8 +187,8 @@ function DogPhoto({ breed }) {
     {
       variables: { breed },
       skip: !breed,
-      pollInterval: 500
-    }
+      pollInterval: 500,
+    },
   );
 
   if (loading) return null;
@@ -236,24 +235,17 @@ What if you want to reload the query in response to a user action instead of an 
 
 ```jsx
 function DogPhoto({ breed }) {
-  const { loading, error, data, refetch } = useQuery(
-    GET_DOG_PHOTO,
-    {
-      variables: { breed },
-      skip: !breed
-    }
-  );
-
+  const { loading, error, data, refetch } = useQuery(GET_DOG_PHOTO, {
+    variables: { breed },
+    skip: !breed,
+  });
 
   if (loading) return null;
   if (error) return `Error! ${error}`;
 
   return (
     <div>
-      <img
-        src={data.dog.displayImage}
-        style={{ height: 100, width: 100 }}
-      />
+      <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
       <button onClick={() => refetch()}>Refetch!</button>
     </div>
   );
@@ -265,11 +257,7 @@ function DogPhoto({ breed }) {
 
 ```jsx
 const DogPhoto = ({ breed }) => (
-  <Query
-    query={GET_DOG_PHOTO}
-    variables={{ breed }}
-    skip={!breed}
-  >
+  <Query query={GET_DOG_PHOTO} variables={{ breed }} skip={!breed}>
     {({ loading, error, data, refetch }) => {
       if (loading) return null;
       if (error) return `Error! ${error}`;
@@ -311,20 +299,17 @@ function DogPhoto({ breed }) {
     {
       variables: { breed },
       skip: !breed,
-      notifyOnNetworkStatusChange: true
-    }
+      notifyOnNetworkStatusChange: true,
+    },
   );
 
-  if (networkStatus === 4) return "Refetching!";
+  if (networkStatus === 4) return 'Refetching!';
   if (loading) return null;
   if (error) return `Error! ${error}`;
 
   return (
     <div>
-      <img
-        src={data.dog.displayImage}
-        style={{ height: 100, width: 100 }}
-      />
+      <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
       <button onClick={() => refetch()}>Refetch!</button>
     </div>
   );
@@ -332,7 +317,7 @@ function DogPhoto({ breed }) {
 ```
 
 </div>
-<div data-language="Hooks (JavaScript)">
+<div data-language="Render Props (JavaScript)">
 
 ```jsx
 const DogPhoto = ({ breed }) => (
@@ -343,7 +328,7 @@ const DogPhoto = ({ breed }) => (
     notifyOnNetworkStatusChange
   >
     {({ loading, error, data, refetch, networkStatus }) => {
-      if (networkStatus === 4) return "Refetching!";
+      if (networkStatus === 4) return 'Refetching!';
       if (loading) return null;
       if (error) return `Error! ${error}`;
 
@@ -364,22 +349,22 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-The `networkStatus` property is an enum with number values from 1-8 representing a different loading state. 4 corresponds to a refetch, but there are also numbers for polling and pagination. For a full list of all the possible loading states, check out the [reference guide](/api/react-apollo/#datanetworkstatus).
+The `networkStatus` property is an enum with number values from 1-8 representing a different loading state. 4 corresponds to a refetch, but there are also numbers for polling and pagination. For a full list of all the possible loading states, check out the [reference guide](/api/react-hooks).
 
 While not as complex as loading state, responding to errors in your component is also customizable via the `useQuery` `errorPolicy` option. The default value for `errorPolicy` is "none" in which we treat all GraphQL errors as runtime errors. In the event of an error, Apollo Client will discard any data that came back with the request and set the `error` property in the `useQuery` result object to true. If you'd like to show any partial data along with any error information, set the `errorPolicy` to "all".
 
 ## Manually firing a query
 
-When React mounts and renders a component that calls the `useQuery` Hook, Apollo Client automatically fires off your query. What if you wanted to delay firing your query until the user performs an action, such as clicking on a button?
+When React mounts and renders a component that calls the `useQuery` hook, Apollo Client automatically fires off your query. What if you wanted to delay firing your query until the user performs an action, such as clicking on a button?
 
-One option is to leverage the `useApolloClient` Hook and directly call `client.query()` instead.
+One option is to leverage the `useApolloClient` hook and directly call `client.query()` instead.
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
 
 ```jsx
-import React from "react";
-import { useApolloClient } from "@apollo/react-hooks";
+import React from 'react';
+import { useApolloClient } from '@apollo/react-hooks';
 
 function DelayedQuery() {
   const [dog, setDog] = useState(null);
@@ -392,7 +377,7 @@ function DelayedQuery() {
         onClick={async () => {
           const { data } = await client.query({
             query: GET_DOG_PHOTO,
-            variables: { breed: "bulldog" }
+            variables: { breed: 'bulldog' },
           });
           setDog(data.dog);
         }}
@@ -408,8 +393,8 @@ function DelayedQuery() {
 <div data-language="Render Props (JavaScript)">
 
 ```jsx
-import React, { Component } from "react";
-import { ApolloConsumer } from "react-apollo";
+import React, { Component } from 'react';
+import { ApolloConsumer } from 'react-apollo';
 
 class DelayedQuery extends Component {
   state = { dog: null };
@@ -426,7 +411,7 @@ class DelayedQuery extends Component {
               onClick={async () => {
                 const { data } = await client.query({
                   query: GET_DOG_PHOTO,
-                  variables: { breed: "bulldog" }
+                  variables: { breed: 'bulldog' },
                 });
                 this.onDogFetched(data.dog);
               }}
@@ -444,13 +429,13 @@ class DelayedQuery extends Component {
 </div>
 </MultiCodeBlock>
 
-While fetching this way gives you fine-grained control over how the query is called, it is more verbose. As an alternative, we recommend using the `useLazyQuery` Hook.
+While fetching this way gives you fine-grained control over how the query is called, it is more verbose. As an alternative, we recommend using the `useLazyQuery` hook.
 
-The `useLazyQuery` Hook acts just like the `useQuery` Hook, with one main exception. When `useLazyQuery` is called, it does not immediately execute the defined query. Instead, it returns an execution function in its result tuple, that can then be triggered whenever you're ready to call the query.
+The `useLazyQuery` hook acts just like the `useQuery` hook, with one main exception. When `useLazyQuery` is called, it does not immediately execute the defined query. Instead, it returns an execution function in its result tuple, that can then be triggered whenever you're ready to call the query.
 
 ```jsx
-import React from "react";
-import { useLazyQuery } from "@apollo/react-hooks";
+import React from 'react';
+import { useLazyQuery } from '@apollo/react-hooks';
 
 function DelayedQuery() {
   const [dog, setDog] = useState(null);
@@ -465,7 +450,7 @@ function DelayedQuery() {
   return (
     <div>
       {dog && <img src={dog.displayImage} />}
-      <button onClick={() => getDog({ variables: { breed: "bulldog" } })}>
+      <button onClick={() => getDog({ variables: { breed: 'bulldog' } })}>
         Click me!
       </button>
     </div>
@@ -477,26 +462,26 @@ function DelayedQuery() {
 
 ## useQuery API overview
 
-If you're looking for an overview of all the options `useQuery` accepts, and its result properties, look no further! Most `useQuery` calls will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `useQuery` Hook API in more detail with usage examples, visit our [reference guide](/api/react-apollo/).
+If you're looking for an overview of all the options `useQuery` accepts, and its result properties, look no further! Most `useQuery` calls will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `useQuery` hook API in more detail with usage examples, visit our [reference guide](/api/react-hooks/).
 
 > **Note:** If you're using React Apollo's `Query` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `query` prop (which holds a GraphQL query document parsed into an AST by `graphql-tag`) is also required.
 
 <h3>Options</h3>
 
-The `useQuery` Hook accepts the following options.
+The `useQuery` hook accepts the following options.
 
 <QueryOptions />
 
 <h3>Result</h3>
 
-After being called the `useQuery` Hook will return a result object with the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
+After being called the `useQuery` hook will return a result object with the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
 <QueryResult />
 
 ## Next steps
 
-Learning how to leverage the `useQuery` Hook to fetch data is one of the most important skills to mastering development with Apollo Client. Now that you're a pro at fetching data, why not try using the `useMutation` Hook to update your data? Here are some resources we think will help you level up your skills:
+Learning how to leverage the `useQuery` hook to fetch data is one of the most important skills to mastering development with Apollo Client. Now that you're a pro at fetching data, why not try using the `useMutation` hook to update your data? Here are some resources we think will help you level up your skills:
 
-- [Mutations](/essentials/mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for the `useMutation` Hook.
+- [Mutations](/essentials/mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for the `useMutation` hook.
 - [Local state management](/essentials/local-state/): Learn how to query local data.
 - [Pagination](/features/pagination/): Building lists has never been easier thanks to Apollo Client's `fetchMore` function. Learn more in our pagination tutorial.

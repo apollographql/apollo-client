@@ -22,12 +22,7 @@ module.exports = {
           filepathPrefix: 'packages/apollo-client/src/',
         },
         sidebarCategories: {
-          null: [
-            'index',
-            'why-apollo',
-            'integrations',
-            'migrating-to-react-apollo-3',
-          ],
+          null: ['index', 'why-apollo', 'integrations', 'hooks-migration'],
           Essentials: [
             'essentials/get-started',
             'essentials/queries',
@@ -62,12 +57,12 @@ module.exports = {
           ],
           API: [
             'api/apollo-client',
-            'api/react-common',
             'api/react-hooks',
-            'api/react-components',
-            'api/react-hoc',
             'api/react-ssr',
             'api/react-testing',
+            'api/react-components',
+            'api/react-hoc',
+            'api/react-common',
           ],
         },
       },

@@ -1,6 +1,6 @@
 ---
-title: React hooks
-description: React Apollo hooks API reference
+title: '@apollo/react-hooks'
+description: API reference
 ---
 
 import QueryOptions from '../../shared/query-options.mdx';
@@ -9,20 +9,21 @@ import MutationOptions from '../../shared/mutation-options.mdx';
 import MutationResult from '../../shared/mutation-result.mdx';
 import SubscriptionOptions from '../../shared/subscription-options.mdx';
 import SubscriptionResult from '../../shared/subscription-result.mdx';
+import ApolloProvider from '../../shared/subscription-result.mdx';
 
-## Package
+## Installation
 
-Npm: [`@apollo/react-hooks`](https://www.npmjs.com/package/@apollo/react-hooks)
+```
+npm install @apollo/react-hooks
+```
 
 ## `useQuery`
-
-> Refer to the [Queries](/essentials/queries/) section for a more in-depth overview of `useQuery`.
 
 <h3>Example</h3>
 
 ```jsx
-import { useQuery } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import { useQuery } from '@apollo/react-hooks';
+import gql from 'graphql-tag';
 
 const GET_GREETING = gql`
   query getGreeting($language: String!) {
@@ -32,23 +33,23 @@ const GET_GREETING = gql`
   }
 `;
 
-
 function Hello() {
-  const { loading, error, data } = useQuery(
-    GET_GREETING,
-    { variables: { language: "english" } }
-  );
-  if (loading) return <p>Loading ...</p>
+  const { loading, error, data } = useQuery(GET_GREETING, {
+    variables: { language: 'english' },
+  });
+  if (loading) return <p>Loading ...</p>;
   return <h1>Hello {data.greeting.message}!</h1>;
 }
 ```
+
+> Refer to the [Queries](/essentials/queries/) section for a more in-depth overview of `useQuery`.
 
 <h3>Function Signature</h3>
 
 ```ts
 function useQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
-  options?: QueryHookOptions<TData, TVariables>
+  options?: QueryHookOptions<TData, TVariables>,
 ): QueryResult<TData, TVariables> {}
 ```
 
@@ -56,8 +57,8 @@ function useQuery<TData = any, TVariables = OperationVariables>(
 
 **`query`**
 
-| Param | Type | Description |
-| - | - | - |
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
 | `query` | DocumentNode | A GraphQL query document parsed into an AST by `graphql-tag`. |
 
 **`options`**
@@ -69,8 +70,6 @@ function useQuery<TData = any, TVariables = OperationVariables>(
 <QueryResult />
 
 ## `useLazyQuery`
-
-> Refer to the [Queries](/essentials/queries/) section for a more in-depth overview of `useLazyQuery`.
 
 <h3>Example</h3>
 
@@ -99,12 +98,14 @@ function Hello() {
 }
 ```
 
+> Refer to the [Queries](/essentials/queries/) section for a more in-depth overview of `useLazyQuery`.
+
 <h3>Function Signature</h3>
 
 ```ts
 function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
-  options?: LazyQueryHookOptions<TData, TVariables>
+  options?: LazyQueryHookOptions<TData, TVariables>,
 ): [
   (options?: QueryLazyOptions<TVariables>) => void,
   QueryResult<TData, TVariables>
@@ -115,8 +116,8 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
 **`query`**
 
-| Param | Type | Description |
-| - | - | - |
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
 | `query` | DocumentNode | A GraphQL query document parsed into an AST by `graphql-tag`. |
 
 **`options`**
@@ -127,8 +128,8 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
 **Execute function**
 
-| Param | Type | Description |
-| - | - | - |
+| Param            | Type                                                  | Description                                                                                                                     |
+| ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Execute function | options?: QueryLazyOptions&lt;TVariables&gt;) => void | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. |
 
 **Result object**
@@ -137,13 +138,11 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
 ## `useMutation`
 
-> Refer to the [Mutations](/essentials/mutations/) section for a more in-depth overview of `useMutation`.
-
 <h3>Example</h3>
 
 ```jsx
-import { useMutation } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import { useMutation } from '@apollo/react-hooks';
+import gql from 'graphql-tag';
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {
@@ -164,7 +163,7 @@ function AddTodo() {
         onSubmit={e => {
           e.preventDefault();
           addTodo({ variables: { type: input.value } });
-          input.value = "";
+          input.value = '';
         }}
       >
         <input
@@ -179,12 +178,14 @@ function AddTodo() {
 }
 ```
 
+> Refer to the [Mutations](/essentials/mutations/) section for a more in-depth overview of `useMutation`.
+
 <h3>Function Signature</h3>
 
 ```ts
 function useMutation<TData = any, TVariables = OperationVariables>(
   mutation: DocumentNode,
-  options?: MutationHookOptions<TData, TVariables>
+  options?: MutationHookOptions<TData, TVariables>,
 ): MutationTuple<TData, TVariables> {}
 ```
 
@@ -192,8 +193,8 @@ function useMutation<TData = any, TVariables = OperationVariables>(
 
 **`mutation`**
 
-| Param | Type | Description |
-| - | - | - |
+| Param      | Type         | Description                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------- |
 | `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `graphql-tag`. |
 
 **`options`**
@@ -205,8 +206,6 @@ function useMutation<TData = any, TVariables = OperationVariables>(
 <MutationResult />
 
 ## `useSubscription`
-
-> Refer to the [Subscriptions](/advanced/subscriptions/) section for a more in-depth overview of `useSubscription`.
 
 <h3>Example</h3>
 
@@ -221,20 +220,22 @@ const COMMENTS_SUBSCRIPTION = gql`
 `;
 
 function DontReadTheComments({ repoFullName }) {
-  const { data: { commentAdded }, loading } = useSubscription(
-    COMMENTS_SUBSCRIPTION,
-    { variables: { repoFullName } }
-  );
+  const {
+    data: { commentAdded },
+    loading,
+  } = useSubscription(COMMENTS_SUBSCRIPTION, { variables: { repoFullName } });
   return <h4>New comment: {!loading && commentAdded.content}</h4>;
 }
 ```
+
+> Refer to the [Subscriptions](/advanced/subscriptions/) section for a more in-depth overview of `useSubscription`.
 
 <h3>Function Signature</h3>
 
 ```ts
 function useSubscription<TData = any, TVariables = OperationVariables>(
   subscription: DocumentNode,
-  options?: SubscriptionHookOptions<TData, TVariables>
+  options?: SubscriptionHookOptions<TData, TVariables>,
 ): {
   variables: TVariables;
   loading: boolean;
@@ -247,8 +248,8 @@ function useSubscription<TData = any, TVariables = OperationVariables>(
 
 **`subscription`**
 
-| Param | Type | Description |
-| - | - | - |
+| Param          | Type         | Description                                                          |
+| -------------- | ------------ | -------------------------------------------------------------------- |
 | `subscription` | DocumentNode | A GraphQL subscription document parsed into an AST by `graphql-tag`. |
 
 **`options`**
@@ -279,6 +280,10 @@ function useApolloClient(): ApolloClient<object> {}
 
 <h3>Result</h3>
 
-| Param | Type | Description |
-| - | - | - |
+| Param                  | Type                       | Description                                                |
+| ---------------------- | -------------------------- | ---------------------------------------------------------- |
 | Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
+
+### `ApolloProvider`
+
+<ApolloProvider />

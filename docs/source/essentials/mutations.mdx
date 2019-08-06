@@ -1,13 +1,13 @@
 ---
 title: Mutations
-description: Learn how to update data with the useMutation Hook
+description: Learn how to update data with the useMutation hook
 ---
 
 import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 import MutationOptions from '../../shared/mutation-options.mdx';
 import MutationResult from '../../shared/mutation-result.mdx';
 
-Now that we've learned how to fetch data with Apollo Client, what happens when we need to update that data? In this guide, you'll discover how to leverage the `useMutation` Hook in your components to send updates to your GraphQL server. You'll also learn how to update the Apollo cache after a mutation occurs and how to handle errors when things go wrong.
+Now that we've learned how to fetch data with Apollo Client, what happens when we need to update that data? In this guide, you'll discover how to leverage the `useMutation` hook in your components to send updates to your GraphQL server. You'll also learn how to update the Apollo cache after a mutation occurs and how to handle errors when things go wrong.
 
 This page assumes some familiarity with building GraphQL mutations. If you'd like a refresher, we recommend [reading this guide](http://graphql.org/learn/queries/#mutations).
 
@@ -15,16 +15,16 @@ The following examples assume that you've already set up Apollo Client and have 
 
 > If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/znl94y0vp) on CodeSandbox, and our sample GraphQL server on [this CodeSandBox](https://codesandbox.io/s/plp0mopxq). You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
 
-## The `useMutation` Hook
+## The `useMutation` hook
 
-The `useMutation` Hook, which is based on React's [Hooks API](https://reactjs.org/docs/hooks-intro.html), is what you'll use to trigger mutations from your UI. To run a mutation, just pass a GraphQL query string wrapped with the `gql` function into `useMutation` as the first parameter, when you call `useMutation` within a React component. When your component renders, `useMutation` will return a result tuple with a mutate function in the fist position, and an object with your mutation result (containing `loading`, `error`, `called` and `data` properties) in the second position. Let's look at an example:
+The `useMutation` hook, which is based on React's [Hooks API](https://reactjs.org/docs/hooks-intro.html), is what you'll use to trigger mutations from your UI. To run a mutation, just pass a GraphQL query string wrapped with the `gql` function into `useMutation` as the first parameter, when you call `useMutation` within a React component. When your component renders, `useMutation` will return a result tuple with a mutate function in the fist position, and an object with your mutation result (containing `loading`, `error`, `called` and `data` properties) in the second position. Let's look at an example:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
 
 ```jsx
-import gql from "graphql-tag";
-import { useMutation } from "@apollo/react-hooks";
+import gql from 'graphql-tag';
+import { useMutation } from '@apollo/react-hooks';
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {
@@ -45,7 +45,7 @@ function AddTodo() {
         onSubmit={e => {
           e.preventDefault();
           addTodo({ variables: { type: input.value } });
-          input.value = "";
+          input.value = '';
         }}
       >
         <input
@@ -64,8 +64,8 @@ function AddTodo() {
 <div data-language="Render Props (JavaScript)">
 
 ```jsx
-import gql from "graphql-tag";
-import { Mutation } from "@apollo/react-components";
+import gql from 'graphql-tag';
+import { Mutation } from '@apollo/react-components';
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {
@@ -87,7 +87,7 @@ const AddTodo = () => {
             onSubmit={e => {
               e.preventDefault();
               addTodo({ variables: { type: input.value } });
-              input.value = "";
+              input.value = '';
             }}
           >
             <input
@@ -107,7 +107,7 @@ const AddTodo = () => {
 </div>
 </MultiCodeBlock>
 
-First, create your GraphQL mutation, wrap it in `gql`, and pass it in as the first parameter to the `useMutation` Hook. When called, the `useMutation` Hook will return a tuple with a mutate function in the first position. This mutate function can be called to tell Apollo Client that you'd like to trigger a mutation. The mutate function optionally takes `variables`, `optimisticResponse`, `refetchQueries`, and `update`; however, you can also pass in those values as options to the `useMutation` Hook. In the example, notice how we use the mutate function (called `addTodo`) to submit the form with our variables.
+First, create your GraphQL mutation, wrap it in `gql`, and pass it in as the first parameter to the `useMutation` hook. When called, the `useMutation` hook will return a tuple with a mutate function in the first position. This mutate function can be called to tell Apollo Client that you'd like to trigger a mutation. The mutate function optionally takes `variables`, `optimisticResponse`, `refetchQueries`, and `update`; however, you can also pass in those values as options to the `useMutation` hook. In the example, notice how we use the mutate function (called `addTodo`) to submit the form with our variables.
 
 The value in the second position of the returned tuple is an object with your mutation result on the `data` property, as well as booleans for `loading` and if the mutate function was `called`, in addition to `error`. If you'd like to ignore the result of the mutation, pass `ignoreResults` as an option to `useMutation`.
 
@@ -123,7 +123,7 @@ The update function is called with the Apollo cache as the first argument. The c
 
 The second argument to the update function is an object with a data property containing your mutation result. If you specify an [optimistic response](/features/optimistic-ui/), your update function will be called twice: once with your optimistic result, and another time with your actual result. You can use your mutation result to update the cache with `cache.writeQuery`.
 
-Now that we've learned about the update function, let's implement one using the `useMutation` Hook.
+Now that we've learned about the update function, let's implement one using the `useMutation` hook.
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
@@ -201,7 +201,7 @@ const AddTodo = () => {
             onSubmit={e => {
               e.preventDefault();
               addTodo({ variables: { type: input.value } });
-              input.value = "";
+              input.value = '';
             }}
           >
             <input
@@ -256,7 +256,7 @@ function Todos() {
             e.preventDefault();
             updateTodo({ variables: { id, type: input.value } });
 
-            input.value = "";
+            input.value = '';
           }}
         >
           <input
@@ -304,7 +304,7 @@ const Todos = () => (
                     e.preventDefault();
                     updateTodo({ variables: { id, type: input.value } });
 
-                    input.value = "";
+                    input.value = '';
                   }}
                 >
                   <input
@@ -331,25 +331,20 @@ If you try updating a todo, you'll notice that the UI updates immediately. Even 
 
 ## Loading and error state
 
-How do we know that our mutation has completed? What happens when your mutation doesn't complete successfully? We need a way to track loading and error state. Luckily, the `useMutation` Hook allows you to do just that. Let's look at the `Todos` component from the previous example:
+How do we know that our mutation has completed? What happens when your mutation doesn't complete successfully? We need a way to track loading and error state. Luckily, the `useMutation` hook allows you to do just that. Let's look at the `Todos` component from the previous example:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
 
 ```jsx
 function Todos() {
-  const {
-    loading: queryLoading,
-    error: queryError,
-    data
-  } = useQuery(GET_TODOS);
+  const { loading: queryLoading, error: queryError, data } = useQuery(
+    GET_TODOS,
+  );
 
   const [
     updateTodo,
-    {
-      loading: mutationLoading,
-      error: mutationError
-    }
+    { loading: mutationLoading, error: mutationError },
   ] = useMutation(UPDATE_TODO);
 
   if (queryLoading) return <p>Loading...</p>;
@@ -366,7 +361,7 @@ function Todos() {
             e.preventDefault();
             updateTodo({ variables: { id, type: input.value } });
 
-            input.value = "";
+            input.value = '';
           }}
         >
           <input
@@ -407,7 +402,7 @@ const Todos = () => (
                     e.preventDefault();
                     updateTodo({ variables: { id, type: input.value } });
 
-                    input.value = "";
+                    input.value = '';
                   }}
                 >
                   <input
@@ -432,17 +427,17 @@ const Todos = () => (
 </div>
 </MultiCodeBlock>
 
-We can destructure `loading` and `error` properties off the mutation result returned by `useMutation`, in order to track the state of our mutation in our UI. The `useMutation` Hook also supports `onCompleted` and `onError` options in case you would like to provide callbacks instead. Additionally, the mutation result object also has a `called` boolean that tracks whether or not the mutate function has been called.
+We can destructure `loading` and `error` properties off the mutation result returned by `useMutation`, in order to track the state of our mutation in our UI. The `useMutation` hook also supports `onCompleted` and `onError` options in case you would like to provide callbacks instead. Additionally, the mutation result object also has a `called` boolean that tracks whether or not the mutate function has been called.
 
 ## useMutation API overview
 
-If you're looking for an overview of all the options `useMutation` accepts, and its result properties, look no further! Most `useMutation` calls will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `useMutation` Hook API in more detail with usage examples, visit our [reference guide](/api/react-apollo/).
+If you're looking for an overview of all the options `useMutation` accepts, and its result properties, look no further! Most `useMutation` calls will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `useMutation` hook API in more detail with usage examples, visit our [reference guide](/api/react-hooks/).
 
 > **Note:** If you're using React Apollo's `Mutation` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `mutation` prop (which holds a GraphQL mutation document parsed into an AST by `graphql-tag`) is also required.
 
 <h3>Options</h3>
 
-The `useMutation` Hook accepts the following options.
+The `useMutation` hook accepts the following options.
 
 <MutationOptions />
 
@@ -454,7 +449,7 @@ The `useMutation` result is a tuple with a `mutate` function in the first positi
 
 ## Next steps
 
-Learning how to leverage the `useMutation` Hook to update your data is an important part of developing applications with Apollo Client. Now that you're well-versed in updating data, why not try executing client-side mutations with Apollo Client's integrated local state management functionality? Here are some resources we think will help you level up your skills:
+Learning how to leverage the `useMutation` hook to update your data is an important part of developing applications with Apollo Client. Now that you're well-versed in updating data, why not try executing client-side mutations with Apollo Client's integrated local state management functionality? Here are some resources we think will help you level up your skills:
 
 - [Optimistic UI](/features/optimistic-ui/): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
 - [Local state](/essentials/local-state/): Manage your local state with Apollo by executing client-side mutations.

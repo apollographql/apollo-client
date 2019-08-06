@@ -1,11 +1,13 @@
 ---
-title: React SSR
-description: React Apollo SSR API reference
+title: "@apollo/react-ssr"
+description: API reference
 ---
 
-## Package
+## Installation
 
-Npm: [`@apollo/react-ssr`](https://www.npmjs.com/package/@apollo/react-ssr)
+```
+npm install @apollo/react-ssr
+```
 
 ## `getDataFromTree`
 

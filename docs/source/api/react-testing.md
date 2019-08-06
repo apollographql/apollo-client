@@ -1,11 +1,13 @@
 ---
-title: React Testing
-description: React Apollo Testing API reference
+title: "@apollo/react-testing"
+description: API reference
 ---
 
-## Package
+## Installation
 
-Npm: [`@apollo/react-testing`](https://www.npmjs.com/package/@apollo/react-testing)
+```
+npm install @apollo/react-testing
+```
 
 ## `MockedProvider`
 

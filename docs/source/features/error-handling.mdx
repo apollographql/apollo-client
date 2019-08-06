@@ -88,7 +88,7 @@ Any errors reported will come under an `error` prop along side the data returned
 
 When using Apollo Link, the ability to handle network errors is way more powerful. The best way to do this is to use the `apollo-link-error` to catch and handle server errors, network errors, and GraphQL errors. If you would like to combine with other links, see [composing links](https://www.apollographql.com/docs/link/composition).
 
-<h4>Usage</h4>
+#### Usage
 
 ```js
 import { onError } from "apollo-link-error";
@@ -105,7 +105,7 @@ const link = onError(({ graphQLErrors, networkError }) => {
 });
 ```
 
-<h4>Options</h4>
+#### Options
 
 Error Link takes a function that is called in the event of an error. This function is called with an object containing the following keys:
 
@@ -114,7 +114,7 @@ Error Link takes a function that is called in the event of an error. This functi
 - `graphQLErrors`: An array of errors from the GraphQL endpoint
 - `networkError`: any error during the link execution or server response
 
-<h4>Ignoring errors</h4>
+#### Ignoring errors
 
 If you want to conditionally ignore errors, you can set `response.errors = null;` within the error handler:
 

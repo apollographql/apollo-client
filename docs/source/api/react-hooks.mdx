@@ -86,7 +86,7 @@ const GET_GREETING = gql`
 `;
 
 function Hello() {
-  const [loadGreeting, { called, loading, data } = useQuery(
+  const [loadGreeting, { called, loading, data } = useLazyQuery(
     GET_GREETING,
     { variables: { language: "english" } }
   );

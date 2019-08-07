@@ -537,6 +537,9 @@ function assertSelectionSetForIdValue(
   field: FieldNode,
   value: any,
 ) {
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
   if (!field.selectionSet && isReference(value)) {
     throw new InvariantError(
       `Missing selection set for object of type ${

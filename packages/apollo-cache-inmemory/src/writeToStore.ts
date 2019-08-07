@@ -19,6 +19,7 @@ import {
   shouldInclude,
   storeKeyNameFromField,
   StoreValue,
+  DeepMerger,
 } from 'apollo-utilities';
 
 import { invariant } from 'ts-invariant';
@@ -297,48 +298,45 @@ export class StoreWriter {
   }
 }
 
-const { hasOwnProperty } = Object.prototype;
-
 function mergeStoreObjects(
   store: NormalizedCache,
   existing: StoreObject,
   incoming: StoreObject,
 ): StoreObject {
-  return mergeHelper(store, existing, incoming);
-}
+  return new DeepMerger(function(existingObject, incomingObject, property) {
+    // In the future, reconciliation logic may depend on the type of the parent
+    // StoreObject, not just the values of the given property.
+    const existing = existingObject[property];
+    const incoming = incomingObject[property];
 
-function mergeHelper(
-  store: NormalizedCache,
-  existing: any,
-  incoming: any,
-): any {
-  if (existing && incoming && existing !== incoming) {
-    if (isReference(incoming)) {
-      if (isReference(existing)) {
-        // Incoming references always overwrite existing references.
+    if (
+      existing !== incoming &&
+      // The DeepMerger class has various helpful utilities that we might as
+      // well reuse here.
+      this.isObject(existing) &&
+      this.isObject(incoming)
+    ) {
+      const eType = getTypenameFromStoreObject(existing);
+      const iType = getTypenameFromStoreObject(incoming);
+      // If both objects have a typename and the typename is different, let the
+      // incoming object win. The typename can change when a different subtype
+      // of a union or interface is written to the cache.
+      if (
+        typeof eType === 'string' &&
+        typeof iType === 'string' &&
+        eType !== iType
+      ) {
         return incoming;
       }
-      // Incoming references merge with some existing non-reference data.
-      store.set(
-        incoming.id,
-        mergeHelper(store, existing, store.get(incoming.id)),
-      );
-      return incoming;
-    }
 
-    if (typeof incoming === 'object') {
-      if (typeof existing !== 'object') {
-        return incoming;
-      }
-
-      const eTypename = isReference(existing) && existing.typename || existing.__typename;
-      const iTypename = isReference(incoming) && incoming.typename || incoming.__typename;
-      const hadTypename = typeof eTypename === 'string';
-      const hasTypename = typeof iTypename === 'string';
-
-      // The typename can change when a different subtype of a union or interface
-      // is written to the cache.
-      if (hadTypename && hasTypename && eTypename !== iTypename) {
+      if (isReference(incoming)) {
+        if (isReference(existing)) {
+          // Incoming references always overwrite existing references.
+          return incoming;
+        }
+        // Incoming references can be merged with existing non-reference data
+        // if the existing data appears to be of a compatible type.
+        store.set(incoming.id, this.merge(existing, store.get(incoming.id)));
         return incoming;
       }
 
@@ -347,29 +345,19 @@ function mergeHelper(
         `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.id} for this object.`,
       );
 
-      let merged: any;
-
-      if (Array.isArray(incoming)) {
-        if (!Array.isArray(existing)) {
-          return incoming;
-        }
-        merged = existing.slice(0);
-      } else {
-        merged = { ...existing };
-      }
-
-      Object.keys(incoming).forEach(storeFieldName => {
-        const incomingChild = incoming[storeFieldName];
-        merged[storeFieldName] = hasOwnProperty.call(existing, storeFieldName)
-          ? mergeHelper(store, existing[storeFieldName], incomingChild)
-          : incomingChild;
-      });
-
-      return merged;
+      return this.merge(existing, incoming);
     }
-  }
 
-  return incoming;
+    return incoming;
+  }).merge(existing, incoming);
+}
+
+function getTypenameFromStoreObject(
+  storeObject: StoreObject,
+): string | undefined {
+  return isReference(storeObject)
+    && storeObject.typename
+    || storeObject.__typename;
 }
 
 function isDataProcessed(

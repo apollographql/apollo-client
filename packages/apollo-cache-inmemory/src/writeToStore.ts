@@ -330,10 +330,8 @@ function mergeStoreObjects(
       }
 
       if (isReference(incoming)) {
-        if (isReference(existing)) {
-          // Incoming references always overwrite existing references.
-          return incoming;
-        }
+        // Incoming references always overwrite existing references.
+        if (isReference(existing)) return incoming;
         // Incoming references can be merged with existing non-reference data
         // if the existing data appears to be of a compatible type.
         store.set(incoming.id, this.merge(existing, store.get(incoming.id)));
@@ -344,6 +342,15 @@ function mergeStoreObjects(
         !isReference(existing),
         `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.id} for this object.`,
       );
+
+      if (Array.isArray(incoming)) {
+        if (!Array.isArray(existing)) return incoming;
+        if (existing.length > incoming.length) {
+          // Allow the incoming array to truncate the existing array, if the
+          // incoming array is shorter.
+          return this.merge(existing.slice(0, incoming.length), incoming);
+        }
+      }
 
       return this.merge(existing, incoming);
     }

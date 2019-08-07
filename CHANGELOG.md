@@ -5,7 +5,8 @@
 ### Apollo Client (vNext)
 
 - Documentation updates.  </br>
-  [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132) 
+  [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5141](https://github.com/apollographql/apollo-client/pull/5141)
 
 
 ## Apollo Client (2.6.3)

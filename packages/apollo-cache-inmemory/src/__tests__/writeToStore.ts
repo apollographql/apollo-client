@@ -1497,10 +1497,9 @@ describe('writing to the store', () => {
         ],
       };
 
-      const newStore = writer.writeResultToStore({
-        dataId: 'ROOT_QUERY',
+      const newStore = writer.writeQueryToStore({
+        query,
         result,
-        document: query,
         dataIdFromObject: getIdField,
       });
 
@@ -1522,10 +1521,9 @@ describe('writing to the store', () => {
       });
 
       return withWarning(() => {
-        const newStore = writer.writeResultToStore({
-          dataId: 'ROOT_QUERY',
+        const newStore = writer.writeQueryToStore({
+          query,
           result,
-          document: query,
           dataIdFromObject: getIdField,
         });
 
@@ -1578,10 +1576,9 @@ describe('writing to the store', () => {
       });
 
       return withWarning(() => {
-        const newStore = writer.writeResultToStore({
-          dataId: 'ROOT_QUERY',
+        const newStore = writer.writeQueryToStore({
+          query: queryWithInterface,
           result,
-          document: queryWithInterface,
           dataIdFromObject: getIdField,
         });
 
@@ -1605,10 +1602,9 @@ describe('writing to the store', () => {
       });
 
       return withWarning(() => {
-        const newStore = writer.writeResultToStore({
-          dataId: 'ROOT_QUERY',
+        const newStore = writer.writeQueryToStore({
+          query: addTypenameToDocument(query),
           result,
-          document: addTypenameToDocument(query),
           dataIdFromObject: getIdField,
         });
 
@@ -1621,10 +1617,9 @@ describe('writing to the store', () => {
         todos: null,
       };
 
-      const newStore = writer.writeResultToStore({
-        dataId: 'ROOT_QUERY',
+      const newStore = writer.writeQueryToStore({
+        query,
         result,
-        document: query,
         dataIdFromObject: getIdField,
       });
 
@@ -1643,10 +1638,9 @@ describe('writing to the store', () => {
         id: 1,
       };
 
-      const newStore = writer.writeResultToStore({
-        dataId: 'ROOT_QUERY',
+      const newStore = writer.writeQueryToStore({
+        query: defered,
         result,
-        document: defered,
         dataIdFromObject: getIdField,
       });
 
@@ -1690,22 +1684,21 @@ describe('writing to the store', () => {
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      writer.writeResultToStore({
+      writer.writeQueryToStore({
         store,
-        result: {
-          item: {
-            __typename: 'Item',
-            stringField: 'This is still a string!',
-          },
-        },
-        dataId: 'ROOT_QUERY',
-        document: gql`
+        query: gql`
           query {
             item {
               stringField
             }
           }
         `,
+        result: {
+          item: {
+            __typename: 'Item',
+            stringField: 'This is still a string!',
+          },
+        },
         dataIdFromObject: getIdField,
       });
     }).toThrowError(/stringField(.|\n)*abcd/g);

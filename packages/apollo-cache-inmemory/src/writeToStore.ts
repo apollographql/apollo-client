@@ -81,44 +81,19 @@ export class StoreWriter {
   public writeQueryToStore({
     query,
     result,
-    store = defaultNormalizedCacheFactory(),
-    variables,
-    dataIdFromObject,
-  }: {
-    query: DocumentNode;
-    result: Object;
-    store?: NormalizedCache;
-    variables?: Object;
-    dataIdFromObject?: IdGetter;
-  }): NormalizedCache {
-    return this.writeResultToStore({
-      dataId: 'ROOT_QUERY',
-      result,
-      document: query,
-      store,
-      variables,
-      dataIdFromObject,
-    });
-  }
-
-  public writeResultToStore({
-    dataId,
-    result,
-    document,
+    dataId = 'ROOT_QUERY',
     store = defaultNormalizedCacheFactory(),
     variables,
     dataIdFromObject = defaultDataIdFromObject,
   }: {
-    dataId: string;
-    result: any;
-    document: DocumentNode;
+    query: DocumentNode;
+    result: Object;
+    dataId?: string;
     store?: NormalizedCache;
     variables?: Object;
     dataIdFromObject?: IdGetter;
   }): NormalizedCache {
-    // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
-    const operationDefinition = getOperationDefinition(document)!;
-
+    const operationDefinition = getOperationDefinition(query)!;
     try {
       return this.writeSelectionSetToStore({
         result,
@@ -133,11 +108,11 @@ export class StoreWriter {
             variables,
           ),
           dataIdFromObject,
-          fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+          fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         },
       });
     } catch (e) {
-      throw enhanceErrorWithDocument(e, document);
+      throw enhanceErrorWithDocument(e, query);
     }
   }
 

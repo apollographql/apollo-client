@@ -147,10 +147,7 @@ describe('mergeDeep', function() {
         }
         return [...targetValue, ...sourceValue];
       }
-      return this.merge(
-        this.shallowCopyForMerge(targetValue),
-        sourceValue,
-      );
+      return this.merge(targetValue, sourceValue);
     });
 
     expect(merger.merge(

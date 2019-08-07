@@ -47,7 +47,7 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
 
 export type WriteContext = {
   readonly store: NormalizedCache;
-  readonly processedData?: { [x: string]: FieldNode[] };
+  readonly processedData: { [x: string]: Set<FieldNode> };
   readonly variables?: any;
   readonly dataIdFromObject?: IdGetter;
   readonly fragmentMap?: FragmentMap;
@@ -344,22 +344,15 @@ function getTypenameFromStoreObject(
 
 function isDataProcessed(
   dataId: string,
-  field: FieldNode | SelectionSetNode,
-  processedData?: { [x: string]: (FieldNode | SelectionSetNode)[] },
+  field: FieldNode,
+  processedData: { [x: string]: Set<typeof field> },
 ): boolean {
-  if (!processedData) {
-    return false;
-  }
-
-  if (processedData[dataId]) {
-    if (processedData[dataId].indexOf(field) >= 0) {
-      return true;
-    } else {
-      processedData[dataId].push(field);
-    }
+  const fieldSet = processedData[dataId];
+  if (fieldSet) {
+    if (fieldSet.has(field)) return true;
+    fieldSet.add(field);
   } else {
-    processedData[dataId] = [field];
+    processedData[dataId] = new Set([field]);
   }
-
   return false;
 }

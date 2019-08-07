@@ -1089,6 +1089,7 @@ describe('writing to the store', () => {
               result: cloneDeep(result),
               context: {
                 store: defaultNormalizedCacheFactory(),
+                processedData: {},
                 variables,
                 dataIdFromObject: () => '5',
               },

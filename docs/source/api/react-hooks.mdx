@@ -1,0 +1,289 @@
+---
+title: '@apollo/react-hooks'
+description: API reference
+---
+
+import QueryOptions from '../../shared/query-options.mdx';
+import QueryResult from '../../shared/query-result.mdx';
+import MutationOptions from '../../shared/mutation-options.mdx';
+import MutationResult from '../../shared/mutation-result.mdx';
+import SubscriptionOptions from '../../shared/subscription-options.mdx';
+import SubscriptionResult from '../../shared/subscription-result.mdx';
+import ApolloProvider from '../../shared/subscription-result.mdx';
+
+## Installation
+
+```
+npm install @apollo/react-hooks
+```
+
+## `useQuery`
+
+<h3>Example</h3>
+
+```jsx
+import { useQuery } from '@apollo/react-hooks';
+import gql from 'graphql-tag';
+
+const GET_GREETING = gql`
+  query getGreeting($language: String!) {
+    greeting(language: $language) {
+      message
+    }
+  }
+`;
+
+function Hello() {
+  const { loading, error, data } = useQuery(GET_GREETING, {
+    variables: { language: 'english' },
+  });
+  if (loading) return <p>Loading ...</p>;
+  return <h1>Hello {data.greeting.message}!</h1>;
+}
+```
+
+> Refer to the [Queries](/essentials/queries/) section for a more in-depth overview of `useQuery`.
+
+<h3>Function Signature</h3>
+
+```ts
+function useQuery<TData = any, TVariables = OperationVariables>(
+  query: DocumentNode,
+  options?: QueryHookOptions<TData, TVariables>,
+): QueryResult<TData, TVariables> {}
+```
+
+<h3>Params</h3>
+
+**`query`**
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | DocumentNode | A GraphQL query document parsed into an AST by `graphql-tag`. |
+
+**`options`**
+
+<QueryOptions />
+
+<h3>Result</h3>
+
+<QueryResult />
+
+## `useLazyQuery`
+
+<h3>Example</h3>
+
+```jsx
+import { useLazyQuery } from "@apollo/react-hooks";
+import gql from "graphql-tag";
+
+const GET_GREETING = gql`
+  query getGreeting($language: String!) {
+    greeting(language: $language) {
+      message
+    }
+  }
+`;
+
+function Hello() {
+  const [loadGreeting, { called, loading, data } = useLazyQuery(
+    GET_GREETING,
+    { variables: { language: "english" } }
+  );
+  if (called && loading) return <p>Loading ...</p>
+  if (!called) {
+    return <button onClick={() => loadGreeting()}>Load greeting</button>
+  }
+  return <h1>Hello {data.greeting.message}!</h1>;
+}
+```
+
+> Refer to the [Queries](/essentials/queries/) section for a more in-depth overview of `useLazyQuery`.
+
+<h3>Function Signature</h3>
+
+```ts
+function useLazyQuery<TData = any, TVariables = OperationVariables>(
+  query: DocumentNode,
+  options?: LazyQueryHookOptions<TData, TVariables>,
+): [
+  (options?: QueryLazyOptions<TVariables>) => void,
+  QueryResult<TData, TVariables>
+] {}
+```
+
+<h3>Params</h3>
+
+**`query`**
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | DocumentNode | A GraphQL query document parsed into an AST by `graphql-tag`. |
+
+**`options`**
+
+<QueryOptions />
+
+<h3>Result</h3>
+
+**Execute function**
+
+| Param            | Type                                                  | Description                                                                                                                     |
+| ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Execute function | options?: QueryLazyOptions&lt;TVariables&gt;) => void | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. |
+
+**Result object**
+
+<QueryResult />
+
+## `useMutation`
+
+<h3>Example</h3>
+
+```jsx
+import { useMutation } from '@apollo/react-hooks';
+import gql from 'graphql-tag';
+
+const ADD_TODO = gql`
+  mutation AddTodo($type: String!) {
+    addTodo(type: $type) {
+      id
+      type
+    }
+  }
+`;
+
+function AddTodo() {
+  let input;
+  const [addTodo, { data }] = useMutation(ADD_TODO);
+
+  return (
+    <div>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          addTodo({ variables: { type: input.value } });
+          input.value = '';
+        }}
+      >
+        <input
+          ref={node => {
+            input = node;
+          }}
+        />
+        <button type="submit">Add Todo</button>
+      </form>
+    </div>
+  );
+}
+```
+
+> Refer to the [Mutations](/essentials/mutations/) section for a more in-depth overview of `useMutation`.
+
+<h3>Function Signature</h3>
+
+```ts
+function useMutation<TData = any, TVariables = OperationVariables>(
+  mutation: DocumentNode,
+  options?: MutationHookOptions<TData, TVariables>,
+): MutationTuple<TData, TVariables> {}
+```
+
+<h3>Params</h3>
+
+**`mutation`**
+
+| Param      | Type         | Description                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------- |
+| `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `graphql-tag`. |
+
+**`options`**
+
+<MutationOptions />
+
+<h3>Result</h3>
+
+<MutationResult />
+
+## `useSubscription`
+
+<h3>Example</h3>
+
+```jsx
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription onCommentAdded($repoFullName: String!) {
+    commentAdded(repoFullName: $repoFullName) {
+      id
+      content
+    }
+  }
+`;
+
+function DontReadTheComments({ repoFullName }) {
+  const {
+    data: { commentAdded },
+    loading,
+  } = useSubscription(COMMENTS_SUBSCRIPTION, { variables: { repoFullName } });
+  return <h4>New comment: {!loading && commentAdded.content}</h4>;
+}
+```
+
+> Refer to the [Subscriptions](/advanced/subscriptions/) section for a more in-depth overview of `useSubscription`.
+
+<h3>Function Signature</h3>
+
+```ts
+function useSubscription<TData = any, TVariables = OperationVariables>(
+  subscription: DocumentNode,
+  options?: SubscriptionHookOptions<TData, TVariables>,
+): {
+  variables: TVariables;
+  loading: boolean;
+  data?: TData;
+  error?: ApolloError;
+} {}
+```
+
+<h3>Params</h3>
+
+**`subscription`**
+
+| Param          | Type         | Description                                                          |
+| -------------- | ------------ | -------------------------------------------------------------------- |
+| `subscription` | DocumentNode | A GraphQL subscription document parsed into an AST by `graphql-tag`. |
+
+**`options`**
+
+<SubscriptionOptions />
+
+<h3>Result</h3>
+
+<SubscriptionResult />
+
+## `useApolloClient`
+
+<h3>Example</h3>
+
+```jsx
+function SomeComponent() {
+  const client = useApolloClient();
+  // `client` is now set to the `ApolloClient` instance being used by the
+  // application (that was configured using something like `ApolloProvider`)
+}
+```
+
+<h3>Function Signature</h3>
+
+```ts
+function useApolloClient(): ApolloClient<object> {}
+```
+
+<h3>Result</h3>
+
+| Param                  | Type                       | Description                                                |
+| ---------------------- | -------------------------- | ---------------------------------------------------------- |
+| Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
+
+### `ApolloProvider`
+
+<ApolloProvider />

@@ -35,13 +35,13 @@ export function mergeDeep<T extends any[]>(
 // element type, which works perfectly when the sources array has a
 // consistent element type.
 export function mergeDeepArray<T>(sources: T[]): T {
-  let target = sources[0] || {} as T;
+  let target = sources[0] || ({} as T);
   const count = sources.length;
   if (count > 1) {
-    const pastCopies: any[] = [];
-    target = shallowCopyForMerge(target, pastCopies);
+    const merger = new DeepMerger();
+    target = merger.shallowCopyForMerge(target);
     for (let i = 1; i < count; ++i) {
-      target = mergeHelper(target, sources[i], pastCopies);
+      target = merger.merge(target, sources[i]);
     }
   }
   return target;
@@ -51,65 +51,62 @@ function isObject(obj: any): obj is Record<string | number, any> {
   return obj !== null && typeof obj === 'object';
 }
 
-function mergeHelper(
-  target: any,
-  source: any,
-  pastCopies: any[],
+function defaultReconciler(
+  this: DeepMerger,
+  target: Record<string | number, any>,
+  source: Record<string | number, any>,
+  property: string | number,
 ) {
-  if (isObject(source) && isObject(target)) {
-    // In case the target has been frozen, make an extensible copy so that
-    // we can merge properties into the copy.
-    if (Object.isExtensible && !Object.isExtensible(target)) {
-      target = shallowCopyForMerge(target, pastCopies);
-    }
-
-    Object.keys(source).forEach(sourceKey => {
-      const sourceValue = source[sourceKey];
-      if (hasOwnProperty.call(target, sourceKey)) {
-        const targetValue = target[sourceKey];
-        if (sourceValue !== targetValue) {
-          // When there is a key collision, we need to make a shallow copy of
-          // target[sourceKey] so the merge does not modify any source objects.
-          // To avoid making unnecessary copies, we use a simple array to track
-          // past copies, since it's safe to modify copies created earlier in
-          // the merge. We use an array for pastCopies instead of a Map or Set,
-          // since the number of copies should be relatively small, and some
-          // Map/Set polyfills modify their keys.
-          target[sourceKey] = mergeHelper(
-            shallowCopyForMerge(targetValue, pastCopies),
-            sourceValue,
-            pastCopies,
-          );
-        }
-      } else {
-        // If there is no collision, the target can safely share memory with
-        // the source, and the recursion can terminate here.
-        target[sourceKey] = sourceValue;
-      }
-    });
-
-    return target;
-  }
-
-  // If source (or target) is not an object, let source replace target.
-  return source;
+  return this.merge(target[property], source[property]);
 }
 
-function shallowCopyForMerge<T>(value: T, pastCopies: any[]): T {
-  if (
-    value !== null &&
-    typeof value === 'object' &&
-    pastCopies.indexOf(value) < 0
-  ) {
-    if (Array.isArray(value)) {
-      value = (value as any).slice(0);
-    } else {
-      value = {
-        __proto__: Object.getPrototypeOf(value),
-        ...value,
-      };
+export class DeepMerger {
+  private pastCopies: any[] = [];
+
+  constructor(private reconciler = defaultReconciler) {}
+
+  public merge(target: any, source: any): any {
+    if (isObject(source) && isObject(target)) {
+      // Make a shallow copy of target so that we can merge properties into it.
+      target = this.shallowCopyForMerge(target);
+
+      Object.keys(source).forEach(sourceKey => {
+        if (hasOwnProperty.call(target, sourceKey)) {
+          if (source[sourceKey] !== target[sourceKey]) {
+            target[sourceKey] = this.reconciler(target, source, sourceKey);
+          }
+        } else {
+          // If there is no collision, the target can safely share memory with
+          // the source, and the recursion can terminate here.
+          target[sourceKey] = source[sourceKey];
+        }
+      });
+
+      return target;
     }
-    pastCopies.push(value);
+
+    // If source (or target) is not an object, let source replace target.
+    return source;
   }
-  return value;
+
+  public isObject = isObject;
+
+  public shallowCopyForMerge<T>(value: T): T {
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      this.pastCopies.indexOf(value) < 0
+    ) {
+      if (Array.isArray(value)) {
+        value = (value as any).slice(0);
+      } else {
+        value = {
+          __proto__: Object.getPrototypeOf(value),
+          ...value,
+        };
+      }
+      this.pastCopies.push(value);
+    }
+    return value;
+  }
 }

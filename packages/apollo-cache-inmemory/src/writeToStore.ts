@@ -30,6 +30,7 @@ import { defaultNormalizedCacheFactory } from './depTrackingCache';
 import { IdGetter, NormalizedCache } from './types';
 import { fragmentMatches } from './fragments';
 import { makeReference, isReference } from './references';
+import { defaultDataIdFromObject } from './inMemoryCache';
 
 export class WriteError extends Error {
   public type = 'WriteError';
@@ -107,7 +108,7 @@ export class StoreWriter {
     document,
     store = defaultNormalizedCacheFactory(),
     variables,
-    dataIdFromObject,
+    dataIdFromObject = defaultDataIdFromObject,
   }: {
     dataId: string;
     result: any;

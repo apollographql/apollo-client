@@ -777,15 +777,15 @@ describe('reading from the store', () => {
           books: [
             {
               title: 'The Bluest Eye',
-              publisher: makeReference('Publisher1', 'Publisher'),
+              publisher: makeReference('Publisher1'),
             },
             {
               title: 'Song of Solomon',
-              publisher: makeReference('Publisher2', 'Publisher'),
+              publisher: makeReference('Publisher2'),
             },
             {
               title: 'Beloved',
-              publisher: makeReference('Publisher2', 'Publisher'),
+              publisher: makeReference('Publisher2'),
             },
           ],
         },

@@ -1163,7 +1163,7 @@ describe('writing to the store', () => {
       };
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
-          author: makeReference(dataIdFromObject(data.author), 'Author'),
+          author: makeReference(dataIdFromObject(data.author)),
         },
         [dataIdFromObject(data.author)!]: {
           firstName: data.author.firstName,
@@ -1203,7 +1203,7 @@ describe('writing to the store', () => {
       };
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
-          author: makeReference(dataIdFromObject(data.author), 'Author'),
+          author: makeReference(dataIdFromObject(data.author)),
         },
         [dataIdFromObject(data.author)!]: {
           __typename: data.author.__typename,
@@ -1280,7 +1280,7 @@ describe('writing to the store', () => {
         __typename: 'Author',
       },
       ROOT_QUERY: {
-        author: makeReference('Author__129', 'Author'),
+        author: makeReference('Author__129'),
       },
     });
     const storeWithoutId = writer.writeQueryToStore({
@@ -1351,7 +1351,7 @@ describe('writing to the store', () => {
         __typename: 'Author',
       },
       ROOT_QUERY: {
-        author: makeReference('Author__129', 'Author'),
+        author: makeReference('Author__129'),
       },
     });
 
@@ -1616,7 +1616,7 @@ describe('writing to the store', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         __typename: 'Query',
-        item: makeReference('abcd', 'Item'),
+        item: makeReference('abcd'),
       },
       abcd: {
         id: 'abcd',
@@ -1856,7 +1856,7 @@ describe('writing to the store', () => {
       ROOT_QUERY: {
         animals: [
           {
-            species: makeReference('Dog__dog-species', 'Dog'),
+            species: makeReference('Dog__dog-species'),
           },
         ],
       },

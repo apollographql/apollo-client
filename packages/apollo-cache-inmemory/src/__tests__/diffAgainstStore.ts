@@ -952,8 +952,7 @@ describe('diffing queries against the store', () => {
 
       const cacheRedirects = {
         Query: {
-          person: (_: any, args: any) =>
-            makeReference(args['id'], 'Person')
+          person: (_: any, args: any) => makeReference(args['id'])
         },
       };
 

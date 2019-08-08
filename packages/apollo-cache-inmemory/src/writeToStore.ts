@@ -22,13 +22,17 @@ import {
   DeepMerger,
 } from 'apollo-utilities';
 
-import { invariant } from 'ts-invariant';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import { defaultNormalizedCacheFactory } from './depTrackingCache';
 
 import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';
-import { makeReference, isReference } from './references';
+import {
+  makeReference,
+  isReference,
+  getTypenameFromStoreObject,
+} from './references';
 import { defaultDataIdFromObject } from './inMemoryCache';
 
 export class WriteError extends Error {
@@ -259,7 +263,7 @@ export class StoreWriter {
             context,
           });
         }
-        return makeReference(dataId, value.__typename);
+        return makeReference(dataId);
       }
     }
 
@@ -289,8 +293,8 @@ function mergeStoreObjects(
       this.isObject(existing) &&
       this.isObject(incoming)
     ) {
-      const eType = getTypenameFromStoreObject(existing);
-      const iType = getTypenameFromStoreObject(incoming);
+      const eType = getTypenameFromStoreObject(store, existing);
+      const iType = getTypenameFromStoreObject(store, incoming);
       // If both objects have a typename and the typename is different, let the
       // incoming object win. The typename can change when a different subtype
       // of a union or interface is written to the cache.
@@ -307,14 +311,16 @@ function mergeStoreObjects(
         if (isReference(existing)) return incoming;
         // Incoming references can be merged with existing non-reference data
         // if the existing data appears to be of a compatible type.
-        store.set(incoming.id, this.merge(existing, store.get(incoming.id)));
+        store.set(
+          incoming.__ref,
+          this.merge(existing, store.get(incoming.__ref)),
+        );
         return incoming;
+      } else if (isReference(existing)) {
+        throw new InvariantError(
+          `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
+        );
       }
-
-      invariant(
-        !isReference(existing),
-        `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.id} for this object.`,
-      );
 
       if (Array.isArray(incoming)) {
         if (!Array.isArray(existing)) return incoming;
@@ -330,14 +336,6 @@ function mergeStoreObjects(
 
     return incoming;
   }).merge(existing, incoming);
-}
-
-function getTypenameFromStoreObject(
-  storeObject: StoreObject,
-): string | undefined {
-  return isReference(storeObject)
-    && storeObject.typename
-    || storeObject.__typename;
 }
 
 function isDataProcessed(

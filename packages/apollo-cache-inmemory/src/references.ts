@@ -1,18 +1,22 @@
-import { IdValue } from 'apollo-utilities';
+import { NormalizedCache, StoreObject } from './types';
 
-export class Reference implements Readonly<IdValue> {
-  public readonly type = 'id';
-  public readonly generated = false;
-  constructor(
-    public readonly id: string,
-    public readonly typename: string | undefined,
-  ) {}
+export interface Reference {
+  __ref: string;
 }
 
-export function makeReference(id: string, typename?: string): Reference {
-  return new Reference(id, typename);
+export function makeReference(id: string): Reference {
+  return { __ref: String(id) };
 }
 
 export function isReference(obj: any): obj is Reference {
-  return obj instanceof Reference;
+  return obj && typeof obj === 'object' && typeof obj.__ref === 'string';
+}
+
+export function getTypenameFromStoreObject(
+  store: NormalizedCache,
+  storeObject: StoreObject | Reference,
+): string | undefined {
+  return isReference(storeObject)
+    ? getTypenameFromStoreObject(store, store.get(storeObject.__ref))
+    : storeObject.__typename;
 }

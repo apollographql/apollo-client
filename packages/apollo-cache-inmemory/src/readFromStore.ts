@@ -29,6 +29,7 @@ import {
   DiffQueryAgainstStoreOptions,
   ReadQueryOptions,
   StoreObject,
+  NormalizedCache,
 } from './types';
 
 import {
@@ -43,7 +44,12 @@ import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
 import { invariant, InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
-import { isReference, makeReference, Reference } from './references';
+import {
+  isReference,
+  makeReference,
+  Reference,
+  getTypenameFromStoreObject,
+} from './references';
 
 export type VariableMap = { [name: string]: any };
 
@@ -132,7 +138,7 @@ export class StoreReader {
             contextValue.store,
             query,
             JSON.stringify(variableValues),
-            isReference(objectOrReference) ? objectOrReference.id : objectOrReference,
+            isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
           );
         }
       }
@@ -151,7 +157,7 @@ export class StoreReader {
             execContext.contextValue.store,
             selectionSet,
             JSON.stringify(execContext.variableValues),
-            isReference(objectOrReference) ? objectOrReference.id : objectOrReference,
+            isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
           );
         }
       }
@@ -229,7 +235,7 @@ export class StoreReader {
     const execResult = this.executeStoreQuery({
       query,
       objectOrReference: rootId === 'ROOT_QUERY'
-        ? makeReference('ROOT_QUERY', 'Query')
+        ? makeReference('ROOT_QUERY')
         : store.get(rootId) || makeReference(rootId),
       contextValue: context,
       variableValues: variables,
@@ -316,10 +322,10 @@ export class StoreReader {
     let object: StoreObject;
     let typename: string;
     if (isReference(objectOrReference)) {
-      object = execContext.contextValue.store.get(objectOrReference.id);
+      object = execContext.contextValue.store.get(objectOrReference.__ref);
       typename =
         (object && object.__typename) ||
-        (objectOrReference.id === 'ROOT_QUERY' && 'Query');
+        (objectOrReference.__ref === 'ROOT_QUERY' && 'Query');
     } else {
       object = objectOrReference;
       typename = object && object.__typename;
@@ -440,7 +446,7 @@ export class StoreReader {
     // Handle all scalar types here
     if (!field.selectionSet) {
       if (process.env.NODE_ENV !== 'production') {
-        assertSelectionSetForIdValue(field, readStoreResult.result);
+        assertSelectionSetForIdValue(contextValue.store, field, readStoreResult.result);
         if (this.freezeResults) {
           maybeDeepFreeze(readStoreResult);
         }
@@ -523,7 +529,7 @@ export class StoreReader {
       }
 
       if (process.env.NODE_ENV !== 'production') {
-        assertSelectionSetForIdValue(field, item);
+        assertSelectionSetForIdValue(execContext.contextValue.store, field, item);
       }
 
       return item;
@@ -538,6 +544,7 @@ export class StoreReader {
 }
 
 function assertSelectionSetForIdValue(
+  store: NormalizedCache,
   field: FieldNode,
   fieldValue: any,
 ) {
@@ -548,7 +555,7 @@ function assertSelectionSetForIdValue(
       if (isReference(nestedValue)) {
         throw new InvariantError(
           `Missing selection set for object of type ${
-            nestedValue.typename
+            getTypenameFromStoreObject(store, nestedValue)
           } returned for query field ${field.name.value}`,
         )
       }
@@ -600,7 +607,7 @@ function readStoreResolver(
           fieldValue = resolver(object, args, {
             getCacheKey(storeObj: StoreObject) {
               const id = context.dataIdFromObject!(storeObj);
-              return id && makeReference(id, storeObj.__typename);
+              return id && makeReference(id);
             },
           });
         }

@@ -817,5 +817,48 @@ describe('reading from the store', () => {
     }).toThrow(
       /Missing selection set for object of type Publisher returned for query field books/,
     );
+
+    expect(
+      reader.readQueryFromStore({
+        store,
+        query: gql`
+          {
+            author {
+              name
+              books {
+                title
+                publisher {
+                  name
+                }
+              }
+            }
+          }
+        `,
+      }),
+    ).toEqual({
+      author: {
+        name: 'Toni Morrison',
+        books: [
+          {
+            title: 'The Bluest Eye',
+            publisher: {
+              name: 'Holt, Rinehart and Winston',
+            },
+          },
+          {
+            title: 'Song of Solomon',
+            publisher: {
+              name: 'Alfred A. Knopf, Inc.',
+            },
+          },
+          {
+            title: 'Beloved',
+            publisher: {
+              name: 'Alfred A. Knopf, Inc.',
+            },
+          },
+        ],
+      },
+    });
   });
 });

@@ -1,10 +1,4 @@
-import {
-  SelectionSetNode,
-  FieldNode,
-  DocumentNode,
-  InlineFragmentNode,
-  FragmentDefinitionNode,
-} from 'graphql';
+import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
 
 import {
   assign,
@@ -12,14 +6,15 @@ import {
   FragmentMap,
   getDefaultValues,
   getFragmentDefinitions,
+  getFragmentFromSelection,
   getOperationDefinition,
   isField,
-  isInlineFragment,
   resultKeyNameFromField,
   shouldInclude,
   storeKeyNameFromField,
   StoreValue,
   DeepMerger,
+  getTypenameFromResult,
 } from 'apollo-utilities';
 
 import { invariant, InvariantError } from 'ts-invariant';
@@ -132,27 +127,19 @@ export class StoreWriter {
     context: WriteContext;
   }): NormalizedCache {
     const { store } = context;
-    const storeObject = store.get(dataId);
-    const typename = dataId === 'ROOT_QUERY' ? 'Query' :
-      (result && result.__typename) ||
-      (storeObject && storeObject.__typename);
-
     const newFields = this.processSelectionSet({
       result,
-      typename,
       selectionSet,
       context,
     });
-
     store.set(dataId, mergeStoreObjects(store, store.get(dataId), newFields));
-
     return store;
   }
 
   private processSelectionSet({
     result,
     selectionSet,
-    typename = result && result.__typename,
+    typename,
     context,
   }: {
     result: any;
@@ -205,16 +192,17 @@ export class StoreWriter {
           );
         }
       } else {
-        // This is not a field, so it must be a fragment, either inline or named
-        let fragment: InlineFragmentNode | FragmentDefinitionNode;
+        // If the typename of the object we're processing was not provided,
+        // compute it lazily.
+        typename =
+          typename ||
+          getTypenameFromResult(result, selectionSet, context.fragmentMap);
 
-        if (isInlineFragment(selection)) {
-          fragment = selection;
-        } else {
-          // Named fragment
-          fragment = (context.fragmentMap || {})[selection.name.value];
-          invariant(fragment, `No fragment named ${selection.name.value}.`);
-        }
+        // This is not a field, so it must be a fragment, either inline or named
+        const fragment = getFragmentFromSelection(
+          selection,
+          context.fragmentMap,
+        );
 
         const match = fragmentMatches(
           fragment,

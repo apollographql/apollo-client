@@ -3,6 +3,8 @@ import {
   OperationDefinitionNode,
   FragmentDefinitionNode,
   ValueNode,
+  InlineFragmentNode,
+  SelectionNode,
 } from 'graphql';
 
 import { invariant, InvariantError } from 'ts-invariant';
@@ -183,8 +185,24 @@ export function createFragmentMap(
   fragments.forEach(fragment => {
     symTable[fragment.name.value] = fragment;
   });
-
   return symTable;
+}
+
+export function getFragmentFromSelection(
+  selection: SelectionNode,
+  fragmentMap: FragmentMap,
+): InlineFragmentNode | FragmentDefinitionNode | null {
+  switch (selection.kind) {
+    case 'InlineFragment':
+      return selection;
+    case 'FragmentSpread': {
+      const fragment = fragmentMap && fragmentMap[selection.name.value];
+      invariant(fragment, `No fragment named ${selection.name.value}.`);
+      return fragment;
+    }
+    default:
+      return null;
+  }
 }
 
 export function getDefaultValues(

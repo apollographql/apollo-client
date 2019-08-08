@@ -18,5 +18,5 @@ export function getTypenameFromStoreObject(
 ): string | undefined {
   return isReference(storeObject)
     ? getTypenameFromStoreObject(store, store.get(storeObject.__ref))
-    : storeObject.__typename;
+    : storeObject && storeObject.__typename;
 }

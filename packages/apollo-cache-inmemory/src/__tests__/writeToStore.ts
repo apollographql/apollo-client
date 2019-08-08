@@ -1108,45 +1108,6 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should write to store if `dataIdFromObject` returns an ID of 0', () => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          id
-          __typename
-        }
-      }
-    `;
-    const data = {
-      author: {
-        id: 0,
-        __typename: 'Author',
-        firstName: 'John',
-      },
-    };
-    const expStore = defaultNormalizedCacheFactory({
-      ROOT_QUERY: {
-        author: makeReference(0 as any, 'Author'),
-      },
-      0: {
-        id: data.author.id,
-        __typename: data.author.__typename,
-        firstName: data.author.firstName,
-      },
-    });
-
-    expect(
-      writer
-        .writeQueryToStore({
-          result: data,
-          query,
-          dataIdFromObject: () => (0 as any) as string,
-        })
-        .toObject(),
-    ).toEqual(expStore.toObject());
-  });
-
   describe('type escaping', () => {
     const dataIdFromObject = (object: any) => {
       if (object.__typename && object.id) {

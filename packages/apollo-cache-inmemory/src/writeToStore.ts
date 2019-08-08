@@ -252,7 +252,7 @@ export class StoreWriter {
 
     if (value && context.dataIdFromObject) {
       const dataId = context.dataIdFromObject(value);
-      if (dataId || dataId === '' || (dataId as any) === 0) {
+      if (typeof dataId === 'string') {
         if (!isDataProcessed(dataId, field, context.processedData)) {
           this.writeSelectionSetToStore({
             dataId,

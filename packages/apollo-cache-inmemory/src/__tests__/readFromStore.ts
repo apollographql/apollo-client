@@ -767,4 +767,55 @@ describe('reading from the store', () => {
       ],
     });
   });
+
+  it('refuses to return raw Reference objects', () => {
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: {
+        author: {
+          __typename: 'Author',
+          name: 'Toni Morrison',
+          books: [
+            {
+              title: 'The Bluest Eye',
+              publisher: makeReference('Publisher1', 'Publisher'),
+            },
+            {
+              title: 'Song of Solomon',
+              publisher: makeReference('Publisher2', 'Publisher'),
+            },
+            {
+              title: 'Beloved',
+              publisher: makeReference('Publisher2', 'Publisher'),
+            },
+          ],
+        },
+      },
+      Publisher1: {
+        __typename: 'Publisher',
+        id: 1,
+        name: 'Holt, Rinehart and Winston',
+      },
+      Publisher2: {
+        __typename: 'Publisher',
+        id: 2,
+        name: 'Alfred A. Knopf, Inc.',
+      },
+    });
+
+    expect(() => {
+      reader.readQueryFromStore({
+        store,
+        query: gql`
+          {
+            author {
+              name
+              books
+            }
+          }
+        `,
+      });
+    }).toThrow(
+      /Missing selection set for object of type Publisher returned for query field books/,
+    );
+  });
 });

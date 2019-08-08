@@ -439,9 +439,11 @@ export class StoreReader {
 
     // Handle all scalar types here
     if (!field.selectionSet) {
-      assertSelectionSetForIdValue(field, readStoreResult.result);
-      if (this.freezeResults && process.env.NODE_ENV !== 'production') {
-        maybeDeepFreeze(readStoreResult);
+      if (process.env.NODE_ENV !== 'production') {
+        assertSelectionSetForIdValue(field, readStoreResult.result);
+        if (this.freezeResults) {
+          maybeDeepFreeze(readStoreResult);
+        }
       }
       return readStoreResult;
     }
@@ -520,7 +522,9 @@ export class StoreReader {
         }));
       }
 
-      assertSelectionSetForIdValue(field, item);
+      if (process.env.NODE_ENV !== 'production') {
+        assertSelectionSetForIdValue(field, item);
+      }
 
       return item;
     });
@@ -535,17 +539,21 @@ export class StoreReader {
 
 function assertSelectionSetForIdValue(
   field: FieldNode,
-  value: any,
+  fieldValue: any,
 ) {
-  if (Array.isArray(value)) {
-    value = value[0];
-  }
-  if (!field.selectionSet && isReference(value)) {
-    throw new InvariantError(
-      `Missing selection set for object of type ${
-        value.typename
-      } returned for query field ${field.name.value}`
-    );
+  if (!field.selectionSet) {
+    // This ensures not only that value contains no Reference objects, but also
+    // that the result contains no cycles.
+    JSON.stringify(fieldValue, (_key, nestedValue) => {
+      if (isReference(nestedValue)) {
+        throw new InvariantError(
+          `Missing selection set for object of type ${
+            nestedValue.typename
+          } returned for query field ${field.name.value}`,
+        )
+      }
+      return nestedValue;
+    });
   }
 }
 

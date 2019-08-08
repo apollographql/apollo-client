@@ -245,9 +245,7 @@ export class StoreWriter {
     }
 
     if (Array.isArray(value)) {
-      return value.map((item, index) => {
-        return this.processFieldValue(item, field, context);
-      });
+      return value.map(item => this.processFieldValue(item, field, context));
     }
 
     if (value && context.dataIdFromObject) {

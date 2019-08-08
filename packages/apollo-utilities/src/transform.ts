@@ -211,14 +211,6 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
   return visit(checkDocument(doc), {
     SelectionSet: {
       enter(node, _key, parent) {
-        // Don't add __typename to OperationDefinitions.
-        if (
-          parent &&
-          (parent as OperationDefinitionNode).kind === 'OperationDefinition'
-        ) {
-          return;
-        }
-
         // No changes if no selections.
         const { selections } = node;
         if (!selections) {

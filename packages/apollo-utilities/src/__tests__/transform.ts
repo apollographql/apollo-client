@@ -554,6 +554,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
     `;
     const expectedQueryStr = print(expectedQuery);
@@ -564,6 +565,7 @@ describe('query transforms', () => {
   it('should not add duplicates', () => {
     let testQuery = gql`
       query {
+        __typename
         author {
           name {
             firstName
@@ -577,6 +579,7 @@ describe('query transforms', () => {
 
     const expectedQuery = gql`
       query {
+        __typename
         author {
           name {
             firstName
@@ -611,6 +614,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
     `);
     const modifiedQuery = addTypenameToDocument(testQuery);
@@ -644,6 +648,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
 
       fragment friendFields on User {
@@ -673,6 +678,7 @@ describe('query transforms', () => {
           lastName
           __typename
         }
+        __typename
       }
     `);
 
@@ -696,6 +702,7 @@ describe('query transforms', () => {
           lastName
           __typename
         }
+        __typename
       }
     `;
 
@@ -768,6 +775,7 @@ describe('query transforms', () => {
           }
           __typename
         }
+        __typename
       }
     `);
     const modifiedQuery = addTypenameToDocument(testQuery);

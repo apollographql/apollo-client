@@ -29,6 +29,7 @@ describe('fragment matching', () => {
     `;
 
     const data = {
+      __typename: 'Query',
       animals: [
         {
           __typename: 'Cat',
@@ -73,6 +74,7 @@ describe('fragment matching', () => {
     `;
 
     const data = {
+      __typename: 'Query',
       bestFriend: {
         __typename: 'Dog',
         id: 2,
@@ -109,6 +111,7 @@ describe('fragment matching', () => {
     `;
 
     const data = {
+      __typename: 'Query',
       testResults: [
         {
           __typename: 'TestResult',
@@ -160,6 +163,7 @@ describe('fragment matching', () => {
     `;
 
     const data = {
+      __typename: 'Query',
       animals: [
         {
           __typename: 'Sphynx',
@@ -204,6 +208,7 @@ describe('fragment matching', () => {
     `;
 
     const data = {
+      __typename: 'Query',
       people: [
         {
           __typename: 'Person',

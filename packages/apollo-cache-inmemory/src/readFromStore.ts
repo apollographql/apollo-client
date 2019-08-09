@@ -11,7 +11,6 @@ import {
   getMainDefinition,
   getQueryDefinition,
   getStoreKeyName,
-  IdValue,
   isEqual,
   isField,
   isInlineFragment,
@@ -42,7 +41,7 @@ import {
 
 import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
-import { invariant, InvariantError } from 'ts-invariant';
+import { InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
 import {
   isReference,
@@ -562,13 +561,6 @@ function assertSelectionSetForIdValue(
       return nestedValue;
     });
   }
-}
-
-export function assertIdValue(idValue: IdValue) {
-  invariant(isReference(idValue), `\
-Encountered a sub-selection on the query, but the store doesn't have \
-an object reference. This should never happen during normal use unless you have custom code \
-that is directly manipulating the store; please file an issue.`);
 }
 
 function readStoreResolver(

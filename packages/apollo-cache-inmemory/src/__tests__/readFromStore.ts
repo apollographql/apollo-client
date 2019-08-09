@@ -1,5 +1,4 @@
 import { assign, omit } from 'lodash';
-import { IdValue, JsonValue } from 'apollo-utilities';
 import gql from 'graphql-tag';
 import { stripSymbols } from 'apollo-utilities';
 
@@ -7,6 +6,7 @@ import { StoreObject } from '../';
 import { StoreReader } from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { withError } from './diffAgainstStore';
+import { makeReference } from '../helpers';
 
 describe('reading from the store', () => {
   const reader = new StoreReader();
@@ -16,17 +16,16 @@ describe('reading from the store', () => {
       const store = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          nestedObj: { type: 'id', id: 'abcde', generated: false },
+          nestedObj: makeReference('abcde'),
         } as StoreObject,
         abcde: {
           id: 'abcde',
           innerArray: [
-            { type: 'id', generated: true, id: 'abcde.innerArray.0' } as any,
+            {
+              id: 'abcdef',
+              someField: 3,
+            },
           ],
-        } as StoreObject,
-        'abcde.innerArray.0': {
-          id: 'abcdef',
-          someField: 3,
         } as StoreObject,
       });
 
@@ -255,11 +254,7 @@ describe('reading from the store', () => {
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: 'abcde',
-          generated: false,
-        },
+        nestedObj: makeReference('abcde'),
       } as StoreObject),
       abcde: result.nestedObj,
     });
@@ -316,19 +311,11 @@ describe('reading from the store', () => {
         assign({}, omit(result, 'nestedObj', 'deepNestedObj')),
         {
           __typename: 'Query',
-          nestedObj: {
-            type: 'id',
-            id: 'abcde',
-            generated: false,
-          },
+          nestedObj: makeReference('abcde'),
         } as StoreObject,
       ),
       abcde: assign({}, result.nestedObj, {
-        deepNestedObj: {
-          type: 'id',
-          id: 'abcdef',
-          generated: false,
-        },
+        deepNestedObj: makeReference('abcdef'),
       }) as StoreObject,
       abcdef: result.deepNestedObj as StoreObject,
     });
@@ -407,14 +394,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          { type: 'id', generated: true, id: 'abcd.nestedArray.0' } as IdValue,
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
-        ],
-      }) as StoreObject,
-      'abcd.nestedArray.0': result.nestedArray[0],
-      'abcd.nestedArray.1': result.nestedArray[1],
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({
@@ -465,13 +445,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          null,
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
-        ],
-      }) as StoreObject,
-      'abcd.nestedArray.1': result.nestedArray[1],
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({
@@ -521,7 +495,7 @@ describe('reading from the store', () => {
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [null, { type: 'id', generated: false, id: 'abcde' }],
+        nestedArray: [null, makeReference('abcde')],
       }) as StoreObject,
       abcde: result.nestedArray[1],
     });
@@ -626,12 +600,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: result.simpleArray,
-        } as JsonValue,
-      }) as StoreObject,
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({
@@ -663,12 +632,7 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: result.simpleArray,
-        } as JsonValue,
-      }) as StoreObject,
+      ROOT_QUERY: result,
     });
 
     const queryResult = reader.readQueryFromStore({
@@ -717,19 +681,11 @@ describe('reading from the store', () => {
         assign({}, omit(data, 'nestedObj', 'deepNestedObj')),
         {
           __typename: 'Query',
-          nestedObj: {
-            type: 'id',
-            id: 'abcde',
-            generated: false,
-          } as IdValue,
+          nestedObj: makeReference('abcde'),
         },
       ) as StoreObject,
       abcde: assign({}, data.nestedObj, {
-        deepNestedObj: {
-          type: 'id',
-          id: 'abcdef',
-          generated: false,
-        },
+        deepNestedObj: makeReference('abcdef'),
       }) as StoreObject,
       abcdef: data.deepNestedObj as StoreObject,
     });
@@ -786,14 +742,9 @@ describe('reading from the store', () => {
       ROOT_QUERY: {
         abc: [
           {
-            generated: true,
-            id: 'ROOT_QUERY.abc.0',
-            type: 'id',
+            name: 'efgh',
           },
         ],
-      },
-      'ROOT_QUERY.abc.0': {
-        name: 'efgh',
       },
     });
 
@@ -814,6 +765,100 @@ describe('reading from the store', () => {
           name: 'efgh',
         },
       ],
+    });
+  });
+
+  it('refuses to return raw Reference objects', () => {
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: {
+        author: {
+          __typename: 'Author',
+          name: 'Toni Morrison',
+          books: [
+            {
+              title: 'The Bluest Eye',
+              publisher: makeReference('Publisher1'),
+            },
+            {
+              title: 'Song of Solomon',
+              publisher: makeReference('Publisher2'),
+            },
+            {
+              title: 'Beloved',
+              publisher: makeReference('Publisher2'),
+            },
+          ],
+        },
+      },
+      Publisher1: {
+        __typename: 'Publisher',
+        id: 1,
+        name: 'Holt, Rinehart and Winston',
+      },
+      Publisher2: {
+        __typename: 'Publisher',
+        id: 2,
+        name: 'Alfred A. Knopf, Inc.',
+      },
+    });
+
+    expect(() => {
+      reader.readQueryFromStore({
+        store,
+        query: gql`
+          {
+            author {
+              name
+              books
+            }
+          }
+        `,
+      });
+    }).toThrow(
+      /Missing selection set for object of type Publisher returned for query field books/,
+    );
+
+    expect(
+      reader.readQueryFromStore({
+        store,
+        query: gql`
+          {
+            author {
+              name
+              books {
+                title
+                publisher {
+                  name
+                }
+              }
+            }
+          }
+        `,
+      }),
+    ).toEqual({
+      author: {
+        name: 'Toni Morrison',
+        books: [
+          {
+            title: 'The Bluest Eye',
+            publisher: {
+              name: 'Holt, Rinehart and Winston',
+            },
+          },
+          {
+            title: 'Song of Solomon',
+            publisher: {
+              name: 'Alfred A. Knopf, Inc.',
+            },
+          },
+          {
+            title: 'Beloved',
+            publisher: {
+              name: 'Alfred A. Knopf, Inc.',
+            },
+          },
+        ],
+      },
     });
   });
 });

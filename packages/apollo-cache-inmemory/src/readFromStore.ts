@@ -11,18 +11,14 @@ import {
   getMainDefinition,
   getQueryDefinition,
   getStoreKeyName,
-  IdValue,
   isEqual,
   isField,
-  isIdValue,
   isInlineFragment,
-  isJsonValue,
   maybeDeepFreeze,
   mergeDeepArray,
   resultKeyNameFromField,
   shouldInclude,
   StoreValue,
-  toIdValue,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -32,6 +28,7 @@ import {
   DiffQueryAgainstStoreOptions,
   ReadQueryOptions,
   StoreObject,
+  NormalizedCache,
 } from './types';
 
 import {
@@ -44,8 +41,14 @@ import {
 
 import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
-import { invariant, InvariantError } from 'ts-invariant';
+import { InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
+import {
+  isReference,
+  makeReference,
+  Reference,
+  getTypenameFromStoreObject,
+} from './helpers';
 
 export type VariableMap = { [name: string]: any };
 
@@ -75,14 +78,14 @@ export type ExecResult<R = any> = {
 
 type ExecStoreQueryOptions = {
   query: DocumentNode;
-  rootValue: IdValue;
+  objectOrReference: StoreObject | Reference;
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
 };
 
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
-  rootValue: any;
+  objectOrReference: StoreObject | Reference;
   execContext: ExecContext;
 };
 
@@ -122,7 +125,7 @@ export class StoreReader {
     }, {
       makeCacheKey({
         query,
-        rootValue,
+        objectOrReference,
         contextValue,
         variableValues,
       }: ExecStoreQueryOptions) {
@@ -134,7 +137,7 @@ export class StoreReader {
             contextValue.store,
             query,
             JSON.stringify(variableValues),
-            rootValue.id,
+            isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
           );
         }
       }
@@ -145,7 +148,7 @@ export class StoreReader {
     }, {
       makeCacheKey({
         selectionSet,
-        rootValue,
+        objectOrReference,
         execContext,
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
@@ -153,7 +156,7 @@ export class StoreReader {
             execContext.contextValue.store,
             selectionSet,
             JSON.stringify(execContext.variableValues),
-            rootValue.id,
+            isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
           );
         }
       }
@@ -230,12 +233,9 @@ export class StoreReader {
 
     const execResult = this.executeStoreQuery({
       query,
-      rootValue: {
-        type: 'id',
-        id: rootId,
-        generated: true,
-        typename: 'Query',
-      },
+      objectOrReference: rootId === 'ROOT_QUERY'
+        ? makeReference('ROOT_QUERY')
+        : store.get(rootId) || makeReference(rootId),
       contextValue: context,
       variableValues: variables,
     });
@@ -288,7 +288,7 @@ export class StoreReader {
    */
   private executeStoreQuery({
     query,
-    rootValue,
+    objectOrReference,
     contextValue,
     variableValues,
   }: ExecStoreQueryOptions): ExecResult {
@@ -304,27 +304,31 @@ export class StoreReader {
 
     return this.executeSelectionSet({
       selectionSet: mainDefinition.selectionSet,
-      rootValue,
+      objectOrReference,
       execContext,
     });
   }
 
   private executeSelectionSet({
     selectionSet,
-    rootValue,
+    objectOrReference,
     execContext,
   }: ExecSelectionSetOptions): ExecResult {
-    const { fragmentMap, contextValue, variableValues: variables } = execContext;
+    const { fragmentMap, variableValues: variables } = execContext;
     const finalResult: ExecResult = { result: null };
-
     const objectsToMerge: { [key: string]: any }[] = [];
 
-    const object: StoreObject = contextValue.store.get(rootValue.id);
-
-    const typename =
-      (object && object.__typename) ||
-      (rootValue.id === 'ROOT_QUERY' && 'Query') ||
-      void 0;
+    let object: StoreObject;
+    let typename: string;
+    if (isReference(objectOrReference)) {
+      object = execContext.contextValue.store.get(objectOrReference.__ref);
+      typename =
+        (object && object.__typename) ||
+        (objectOrReference.__ref === 'ROOT_QUERY' && 'Query');
+    } else {
+      object = objectOrReference;
+      typename = object && object.__typename;
+    }
 
     function handleMissing<T>(result: ExecResult<T>): T {
       if (result.missing) {
@@ -374,7 +378,7 @@ export class StoreReader {
         if (match && (object || typename === 'Query')) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
-            rootValue,
+            objectOrReference: object,
             execContext,
           });
 
@@ -440,9 +444,11 @@ export class StoreReader {
 
     // Handle all scalar types here
     if (!field.selectionSet) {
-      assertSelectionSetForIdValue(field, readStoreResult.result);
-      if (this.freezeResults && process.env.NODE_ENV !== 'production') {
-        maybeDeepFreeze(readStoreResult);
+      if (process.env.NODE_ENV !== 'production') {
+        assertSelectionSetForIdValue(contextValue.store, field, readStoreResult.result);
+        if (this.freezeResults) {
+          maybeDeepFreeze(readStoreResult);
+        }
       }
       return readStoreResult;
     }
@@ -459,7 +465,7 @@ export class StoreReader {
       readStoreResult,
       this.executeSelectionSet({
         selectionSet: field.selectionSet,
-        rootValue: readStoreResult.result,
+        objectOrReference: readStoreResult.result as StoreObject | Reference,
         execContext,
       }),
     );
@@ -516,12 +522,14 @@ export class StoreReader {
       if (field.selectionSet) {
         return handleMissing(this.executeSelectionSet({
           selectionSet: field.selectionSet,
-          rootValue: item,
+          objectOrReference: item,
           execContext,
         }));
       }
 
-      assertSelectionSetForIdValue(field, item);
+      if (process.env.NODE_ENV !== 'production') {
+        assertSelectionSetForIdValue(execContext.contextValue.store, field, item);
+      }
 
       return item;
     });
@@ -535,23 +543,24 @@ export class StoreReader {
 }
 
 function assertSelectionSetForIdValue(
+  store: NormalizedCache,
   field: FieldNode,
-  value: any,
+  fieldValue: any,
 ) {
-  if (!field.selectionSet && isIdValue(value)) {
-    throw new InvariantError(
-      `Missing selection set for object of type ${
-        value.typename
-      } returned for query field ${field.name.value}`
-    );
+  if (!field.selectionSet) {
+    // This ensures not only that value contains no Reference objects, but also
+    // that the result contains no cycles.
+    JSON.stringify(fieldValue, (_key, nestedValue) => {
+      if (isReference(nestedValue)) {
+        throw new InvariantError(
+          `Missing selection set for object of type ${
+            getTypenameFromStoreObject(store, nestedValue)
+          } returned for query field ${field.name.value}`,
+        )
+      }
+      return nestedValue;
+    });
   }
-}
-
-export function assertIdValue(idValue: IdValue) {
-  invariant(isIdValue(idValue), `\
-Encountered a sub-selection on the query, but the store doesn't have \
-an object reference. This should never happen during normal use unless you have custom code \
-that is directly manipulating the store; please file an issue.`);
 }
 
 function readStoreResolver(
@@ -560,7 +569,7 @@ function readStoreResolver(
   fieldName: string,
   args: any,
   context: ReadStoreContext,
-  { resultKey, directives }: ExecInfo,
+  { directives }: ExecInfo,
 ): ExecResult<StoreValue> {
   let storeKeyName = fieldName;
   if (args || directives) {
@@ -590,10 +599,7 @@ function readStoreResolver(
           fieldValue = resolver(object, args, {
             getCacheKey(storeObj: StoreObject) {
               const id = context.dataIdFromObject!(storeObj);
-              return id && toIdValue({
-                id,
-                typename: storeObj.__typename,
-              });
+              return id && makeReference(id);
             },
           });
         }
@@ -610,10 +616,6 @@ function readStoreResolver(
         tolerable: false,
       }],
     };
-  }
-
-  if (isJsonValue(fieldValue)) {
-    fieldValue = fieldValue.json;
   }
 
   return {

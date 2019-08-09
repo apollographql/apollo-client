@@ -2,7 +2,7 @@ import { from } from 'rxjs';
 import { take, toArray, map } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
 import { addTypenameToDocument } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache, makeReference } from 'apollo-cache-inmemory';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
@@ -279,10 +279,10 @@ describe('optimistic mutation results', () => {
         expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
         expect(dataInStore).toHaveProperty('Todo66');
         expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-          realIdValue('Todo66', 'Todo'),
+          makeReference('Todo66'),
         );
         expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-          realIdValue('Todo99', 'Todo'),
+          makeReference('Todo99'),
         );
       });
 
@@ -298,10 +298,10 @@ describe('optimistic mutation results', () => {
           expect(dataInStore).toHaveProperty('Todo66');
           // <any> can be removed once @types/chai adds deepInclude
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66', 'Todo'),
+            makeReference('Todo66'),
           );
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo99', 'Todo'),
+            makeReference('Todo99'),
           );
           expect((dataInStore['Todo99'] as any).text).toBe(expectedText1);
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
@@ -507,10 +507,10 @@ describe('optimistic mutation results', () => {
         expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
         expect(dataInStore).toHaveProperty('Todo66');
         expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-          realIdValue('Todo66', 'Todo'),
+          makeReference('Todo66'),
         );
         expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-          realIdValue('Todo99', 'Todo'),
+          makeReference('Todo99'),
         );
       });
 
@@ -525,10 +525,10 @@ describe('optimistic mutation results', () => {
           expect(dataInStore).toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo66', 'Todo'),
+            makeReference('Todo66'),
           );
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-            realIdValue('Todo99', 'Todo'),
+            makeReference('Todo99'),
           );
           expect((dataInStore['Todo99'] as any).text).toBe(expectedText1);
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
@@ -1189,10 +1189,10 @@ describe('optimistic mutation results', () => {
       expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
       expect(dataInStore).toHaveProperty('Todo66');
       expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-        realIdValue('Todo66', 'Todo'),
+        makeReference('Todo66'),
       );
       expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-        realIdValue('Todo99', 'Todo'),
+        makeReference('Todo99'),
       );
     });
 
@@ -1638,10 +1638,10 @@ describe('optimistic mutation results', () => {
       expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
       expect(dataInStore).toHaveProperty('Todo66');
       expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-        realIdValue('Todo66', 'Todo'),
+        makeReference('Todo66'),
       );
       expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-        realIdValue('Todo99', 'Todo'),
+        makeReference('Todo99'),
       );
     });
 
@@ -1964,12 +1964,3 @@ describe('optimistic mutation - githunt comments', () => {
     expect(newResult.data.entry.comments.length).toBe(2);
   });
 });
-
-function realIdValue(id: string, typename: string) {
-  return {
-    type: 'id',
-    generated: false,
-    id,
-    typename,
-  };
-}

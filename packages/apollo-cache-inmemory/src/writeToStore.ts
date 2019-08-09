@@ -1,10 +1,4 @@
-import {
-  SelectionSetNode,
-  FieldNode,
-  DocumentNode,
-  InlineFragmentNode,
-  FragmentDefinitionNode,
-} from 'graphql';
+import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
 
 import {
   assign,
@@ -12,29 +6,29 @@ import {
   FragmentMap,
   getDefaultValues,
   getFragmentDefinitions,
+  getFragmentFromSelection,
   getOperationDefinition,
-  IdValue,
   isField,
-  isIdValue,
-  isInlineFragment,
   resultKeyNameFromField,
   shouldInclude,
   storeKeyNameFromField,
   StoreValue,
-  toIdValue,
-  isEqual,
+  DeepMerger,
+  getTypenameFromResult,
 } from 'apollo-utilities';
 
-import { invariant } from 'ts-invariant';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import { defaultNormalizedCacheFactory } from './depTrackingCache';
 
-import {
-  IdGetter,
-  NormalizedCache,
-  StoreObject,
-} from './types';
+import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';
+import {
+  makeReference,
+  isReference,
+  getTypenameFromStoreObject,
+} from './helpers';
+import { defaultDataIdFromObject } from './inMemoryCache';
 
 export class WriteError extends Error {
   public type = 'WriteError';
@@ -52,7 +46,7 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
 
 export type WriteContext = {
   readonly store: NormalizedCache;
-  readonly processedData?: { [x: string]: FieldNode[] };
+  readonly processedData: { [x: string]: Set<FieldNode> };
   readonly variables?: any;
   readonly dataIdFromObject?: IdGetter;
   readonly fragmentMap?: FragmentMap;
@@ -86,44 +80,19 @@ export class StoreWriter {
   public writeQueryToStore({
     query,
     result,
+    dataId = 'ROOT_QUERY',
     store = defaultNormalizedCacheFactory(),
     variables,
-    dataIdFromObject,
+    dataIdFromObject = defaultDataIdFromObject,
   }: {
     query: DocumentNode;
     result: Object;
+    dataId?: string;
     store?: NormalizedCache;
     variables?: Object;
     dataIdFromObject?: IdGetter;
   }): NormalizedCache {
-    return this.writeResultToStore({
-      dataId: 'ROOT_QUERY',
-      result,
-      document: query,
-      store,
-      variables,
-      dataIdFromObject,
-    });
-  }
-
-  public writeResultToStore({
-    dataId,
-    result,
-    document,
-    store = defaultNormalizedCacheFactory(),
-    variables,
-    dataIdFromObject,
-  }: {
-    dataId: string;
-    result: any;
-    document: DocumentNode;
-    store?: NormalizedCache;
-    variables?: Object;
-    dataIdFromObject?: IdGetter;
-  }): NormalizedCache {
-    // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
-    const operationDefinition = getOperationDefinition(document)!;
-
+    const operationDefinition = getOperationDefinition(query)!;
     try {
       return this.writeSelectionSetToStore({
         result,
@@ -138,11 +107,11 @@ export class StoreWriter {
             variables,
           ),
           dataIdFromObject,
-          fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+          fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         },
       });
     } catch (e) {
-      throw enhanceErrorWithDocument(e, document);
+      throw enhanceErrorWithDocument(e, query);
     }
   }
 
@@ -157,24 +126,50 @@ export class StoreWriter {
     selectionSet: SelectionSetNode;
     context: WriteContext;
   }): NormalizedCache {
-    const { variables, store, fragmentMap } = context;
+    const { store } = context;
+    const newFields = this.processSelectionSet({
+      result,
+      selectionSet,
+      context,
+    });
+    store.set(dataId, mergeStoreObjects(store, store.get(dataId), newFields));
+    return store;
+  }
+
+  private processSelectionSet({
+    result,
+    selectionSet,
+    typename,
+    context,
+  }: {
+    result: any;
+    selectionSet: SelectionSetNode;
+    typename?: string;
+    context: WriteContext;
+  }): StoreObject {
+    const newFields: {
+      [storeFieldName: string]: StoreValue;
+    } = Object.create(null);
 
     selectionSet.selections.forEach(selection => {
-      if (!shouldInclude(selection, variables)) {
+      if (!shouldInclude(selection, context.variables)) {
         return;
       }
 
       if (isField(selection)) {
-        const resultFieldKey: string = resultKeyNameFromField(selection);
-        const value: any = result[resultFieldKey];
+        const resultFieldKey = resultKeyNameFromField(selection);
+        const value = result[resultFieldKey];
 
         if (typeof value !== 'undefined') {
-          this.writeFieldToStore({
-            dataId,
+          const storeFieldName = storeKeyNameFromField(
+            selection,
+            context.variables,
+          );
+          newFields[storeFieldName] = this.processFieldValue(
             value,
-            field: selection,
+            selection,
             context,
-          });
+          );
         } else if (
           this.config.possibleTypes &&
           !(
@@ -197,21 +192,17 @@ export class StoreWriter {
           );
         }
       } else {
+        // If the typename of the object we're processing was not provided,
+        // compute it lazily.
+        typename =
+          typename ||
+          getTypenameFromResult(result, selectionSet, context.fragmentMap);
+
         // This is not a field, so it must be a fragment, either inline or named
-        let fragment: InlineFragmentNode | FragmentDefinitionNode;
-
-        if (isInlineFragment(selection)) {
-          fragment = selection;
-        } else {
-          // Named fragment
-          fragment = (fragmentMap || {})[selection.name.value];
-          invariant(fragment, `No fragment named ${selection.name.value}.`);
-        }
-
-        const typename =
-          (result && result.__typename) ||
-          (dataId === 'ROOT_QUERY' && 'Query') ||
-          void 0;
+        const fragment = getFragmentFromSelection(
+          selection,
+          context.fragmentMap,
+        );
 
         const match = fragmentMatches(
           fragment,
@@ -220,271 +211,132 @@ export class StoreWriter {
         );
 
         if (match && (result || typename === 'Query')) {
+          Object.assign(
+            newFields,
+            this.processSelectionSet({
+              result,
+              selectionSet: fragment.selectionSet,
+              typename,
+              context,
+            }),
+          );
+        }
+      }
+    });
+
+    return newFields;
+  }
+
+  private processFieldValue(
+    value: any,
+    field: FieldNode,
+    context: WriteContext,
+  ): StoreValue {
+    if (!field.selectionSet || value === null) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(item => this.processFieldValue(item, field, context));
+    }
+
+    if (value && context.dataIdFromObject) {
+      const dataId = context.dataIdFromObject(value);
+      if (typeof dataId === 'string') {
+        if (!isDataProcessed(dataId, field, context.processedData)) {
           this.writeSelectionSetToStore({
-            result,
-            selectionSet: fragment.selectionSet,
             dataId,
+            result: value,
+            selectionSet: field.selectionSet,
             context,
           });
         }
-      }
-    });
-
-    return store;
-  }
-
-  private writeFieldToStore({
-    field,
-    value,
-    dataId,
-    context,
-  }: {
-    field: FieldNode;
-    value: any;
-    dataId: string;
-    context: WriteContext;
-  }) {
-    const { variables, dataIdFromObject, store } = context;
-
-    let storeValue: StoreValue;
-    let storeObject: StoreObject;
-
-    const storeFieldName: string = storeKeyNameFromField(field, variables);
-
-    // If this is a scalar value...
-    if (!field.selectionSet || value === null) {
-      storeValue =
-        value != null && typeof value === 'object'
-          ? // If the scalar value is a JSON blob, we have to "escape" it so it can’t pretend to be
-            // an id.
-            { type: 'json', json: value }
-          : // Otherwise, just store the scalar directly in the store.
-            value;
-    } else if (Array.isArray(value)) {
-      const generatedId = `${dataId}.${storeFieldName}`;
-
-      storeValue = this.processArrayValue(
-        value,
-        generatedId,
-        field.selectionSet,
-        context,
-      );
-    } else {
-      // It's an object
-      let valueDataId = `${dataId}.${storeFieldName}`;
-      let generated = true;
-
-      // We only prepend the '$' if the valueDataId isn't already a generated
-      // id.
-      if (!isGeneratedId(valueDataId)) {
-        valueDataId = '$' + valueDataId;
-      }
-
-      if (dataIdFromObject) {
-        const semanticId = dataIdFromObject(value);
-
-        // We throw an error if the first character of the id is '$. This is
-        // because we use that character to designate an Apollo-generated id
-        // and we use the distinction between user-desiginated and application-provided
-        // ids when managing overwrites.
-        invariant(
-          !semanticId || !isGeneratedId(semanticId),
-          'IDs returned by dataIdFromObject cannot begin with the "$" character.',
-        );
-
-        if (
-          semanticId ||
-          (typeof semanticId === 'number' && semanticId === 0)
-        ) {
-          valueDataId = semanticId;
-          generated = false;
-        }
-      }
-
-      if (!isDataProcessed(valueDataId, field, context.processedData)) {
-        this.writeSelectionSetToStore({
-          dataId: valueDataId,
-          result: value,
-          selectionSet: field.selectionSet,
-          context,
-        });
-      }
-
-      // We take the id and escape it (i.e. wrap it with an enclosing object).
-      // This allows us to distinguish IDs from normal scalars.
-      const typename = value.__typename;
-      storeValue = toIdValue({ id: valueDataId, typename }, generated);
-
-      // check if there was a generated id at the location where we're
-      // about to place this new id. If there was, we have to merge the
-      // data from that id with the data we're about to write in the store.
-      storeObject = store.get(dataId);
-      const escapedId =
-        storeObject && (storeObject[storeFieldName] as IdValue | undefined);
-      if (escapedId !== storeValue && isIdValue(escapedId)) {
-        const hadTypename = escapedId.typename !== undefined;
-        const hasTypename = typename !== undefined;
-        const typenameChanged =
-          hadTypename && hasTypename && escapedId.typename !== typename;
-
-        // If there is already a real id in the store and the current id we
-        // are dealing with is generated, we throw an error.
-        // One exception we allow is when the typename has changed, which occurs
-        // when schema defines a union, both with and without an ID in the same place.
-        // checks if we "lost" the read id
-        invariant(
-          !generated || escapedId.generated || typenameChanged,
-          `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${
-            escapedId.id
-          } for this object. The selectionSet that was trying to be written is:\n${
-            JSON.stringify(field)
-          }`,
-        );
-
-        // checks if we "lost" the typename
-        invariant(
-          !hadTypename || hasTypename,
-          `Store error: the application attempted to write an object with no provided typename but the store already contains an object with typename of ${
-            escapedId.typename
-          } for the object of id ${escapedId.id}. The selectionSet that was trying to be written is:\n${
-            JSON.stringify(field)
-          }`,
-        );
-
-        if (escapedId.generated) {
-          // We should only merge if it's an object of the same type,
-          // otherwise we should delete the generated object
-          if (typenameChanged) {
-            // Only delete the generated object when the old object was
-            // inlined, and the new object is not. This is indicated by
-            // the old id being generated, and the new id being real.
-            if (!generated) {
-              store.delete(escapedId.id);
-            }
-          } else {
-            mergeWithGenerated(escapedId.id, (storeValue as IdValue).id, store);
-          }
-        }
+        return makeReference(dataId);
       }
     }
 
-    storeObject = store.get(dataId);
-    if (!storeObject || !isEqual(storeValue, storeObject[storeFieldName])) {
-      store.set(dataId, {
-        ...storeObject,
-        [storeFieldName]: storeValue,
-      });
-    }
-  }
-
-  private processArrayValue(
-    value: any[],
-    generatedId: string,
-    selectionSet: SelectionSetNode,
-    context: WriteContext,
-  ): any[] {
-    return value.map((item: any, index: any) => {
-      if (item === null) {
-        return null;
-      }
-
-      let itemDataId = `${generatedId}.${index}`;
-
-      if (Array.isArray(item)) {
-        return this.processArrayValue(item, itemDataId, selectionSet, context);
-      }
-
-      let generated = true;
-
-      if (context.dataIdFromObject) {
-        const semanticId = context.dataIdFromObject(item);
-
-        if (semanticId) {
-          itemDataId = semanticId;
-          generated = false;
-        }
-      }
-
-      if (!isDataProcessed(itemDataId, selectionSet, context.processedData)) {
-        this.writeSelectionSetToStore({
-          dataId: itemDataId,
-          result: item,
-          selectionSet,
-          context,
-        });
-      }
-
-      return toIdValue(
-        { id: itemDataId, typename: item.__typename },
-        generated,
-      );
+    return this.processSelectionSet({
+      result: value,
+      selectionSet: field.selectionSet,
+      context,
     });
   }
 }
 
-// Checks if the id given is an id that was generated by Apollo
-// rather than by dataIdFromObject.
-function isGeneratedId(id: string): boolean {
-  return id[0] === '$';
-}
-
-function mergeWithGenerated(
-  generatedKey: string,
-  realKey: string,
-  cache: NormalizedCache,
-): boolean {
-  if (generatedKey === realKey) {
-    return false;
-  }
-
-  const generated = cache.get(generatedKey);
-  const real = cache.get(realKey);
-  let madeChanges = false;
-
-  Object.keys(generated).forEach(key => {
-    const value = generated[key];
-    const realValue = real[key];
+function mergeStoreObjects(
+  store: NormalizedCache,
+  existing: StoreObject,
+  incoming: StoreObject,
+): StoreObject {
+  return new DeepMerger(function(existingObject, incomingObject, property) {
+    // In the future, reconciliation logic may depend on the type of the parent
+    // StoreObject, not just the values of the given property.
+    const existing = existingObject[property];
+    const incoming = incomingObject[property];
 
     if (
-      isIdValue(value) &&
-      isGeneratedId(value.id) &&
-      isIdValue(realValue) &&
-      !isEqual(value, realValue) &&
-      mergeWithGenerated(value.id, realValue.id, cache)
+      existing !== incoming &&
+      // The DeepMerger class has various helpful utilities that we might as
+      // well reuse here.
+      this.isObject(existing) &&
+      this.isObject(incoming)
     ) {
-      madeChanges = true;
+      const eType = getTypenameFromStoreObject(store, existing);
+      const iType = getTypenameFromStoreObject(store, incoming);
+      // If both objects have a typename and the typename is different, let the
+      // incoming object win. The typename can change when a different subtype
+      // of a union or interface is written to the cache.
+      if (
+        typeof eType === 'string' &&
+        typeof iType === 'string' &&
+        eType !== iType
+      ) {
+        return incoming;
+      }
+
+      if (isReference(incoming)) {
+        // Incoming references always overwrite existing references.
+        if (isReference(existing)) return incoming;
+        // Incoming references can be merged with existing non-reference data
+        // if the existing data appears to be of a compatible type.
+        store.set(
+          incoming.__ref,
+          this.merge(existing, store.get(incoming.__ref)),
+        );
+        return incoming;
+      } else if (isReference(existing)) {
+        throw new InvariantError(
+          `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
+        );
+      }
+
+      if (Array.isArray(incoming)) {
+        if (!Array.isArray(existing)) return incoming;
+        if (existing.length > incoming.length) {
+          // Allow the incoming array to truncate the existing array, if the
+          // incoming array is shorter.
+          return this.merge(existing.slice(0, incoming.length), incoming);
+        }
+      }
+
+      return this.merge(existing, incoming);
     }
-  });
 
-  cache.delete(generatedKey);
-  const newRealValue = { ...generated, ...real };
-
-  if (isEqual(newRealValue, real)) {
-    return madeChanges;
-  }
-
-  cache.set(realKey, newRealValue);
-  return true;
+    return incoming;
+  }).merge(existing, incoming);
 }
 
 function isDataProcessed(
   dataId: string,
-  field: FieldNode | SelectionSetNode,
-  processedData?: { [x: string]: (FieldNode | SelectionSetNode)[] },
+  field: FieldNode,
+  processedData: { [x: string]: Set<typeof field> },
 ): boolean {
-  if (!processedData) {
-    return false;
-  }
-
-  if (processedData[dataId]) {
-    if (processedData[dataId].indexOf(field) >= 0) {
-      return true;
-    } else {
-      processedData[dataId].push(field);
-    }
+  const fieldSet = processedData[dataId];
+  if (fieldSet) {
+    if (fieldSet.has(field)) return true;
+    fieldSet.add(field);
   } else {
-    processedData[dataId] = [field];
+    processedData[dataId] = new Set([field]);
   }
-
   return false;
 }

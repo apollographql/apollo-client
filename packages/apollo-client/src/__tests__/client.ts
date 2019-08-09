@@ -391,23 +391,13 @@ describe('client', () => {
 
     const initialState: any = {
       data: {
-        'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
-          name: 'Luke Skywalker',
-        },
-        'ROOT_QUERY.allPeople({"first":1})': {
-          people: [
-            {
-              type: 'id',
-              generated: true,
-              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-            },
-          ],
-        },
         ROOT_QUERY: {
           'allPeople({"first":1})': {
-            type: 'id',
-            id: 'ROOT_QUERY.allPeople({"first":1})',
-            generated: true,
+            people: [
+              {
+                name: 'Luke Skywalker',
+              },
+            ],
           },
         },
         optimistic: [],
@@ -459,23 +449,13 @@ describe('client', () => {
 
     const initialState: any = {
       data: {
-        'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
-          name: 'Luke Skywalker',
-        },
-        'ROOT_QUERY.allPeople({"first":1})': {
-          people: [
-            {
-              type: 'id',
-              generated: true,
-              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-            },
-          ],
-        },
         ROOT_QUERY: {
           'allPeople({"first":1})': {
-            type: 'id',
-            id: 'ROOT_QUERY.allPeople({"first":1})',
-            generated: true,
+            people: [
+              {
+                name: 'Luke Skywalker',
+              },
+            ],
           },
         },
         optimistic: [],

@@ -8,10 +8,7 @@ Object {
   "foo": Object {
     "e": 4,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -29,10 +26,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -50,10 +44,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -71,10 +62,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -92,10 +80,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -113,10 +98,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -130,10 +112,7 @@ Object {
   "foo": Object {
     "e": 4,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -151,10 +130,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -172,10 +148,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -193,10 +166,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -214,10 +184,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -235,10 +202,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -252,10 +216,7 @@ Object {
   "foo": Object {
     "e": 4,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -273,10 +234,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -294,10 +252,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -315,10 +270,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": undefined,
+      "__ref": "bar",
     },
   },
 }
@@ -336,10 +288,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -357,10 +306,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }

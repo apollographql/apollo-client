@@ -347,15 +347,15 @@ describe('Link interactions', () => {
       link,
       store: new DataStore(
         new InMemoryCache({
-          cacheResolvers: {
+          cacheRedirects: {
             Query: {
-              book: (_, { id }, context) => {
+              book(_, { id }, context) {
                 expect(context.getCacheKey).toBeDefined();
                 const cacheKey = context.getCacheKey({
                   id,
                   __typename: 'Book',
                 });
-                expect(cacheKey.id).toEqual(`Book:${id}`);
+                expect(cacheKey.__ref).toEqual(`Book:${id}`);
                 return cacheKey;
               },
             },

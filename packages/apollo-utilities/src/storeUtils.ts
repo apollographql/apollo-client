@@ -14,10 +14,12 @@ import {
   ValueNode,
   SelectionNode,
   NameNode,
+  SelectionSetNode,
 } from 'graphql';
 
 import stringify from 'fast-json-stable-stringify';
 import { InvariantError } from 'ts-invariant';
+import { FragmentMap, getFragmentFromSelection } from './getFromAST';
 
 export interface IdValue {
   type: 'id';
@@ -259,6 +261,29 @@ export function argumentsObjectFromField(
 
 export function resultKeyNameFromField(field: FieldNode): string {
   return field.alias ? field.alias.value : field.name.value;
+}
+
+export function getTypenameFromResult(
+  result: Record<string, any>,
+  selectionSet: SelectionSetNode,
+  fragmentMap: FragmentMap,
+): string | undefined {
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (selection.name.value === '__typename') {
+        return result[resultKeyNameFromField(selection)];
+      }
+    } else {
+      const typename = getTypenameFromResult(
+        result,
+        getFragmentFromSelection(selection, fragmentMap).selectionSet,
+        fragmentMap,
+      );
+      if (typeof typename === 'string') {
+        return typename;
+      }
+    }
+  }
 }
 
 export function isField(selection: SelectionNode): selection is FieldNode {

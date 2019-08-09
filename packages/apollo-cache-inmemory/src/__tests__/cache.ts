@@ -1,8 +1,8 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
-import { stripSymbols } from 'apollo-utilities';
-import { cloneDeep } from 'lodash';
+import { stripSymbols, cloneDeep } from 'apollo-utilities';
 
 import { InMemoryCache, InMemoryCacheConfig } from '..';
+import { makeReference } from '../helpers';
 
 disableFragmentWarnings();
 
@@ -127,21 +127,13 @@ describe('Cache', () => {
             a: 1,
             b: 2,
             c: 3,
-            d: {
-              type: 'id',
-              id: 'foo',
-              generated: false,
-            },
+            d: makeReference('foo'),
           },
           foo: {
             e: 4,
             f: 5,
             g: 6,
-            h: {
-              type: 'id',
-              id: 'bar',
-              generated: false,
-            },
+            h: makeReference('bar'),
           },
           bar: {
             i: 7,
@@ -391,22 +383,14 @@ describe('Cache', () => {
             a: 1,
             b: 2,
             c: 3,
-            d: {
-              type: 'id',
-              id: 'foo',
-              generated: false,
-            },
+            d: makeReference('foo'),
           },
           foo: {
             __typename: 'Foo',
             e: 4,
             f: 5,
             g: 6,
-            h: {
-              type: 'id',
-              id: 'bar',
-              generated: false,
-            },
+            h: makeReference('bar'),
           },
           bar: {
             __typename: 'Bar',
@@ -700,13 +684,8 @@ describe('Cache', () => {
           ROOT_QUERY: {
             a: 1,
             d: {
-              type: 'id',
-              id: '$ROOT_QUERY.d',
-              generated: true,
+              e: 4,
             },
-          },
-          '$ROOT_QUERY.d': {
-            e: 4,
           },
         });
 
@@ -728,21 +707,11 @@ describe('Cache', () => {
           ROOT_QUERY: {
             a: 1,
             d: {
-              type: 'id',
-              id: '$ROOT_QUERY.d',
-              generated: true,
+              e: 4,
+              h: {
+                i: 7,
+              },
             },
-          },
-          '$ROOT_QUERY.d': {
-            e: 4,
-            h: {
-              type: 'id',
-              id: '$ROOT_QUERY.d.h',
-              generated: true,
-            },
-          },
-          '$ROOT_QUERY.d.h': {
-            i: 7,
           },
         });
 
@@ -778,25 +747,15 @@ describe('Cache', () => {
             b: 2,
             c: 3,
             d: {
-              type: 'id',
-              id: '$ROOT_QUERY.d',
-              generated: true,
+              e: 4,
+              f: 5,
+              g: 6,
+              h: {
+                i: 7,
+                j: 8,
+                k: 9,
+              },
             },
-          },
-          '$ROOT_QUERY.d': {
-            e: 4,
-            f: 5,
-            g: 6,
-            h: {
-              type: 'id',
-              id: '$ROOT_QUERY.d.h',
-              generated: true,
-            },
-          },
-          '$ROOT_QUERY.d.h': {
-            i: 7,
-            j: 8,
-            k: 9,
           },
         });
       },

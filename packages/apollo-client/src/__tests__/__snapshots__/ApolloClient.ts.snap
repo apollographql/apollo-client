@@ -14,45 +14,24 @@ For more information, please visit: https://www.apollographql.com/docs/tutorial/
 
 exports[`ApolloClient write then read will not use a default id getter if either _id or id is present when __typename is not also present 1`] = `
 Object {
-  "$ROOT_QUERY.bar": Object {
-    "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.bar.foo",
-      "type": "id",
-      "typename": undefined,
-    },
-    "i": 10,
-    "j": 11,
-  },
-  "$ROOT_QUERY.bar.foo": Object {
-    "_id": "barfoo",
-    "k": 12,
-    "l": 13,
-  },
-  "$ROOT_QUERY.foo": Object {
-    "bar": Object {
-      "generated": false,
-      "id": "bar:foobar",
-      "type": "id",
-      "typename": "bar",
-    },
-    "c": 3,
-    "d": 4,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "b": 2,
     "bar": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.bar",
-      "type": "id",
-      "typename": undefined,
+      "foo": Object {
+        "_id": "barfoo",
+        "k": 12,
+        "l": 13,
+      },
+      "i": 10,
+      "j": 11,
     },
     "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.foo",
-      "type": "id",
-      "typename": undefined,
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
     },
     "g": 8,
     "h": 9,
@@ -67,52 +46,28 @@ Object {
 
 exports[`ApolloClient write then read will not use a default id getter if id and _id are not present 1`] = `
 Object {
-  "$ROOT_QUERY.bar": Object {
-    "__typename": "bar",
-    "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.bar.foo",
-      "type": "id",
-      "typename": "foo",
-    },
-    "i": 10,
-    "j": 11,
-  },
-  "$ROOT_QUERY.bar.foo": Object {
-    "__typename": "foo",
-    "k": 12,
-    "l": 13,
-  },
-  "$ROOT_QUERY.foo": Object {
-    "__typename": "foo",
-    "bar": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.foo.bar",
-      "type": "id",
-      "typename": "bar",
-    },
-    "c": 3,
-    "d": 4,
-  },
-  "$ROOT_QUERY.foo.bar": Object {
-    "__typename": "bar",
-    "e": 5,
-    "f": 6,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "b": 2,
     "bar": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.bar",
-      "type": "id",
-      "typename": "bar",
+      "__typename": "bar",
+      "foo": Object {
+        "__typename": "foo",
+        "k": 12,
+        "l": 13,
+      },
+      "i": 10,
+      "j": 11,
     },
     "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.foo",
-      "type": "id",
-      "typename": "foo",
+      "__typename": "foo",
+      "bar": Object {
+        "__typename": "bar",
+        "e": 5,
+        "f": 6,
+      },
+      "c": 3,
+      "d": 4,
     },
     "g": 8,
     "h": 9,
@@ -122,25 +77,16 @@ Object {
 
 exports[`ApolloClient write then read will use a default id getter if __typename and _id are present 1`] = `
 Object {
-  "$ROOT_QUERY.foo": Object {
-    "__typename": "foo",
-    "bar": Object {
-      "generated": false,
-      "id": "bar:foobar",
-      "type": "id",
-      "typename": "bar",
-    },
-    "c": 3,
-    "d": 4,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "b": 2,
     "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.foo",
-      "type": "id",
-      "typename": "foo",
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
     },
   },
   "bar:foobar": Object {
@@ -154,25 +100,16 @@ Object {
 
 exports[`ApolloClient write then read will use a default id getter if __typename and id are present 1`] = `
 Object {
-  "$ROOT_QUERY.foo": Object {
-    "__typename": "foo",
-    "bar": Object {
-      "generated": false,
-      "id": "bar:foobar",
-      "type": "id",
-      "typename": "bar",
-    },
-    "c": 3,
-    "d": 4,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "b": 2,
     "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.foo",
-      "type": "id",
-      "typename": "foo",
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
     },
   },
   "bar:foobar": Object {
@@ -186,42 +123,24 @@ Object {
 
 exports[`ApolloClient write then read will use a default id getter if one is not specified and __typename is present along with either _id or id 1`] = `
 Object {
-  "$ROOT_QUERY.bar": Object {
-    "__typename": "bar",
-    "foo": Object {
-      "generated": false,
-      "id": "foo:barfoo",
-      "type": "id",
-      "typename": "foo",
-    },
-    "i": 10,
-    "j": 11,
-  },
-  "$ROOT_QUERY.foo": Object {
-    "__typename": "foo",
-    "bar": Object {
-      "generated": false,
-      "id": "bar:foobar",
-      "type": "id",
-      "typename": "bar",
-    },
-    "c": 3,
-    "d": 4,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "b": 2,
     "bar": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.bar",
-      "type": "id",
-      "typename": "bar",
+      "__typename": "bar",
+      "foo": Object {
+        "__ref": "foo:barfoo",
+      },
+      "i": 10,
+      "j": 11,
     },
     "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.foo",
-      "type": "id",
-      "typename": "foo",
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
     },
     "g": 8,
     "h": 9,
@@ -243,7 +162,7 @@ Object {
 
 exports[`ApolloClient write then read will write data locally which will then be read back 1`] = `
 Object {
-  "$foo.bar": Object {
+  "bar": Object {
     "__typename": "Bar",
     "d": 8,
     "e": 9,
@@ -254,10 +173,7 @@ Object {
     "a": 7,
     "b": 2,
     "bar": Object {
-      "generated": true,
-      "id": "$foo.bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
     "c": 3,
   },
@@ -266,25 +182,16 @@ Object {
 
 exports[`ApolloClient write then read will write data to a specific id 1`] = `
 Object {
-  "$ROOT_QUERY.foo": Object {
-    "__typename": "foo",
-    "bar": Object {
-      "generated": false,
-      "id": "foobar",
-      "type": "id",
-      "typename": "bar",
-    },
-    "c": 3,
-    "d": 4,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "b": 2,
     "foo": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.foo",
-      "type": "id",
-      "typename": "foo",
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "foobar",
+      },
+      "c": 3,
+      "d": 4,
     },
   },
   "foobar": Object {
@@ -306,10 +213,7 @@ Object {
     "__typename": "Foo",
     "e": 4,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -329,10 +233,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -352,10 +253,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -375,10 +273,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -398,10 +293,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -421,10 +313,7 @@ Object {
     "f": 5,
     "g": 6,
     "h": Object {
-      "generated": false,
-      "id": "bar",
-      "type": "id",
-      "typename": "Bar",
+      "__ref": "bar",
     },
   },
 }
@@ -432,17 +321,11 @@ Object {
 
 exports[`ApolloClient writeQuery will write some deeply nested data to the store 1`] = `
 Object {
-  "$ROOT_QUERY.d": Object {
-    "__typename": "D",
-    "e": 4,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "d": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.d",
-      "type": "id",
-      "typename": "D",
+      "__typename": "D",
+      "e": 4,
     },
   },
 }
@@ -450,27 +333,15 @@ Object {
 
 exports[`ApolloClient writeQuery will write some deeply nested data to the store 2`] = `
 Object {
-  "$ROOT_QUERY.d": Object {
-    "__typename": "D",
-    "e": 4,
-    "h": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.d.h",
-      "type": "id",
-      "typename": "H",
-    },
-  },
-  "$ROOT_QUERY.d.h": Object {
-    "__typename": "H",
-    "i": 7,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "d": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.d",
-      "type": "id",
-      "typename": "D",
+      "__typename": "D",
+      "e": 4,
+      "h": Object {
+        "__typename": "H",
+        "i": 7,
+      },
     },
   },
 }
@@ -478,33 +349,21 @@ Object {
 
 exports[`ApolloClient writeQuery will write some deeply nested data to the store 3`] = `
 Object {
-  "$ROOT_QUERY.d": Object {
-    "__typename": "D",
-    "e": 4,
-    "f": 5,
-    "g": 6,
-    "h": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.d.h",
-      "type": "id",
-      "typename": "H",
-    },
-  },
-  "$ROOT_QUERY.d.h": Object {
-    "__typename": "H",
-    "i": 7,
-    "j": 8,
-    "k": 9,
-  },
   "ROOT_QUERY": Object {
     "a": 1,
     "b": 2,
     "c": 3,
     "d": Object {
-      "generated": true,
-      "id": "$ROOT_QUERY.d",
-      "type": "id",
-      "typename": "D",
+      "__typename": "D",
+      "e": 4,
+      "f": 5,
+      "g": 6,
+      "h": Object {
+        "__typename": "H",
+        "i": 7,
+        "j": 8,
+        "k": 9,
+      },
     },
   },
 }

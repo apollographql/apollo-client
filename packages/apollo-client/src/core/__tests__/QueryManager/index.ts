@@ -1820,44 +1820,6 @@ describe('QueryManager', () => {
       .catch(done.fail);
   });
 
-  it('should error when we attempt to give an id beginning with $', done => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-          id
-          __typename
-        }
-      }
-    `;
-    const data = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-        id: '129',
-        __typename: 'Author',
-      },
-    };
-    const reducerConfig = {
-      dataIdFromObject: (x: any) => '$' + dataIdFromObject(x),
-    };
-    createQueryManager({
-      link: mockSingleLink({
-        request: { query },
-        result: { data },
-      }),
-      config: reducerConfig,
-    })
-      .query({ query })
-      .then(() => {
-        done.fail(new Error('Returned a result when it should not have.'));
-      })
-      .catch(() => {
-        done();
-      });
-  });
-
   it('should reject a query promise given a GraphQL error', () => {
     const query = gql`
       query {
@@ -1926,10 +1888,8 @@ describe('QueryManager', () => {
           .catch(() => {
             // make that the error thrown doesn't empty the state
             expect(
-              (queryManager.dataStore.getCache() as InMemoryCache).extract()[
-                '$ROOT_QUERY.author'
-              ] as Object,
-            ).toEqual(data['author']);
+              (queryManager.dataStore.getCache() as InMemoryCache).extract().ROOT_QUERY.author,
+            ).toEqual(data.author);
             done();
           });
       })
@@ -2009,18 +1969,16 @@ describe('QueryManager', () => {
         errorCallbacks: [
           () => {
             expect(
-              (queryManager.dataStore.getCache() as InMemoryCache).extract()[
-                '$ROOT_QUERY.author'
-              ] as Object,
+              (queryManager.dataStore.getCache() as InMemoryCache).extract().ROOT_QUERY.author,
             ).toEqual(data.author);
           },
         ],
       },
       result => {
         expect(stripSymbols(result.data)).toEqual(data);
-        expect((queryManager.dataStore.getCache() as InMemoryCache).extract()[
-          '$ROOT_QUERY.author'
-        ] as Object).toEqual(data.author);
+        expect(
+          (queryManager.dataStore.getCache() as InMemoryCache).extract().ROOT_QUERY.author
+        ).toEqual(data.author);
       },
     );
   });

@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache, makeReference } from 'apollo-cache-inmemory';
 import { stripSymbols } from 'apollo-utilities';
 import { withWarning } from '../util/wrap';
 import ApolloClient from '../';
@@ -82,22 +82,14 @@ describe('ApolloClient', () => {
             a: 1,
             b: 2,
             c: 3,
-            d: {
-              type: 'id',
-              id: 'foo',
-              generated: false,
-            },
+            d: makeReference('foo'),
           },
           foo: {
             __typename: 'Foo',
             e: 4,
             f: 5,
             g: 6,
-            h: {
-              type: 'id',
-              id: 'bar',
-              generated: false,
-            },
+            h: makeReference('bar'),
           },
           bar: {
             __typename: 'Bar',
@@ -339,22 +331,14 @@ describe('ApolloClient', () => {
             a: 1,
             b: 2,
             c: 3,
-            d: {
-              type: 'id',
-              id: 'foo',
-              generated: false,
-            },
+            d: makeReference('foo'),
           },
           foo: {
             __typename: 'Foo',
             e: 4,
             f: 5,
             g: 6,
-            h: {
-              type: 'id',
-              id: 'bar',
-              generated: false,
-            },
+            h: makeReference('bar'),
           },
           bar: {
             __typename: 'Bar',
@@ -1355,6 +1339,7 @@ describe('ApolloClient', () => {
                     fragment bestFriends on Person {
                       friends {
                         id
+                        type
                       }
                     }
                   `,
@@ -1527,6 +1512,7 @@ describe('ApolloClient', () => {
         query,
         data: {
           obj: {
+            __typename: 'Obj',
             field: {
               field2: 1,
               __typename: 'Field',
@@ -1537,7 +1523,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeData({
-        id: '$ROOT_QUERY.obj',
+        id: 'Obj:uniqueId',
         data: {
           field: {
             field2: 2,
@@ -1550,7 +1536,7 @@ describe('ApolloClient', () => {
         .query({ query })
         .then(({ data }: any) => {
           console.warn = originalWarn;
-          expect(data.obj.__typename).toEqual('__ClientData');
+          expect(data.obj.__typename).toEqual('Obj');
           expect(data.obj.field.__typename).toEqual('Field');
         })
         .catch(e => console.log(e));
@@ -1561,19 +1547,21 @@ describe('ApolloClient', () => {
     it('will write data locally which will then be read back', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache().restore({
+        cache: new InMemoryCache({
+          dataIdFromObject(object) {
+            if (typeof object.__typename === 'string') {
+              return object.__typename.toLowerCase();
+            }
+          },
+        }).restore({
           foo: {
             __typename: 'Foo',
             a: 1,
             b: 2,
             c: 3,
-            bar: {
-              type: 'id',
-              id: '$foo.bar',
-              generated: true,
-            },
+            bar: makeReference('bar'),
           },
-          '$foo.bar': {
+          bar: {
             __typename: 'Bar',
             d: 4,
             e: 5,
@@ -1683,7 +1671,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        id: '$foo.bar',
+        id: 'bar',
         fragment: gql`
           fragment y on Bar {
             e
@@ -1852,43 +1840,23 @@ describe('ApolloClient', () => {
           g: 8,
           h: 9,
           bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+            i: 10,
+            j: 11,
+            foo: {
+              _id: 'barfoo',
+              k: 12,
+              l: 13,
+            },
           },
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+            c: 3,
+            d: 4,
+            bar: {
+              id: 'foobar',
+              e: 5,
+              f: 6,
+            },
           },
-        },
-        '$ROOT_QUERY.foo': {
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.bar': {
-          i: 10,
-          j: 11,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar.foo',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.foo.bar': {
-          id: 'foobar',
-          e: 5,
-          f: 6,
-        },
-        '$ROOT_QUERY.bar.foo': {
-          _id: 'barfoo',
-          k: 12,
-          l: 13,
         },
       });
     });
@@ -2066,24 +2034,14 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+            c: 3,
+            d: 4,
+            bar: {
+              id: 'foobar',
+              e: 5,
+              f: 6,
+            },
           },
-        },
-        '$ROOT_QUERY.foo': {
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.foo.bar': {
-          id: 'foobar',
-          e: 5,
-          f: 6,
         },
       });
     });
@@ -2124,24 +2082,14 @@ describe('ApolloClient', () => {
           a: 1,
           b: 2,
           foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+            c: 3,
+            d: 4,
+            bar: {
+              _id: 'foobar',
+              e: 5,
+              f: 6,
+            },
           },
-        },
-        '$ROOT_QUERY.foo': {
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.foo.bar': {
-          _id: 'foobar',
-          e: 5,
-          f: 6,
         },
       });
     });

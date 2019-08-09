@@ -239,23 +239,13 @@ describe('subscribeToMore', () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }).restore({
-        'ROOT_QUERY.entry.0': {
-          value: 1,
-        },
-        'ROOT_QUERY.entry.1': {
-          value: 2,
-        },
         ROOT_QUERY: {
           entry: [
             {
-              type: 'id',
-              id: 'ROOT_QUERY.entry.0',
-              generated: true,
+              value: 1,
             },
             {
-              type: 'id',
-              id: 'ROOT_QUERY.entry.1',
-              generated: true,
+              value: 2,
             },
           ],
         },

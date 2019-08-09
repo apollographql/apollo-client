@@ -1,11 +1,11 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
-import { toIdValue } from 'apollo-utilities';
 
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { defaultDataIdFromObject } from '../inMemoryCache';
 import { NormalizedCache } from '../types';
+import { makeReference } from '../helpers';
 
 disableFragmentWarnings();
 
@@ -952,18 +952,15 @@ describe('diffing queries against the store', () => {
 
       const cacheRedirects = {
         Query: {
-          person: (_: any, args: any) =>
-            toIdValue({ id: args['id'], typename: 'Person' }),
+          person: (_: any, args: any) => makeReference(args['id'])
         },
       };
-
-      const config = { dataIdFromObject, cacheRedirects };
 
       const { result } = reader.diffQueryAgainstStore({
         store,
         query: itemQuery,
         previousResult,
-        config,
+        config: { dataIdFromObject, cacheRedirects },
       });
 
       expect(result).toEqual(previousResult);

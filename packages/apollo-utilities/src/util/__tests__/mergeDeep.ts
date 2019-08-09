@@ -1,4 +1,4 @@
-import { mergeDeep, mergeDeepArray } from '../mergeDeep';
+import { mergeDeep, mergeDeepArray, DeepMerger } from '../mergeDeep';
 
 describe('mergeDeep', function() {
   it('should return an object if first argument falsy', function() {
@@ -135,5 +135,33 @@ describe('mergeDeep', function() {
     // Although mergeDeepArray doesn't have the same tuple type awareness as
     // mergeDeep, it does infer that F should be the return type here:
     expect(mergeDeepArray(fs).check()).toBe("ok");
+  });
+
+  it('supports custom reconciler functions', function () {
+    const merger = new DeepMerger((target, source, key) => {
+      const targetValue = target[key];
+      const sourceValue = source[key];
+      if (Array.isArray(sourceValue)) {
+        if (!Array.isArray(targetValue)) {
+          return sourceValue;
+        }
+        return [...targetValue, ...sourceValue];
+      }
+      return this.merge(targetValue, sourceValue);
+    });
+
+    expect(merger.merge(
+      {
+        a: [1, 2, 3],
+        b: "replace me",
+      },
+      {
+        a: [4, 5],
+        b: ["I", "win"],
+      },
+    )).toEqual({
+      a: [1, 2, 3, 4, 5],
+      b: ["I", "win"],
+    });
   });
 });

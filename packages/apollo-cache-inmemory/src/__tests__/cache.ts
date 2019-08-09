@@ -24,12 +24,6 @@ describe('Cache', () => {
           resultCaching: false,
         }).restore(cloneDeep(data)),
       ),
-      initialDataForCaches.map(data =>
-        new InMemoryCache({
-          addTypename: false,
-          freezeResults: true,
-        }).restore(cloneDeep(data)),
-      ),
     ];
 
     cachesList.forEach((caches, i) => {
@@ -54,11 +48,6 @@ describe('Cache', () => {
         addTypename: false,
         ...config,
         resultCaching: false,
-      }),
-      new InMemoryCache({
-        addTypename: false,
-        ...config,
-        freezeResults: true,
       }),
     ];
 

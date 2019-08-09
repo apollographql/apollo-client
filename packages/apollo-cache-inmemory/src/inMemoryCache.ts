@@ -2,14 +2,10 @@
 import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
-
 import { Cache, ApolloCache, Transaction } from 'apollo-cache';
-
 import { addTypenameToDocument, canUseWeakMap } from 'apollo-utilities';
-
 import { wrap } from 'optimism';
-
-import { invariant, InvariantError } from 'ts-invariant';
+import { InvariantError } from 'ts-invariant';
 
 import {
   ApolloReducerConfig,
@@ -102,22 +98,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
-
-    // backwards compat
-    if ((this.config as any).customResolvers) {
-      invariant.warn(
-        'customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version.',
-      );
-      this.config.cacheRedirects = (this.config as any).customResolvers;
-    }
-
-    if ((this.config as any).cacheResolvers) {
-      invariant.warn(
-        'cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.',
-      );
-      this.config.cacheRedirects = (this.config as any).cacheResolvers;
-    }
-
     this.addTypename = !!this.config.addTypename;
 
     if (this.config.possibleTypes) {

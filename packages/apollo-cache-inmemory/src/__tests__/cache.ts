@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols, cloneDeep } from 'apollo-utilities';
 
 import { InMemoryCache, InMemoryCacheConfig } from '..';
-import { makeReference } from '../references';
+import { makeReference } from '../helpers';
 
 disableFragmentWarnings();
 

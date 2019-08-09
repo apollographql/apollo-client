@@ -27,7 +27,7 @@ import {
   makeReference,
   isReference,
   getTypenameFromStoreObject,
-} from './references';
+} from './helpers';
 import { defaultDataIdFromObject } from './inMemoryCache';
 
 export class WriteError extends Error {

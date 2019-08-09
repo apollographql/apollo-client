@@ -6,7 +6,7 @@ import { StoreObject } from '../';
 import { StoreReader } from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../objectCache';
 import { withError } from './diffAgainstStore';
-import { makeReference } from '../references';
+import { makeReference } from '../helpers';
 
 describe('reading from the store', () => {
   const reader = new StoreReader();

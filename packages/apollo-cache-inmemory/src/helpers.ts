@@ -1,7 +1,7 @@
 import { NormalizedCache, StoreObject } from './types';
 
 export interface Reference {
-  __ref: string;
+  readonly __ref: string;
 }
 
 export function makeReference(id: string): Reference {

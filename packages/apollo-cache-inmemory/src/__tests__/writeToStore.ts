@@ -19,7 +19,7 @@ import { StoreWriter } from '../writeToStore';
 
 import { defaultNormalizedCacheFactory } from '../objectCache';
 
-import { makeReference } from '../references';
+import { makeReference } from '../helpers';
 
 export function withWarning(func: Function, regex?: RegExp) {
   let message: string = null as never;

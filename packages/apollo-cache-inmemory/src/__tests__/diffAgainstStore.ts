@@ -5,7 +5,7 @@ import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { defaultDataIdFromObject } from '../inMemoryCache';
 import { NormalizedCache } from '../types';
-import { makeReference } from '../references';
+import { makeReference } from '../helpers';
 
 disableFragmentWarnings();
 

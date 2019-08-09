@@ -49,7 +49,7 @@ import {
   makeReference,
   Reference,
   getTypenameFromStoreObject,
-} from './references';
+} from './helpers';
 
 export type VariableMap = { [name: string]: any };
 

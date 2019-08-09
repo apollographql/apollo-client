@@ -27,7 +27,6 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 
 const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
-  addTypename: true,
   resultCaching: true,
   freezeResults: false,
 };
@@ -80,7 +79,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
-  private addTypename: boolean;
   private possibleTypes?: {
     [supertype: string]: {
       [subtype: string]: true;
@@ -98,7 +96,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
-    this.addTypename = !!this.config.addTypename;
 
     if (this.config.possibleTypes) {
       this.addPossibleTypes(this.config.possibleTypes);
@@ -299,19 +296,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) {
-      let result = this.typenameDocumentCache.get(document);
-      if (!result) {
-        result = addTypenameToDocument(document);
-        this.typenameDocumentCache.set(document, result);
-        // If someone calls transformDocument and then mistakenly passes the
-        // result back into an API that also calls transformDocument, make sure
-        // we don't keep creating new query documents.
-        this.typenameDocumentCache.set(result, result);
-      }
-      return result;
+    let result = this.typenameDocumentCache.get(document);
+    if (!result) {
+      result = addTypenameToDocument(document);
+      this.typenameDocumentCache.set(document, result);
+      // If someone calls transformDocument and then mistakenly passes the
+      // result back into an API that also calls transformDocument, make sure
+      // we don't keep creating new query documents.
+      this.typenameDocumentCache.set(result, result);
     }
-    return document;
+    return result;
   }
 
   public addPossibleTypes(possibleTypes: PossibleTypesMap) {

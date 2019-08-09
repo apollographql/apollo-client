@@ -49,14 +49,6 @@ export type RemoveVariableDefinitionConfig = RemoveNodeConfig<
   VariableDefinitionNode
 >;
 
-const TYPENAME_FIELD: FieldNode = {
-  kind: 'Field',
-  name: {
-    kind: 'Name',
-    value: '__typename',
-  },
-};
-
 function isEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
   fragments: FragmentMap,
@@ -207,6 +199,14 @@ export function removeDirectivesFromDocument(
   return modifiedDoc;
 }
 
+const TYPENAME_FIELD = Object.freeze({
+  kind: 'Field',
+  name: Object.freeze({
+    kind: 'Name',
+    value: '__typename',
+  }),
+} as FieldNode);
+
 export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
   return visit(checkDocument(doc), {
     SelectionSet: {
@@ -249,6 +249,12 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
       },
     },
   });
+}
+
+export namespace addTypenameToDocument {
+  export function didAdd(field: SelectionNode): field is FieldNode {
+    return field === TYPENAME_FIELD;
+  }
 }
 
 const connectionRemoveConfig = {

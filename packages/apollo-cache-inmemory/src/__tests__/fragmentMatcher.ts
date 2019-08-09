@@ -1,14 +1,11 @@
-import { InMemoryCache } from '../inMemoryCache';
 import gql from 'graphql-tag';
+import { InMemoryCache } from '../inMemoryCache';
+import { cloneWithoutTypename } from './testUtils';
 
 describe('fragment matching', () => {
   it('can match exact types with or without possibleTypes', () => {
-    const cacheWithoutPossibleTypes = new InMemoryCache({
-      addTypename: true,
-    });
-
+    const cacheWithoutPossibleTypes = new InMemoryCache();
     const cacheWithPossibleTypes = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ['Cat', 'Dog'],
       },
@@ -47,15 +44,18 @@ describe('fragment matching', () => {
     };
 
     cacheWithoutPossibleTypes.writeQuery({ query, data });
-    expect(cacheWithoutPossibleTypes.readQuery({ query })).toEqual(data);
+    expect(cacheWithoutPossibleTypes.readQuery({ query })).toEqual(
+      cloneWithoutTypename(data),
+    );
 
     cacheWithPossibleTypes.writeQuery({ query, data });
-    expect(cacheWithPossibleTypes.readQuery({ query })).toEqual(data);
+    expect(cacheWithPossibleTypes.readQuery({ query })).toEqual(
+      cloneWithoutTypename(data),
+    );
   });
 
   it('can match interface subtypes', () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ['Cat', 'Dog'],
       },
@@ -83,12 +83,11 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 
   it('can match union member types', () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Status: ['PASSING', 'FAILING', 'SKIPPED'],
       },
@@ -134,12 +133,11 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 
   it('can match indirect subtypes while avoiding cycles', () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ['Animal', 'Bug', 'Mammal'],
         Bug: ['Ant', 'Spider', 'RolyPoly'],
@@ -183,13 +181,11 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 
   it('can match against the root Query', () => {
-    const cache = new InMemoryCache({
-      addTypename: true,
-    });
+    const cache = new InMemoryCache();
 
     const query = gql`
       query AllPeople {
@@ -224,6 +220,6 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 });

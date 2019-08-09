@@ -19,6 +19,7 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   StoreValue,
+  addTypenameToDocument,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -339,6 +340,13 @@ export class StoreReader {
     }
 
     selectionSet.selections.forEach(selection => {
+      // If this selection was added by the addTypenameToDocument function, it
+      // may be useful for maintaining accurate __typename information in the
+      // cache, but we do not need to include it in the query result.
+      if (addTypenameToDocument.didAdd(selection)) {
+        return;
+      }
+
       if (!shouldInclude(selection, variables)) {
         // Skip this entirely
         return;

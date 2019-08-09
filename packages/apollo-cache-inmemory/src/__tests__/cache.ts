@@ -2,6 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols, cloneDeep } from 'apollo-utilities';
 
 import { InMemoryCache, InMemoryCacheConfig } from '..';
+import { cloneWithoutTypename } from './testUtils';
 import { makeReference } from '../helpers';
 
 disableFragmentWarnings();
@@ -14,19 +15,15 @@ describe('Cache', () => {
   ) {
     const cachesList: InMemoryCache[][] = [
       initialDataForCaches.map(data =>
-        new InMemoryCache({
-          addTypename: false,
-        }).restore(cloneDeep(data)),
+        new InMemoryCache().restore(cloneDeep(data)),
       ),
       initialDataForCaches.map(data =>
         new InMemoryCache({
-          addTypename: false,
           resultCaching: false,
         }).restore(cloneDeep(data)),
       ),
       initialDataForCaches.map(data =>
         new InMemoryCache({
-          addTypename: false,
           freezeResults: true,
         }).restore(cloneDeep(data)),
       ),
@@ -46,17 +43,14 @@ describe('Cache', () => {
   ) {
     const caches = [
       new InMemoryCache({
-        addTypename: false,
         ...config,
         resultCaching: true,
       }),
       new InMemoryCache({
-        addTypename: false,
         ...config,
         resultCaching: false,
       }),
       new InMemoryCache({
-        addTypename: false,
         ...config,
         freezeResults: true,
       }),
@@ -907,7 +901,6 @@ describe('Cache', () => {
       'will write some deeply nested data into the store at any id',
       {
         dataIdFromObject: (o: any) => o.id,
-        addTypename: false,
       },
       proxy => {
         proxy.writeFragment({
@@ -1028,9 +1021,7 @@ describe('Cache', () => {
 
     itWithCacheConfig(
       'writes data that can be read back',
-      {
-        addTypename: true,
-      },
+      {},
       proxy => {
         const readWriteFragment = gql`
           fragment aFragment on query {
@@ -1053,15 +1044,13 @@ describe('Cache', () => {
           fragment: readWriteFragment,
           id: 'query',
         });
-        expect(stripSymbols(result)).toEqual(data);
+        expect(stripSymbols(result)).toEqual(cloneWithoutTypename(data));
       },
     );
 
     itWithCacheConfig(
       'will write some data to the store with variables',
-      {
-        addTypename: true,
-      },
+      {},
       proxy => {
         proxy.writeFragment({
           data: {

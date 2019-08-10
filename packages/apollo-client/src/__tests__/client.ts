@@ -2603,6 +2603,122 @@ describe('client', () => {
     });
   });
 
+  it.only('should be able to refetch after there was a network error', done => {
+    const query: DocumentNode = gql`
+      query somethingelse {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const dataTwo = { allPeople: { people: [{ name: 'Princess Leia' }] } };
+    const link = mockSingleLink(
+      { request: { query }, result: { data } },
+      { request: { query }, error: new Error('This is an error!') },
+      { request: { query }, result: { data: dataTwo } },
+    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    let count = 0;
+    const noop = () => null;
+
+    const observable = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let subscription: any = null;
+
+    const observerOptions = {
+      next(result: any) {
+        try {
+          switch (count++) {
+            case 0:
+              if (!result.data!.allPeople) {
+                done.fail('Should have data by this point');
+                break;
+              }
+              // First result is loaded, run a refetch to get the second result
+              // which is an error.
+              expect(result.loading).toBeFalsy();
+              expect(result.networkStatus).toBe(7);
+              expect(stripSymbols(result.data!.allPeople)).toEqual(
+                data.allPeople,
+              );
+              setTimeout(() => {
+                observable.refetch().then(() => {
+                  done.fail('Expected error value on first refetch.');
+                }, noop);
+              }, 0);
+              break;
+            case 1:
+              // Waiting for the second result to load
+              expect(result.loading).toBeTruthy();
+              expect(result.networkStatus).toBe(4);
+              break;
+            // case 2 is handled by the error callback
+            case 3:
+              expect(result.loading).toBeTruthy();
+              expect(result.networkStatus).toBe(4);
+              expect(result.errors).toBeFalsy();
+              break;
+            case 4:
+              // Third result's data is loaded
+              expect(result.loading).toBeFalsy();
+              expect(result.networkStatus).toBe(7);
+              expect(result.errors).toBeFalsy();
+              if (!result.data) {
+                done.fail('Should have data by this point');
+                break;
+              }
+              expect(stripSymbols(result.data.allPeople)).toEqual(
+                dataTwo.allPeople,
+              );
+              done();
+              break;
+            default:
+              throw new Error('Unexpected fall through');
+          }
+        } catch (e) {
+          done.fail(e);
+        }
+      },
+      error(error) {
+        expect(count++).toBe(2);
+        expect(error.message).toBe('Network error: This is an error!');
+
+        subscription.unsubscribe();
+
+        const lastError = observable.getLastError();
+        const lastResult = observable.getLastResult();
+
+        expect(lastResult.loading).toBeFalsy();
+        expect(lastResult.networkStatus).toBe(8);
+
+        observable.resetLastResults();
+        subscription = observable.subscribe(observerOptions);
+        Object.assign(observable, { lastError, lastResult });
+
+        // The error arrived, run a refetch to get the third result
+        // which should now contain valid data.
+        setTimeout(() => {
+          observable.refetch().catch(() => {
+            done.fail('Expected good data on second refetch.');
+          });
+        }, 0);
+      },
+    };
+
+    subscription = observable.subscribe(observerOptions);
+  });
+
   it('should throw a GraphQL error', () => {
     const query = gql`
       query {

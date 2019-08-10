@@ -1,0 +1,35 @@
+---
+title: '@apollo/react-common'
+description: API reference
+---
+
+import ApolloProvider from '../../shared/apollo-provider.mdx';
+
+## Installation
+
+```
+npm install @apollo/react-common
+```
+
+## `ApolloProvider`
+
+<ApolloProvider />
+
+## `ApolloConsumer`
+
+One way to access the configured Apollo Client instance directly is to create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function will be called with your `ApolloClient` instance as its only argument. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [React Context API](https://reactjs.org/docs/context.html).
+
+### Example
+
+```jsx
+import React from 'react';
+import { ApolloConsumer } from '@apollo/react-common';
+// or from the hooks, components, hoc packages:
+// import { ApolloConsumer } from "@apollo/react-hooks";
+
+const WithApolloClient = () => (
+  <ApolloConsumer>
+    {client => 'We have access to the client!' /* do stuff here */}
+  </ApolloConsumer>
+);
+```

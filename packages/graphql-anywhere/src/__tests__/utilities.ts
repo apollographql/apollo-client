@@ -108,7 +108,7 @@ describe('utilities', () => {
       expect(filter(doc, arrayData)).toEqual(filteredArrayData);
     });
 
-    it('can short circut when data is null', () => {
+    it('can short circuit when data is null', () => {
       expect(filter(doc, null)).toEqual(null);
     });
 

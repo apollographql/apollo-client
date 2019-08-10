@@ -97,7 +97,7 @@ Now any `import` statements importing from a GraphQL file type will return a rea
 
 ```jsx
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
+import { graphql } from '@apollo/react-hoc';
 import myImportedQuery from './productsQuery.graphql';
 // or for files with multiple operations:
 // import { query1, query2 } from './queries.graphql';

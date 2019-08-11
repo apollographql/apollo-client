@@ -279,12 +279,6 @@ export class StoreReader {
    *   variableValues?: ?{[key: string]: any},
    *   operationName?: ?string
    * ): Promise<GraphQLResult>
-   *
-   * The default export as of graphql-anywhere is sync as of 4.0,
-   * but below is an exported alternative that is async.
-   * In the 5.0 version, this will be the only export again
-   * and it will be async
-   *
    */
   private executeStoreQuery({
     query,

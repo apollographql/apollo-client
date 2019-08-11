@@ -56,8 +56,7 @@
     "apollo-cache": "file:packages/apollo-cache",
     "apollo-cache-inmemory": "file:packages/apollo-cache-inmemory",
     "apollo-client": "file:packages/apollo-client",
-    "apollo-utilities": "file:packages/apollo-utilities",
-    "graphql-anywhere": "file:packages/graphql-anywhere"
+    "apollo-utilities": "file:packages/apollo-utilities"
   },
   "devDependencies": {
     "@babel/core": "7.5.5",

@@ -1,12 +1,16 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (vNext)
+## Apollo Client (2.6.4)
 
-### Apollo Client (vNext)
+### Apollo Client (2.6.4)
 
+- Modify `ObservableQuery` to allow queries with `notifyOnNetworkStatusChange`
+  to be notified when loading after an error occurs. <br />
+  [@jasonpaulos](https://github.com/jasonpaulos) in [#4992](https://github.com/apollographql/apollo-client/pull/4992)
 - Documentation updates.  </br>
-  [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132) 
-
+  [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5141](https://github.com/apollographql/apollo-client/pull/5141)
+  
 
 ## Apollo Client (2.6.3)
 

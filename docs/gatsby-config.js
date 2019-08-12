@@ -55,7 +55,7 @@ module.exports = {
             'recipes/meteor',
             'recipes/recompose',
           ],
-          API: [
+          'API Reference': [
             'api/apollo-client',
             'api/react-hooks',
             'api/react-ssr',

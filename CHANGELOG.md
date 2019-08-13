@@ -7,6 +7,9 @@
 - Modify `ObservableQuery` to allow queries with `notifyOnNetworkStatusChange`
   to be notified when loading after an error occurs. <br />
   [@jasonpaulos](https://github.com/jasonpaulos) in [#4992](https://github.com/apollographql/apollo-client/pull/4992)
+- Add `graphql` as a `peerDependency` of `apollo-cache` and 
+  `graphql-anywhere`.  <br/>
+  [@ssalbdivad](https://github.com/ssalbdivad) in [#5081](https://github.com/apollographql/apollo-client/pull/5081)
 - Documentation updates.  </br>
   [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132)  <br/>
   [@hwillson](https://github.com/hwillson) in [#5141](https://github.com/apollographql/apollo-client/pull/5141)

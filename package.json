@@ -101,7 +101,7 @@
     "rollup-plugin-typescript2": "0.18.1",
     "rxjs": "6.5.2",
     "ts-jest": "23.10.5",
-    "tsc-watch": "2.2.1",
+    "tsc-watch": "2.4.0",
     "tslib": "1.10.0",
     "tslint": "5.18.0",
     "typescript": "3.5.3",

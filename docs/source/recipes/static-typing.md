@@ -228,8 +228,6 @@ Now the `<Query />` component render prop function arguments are typed. Since we
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
-> Note: It is also possible to extend a `class` with the `<Query />` component as follows: `class AllPeopleQuery extends Query<Data, Variables> {}`. This `class` can be exported and used in a component tree with full TypeScript support
-
 ## Typing Higher Order Components
 
 Since the result of a query will be sent to the wrapped component as props, we want to be able to tell our type system the shape of those props. Here is an example setting types for an operation using the `graphql` higher order component (**note**: the follow sections also work for the query, mutation, and subscription hocs):

@@ -102,12 +102,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return maybeBroadcastWatch.call(this, c);
     }, {
       makeCacheKey(c: Cache.WatchOptions) {
-        if (c.optimistic) {
-          // If we're reading optimistic data, it doesn't matter if this.data
-          // is a DepTrackingCache, since it will be ignored.
-          return;
-        }
-
         if (c.previousResult) {
           // If a previousResult was provided, assume the caller would prefer
           // to compare the previous data to the new data to determine whether

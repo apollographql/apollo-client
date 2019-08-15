@@ -7,24 +7,30 @@ import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 import QueryOptions from '../../shared/query-options.mdx';
 import QueryResult from '../../shared/query-result.mdx';
 
-Fetching data in a simple, predictable way is one of the core features of Apollo Client. In this guide, you'll learn how to fetch GraphQL data with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies your data management code by tracking error and loading states for you.
+> This article was recently updated to reflect Apollo Client's support
+> for React Hooks. To perform queries with Apollo Client's render-prop API instead,
+> see the [previous version of this article](/v2.5/essentials/queries/).
 
-This page assumes some familiarity with building GraphQL queries. If you'd like a refresher, we recommend [reading this guide](http://graphql.org/learn/queries/) and practicing [running queries in GraphiQL](/features/developer-tooling/#features). Since Apollo Client queries are just standard GraphQL, you can be sure that any query that successfully runs in GraphiQL will also run when used with `useQuery`.
+Fetching data in a simple, predictable way is one of the core features of Apollo Client. This article shows how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
 
-The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](/essentials/get-started/) guide if you need help with either of those steps.
+## Prerequisites
 
-> If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/j2ly83749w) on CodeSandbox and our sample GraphQL server on [this CodeSandbox](https://codesandbox.io/s/32ypr38l61). You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
+This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend that you [read this guide](http://graphql.org/learn/queries/) and [practice running queries in GraphiQL](/features/developer-tooling/#features). Apollo Client queries are just standard GraphQL, so any query that runs in GraphiQL will also run when provided to `useQuery`.
+
+This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](/essentials/get-started/) if you need help with either of those steps.
+
+> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/j2ly83749w) and [sample GraphQL server](https://codesandbox.io/s/32ypr38l61) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
 
 ## The `useQuery` hook
 
-The `useQuery` hook, which is based on React's [Hooks API](https://reactjs.org/docs/hooks-intro.html), is one of the most important building blocks of your Apollo application. To run a query, just pass a GraphQL query string wrapped with the `gql` function into `useQuery` as the first parameter, when you call `useQuery` within a React component. When your component renders, `useQuery` will return an object from Apollo Client containing `loading`, `error`, and `data` properties that you can use to render your UI. Let's look at an example:
+The `useQuery` hook, which is based on the React [Hooks API](https://reactjs.org/docs/hooks-intro.html), is one of the most important building blocks of your Apollo application. To run a query within a React component, you simply pass `useQuery` a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
 
-First, let's create our GraphQL query. Remember to wrap your query string in the `gql` function in order to parse it into a query document. Once we have our GraphQL query, let's pass it into our `useQuery` hook. When we get back the `loading`, `error`, and `data` properties that the `useQuery` hook provides for us, we can intelligently render different UI elements depending on the state of our query. Let's see what this looks like!
+Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
 
-```tsx
+```tsx:title=index.js
 import gql from 'graphql-tag';
 import { useQuery } from '@apollo/react-hooks';
 
@@ -36,7 +42,34 @@ const GET_DOGS = gql`
     }
   }
 `;
+```
 
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```tsx:title=index.js
+import gql from 'graphql-tag';
+import { Query } from 'react-apollo';
+
+const GET_DOGS = gql`
+  {
+    dogs {
+      id
+      breed
+    }
+  }
+`;
+```
+
+</div>
+</MultiCodeBlock>
+
+Next, from within a component named `Dogs`, we'll pass our `GET_DOGS` query to the `useQuery` hook:
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```tsx:title=index.js
 function Dogs({ onDogSelected }) {
   const { loading, error, data } = useQuery(GET_DOGS);
 
@@ -58,19 +91,7 @@ function Dogs({ onDogSelected }) {
 </div>
 <div data-language="Render Props (JavaScript)">
 
-```tsx
-import gql from 'graphql-tag';
-import { Query } from 'react-apollo';
-
-const GET_DOGS = gql`
-  {
-    dogs {
-      id
-      breed
-    }
-  }
-`;
-
+```tsx:title=index.js
 const Dogs = ({ onDogSelected }) => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {
@@ -94,9 +115,13 @@ const Dogs = ({ onDogSelected }) => (
 </div>
 </MultiCodeBlock>
 
-If you render `Dogs` within your `App` component, you'll first see a loading state and then a form with a list of dog breeds once Apollo Client receives the data from the server. When the form value changes, we're going to send the value to a parent component via `onDogSelected`, which will eventually pass the value to a `DogPhoto` component.
+As this snippet shows, when the `loading`, `error`, and `data` properties are populated by the `useQuery` hook, we can intelligently render different UI elements depending on the state of the query.
 
-In the next step, we're going to hook our form up to a more complex query with variables by building a `DogPhoto` component.
+In this case, the `Dogs` component presents a `Loading...` message until Apollo Client receives data from the server. When the data is received, the component renders a dropdown menu that's populated with the received list of dog breeds.
+
+When the user selects a dog breed from the dropdown menu, the selection is sent to the parent component via the provided `onDogSelected` function.
+
+In the next step, we'll hook the dropdown menu up to a more complex query that uses variables.
 
 ## Receiving data
 

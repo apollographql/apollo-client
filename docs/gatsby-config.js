@@ -8,8 +8,9 @@ module.exports = {
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
-        defaultVersion: 2.6,
+        defaultVersion: 3.0,
         versions: {
+          2.6: 'version-2.6',
           2.5: 'version-2.5',
           2.4: 'version-2.4',
         },

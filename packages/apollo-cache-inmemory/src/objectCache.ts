@@ -28,6 +28,10 @@ export class ObjectCache implements NormalizedCache {
   }
 }
 
+export function supportsResultCaching() {
+  return false;
+}
+
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {

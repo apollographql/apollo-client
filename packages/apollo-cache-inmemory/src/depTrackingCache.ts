@@ -154,6 +154,10 @@ class Layer extends DepTrackingCache {
   }
 }
 
+export function supportsResultCaching(store: any): store is DepTrackingCache {
+  return !!(store instanceof DepTrackingCache && store.depend);
+}
+
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {

@@ -15,7 +15,7 @@ import {
 
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
-import { DepTrackingCache } from './depTrackingCache';
+import { DepTrackingCache, supportsResultCaching } from './depTrackingCache';
 import { KeyTrie } from 'optimism';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
@@ -116,7 +116,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
           return;
         }
 
-        if (cache.data instanceof DepTrackingCache) {
+        if (supportsResultCaching(cache.data)) {
           // Return a cache key (thus enabling caching) only if we're currently
           // using a data store that can track cache dependencies.
           return cache.cacheKeyRoot.lookup(

@@ -3,6 +3,9 @@ jest.mock('../objectCache', () => {
   return {
     ObjectCache: MapCache,
     defaultNormalizedCacheFactory: mapNormalizedCacheFactory,
+    supportsResultCaching() {
+      return false;
+    },
   };
 });
 

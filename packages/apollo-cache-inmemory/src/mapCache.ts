@@ -43,6 +43,10 @@ export class MapCache implements NormalizedCache {
   }
 }
 
+export function supportsResultCaching() {
+  return false;
+}
+
 export function mapNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {

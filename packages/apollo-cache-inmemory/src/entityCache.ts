@@ -7,9 +7,21 @@ type DependType = OptimisticWrapperFunction<[string], StoreObject> | null;
 
 export abstract class EntityCache implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
+
+  // It seems like this property ought to be protected rather than public,
+  // but TypeScript doesn't realize it's inherited from a shared base
+  // class by both Root and Layer classes, so Layer methods are forbidden
+  // from accessing the .depend property of an arbitrary EntityCache
+  // instance, because it might be a Root instance (and vice-versa).
   public readonly depend: DependType = null;
 
   protected makeDepend(): DependType {
+    // It's important for this.depend to return a real value instead of
+    // void, because this.depend(dataId) after this.depend.dirty(dataId)
+    // marks the ID as clean if the result has not changed since the last
+    // time the parent computation called this.depend(dataId). Returning
+    // the StoreObject ensures the ID stays dirty unless its StoreObject
+    // value is actually === the same as before.
     return wrap((dataId: string) => this.data[dataId], {
       disposable: true,
       makeCacheKey(dataId) {
@@ -24,6 +36,10 @@ export abstract class EntityCache implements NormalizedCache {
   ): EntityCache;
 
   public abstract removeLayer(id: string): EntityCache;
+
+  // Although the EntityCache class is abstract, it contains concrete
+  // implementations of the various NormalizedCache interface methods that
+  // are inherited by the Root and Layer subclasses.
 
   public toObject(): NormalizedCacheObject {
     return this.data;
@@ -83,6 +99,7 @@ export namespace EntityCache {
     }) {
       super();
       if (resultCaching) {
+        // Regard this.depend as publicly readonly but privately mutable.
         (this as any).depend = this.makeDepend();
         this.sharedLayerDepend = this.makeDepend();
       }
@@ -93,10 +110,12 @@ export namespace EntityCache {
       id: string,
       replay: (layer: EntityCache) => any,
     ): EntityCache {
+      // The replay function will be called in the Layer constructor.
       return new Layer(id, this, replay, this.sharedLayerDepend);
     }
 
     public removeLayer(): Root {
+      // Never remove the root layer.
       return this;
     }
   }
@@ -123,7 +142,9 @@ class Layer extends EntityCache {
   }
 
   public removeLayer(id: string): EntityCache {
+    // Remove all instances of the given id, not just the first one.
     const parent = this.parent.removeLayer(id);
+
     if (id === this.id) {
       // Dirty every ID we're removing.
       // TODO Some of these IDs could escape dirtying if value unchanged.
@@ -132,7 +153,11 @@ class Layer extends EntityCache {
       }
       return parent;
     }
+
+    // No changes are necessary if the parent chain remains identical.
     if (parent === this.parent) return this;
+
+    // Recreate this layer on top of the new parent.
     return parent.addLayer(this.id, this.replay);
   }
 
@@ -147,6 +172,12 @@ class Layer extends EntityCache {
     if (hasOwn.call(this.data, dataId)) {
       return super.get(dataId);
     }
+    // If this layer has a this.depend function and it's not the one
+    // this.parent is using, we need to depend on the given dataId before
+    // delegating to the parent. This check saves us from calling
+    // this.depend(dataId) for every optimistic layer we examine, but
+    // ensures we call this.depend(dataId) in the last optimistic layer
+    // before we reach the root layer.
     if (this.depend && this.depend !== this.parent.depend) {
       this.depend(dataId);
     }
@@ -155,6 +186,7 @@ class Layer extends EntityCache {
 }
 
 export function supportsResultCaching(store: any): store is EntityCache {
+  // When result caching is disabled, store.depend will be null.
   return !!(store instanceof EntityCache && store.depend);
 }
 

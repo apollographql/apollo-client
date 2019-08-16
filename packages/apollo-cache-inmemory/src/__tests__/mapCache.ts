@@ -1,4 +1,4 @@
-jest.mock('../objectCache', () => {
+jest.mock('../entityCache', () => {
   const { MapCache, mapNormalizedCacheFactory } = require('../mapCache');
   return {
     ObjectCache: MapCache,
@@ -12,7 +12,6 @@ jest.mock('../objectCache', () => {
 describe('MapCache', () => {
   // simply re-runs all the tests
   // with the alternative implementation of the cache
-  require('./objectCache');
   require('./cache');
   require('./diffAgainstStore');
   require('./fragmentMatcher');

@@ -5,7 +5,7 @@ const hasOwn = Object.prototype.hasOwnProperty;
 
 type DependType = OptimisticWrapperFunction<[string], StoreObject> | null;
 
-export abstract class DepTrackingCache implements NormalizedCache {
+export abstract class EntityCache implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
   public readonly depend: DependType = null;
 
@@ -20,10 +20,10 @@ export abstract class DepTrackingCache implements NormalizedCache {
 
   public abstract addLayer(
     id: string,
-    replay: (layer: DepTrackingCache) => any,
-  ): DepTrackingCache;
+    replay: (layer: EntityCache) => any,
+  ): EntityCache;
 
-  public abstract removeLayer(id: string): DepTrackingCache;
+  public abstract removeLayer(id: string): EntityCache;
 
   public toObject(): NormalizedCacheObject {
     return this.data;
@@ -64,9 +64,9 @@ export abstract class DepTrackingCache implements NormalizedCache {
   }
 }
 
-export namespace DepTrackingCache {
-  // Refer to this class as DepTrackingCache.Root outside this namespace.
-  export class Root extends DepTrackingCache {
+export namespace EntityCache {
+  // Refer to this class as EntityCache.Root outside this namespace.
+  export class Root extends EntityCache {
     // Although each Root instance gets its own unique this.depend
     // function, any Layer instances created by calling addLayer need to
     // share a single distinct dependency function. Since this shared
@@ -91,8 +91,8 @@ export namespace DepTrackingCache {
 
     public addLayer(
       id: string,
-      replay: (layer: DepTrackingCache) => any,
-    ): DepTrackingCache {
+      replay: (layer: EntityCache) => any,
+    ): EntityCache {
       return new Layer(id, this, replay, this.sharedLayerDepend);
     }
 
@@ -103,12 +103,12 @@ export namespace DepTrackingCache {
 }
 
 // Not exported, since all Layer instances are created by the addLayer method
-// of the DepTrackingCache.Root class.
-class Layer extends DepTrackingCache {
+// of the EntityCache.Root class.
+class Layer extends EntityCache {
   constructor(
     private id: string,
-    private parent: DepTrackingCache,
-    private replay: (layer: DepTrackingCache) => any,
+    private parent: EntityCache,
+    private replay: (layer: EntityCache) => any,
     public readonly depend: DependType,
   ) {
     super();
@@ -117,12 +117,12 @@ class Layer extends DepTrackingCache {
 
   public addLayer(
     id: string,
-    replay: (layer: DepTrackingCache) => any,
-  ): DepTrackingCache {
+    replay: (layer: EntityCache) => any,
+  ): EntityCache {
     return new Layer(id, this, replay, this.depend);
   }
 
-  public removeLayer(id: string): DepTrackingCache {
+  public removeLayer(id: string): EntityCache {
     const parent = this.parent.removeLayer(id);
     if (id === this.id) {
       // Dirty every ID we're removing.
@@ -154,12 +154,12 @@ class Layer extends DepTrackingCache {
   }
 }
 
-export function supportsResultCaching(store: any): store is DepTrackingCache {
-  return !!(store instanceof DepTrackingCache && store.depend);
+export function supportsResultCaching(store: any): store is EntityCache {
+  return !!(store instanceof EntityCache && store.depend);
 }
 
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {
-  return new DepTrackingCache.Root({ resultCaching: true, seed });
+  return new EntityCache.Root({ resultCaching: true, seed });
 }

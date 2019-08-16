@@ -15,7 +15,7 @@ import {
 
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
-import { DepTrackingCache, supportsResultCaching } from './depTrackingCache';
+import { EntityCache, supportsResultCaching } from './entityCache';
 import { KeyTrie } from 'optimism';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
@@ -43,8 +43,8 @@ export function defaultDataIdFromObject(result: any): string | null {
 }
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: DepTrackingCache;
-  private optimisticData: DepTrackingCache;
+  private data: EntityCache;
+  private optimisticData: EntityCache;
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
@@ -75,7 +75,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
-    this.data = new DepTrackingCache.Root({
+    this.data = new EntityCache.Root({
       resultCaching: this.config.resultCaching,
     });
 
@@ -205,7 +205,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
-    const perform = (layer?: DepTrackingCache) => {
+    const perform = (layer?: EntityCache) => {
       const { data, optimisticData, silenceBroadcast } = this;
       this.silenceBroadcast = true;
       // Temporarily make this.data refer to the new layer for the duration of

@@ -40,7 +40,7 @@ import {
 } from 'graphql';
 
 import { wrap, KeyTrie } from 'optimism';
-import { supportsResultCaching } from './depTrackingCache';
+import { supportsResultCaching } from './entityCache';
 import { InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
 import {

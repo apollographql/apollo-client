@@ -1,8 +1,8 @@
 import { NormalizedCacheObject } from '../types';
-import { DepTrackingCache } from '../depTrackingCache';
+import { EntityCache } from '../entityCache';
 
 describe('OptimisticCacheLayer', () => {
-  function makeLayer(root: DepTrackingCache) {
+  function makeLayer(root: EntityCache) {
     return root.addLayer('whatever', () => {});
   }
 
@@ -16,7 +16,7 @@ describe('OptimisticCacheLayer', () => {
       Human: { __typename: 'Human', name: 'John' },
     };
 
-    const underlyingCache = new DepTrackingCache.Root({ seed: data });
+    const underlyingCache = new EntityCache.Root({ seed: data });
 
     let cache = makeLayer(underlyingCache);
     beforeEach(() => {
@@ -54,7 +54,7 @@ describe('OptimisticCacheLayer', () => {
       Human: { __typename: 'Human', name: 'John' },
     };
 
-    const underlyingCache = new DepTrackingCache.Root({ seed: data });
+    const underlyingCache = new EntityCache.Root({ seed: data });
     let cache = makeLayer(underlyingCache);
     let recording: NormalizedCacheObject;
 

@@ -197,4 +197,249 @@ describe('optimistic cache layers', () => {
       },
     });
   });
+
+  it('dirties appropriate IDs when optimistic layers are removed', () => {
+    const cache = new InMemoryCache({
+      resultCaching: true,
+      dataIdFromObject(value: any) {
+        switch (value && value.__typename) {
+          case 'Book':
+            return 'Book:' + value.isbn;
+          case 'Author':
+            return 'Author:' + value.name;
+        }
+      },
+    });
+
+    type Q = {
+      books: any[];
+    };
+
+    const query = gql`
+      {
+        books {
+          title
+          subtitle
+        }
+      }
+    `;
+
+    const eagerBookData = {
+      __typename: 'Book',
+      isbn: '1603589082',
+      title: 'Eager',
+      subtitle: 'The Surprising, Secret Life of Beavers and Why They Matter',
+      author: {
+        __typename: 'Author',
+        name: 'Ben Goldfarb',
+      },
+    };
+
+    const spinelessBookData = {
+      __typename: 'Book',
+      isbn: '0735211280',
+      title: 'Spineless',
+      subtitle: 'The Science of Jellyfish and the Art of Growing a Backbone',
+      author: {
+        __typename: 'Author',
+        name: 'Juli Berwald',
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        books: [eagerBookData, spinelessBookData],
+      },
+    });
+
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        books: [{ __ref: 'Book:1603589082' }, { __ref: 'Book:0735211280' }],
+      },
+      'Book:1603589082': {
+        title: 'Eager',
+        subtitle: eagerBookData.subtitle,
+        __typename: 'Book',
+      },
+      'Book:0735211280': {
+        title: 'Spineless',
+        subtitle: spinelessBookData.subtitle,
+        __typename: 'Book',
+      },
+    });
+
+    function read() {
+      return cache.readQuery<Q>({ query }, true);
+    }
+
+    const result = read();
+    expect(result).toEqual({
+      books: [
+        {
+          __typename: 'Book',
+          title: 'Eager',
+          subtitle: 'The Surprising, Secret Life of Beavers and Why They Matter',
+        },
+        {
+          __typename: 'Book',
+          title: 'Spineless',
+          subtitle: 'The Science of Jellyfish and the Art of Growing a Backbone',
+        },
+      ],
+    });
+    expect(read()).toBe(result);
+
+    const bookAuthorNameFragment = gql`
+      fragment BookAuthorName on Book {
+        author {
+          name
+        }
+      }
+    `;
+
+    cache.writeFragment({
+      id: 'Book:0735211280',
+      fragment: bookAuthorNameFragment,
+      data: {
+        author: spinelessBookData.author,
+      },
+    });
+
+    // Adding an author doesn't change the structure of the original result,
+    // because the original query did not ask for author information.
+    const resultWithSpinlessAuthor = read();
+    expect(resultWithSpinlessAuthor).toEqual(result);
+    expect(resultWithSpinlessAuthor).not.toBe(result);
+    expect(resultWithSpinlessAuthor.books[0]).toBe(result.books[0]);
+    expect(resultWithSpinlessAuthor.books[1]).not.toBe(result.books[1]);
+
+    cache.recordOptimisticTransaction(proxy => {
+      proxy.writeFragment({
+        id: 'Book:1603589082',
+        fragment: bookAuthorNameFragment,
+        data: {
+          author: eagerBookData.author,
+        },
+      });
+    }, 'eager author');
+
+    expect(read()).toEqual(result);
+
+    const queryWithAuthors = gql`
+      {
+        books {
+          title
+          subtitle
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    function readWithAuthors(optimistic = true) {
+      return cache.readQuery<Q>({
+        query: queryWithAuthors,
+      }, optimistic);
+    }
+
+    function withoutISBN(data: any) {
+      return JSON.parse(JSON.stringify(
+        data,
+        (key, value) => {
+          if (key === 'isbn') return;
+          return value;
+        },
+      ));
+    }
+
+    const resultWithTwoAuthors = readWithAuthors();
+    expect(resultWithTwoAuthors).toEqual({
+      books: [
+        withoutISBN(eagerBookData),
+        withoutISBN(spinelessBookData),
+      ],
+    });
+
+    const buzzBookData = {
+      __typename: 'Book',
+      isbn: '0465052614',
+      title: 'Buzz',
+      subtitle: 'The Nature and Necessity of Bees',
+      author: {
+        __typename: 'Author',
+        name: 'Thor Hanson',
+      },
+    };
+
+    cache.recordOptimisticTransaction(proxy => {
+      proxy.writeQuery({
+        query: queryWithAuthors,
+        data: {
+          books: [
+            eagerBookData,
+            spinelessBookData,
+            buzzBookData,
+          ],
+        },
+      });
+    }, 'buzz book');
+
+    const resultWithBuzz = readWithAuthors();
+
+    expect(resultWithBuzz).toEqual({
+      books: [
+        withoutISBN(eagerBookData),
+        withoutISBN(spinelessBookData),
+        withoutISBN(buzzBookData),
+      ],
+    });
+    expect(resultWithBuzz.books[0]).toEqual(resultWithTwoAuthors.books[0]);
+    expect(resultWithBuzz.books[1]).toEqual(resultWithTwoAuthors.books[1]);
+
+    // Before removing the Buzz optimistic layer from the cache, write the same
+    // data to the root layer of the cache.
+    cache.writeQuery({
+      query: queryWithAuthors,
+      data: {
+        books: [eagerBookData, spinelessBookData, buzzBookData],
+      },
+    });
+
+    expect(readWithAuthors()).toBe(resultWithBuzz);
+
+    function readSpinelessFragment() {
+      return cache.readFragment<{ author: any }>(
+        {
+          id: 'Book:' + spinelessBookData.isbn,
+          fragment: bookAuthorNameFragment,
+        },
+        true,
+      );
+    }
+
+    const spinelessBeforeRemovingBuzz = readSpinelessFragment();
+    cache.removeOptimistic('buzz book');
+    const spinelessAfterRemovingBuzz = readSpinelessFragment();
+    expect(spinelessBeforeRemovingBuzz).toEqual(spinelessAfterRemovingBuzz);
+    expect(spinelessBeforeRemovingBuzz).not.toBe(spinelessAfterRemovingBuzz);
+    expect(spinelessBeforeRemovingBuzz.author).not.toBe(
+      spinelessAfterRemovingBuzz.author,
+    );
+
+    const resultAfterRemovingBuzzLayer = readWithAuthors();
+    expect(resultAfterRemovingBuzzLayer).toEqual(resultWithBuzz);
+    expect(resultAfterRemovingBuzzLayer).not.toBe(resultWithBuzz);
+    resultWithTwoAuthors.books.forEach((book, i) => {
+      expect(book).toEqual(resultAfterRemovingBuzzLayer.books[i]);
+      expect(book).not.toBe(resultAfterRemovingBuzzLayer.books[i]);
+    });
+
+    const nonOptimisticResult = readWithAuthors(false);
+    expect(nonOptimisticResult).toEqual(resultWithBuzz);
+    cache.removeOptimistic('eager author');
+    const resultWithoutOptimisticLayers = readWithAuthors();
+    expect(resultWithoutOptimisticLayers).toBe(nonOptimisticResult);
+  });
 });

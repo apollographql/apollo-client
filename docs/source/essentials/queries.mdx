@@ -115,31 +115,34 @@ const Dogs = ({ onDogSelected }) => (
 </div>
 </MultiCodeBlock>
 
-As our query executes and the values of `loading`, `error`, and `data` change, the `Dogs` component can intelligently render different UI elements according to the state of the query:
+As our query executes and the values of `loading`, `error`, and `data` change, the `Dogs` component can intelligently render different UI elements according to the query's state:
 
 - As long as `loading` is `true` (indicating the query is still in flight), the component presents a `Loading...` notice.
 - When loading is `false` and there is no `error`, the query has completed. The component renders a dropdown menu that's populated with the list of dog breeds returned by the server.
 
-When the user selects a dog breed from the populated dropdown menu, the selection is sent to the parent component via the provided `onDogSelected` function.
+When the user selects a dog breed from the populated dropdown, the selection is sent to the parent component via the provided `onDogSelected` function.
 
-In the next step, we'll hook the dropdown menu up to a more complex query that uses variables.
+In the next step, we'll associate the dropdown with a more sophisticated query that uses variables.
 
-## Receiving data from queries
+## Receiving and caching query data
 
 Before we enhance our code, let's take a closer look at what happens behind the scenes when we execute a query with `useQuery`:
 
-1. When a particular query is initiated with `useQuery`, Apollo Client creates an **observable** to represent it. An observable is a special type of object that you can subscribe to for notifications of changes.
-2. The query's containing component subscribes to the observable, which is stored in the Apollo Client cache.
-3. Apollo Client attempts to obtain the query result from the observable. If it's not there, Apollo Client sends the query to the server.
-4. When the server returns the query result, Apollo Client normalizes it and stores it in the observable.
-5. Since the `useQuery` hook subscribes to the result internally, it updates with the data reactively.
+1. When a particular query is initiated with `useQuery`, Apollo Client creates an `Observable` to represent the query's state. An `Observable` is a special type of object that notifies subscribers whenever it changes.
+2. The `useQuery` hook subscribes to the created `Observable`.
+3. Apollo Client checks to see if the query's result is already in its cache.
+   - If the result is present, skip to step 5.
+   - If the result isn't present, Apollo Client sends the query to the server.
+4. When the server returns the query's result, Apollo Client normalizes it and stores it in the cache.
+5. Apollo Client copies the cached query result into the `Observable`.
+6. The `useQuery` hook is notified of changes to the `Observable`, and the containing component will reflect the query result on the next render.
 
 To see Apollo Client's caching in action, let's build a new component called `DogPhoto`. `DogPhoto` accepts a prop called `breed` that reflects the current value of the dropdown menu in our `Dogs` component:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
 
-```jsx
+```jsx:title=index.html
 const GET_DOG_PHOTO = gql`
   query Dog($breed: String!) {
     dog(breed: $breed) {
@@ -166,7 +169,7 @@ function DogPhoto({ breed }) {
 </div>
 <div data-language="Render Props (JavaScript)">
 
-```jsx
+```jsx:title=index.html
 const GET_DOG_PHOTO = gql`
   query Dog($breed: String!) {
     dog(breed: $breed) {
@@ -193,31 +196,31 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-You'll notice that we're using a new configuration option with our `useQuery` hook. The `variables` option is an object containing the variables we want to pass to our GraphQL query. In this case, we want to pass the breed from the form into our query.
+Notice that we're providing a configuration option (`variables`) to the `useQuery` hook this time. The `variables` option is an object that contains all of the variables we want to pass to our GraphQL query. In this case, we want to pass the currently selected breed from the dropdown.
 
-Try selecting "bulldog" from the list to see its photo show up. Then, switch to another breed and switch back to "bulldog". You'll notice that the bulldog photo loads instantaneously the second time around. This is the Apollo cache at work!
+Select `bulldog` from the dropdown to see its photo appear. Then switch to another breed and switch _back_ to `bulldog`. You'll notice that the bulldog photo loads instantly the second time around. This is the Apollo cache at work!
 
-Next, let's learn some techniques for ensuring our data is fresh, such as polling and refetching.
+Next, let's learn some techniques for ensuring that our cached data is fresh.
 
-## Polling and refetching
+## Updating cached query data
 
-It's awesome that Apollo Client caches your data for you, but what should we do when we want fresh data? Two solutions are polling and refetching.
+Caching query data is handy and easy to do, but sometimes you
+want to make sure that your data is up to date with your server. Apollo Client supports two strategies for this: **polling** and **refetching**.
 
-Polling can help us achieve near real-time data by causing the query to refetch on a specified interval. To implement polling, simply pass a `pollInterval` option into the `useQuery` hook with the interval in ms. If you pass in 0, the query will not poll. You can also implement dynamic polling by using the `startPolling` and `stopPolling` functions that are returned by the `useQuery` hook.
+### Polling
+
+Polling provides near-real-time synchronization with your server by causing a query to execute periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
 
-```jsx
+```jsx:title=index.html
 function DogPhoto({ breed }) {
-  const { loading, error, data, startPolling, stopPolling } = useQuery(
-    GET_DOG_PHOTO,
-    {
-      variables: { breed },
-      skip: !breed,
-      pollInterval: 500,
-    },
-  );
+  const { loading, error, data } = useQuery(GET_DOG_PHOTO, {
+    variables: { breed },
+    skip: !breed,
+    pollInterval: 500,
+  });
 
   if (loading) return null;
   if (error) return `Error! ${error}`;
@@ -231,7 +234,7 @@ function DogPhoto({ breed }) {
 </div>
 <div data-language="Render Props (JavaScript)">
 
-```jsx
+```jsx:title=index.html
 const DogPhoto = ({ breed }) => (
   <Query
     query={GET_DOG_PHOTO}
@@ -239,7 +242,7 @@ const DogPhoto = ({ breed }) => (
     skip={!breed}
     pollInterval={500}
   >
-    {({ loading, error, data, startPolling, stopPolling }) => {
+    {({ loading, error, data }) => {
       if (loading) return null;
       if (error) return `Error! ${error}`;
 
@@ -254,9 +257,18 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-By setting the `pollInterval` to 500, you should see a new dog image every .5 seconds. Polling is an excellent way to achieve near-realtime data without the complexity of setting up GraphQL subscriptions.
+By setting the `pollInterval` to 500, you'll fetch the current breed's image from the server every 0.5 seconds. Note that if you set `pollInterval` to `0`, the query will **not** poll.
 
-What if you want to reload the query in response to a user action instead of an interval? That's where the `refetch` function comes in! Here, we're adding a button to our `DogPhoto` component that will trigger a refetch when clicked. `refetch` takes variables, but if we don't pass in new variables, it will use the same ones from our previous query.
+> You can also start and stop polling dynamically with the `startPolling` and `stopPolling` functions that are returned by the [`useQuery` hook](https://www.apollographql.com/docs/react/api/react-hooks/#usequery).
+
+### Refetching
+
+Refetching enables you to refresh query data in response to a particular user
+action instead of using a fixed interval.
+
+Here we're adding a button to our `DogPhoto` component that triggers a refetch when it's clicked. You can optionally provide a new set of variables to
+the `refetch` function. If you don't provide one (as in this example), the
+query uses the same variables that it used in its previous execution.
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
@@ -307,15 +319,16 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-If you click the button, you'll notice that our UI updates with a new dog photo. Refetching is an excellent way to guarantee fresh data, but it introduces some added complexity with loading state. In the next section, you'll learn strategies to handle complex loading and error state.
+Click the button and notice that the UI updates with a new dog photo. Refetching is an excellent way to guarantee fresh data, but it introduces some complexity with loading state. In the next section, we'll cover strategies for handling complex loading and error state.
 
-## Loading and error state
+## Inspecting loading states
 
-We've already seen how Apollo Client exposes our query's loading and error state in the result object returned by `useQuery`. These properties are helpful when the query initially loads, but what happens to our loading state when we're refetching or polling?
+We've already seen that the `useQuery` hook exposes our query's current loading state. This is helpful when a query first loads, but what happens to our loading state when we're refetching or polling?
 
-Let's go back to our refetching example from the previous section. If you click on the refetch button, you'll see that the component doesn't re-render until the new data arrives. What if we want to indicate to the user that we're refetching the photo?
+Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component doesn't re-render until the new data arrives. What if we want to indicate to the user that we're refetching the photo?
 
-Luckily, Apollo Client provides fine-grained information about the status of our query via the `networkStatus` property in the `useQuery` result object. We also need to set the option `notifyOnNetworkStatusChange` to true so our query component re-renders while a refetch is in flight.
+Luckily, the `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
+of this information, we need to set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
@@ -377,13 +390,20 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-The `networkStatus` property is an enum with number values from 1-8 representing a different loading state. 4 corresponds to a refetch, but there are also numbers for polling and pagination. For a full list of all the possible loading states, check out the [reference guide](/api/react-hooks/).
+The `networkStatus` property is an enum with number values from `1` to `8` that represent different loading states. `4` corresponds to a refetch, but there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/master/packages/apollo-client/src/core/networkStatus.ts).
 
-While not as complex as loading state, responding to errors in your component is also customizable via the `useQuery` `errorPolicy` option. The default value for `errorPolicy` is "none" in which we treat all GraphQL errors as runtime errors. In the event of an error, Apollo Client will discard any data that came back with the request and set the `error` property in the `useQuery` result object to true. If you'd like to show any partial data along with any error information, set the `errorPolicy` to "all".
+## Inspecting error states
 
-## Manually firing a query
+You can customize your query error handling by providing the `errorPolicy`
+configuration option to the `useQuery` hook. The default value is `none`, which tells Apollo Client to treat all GraphQL errors as runtime errors. In this case, Apollo Client discards any query response data returned by the server and sets the `error` property in the `useQuery` result object to `true`.
 
-When React mounts and renders a component that calls the `useQuery` hook, Apollo Client automatically fires off your query. What if you wanted to delay firing your query until the user performs an action, such as clicking on a button?
+If you set `errorPolicy` to `all`, `useQuery` does _not_ discard query response data, allowing you to render partial results.
+
+## Executing queries manually
+
+When React mounts and renders a component that calls the `useQuery` hook, Apollo Client automatically executes the specified query. But what if you want to execute a query in response to a different event, such as a user clicking a button?
+
+<!-- START HERE -->
 
 One option is to leverage the `useApolloClient` hook and directly call `client.query()` instead.
 

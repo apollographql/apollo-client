@@ -197,17 +197,24 @@ export function removeDirectivesFromDocument(
     }),
   );
 
-  Object.keys(fragmentSpreads).forEach(key => {
-    if (
-      !fragmentSpreads[key].hasParentField &&
-      fragmentSpreadsToRemove.some(({ name }) => fragmentSpreads[key].parentFragments.includes(name))
-    ) {
-      fragmentSpreadsToRemove.push({
-        name: key,
-      });
-      fragmentSpreads[key].inUse = false;
-    }
-  });
+  let shouldCheckAgain = true;
+
+  while (shouldCheckAgain) {
+    shouldCheckAgain = false;
+    Object.keys(fragmentSpreads).forEach(key => {
+      if (
+        fragmentSpreads[key].inUse &&
+        !fragmentSpreads[key].hasParentField &&
+        fragmentSpreadsToRemove.some(({ name }) => fragmentSpreads[key].parentFragments.includes(name))
+      ) {
+        fragmentSpreadsToRemove.push({
+          name: key,
+        });
+        fragmentSpreads[key].inUse = false;
+        shouldCheckAgain = true;
+      }
+    });
+  }
 
   // If we've removed fields with arguments, make sure the associated
   // variables are also removed from the rest of the document, as long as they

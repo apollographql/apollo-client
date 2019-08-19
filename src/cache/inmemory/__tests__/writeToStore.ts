@@ -5,6 +5,7 @@ import {
   DefinitionNode,
   OperationDefinitionNode,
   ASTNode,
+  DocumentNode,
 } from 'graphql';
 import gql from 'graphql-tag';
 
@@ -1079,19 +1080,18 @@ describe('writing to the store', () => {
     mutation.definitions.map((def: OperationDefinitionNode) => {
       if (isOperationDefinition(def)) {
         expect(
-          writer
-            .writeSelectionSetToStore({
-              dataId: '5',
-              selectionSet: def.selectionSet,
-              result: cloneDeep(result),
-              context: {
-                store: defaultNormalizedCacheFactory(),
-                processedData: {},
-                variables,
-                dataIdFromObject: () => '5',
-              },
-            })
-            .toObject(),
+          writer.writeQueryToStore({
+            query: {
+              kind: 'Document',
+              definitions: [def],
+            } as DocumentNode,
+            dataId: '5',
+            result,
+            variables,
+            dataIdFromObject() {
+              return '5';
+            },
+          }).toObject(),
         ).toEqual({
           '5': {
             id: 'id',

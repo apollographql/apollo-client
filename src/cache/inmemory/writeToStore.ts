@@ -93,7 +93,7 @@ export class StoreWriter {
     });
   }
 
-  public writeSelectionSetToStore({
+  private writeSelectionSetToStore({
     result,
     dataId,
     selectionSet,

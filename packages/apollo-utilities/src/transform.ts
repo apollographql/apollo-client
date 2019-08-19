@@ -96,11 +96,11 @@ export function removeDirectivesFromDocument(
   const variablesInUse: Record<string, boolean> = Object.create(null);
   let variablesToRemove: RemoveArgumentsConfig[] = [];
 
-  const fragmentSpreads: {
-    inUse: Record<string, boolean>,
-    hasParentField: Record<string, boolean>,
+  const fragmentSpreads: Record<string, {
+    inUse: boolean,
+    hasParentField: boolean,
     parentFragments: string[],
-  } = Object.create(null);
+  }> = Object.create(null);
   let fragmentSpreadsToRemove: RemoveFragmentSpreadConfig[] = [];
 
   let modifiedDoc = nullIfDocIsEmpty(
@@ -179,8 +179,8 @@ export function removeDirectivesFromDocument(
               parentFragments: [],
             };
 
-          if (ancestors[2].kind === 'FragmentDefinition')
-            fragmentSpreads[node.name.value].parentFragments.push(ancestors[2].name.value);
+          if ((ancestors[2] as FragmentDefinitionNode).kind === 'FragmentDefinition')
+            fragmentSpreads[node.name.value].parentFragments.push((ancestors[2] as FragmentDefinitionNode).name.value);
           else
             fragmentSpreads[node.name.value].hasParentField = true;
         },

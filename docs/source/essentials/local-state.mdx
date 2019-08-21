@@ -426,7 +426,13 @@ const GET_CART_ITEMS = gql`
   }
 `;
 
-const cache = new InMemoryCache(),
+const cache = new InMemoryCache();
+cache.writeData({
+  data: {
+    cartItems: [],
+  },
+});
+
 const client = new ApolloClient({
   cache,
   link: new HttpLink({
@@ -439,12 +445,6 @@ const client = new ApolloClient({
         return cartItems.includes(launch.id);
       },
     },
-  },
-});
-
-cache.writeData({
-  data: {
-    cartItems: [],
   },
 });
 

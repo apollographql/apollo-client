@@ -1,10 +1,9 @@
-import { OptimisticCacheLayer } from '../inMemoryCache';
-import { ObjectCache } from '../objectCache';
 import { NormalizedCacheObject } from '../types';
+import { EntityCache } from '../entityCache';
 
 describe('OptimisticCacheLayer', () => {
-  function makeLayer(root: ObjectCache) {
-    return new OptimisticCacheLayer('whatever', root, () => {});
+  function makeLayer(root: EntityCache) {
+    return root.addLayer('whatever', () => {});
   }
 
   describe('returns correct values during recording', () => {
@@ -17,7 +16,7 @@ describe('OptimisticCacheLayer', () => {
       Human: { __typename: 'Human', name: 'John' },
     };
 
-    const underlyingCache = new ObjectCache(data);
+    const underlyingCache = new EntityCache.Root({ seed: data });
 
     let cache = makeLayer(underlyingCache);
     beforeEach(() => {
@@ -55,7 +54,7 @@ describe('OptimisticCacheLayer', () => {
       Human: { __typename: 'Human', name: 'John' },
     };
 
-    const underlyingCache = new ObjectCache(data);
+    const underlyingCache = new EntityCache.Root({ seed: data });
     let cache = makeLayer(underlyingCache);
     let recording: NormalizedCacheObject;
 

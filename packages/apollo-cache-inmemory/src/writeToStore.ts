@@ -19,7 +19,7 @@ import {
 
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { defaultNormalizedCacheFactory } from './depTrackingCache';
+import { defaultNormalizedCacheFactory } from './entityCache';
 
 import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';

@@ -40,7 +40,7 @@ import {
 } from 'graphql';
 
 import { wrap, KeyTrie } from 'optimism';
-import { DepTrackingCache } from './depTrackingCache';
+import { supportsResultCaching } from './entityCache';
 import { InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
 import {
@@ -129,10 +129,7 @@ export class StoreReader {
         contextValue,
         variableValues,
       }: ExecStoreQueryOptions) {
-        // The result of executeStoreQuery can be safely cached only if the
-        // underlying store is capable of tracking dependencies and invalidating
-        // the cache when relevant data have changed.
-        if (contextValue.store instanceof DepTrackingCache) {
+        if (supportsResultCaching(contextValue.store)) {
           return cacheKeyRoot.lookup(
             contextValue.store,
             query,
@@ -151,7 +148,7 @@ export class StoreReader {
         objectOrReference,
         execContext,
       }: ExecSelectionSetOptions) {
-        if (execContext.contextValue.store instanceof DepTrackingCache) {
+        if (supportsResultCaching(execContext.contextValue.store)) {
           return cacheKeyRoot.lookup(
             execContext.contextValue.store,
             selectionSet,
@@ -166,7 +163,7 @@ export class StoreReader {
       return executeSubSelectedArray.call(this, options);
     }, {
       makeCacheKey({ field, array, execContext }) {
-        if (execContext.contextValue.store instanceof DepTrackingCache) {
+        if (supportsResultCaching(execContext.contextValue.store)) {
           return cacheKeyRoot.lookup(
             execContext.contextValue.store,
             field,

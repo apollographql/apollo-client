@@ -4,7 +4,7 @@ import { stripSymbols } from 'apollo-utilities';
 
 import { StoreObject } from '../';
 import { StoreReader } from '../readFromStore';
-import { defaultNormalizedCacheFactory } from '../objectCache';
+import { defaultNormalizedCacheFactory } from '../entityCache';
 import { withError } from './diffAgainstStore';
 import { makeReference } from '../helpers';
 

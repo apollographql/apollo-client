@@ -9,16 +9,14 @@ import { InvariantError } from 'ts-invariant';
 
 import {
   ApolloReducerConfig,
-  NormalizedCache,
   NormalizedCacheObject,
   PossibleTypesMap,
 } from './types';
 
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
-import { DepTrackingCache } from './depTrackingCache';
+import { EntityCache, supportsResultCaching } from './entityCache';
 import { KeyTrie } from 'optimism';
-import { ObjectCache } from './objectCache';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
@@ -44,39 +42,9 @@ export function defaultDataIdFromObject(result: any): string | null {
   return null;
 }
 
-const hasOwn = Object.prototype.hasOwnProperty;
-
-export class OptimisticCacheLayer extends ObjectCache {
-  constructor(
-    public readonly optimisticId: string,
-    // OptimisticCacheLayer objects always wrap some other parent cache, so
-    // this.parent should never be null.
-    public readonly parent: NormalizedCache,
-    public readonly transaction: Transaction<NormalizedCacheObject>,
-  ) {
-    super(Object.create(null));
-  }
-
-  public toObject(): NormalizedCacheObject {
-    return {
-      ...this.parent.toObject(),
-      ...this.data,
-    };
-  }
-
-  // All the other accessor methods of ObjectCache work without knowing about
-  // this.parent, but the get method needs to be overridden to implement the
-  // fallback this.parent.get(dataId) behavior.
-  public get(dataId: string) {
-    return hasOwn.call(this.data, dataId)
-      ? this.data[dataId]
-      : this.parent.get(dataId);
-  }
-}
-
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: NormalizedCache;
-  private optimisticData: NormalizedCache;
+  private data: EntityCache;
+  private optimisticData: EntityCache;
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
@@ -107,9 +75,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
-    this.data = this.config.resultCaching
-      ? new DepTrackingCache()
-      : new ObjectCache();
+    this.data = new EntityCache.Root({
+      resultCaching: this.config.resultCaching,
+    });
 
     // When no optimistic writes are currently active, cache.optimisticData ===
     // cache.data, so there are no additional layers on top of the actual data.
@@ -134,12 +102,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return maybeBroadcastWatch.call(this, c);
     }, {
       makeCacheKey(c: Cache.WatchOptions) {
-        if (c.optimistic) {
-          // If we're reading optimistic data, it doesn't matter if this.data
-          // is a DepTrackingCache, since it will be ignored.
-          return;
-        }
-
         if (c.previousResult) {
           // If a previousResult was provided, assume the caller would prefer
           // to compare the previous data to the new data to determine whether
@@ -148,7 +110,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
           return;
         }
 
-        if (cache.data instanceof DepTrackingCache) {
+        if (supportsResultCaching(cache.data)) {
           // Return a cache key (thus enabling caching) only if we're currently
           // using a data store that can track cache dependencies.
           return cache.cacheKeyRoot.lookup(
@@ -223,36 +185,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public reset(): Promise<void> {
     this.data.clear();
+    this.optimisticData = this.data;
     this.broadcastWatches();
-
     return Promise.resolve();
   }
 
   public removeOptimistic(idToRemove: string) {
-    const toReapply: OptimisticCacheLayer[] = [];
-    let removedCount = 0;
-    let layer = this.optimisticData;
-
-    while (layer instanceof OptimisticCacheLayer) {
-      if (layer.optimisticId === idToRemove) {
-        ++removedCount;
-      } else {
-        toReapply.push(layer);
-      }
-      layer = layer.parent;
-    }
-
-    if (removedCount > 0) {
-      // Reset this.optimisticData to the first non-OptimisticCacheLayer object,
-      // which is almost certainly this.data.
-      this.optimisticData = layer;
-
-      // Reapply the layers whose optimistic IDs do not match the removed ID.
-      while (toReapply.length > 0) {
-        const layer = toReapply.pop()!;
-        this.performTransaction(layer.transaction, layer.optimisticId);
-      }
-
+    const newOptimisticData = this.optimisticData.removeLayer(idToRemove);
+    if (newOptimisticData !== this.optimisticData) {
+      this.optimisticData = newOptimisticData;
       this.broadcastWatches();
     }
   }
@@ -264,27 +205,34 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
-    const { data, silenceBroadcast } = this;
-    this.silenceBroadcast = true;
+    const perform = (layer?: EntityCache) => {
+      const { data, optimisticData, silenceBroadcast } = this;
+      this.silenceBroadcast = true;
+      // Temporarily make this.data refer to the new layer for the duration of
+      // the transaction.
+      if (layer) {
+        this.data = this.optimisticData = layer;
+      }
+      try {
+        return transaction(this);
+      } finally {
+        this.silenceBroadcast = silenceBroadcast;
+        if (layer) {
+          this.data = data;
+          this.optimisticData = optimisticData;
+        }
+      }
+    };
 
     if (typeof optimisticId === 'string') {
-      // Add a new optimistic layer and temporarily make this.data refer to
-      // that layer for the duration of the transaction.
-      this.data = this.optimisticData = new OptimisticCacheLayer(
-        // Note that there can be multiple layers with the same optimisticId.
-        // When removeOptimistic(id) is called for that id, all matching layers
-        // will be removed, and the remaining layers will be reapplied.
-        optimisticId,
-        this.optimisticData,
-        transaction,
-      );
-    }
-
-    try {
-      transaction(this);
-    } finally {
-      this.silenceBroadcast = silenceBroadcast;
-      this.data = data;
+      // Note that there can be multiple layers with the same optimisticId.
+      // When removeOptimistic(id) is called for that id, all matching layers
+      // will be removed, and the remaining layers will be reapplied.
+      this.optimisticData = this.optimisticData.addLayer(optimisticId, perform);
+    } else {
+      // If we don't have an optimisticId, perform the transaction anyway. Note
+      // that this.optimisticData.addLayer calls perform, too.
+      perform();
     }
 
     // This broadcast does nothing if this.silenceBroadcast is true.

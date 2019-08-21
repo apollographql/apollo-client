@@ -17,7 +17,7 @@ import {
 
 import { StoreWriter } from '../writeToStore';
 
-import { defaultNormalizedCacheFactory } from '../objectCache';
+import { defaultNormalizedCacheFactory } from '../entityCache';
 
 import { makeReference } from '../helpers';
 

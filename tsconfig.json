@@ -1,7 +1,6 @@
 {
   "extends": "./config/tsconfig.base.json",
   "references": [
-    { "path": "packages/apollo-boost" },
     { "path": "packages/apollo-cache" },
     { "path": "packages/apollo-cache-inmemory" },
     { "path": "packages/apollo-client" },

@@ -23,7 +23,6 @@ const defaultGlobals = {
   'apollo-link': 'apolloLink.core',
   'apollo-link-dedup': 'apolloLink.dedup',
   'apollo-utilities': 'apollo.utilities',
-  'apollo-boost': 'apollo.boost',
   'tslib': 'tslib',
   'ts-invariant': 'invariant',
 };

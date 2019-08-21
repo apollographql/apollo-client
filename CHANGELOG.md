@@ -1,5 +1,11 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client 3.0.0 (TBD)
+
+- Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
+
+
 ## Apollo Client (vNext)
 
 ### Apollo Client (vNext)

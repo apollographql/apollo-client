@@ -20,6 +20,7 @@ import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 
 import { makeReference } from '../helpers';
+import { InMemoryCache } from '../inMemoryCache';
 
 export function withWarning(func: Function, regex?: RegExp) {
   let message: string = null as never;
@@ -1861,5 +1862,41 @@ describe('writing to the store', () => {
         ],
       },
     });
+  });
+
+  it('should not deep-freeze scalar objects', () => {
+    const query = gql`
+      query {
+        scalarFieldWithObjectValue
+      }
+    `;
+
+    const scalarObject = {
+      a: 1,
+      b: [2, 3],
+      c: {
+        d: 4,
+        e: 5,
+      },
+    };
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        scalarFieldWithObjectValue: scalarObject,
+      },
+    });
+
+    expect(Object.isFrozen(scalarObject)).toBe(false);
+    expect(Object.isFrozen(scalarObject.b)).toBe(false);
+    expect(Object.isFrozen(scalarObject.c)).toBe(false);
+
+    const result = cache.readQuery<any>({ query });
+    expect(result.scalarFieldWithObjectValue).not.toBe(scalarObject);
+    expect(Object.isFrozen(result.scalarFieldWithObjectValue)).toBe(true);
+    expect(Object.isFrozen(result.scalarFieldWithObjectValue.b)).toBe(true);
+    expect(Object.isFrozen(result.scalarFieldWithObjectValue.c)).toBe(true);
   });
 });

@@ -1,5 +1,10 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client 3.0.0 (TBD)
+
+- Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
+
 ## Apollo Client (vNext)
 
 ### Apollo Client (vNext)

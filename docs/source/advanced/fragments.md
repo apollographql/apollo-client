@@ -26,7 +26,7 @@ There are two principal uses for fragments in Apollo:
   - Sharing fields between multiple queries, mutations or subscriptions.
   - Breaking your queries up to allow you to co-locate field access with the places they are used.
 
-In this document we'll outline patterns to do both; we'll also make use of utilities in the [`graphql-anywhere`](https://github.com/apollographql/apollo-client/tree/master/packages/graphql-anywhere) and [`graphql-tag`](https://github.com/apollographql/graphql-tag) packages which aim to help us, especially with the second problem.
+In this document we'll outline patterns to do both using the [`graphql-tag`](https://github.com/apollographql/graphql-tag) package.
 
 ## Reusing fragments
 
@@ -101,8 +101,6 @@ FeedPage
 
 The `FeedPage` conducts a query to fetch a list of `Entry`s, and each of the subcomponents requires different subfields of each `Entry`.
 
-The `graphql-anywhere` package gives us tools to easily construct a single query that provides all the fields that each subcomponent needs, and allows to easily pass the exact field that a component needs to it.
-
 ### Creating fragments
 
 To create the fragments, we again use the `gql` helper and attach to subfields of `ComponentClass.fragments`, for example:
@@ -142,25 +140,6 @@ FeedEntry.fragments = {
   `,
 };
 ```
-
-### Filtering with fragments
-
-We can also use the `graphql-anywhere` package to filter the exact fields from the `entry` before passing them to the subcomponent. So when we render a `VoteButtons`, we can simply do:
-
-```jsx
-import { filter } from 'graphql-anywhere';
-
-<VoteButtons
-  entry={filter(VoteButtons.fragments.entry, entry)}
-  canVote={loggedIn}
-  onVote={type => onVote({
-    repoFullName: full_name,
-    type,
-  })}
-/>
-```
-
-The `filter()` function will grab exactly the fields from the `entry` that the fragment defines.
 
 ### Importing fragments when using Webpack
 

@@ -22,7 +22,6 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   const reader = new StoreReader();
-  const immutableReader = new StoreReader({ freezeResults: true });
   const writer = new StoreWriter();
 
   const store = writer.writeQueryToStore({
@@ -45,9 +44,9 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   expect(store).toBeInstanceOf(EntityCache);
   expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
 
-  const immutableResult = immutableReader.readQueryFromStore(readOptions);
+  const immutableResult = reader.readQueryFromStore(readOptions);
   expect(immutableResult).toEqual(reconstructedResult);
-  expect(immutableReader.readQueryFromStore(readOptions)).toBe(immutableResult);
+  expect(reader.readQueryFromStore(readOptions)).toBe(immutableResult);
   if (process.env.NODE_ENV !== 'production') {
     try {
       // Note: this illegal assignment will only throw in strict mode, but that's
@@ -234,8 +233,8 @@ describe('roundtrip', () => {
       },
     );
 
-    // Just because we read from the store using { freezeResults: true }, the
-    // original data should not be frozen.
+    // Reading immutable results from the store does not mean the original
+    // data should get frozen.
     expect(Object.isExtensible(updateClub)).toBe(true);
     expect(Object.isFrozen(updateClub)).toBe(false);
   });

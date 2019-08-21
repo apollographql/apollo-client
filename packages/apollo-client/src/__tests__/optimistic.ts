@@ -988,13 +988,19 @@ describe('optimistic mutation results', () => {
         mutation,
         optimisticResponse,
         updateQueries: {
-          todoList: (prev, options) => {
+          todoList(prev, options) {
             const mResult = options.mutationResult as any;
             expect(mResult.data.createTodo.id).toEqual('99');
-
-            const state = cloneDeep(prev) as any;
-            state.todoList.todos.unshift(mResult.data.createTodo);
-            return state;
+            return {
+              ...prev,
+              todoList: {
+                ...prev.todoList,
+                todos: [
+                  mResult.data.createTodo,
+                  ...prev.todoList.todos,
+                ],
+              },
+            };
           },
         },
       });
@@ -1386,12 +1392,12 @@ describe('optimistic mutation results', () => {
       });
 
       let firstTime = true;
-      let before = new Date();
+      let before = Date.now();
       const promise = client.mutate({
         mutation,
         optimisticResponse,
         update: (proxy, mResult: any) => {
-          const after = new Date();
+          const after = Date.now();
           const duration = after - before;
           if (firstTime) {
             expect(duration < 300).toBe(true);
@@ -1401,13 +1407,18 @@ describe('optimistic mutation results', () => {
           }
           let data = proxy.readQuery({ query });
 
-          data.todoList.todos = [
-            mResult.data.createTodo,
-            ...data.todoList.todos,
-          ];
           proxy.writeQuery({
             query,
-            data,
+            data: {
+              ...data,
+              todoList: {
+                ...data.todoList,
+                todos: [
+                  mResult.data.createTodo,
+                  ...data.todoList.todos,
+                ],
+              },
+            },
           });
         },
       });

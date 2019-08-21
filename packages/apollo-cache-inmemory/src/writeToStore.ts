@@ -15,6 +15,7 @@ import {
   StoreValue,
   DeepMerger,
   getTypenameFromResult,
+  cloneDeep,
 } from 'apollo-utilities';
 
 import { invariant, InvariantError } from 'ts-invariant';
@@ -233,7 +234,10 @@ export class StoreWriter {
     context: WriteContext,
   ): StoreValue {
     if (!field.selectionSet || value === null) {
-      return value;
+      // In development, we need to clone scalar values so that they can be
+      // safely frozen with maybeDeepFreeze in readFromStore.ts. In production,
+      // it's cheaper to store the scalar values directly in the cache.
+      return process.env.NODE_ENV === 'production' ? value : cloneDeep(value);
     }
 
     if (Array.isArray(value)) {

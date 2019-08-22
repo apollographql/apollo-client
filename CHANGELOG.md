@@ -1,9 +1,11 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client 3.0 (TBD)
+## Apollo Client 3.0.0 (TBD)
 
 - Fully removed `prettier`. The Apollo Client team has decided to no longer automatically enforce code formatting across the codebase. In most cases existing code styles should be followed as much as possible, but this is not a hard and fast rule.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5227](https://github.com/apollographql/apollo-client/pull/5227)
+- Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
 
 ## Apollo Client (vNext)
 

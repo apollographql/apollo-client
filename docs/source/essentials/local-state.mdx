@@ -844,7 +844,7 @@ export const resolvers = {
 };
 ```
 
-Let's assume we're starting with an empty cache. Since we haven't specified a `fetchPolicy` prop in our `useQuery` call, we're using Apollo Client's default `cache-and-network` `fetchPolicy`. This means when the `GET_LAUNCH_DETAILS` query is run, it checks the cache first to see if it can find a result. It's important to note that when the cache is checked the entire query is run against the cache, but any `@client` associated local resolvers are skipped (not run). So the cache is queried with the following (it's as if the `@client` directive was never specified):
+Let's assume we're starting with an empty cache. Since we haven't specified a `fetchPolicy` prop in our `useQuery` call, we're using Apollo Client's default `cache-first` `fetchPolicy`. This means when the `GET_LAUNCH_DETAILS` query is run, it checks the cache first to see if it can find a result. It's important to note that when the cache is checked the entire query is run against the cache, but any `@client` associated local resolvers are skipped (not run). So the cache is queried with the following (it's as if the `@client` directive was never specified):
 
 ```graphql
 launch(id: $launchId) {
@@ -858,7 +858,7 @@ launch(id: $launchId) {
 
 In this case a result can't be extracted from the cache (since our cache is empty), so behind the scenes Apollo Client moves further down the query execution path. At its next step, it essentially splits the original query into two parts - the part that has `@client` fields and the part that will be fired over the network. Both parts are then executed - results are fetched from the network, and results are calculated by running local resolvers. The results from the local resolvers and from the network are then merged together, and the final result is written to the cache and returned. So after our first run, we now have a result in the cache for the original query, that includes data for both the `@client` parts and network parts of the query.
 
-When the `GET_LAUNCH_DETAILS` query is run a second time, again since we're using Apollo Client's default `fetchPolicy` of `cache-and-network`, the cache is checked first for a result. This time a full result can be found for the query, so that result is returned through our `useQuery` call. Our `@client` field local resolvers aren't fired since the result we're looking for can already be extracted from the cache.
+When the `GET_LAUNCH_DETAILS` query is run a second time, again since we're using Apollo Client's default `fetchPolicy` of `cache-first`, the cache is checked first for a result. This time a full result can be found for the query, so that result is returned through our `useQuery` call. Our `@client` field local resolvers aren't fired since the result we're looking for can already be extracted from the cache.
 
 In a lot of situations treating local resolvers just like remote resolvers, by having them adhere to the same `fetchPolicy`, makes a lot of sense. Once you have the data you're looking for, which might have been fetched remotely or calculated using a local resolver, you can cache it and avoid recalculating/re-fetching it again on a subsequent request. But what if you're using local resolvers to run calculations that you need fired on every request? There are a few different ways this can be handled. You can switch your query to use a `fetchPolicy` that forces your entire query to run on each request, like `no-cache` or `network-only`. This will make sure your local resolvers fire on every request, but it will also make sure your network based query components fire on every request. Depending on your use case this might be okay, but what if you want the network parts of your query to leverage the cache, and just want your `@client` parts to run on every request? We'll cover a more flexible option for this in the [Forcing resolvers with `@client(always: true)`](#forcing-resolvers-with-clientalways-true) section.
 
@@ -1199,7 +1199,7 @@ If you open up Apollo Client Devtools and click on the `GraphiQL` tab, you'll be
 
 Depending on the complexity and size of your local resolvers, you might not always want to define them up front, when you create your initial `ApolloClient` instance. If you have local resolvers that are only needed in a specific part of your application, you can leverage Apollo Client's [`addResolvers` and `setResolvers`](#methods) functions to adjust your resolver map at any point. This can be really useful when leveraging techniques like route based code-splitting, using something like [`react-loadable`](https://github.com/jamiebuilds/react-loadable).
 
-Let's say we're building a messaging app and have a `/stats` route that is used return the total number of messages stored locally. If we use `react-loadable` to load our `Stats` component like:
+Let's say we're building a messaging app and have a `/stats` route that is used to return the total number of messages stored locally. If we use `react-loadable` to load our `Stats` component like:
 
 ```js
 import Loadable from 'react-loadable';

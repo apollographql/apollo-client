@@ -9,10 +9,7 @@
     "test": "jest --verbose",
     "test-ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "benchmark": "cd packages/apollo-client && npm run benchmark",
-    "prelint": "npm run lint-fix",
     "lint": "lerna run lint",
-    "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
-    "lint-staged": "lint-staged",
     "filesize": "lerna run build && bundlesize",
     "coverage": "jest --verbose --coverage",
     "coverage:upload": "codecov",
@@ -42,15 +39,6 @@
       "maxSize": "4.25 kB"
     }
   ],
-  "lint-staged": {
-    "*.ts*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
-    ],
-    "*.js*": [
-      "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write"
-    ]
-  },
-  "pre-commit": "lint-staged",
   "dependencies": {
     "apollo-cache": "file:packages/apollo-cache",
     "apollo-cache-inmemory": "file:packages/apollo-cache-inmemory",
@@ -83,10 +71,7 @@
     "jest": "23.6.0",
     "jest-junit": "5.2.0",
     "lerna": "3.16.4",
-    "lint-staged": "8.2.1",
     "lodash": "4.17.15",
-    "pre-commit": "1.2.2",
-    "prettier": "1.18.2",
     "prop-types": "15.7.2",
     "react": "16.8.6",
     "react-dom": "16.8.6",

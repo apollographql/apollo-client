@@ -1329,8 +1329,6 @@ describe('ApolloClient', () => {
                   data,
                 );
                 const friends = result.data.people.friends;
-                friends[0].type = 'okayest';
-                friends[1].type = 'okayest';
 
                 // this should re call next
                 client.writeFragment({
@@ -1344,7 +1342,10 @@ describe('ApolloClient', () => {
                     }
                   `,
                   data: {
-                    friends,
+                    friends: [
+                      { ...friends[0], type: 'okayest' },
+                      { ...friends[1], type: 'okayest' },
+                    ],
                     __typename: 'Person',
                   },
                 });

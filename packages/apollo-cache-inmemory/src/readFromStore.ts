@@ -85,7 +85,7 @@ type ExecStoreQueryOptions = {
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
   // Default matcher always matches all fragments
-  fragmentMatcher: FragmentMatcher;
+  fragmentMatcher?: FragmentMatcher;
 };
 
 type ExecSelectionSetOptions = {
@@ -103,7 +103,7 @@ type ExecSubSelectedArrayOptions = {
 export interface StoreReaderConfig {
   cacheKeyRoot?: KeyTrie<object>;
   freezeResults?: boolean;
-};
+}
 
 export class StoreReader {
   private freezeResults: boolean;
@@ -198,12 +198,10 @@ export class StoreReader {
    */
   public readQueryFromStore<QueryType>(
     options: ReadQueryOptions,
-  ): QueryType {
-    const optsPatch = { returnPartialData: false };
-
+  ): QueryType | undefined {
     return this.diffQueryAgainstStore<QueryType>({
       ...options,
-      ...optsPatch,
+      returnPartialData: false,
     }).result;
   }
 
@@ -233,7 +231,7 @@ export class StoreReader {
     const context: ReadStoreContext = {
       // Global settings
       store,
-      dataIdFromObject: (config && config.dataIdFromObject) || null,
+      dataIdFromObject: config && config.dataIdFromObject,
       cacheRedirects: (config && config.cacheRedirects) || {},
     };
 
@@ -254,7 +252,7 @@ export class StoreReader {
       execResult.missing && execResult.missing.length > 0;
 
     if (hasMissingFields && ! returnPartialData) {
-      execResult.missing.forEach(info => {
+      execResult.missing!.forEach(info => {
         if (info.tolerable) return;
         throw new InvariantError(
           `Can't find field ${info.fieldName} on object ${JSON.stringify(
@@ -378,9 +376,13 @@ export class StoreReader {
           }
         }
 
-        const typeCondition = fragment.typeCondition.name.value;
+        const typeCondition =
+          fragment.typeCondition && fragment.typeCondition.name.value;
 
-        const match = execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+        const match =
+          !typeCondition ||
+          execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+
         if (match) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
@@ -478,7 +480,7 @@ export class StoreReader {
   private combineExecResults<T>(
     ...execResults: ExecResult<T>[]
   ): ExecResult<T> {
-    let missing: ExecResultMissingField[] = null;
+    let missing: ExecResultMissingField[] | undefined;
     execResults.forEach(execResult => {
       if (execResult.missing) {
         missing = missing || [];
@@ -486,7 +488,7 @@ export class StoreReader {
       }
     });
     return {
-      result: execResults.pop().result,
+      result: execResults.pop()!.result,
       missing,
     };
   }
@@ -496,7 +498,7 @@ export class StoreReader {
     array,
     execContext,
   }: ExecSubSelectedArrayOptions): ExecResult {
-    let missing: ExecResultMissingField[] = null;
+    let missing: ExecResultMissingField[] | undefined;
 
     function handleMissing<T>(childResult: ExecResult<T>): T {
       if (childResult.missing) {
@@ -603,8 +605,9 @@ function readStoreResolver(
         if (resolver) {
           fieldValue = resolver(object, args, {
             getCacheKey(storeObj: StoreObject) {
-              return toIdValue({
-                id: context.dataIdFromObject(storeObj),
+              const id = context.dataIdFromObject!(storeObj);
+              return id && toIdValue({
+                id,
                 typename: storeObj.__typename,
               });
             },

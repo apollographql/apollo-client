@@ -129,7 +129,7 @@ mutate({
 
 ### `update`
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-apollo/#optionsupdate).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
 
 ```javascript
 import CommentAppQuery from '../queries/CommentAppQuery';

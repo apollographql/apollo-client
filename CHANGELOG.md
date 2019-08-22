@@ -1,5 +1,11 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client 3.0 (TBD)
+
+- Fully removed `prettier`. The Apollo Client team has decided to no longer use or enforce code formatting across the codebase. In most cases existing code styles should be followed as much as possible, but this is not a hard and fast rule.  <br/>
+[@hwillson](https://github.com/hwills) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
+
+
 ## Apollo Client (vNext)
 
 ### Apollo Client (vNext)

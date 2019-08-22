@@ -32,7 +32,6 @@
     "type": "git",
     "url": "apollographql/apollo-client"
   },
-  "pre-commit": "lint-staged",
   "keywords": [
     "ecmascript",
     "es2015",

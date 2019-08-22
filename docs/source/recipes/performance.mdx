@@ -35,8 +35,7 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```js
-import { toIdValue } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { toIdValue, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache({
   cacheRedirects: {
@@ -271,9 +270,7 @@ query SeriesEpisodes($seriesId: Int!) {
 By adding a [custom resolver](/advanced/caching/#cache-redirects-with-cacheredirects) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
 
 ```javascript
-import { ApolloClient } from 'apollo-client';
-import { toIdValue } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, toIdValue, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache({
   cacheResolvers: {

@@ -28,7 +28,7 @@ Direct writes to the cache do not require a GraphQL mutation or a resolver funct
 
 ```jsx
 import React from "react";
-import { useApolloClient } from "@apollo/react-hooks";
+import { useApolloClient } from "@apollo/client";
 
 import Link from "./Link";
 
@@ -78,8 +78,7 @@ What if we want to immediately subscribe to the data we just wrote to the cache?
 
 ```jsx
 import React from "react";
-import { useQuery } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import { gql, useQuery } from "@apollo/client";
 
 import Link from "./Link";
 
@@ -158,8 +157,7 @@ fieldName: (obj, args, context, info) => result;
 Let's take a look at an example of a resolver where we toggle a todo's completed status:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -193,8 +191,7 @@ Let's learn how to trigger our `toggleTodo` mutation from our component:
 
 ```jsx
 import React from "react"
-import { useMutation } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import { gql, useMutation } from "@apollo/client";
 
 const TOGGLE_TODO = gql`
   mutation ToggleTodo($id: Int!) {
@@ -261,8 +258,7 @@ Querying for local data is very similar to querying your GraphQL server. The onl
 
 ```jsx
 import React from "react";
-import { useQuery } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import { gql, useQuery } from "@apollo/client";
 
 import Todo from "./Todo";
 
@@ -335,8 +331,7 @@ Here we create our GraphQL query and add `@client` directives to `todos` and `vi
 Often, you'll need to write an initial state to the cache so any components querying data before a mutation is triggered don't error out. To accomplish this, you can use `cache.writeData` to prep the cache with initial values. The shape of your initial state should match how you plan to query it in your application.
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache();
 const client = new ApolloClient({
@@ -359,8 +354,7 @@ cache.writeData({
 Sometimes you may need to [reset the store](/api/apollo-client/#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache();
 const client = new ApolloClient({
@@ -415,10 +409,7 @@ Let's look at both of these steps more closely.
 Local resolvers are very similar to remote resolvers. Instead of sending your GraphQL query to a remote GraphQL endpoint, which then runs resolver functions against your query to populate and return a result set, Apollo Client runs locally defined resolver functions against any fields marked with the `@client` directive. Let's look at an example:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const GET_CART_ITEMS = gql`
   query GetCartItems {
@@ -489,10 +480,7 @@ While Apollo Client’s local state handling features can be used to work with l
 The `@client` directive can be used on any GraphQL selection set or field, to identify that the result of that field should be loaded locally with the help of a local resolver:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const MEMBER_DETAILS = gql`
   query Member {
@@ -524,10 +512,7 @@ When the above `MEMBER_DETAILS` query is fired by Apollo Client (assuming we're 
 The `@client` directive can be used with entire selection sets as well:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const MEMBER_DETAILS = gql`
   query Member {
@@ -572,8 +557,7 @@ Apollo Client supports asynchronous local resolver functions. These functions ca
 For React Native and most browser APIs, you should set up a listener in a component lifecycle method and pass in your mutation trigger function as the callback instead of using an async resolver. However, an `async` resolver function is often the most convenient way to consume asynchronous device APIs:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { CameraRoll } from 'react-native';
 
 const client = new ApolloClient({
@@ -639,11 +623,14 @@ As outlined in [Handling `@client` fields with resolvers][], `@client` fields ca
 ```jsx
 import React from "react";
 import ReactDOM from "react-dom";
-import { ApolloClient } from "apollo-client";
-import { InMemoryCache } from "apollo-cache-inmemory";
-import { HttpLink } from "apollo-link-http";
-import { ApolloProvider, useQuery } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ApolloProvider,
+  useQuery,
+  gql
+} from "@apollo/client";
 
 import Pages from "./pages";
 import Login from "./pages/login";
@@ -686,11 +673,14 @@ ReactDOM.render(
 ```jsx
 import React from "react";
 import ReactDOM from "react-dom";
-import { ApolloClient } from "apollo-client";
-import { InMemoryCache } from "apollo-cache-inmemory";
-import { HttpLink } from "apollo-link-http";
-import { ApolloProvider, Query } from "@apollo/react-components";
-import gql from "graphql-tag";
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ApolloProvider,
+  gql
+} from "@apollo/client";
+import { Query } from "@apollo/react-components";
 
 import Pages from "./pages";
 import Login from "./pages/login";
@@ -742,8 +732,7 @@ Before Apollo Client executes a query, one of the first things it does is check 
 
 ```jsx
 import React, { Fragment } from "react";
-import { useQuery } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import { useQuery, gql } from "@apollo/client";
 
 import { Loading, Header, LaunchDetail } from "../components";
 import { ActionButton } from "../containers";
@@ -869,9 +858,7 @@ Apollo Client leverages its cache to help reduce the network overhead required w
 While leveraging the cache for both local and remote results can be super helpful in a lot of cases, it's not always the best fit. We might want to use a local resolver to calculate a dynamic value that needs to be refreshed on every request, while at the same time continue to use the cache for the network based parts of our query. To support this use case, Apollo Client's `@client` directive accepts an `always` argument, that when set to `true` will ensure that the associated local resolver is run on every request. Looking at an example:
 
 ```jsx
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -904,10 +891,7 @@ While `@client(always: true)` ensures that a local resolver is always fired, it'
 Apollo Client provides a way to use an `@client` field result as a variable for a selection set or field, in the same operation. So instead of running an `@client` based query first, getting the local result, then running a second query using the loaded local result as a variable, everything can be handled in one request. This is achieved by combining the `@client` directive with the `@export(as: "variableName")` directive:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const query = gql`
   query currentAuthorPostCount($authorId: Int!) {
@@ -935,10 +919,7 @@ cache.writeData({
 In the example above, `currentAuthorId` is first loaded from the cache, then passed into the subsequent  `postCount` field as the `authorId` variable (specified by the `@export(as: "authorId")` directive). The `@export` directive can also be used on specific fields within a selection set, like:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const query = gql`
   query currentAuthorPostCount($authorId: Int!) {
@@ -973,10 +954,7 @@ cache.writeData({
 Here the `authorId` variable is set from the `authorId` field loaded from the cache stored `currentAuthor`. `@export` variable use isn't limited to remote queries; it can also be used to define variables for other `@client` fields or selection sets:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const query = gql`
   query currentAuthorPostCount($authorId: Int!) {
@@ -1029,8 +1007,7 @@ When you're using Apollo Client to work with local state, your Apollo cache beco
 The easiest way to update the cache is with `cache.writeData`, which allows you to write data directly to the cache without passing in a query. Here's how you use it in your resolver map for a simple update:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -1050,8 +1027,7 @@ const client = new ApolloClient({
 The `id` should correspond to the object's cache key. If you're using the `InMemoryCache` and not overriding the `dataObjectFromId` config property, your cache key should be `__typename:id`.
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -1073,9 +1049,7 @@ const client = new ApolloClient({
 Sometimes, the data you're writing to the cache depends on data that's already in the cache; for example, you're adding an item to a list or setting a property based on an existing property value. In that case, you should use `cache.readQuery` to pass in a query and read a value from the cache before you write any data. Let's look at an example where we add a todo to a list:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
 
 let nextTodoId = 0;
 
@@ -1126,8 +1100,7 @@ To write the data to the cache, you can use either `cache.writeQuery` or `cache.
 Let's go back to our previous todo list example and see how `cache.readFragment` can help us toggle one of our todos as completed.
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   resolvers: {
@@ -1162,10 +1135,7 @@ You can optionally set a client-side schema to be used with Apollo Client, throu
 The following demonstrates how to configure a client-side schema through the `ApolloClient` constructor:
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const typeDefs = gql`
   extend type Query {
@@ -1219,8 +1189,7 @@ and wait until our `Stats` component is called to define our local resolvers (us
 
 ```js
 import React from "react";
-import { ApolloConsumer, useApolloClient, useQuery } from "@apollo/react-hooks";
-import gql from "graphql-tag";
+import { ApolloConsumer, useApolloClient, useQuery, gql } from "@apollo/client";
 
 const GET_MESSAGE_COUNT = gql`
   {
@@ -1324,7 +1293,7 @@ While `apollo-link-state` achieved some of the goals of local state handling, th
 
 Updating your application to use Apollo Client's local state management features, instead of `apollo-link-state`, is fairly straightforward. The necessary steps are outlined below.
 
-1. Including `apollo-link-state` as a dependency, and importing it to use `withClientState`, is no longer necessary. You can remove the `apollo-link-state` dependency since local state management is included with `apollo-client` >= 2.5.0.
+1. Including `apollo-link-state` as a dependency, and importing it to use `withClientState`, is no longer necessary. You can remove the `apollo-link-state` dependency since local state management is included with `apollo-client` >= 2.5.0 and `@apollo/client` >= 3.0.0.
 2. Using `withClientState` is no longer supported. The following:
 
   ```js
@@ -1379,8 +1348,7 @@ Updating your application to use Apollo Client's local state management features
   });
   ```
 
-4. If you're using Apollo Boost, you shouldn't have to change anything. Apollo Boost has been updated to use Apollo Client's integrated local state handling, which means it is no longer using `apollo-link-state`. Behind the scenes, the Apollo Boost `clientState` constructor parameter now feeds the necessary local state initialization directly into Apollo Client.
-5. Test thoroughly! 🙂
+4. Test thoroughly! 🙂
 
 ## Next steps
 
@@ -1400,8 +1368,7 @@ Apollo Client local state handling is baked in, so you don't have to install any
 #### Constructor
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -1420,9 +1387,7 @@ None of these options are required. If you don't specify anything, you will stil
 #### Methods
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -1464,7 +1429,7 @@ type FragmentMatcher = (
 #### Methods
 
 ```js
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache();
 cache.writeData({

@@ -166,7 +166,7 @@ This case is borrowed from [David Glasser's post on the Apollo blog](https://blo
 
 > We’re not usually running any migrations, so a nice, slow polling interval like 30 seconds seemed reasonable. But in the rare case where a migration is running, I wanted to be able to see much faster updates on its progress.
 
-> The key to this is knowing that the `options` parameter to react-apollo’s main graphql function can itself be a function that depends on its incoming React props. (The `options` parameter describes the options for the query itself, as opposed to React-specific details like what property name to use for data.) We can then use recompose's `withState()` to set the poll interval from a prop passed in to the graphql component, and use the `componentWillReceiveProps` React lifecycle event (added via the recompose lifecycle helper) to look at the fetched GraphQL data and adjust if necessary.
+> The key to this is knowing that the `options` parameter to @apollo/react-hoc’s main graphql function can itself be a function that depends on its incoming React props. (The `options` parameter describes the options for the query itself, as opposed to React-specific details like what property name to use for data.) We can then use recompose's `withState()` to set the poll interval from a prop passed in to the graphql component, and use the `componentWillReceiveProps` React lifecycle event (added via the recompose lifecycle helper) to look at the fetched GraphQL data and adjust if necessary.
 
 Let's look at the code:
 

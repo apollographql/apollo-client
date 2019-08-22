@@ -3,7 +3,7 @@ title: Using Apollo with TypeScript
 sidebar_title: Using TypeScript
 ---
 
-As your application grows, you may find it helpful to include a type system to assist in development. Apollo supports type definitions for TypeScript out of the box. Both `apollo-client` and React Apollo ship with definitions in their npm associated packages, so installation should be done for you after the libraries are included in your project.
+As your application grows, you may find it helpful to include a type system to assist in development. Apollo supports type definitions for TypeScript out of the box. Apollo Client ships with definitions in its associated npm package, so installation should be done for you after the libraries are included in your project.
 
 These docs assume you already have TypeScript configured in your project, if not start [here](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide).
 
@@ -11,14 +11,13 @@ The most common need when using type systems with GraphQL is to type the results
 
 ## Typing hooks
 
-React Apollo's `useQuery`, `useMutation` and `useSubscription` hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. React Apollo Hook options and result types are listed in the [Hooks API](/api/react-hooks) section of the docs. You can find a typed example of each Hook below.
+Apollo Client's `useQuery`, `useMutation` and `useSubscription` hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. Apollo Client Hook options and result types are listed in the [Hooks API](/api/react-hooks) section of the docs. You can find a typed example of each Hook below.
 
 ### `useQuery`
 
 ```jsx
 import React from 'react';
-import { useQuery } from '@apollo/react-hooks';
-import gql from 'graphql-tag';
+import { useQuery, gql } from '@apollo/client';
 
 interface RocketInventory {
   id: number;
@@ -83,8 +82,7 @@ export function RocketInventoryList() {
 
 ```jsx
 import React, { useState } from 'react';
-import { useMutation } from '@apollo/react-hooks';
-import gql from 'graphql-tag';
+import { useMutation, gql } from '@apollo/client';
 
 const SAVE_ROCKET = gql`
   mutation saveRocket($rocket: RocketInput!) {
@@ -161,8 +159,7 @@ export function NewRocketForm() {
 
 ```jsx
 import React from 'react';
-import { useSubscription } from '@apollo/react-hooks';
-import gql from 'graphql-tag';
+import { useSubscription, gql } from '@apollo/client';
 
 interface Message {
   content: string;
@@ -237,7 +234,7 @@ Since the result of a query will be sent to the wrapped component as props, we w
 ```tsx
 import React from "react";
 import gql from "graphql-tag";
-import { ChildDataProps, graphql } from "react-apollo";
+import { ChildDataProps, graphql } from "@apollo/react-hoc";
 
 const HERO_QUERY = gql`
   query GetCharacter($episode: Episode!) {
@@ -294,7 +291,7 @@ Typically, variables to the query will be computed from the props of the wrapper
 ```tsx
 import React from "react";
 import gql from "graphql-tag";
-import { ChildDataProps, graphql } from "react-apollo";
+import { ChildDataProps, graphql } from "@apollo/react-hoc";
 
 const HERO_QUERY = gql`
   query GetCharacter($episode: Episode!) {
@@ -348,10 +345,12 @@ This is especially helpful when accessing deeply nested objects that are passed 
 
 ```tsx
 import React from "react";
-import { ApolloClient } from "apollo-client";
-import { createHttpLink } from "apollo-link-http";
-import { InMemoryCache } from "apollo-cache-inmemory";
-import { ApolloProvider } from "react-apollo";
+import {
+  ApolloClient,
+  createHttpLink,
+  InMemoryCache,
+  ApolloProvider
+} from "@apollo/client";
 
 import Character from "./Character";
 
@@ -375,12 +374,12 @@ export default () =>
 
 One of the most powerful feature of the React integration is the `props` function which allows you to reshape the result data from an operation into a new shape of props for the wrapped component. GraphQL is awesome at allowing you to only request the data you want from the server. The client still often needs to reshape or do client side calculations based on these results. The return value can even differ depending on the state of the operation (i.e loading, error, recieved data), so informing our type system of choice of these possible values is really important to make sure our components won't have runtime errors.
 
-The `graphql` wrapper from `react-apollo` supports manually declaring the shape of your result props.
+The `graphql` wrapper from `@apollo/react-hoc` supports manually declaring the shape of your result props.
 
 ```tsx
 import React from "react";
 import gql from "graphql-tag";
-import { graphql, ChildDataProps } from "react-apollo";
+import { graphql, ChildDataProps } from "@apollo/react-hoc";
 
 const HERO_QUERY = gql`
   query GetCharacter($episode: Episode!) {
@@ -452,10 +451,10 @@ With this addition, the entirety of the integration between Apollo and React can
 
 ### Classes vs Functions
 
-All of the above examples show wrapping a component which is just a function using the result of a `graphql` wrapper. Sometimes, components that depend on GraphQL data require state and are formed using the `class MyComponent extends React.Component` practice. In these use cases, TypeScript requires adding prop shape to the class instance. In order to support this, `react-apollo` exports types to support creating result types easily.
+All of the above examples show wrapping a component which is just a function using the result of a `graphql` wrapper. Sometimes, components that depend on GraphQL data require state and are formed using the `class MyComponent extends React.Component` practice. In these use cases, TypeScript requires adding prop shape to the class instance. In order to support this, `@apollo/react-hoc` exports types to support creating result types easily.
 
 ```tsx
-import { ChildProps } from "react-apollo";
+import { ChildProps } from "@apollo/react-hoc";
 
 const withCharacter = graphql<InputProps, Response>(HERO_QUERY, {
   options: ({ episode }) => ({
@@ -480,7 +479,7 @@ export default withCharacter(Character);
 If you are using the `name` property in the configuration of the `graphql` wrapper, you will need to manually attach the type of the response to the `props` function. An example using TypeScript would be like this:
 
 ```ts
-import { NamedProps, QueryProps } from 'react-apollo';
+import { NamedProps, QueryProps } from '@apollo/react-hoc';
 
 export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY, {
   name: 'character',

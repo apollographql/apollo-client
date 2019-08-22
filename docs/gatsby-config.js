@@ -38,7 +38,6 @@ module.exports = {
             'features/developer-tooling',
           ],
           Advanced: [
-            'advanced/boost-migration',
             'advanced/subscriptions',
             'advanced/network-layer',
             'advanced/caching',

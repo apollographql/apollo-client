@@ -174,8 +174,6 @@ Will make the contents of `someFragment.graphql` available to the current file. 
 
 ## Fragments on unions and interfaces
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/advanced/boost-migration/).
-
 By default, Apollo Client doesn't require any knowledge of the GraphQL schema, which means it's very easy to set up and works with any server and supports even the largest schemas. However, as your usage of Apollo and GraphQL becomes more sophisticated, you may start using fragments on interfaces or unions. Here's an example of a query that uses fragments on an interface:
 
 ```graphql
@@ -270,7 +268,7 @@ fetch(`${YOUR_API_HOST}/graphql`, {
 2. Create a new IntrospectionFragment matcher by passing in the `fragmentTypes.json` file you just created. You'll want to do this in the same file where you initialize the cache for Apollo Client.
 
 ```js
-import { IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
+import { IntrospectionFragmentMatcher } from '@apollo/client';
 import introspectionQueryResultData from './fragmentTypes.json';
 
 const fragmentMatcher = new IntrospectionFragmentMatcher({
@@ -281,9 +279,7 @@ const fragmentMatcher = new IntrospectionFragmentMatcher({
 3. Pass in the newly created `IntrospectionFragmentMatcher` to configure your cache during construction. Then, you pass your newly configured cache to `ApolloClient` to complete the process.
 
 ```js
-import ApolloClient from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 
 // add fragmentMatcher code from step 2 here
 

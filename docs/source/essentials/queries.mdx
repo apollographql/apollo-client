@@ -25,8 +25,7 @@ First, let's create our GraphQL query. Remember to wrap your query string in the
 <div data-language="Hooks (JavaScript)">
 
 ```tsx
-import gql from 'graphql-tag';
-import { useQuery } from '@apollo/react-hooks';
+import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
   {
@@ -59,8 +58,8 @@ function Dogs({ onDogSelected }) {
 <div data-language="Render Props (JavaScript)">
 
 ```tsx
-import gql from 'graphql-tag';
-import { Query } from 'react-apollo';
+import { gql } from '@apollo/client';
+import { Query } from '@apollo/react-components';
 
 const GET_DOGS = gql`
   {
@@ -364,7 +363,7 @@ One option is to leverage the `useApolloClient` hook and directly call `client.q
 
 ```jsx
 import React from 'react';
-import { useApolloClient } from '@apollo/react-hooks';
+import { useApolloClient } from '@apollo/client';
 
 function DelayedQuery() {
   const [dog, setDog] = useState(null);
@@ -394,7 +393,7 @@ function DelayedQuery() {
 
 ```jsx
 import React, { Component } from 'react';
-import { ApolloConsumer } from 'react-apollo';
+import { ApolloConsumer } from '@apollo/client';
 
 class DelayedQuery extends Component {
   state = { dog: null };
@@ -435,7 +434,7 @@ The `useLazyQuery` hook acts just like the `useQuery` hook, with one main except
 
 ```jsx
 import React from 'react';
-import { useLazyQuery } from '@apollo/react-hooks';
+import { useLazyQuery } from '@apollo/client';
 
 function DelayedQuery() {
   const [dog, setDog] = useState(null);

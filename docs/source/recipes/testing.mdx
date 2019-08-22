@@ -11,9 +11,9 @@ Although React Apollo has a lot going on under the hood, the library provides mu
 
 ## An introduction
 
-The React Apollo library relies on [React's context](https://reactjs.org/docs/context.html) to pass the `ApolloClient` instance through the React component tree. In addition, React Apollo makes network requests in order to fetch data. This behavior affects how tests should be written for components that use React Apollo.
+Apollo Client's React integration relies on [React's context](https://reactjs.org/docs/context.html) to pass the `ApolloClient` instance through the React component tree. In addition, Apollo Client makes network requests in order to fetch data. This behavior affects how tests should be written for components that use Apollo Client with React.
 
-This guide will explain step-by-step how to test React Apollo code. The following examples use the [Jest](https://facebook.github.io/jest/docs/en/tutorial-react.html) testing framework, but most concepts should be reusable with other libraries. These examples aim to use as simple of a toolset as possible, so React's [test renderer](https://reactjs.org/docs/test-renderer.html) will be used in place of React-specific tools like [Enzyme](https://github.com/airbnb/enzyme) and [react-testing-library](https://github.com/kentcdodds/react-testing-library).
+This guide will explain step-by-step how to test Apollo Client React code. The following examples use the [Jest](https://facebook.github.io/jest/docs/en/tutorial-react.html) testing framework, but most concepts should be reusable with other libraries. These examples aim to use as simple of a toolset as possible, so React's [test renderer](https://reactjs.org/docs/test-renderer.html) will be used in place of React-specific tools like [Enzyme](https://github.com/airbnb/enzyme) and [react-testing-library](https://github.com/kentcdodds/react-testing-library).
 
 > **Note:** As of React Apollo 3, all testing utilities can now be found in their own `@apollo/react-testing` package.
 
@@ -60,7 +60,7 @@ export function Dog({ name }) {
 ```jsx
 import React from 'react';
 import gql from 'graphql-tag';
-import { Query } from 'react-apollo';
+import { Query } from '@apollo/react-components';
 
 // Make sure the query is also exported -- not just the component
 export const GET_DOG_QUERY = gql`

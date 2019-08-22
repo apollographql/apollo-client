@@ -5,22 +5,16 @@ description: A guide to customizing and directly accessing your Apollo cache
 
 ## InMemoryCache
 
-`apollo-cache-inmemory` is the default cache implementation for Apollo Client 2.0. `InMemoryCache` is a normalized data store that supports all of Apollo Client 1.0's features without the dependency on Redux.
+`InMemoryCache` is the default cache implementation for Apollo Client 2.0. `InMemoryCache` is a normalized data store that supports all of Apollo Client 1.0's features without the dependency on Redux.
 
 In some instances, you may need to manipulate the cache directly, such as updating the store after a mutation. We'll cover some common use cases [here](#recipes).
 
 ### Installation
 
-```bash
-npm install apollo-cache-inmemory --save
-```
-
-After installing the package, you'll want to initialize the cache constructor. Then, you can pass in your newly created cache to ApolloClient.
+After installing the `@apollo/client` package, you'll want to initialize the cache constructor. Then, you can pass in your newly created cache to ApolloClient.
 
 ```js
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import { ApolloClient } from 'apollo-client';
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache();
 
@@ -61,7 +55,7 @@ Note that Apollo Client doesn't add the type name to the cache key when you spec
 You can use different unique identifiers for different data types by keying off of the `__typename` property attached to every object typed by GraphQL.  For example:
 
 ```js
-import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory';
+import { InMemoryCache, defaultDataIdFromObject } from '@apollo/client';
 
 const cache = new InMemoryCache({
   dataIdFromObject: object => {
@@ -488,7 +482,7 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```js
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache({
   cacheRedirects: {
@@ -555,8 +549,7 @@ To register a callback function to be executed after the store has been reset, c
 In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](https://www.apollographql.com/docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { withClientState } from 'apollo-link-state';
 
 import { resolvers, defaults } from './resolvers';
@@ -577,7 +570,7 @@ You can also call `client.onResetStore` from your React components. This can be 
 If you would like to unsubscribe your callbacks from resetStore, use the return value of `client.onResetStore` for your unsubscribe function.
 
 ```js
-import { withApollo } from "react-apollo";
+import { withApollo } from "@apollo/react-hoc";
 
 export class Foo extends Component {
   constructor(props) {
@@ -629,7 +622,7 @@ To get started, simply pass your Apollo Cache and a storage provider to `persist
 
 ```js
 import { AsyncStorage } from 'react-native';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache } from '@apollo/cache';
 import { persistCache } from 'apollo-cache-persist';
 
 const cache = new InMemoryCache();

@@ -40,7 +40,7 @@ import {
 } from 'graphql';
 
 import { wrap, KeyTrie } from 'optimism';
-import { DepTrackingCache } from './depTrackingCache';
+import { supportsResultCaching } from './entityCache';
 import { InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
 import {
@@ -98,17 +98,14 @@ type ExecSubSelectedArrayOptions = {
 type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 export interface StoreReaderConfig {
   cacheKeyRoot?: KeyTrie<object>;
-  freezeResults?: boolean;
   possibleTypes?: PossibleTypes;
 }
 
 export class StoreReader {
-  private freezeResults: boolean;
   private possibleTypes?: PossibleTypes;
 
   constructor({
     cacheKeyRoot = new KeyTrie<object>(canUseWeakMap),
-    freezeResults = false,
     possibleTypes,
   }: StoreReaderConfig = {}) {
     const {
@@ -117,7 +114,6 @@ export class StoreReader {
       executeSubSelectedArray,
     } = this;
 
-    this.freezeResults = freezeResults;
     this.possibleTypes = possibleTypes;
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
@@ -129,10 +125,7 @@ export class StoreReader {
         contextValue,
         variableValues,
       }: ExecStoreQueryOptions) {
-        // The result of executeStoreQuery can be safely cached only if the
-        // underlying store is capable of tracking dependencies and invalidating
-        // the cache when relevant data have changed.
-        if (contextValue.store instanceof DepTrackingCache) {
+        if (supportsResultCaching(contextValue.store)) {
           return cacheKeyRoot.lookup(
             contextValue.store,
             query,
@@ -151,7 +144,7 @@ export class StoreReader {
         objectOrReference,
         execContext,
       }: ExecSelectionSetOptions) {
-        if (execContext.contextValue.store instanceof DepTrackingCache) {
+        if (supportsResultCaching(execContext.contextValue.store)) {
           return cacheKeyRoot.lookup(
             execContext.contextValue.store,
             selectionSet,
@@ -166,7 +159,7 @@ export class StoreReader {
       return executeSubSelectedArray.call(this, options);
     }, {
       makeCacheKey({ field, array, execContext }) {
-        if (execContext.contextValue.store instanceof DepTrackingCache) {
+        if (supportsResultCaching(execContext.contextValue.store)) {
           return cacheKeyRoot.lookup(
             execContext.contextValue.store,
             field,
@@ -394,7 +387,7 @@ export class StoreReader {
     // defensive shallow copies than necessary.
     finalResult.result = mergeDeepArray(objectsToMerge);
 
-    if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       Object.freeze(finalResult.result);
     }
 
@@ -440,9 +433,7 @@ export class StoreReader {
     if (!field.selectionSet) {
       if (process.env.NODE_ENV !== 'production') {
         assertSelectionSetForIdValue(contextValue.store, field, readStoreResult.result);
-        if (this.freezeResults) {
-          maybeDeepFreeze(readStoreResult);
-        }
+        maybeDeepFreeze(readStoreResult);
       }
       return readStoreResult;
     }
@@ -528,7 +519,7 @@ export class StoreReader {
       return item;
     });
 
-    if (this.freezeResults && process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       Object.freeze(array);
     }
 

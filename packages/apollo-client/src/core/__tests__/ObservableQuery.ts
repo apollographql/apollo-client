@@ -1863,7 +1863,10 @@ describe('ObservableQuery', () => {
         pollInterval: 20,
       };
 
-      function check({ assumeImmutableResults, freezeResults }) {
+      function check({
+        assumeImmutableResults = true,
+        assertFrozenResults = false,
+      }) {
         const client = new ApolloClient({
           link: mockSingleLink(
             { request: queryOptions, result: { data: { value: 1 } } },
@@ -1871,7 +1874,7 @@ describe('ObservableQuery', () => {
             { request: queryOptions, result: { data: { value: 3 } } },
           ),
           assumeImmutableResults,
-          cache: new InMemoryCache({ freezeResults }),
+          cache: new InMemoryCache(),
         });
 
         const observable = client.watchQuery(queryOptions);
@@ -1881,10 +1884,20 @@ describe('ObservableQuery', () => {
           observable.subscribe({
             next(result) {
               values.push(result.data.value);
-              try {
-                result.data.value = 'oyez';
-              } catch (error) {
-                reject(error);
+              if (assertFrozenResults) {
+                try {
+                  result.data.value = 'oyez';
+                } catch (error) {
+                  reject(error);
+                }
+              } else {
+                result = {
+                  ...result,
+                  data: {
+                    ...result.data,
+                    value: 'oyez',
+                  },
+                };
               }
               client.writeData(result);
             },
@@ -1896,20 +1909,6 @@ describe('ObservableQuery', () => {
         });
       }
 
-      // When we assume immutable results, the next method will not fire as a
-      // result of destructively modifying result.data.value, because the data
-      // object is still === to the previous object. This behavior might seem
-      // like a bug, if you are relying on the mutability of results, but the
-      // cloneDeep calls required to prevent that bug are expensive. Assuming
-      // immutability is safe only when you write your code in an immutable
-      // style, but the benefits are well worth the extra effort.
-      expect(
-        await check({
-          assumeImmutableResults: true,
-          freezeResults: false,
-        }),
-      ).toEqual([1, 2, 3]);
-
       // When we do not assume immutable results, the observable must do
       // extra work to take snapshots of past results, just in case those
       // results are destructively modified. The benefit of that work is
@@ -1920,7 +1919,7 @@ describe('ObservableQuery', () => {
       expect(
         await check({
           assumeImmutableResults: false,
-          freezeResults: false,
+          assertFrozenResults: false,
         }),
       ).toEqual([1, 'oyez', 2, 'oyez', 3, 'oyez']);
 
@@ -1933,7 +1932,7 @@ describe('ObservableQuery', () => {
             // modifications of the result objects will become fatal. Once you
             // start enforcing immutability in this way, you might as well pass
             // assumeImmutableResults: true, to prevent calling cloneDeep.
-            freezeResults: true,
+            assertFrozenResults: true,
           });
           throw new Error('not reached');
         } catch (error) {

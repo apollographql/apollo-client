@@ -380,9 +380,11 @@ export class QueryManager<TStore> {
 
     let shouldFetch =
       needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
-
-    // we need to check to see if this is an operation that uses the @live directive
-    if (hasDirectives(['live'], query)) shouldFetch = true;
+    
+    if (!shouldFetch) {      
+      // we need to check to see if this is an operation that uses the @live directive
+      if (hasDirectives(['live'], query)) shouldFetch = true;
+    }
 
     const requestId = this.idCounter++;
 

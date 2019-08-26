@@ -29,7 +29,7 @@ By default, Apollo identifies objects based on two properties: The `__typename` 
 'Person:1234'
 ```
 
-You can also specify a custom function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.
+You can also specify a custom function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](/essentials/get-started/#create-a-client), if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.
 
 ```js
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -79,7 +79,7 @@ mutation {
 }
 ```
 
-If the `id` field on both results matches up, then the `score` field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use [fragments](fragments.html) to share fields between the query and the mutation that affects it.
+If the `id` field on both results matches up, then the `score` field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use [fragments](fragments/) to share fields between the query and the mutation that affects it.
 
 ## Updating after a mutation
 
@@ -494,7 +494,7 @@ export default withApollo(graphql(PROFILE_QUERY, {
 
 To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
 
-In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
+In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](https://www.apollographql.com/docs/link/links/state/). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
 
 ```js
 import { ApolloClient } from 'apollo-client';

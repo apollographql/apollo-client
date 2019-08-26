@@ -1,9 +1,12 @@
+const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
+
 module.exports = {
   pathPrefix: '/docs/react',
-  __experimentalThemes: [
+  plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
+        ...themeOptions,
         root: __dirname,
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',

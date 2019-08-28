@@ -2603,7 +2603,7 @@ describe('client', () => {
     });
   });
 
-  it.only('should be able to refetch after there was a network error', done => {
+  it('should be able to refetch after there was a network error', done => {
     const query: DocumentNode = gql`
       query somethingelse {
         allPeople(first: 1) {

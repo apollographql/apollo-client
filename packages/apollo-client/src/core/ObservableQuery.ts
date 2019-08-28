@@ -396,7 +396,7 @@ export class ObservableQuery<
       TSubscriptionVariables,
       TSubscriptionData
     >,
-  ) {
+  ): () => void {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,

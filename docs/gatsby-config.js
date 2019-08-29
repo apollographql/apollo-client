@@ -8,7 +8,7 @@ module.exports = {
       options: {
         ...themeOptions,
         root: __dirname,
-        subtitle: 'Apollo Client',
+        subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: 2.6,

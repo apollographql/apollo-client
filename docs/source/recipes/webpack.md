@@ -36,7 +36,7 @@ As you can see, `.graphql` or `.gql` files will be parsed whenever imported:
 
 ```js
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
+import { graphql } from '@apollo/react-hoc';
 import currentUserQuery from './currentUser.graphql';
 
 class Profile extends Component { ... }

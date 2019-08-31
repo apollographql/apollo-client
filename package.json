@@ -69,8 +69,8 @@
     "@types/graphql": "14.2.3",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jest": "24.0.18",
-    "@types/lodash": "4.14.137",
-    "@types/node": "12.7.2",
+    "@types/lodash": "4.14.138",
+    "@types/node": "12.7.3",
     "@types/react": "16.9.2",
     "@types/react-dom": "16.9.0",
     "benchmark": "2.1.4",
@@ -78,7 +78,7 @@
     "codecov": "3.5.0",
     "danger": "7.1.4",
     "fetch-mock": "7.3.9",
-    "flow-bin": "0.105.2",
+    "flow-bin": "0.106.3",
     "graphql": "14.5.4",
     "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",
@@ -106,7 +106,7 @@
     "tslint": "5.19.0",
     "typescript": "3.5.3",
     "uglify-js": "3.6.0",
-    "webpack": "4.39.2",
+    "webpack": "4.39.3",
     "webpack-bundle-analyzer": "3.4.1"
   },
   "renovate": {

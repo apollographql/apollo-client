@@ -384,7 +384,7 @@ const QUERY_ITEM_DETAILS = gql`
 // ... run the query using client.query, a <Query /> component, etc.
 ```
 
-Here when the `QUERY_CART_INFO` query is executed, Apollo Client looks for a local resolver associated with the `isInCart` field. Since we've defined a local resolver for the `isInCart` field in the `ApolloClient` constructor, it finds a resolver it can use. This resolver function is run, then the result is calculated and merged in with the rest of the query result (if a local resolver can't be found, Apollo Client will check the cache for a matching field - see [Local data query flow](#2.-local-data-query-flow) for more details).
+Here when the `QUERY_CART_INFO` query is executed, Apollo Client looks for a local resolver associated with the `isInCart` field. Since we've defined a local resolver for the `isInCart` field in the `ApolloClient` constructor, it finds a resolver it can use. This resolver function is run, then the result is calculated and merged in with the rest of the query result (if a local resolver can't be found, Apollo Client will check the cache for a matching field - see [Local data query flow](#2-local-data-query-flow) for more details).
 
 Setting resolvers through `ApolloClient`'s constructor `resolvers` parameter, or through its `setResolvers` / `addResolvers` methods, adds resolvers to Apollo Client's internal resolver map (refer to the [Local resolvers](#local-resolvers) section for more details concerning the resolver map). In the above example we added a `isInCart` resolver, for the `Item` GraphQL object type, to the resolver map. Let's look at the `isInCart` resolver function more closely:
 

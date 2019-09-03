@@ -206,8 +206,8 @@ B. Apollo essentially splits the query into two different operations. It sends t
 
 Let's look at both of these steps more closely.
 
-2a. Reading `@client` data from the cache (step A above) is explained in [Handling `@client` fields with the cache](#handling-client-fields-with-the-cache).
-2b. Resolving `@client` data with the help of local resolvers (step B above) is explained in [Handling `@client` fields with resolvers][].
+2a. Reading `@client` data from the cache (step A above) is explained in [2a. Handling `@client` fields with the cache](#handling-client-fields-with-the-cache).
+2b. Resolving `@client` data with the help of local resolvers (step B above) is explained in [2b. Handling `@client` fields with resolvers][].
 
 ### 2a. Handling `@client` fields with the cache
 
@@ -411,7 +411,7 @@ There are some additional use cases that could potentially help your specific ap
 
 Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](/api/apollo-client/#ApolloClient.query) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request.
 
-In a lot of situations treating local resolvers just like remote resolvers, by having them adhere to the same `fetchPolicy`, makes a lot of sense. Once you have the data you're looking for, which might have been fetched remotely or calculated using a local resolver, you can cache it and avoid recalculating/re-fetching it again on a subsequent request. But what if you're using local resolvers to run calculations that you need fired on every request? There are a few different ways this can be handled. You can switch your query to use a `fetchPolicy` that forces your entire query to run on each request, like `no-cache` or `network-only`. This will make sure your local resolvers fire on every request, but it will also make sure your network based query components fire on every request. Depending on your use case this might be okay, but what if you want the network parts of your query to leverage the cache, and just want your `@client` parts to run on every request? We'll cover a more flexible option for this in the [Forcing resolvers with `@client(always: true)`](#forcing-resolvers-with-clientalways-true) section.
+In a lot of situations treating local resolvers just like remote resolvers, by having them adhere to the same `fetchPolicy`, makes a lot of sense. Once you have the data you're looking for, which might have been fetched remotely or calculated using a local resolver, you can cache it and avoid recalculating/re-fetching it again on a subsequent request. But what if you're using local resolvers to run calculations that you need fired on every request? There are a few different ways this can be handled. You can switch your query to use a `fetchPolicy` that forces your entire query to run on each request, like `no-cache` or `network-only`. This will make sure your local resolvers fire on every request, but it will also make sure your network based query components fire on every request. Depending on your use case this might be okay, but what if you want the network parts of your query to leverage the cache, and just want your `@client` parts to run on every request? We'll can do this by forcing the resolver on every request, using @client(always: true), as described below.
 
 #### 3b. Force resolvers on every request - @client(always: true)
 
@@ -1412,6 +1412,6 @@ fieldName: (obj, args, context, info) => result;
 2. `args`: An object containing all of the arguments passed into the field. For example, if you called a mutation with `addItemToCart(id: 'random_id_0123')`, the `args` object would be `{ id: 'random_id_0123' }`
 3. `context`: An object of contextual information shared between your React components and your Apollo Client network stack. In addition to any custom context properties that may be present, local resolvers always receive the following:
     - `context.client`: The Apollo Client instance.
-    - `context.cache`: The Apollo Cache instance, which can be used to manipulate the cache with `context.cache.readQuery`, `.writeQuery`, `.readFragment`, `.writeFragment`, and `.writeData`. You can learn more about these methods in [Managing the cache](#managing-the-cache).
+    - `context.cache`: The Apollo Cache instance, which can be used to manipulate the cache with `context.cache.readQuery`, `.writeQuery`, `.readFragment`, `.writeFragment`, and `.writeData`
     - `context.getCacheKey`: Get a key from the cache using a `__typename` and `id`.
 4. `info`: Information about the execution state of the query. You will probably never have to use this one.

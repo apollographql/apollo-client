@@ -5,14 +5,14 @@ import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
  * Note that you need a polyfill for Object.entries for this to work.
  */
 export class MapCache implements NormalizedCache {
-  private cache: Map<string, StoreObject>;
+  private cache: Map<string, StoreObject | undefined>;
 
   constructor(data: NormalizedCacheObject = {}) {
     this.cache = new Map(Object.entries(data));
   }
 
   public get(dataId: string): StoreObject {
-    return this.cache.get(`${dataId}`);
+    return this.cache.get(`${dataId}`)!;
   }
 
   public set(dataId: string, value: StoreObject): void {

@@ -7,6 +7,11 @@
 - Update the `fetchMore` type signature to accept `context`.  <br/>
   [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
 
+### GraphQL Anywhere vNext
+
+- Fix `filter` edge case involving `null`.  <br/>
+  [@lifeiscontent](https://github.com/lifeiscontent) in [#5110](https://github.com/apollographql/apollo-client/pull/5110)
+
 
 ## Apollo Client (2.6.4)
 

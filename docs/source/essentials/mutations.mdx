@@ -435,13 +435,13 @@ If you're looking for an overview of all the options `useMutation` accepts, and 
 
 > **Note:** If you're using React Apollo's `Mutation` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `mutation` prop (which holds a GraphQL mutation document parsed into an AST by `graphql-tag`) is also required.
 
-<h3>Options</h3>
+### Options
 
 The `useMutation` hook accepts the following options.
 
 <MutationOptions />
 
-<h3>Result</h3>
+### Result
 
 The `useMutation` result is a tuple with a `mutate` function in the first position, and an object with the mutation result in the second position. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
 

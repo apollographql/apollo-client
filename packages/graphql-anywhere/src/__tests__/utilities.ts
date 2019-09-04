@@ -108,7 +108,11 @@ describe('utilities', () => {
       expect(filter(doc, arrayData)).toEqual(filteredArrayData);
     });
 
-    it('can filter data for fragments ', () => {
+    it('can short circuit when data is null', () => {
+      expect(filter(doc, null)).toEqual(null);
+    });
+
+    it('can filter data for fragments', () => {
       expect(filter(fragment, data)).toEqual(filteredData);
     });
 

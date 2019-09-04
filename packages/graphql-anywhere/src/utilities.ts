@@ -13,6 +13,8 @@ export function filter<FD = any, D extends FD = any>(
   data: D,
   variableValues: VariableMap = {},
 ): FD {
+  if (data === null) return data;
+
   const resolver = (
     fieldName: string,
     root: any,
@@ -63,7 +65,8 @@ function hasVariableInclusions(
   directives: ReadonlyArray<DirectiveNode>,
 ): boolean {
   return getInclusionDirectives(directives).some(
-    ({ ifArgument }) => ifArgument.value && ifArgument.value.kind === 'Variable',
+    ({ ifArgument }) =>
+      ifArgument.value && ifArgument.value.kind === 'Variable',
   );
 }
 

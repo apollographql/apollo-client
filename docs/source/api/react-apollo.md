@@ -57,38 +57,38 @@ const WithApolloClient = () => (
 The Query component accepts the following props. Only `query` and `children` are **required**.
 
 <dl>
-  <dt>`query`: DocumentNode</dt>
-  <dd>A GraphQL query document parsed into an AST by `graphql-tag`. **Required**</dd>
-  <dt>`children`: (result: QueryResult) => React.ReactNode</dt>
-  <dd>A function returning the UI you want to render based on your query result. **Required**</dd>
-  <dt>`variables`: { [key: string]: any }</dt>
+  <dt><code>query</code>: DocumentNode</dt>
+  <dd>A GraphQL query document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
+  <dt><code>children</code>: (result: QueryResult) => React.ReactNode</dt>
+  <dd>A function returning the UI you want to render based on your query result. <strong>Required</strong></dd>
+  <dt><code>variables</code>: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your query needs to execute</dd>
-  <dt>`pollInterval`: number</dt>
+  <dt><code>pollInterval</code>: number</dt>
   <dd>Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling).</dd>
-  <dt>`notifyOnNetworkStatusChange`: boolean</dt>
+  <dt><code>notifyOnNetworkStatusChange</code>: boolean</dt>
   <dd>Whether updates to the network status or network error should re-render your component. Defaults to false.</dd>
-  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dt><code>fetchPolicy</code>: FetchPolicy</dt>
   <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
-  <dt>`errorPolicy`: ErrorPolicy</dt>
+  <dt><code>errorPolicy</code>: ErrorPolicy</dt>
   <dd>How you want your component to handle network and GraphQL errors. Defaults to "none", which means we treat GraphQL errors as runtime errors.</dd>
-  <dt>`ssr`: boolean</dt>
+  <dt><code>ssr</code>: boolean</dt>
   <dd>Pass in false to skip your query during server-side rendering.</dd>
-  <dt>`displayName`: string</dt>
+  <dt><code>displayName</code>: string</dt>
   <dd>The name of your component to be displayed in React DevTools. Defaults to 'Query'.</dd>
-  <dt>`skip`: boolean</dt>
+  <dt><code>skip</code>: boolean</dt>
   <dd>If skip is true, the query will be skipped entirely.</dd>
-  <dt>`onCompleted`: (data: TData | {}) => void</dt>
+  <dt><code>onCompleted</code>: (data: TData | {}) => void</dt>
   <dd>A callback executed once your query successfully completes.</dd>
-  <dt>`onError`: (error: ApolloError) => void</dt>
+  <dt><code>onError</code>: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error.</dd>
-  <dt>`context`: Record&lt;string, any&lt;</dt>
-  <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
-  <dt>`partialRefetch`: boolean</dt>
-  <dd>If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
-  <dt>`client`: ApolloClient</dt>
-  <dd>An `ApolloClient` instance. By default `Query` uses the client passed down via context, but a different client can be passed in.</dd>
-  <dt>`returnPartialData`: boolean</dt>
-  <dd>Opt into receiving partial results from the cache for queries that are not fully satisfied by the cache. `false` by default.</dd>
+  <dt><code>context</code>: Record&lt;string, any&lt;</dt>
+  <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the <code>request</code> function of Apollo Boost.</dd>
+  <dt><code>partialRefetch</code>: boolean</dt>
+  <dd>If <code>true</code>, perform a query <code>refetch</code> if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client <code>QueryManager</code> (due to a cache miss). The default value is <code>false</code> for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
+  <dt><code>client</code>: ApolloClient</dt>
+  <dd>An <code>ApolloClient</code> instance. By default <code>Query</code> uses the client passed down via context, but a different client can be passed in.</dd>
+  <dt><code>returnPartialData</code>: boolean</dt>
+  <dd>Opt into receiving partial results from the cache for queries that are not fully satisfied by the cache. <code>false</code> by default.</dd>
 </dl>
 
 ### Render prop function
@@ -96,30 +96,30 @@ The Query component accepts the following props. Only `query` and `children` are
 The render prop function that you pass to the `children` prop of `Query` is called with an object (`QueryResult`) that has the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
 <dl>
-  <dt>`data`: TData</dt>
-  <dd>An object containing the result of your GraphQL query. Defaults to `undefined`.</dd>
-  <dt>`loading`: boolean</dt>
+  <dt><code>data</code>: TData</dt>
+  <dd>An object containing the result of your GraphQL query. Defaults to <code>undefined</code>.</dd>
+  <dt><code>loading</code>: boolean</dt>
   <dd>A boolean that indicates whether the request is in flight</dd>
-  <dt>`error`: ApolloError</dt>
-  <dd>A runtime error with `graphQLErrors` and `networkError` properties</dd>
-  <dt>`variables`: { [key: string]: any }</dt>
+  <dt><code>error</code>: ApolloError</dt>
+  <dd>A runtime error with <code>graphQLErrors</code> and <code>networkError</code> properties</dd>
+  <dt><code>variables</code>: { [key: string]: any }</dt>
   <dd>An object containing the variables the query was called with</dd>
-  <dt>`networkStatus`: NetworkStatus</dt>
-  <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the `notifyOnNetworkStatusChange` prop.</dd>
-  <dt>`refetch`: (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt;</dt>
+  <dt><code>networkStatus</code>: NetworkStatus</dt>
+  <dd>A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the <code>notifyOnNetworkStatusChange</code> prop.</dd>
+  <dt><code>refetch</code>: (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
-  <dt>`fetchMore`: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt;</dt>
-  <dd>A function that enables [pagination](/features/pagination/) for your query</dd>
-  <dt>`startPolling`: (interval: number) => void</dt>
+  <dt><code>fetchMore</code>: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt;</dt>
+  <dd>A function that enables <a href="/features/pagination/">pagination</a> for your query</dd>
+  <dt><code>startPolling</code>: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
-  <dt>`stopPolling`: () => void</dt>
+  <dt><code>stopPolling</code>: () => void</dt>
   <dd>This function stops the query from polling.</dd>
-  <dt>`subscribeToMore`: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
-  <dd>A function that sets up a [subscription](/advanced/subscriptions/). `subscribeToMore` returns a function that you can use to unsubscribe.</dd>
-  <dt>`updateQuery`: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
+  <dt><code>subscribeToMore</code>: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
+  <dd>A function that sets up a <a href="/advanced/subscriptions/">subscription</a>. <code>subscribeToMore</code> returns a function that you can use to unsubscribe.</dd>
+  <dt><code>updateQuery</code>: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
   <dd>A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription</dd>
-  <dt>`client`: ApolloClient</dt>
-  <dd>Your `ApolloClient` instance. Useful for manually firing queries or writing data to the cache.</dd>
+  <dt><code>client</code>: ApolloClient</dt>
+  <dd>Your <code>ApolloClient</code> instance. Useful for manually firing queries or writing data to the cache.</dd>
 </dl>
 
 ## `Mutation`
@@ -129,28 +129,28 @@ The render prop function that you pass to the `children` prop of `Query` is call
 The Mutation component accepts the following props. Only `mutation` and `children` are **required**.
 
 <dl>
-  <dt>`mutation`: DocumentNode</dt>
-  <dd>A GraphQL mutation document parsed into an AST by `graphql-tag`. **Required**</dd>
-  <dt>`children`: (mutate: Function, result: MutationResult) => React.ReactNode</dt>
-  <dd>A function that allows you to trigger a mutation from your UI. **Required**</dd>
-  <dt>`variables`: { [key: string]: any }</dt>
+  <dt><code>mutation</code>: DocumentNode</dt>
+  <dd>A GraphQL mutation document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
+  <dt><code>children</code>: (mutate: Function, result: MutationResult) => React.ReactNode</dt>
+  <dd>A function that allows you to trigger a mutation from your UI. <strong>Required</strong></dd>
+  <dt><code>variables</code>: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your mutation needs to execute</dd>
-  <dt>`update`: (cache: DataProxy, mutationResult: FetchResult)</dt>
+  <dt><code>update</code>: (cache: DataProxy, mutationResult: FetchResult)</dt>
   <dd>A function used to update the cache after a mutation occurs</dd>
-  <dt>`ignoreResults`: boolean</dt>
-  <dd>If true, the `data` property on the render prop function will not update with the mutation result.</dd>
-  <dt>`optimisticResponse`: Object</dt>
-  <dd>Provide a [mutation response](/features/optimistic-ui/) before the result comes back from the server</dd>
-  <dt>`refetchQueries`: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables}></dt>
+  <dt><code>ignoreResults</code>: boolean</dt>
+  <dd>If true, the <code>data</code> property on the render prop function will not update with the mutation result.</dd>
+  <dt><code>optimisticResponse</code>: Object</dt>
+  <dd>Provide a <a href="/features/optimistic-ui/">mutation response</a> before the result comes back from the server</dd>
+  <dt><code>refetchQueries</code>: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables}></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
-  <dt>`onCompleted`: (data: TData) => void</dt>
+  <dt><code>onCompleted</code>: (data: TData) => void</dt>
   <dd>A callback executed once your mutation successfully completes</dd>
-  <dt>`onError`: (error: ApolloError) => void</dt>
+  <dt><code>onError</code>: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error</dd>
-  <dt>`context`: Record&lt;string, any&lt;</dt>
-  <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost.</dd>
-  <dt>`client`: ApolloClient</dt>
-  <dd>An `ApolloClient` instance. By default `Mutation` uses the client passed down via context, but a different client can be passed in.</dd>
+  <dt><code>context</code>: Record&lt;string, any&lt;</dt>
+  <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the <code>request</code> function of Apollo Boost.</dd>
+  <dt><code>client</code>: ApolloClient</dt>
+  <dd>An <code>ApolloClient</code> instance. By default <code>Mutation</code> uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 ### Render prop function
@@ -160,23 +160,23 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 **Mutate function:**
 
 <dl>
-  <dt>`mutate`: (options?: MutationOptions) => Promise&lt;FetchResult&gt;</dt>
-  <dd>A function to trigger a mutation from your UI. You can optionally pass `variables`, `optimisticResponse`, `refetchQueries`, and `update` in as options, which will override any props passed to the `Mutation` component. The function returns a promise that fulfills with your mutation result.</dd>
+  <dt><code>mutate</code>: (options?: MutationOptions) => Promise&lt;FetchResult&gt;</dt>
+  <dd>A function to trigger a mutation from your UI. You can optionally pass <code>variables</code>, <code>optimisticResponse</code>, <code>refetchQueries</code>, and <code>update</code> in as options, which will override any props passed to the <code>Mutation</code> component. The function returns a promise that fulfills with your mutation result.</dd>
 </dl>
 
 **Mutation result:**
 
 <dl>
-  <dt>`data`: TData</dt>
-  <dd>The data returned from your mutation. It can be undefined if `ignoreResults` is true.</dd>
-  <dt>`loading`: boolean</dt>
+  <dt><code>data</code>: TData</dt>
+  <dd>The data returned from your mutation. It can be undefined if <code>ignoreResults</code> is true.</dd>
+  <dt><code>loading</code>: boolean</dt>
   <dd>A boolean indicating whether your mutation is in flight</dd>
-  <dt>`error`: ApolloError</dt>
+  <dt><code>error</code>: ApolloError</dt>
   <dd>Any errors returned from the mutation</dd>
-  <dt>`called`: boolean</dt>
+  <dt><code>called</code>: boolean</dt>
   <dd>A boolean indicating if the mutate function has been called</dd>
-  <dt>`client`: ApolloClient</dt>
-  <dd>Your `ApolloClient` instance. Useful for invoking cache methods outside the context of the update function, such as `client.writeData` and `client.readQuery`.</dd>
+  <dt><code>client</code>: ApolloClient</dt>
+  <dd>Your <code>ApolloClient</code> instance. Useful for invoking cache methods outside the context of the update function, such as <code>client.writeData</code> and <code>client.readQuery</code>.</dd>
 </dl>
 
 ## `Subscription`
@@ -186,20 +186,20 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 The Subscription component accepts the following props. Only `subscription` and `children` are **required**.
 
 <dl>
-  <dt>`subscription`: DocumentNode</dt>
-  <dd>A GraphQL subscription document parsed into an AST by `graphql-tag`. **Required**</dd>
-  <dt>`children`: (result: SubscriptionResult) => React.ReactNode</dt>
-  <dd>A function returning the UI you want to render based on your subscription result. **Required**</dd>
-  <dt>`variables`: { [key: string]: any }</dt>
+  <dt><code>subscription</code>: DocumentNode</dt>
+  <dd>A GraphQL subscription document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
+  <dt><code>children</code>: (result: SubscriptionResult) => React.ReactNode</dt>
+  <dd>A function returning the UI you want to render based on your subscription result. <strong>Required</strong></dd>
+  <dt><code>variables</code>: { [key: string]: any }</dt>
   <dd>An object containing all of the variables your subscription needs to execute</dd>
-  <dt>`shouldResubscribe`: boolean</dt>
+  <dt><code>shouldResubscribe</code>: boolean</dt>
   <dd>Determines if your subscription should be unsubscribed and subscribed again</dd>
-  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions&lt;TData&gt;) => any</dt>
-  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
-  <dt>`fetchPolicy`: FetchPolicy</dt>
+  <dt><code>onSubscriptionData</code>: (options: OnSubscriptionDataOptions&lt;TData&gt;) => any</dt>
+  <dd>Allows the registration of a callback function, that will be triggered each time the <code>Subscription</code> component receives data. The callback <code>options</code> object param consists of the current Apollo Client instance in <code>client</code>, and the received subscription data in <code>subscriptionData</code>.</dd>
+  <dt><code>fetchPolicy</code>: FetchPolicy</dt>
   <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
-  <dt>`client`: ApolloClient</dt>
-  <dd>An `ApolloClient` instance. By default `Subscription` uses the client passed down via context, but a different client can be passed in.</dd>
+  <dt><code>client</code>: ApolloClient</dt>
+  <dd>An <code>ApolloClient</code> instance. By default <code>Subscription</code> uses the client passed down via context, but a different client can be passed in.</dd>
 </dl>
 
 ### Render prop function
@@ -207,12 +207,12 @@ The Subscription component accepts the following props. Only `subscription` and 
 The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties
 
 <dl>
-  <dt>`data`: TData</dt>
+  <dt><code>data</code>: TData</dt>
   <dd>An object containing the result of your GraphQL subscription. Defaults to an empty object.</dd>
-  <dt>`loading`: boolean</dt>
+  <dt><code>loading</code>: boolean</dt>
   <dd>A boolean that indicates whether any initial data has been returned</dd>
-  <dt>`error`: ApolloError</dt>
-  <dd>A runtime error with `graphQLErrors` and `networkError` properties</dd>
+  <dt><code>error</code>: ApolloError</dt>
+  <dd>A runtime error with <code>graphQLErrors</code> and <code>networkError</code> properties</dd>
 </dl>
 
 ## `MockedProvider`

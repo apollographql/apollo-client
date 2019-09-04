@@ -3,6 +3,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
+import { Resolver } from './LocalState';
 
 export type QueryListener = (
   queryStoreValue: QueryStoreValue,
@@ -48,11 +49,6 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
 
 export interface Resolvers {
   [key: string]: {
-    [field: string]: (
-      rootValue?: any,
-      args?: any,
-      context?: any,
-      info?: any,
-    ) => any;
+    [ field: string ]: Resolver;
   };
 }

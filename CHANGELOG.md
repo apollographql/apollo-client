@@ -6,6 +6,8 @@
 
 - Update the `fetchMore` type signature to accept `context`.  <br/>
   [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
+- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
+  [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
 
 ### GraphQL Anywhere vNext
 
@@ -38,7 +40,7 @@
 - Documentation updates.  <br/>
   [@michael-watson](https://github.com/michael-watson) in [#4940](https://github.com/apollographql/apollo-client/pull/4940)  <br/>
   [@hwillson](https://github.com/hwillson) in [#4969](https://github.com/apollographql/apollo-client/pull/4969)
-- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br /> [@peoplenarthax](https://github.com/peoplenarthax) 
+
 
 ## Apollo Client (2.6.1)
 

@@ -66,7 +66,9 @@ const MUTATION_ADD_ITEM_TO_CART = gql`
 `;
 
 // use mutations the same as before
-const [ addItemToCart,  { data } ] = useMutation(MUTATION_ADD_ITEM_TO_CART) or <Mutation mutation={MUTATION_ADD_ITEM_TO_CART}>
+const [ addItemToCart,  { data } ] = useMutation(MUTATION_ADD_ITEM_TO_CART)
+// or using the same components as before..
+<Mutation mutation={MUTATION_ADD_ITEM_TO_CART}>
 ```
 
 ### Local Resolvers
@@ -113,9 +115,12 @@ Apollo's state management is very powerful and handles very similar use cases to
 In this section, we'll explain how local queries work in detail. We'll explore the inner-workings of a local query and then provide some solutions to more specific use cases.
   1. Initializing our cache: Why it's needed and how do we do it?
   2. Local data query flow
+
     - [Handling `@client` fields with the cache]
     - [Handling `@client` fields with resolvers]
+
   3. Additional concepts
+
     - Handling fetch policies
     - Force resolvers on every request
     - @client results as variables
@@ -581,26 +586,36 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 3. If you define multiple `@export` variables that use the same name, in a single operation, the value of the last `@export` variable will be used as the variable value moving forward. When this happens Apollo Client will log a warning message (dev only).
 
-## Mutations
+## Mutations and resolvers
 
 Mutations are used just as before, tied to our UI using the same useMutation hooks/Mutation components/hocs. Once again, the only difference being the `@client` directive. To implement the logic for our mutations, we make use of "resolvers", which we cover in the next section.
-
-## Resolvers and the store
 
 When it comes to resolvers and updating the local state, there are a couple important concerns:
 
   I. Resolver Map
+
     a. object with resolver functions for each GraphQL type
+
       - passed to our ApolloClient constructor
+
   II. The resolvers:  e.g. -> addItemToCart: (obj, args, context, info) => any;
-    Resolvers handle the logic to actually update our cache with the correct data. You can think of them in a similar manner to reducers in redux. Rather than reading the state and returning a new state, we are usually reading the cache and writing back to the cache. Resolvers access the cache via the context parameter in our resolvers. Please review the resolver signature/parameters in the API Overview section here: [Resolver Parameters]: #resolver-parameters
+
+    Resolvers handle the logic to actually update our cache with the correct data. You can think of them in a similar manner to reducers in redux. Rather than reading the state and returning a new state, we are usually reading the cache and writing back to the cache. Resolvers access the cache via the context parameter in our resolvers. Please review the resolver signature/parameters in the API Overview section here: [Resolver Parameters]
+
   III. The way we update the cache:
+
     a. via client, using useApolloClient hook, directly, or ApolloConsumer component
+
       - as when we "initialized our cache" - client.writeData({ data: ... })
+
     b. via resolvers, using context.cache in resolvers - (obj, args, context, info) => result;
+
       - writeData: ({ data: ... }) - no structure, although apollo client will make use of writeQuery/writeFragment in the background
+
       - writeQuery: ({ query: ... , data: ...}) - enforces data written in provided structure, avoid bad writes to cache.
+
       - writeFragment: ({ fragment: ... , data: ...}) - similar to query, but for fragments
+      
       - readQuery/readFragment: ({ query/fragment: ... }) - reads a query or fragment
 
 To visualize how this all lines up, it's useful to think of a GraphQL query or mutation as a tree of function calls for each field. These function calls resolve to data or another function call. So when a GraphQL query is run through Apollo Client, it looks for a way to essentially run functions for each field in the query. When it finds an `@client` directive on a field, it turns to its internal resolver map looking for a function it can run for that field.

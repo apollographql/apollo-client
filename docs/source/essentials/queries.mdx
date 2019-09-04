@@ -35,7 +35,7 @@ import gql from 'graphql-tag';
 import { useQuery } from '@apollo/react-hooks';
 
 const GET_DOGS = gql`
-  {
+  query GetDogs {
     dogs {
       id
       breed
@@ -52,7 +52,7 @@ import gql from 'graphql-tag';
 import { Query } from 'react-apollo';
 
 const GET_DOGS = gql`
-  {
+  query GetDogs {
     dogs {
       id
       breed

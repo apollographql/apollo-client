@@ -113,9 +113,9 @@ Apollo's state management is very powerful and handles very similar use cases to
 In this section, we'll explain how local queries work in detail. We'll explore the inner-workings of a local query and then provide some solutions to more specific use cases.
   1. Initializing our cache: Why it's needed and how do we do it?
   2. Local data query flow
-    - [Handling `@client` fields with the cache]: #handling-client-fields-with-the-cache
-    - [Handling `@client` fields with resolvers]: #handling-client-fields-with-resolvers
-  3. More concepts
+    - [Handling `@client` fields with the cache]
+    - [Handling `@client` fields with resolvers]
+  3. Additional concepts
     - Handling fetch policies
     - Force resolvers on every request
     - @client results as variables
@@ -124,7 +124,7 @@ In this section, we'll explain how local queries work in detail. We'll explore t
 
 We initialize our cache to prevent our application from erroring if a query fails to resolve because it has no resolvers and existing data in the cache to return a value. This sets some defaults that help prevent queries that fire off before a mutation populating data is executed.
 
-Consider querying for, and attempting to map over, items in a cart object, but the cart object and items array have not yet been defined... This would of course lead our application to error. To prevent this issue, we "initialize our cache." Notice the difference between Apollo Boost and standard Apollo Client. Using boost, we can use the standard Apollo Client method to initialize our cache, but we cannot do the converse (i.e. we cannot initialize our state in standard Apollo Client using clientState: { defaults: { } }).
+Consider querying for, and attempting to map over, items in a cart object, but the cart object and items array have not yet been defined... This would of course lead our application to error. To prevent this issue, we "initialize our cache." Notice the difference between Apollo Boost and standard Apollo Client. Using boost, we can use the standard Apollo Client method to initialize our cache, but we cannot do the converse (i.e. we cannot initialize our state in standard Apollo Client using clientState defaults.
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
@@ -183,7 +183,15 @@ When a query containing `@client` directives is executed, Apollo Client runs thr
 
 ![Query Data Flow](../assets/query-data-flow.png)
 
-Let's assume we're starting with an empty cache and talking to a network based GraphQL API. Using the default fetchPolicy in our query ("cache-first" for all queries, local & remote), Apollo Client will first search the cache for a matching result to our query, ignoring all `@client` directives, but still checking for the respective field of the query. It is important to note that this is the same cache that stores data retrieved from remote requests. If data is found in the cache, it is returned immediately and no local (or remote) resolvers will be run. If one is not found, then apollo client basically splits the query into two parts: fields with `@client` and fields without. The fields with the `@client` directive are sent to the local resolvers to "resolve" their value. Fields without `@client` are sent to the server to be "resolved."  Once the entire query is resolved, the local and remote data is merged and then written back to the cache and returned as the response to the original operation. We can adjust the way our values are resolved (via fetchPolicies, etc.) and I encourage you to read the pros and cons [3-more-concepts]: here.
+Let's assume we're starting with an empty cache and talking to a network based GraphQL API. Using the default fetchPolicy in our query ("cache-first" for all queries, local & remote), Apollo Client will go through the following steps:
+  - First, search the cache for a matching result to our query, ignoring all `@client` directives, but still checking for the respective field of the query. It is important to note that this is the same cache that stores data retrieved from remote requests.
+  - If data is found in the cache, it is returned immediately and no local (or remote) resolvers will be run.
+  - If one is not found, then apollo client basically splits the query into two parts: fields with `@client` and fields without.
+    - The fields with the `@client` directive are sent to the local resolvers to "resolve" their value.
+    - The fields without `@client` are sent to the server to be "resolved."
+  - Once the entire query is resolved, the local and remote data is merged and then written back to the cache and returned as the response to the original operation.
+
+We can adjust the way our values are resolved (via fetchPolicies, etc.) and I encourage you to read the pros and cons: [Additional-concepts]
 
 ```js
 const QUERY_ITEMS_FROM_SERVER = gql`
@@ -201,10 +209,10 @@ const QUERY_ITEMS_FROM_SERVER = gql`
 
 This query includes a mixture of both remote and local fields. The query would be first ran against the cache and if a result was found, the result would be returned. If no result is found, it's time to resolve some fields. The remote fields would be handled by the Network API. When Apollo Client executes this query and tries to find a result, it runs through the following steps:
 
-[Handling `@client` fields with the cache]: #handling-client-fields-with-the-cache
+[Handling `@client` fields with the cache]
   - Apollo Client first runs the query against the cache to see if there is an existing response to the query. If no matching result is found, Apollo looks for local resolvers to resolve the value (B).
 
-[Handling `@client` fields with resolvers]: #handling-client-fields-with-resolvers
+[Handling `@client` fields with resolvers]
   - Apollo essentially splits the query into two different operations. It sends the request for the itemsForServer and fields without `@client` directive to the server. Apollo then searches for a resolver function (either through the `ApolloClient` constructor `resolvers` parameter or Apollo Client's `setResolvers` / `addResolvers` methods) corresponding to `isInCart` and executes, which should return the value. The two results, local and remote, are then merged and the result is added it to the cache.
 
 
@@ -402,17 +410,20 @@ Setting resolvers through `ApolloClient`'s constructor `resolvers` parameter, or
 
 Just like resolvers on the server, local resolvers are extremely flexible. They can be used to perform any kind of local computation you want, before returning a result for the specified field. You can manually query (or write to) the cache in different ways, call other helper utilities or libraries to prep/validate/clean data, track statistics, call into other data stores to prep a result, etc.
 
-### 3. More concepts
+### Additional concepts
 
-There are some additional use cases that could potentially help your specific application. Not everyone will need these, but are definitely important to consider. They are currently as follows: a. Handling fetch policies, b. force resolvers on every request, and c. @client results as variables.
+There are some additional use cases that could potentially help your specific application. Not everyone will need these, but are definitely important to consider. They are currently as follows:
+  a. [Handling fetch policies]
+  b. [Force resolvers on every request - @client(always: true)]
+  c. @client results as variables.
 
-#### 3a. Handling fetch policies
+#### Handling fetch policies
 
 Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](/api/apollo-client/#ApolloClient.query) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request.
 
 In a lot of situations treating local resolvers just like remote resolvers, by having them adhere to the same `fetchPolicy`, makes a lot of sense. Once you have the data you're looking for, which might have been fetched remotely or calculated using a local resolver, you can cache it and avoid recalculating/re-fetching it again on a subsequent request. But what if you're using local resolvers to run calculations that you need fired on every request? There are a few different ways this can be handled. You can switch your query to use a `fetchPolicy` that forces your entire query to run on each request, like `no-cache` or `network-only`. This will make sure your local resolvers fire on every request, but it will also make sure your network based query components fire on every request. Depending on your use case this might be okay, but what if you want the network parts of your query to leverage the cache, and just want your `@client` parts to run on every request? We'll can do this by forcing the resolver on every request, using @client(always: true), as described below.
 
-#### 3b. Force resolvers on every request - @client(always: true)
+#### Force resolvers on every request - @client(always: true)
 
 Apollo Client leverages its cache to help reduce the network overhead required when constantly making requests for the same data. By default, `@client` based fields leverage the cache in the exact same manner as remote fields. After a local resolver is run, its result is cached alongside any remote results. This way the next time a query is fired that can find its results in the cache, those results are used, and any associated local resolvers are not fired again (until the data is either removed from the cache or the query is updated to use a `fetchPolicy` that does not leverage the cache, such as `no-cache` or `network-only`).
 
@@ -449,7 +460,7 @@ The `isLoggedIn` resolver above is checking to see if an authentication token ex
 
 While `@client(always: true)` ensures that a local resolver is always fired, it's important to note that if a query is using a `fetchPolicy` that leverages the cache first (`cache-first`, `cache-and-network`, `cache-only`), the query is still attempted to be resolved from the cache first, before the local resolver is fired.    This happens because `@client(always: true)` use could be mixed with normal `@client` use in the same query, which means we want part of the query to adhere to the defined `fetchPolicy`. The benefit of this is that anything that can be loaded from the cache first is made available to your `@client(always: true)` resolver function, as its [first parameter](#local-resolvers). So even though you've used `@client(always: true)` to identify that you want to always run a specific resolver, within that resolver you can look at the loaded cache values for the query, and decide if you want to proceed with running the resolver.
 
-#### 3c. Using @client results as variables
+#### Using @client results as variables
 
 Apollo Client provides a way to use an `@client` field result as a variable for a selection set or field, in the same operation. So instead of running an `@client` based query first, getting the local result, then running a second query using the loaded local result as a variable, everything can be handled in one request. This is achieved by combining the `@client` directive with the `@export(as: "variableName")` directive:
 

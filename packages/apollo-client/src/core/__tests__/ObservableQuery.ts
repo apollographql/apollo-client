@@ -4,6 +4,7 @@ import {
   InMemoryCache,
   IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';
+import { GraphQLError } from 'graphql';
 
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import mockWatchQuery from '../../__mocks__/mockWatchQuery';
@@ -1994,6 +1995,50 @@ describe('ObservableQuery', () => {
           // oops! we are polling for data, this should not happen.
           startedPolling = true;
           done.fail(new Error('should not start polling, already stopped'));
+        }
+      });
+    });
+  });
+
+  describe('resetQueryStoreErrors', () => {
+    it("should remove any GraphQLError's stored in the query store", (done) => {
+      const graphQLError = new GraphQLError('oh no!');
+
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { errors: [graphQLError] },
+      });
+
+      observable.subscribe({
+        error() {
+          const { queryManager } = (observable as any);
+          const queryStore = queryManager.queryStore.get(observable.queryId);
+          expect(queryStore.graphQLErrors).toEqual([graphQLError]);
+
+          observable.resetQueryStoreErrors();
+          expect(queryStore.graphQLErrors).toEqual([]);
+
+          done();
+        }
+      });
+    });
+
+    it("should remove network error's stored in the query store", (done) => {
+      const networkError = new Error('oh no!');
+
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      });
+
+      observable.subscribe({
+        next() {
+          const { queryManager } = (observable as any);
+          const queryStore = queryManager.queryStore.get(observable.queryId);
+          queryStore.networkError = networkError;
+          observable.resetQueryStoreErrors();
+          expect(queryStore.networkError).toBeNull();
+          done();
         }
       });
     });

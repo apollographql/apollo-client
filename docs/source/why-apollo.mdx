@@ -3,11 +3,29 @@ title: Why Apollo Client?
 description: Why choose Apollo Client to manage your data?
 ---
 
+import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
+
 Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've come to the right place. Through practical examples inspired by our [example app Pupstagram](https://codesandbox.io/s/r5qp83z0yq), you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
 
 ## Declarative data fetching
 
-With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated in a single Query component. This encapsulation makes composing your Query components with your presentational components a breeze! Let's see what this looks like in practice with React Apollo:
+With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated by the `useQuery` Hook. This encapsulation makes integrating query results into your presentational components a breeze! Let's see what this looks like in practice with React Apollo:
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+function Feed() {
+  const { loading, error, data } = useQuery(GET_DOGS);
+  if (error) return <Error />;
+  if (loading || !data) return <Fetching />;
+
+  return <DogList dogs={data.dogs} />;
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
 
 ```jsx
 const Feed = () => (
@@ -22,11 +40,14 @@ const Feed = () => (
 )
 ```
 
-Here we're using a Query component to fetch some dogs from our GraphQL server and display them in a list. The Query component uses the React [render prop API](https://reactjs.org/docs/render-props.html) (with a function as a child) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
+</div>
+</MultiCodeBlock>
+
+Here we're using the `useQuery` Hook to fetch some dogs from our GraphQL server and display them in a list. `useQuery` leverages React's [Hooks API](https://reactjs.org/docs/hooks-intro.html) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
 
 Apollo Client takes care of the request cycle from start to finish, including tracking loading and error states for you. There's no middleware to set up or boilerplate to write before making your first request, nor do you need to worry about transforming and caching the response. All you have to do is describe the data your component needs and let Apollo Client do the heavy lifting. 💪
 
-You'll find that when you switch to Apollo Client, you'll be able to delete a lot of unnecessary code related to data management. The exact amount will vary depending on your application, but some teams have reported up to thousands of lines. While you'll find yourself writing less code with Apollo, that doesn't mean you have to compromise on features! Advanced features like optimistic UI, refetching, and pagination are all easily accessible from the Query component props.
+You'll find that when you switch to Apollo Client, you'll be able to delete a lot of unnecessary code related to data management. The exact amount will vary depending on your application, but some teams have reported up to thousands of lines. While you'll find yourself writing less code with Apollo, that doesn't mean you have to compromise on features! Advanced features like optimistic UI, refetching, and pagination are all easily accessible through `useQuery` options.
 
 ## Zero-config caching
 
@@ -96,7 +117,7 @@ const client = new ApolloClient({
 
 ## Combine local & remote data
 
-Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? This is where `apollo-link-state` comes in, our solution for local state management that allows you to use your Apollo cache as the single source of truth for data in your application.
+Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? Apollo Client includes [local state management](/essentials/local-state/) features out of the box, that allow you to use your Apollo cache as the single source of truth for data in your application.
 
 Managing all your data with Apollo Client allows you to take advantage of GraphQL as a unified interface to all of your data. This enables you to inspect both your local and remote schemas in Apollo DevTools through GraphiQL.
 
@@ -114,7 +135,7 @@ const GET_DOG = gql`
 `;
 ```
 
-With `apollo-link-state`, you can add client-side only fields to your remote data seamlessly and query them from your components. In this example, we're querying the client-only field `isLiked` alongside our server data. Your components are made up of local and remote data, now your queries can be too!
+By leveraging Apollo Client's local state functionality, you can add client-side only fields to your remote data seamlessly and query them from your components. In this example, we're querying the client-only field `isLiked` alongside our server data. Your components are made up of local and remote data, now your queries can be too!
 
 ## Vibrant ecosystem
 
@@ -126,7 +147,7 @@ This flexibility makes it simple to create your dream client by building extensi
 - [apollo-storybook-decorator](https://github.com/abhiaiyer91/apollo-storybook-decorator): Wrap your React Storybook stories with Apollo Client ([@abhiaiyer91](https://github.com/abhiaiyer91))
 - [AppSync by AWS](https://blog.apollographql.com/aws-appsync-powered-by-apollo-df61eb706183): Amazon's real-time GraphQL client uses Apollo Client under the hood
 
-When you choose Apollo to manage your data, you also gain the support of our amazing community. There are thousands of developers in our [Apollo Spectrum community](https://spectrum.chat/apollo) for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://blog.apollographql.com/), updated weekly.
+When you choose Apollo to manage your data, you also gain the support of our amazing community. There are thousands of developers in our [Apollo Spectrum community](https://spectrum.chat/apollo) for you to share ideas with. You can also read articles on best practices and our announcements on the [Apollo blog](https://blog.apollographql.com/), updated frequently.
 
 ## Case studies
 
@@ -138,4 +159,4 @@ Companies ranging from enterprises to startups trust Apollo Client to power thei
 - [Expo](https://blog.apollographql.com/using-graphql-apollo-at-expo-4c1f21f0f115): Developing their React Native app with Apollo allowed the Expo engineers to focus on improving their product instead of writing data fetching logic
 - [KLM](https://youtu.be/T2njjXHdKqw): Learn how the KLM team scaled their Angular app with GraphQL and Apollo
 
-If your company is using Apollo Client in production, we'd love to feature a case study on our blog! Please get in touch via Spectrum so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send in a PR.
+If your company is using Apollo Client in production, we'd love to feature a case study on our blog! Please get in touch via [Spectrum](https://spectrum.chat/apollo) so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send in a PR.

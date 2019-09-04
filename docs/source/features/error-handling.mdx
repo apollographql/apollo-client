@@ -35,7 +35,7 @@ const MY_QUERY = gql`
 `;
 
 function ShowingSomeErrors() {
-  const { loading, error, data } = useQuery(MY_QUERY, { errorPolicy: 'all' });
+  const { loading, error, data } = useQuery(MY_QUERY);
 
   if (loading) return <span>loading...</span>
   return (

@@ -1,3 +1,9 @@
+---
+title: Local state management
+description: Learn how to work with your local data in Apollo Client
+---
+
+import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 
 ## Overview
 
@@ -13,13 +19,13 @@ In this section, you'll learn how Apollo Client can help simplify local state ma
 
 ## Key Concepts
 
-	1. Use the same query/mutations and hooks/components as we do with remote data
+1. Use the same query/mutations and hooks/components as we do with remote data
 		- Differentiate local from remote using the @client directive
 		- Still use standard GraphQL syntax
-	2. Local 'store/state' is held in the same cache as remote data, by default
+2. Local 'store/state' is held in the same cache as remote data, by default
 	    - Sometimes we use cache, store, state interchangibly - but store/state is held in the cache
 	    - Still can use normal react component state - not everything has to be in global store
-	3. Handle logic for updating local cache using resolvers or the client directly
+3. Handle logic for updating local cache using resolvers or the client directly
 	    - Using cache.writeData, cache.writeQuery and/or cache.writeFragment
 	    - cache.writeQuery and cache.writeFragment ensure our writes use the same
 		  structure as the corresponding query/fragment.
@@ -118,8 +124,8 @@ In this section, we'll explain how local queries work in detail. We'll explore t
 	  - [Force resolvers on every request](#force-resolvers-on-every-request)
       - [`@client` results as variables](#using-client-results-as-variables)
 
-### 1. Initializing our cache
-
+### Initializing our cache
+---
 We initialize our cache to prevent our application from erroring if a query fails to resolve because it has no resolvers and existing data in the cache to return a value. This sets some defaults that help prevent queries that fire off before a mutation populating data is executed.
 
 Consider querying for, and attempting to map over, items in a cart object, but the cart object and items array have not yet been defined... This would of course lead our application to error. To prevent this issue, we "initialize our cache." Notice the difference between Apollo Boost and standard Apollo Client. Using boost, we can use the standard Apollo Client method to initialize our cache, but we cannot do the converse (i.e. we cannot initialize our state in standard Apollo Client using clientState defaults.
@@ -175,8 +181,8 @@ const client = new ApolloClient({
 </div>
 </MultiCodeBlock>
 
-### 2. Local data query flow
-
+### Local data query flow
+---
 When a query containing `@client` directives is executed, Apollo Client runs through a few sequential steps to try to find a result for the `@client` field. Take a look at the diagram below, which provides a visual to the sequential flow of a normal query.
 
 ![Query Data Flow](../assets/query-data-flow.png)
@@ -208,7 +214,7 @@ const QUERY_ITEMS_FROM_SERVER = gql`
 This query includes a mixture of both remote and local fields. The query would be first ran against the cache and if a result was found, the result would be returned. If no result is found, it's time to resolve some fields. The remote fields would be handled by the Network API. When Apollo Client executes this query and tries to find a result, it runs through the following steps:
 
 [Handling `@client` fields with the cache](#handling-client-fields-with-the-cache)
-  - Apollo Client first runs the query against the cache to see if there is an existing response to the query. If no matching result is found, Apollo looks for local resolvers to resolve the value (B).
+  - Apollo Client first runs the query against the cache to see if there is an existing response to the query. If no matching result is found, Apollo looks for local resolvers to resolve the value.
 
 [Handling `@client` fields with resolvers]
   - Apollo essentially splits the query into two different operations. It sends the request for the itemsForServer and fields without `@client` directive to the server. Apollo then searches for a resolver function (either through the `ApolloClient` constructor `resolvers` parameter or Apollo Client's `setResolvers` / `addResolvers` methods) corresponding to `isInCart` and executes, which should return the value. The two results, local and remote, are then merged and the result is added it to the cache.
@@ -408,8 +414,8 @@ Setting resolvers through `ApolloClient`'s constructor `resolvers` parameter, or
 
 Just like resolvers on the server, local resolvers are extremely flexible. They can be used to perform any kind of local computation you want, before returning a result for the specified field. You can manually query (or write to) the cache in different ways, call other helper utilities or libraries to prep/validate/clean data, track statistics, call into other data stores to prep a result, etc.
 
-### 3. Additional concepts
-
+### Additional concepts
+---
 There are some additional use cases that could potentially help your specific application. Not everyone will need these, but are definitely important to consider. They are currently as follows:
   a. [Handling fetch policies](#handling-fetch-policies)
   b. [Force resolvers on every request using @client(always: true)](#force-resolvers-on-every-request)
@@ -581,7 +587,7 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 ## Updating the Store
 To update our store, which recall is the in the cache, we have a couple main ways. Also, recall that the cache that keeps track of our local data, is the exact same cache that handles our remote data. Here are the main ways we can update the store.
-1. [Direct writes via client](#direct-writes), using useApolloClient hook, or ApolloConsumer component
+1. [Direct writes](#direct-writes), using useApolloClient hook, or ApolloConsumer component
 	- as when we ["initialized the cache"](#initializing-our-cache)
 2. [Mutations which execute local resolvers (most often preferred)](#mutations-that-execute-local-resolvers)
 	  - Same mutations as normal, with the exception of the client directive as [shown earlier](#mutations)
@@ -816,7 +822,7 @@ There are three different ways we can write to our cache and two ways to read fr
 2. [writeQuery/readQuery](#writequery-and-readquery)
 3. [writeFragment/readFragment](#writefragment-and-readfragment)
 
-#### 1. cache.writeData
+#### cache.writeData
 
 The easiest way to update the cache is with `cache.writeData`, which allows you to write data directly to the cache without passing in a query. Here's how you use it in your resolver map for a simple update:
 
@@ -1269,7 +1275,7 @@ Updating your application to use Apollo Client's local state management features
   });
   ```
 
-3. `defaults` are no longer supported. To prep the cache, use [`cache.writeData`](#writedata) directly instead. So
+3. `defaults` are no longer supported. To prep the cache, use [`cache.writeData`](#cache.writedata) directly instead. So
 
   ```js
   const cache = new InMemoryCache();

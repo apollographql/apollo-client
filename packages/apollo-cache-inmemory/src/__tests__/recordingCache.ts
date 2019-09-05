@@ -25,23 +25,23 @@ describe('OptimisticCacheLayer', () => {
     });
 
     it('should passthrough values if not defined in recording', () => {
-      expect(cache.get('Human')).toBe(data.Human);
-      expect(cache.get('Animal')).toBe(data.Animal);
+      expect(cache.get('Human')).toEqual(data.Human);
+      expect(cache.get('Animal')).toEqual(data.Animal);
     });
 
     it('should return values defined during recording', () => {
       cache.set('Human', dataToRecord.Human);
-      expect(cache.get('Human')).toBe(dataToRecord.Human);
-      expect(underlyingCache.get('Human')).toBe(data.Human);
+      expect(cache.get('Human')).toEqual(dataToRecord.Human);
+      expect(underlyingCache.get('Human')).toEqual(data.Human);
     });
 
     it('should return undefined for values deleted during recording', () => {
-      expect(cache.get('Animal')).toBe(data.Animal);
+      expect(cache.get('Animal')).toEqual(data.Animal);
       // delete should be registered in the recording:
       cache.delete('Animal');
       expect(cache.get('Animal')).toBeUndefined();
       expect(cache.toObject()).toHaveProperty('Animal');
-      expect(underlyingCache.get('Animal')).toBe(data.Animal);
+      expect(underlyingCache.get('Animal')).toEqual(data.Animal);
     });
   });
 

@@ -16,6 +16,7 @@ import {
   ApolloReducerConfig,
   NormalizedCache,
   NormalizedCacheObject,
+  StoreObject,
 } from './types';
 
 import { StoreReader } from './readFromStore';
@@ -72,10 +73,25 @@ export class OptimisticCacheLayer extends ObjectCache {
   // All the other accessor methods of ObjectCache work without knowing about
   // this.parent, but the get method needs to be overridden to implement the
   // fallback this.parent.get(dataId) behavior.
-  public get(dataId: string) {
-    return hasOwn.call(this.data, dataId)
-      ? this.data[dataId]
-      : this.parent.get(dataId);
+  public get(dataId: string): StoreObject {
+    const data = this.data[dataId];
+
+    // If the key does not exist in the current layer, return the parent layer.
+    if (!hasOwn.call(this.data, dataId)) {
+      return this.parent.get(dataId);
+    }
+
+    // If the key does exist, and it's undefined, return undefined. This means
+    // the data was explicitly deleted.
+    if (typeof data === 'undefined') {
+      return undefined;
+    }
+
+    // If the key does exist, and it's defined, merge with the parent layer.
+    return {
+      ...this.parent.get(dataId),
+      ...data,
+    };
   }
 }
 
@@ -269,8 +285,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
       // Reapply the layers whose optimistic IDs do not match the removed ID.
       while (toReapply.length > 0) {
-        const layer = toReapply.pop()!;
-        this.performTransaction(layer.transaction, layer.optimisticId);
+        const reAppliedLayer = toReapply.pop()!;
+
+        this.performTransaction(
+          reAppliedLayer.transaction,
+          reAppliedLayer.optimisticId,
+        );
       }
 
       this.broadcastWatches();

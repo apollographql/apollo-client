@@ -37,13 +37,15 @@ export interface NormalizedCache {
  * a flattened representation of query result trees.
  */
 export interface NormalizedCacheObject {
-  [dataId: string]: StoreObject | undefined;
+  [dataId: string]: StoreObject;
 }
 
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
-}
+export declare type StoreObject =
+  | {
+      __typename?: string;
+      [storeFieldKey: string]: StoreValue;
+    }
+  | undefined;
 
 export type OptimisticStoreItem = {
   id: string;

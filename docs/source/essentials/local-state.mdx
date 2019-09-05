@@ -818,11 +818,11 @@ const QUERY_CART_INFO = gql`
 ### Cache Methods
 There are three different ways we can write to our cache and two ways to read from it, which we will cover now. We access the cache from the third parameter in our resolver functions.
 
-1. [writeData](#cache.writedata)
+1. [writeData](#writedata)
 2. [writeQuery/readQuery](#writequery-and-readquery)
 3. [writeFragment/readFragment](#writefragment-and-readfragment)
 
-#### cache.writeData
+#### writeData
 
 The easiest way to update the cache is with `cache.writeData`, which allows you to write data directly to the cache without passing in a query. Here's how you use it in your resolver map for a simple update:
 
@@ -1275,7 +1275,7 @@ Updating your application to use Apollo Client's local state management features
   });
   ```
 
-3. `defaults` are no longer supported. To prep the cache, use [`cache.writeData`](#cache.writedata) directly instead. So
+3. `defaults` are no longer supported. To prep the cache, use [`cache.writeData`](#writedata) directly instead. So
 
   ```js
   const cache = new InMemoryCache();

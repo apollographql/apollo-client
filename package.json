@@ -99,7 +99,7 @@
     "rollup-plugin-sourcemaps": "0.4.2",
     "rollup-plugin-terser": "4.0.4",
     "rollup-plugin-typescript2": "0.18.1",
-    "rxjs": "6.5.2",
+    "rxjs": "6.5.3",
     "ts-jest": "23.10.5",
     "tsc-watch": "2.4.0",
     "tslib": "1.10.0",

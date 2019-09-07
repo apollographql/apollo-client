@@ -64,7 +64,6 @@
     "codecov": "3.5.0",
     "danger": "7.1.4",
     "fetch-mock": "7.3.9",
-    "flow-bin": "0.104.0",
     "graphql": "14.4.2",
     "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",

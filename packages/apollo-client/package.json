@@ -24,8 +24,6 @@
     "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "testonly": "jest",
-    "preanalyze": "npm run build",
-    "analyze": "webpack -p --config analyze/webpack.config.js",
     "clean": "rm -rf coverage/* lib/*"
   },
   "repository": {

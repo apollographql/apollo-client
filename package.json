@@ -2,6 +2,14 @@
   "name": "@apollo/client",
   "version": "3.0.0-alpha.0",
   "description": "A fully-featured caching GraphQL client.",
+  "keywords": [
+    "apollo",
+    "graphql",
+    "react",
+    "hooks",
+    "client",
+    "cache"
+  ],
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "main": "./lib/bundle.cjs.js",

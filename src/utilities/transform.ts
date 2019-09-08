@@ -12,19 +12,21 @@ import {
   VariableNode,
 } from 'graphql';
 import { visit } from 'graphql/language/visitor';
+import { invariant } from 'ts-invariant';
 
 import {
   checkDocument,
   getOperationDefinition,
   getFragmentDefinition,
   getFragmentDefinitions,
-  createFragmentMap,
-  FragmentMap,
   getMainDefinition,
 } from './getFromAST';
 import { filterInPlace } from './util/filterInPlace';
-import { invariant } from 'ts-invariant';
 import { isField, isInlineFragment } from './storeUtils';
+import {
+  createFragmentMap,
+  FragmentMap,
+} from './fragments';
 
 export type RemoveNodeConfig<N> = {
   name?: string;

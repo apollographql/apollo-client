@@ -5,10 +5,9 @@ import {
   execute,
 } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { ApolloCache, DataProxy } from 'apollo-cache';
-
 import { invariant, InvariantError } from 'ts-invariant';
 
+import { ApolloCache, DataProxy } from './cache/core';
 import { QueryManager } from './core/QueryManager';
 import {
   ApolloQueryResult,
@@ -18,7 +17,6 @@ import {
 import { ObservableQuery } from './core/ObservableQuery';
 import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
-
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -26,9 +24,7 @@ import {
   MutationOptions,
   WatchQueryFetchPolicy,
 } from './core/watchQueryOptions';
-
 import { DataStore } from './data/store';
-
 import { version } from './version';
 
 export interface DefaultOptions {

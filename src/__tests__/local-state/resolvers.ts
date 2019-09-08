@@ -1,7 +1,6 @@
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
-import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloLink, Observable } from 'apollo-link';
 
 import ApolloClient from '../..';
@@ -11,6 +10,7 @@ import wrap from '../../util/wrap';
 import { ApolloQueryResult, Resolvers } from '../../core/types';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
 import { LocalState } from '../../core/LocalState';
+import { InMemoryCache } from '../../cache/inmemory';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.

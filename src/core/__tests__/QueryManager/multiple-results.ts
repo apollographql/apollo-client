@@ -1,36 +1,14 @@
 // externals
-import Rx from 'rxjs';
-import { assign } from 'lodash';
 import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult } from 'graphql';
-import { ApolloLink, Operation, Observable } from 'apollo-link';
-import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
-import { stripSymbols } from 'apollo-utilities';
+import { InMemoryCache } from '../../../cache/inmemory';
+import { stripSymbols } from '../../../utilities';
 
 // mocks
-import mockQueryManager from '../../../__mocks__/mockQueryManager';
-import mockWatchQuery from '../../../__mocks__/mockWatchQuery';
-import {
-  mockSingleLink,
-  MockSubscriptionLink,
-} from '../../../__mocks__/mockLinks';
+import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core
-import { ApolloQueryResult } from '../../types';
-import { NetworkStatus } from '../../networkStatus';
-import { ObservableQuery } from '../../ObservableQuery';
-import { WatchQueryOptions } from '../../watchQueryOptions';
 import { QueryManager } from '../../QueryManager';
-
-import { ApolloError } from '../../../errors/ApolloError';
 import { DataStore } from '../../../data/store';
-import { Observer } from '../../../util/Observable';
-
-// testing utils
-import wrap from '../../../util/wrap';
-import observableToPromise, {
-  observableToPromiseAndSubscription,
-} from '../../../util/observableToPromise';
 
 describe('mutiple results', () => {
   it('allows multiple query results from link', done => {

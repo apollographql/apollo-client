@@ -1,6 +1,7 @@
 import { DocumentNode } from 'graphql';
-import { Transaction } from 'apollo-cache';
-import { StoreValue } from 'apollo-utilities';
+
+import { Transaction } from '../core';
+import { StoreValue } from '../../utilities';
 
 export interface IdGetterObj extends Object {
   __typename?: string;

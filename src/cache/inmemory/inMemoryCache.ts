@@ -2,21 +2,20 @@
 import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
-import { Cache, ApolloCache, Transaction } from 'apollo-cache';
-import { addTypenameToDocument, canUseWeakMap } from 'apollo-utilities';
 import { wrap } from 'optimism';
 import { InvariantError } from 'ts-invariant';
+import { KeyTrie } from 'optimism';
 
+import { Cache, ApolloCache, Transaction } from '../core';
+import { addTypenameToDocument, canUseWeakMap } from '../../utilities';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
   PossibleTypesMap,
 } from './types';
-
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityCache, supportsResultCaching } from './entityCache';
-import { KeyTrie } from 'optimism';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;

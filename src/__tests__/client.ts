@@ -2,19 +2,14 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
-import { InMemoryCache, PossibleTypesMap } from 'apollo-cache-inmemory';
-import { stripSymbols } from 'apollo-utilities';
 
-import { QueryManager } from '../core/QueryManager';
+import { InMemoryCache, PossibleTypesMap } from '../cache/inmemory';
+import { stripSymbols } from '../utilities';
 import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
-
 import { ApolloError } from '../errors/ApolloError';
-
-import ApolloClient, { printAST } from '..';
-
+import ApolloClient from '..';
 import subscribeAndCount from '../util/subscribeAndCount';
 import { withWarning } from '../util/wrap';
-
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
 describe('client', () => {

@@ -1,6 +1,7 @@
+import { DocumentNode } from 'graphql';
+
 import { QueryStore } from '../queries';
 import { NetworkStatus } from '../../core/networkStatus';
-import { DocumentNode } from 'graphql';
 
 describe('QueryStore', () => {
   const queryId = 'abc123';

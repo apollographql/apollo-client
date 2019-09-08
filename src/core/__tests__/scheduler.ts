@@ -1,6 +1,7 @@
-import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
-import { stripSymbols } from 'apollo-utilities';
+
+import { InMemoryCache } from '../../cache/inmemory';
+import { stripSymbols } from '../../utilities';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';

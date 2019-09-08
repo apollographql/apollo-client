@@ -19,7 +19,7 @@ import {
 
 import stringify from 'fast-json-stable-stringify';
 import { InvariantError } from 'ts-invariant';
-import { FragmentMap, getFragmentFromSelection } from './getFromAST';
+import { FragmentMap, getFragmentFromSelection } from './fragments';
 
 export interface IdValue {
   type: 'id';

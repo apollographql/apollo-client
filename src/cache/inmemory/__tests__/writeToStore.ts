@@ -1,5 +1,4 @@
 import { assign, omit } from 'lodash';
-
 import {
   SelectionNode,
   FieldNode,
@@ -7,18 +6,15 @@ import {
   OperationDefinitionNode,
   ASTNode,
 } from 'graphql';
-
 import gql from 'graphql-tag';
+
 import {
   storeKeyNameFromField,
   addTypenameToDocument,
   cloneDeep,
-} from 'apollo-utilities';
-
+} from '../../../utilities';
 import { StoreWriter } from '../writeToStore';
-
 import { defaultNormalizedCacheFactory } from '../entityCache';
-
 import { makeReference } from '../helpers';
 import { InMemoryCache } from '../inMemoryCache';
 

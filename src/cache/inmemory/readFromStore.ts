@@ -1,4 +1,14 @@
 import {
+  DocumentNode,
+  FieldNode,
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+  SelectionSetNode,
+} from 'graphql';
+import { wrap, KeyTrie } from 'optimism';
+import { InvariantError } from 'ts-invariant';
+
+import {
   argumentsObjectFromField,
   assign,
   canUseWeakMap,
@@ -19,10 +29,8 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   StoreValue,
-} from 'apollo-utilities';
-
-import { Cache } from 'apollo-cache';
-
+} from '../../utilities';
+import { Cache } from '../core';
 import {
   ReadStoreContext,
   DiffQueryAgainstStoreOptions,
@@ -30,18 +38,7 @@ import {
   StoreObject,
   NormalizedCache,
 } from './types';
-
-import {
-  DocumentNode,
-  FieldNode,
-  FragmentDefinitionNode,
-  InlineFragmentNode,
-  SelectionSetNode,
-} from 'graphql';
-
-import { wrap, KeyTrie } from 'optimism';
 import { supportsResultCaching } from './entityCache';
-import { InvariantError } from 'ts-invariant';
 import { fragmentMatches } from './fragments';
 import {
   isReference,

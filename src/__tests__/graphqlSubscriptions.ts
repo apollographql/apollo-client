@@ -1,10 +1,8 @@
 import gql from 'graphql-tag';
-import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { mockObservableLink, MockedSubscription } from '../__mocks__/mockLinks';
-
+import { InMemoryCache } from '../cache/inmemory';
 import ApolloClient from '../';
-
 import { QueryManager } from '../core/QueryManager';
 import { DataStore } from '../data/store';
 

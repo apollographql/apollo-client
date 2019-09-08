@@ -1,4 +1,5 @@
 import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   assign,
@@ -16,12 +17,8 @@ import {
   DeepMerger,
   getTypenameFromResult,
   cloneDeep,
-} from 'apollo-utilities';
-
-import { invariant, InvariantError } from 'ts-invariant';
-
+} from '../../utilities';
 import { defaultNormalizedCacheFactory } from './entityCache';
-
 import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';
 import {

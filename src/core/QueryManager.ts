@@ -1,6 +1,8 @@
 import { execute, ApolloLink, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { Cache } from 'apollo-cache';
+import { invariant, InvariantError } from 'ts-invariant';
+
+import { Cache } from '../cache/core';
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -10,16 +12,12 @@ import {
   hasClientExports,
   removeConnectionDirectiveFromDocument,
   canUseWeakMap,
-} from 'apollo-utilities';
-
-import { invariant, InvariantError } from 'ts-invariant';
-
+} from '../utilities';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';
 import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
-
 import {
   QueryOptions,
   WatchQueryOptions,

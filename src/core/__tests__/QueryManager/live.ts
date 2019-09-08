@@ -6,18 +6,11 @@
 
 // externals
 import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult } from 'graphql';
-import { ApolloLink, Operation, Observable } from 'apollo-link';
-import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
-import { stripSymbols } from 'apollo-utilities';
-
+import { InMemoryCache } from '../../../cache/inmemory';
+import { stripSymbols } from '../../../utilities';
 import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core
-import { ApolloQueryResult } from '../../types';
-import { NetworkStatus } from '../../networkStatus';
-import { ObservableQuery } from '../../ObservableQuery';
-import { WatchQueryOptions } from '../../watchQueryOptions';
 import { QueryManager } from '../../QueryManager';
 import { DataStore } from '../../../data/store';
 

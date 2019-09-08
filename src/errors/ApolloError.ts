@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+
 import { isNonEmptyArray } from '../util/arrays';
 
 export function isApolloError(err: Error): err is ApolloError {

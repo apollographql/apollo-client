@@ -1,4 +1,5 @@
 import { print } from 'graphql/language/printer';
+
 import { queryFromPojo, fragmentFromPojo } from '../utils';
 
 describe('writing data with no query', () => {

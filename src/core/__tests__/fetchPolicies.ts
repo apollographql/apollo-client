@@ -1,23 +1,10 @@
-import { cloneDeep, assign } from 'lodash';
-import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { print } from 'graphql/language/printer';
-import { ApolloLink, Observable } from 'apollo-link';
-import {
-  InMemoryCache,
-} from 'apollo-cache-inmemory';
-import { stripSymbols } from 'apollo-utilities';
+import { ApolloLink } from 'apollo-link';
 
-import { QueryManager } from '../QueryManager';
-import { WatchQueryOptions } from '../watchQueryOptions';
-
-import { ApolloError } from '../../errors/ApolloError';
-
-import ApolloClient, { printAST } from '../..';
-
+import { InMemoryCache } from '../../cache/inmemory';
+import { stripSymbols } from '../../utilities';
+import ApolloClient from '../..';
 import subscribeAndCount from '../../util/subscribeAndCount';
-import { withWarning } from '../../util/wrap';
-
 import { mockSingleLink } from '../../__mocks__/mockLinks';
 import { NetworkStatus } from '../networkStatus';
 

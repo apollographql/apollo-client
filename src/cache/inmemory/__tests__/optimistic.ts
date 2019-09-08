@@ -1,4 +1,5 @@
 import gql from 'graphql-tag';
+
 import { InMemoryCache } from '../inMemoryCache';
 
 describe('optimistic cache layers', () => {

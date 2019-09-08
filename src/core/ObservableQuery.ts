@@ -1,10 +1,12 @@
+import { GraphQLError } from 'graphql';
+import { invariant, InvariantError } from 'ts-invariant';
+
 import {
   isEqual,
   tryFunctionOrLogError,
   cloneDeep,
   getOperationDefinition,
-} from 'apollo-utilities';
-import { GraphQLError } from 'graphql';
+} from '../utilities';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
 import { ApolloError } from '../errors/ApolloError';
@@ -16,10 +18,7 @@ import {
   SubscribeToMoreOptions,
   ErrorPolicy,
 } from './watchQueryOptions';
-
 import { QueryStoreValue } from '../data/queries';
-
-import { invariant, InvariantError } from 'ts-invariant';
 import { isNonEmptyArray } from '../util/arrays';
 
 // XXX remove in the next breaking semver change (3.0)

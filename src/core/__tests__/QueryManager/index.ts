@@ -5,18 +5,18 @@ import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
+
 import {
   InMemoryCache,
   ApolloReducerConfig,
   NormalizedCacheObject,
-} from 'apollo-cache-inmemory';
+} from '../../../cache/inmemory';
 
 // mocks
 import mockQueryManager from '../../../__mocks__/mockQueryManager';
 import mockWatchQuery from '../../../__mocks__/mockWatchQuery';
 import {
   mockSingleLink,
-  MockSubscriptionLink,
 } from '../../../__mocks__/mockLinks';
 
 // core
@@ -35,7 +35,7 @@ import wrap from '../../../util/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../util/observableToPromise';
-import { stripSymbols } from 'apollo-utilities';
+import { stripSymbols } from '../../../utilities';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.

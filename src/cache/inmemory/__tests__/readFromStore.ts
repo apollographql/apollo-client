@@ -1,7 +1,7 @@
 import { assign, omit } from 'lodash';
 import gql from 'graphql-tag';
-import { stripSymbols } from 'apollo-utilities';
 
+import { stripSymbols } from '../../../utilities';
 import { StoreObject } from '../';
 import { StoreReader } from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../entityCache';

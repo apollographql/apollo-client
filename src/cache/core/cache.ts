@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
-import { getFragmentQueryDocument } from 'apollo-utilities';
 
+import { getFragmentQueryDocument } from '../../utilities';
 import { DataProxy, Cache } from './types';
 import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
 

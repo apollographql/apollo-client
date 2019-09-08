@@ -3,9 +3,7 @@ import gql from 'graphql-tag';
 
 import { withError } from './diffAgainstStore';
 import { withWarning } from './writeToStore';
-
 import { EntityCache } from '../entityCache';
-
 import { StoreReader, StoreWriter } from '../';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {

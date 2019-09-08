@@ -1,12 +1,12 @@
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
-import { InMemoryCache, makeReference } from 'apollo-cache-inmemory';
-import { stripSymbols } from 'apollo-utilities';
+
+import { InMemoryCache, makeReference } from '../cache/inmemory';
+import { stripSymbols } from '../utilities';
 import { withWarning } from '../util/wrap';
 import ApolloClient from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
-import { DataProxy } from 'apollo-cache';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {

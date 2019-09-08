@@ -1,14 +1,12 @@
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities';
+import { ApolloLink, Observable, Operation } from 'apollo-link';
 
 import ApolloClient from '../..';
-import { ApolloCache } from 'apollo-cache';
-import {
-  InMemoryCache,
-} from 'apollo-cache-inmemory';
-import { ApolloLink, Observable, Operation } from 'apollo-link';
-import { hasDirectives } from 'apollo-utilities';
+import { ApolloCache } from '../../cache/core';
+import { InMemoryCache } from '../../cache/inmemory';
+import { hasDirectives } from '../../utilities';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {

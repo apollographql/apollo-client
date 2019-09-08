@@ -1,5 +1,6 @@
-import { InMemoryCache } from '../inMemoryCache';
 import gql from 'graphql-tag';
+
+import { InMemoryCache } from '../inMemoryCache';
 
 describe('fragment matching', () => {
   it('can match exact types with or without possibleTypes', () => {

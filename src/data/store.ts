@@ -1,12 +1,12 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { ApolloCache, Cache, DataProxy } from 'apollo-cache';
 
+import { ApolloCache, Cache, DataProxy } from '../cache/core';
 import { QueryStoreValue } from '../data/queries';
 import {
   getOperationName,
   tryFunctionOrLogError,
   graphQLResultHasError,
-} from 'apollo-utilities';
+} from '../utilities';
 import { MutationQueryReducer } from '../core/types';
 
 export type QueryWithUpdater = {

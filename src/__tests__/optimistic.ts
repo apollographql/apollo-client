@@ -1,18 +1,14 @@
 import { from } from 'rxjs';
 import { take, toArray, map } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
-import { addTypenameToDocument } from 'apollo-utilities';
-import { InMemoryCache, makeReference } from 'apollo-cache-inmemory';
+import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
-
 import { MutationQueryReducersMap } from '../core/types';
 import { Subscription } from '../util/Observable';
-
 import ApolloClient from '../';
-
-import gql from 'graphql-tag';
-import { stripSymbols } from 'apollo-utilities';
+import { addTypenameToDocument, stripSymbols } from '../utilities';
+import { InMemoryCache, makeReference } from '../cache/inmemory';
 
 describe('optimistic mutation results', () => {
   const query = gql`

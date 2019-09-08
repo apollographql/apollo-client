@@ -10,8 +10,9 @@ import {
   ASTNode,
 } from 'graphql';
 import { visit, BREAK } from 'graphql/language/visitor';
+import { invariant } from 'ts-invariant';
 
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '../cache/core';
 import {
   getMainDefinition,
   buildQueryFromSelectionSet,
@@ -27,10 +28,7 @@ import {
   shouldInclude,
   isField,
   isInlineFragment,
-} from 'apollo-utilities';
-
-import { invariant } from 'ts-invariant';
-
+} from '../utilities';
 import ApolloClient from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';

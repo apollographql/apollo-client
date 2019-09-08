@@ -1,19 +1,21 @@
 ---
 title: Developer tools
-description: How to use extensions and developer tools to analyze your data
+description: Improve your developer experience with these these services and extensions
 ---
 
-## Apollo Engine
+## Apollo Graph Manager
 
-[Apollo Engine](https://www.apollographql.com/platform/) is the best way to run GraphQL in production. It is a GraphQL gateway that helps you implement and run GraphQL over REST or any other backend with confidence. With Engine, you get a number of incredible features to help you understand your GraphQL service, and to make it run faster!
+[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) is a cloud service that helps you manage, validate, and secure your organization's data graph.
 
-* **Improve response times**: With caching and persisted queries
-* **Identify and understand hotspots**: With performance tracing and history
-* **Keep an eye on your API**: With alerts and regular reports
+It provides the following features to all Apollo users for free:
 
-Apollo Engine can run anywhere your GraphQL server can. It operates in one of two modes, either as a package you install into your Node server, or as a standalone proxy you can run with Docker, which works with any GraphQL server library. We've architected it to work for the most demanding of environments.
+* A GraphQL schema registry that tracks changes and variants
+* A schema explorer that makes it easy to inspect your schema's queries, mutations, and other object definitions
+* Team collaboration via organizations
 
-To learn more about Apollo Engine, check out the [guide](https://www.apollographql.com/platform/)
+Advanced features are available with a subscription to an Apollo Team or Enterprise plan.
+
+To learn more about Graph Manager, check out the [overview](https://www.apollographql.com/docs/platform/graph-manager-overview/).
 
 ## Apollo Client Devtools
 

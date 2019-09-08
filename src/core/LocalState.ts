@@ -34,11 +34,10 @@ import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
 
 export type Resolver = (
-  fieldName: string,
-  rootValue: any,
-  args: any,
-  context: any,
-  info: {
+  rootValue?: any,
+  args?: any,
+  context?: any,
+  info?: {
     field: FieldNode;
   },
 ) => any;

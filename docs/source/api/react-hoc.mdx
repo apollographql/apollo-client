@@ -55,7 +55,7 @@ const TodoAppWithData = withTodoAppQuery(TodoApp);
 export default TodoAppWithData;
 ```
 
-The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`][] component higher up in your tree to provide an [`ApolloClient`][] instance that will be used to fetch your data.
+The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](/api/react-common/#apolloprovider) component higher up in your tree to provide an [`ApolloClient`](/api/apollo-client/) instance that will be used to fetch your data.
 
 The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](/essentials/queries/), a [mutation](/essentials/mutations/), or a [subscription](/advanced/subscriptions/). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
@@ -98,7 +98,7 @@ export default graphql(gql`{ ... }`, {
 
 ### `config.props`
 
-The `config.props` property allows you to define a map function that takes the `props` (and optionally `lastProps`) added by the `graphql()` function ([`props.data`](#propsdata) for queries and [`props.mutate`][] for mutations) and allows you to compute a new `props` (and optionally `lastProps`) object that will be provided to the component that `graphql()` is wrapping.
+The `config.props` property allows you to define a map function that takes the `props` (and optionally `lastProps`) added by the `graphql()` function ([`props.data`](#propsdata) for queries and [`props.mutate`](#propsmutate) for mutations) and allows you to compute a new `props` (and optionally `lastProps`) object that will be provided to the component that `graphql()` is wrapping.
 
 The function you define behaves almost exactly like [`mapProps` from Recompose](https://github.com/acdlite/recompose/blob/2e71fdf4270cc8022a6574aaf00731bfc25dcae6/docs/API.md#mapprops) providing the same benefits without the need for another library.
 
@@ -165,7 +165,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-The following example uses the [`compose`][] function to use multiple `graphql()` enhancers at once.
+The following example uses the [`compose`](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` enhancers at once.
 
 ```js
 export default compose(
@@ -186,7 +186,7 @@ This property allows you to configure the name of the prop that gets passed down
 
 **Example:**
 
-This example uses the [`compose`][] function to use multiple `graphql()` HOCs together.
+This example uses the [`compose`](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -257,7 +257,7 @@ To configure the name of your higher order component wrapper, you may use the `c
 
 **Example:**
 
-This example uses the [`compose`][] function to use multiple `graphql()` HOCs together.
+This example uses the [`compose`](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -367,7 +367,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 ### `data.networkStatus`
 
-`data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`][] does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
+`data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`](#dataloading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
 
 1. `loading`: The query has never been run before and the request is now pending. A query will still have this network status even if a result was returned from the cache, but a query was dispatched anyway.
 2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#optionsvariables) changes on their queries.
@@ -378,7 +378,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 7. `ready`: No request is in flight for this query, and no errors happened. Everything is OK.
 8. `error`: No request is in flight for this query, but one or more errors were detected.
 
-If the network status is less then 7 then it is equivalent to [`data.loading`][] being true. In fact you could replace all of your `data.loading` checks with `data.networkStatus < 7` and you would not see a difference. It is recommended that you use `data.loading`, however.
+If the network status is less then 7 then it is equivalent to [`data.loading`](#dataloading) being true. In fact you could replace all of your `data.loading` checks with `data.networkStatus < 7` and you would not see a difference. It is recommended that you use `data.loading`, however.
 
 **Example:**
 
@@ -528,7 +528,7 @@ Polling is a good way to keep the data in your UI fresh. By refetching your data
 
 If you call `data.startPolling` when your query is already polling then the current polling process will be cancelled and a new process will be started with the interval you specified.
 
-You may also use [`options.pollInterval`][] to start polling immediately after your component mounts. It is recommend that you use [`options.pollInterval`][] if you don’t need to arbitrarily start and stop polling.
+You may also use [`options.pollInterval`](#optionspollinterval) to start polling immediately after your component mounts. It is recommend that you use `options.pollInterval` if you don’t need to arbitrarily start and stop polling.
 
 If you set your `interval` to 0 then that means no polling instead of executing a request every JavaScript event loop tick.
 
@@ -611,7 +611,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`][].
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#configoptions).
 
 **Example:**
 
@@ -781,9 +781,9 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`][].
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are available when your operation is a mutation. To see what other options are available for different operations, see the generic documentation for [`config.options`](#configoptions).
 
-The properties accepted in this options object may also be accepted by the [`props.mutate`][] function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
+The properties accepted in this options object may also be accepted by the [`props.mutate`](#propsmutate) function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
 
 **Example:**
 
@@ -823,7 +823,7 @@ export default graphql(gql`mutation { ... }`)(MyComponent);
 
 ### `options.variables`
 
-The variables which will be used to execute the mutation operation. These variables should correspond to the variables that your mutation definition accepts. If you define `config.options` as a function, or you pass variables into the [`props.mutate`][] function then you may compute your variables from props and component state.
+The variables which will be used to execute the mutation operation. These variables should correspond to the variables that your mutation definition accepts. If you define `config.options` as a function, or you pass variables into the [`props.mutate`](#propsmutate) function then you may compute your variables from props and component state.
 
 **Example:**
 
@@ -851,7 +851,7 @@ Often when you mutate data it is fairly easy to predict what the response of the
 
 To learn more about the benefits of optimistic data and how to use it be sure to read the recipe on [Optimistic UI](/features/optimistic-ui/).
 
-This optimistic response will be used with [`options.update`][] and [`options.updateQueries`][] to apply an update to your cache which will be rolled back before applying the update from the actual response.
+This optimistic response will be used with [`options.update`](#optionsupdate) and [`options.updateQueries`](#optionsupdatequeries) to apply an update to your cache which will be rolled back before applying the update from the actual response.
 
 **Example:**
 
@@ -896,11 +896,11 @@ export default graphql(gql`
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
 
-`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](#render-prop-function-1) section for more details).
+`options.update` takes two arguments. The first is an instance of a `DataProxy` object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](/api/react-components/#render-prop-function-1) section for more details).
 
-In order to change the data in your store call methods on your [`DataProxy`][] instance like [`writeQuery`](/advanced/caching/#writequery-and-writefragment) and [`writeFragment`](/advanced/caching/#writequery-and-writefragment). This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
+In order to change the data in your store call methods on your `DataProxy` instance like [`writeQuery`](/advanced/caching/#writequery-and-writefragment) and [`writeFragment`](/advanced/caching/#writequery-and-writefragment). This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
 
-To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`](/advanced/caching/#readquery) and [`readFragment`](/advanced/caching/#readfragment).
+To read the data from the store that you are changing, make sure to use methods on your `DataProxy` like [`readQuery`](/advanced/caching/#readquery) and [`readFragment`](/advanced/caching/#readfragment).
 
 For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](/advanced/caching/#updating-after-a-mutation).
 
@@ -929,7 +929,7 @@ export default graphql(
 
 ### `options.refetchQueries`
 
-Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`][], and [`options.update`][]. However, you can update the data in your cache more reliably at the cost of efficiency by using `options.refetchQueries`.
+Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`](#optionsupdatequeries), and [`options.update`](#optionsupdate). However, you can update the data in your cache more reliably at the cost of efficiency by using `options.refetchQueries`.
 
 `options.refetchQueries` will execute one or more queries using your network interface and will then normalize the results of those queries into your cache. Allowing you to potentially refetch queries you had fetched before, or fetch brand new queries.
 
@@ -996,7 +996,7 @@ Queries refetched using [`options.refetchQueries`](#optionsrefetchqueries) are h
 
 ### `options.updateQueries`
 
-**Note: We recommend using [`options.update`][] instead of `updateQueries`. `updateQueries` will be removed in the next version of Apollo Client**
+**Note: We recommend using [`options.update`](#optionsupdate) instead of `updateQueries`. `updateQueries` will be removed in the next version of Apollo Client**
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.updateQueries` function.
 
@@ -1068,11 +1068,11 @@ export default graphql(
 import { withApollo } from '@apollo/react-hoc';
 ```
 
-A simple enhancer which provides direct access to your [`ApolloClient`][] instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`][] as a `client` prop.
+A simple enhancer which provides direct access to your [`ApolloClient`](/api/apollo-client/) instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of `ApolloClient` as a `client` prop.
 
-If you are wondering when to use `withApollo()` and when to use [`graphql()`][] the answer is that most of the time you will want to use [`graphql()`][]. [`graphql()`][] provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
+If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphqlquery-configcomponent) the answer is that most of the time you will want to use `graphql()`. `graphql()` provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
 
-This will only be able to provide access to your client if there is an [`<ApolloProvider/>`][] component higher up in your tree to actually provide the client.
+This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](/api/react-common/#apolloprovider) component higher up in your tree to actually provide the client.
 
 **Example:**
 

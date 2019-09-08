@@ -25,7 +25,7 @@ Consider the component below, which makes a basic query, and displays its result
 ```jsx
 import React from 'react';
 import gql from 'graphql-tag';
-import { Query } from '@apollo/react-components';
+import { useQuery } from '@apollo/react-hooks';
 
 // Make sure the query is also exported -- not just the component
 export const GET_DOG_QUERY = gql`

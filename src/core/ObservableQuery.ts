@@ -615,6 +615,14 @@ export class ObservableQuery<
     }
 
     const onError = (error: ApolloError) => {
+      // Since we don't get the current result on errors, only the error, we
+      // must mirror the updates that occur in QueryStore.markQueryError here
+      this.updateLastResult({
+        ...this.lastResult,
+        errors: error.graphQLErrors,
+        networkStatus: NetworkStatus.error,
+        loading: false,
+      });
       iterateObserversSafely(this.observers, 'error', this.lastError = error);
     };
 

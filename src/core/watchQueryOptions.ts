@@ -120,6 +120,7 @@ export interface WatchQueryOptions<TVariables = OperationVariables>
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
   query?: DocumentNode;
   variables?: Pick<TVariables, K>;
+  context?: any;
 }
 
 export type UpdateQueryFn<

@@ -11,7 +11,7 @@ The most common need when using type systems with GraphQL is to type the results
 
 ## Typing hooks
 
-Apollo Client's `useQuery`, `useMutation` and `useSubscription` hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. Apollo Client Hook options and result types are listed in the [Hooks API](/api/react-hooks) section of the docs. You can find a typed example of each Hook below.
+React Apollo's `useQuery`, `useMutation` and `useSubscription` hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. React Apollo Hook options and result types are listed in the [Hooks API](/api/react-hooks/) section of the docs. You can find a typed example of each Hook below.
 
 ### `useQuery`
 
@@ -225,7 +225,23 @@ Now the `<Query />` component render prop function arguments are typed. Since we
 
 This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
 
-> Note: It is also possible to extend a `class` with the `<Query />` component as follows: `class AllPeopleQuery extends Query<Data, Variables> {}`. This `class` can be exported and used in a component tree with full TypeScript support
+### Extending components
+
+In previous versions of React Apollo, render prop components (`Query`, `Mutation` and `Subscription`) could be extended to add additional type information:
+
+```js
+class SomeQuery extends Query<SomeData, SomeVariables> {}
+```
+
+Since all class based render prop components have been converted to functional components, extending components in this manner is no longer possible. While we recommend switching over to use the new `useQuery`, `useMutation` and `useSubscription` hooks as soon as possible, if you're looking for a stop gap you can consider replacing your class with a wrapped and typed component:
+
+```jsx
+export const SomeQuery = () => (
+  <Query<SomeData, SomeVariables> query={SOME_QUERY} /* ... */>
+    {({ loading, error, data }) => { ... }}
+  </Query>
+);
+```
 
 ## Typing Higher Order Components
 

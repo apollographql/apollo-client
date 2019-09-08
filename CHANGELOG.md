@@ -2,17 +2,33 @@
 
 ## Apollo Client 3.0.0 (TBD)
 
+## Improvements
+
 - Fully removed `prettier`. The Apollo Client team has decided to no longer automatically enforce code formatting across the codebase. In most cases existing code styles should be followed as much as possible, but this is not a hard and fast rule.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5227](https://github.com/apollographql/apollo-client/pull/5227)
+- Update the `fetchMore` type signature to accept `context`.  <br/>
+  [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
+- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
+  [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
+
+### Breaking Changes
+
 - Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
 - Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
 
-## Apollo Client (vNext)
 
-### Apollo Client (vNext)
+## Apollo Client (2.6.4)
 
+### Apollo Client (2.6.4)
+
+- Modify `ObservableQuery` to allow queries with `notifyOnNetworkStatusChange`
+  to be notified when loading after an error occurs. <br />
+  [@jasonpaulos](https://github.com/jasonpaulos) in [#4992](https://github.com/apollographql/apollo-client/pull/4992)
+- Add `graphql` as a `peerDependency` of `apollo-cache` and
+  `graphql-anywhere`.  <br/>
+  [@ssalbdivad](https://github.com/ssalbdivad) in [#5081](https://github.com/apollographql/apollo-client/pull/5081)
 - Documentation updates.  </br>
   [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132)  <br/>
   [@hwillson](https://github.com/hwillson) in [#5141](https://github.com/apollographql/apollo-client/pull/5141)

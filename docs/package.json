@@ -6,8 +6,10 @@
     "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
-    "gatsby": "2.13.50",
-    "gatsby-theme-apollo-docs": "1.2.3"
+    "gatsby": "2.15.9",
+    "gatsby-theme-apollo-docs": "2.0.2",
+    "react": "16.9.0",
+    "react-dom": "16.9.0"
   },
   "devDependencies": {
     "typedoc": "0.15.0",

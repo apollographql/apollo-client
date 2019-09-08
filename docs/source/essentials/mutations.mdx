@@ -17,7 +17,7 @@ The following examples assume that you've already set up Apollo Client and have 
 
 ## The `useMutation` hook
 
-The `useMutation` hook, which is based on React's [Hooks API](https://reactjs.org/docs/hooks-intro.html), is what you'll use to trigger mutations from your UI. To run a mutation, just pass a GraphQL query string wrapped with the `gql` function into `useMutation` as the first parameter, when you call `useMutation` within a React component. When your component renders, `useMutation` will return a result tuple with a mutate function in the fist position, and an object with your mutation result (containing `loading`, `error`, `called` and `data` properties) in the second position. Let's look at an example:
+The `useMutation` hook, which is based on React's [Hooks API](https://reactjs.org/docs/hooks-intro.html), is what you'll use to trigger mutations from your UI. To run a mutation, just pass a GraphQL query string wrapped with the `gql` function into `useMutation` as the first parameter, when you call `useMutation` within a React component. When your component renders, `useMutation` will return a result tuple with a mutate function in the first position, and an object with your mutation result (containing `loading`, `error`, `called` and `data` properties) in the second position. Let's look at an example:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
@@ -433,13 +433,13 @@ If you're looking for an overview of all the options `useMutation` accepts, and 
 
 > **Note:** If you're using React Apollo's `Mutation` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `mutation` prop (which holds a GraphQL mutation document parsed into an AST by `graphql-tag`) is also required.
 
-<h3>Options</h3>
+### Options
 
 The `useMutation` hook accepts the following options.
 
 <MutationOptions />
 
-<h3>Result</h3>
+### Result
 
 The `useMutation` result is a tuple with a `mutate` function in the first position, and an object with the mutation result in the second position. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
 

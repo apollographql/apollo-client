@@ -92,6 +92,9 @@
     "typescript": "3.5.3",
     "uglify-js": "3.6.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "lib"
   ]

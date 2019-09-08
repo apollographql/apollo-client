@@ -30,7 +30,9 @@
     "bundle": "npx rollup -c ./config/rollup.config.js",
     "coverage": "npx jest --config ./config/jest.config.js --verbose --coverage",
     "coverage:upload": "npx codecov",
-    "bundlesize": "npm run build && bundlesize"
+    "bundlesize": "npm run build && bundlesize",
+    "predeploy": "npm run build",
+    "deploy": "npm publish --tag alpha"
   },
   "bundlesize": [
     {
@@ -89,5 +91,8 @@
     "tsc-watch": "2.4.0",
     "typescript": "3.5.3",
     "uglify-js": "3.6.0"
-  }
+  },
+  "files": [
+    "lib"
+  ]
 }

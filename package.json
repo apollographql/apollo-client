@@ -44,7 +44,7 @@
   "bundlesize": [
     {
       "name": "apollo-client",
-      "path": "./lib/bundle.cjs.min.js",
+      "path": "./lib/apollo-client.cjs.min.js",
       "maxSize": "11.8 kB"
     }
   ],

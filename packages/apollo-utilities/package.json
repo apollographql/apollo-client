@@ -42,6 +42,6 @@
     "@wry/equality": "^0.1.2",
     "fast-json-stable-stringify": "^2.0.0",
     "ts-invariant": "^0.4.0",
-    "tslib": "^1.9.3"
+    "tslib": "^1.10.0"
   }
 }

@@ -43,7 +43,7 @@
     "apollo-utilities": "file:../apollo-utilities",
     "optimism": "^0.10.0",
     "ts-invariant": "^0.4.0",
-    "tslib": "^1.9.3"
+    "tslib": "^1.10.0"
   },
   "peerDependencies": {
     "graphql": "0.11.7 || ^0.12.0 || ^0.13.0 || ^14.0.0"

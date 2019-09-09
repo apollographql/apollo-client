@@ -223,6 +223,11 @@ export class StoreReader {
       cacheRedirects: (config && config.cacheRedirects) || {},
     };
 
+    // Any IDs read explicitly from the cache (including ROOT_QUERY, most
+    // frequently) will be retained as reachable root IDs on behalf of their
+    // owner DocumentNode objects, until/unless evicted for all owners.
+    store.retain(rootId, query);
+
     const execResult = this.executeStoreQuery({
       query,
       objectOrReference: rootId === 'ROOT_QUERY'

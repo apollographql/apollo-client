@@ -1,5 +1,6 @@
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 import { wrap, OptimisticWrapperFunction } from 'optimism';
+import { isReference } from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -31,18 +32,18 @@ export abstract class EntityCache implements NormalizedCache {
   }
 
   public abstract addLayer(
-    id: string,
+    layerId: string,
     replay: (layer: EntityCache) => any,
   ): EntityCache;
 
-  public abstract removeLayer(id: string): EntityCache;
+  public abstract removeLayer(layerId: string): EntityCache;
 
   // Although the EntityCache class is abstract, it contains concrete
   // implementations of the various NormalizedCache interface methods that
   // are inherited by the Root and Layer subclasses.
 
   public toObject(): NormalizedCacheObject {
-    return this.data;
+    return { ...this.data };
   }
 
   public get(dataId: string): StoreObject {
@@ -53,12 +54,16 @@ export abstract class EntityCache implements NormalizedCache {
   public set(dataId: string, value: StoreObject): void {
     if (!hasOwn.call(this.data, dataId) || value !== this.data[dataId]) {
       this.data[dataId] = value;
+      delete this.refs[dataId];
       if (this.depend) this.depend.dirty(dataId);
     }
   }
 
   public delete(dataId: string): void {
-    this.data[dataId] = void 0;
+    if (this instanceof Layer) {
+      this.data[dataId] = void 0;
+    } else delete this.data[dataId];
+    delete this.refs[dataId];
     if (this.depend) this.depend.dirty(dataId);
   }
 
@@ -77,6 +82,78 @@ export abstract class EntityCache implements NormalizedCache {
         this.set(dataId, newData[dataId]);
       });
     }
+  }
+
+  private rootIds: {
+    [rootId: string]: Set<object>;
+  } = Object.create(null);
+
+  public retain(rootId: string, owner: object): void {
+    (this.rootIds[rootId] || (this.rootIds[rootId] = new Set<object>())).add(owner);
+  }
+
+  public release(rootId: string, owner: object): void {
+    const owners = this.rootIds[rootId];
+    if (owners && owners.delete(owner) && !owners.size) {
+      delete this.rootIds[rootId];
+    }
+  }
+
+  // This method will be overridden in the Layer class to merge root IDs for all
+  // layers (including the root).
+  public getRootIdSet() {
+    return new Set(Object.keys(this.rootIds));
+  }
+
+  // The goal of garbage collection is to remove IDs from the Root layer of the
+  // cache that are no longer reachable starting from any IDs that have been
+  // explicitly retained (see retain and release, above). Returns an array of
+  // dataId strings that were removed from the cache.
+  public gc() {
+    const ids = this.getRootIdSet();
+    const snapshot = this.toObject();
+    ids.forEach(id => {
+      if (hasOwn.call(snapshot, id)) {
+        // Because we are iterating over an ECMAScript Set, the IDs we add here
+        // will be visited in later iterations of the forEach loop only if they
+        // were not previously contained by the Set.
+        Object.keys(this.findChildIds(id)).forEach(ids.add, ids);
+        // By removing IDs from the snapshot object here, we protect them from
+        // getting removed from the root cache layer below.
+        delete snapshot[id];
+      }
+    });
+    const idsToRemove = Object.keys(snapshot);
+    if (idsToRemove.length) {
+      let root: EntityCache = this;
+      while (root instanceof Layer) root = root.parent;
+      idsToRemove.forEach(root.delete, root);
+    }
+    return idsToRemove;
+  }
+
+  // Lazily tracks { __ref: <dataId> } strings contained by this.data[dataId].
+  private refs: {
+    [dataId: string]: Record<string, true>;
+  } = Object.create(null);
+
+  public findChildIds(dataId: string): Record<string, true> {
+    if (!hasOwn.call(this.refs, dataId)) {
+      const found = this.refs[dataId] = Object.create(null);
+      // Use the little-known replacer function API of JSON.stringify to find
+      // { __ref } objects quickly and without a lot of traversal code.
+      JSON.stringify(this.data[dataId], (_key, value) => {
+        if (isReference(value)) {
+          found[value.__ref] = true;
+        } else if (value && typeof value === "object") {
+          // Returning the value allows the traversal to continue, which is
+          // necessary only when the value could contain other values that might
+          // be reference objects.
+          return value;
+        }
+      });
+    }
+    return this.refs[dataId];
   }
 }
 
@@ -107,14 +184,14 @@ export namespace EntityCache {
     }
 
     public addLayer(
-      id: string,
+      layerId: string,
       replay: (layer: EntityCache) => any,
     ): EntityCache {
       // The replay function will be called in the Layer constructor.
-      return new Layer(id, this, replay, this.sharedLayerDepend);
+      return new Layer(layerId, this, replay, this.sharedLayerDepend);
     }
 
-    public removeLayer(): Root {
+    public removeLayer(layerId: string): Root {
       // Never remove the root layer.
       return this;
     }
@@ -125,9 +202,9 @@ export namespace EntityCache {
 // of the EntityCache.Root class.
 class Layer extends EntityCache {
   constructor(
-    private id: string,
-    private parent: EntityCache,
-    private replay: (layer: EntityCache) => any,
+    public readonly id: string,
+    public readonly parent: Layer | EntityCache.Root,
+    public readonly replay: (layer: EntityCache) => any,
     public readonly depend: DependType,
   ) {
     super();
@@ -135,17 +212,17 @@ class Layer extends EntityCache {
   }
 
   public addLayer(
-    id: string,
+    layerId: string,
     replay: (layer: EntityCache) => any,
   ): EntityCache {
-    return new Layer(id, this, replay, this.depend);
+    return new Layer(layerId, this, replay, this.depend);
   }
 
-  public removeLayer(id: string): EntityCache {
+  public removeLayer(layerId: string): EntityCache {
     // Remove all instances of the given id, not just the first one.
-    const parent = this.parent.removeLayer(id);
+    const parent = this.parent.removeLayer(layerId);
 
-    if (id === this.id) {
+    if (layerId === this.id) {
       // Dirty every ID we're removing.
       // TODO Some of these IDs could escape dirtying if value unchanged.
       if (this.depend) {
@@ -168,6 +245,8 @@ class Layer extends EntityCache {
     };
   }
 
+  // All the other inherited accessor methods work as-is, but the get method
+  // needs to fall back to this.parent.get when accessing a missing dataId.
   public get(dataId: string): StoreObject {
     if (hasOwn.call(this.data, dataId)) {
       return super.get(dataId);
@@ -182,6 +261,22 @@ class Layer extends EntityCache {
       this.depend(dataId);
     }
     return this.parent.get(dataId);
+  }
+
+  // Return a Set<string> of all the ID strings that have been retained by this
+  // Layer *and* any layers/roots beneath it.
+  public getRootIdSet(): Set<string> {
+    const ids = this.parent.getRootIdSet();
+    super.getRootIdSet().forEach(ids.add, ids);
+    return ids;
+  }
+
+  public findChildIds(dataId: string): Record<string, true> {
+    const fromParent = this.parent.findChildIds(dataId);
+    return hasOwn.call(this.data, dataId) ? {
+      ...fromParent,
+      ...super.findChildIds(dataId),
+    } : fromParent;
   }
 }
 

@@ -30,6 +30,14 @@ export interface NormalizedCache {
    * replace the state of the store
    */
   replace(newData: NormalizedCacheObject): void;
+
+  /**
+   * Retain or release a given root ID on behalf of a specific "owner" object.
+   * During garbage collection, retained root IDs with one or more owners are
+   * considered immediately reachable. A single owner object counts only once.
+   */
+  retain(rootId: string, owner: object): void;
+  release(rootId: string, owner: object): void;
 }
 
 /**

@@ -175,6 +175,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     };
   }
 
+  // Request garbage collection of unreachable normalized entities.
+  public gc() {
+    return this.optimisticData.gc();
+  }
+
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
     throw new InvariantError(`eviction is not implemented on InMemory Cache`);
   }

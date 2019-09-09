@@ -31,7 +31,7 @@ const defaultGlobals = {
 
 function rollup({
   input = './src/index.ts',
-  outputPrefix = 'bundle',
+  outputPrefix = 'apollo-client',
   extraGlobals = {},
 } = {}) {
   const projectDir = path.join(__dirname, '..');

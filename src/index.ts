@@ -36,3 +36,7 @@ export { ApolloClientOptions, DefaultOptions };
 // Export the client as both default and named.
 export { ApolloClient };
 export default ApolloClient;
+
+export * from './cache/core';
+export * from './cache/inmemory';
+export * from './utilities';

@@ -1287,6 +1287,28 @@ describe('QueryManager', () => {
       });
   });
 
+  it('gracefully handles errors when directive inputs are missing', () => {
+    const query = gql`
+      {
+        people_one(id: 1) @include(if: $queryPeople) {
+          name
+        }
+      }
+    `;
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data: undefined },
+      },
+    );
+
+    const observable = queryManager.watchQuery({ query, variables: {} });
+
+    const result = queryManager.getCurrentQueryResult(observable, true);
+    expect(result).toEqual({ data: undefined, partial: true });
+  });
+
   it('can handle null values in arrays (#1551)', done => {
     const query = gql`
       {

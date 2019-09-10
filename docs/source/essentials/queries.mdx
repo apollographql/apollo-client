@@ -23,7 +23,7 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 ## Executing a query
 
-The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the primary API for executing queries in an Apollo application. To run a query within a React component, simply call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 

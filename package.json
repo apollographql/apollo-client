@@ -15,7 +15,7 @@
   "main": "./lib/apollo-client.cjs.js",
   "module": "./lib/apollo-client.esm.js",
   "sideEffects": [
-    "./lib/fixPolyfills.js"
+    "./lib/cache/inmemory/fixPolyfills.js"
   ],
   "repository": {
     "type": "git",

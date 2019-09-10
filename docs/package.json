@@ -3,7 +3,7 @@
     "start": "rm -rf .cache && gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
+    "types": "cd .. && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
     "gatsby": "2.15.9",

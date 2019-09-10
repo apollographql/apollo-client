@@ -41,7 +41,7 @@ export default enhancedComponent;
 
 This way, our wrapped component is only rendered outside of the loading state. That means we only need to take care of 2 states: error or successful load.
 
-> Note: `loading` is only `true` during the first fetch for a particular query. But if you enable [options.notifyOnNetworkStatusChange](/api/react-apollo/#optionsnotifyonnetworkstatuschange) you can keep track of other loading status using the [data.networkStatus](/api/react-apollo/#datanetworkstatus) field. You can use a similar pattern to the above.
+> Note: `loading` is only `true` during the first fetch for a particular query. But if you enable `options.notifyOnNetworkStatusChange` you can keep track of other loading status using the `data.networkStatus` field. You can use a similar pattern to the above.
 
 ## Error handling
 
@@ -233,7 +233,7 @@ Note that we check the current value of `pollInterval` before changing it becaus
 
 Recompose is a powerful tool and can be applied to all sorts of other cases. Here are a few final examples.
 
-Normally, if you wanted to add side effects to the `mutate` function, you would manage them in the `graphql` HOC's [`props` option](/api/react-apollo/#configprops) by doing something like `{ mutate: () => mutate().then(sideEffectHandler) }`. But that's not very reusable. Using recompose's `withHandlers()` you can compose the same prop manipulation in any number of components. You can see a more detailed example [here](https://medium.com/front-end-developers/how-i-write-mutations-in-apollo-w-recompose-1c0ab06ef4ea).
+Normally, if you wanted to add side effects to the `mutate` function, you would manage them in the `graphql` HOC's `props` option by doing something like `{ mutate: () => mutate().then(sideEffectHandler) }`. But that's not very reusable. Using recompose's `withHandlers()` you can compose the same prop manipulation in any number of components. You can see a more detailed example [here](https://medium.com/front-end-developers/how-i-write-mutations-in-apollo-w-recompose-1c0ab06ef4ea).
 
 Mutations can also be tracked using recompose's `withState`, since it has no effect on your query's `loading` state. For example, you could use it to disable buttons while submitting form data.
 

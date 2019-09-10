@@ -1037,18 +1037,24 @@ export class QueryManager<TStore> {
       return { data: undefined, partial: false };
     }
 
-    const { result, complete } = this.dataStore.getCache().diff<T>({
-      query,
-      variables,
-      previousResult: lastResult ? lastResult.data : undefined,
-      returnPartialData: true,
-      optimistic,
-    });
-
-    return {
-      data: (complete || returnPartialData) ? result : void 0,
-      partial: !complete,
-    };
+    try {
+      const { result, complete } = this.dataStore.getCache().diff<T>({
+        query,
+        variables,
+        previousResult: lastResult ? lastResult.data : undefined,
+        returnPartialData: true,
+        optimistic,
+      });
+      return {
+        data: (complete || returnPartialData) ? result : void 0,
+        partial: !complete,
+      };
+    } catch {
+      return {
+        data: undefined,
+        partial: true
+      };
+    }
   }
 
   public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(

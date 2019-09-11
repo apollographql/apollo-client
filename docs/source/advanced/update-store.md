@@ -43,7 +43,7 @@ const cache = new InMemoryCache({
 
 These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
-If you want to get the dataIdFromObjectFunction (for instance when using the [`readFragment` function](LINK PLZ)), you can import it from the InMemoryCache package;
+If you want to get the dataIdFromObjectFunction (for instance when using the [`readFragment` function](caching/#readfragment)), you can import it from the InMemoryCache package;
 
 ```js
 import { defaultDataIdFromObject } from 'apollo-cache-inmemory';
@@ -129,7 +129,7 @@ mutate({
 
 ### `update`
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-apollo/#optionsupdate).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
 
 ```javascript
 import CommentAppQuery from '../queries/CommentAppQuery';

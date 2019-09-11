@@ -1,14 +1,48 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client (vNext)
+## Apollo Client vNext
 
-### Apollo Client (vNext)
+### Apollo Client vNext
 
+- Update the `fetchMore` type signature to accept `context`.  <br/>
+  [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
+- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
+  [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
+
+### GraphQL Anywhere vNext
+
+- Fix `filter` edge case involving `null`.  <br/>
+  [@lifeiscontent](https://github.com/lifeiscontent) in [#5110](https://github.com/apollographql/apollo-client/pull/5110)
+
+
+## Apollo Client (2.6.4)
+
+### Apollo Client (2.6.4)
+
+- Modify `ObservableQuery` to allow queries with `notifyOnNetworkStatusChange`
+  to be notified when loading after an error occurs. <br />
+  [@jasonpaulos](https://github.com/jasonpaulos) in [#4992](https://github.com/apollographql/apollo-client/pull/4992)
+- Add `graphql` as a `peerDependency` of `apollo-cache` and
+  `graphql-anywhere`.  <br/>
+  [@ssalbdivad](https://github.com/ssalbdivad) in [#5081](https://github.com/apollographql/apollo-client/pull/5081)
+- Documentation updates.  </br>
+  [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5141](https://github.com/apollographql/apollo-client/pull/5141)
+
+
+## Apollo Client (2.6.3)
+
+### Apollo Client (2.6.3)
+
+- A new `ObservableQuery.resetQueryStoreErrors()` method is now available that
+  can be used to clear out `ObservableQuery` query store errors.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#4941](https://github.com/apollographql/apollo-client/pull/4941)
 - Documentation updates.  <br/>
-  [@michael-watson](https://github.com/michael-watson) in [#4940](https://github.com/apollographql/apollo-client/pull/4940)
+  [@michael-watson](https://github.com/michael-watson) in [#4940](https://github.com/apollographql/apollo-client/pull/4940)  <br/>
+  [@hwillson](https://github.com/hwillson) in [#4969](https://github.com/apollographql/apollo-client/pull/4969)
 
 
-## Apollo Client (2.6.2)
+## Apollo Client (2.6.1)
 
 ### Apollo Utilities 1.3.2
 

@@ -124,7 +124,7 @@ export class StoreWriter {
     fragmentMatcherFunction?: FragmentMatcher;
   }): NormalizedCache {
     // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
-    const operationDefinition = getOperationDefinition(document);
+    const operationDefinition = getOperationDefinition(document)!;
 
     try {
       return this.writeSelectionSetToStore({

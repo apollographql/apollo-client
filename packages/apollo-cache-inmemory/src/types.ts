@@ -37,7 +37,7 @@ export interface NormalizedCache {
  * a flattened representation of query result trees.
  */
 export interface NormalizedCacheObject {
-  [dataId: string]: StoreObject;
+  [dataId: string]: StoreObject | undefined;
 }
 
 export interface StoreObject {

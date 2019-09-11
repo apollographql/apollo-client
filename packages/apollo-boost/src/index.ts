@@ -122,7 +122,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       ? onError(errorCallback)
       : onError(({ graphQLErrors, networkError }) => {
           if (graphQLErrors) {
-            graphQLErrors.map(({ message, locations, path }) =>
+            graphQLErrors.forEach(({ message, locations, path }) =>
               // tslint:disable-next-line
               invariant.warn(
                 `[GraphQL error]: Message: ${message}, Location: ` +

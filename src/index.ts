@@ -39,4 +39,3 @@ export default ApolloClient;
 
 export * from './cache/core';
 export * from './cache/inmemory';
-export * from './utilities';

@@ -7,7 +7,7 @@ You can use Apollo with React Native exactly as you would with React Web.
 To introduce Apollo to your app, install React Apollo from npm and use them in your app as outlined in the [setup](/essentials/get-started/) article:
 
 ```bash
-npm install @apollo/react-hooks --save
+npm install @apollo/react-hooks apollo-client graphql --save
 ```
 
 ```jsx

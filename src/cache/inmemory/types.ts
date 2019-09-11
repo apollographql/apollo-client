@@ -32,12 +32,15 @@ export interface NormalizedCache {
   replace(newData: NormalizedCacheObject): void;
 
   /**
-   * Retain or release a given root ID on behalf of a specific "owner" object.
-   * During garbage collection, retained root IDs with one or more owners are
-   * considered immediately reachable. A single owner object counts only once.
+   * Retain (or release) a given root ID to protect (or expose) it and its
+   * transitive child entities from (or to) garbage collection. The current
+   * retainment count is returned by both methods. Note that releasing a root
+   * ID does not cause that entity to be garbage collected, but merely removes
+   * it from the set of root IDs that will be considered during the next
+   * mark-and-sweep collection.
    */
-  retain(rootId: string, owner: object): void;
-  release(rootId: string, owner: object): void;
+  retain(rootId: string): number;
+  release(rootId: string): number;
 }
 
 /**

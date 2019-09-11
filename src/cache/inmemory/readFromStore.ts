@@ -224,9 +224,8 @@ export class StoreReader {
     };
 
     // Any IDs read explicitly from the cache (including ROOT_QUERY, most
-    // frequently) will be retained as reachable root IDs on behalf of their
-    // owner DocumentNode objects, until/unless evicted for all owners.
-    store.retain(rootId, query);
+    // frequently) will be retained as reachable root IDs, until released.
+    store.retain(rootId);
 
     const execResult = this.executeStoreQuery({
       query,

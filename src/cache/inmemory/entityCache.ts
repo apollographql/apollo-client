@@ -84,19 +84,24 @@ export abstract class EntityCache implements NormalizedCache {
     }
   }
 
+  // Maps root entity IDs to the number of times they have been retained, minus
+  // the number of times they have been released. Retained entities keep other
+  // entities they reference (even indirectly) from being garbage collected.
   private rootIds: {
-    [rootId: string]: Set<object>;
+    [rootId: string]: number;
   } = Object.create(null);
 
-  public retain(rootId: string, owner: object): void {
-    (this.rootIds[rootId] || (this.rootIds[rootId] = new Set<object>())).add(owner);
+  public retain(rootId: string): number {
+    return this.rootIds[rootId] = (this.rootIds[rootId] || 0) + 1;
   }
 
-  public release(rootId: string, owner: object): void {
-    const owners = this.rootIds[rootId];
-    if (owners && owners.delete(owner) && !owners.size) {
-      delete this.rootIds[rootId];
+  public release(rootId: string): number {
+    if (this.rootIds[rootId] > 0) {
+      const count = --this.rootIds[rootId];
+      if (!count) delete this.rootIds[rootId];
+      return count;
     }
+    return 0;
   }
 
   // This method will be overridden in the Layer class to merge root IDs for all

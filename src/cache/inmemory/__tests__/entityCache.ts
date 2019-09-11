@@ -33,7 +33,7 @@ describe('EntityCache', () => {
     expect(supportsResultCaching(cacheWithoutResultCaching)).toBe(false);
   });
 
-  it('should reclaim no-longer-reachable, unretained entities', () => {
+  function newBookAuthorCache() {
     const cache = new InMemoryCache({
       resultCaching: true,
       dataIdFromObject(value: any) {
@@ -56,6 +56,15 @@ describe('EntityCache', () => {
         }
       }
     `;
+
+    return {
+      cache,
+      query,
+    };
+  }
+
+  it('should reclaim no-longer-reachable, unretained entities', () => {
+    const { cache, query } = newBookAuthorCache();
 
     cache.writeQuery({
       query,
@@ -218,28 +227,7 @@ describe('EntityCache', () => {
   });
 
   it('should respect optimistic updates, when active', () => {
-    const cache = new InMemoryCache({
-      resultCaching: true,
-      dataIdFromObject(value: any) {
-        switch (value && value.__typename) {
-          case 'Book':
-            return 'Book:' + value.isbn;
-          case 'Author':
-            return 'Author:' + value.name;
-        }
-      },
-    });
-
-    const query = gql`
-      query {
-        book {
-          title
-          author {
-            name
-          }
-        }
-      }
-    `;
+    const { cache, query } = newBookAuthorCache();
 
     cache.writeQuery({
       query,
@@ -390,6 +378,194 @@ describe('EntityCache', () => {
         },
       },
     });
+
+    expect(cache.gc()).toEqual([]);
+  });
+
+  it('should respect retain/release methods', () => {
+    const { query, cache } = newBookAuthorCache();
+
+    const eagerBookData = {
+      __typename: 'Book',
+      isbn: '1603589082',
+      title: 'Eager',
+      subtitle: 'The Surprising, Secret Life of Beavers and Why They Matter',
+      author: {
+        __typename: 'Author',
+        name: 'Ben Goldfarb',
+      },
+    };
+
+    const spinelessBookData = {
+      __typename: 'Book',
+      isbn: '0735211280',
+      title: 'Spineless',
+      subtitle: 'The Science of Jellyfish and the Art of Growing a Backbone',
+      author: {
+        __typename: 'Author',
+        name: 'Juli Berwald',
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: spinelessBookData,
+      },
+    });
+
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        book: {
+          __ref: "Book:0735211280",
+        },
+      },
+      "Book:0735211280": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:Juli Berwald",
+        },
+        title: "Spineless",
+      },
+      "Author:Juli Berwald": {
+        __typename: "Author",
+        name: "Juli Berwald",
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: eagerBookData,
+      },
+    });
+
+    const snapshotWithBothBooksAndAuthors = {
+      ROOT_QUERY: {
+        book: {
+          __ref: "Book:1603589082",
+        },
+      },
+      "Book:0735211280": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:Juli Berwald",
+        },
+        title: "Spineless",
+      },
+      "Author:Juli Berwald": {
+        __typename: "Author",
+        name: "Juli Berwald",
+      },
+      "Book:1603589082": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:Ben Goldfarb",
+        },
+        title: "Eager",
+      },
+      "Author:Ben Goldfarb": {
+        __typename: "Author",
+        name: "Ben Goldfarb",
+      },
+    };
+
+    expect(cache.extract(true)).toEqual(snapshotWithBothBooksAndAuthors);
+
+    expect(cache.retain("Book:0735211280")).toBe(1);
+
+    expect(cache.gc()).toEqual([]);
+
+    expect(cache.retain("Author:Juli Berwald")).toBe(1);
+
+    cache.recordOptimisticTransaction(proxy => {
+      proxy.writeFragment({
+        id: "Author:Juli Berwald",
+        fragment: gql`
+          fragment AuthorBooks on Author {
+            books {
+              title
+            }
+          }
+        `,
+        data: {
+          books: [
+            {
+              __typename: 'Book',
+              isbn: '0735211280',
+            },
+          ],
+        },
+      });
+    }, "juli books");
+
+    // Retain the Spineless book on the optimistic layer (for the first time)
+    // but release it on the root layer.
+    expect(cache.retain("Book:0735211280", true)).toBe(1);
+    expect(cache.release("Book:0735211280")).toBe(0);
+
+    // The Spineless book is still protected by the reference from author Juli
+    // Berwald's optimistically-added author.books field.
+    expect(cache.gc()).toEqual([]);
+
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        book: {
+          __ref: "Book:1603589082",
+        },
+      },
+      "Book:0735211280": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:Juli Berwald",
+        },
+        title: "Spineless",
+      },
+      "Author:Juli Berwald": {
+        __typename: "Author",
+        name: "Juli Berwald",
+        // Note this extra optimistic field.
+        books: [
+          {
+            __ref: "Book:0735211280",
+          },
+        ],
+      },
+      "Book:1603589082": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:Ben Goldfarb",
+        },
+        title: "Eager",
+      },
+      "Author:Ben Goldfarb": {
+        __typename: "Author",
+        name: "Ben Goldfarb",
+      },
+    });
+
+    // A non-optimistic snapshot will not have the extra books field.
+    expect(cache.extract(false)).toEqual(snapshotWithBothBooksAndAuthors);
+
+    cache.removeOptimistic("juli books");
+
+    // The optimistic books field is gone now that we've removed the optimistic
+    // layer that added it.
+    expect(cache.extract(true)).toEqual(snapshotWithBothBooksAndAuthors);
+
+    // The Spineless book is no longer retained or kept alive by any other root
+    // IDs, so it can finally be collected.
+    expect(cache.gc()).toEqual([
+      "Book:0735211280",
+    ]);
+
+    expect(cache.release("Author:Juli Berwald")).toBe(0);
+
+    // Now that Juli Berwald's author entity is no longer retained, garbage
+    // collection cometh for her. Look out, Juli!
+    expect(cache.gc()).toEqual([
+      "Author:Juli Berwald",
+    ]);
 
     expect(cache.gc()).toEqual([]);
   });

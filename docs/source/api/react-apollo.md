@@ -364,7 +364,7 @@ The `config.props` property allows you to define a map function that takes the `
 
 The function you define behaves almost exactly like [`mapProps` from Recompose](https://github.com/acdlite/recompose/blob/2e71fdf4270cc8022a6574aaf00731bfc25dcae6/docs/API.md#mapprops) providing the same benefits without the need for another library.
 
-`config.props` is most useful when you want to abstract away complex functions calls into a simple prop that you can pass down to your component.
+`config.props` is most useful when you want to abstract away complex function calls into a simple prop that you can pass down to your component.
 
 Another benefit of `config.props` is that it also allows you to decouple your pure UI components from your GraphQL and Apollo concerns. You can write your pure UI components in one file and then keep the logic required for them to interact with the store in a completely different place in your project. You can accomplish this by your pure UI components only asking for the props needed to render and `config.props` can contain the logic to provide exactly the props your pure component needs from the data provided by your GraphQL API.
 

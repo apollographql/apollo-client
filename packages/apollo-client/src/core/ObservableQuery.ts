@@ -280,6 +280,14 @@ export class ObservableQuery<
     this.isTornDown = false;
   }
 
+  public resetQueryStoreErrors() {
+    const queryStore = this.queryManager.queryStore.get(this.queryId);
+    if (queryStore) {
+      queryStore.networkError = null;
+      queryStore.graphQLErrors = [];
+    }
+  }
+
   /**
    * Update the variables of this observable query, and fetch the new results.
    * This method should be preferred over `setVariables` in most use cases.
@@ -608,6 +616,14 @@ export class ObservableQuery<
     }
 
     const onError = (error: ApolloError) => {
+      // Since we don't get the current result on errors, only the error, we
+      // must mirror the updates that occur in QueryStore.markQueryError here
+      this.updateLastResult({
+        ...this.lastResult,
+        errors: error.graphQLErrors,
+        networkStatus: NetworkStatus.error,
+        loading: false,
+      });
       iterateObserversSafely(this.observers, 'error', this.lastError = error);
     };
 

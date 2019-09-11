@@ -5,7 +5,7 @@ import { DocumentNode } from 'graphql';
 
 import { Cache, ApolloCache, Transaction } from 'apollo-cache';
 
-import { addTypenameToDocument } from 'apollo-utilities';
+import { addTypenameToDocument, canUseWeakMap } from 'apollo-utilities';
 
 import { wrap } from 'optimism';
 
@@ -21,7 +21,7 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { DepTrackingCache } from './depTrackingCache';
-import { CacheKeyNode } from './cacheKeys';
+import { KeyTrie } from 'optimism';
 import { ObjectCache } from './objectCache';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
@@ -89,7 +89,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
-  private cacheKeyRoot = new CacheKeyNode();
+  private cacheKeyRoot = new KeyTrie<object>(canUseWeakMap);
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -114,7 +114,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.config.cacheRedirects = (this.config as any).cacheResolvers;
     }
 
-    this.addTypename = this.config.addTypename;
+    this.addTypename = !!this.config.addTypename;
 
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
@@ -183,18 +183,24 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return null;
     }
 
+    const { fragmentMatcher } = this.config;
+    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
+
     return this.storeReader.readQueryFromStore({
       store: options.optimistic ? this.optimisticData : this.data,
       query: this.transformDocument(options.query),
       variables: options.variables,
       rootId: options.rootId,
-      fragmentMatcherFunction: this.config.fragmentMatcher.match,
+      fragmentMatcherFunction,
       previousResult: options.previousResult,
       config: this.config,
-    });
+    }) || null;
   }
 
   public write(write: Cache.WriteOptions): void {
+    const { fragmentMatcher } = this.config;
+    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
+
     this.storeWriter.writeResultToStore({
       dataId: write.dataId,
       result: write.result,
@@ -202,20 +208,23 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
-      fragmentMatcherFunction: this.config.fragmentMatcher.match,
+      fragmentMatcherFunction,
     });
 
     this.broadcastWatches();
   }
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
+    const { fragmentMatcher } = this.config;
+    const fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
+
     return this.storeReader.diffQueryAgainstStore({
       store: query.optimistic ? this.optimisticData : this.data,
       query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
-      fragmentMatcherFunction: this.config.fragmentMatcher.match,
+      fragmentMatcherFunction,
       config: this.config,
     });
   }
@@ -260,7 +269,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
       // Reapply the layers whose optimistic IDs do not match the removed ID.
       while (toReapply.length > 0) {
-        const layer = toReapply.pop();
+        const layer = toReapply.pop()!;
         this.performTransaction(layer.transaction, layer.optimisticId);
       }
 

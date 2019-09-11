@@ -22,7 +22,6 @@ import { defaultNormalizedCacheFactory } from '../objectCache';
 import {
   HeuristicFragmentMatcher,
   IntrospectionFragmentMatcher,
-  NormalizedCache,
   StoreObject,
 } from '../';
 
@@ -291,7 +290,7 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedObj')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: result.nestedObj.id,
@@ -493,7 +492,7 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', id: result.nestedArray[0].id, generated: false },
           null,
@@ -626,7 +625,7 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: [
@@ -664,7 +663,7 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: [
@@ -1242,7 +1241,7 @@ describe('writing to the store', () => {
     const expStore = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         author: {
-          id: 0,
+          id: 0 as any,
           typename: 'Author',
           type: 'id',
           generated: false,
@@ -1260,7 +1259,7 @@ describe('writing to the store', () => {
         .writeQueryToStore({
           result: data,
           query,
-          dataIdFromObject: () => 0,
+          dataIdFromObject: () => (0 as any) as string,
         })
         .toObject(),
     ).toEqual(expStore.toObject());
@@ -1292,7 +1291,7 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           author: {
-            type: 'id',
+            type: 'id' as any,
             id: '$ROOT_QUERY.author',
             generated: true,
           },
@@ -1330,7 +1329,7 @@ describe('writing to the store', () => {
         ROOT_QUERY: {
           author: {
             type: 'id',
-            id: dataIdFromObject(data.author),
+            id: dataIdFromObject(data.author)!,
             generated: false,
             typename: 'Author',
           },
@@ -1375,7 +1374,7 @@ describe('writing to the store', () => {
         ROOT_QUERY: {
           author: {
             type: 'id',
-            id: dataIdFromObject(data.author),
+            id: dataIdFromObject(data.author)!,
             generated: false,
             typename: 'Author',
           },

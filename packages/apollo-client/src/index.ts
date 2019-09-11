@@ -12,6 +12,7 @@ export {
   MutationOptions,
   SubscriptionOptions,
   FetchPolicy,
+  WatchQueryFetchPolicy,
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,

@@ -10,7 +10,7 @@ import {
 import { stripSymbols } from 'apollo-utilities';
 
 import { QueryManager } from '../core/QueryManager';
-import { WatchQueryOptions } from '../core/watchQueryOptions';
+import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
 
 import { ApolloError } from '../errors/ApolloError';
 
@@ -79,7 +79,7 @@ describe('client', () => {
             a
           }
         `,
-      } as any)
+      } as any),
     ).rejects.toThrow(
       'mutation option is required. You must specify your GraphQL document in the mutation option.',
     );
@@ -1584,6 +1584,51 @@ describe('client', () => {
     });
   });
 
+  it('unsubscribes from deduplicated observables only once', done => {
+    const document: DocumentNode = gql`
+      query test1($x: String) {
+        test(x: $x)
+      }
+    `;
+
+    const variables1 = { x: 'Hello World' };
+    const variables2 = { x: 'Hello World' };
+
+    let unsubscribed = false;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable(observer => {
+          observer.complete();
+          return () => {
+            unsubscribed = true;
+            setTimeout(done, 0);
+          };
+        });
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    const sub1 = client
+      .watchQuery({
+        query: document,
+        variables: variables1,
+      })
+      .subscribe({});
+
+    const sub2 = client
+      .watchQuery({
+        query: document,
+        variables: variables2,
+      })
+      .subscribe({});
+
+    sub1.unsubscribe();
+    expect(unsubscribed).toBe(false);
+
+    sub2.unsubscribe();
+  });
+
   describe('deprecated options', () => {
     const query = gql`
       query people {
@@ -1680,30 +1725,48 @@ describe('client', () => {
       },
     };
 
+    const cacheAndNetworkError =
+      'The cache-and-network fetchPolicy does not work with client.query, because ' +
+      'client.query can only return a single result. Please use client.watchQuery ' +
+      'to receive multiple results from the cache and the network, or consider ' +
+      'using a different fetchPolicy, such as cache-first or network-only.';
+
+    function checkCacheAndNetworkError(callback: () => any) {
+      try {
+        callback();
+        throw new Error('not reached');
+      } catch (thrown) {
+        expect(thrown.message).toBe(cacheAndNetworkError);
+      }
+    }
+
     // Test that cache-and-network can only be used on watchQuery, not query.
-    it('errors when being used on query', () => {
+    it('warns when used with client.query', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-      expect(() => {
-        client.query({ query, fetchPolicy: 'cache-and-network' });
-      }).toThrowError(/cache-and-network fetchPolicy/);
+
+      checkCacheAndNetworkError(
+        () => client.query({
+          query,
+          fetchPolicy: 'cache-and-network' as FetchPolicy,
+        }),
+      );
     });
 
-    it('errors when being used on query with defaultOptions', () => {
+    it('warns when used with client.query with defaultOptions', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
         defaultOptions: {
           query: {
-            fetchPolicy: 'cache-and-network',
+            fetchPolicy: 'cache-and-network' as FetchPolicy,
           },
         },
       });
-      expect(() => {
-        client.query({ query });
-      }).toThrowError(/cache-and-network fetchPolicy/);
+
+      checkCacheAndNetworkError(() => client.query({ query }));
     });
 
     it('fetches from cache first, then network', done => {
@@ -2248,17 +2311,14 @@ describe('client', () => {
       });
   });
 
-  it('has a clearStore method which calls QueryManager', done => {
+  it('has a clearStore method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      clearStore: () => {
-        done();
-      },
-    } as QueryManager;
-    client.clearStore();
+    const spy = jest.spyOn(client.queryManager, 'clearStore');
+    await client.clearStore();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('has an onClearStore method which takes a callback to be called after clearStore', async () => {
@@ -2290,18 +2350,14 @@ describe('client', () => {
     expect(onClearStore).not.toHaveBeenCalled();
   });
 
-  it('has a resetStore method which calls QueryManager', done => {
+  it('has a resetStore method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      reFetchObservableQueries() {},
-      clearStore: () => {
-        done();
-      },
-    } as QueryManager;
-    client.resetStore();
+    const spy = jest.spyOn(client.queryManager, 'clearStore');
+    await client.resetStore();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('has an onResetStore method which takes a callback to be called after resetStore', async () => {
@@ -2397,6 +2453,7 @@ describe('client', () => {
           new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
+            observer.complete();
             return;
           }),
       ),
@@ -2460,17 +2517,14 @@ describe('client', () => {
     expect(next).toHaveBeenCalledTimes(2);
   });
 
-  it('has a reFetchObservableQueries method which calls QueryManager', done => {
+  it('has a reFetchObservableQueries method which calls QueryManager', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
-    client.queryManager = {
-      reFetchObservableQueries: () => {
-        done();
-      },
-    } as QueryManager;
-    client.reFetchObservableQueries();
+    const spy = jest.spyOn(client.queryManager, 'reFetchObservableQueries');
+    await client.reFetchObservableQueries();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('should enable dev tools logging', () => {
@@ -2547,6 +2601,122 @@ describe('client', () => {
         done();
       },
     });
+  });
+
+  it('should be able to refetch after there was a network error', done => {
+    const query: DocumentNode = gql`
+      query somethingelse {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const dataTwo = { allPeople: { people: [{ name: 'Princess Leia' }] } };
+    const link = mockSingleLink(
+      { request: { query }, result: { data } },
+      { request: { query }, error: new Error('This is an error!') },
+      { request: { query }, result: { data: dataTwo } },
+    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    let count = 0;
+    const noop = () => null;
+
+    const observable = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let subscription: any = null;
+
+    const observerOptions = {
+      next(result: any) {
+        try {
+          switch (count++) {
+            case 0:
+              if (!result.data!.allPeople) {
+                done.fail('Should have data by this point');
+                break;
+              }
+              // First result is loaded, run a refetch to get the second result
+              // which is an error.
+              expect(result.loading).toBeFalsy();
+              expect(result.networkStatus).toBe(7);
+              expect(stripSymbols(result.data!.allPeople)).toEqual(
+                data.allPeople,
+              );
+              setTimeout(() => {
+                observable.refetch().then(() => {
+                  done.fail('Expected error value on first refetch.');
+                }, noop);
+              }, 0);
+              break;
+            case 1:
+              // Waiting for the second result to load
+              expect(result.loading).toBeTruthy();
+              expect(result.networkStatus).toBe(4);
+              break;
+            // case 2 is handled by the error callback
+            case 3:
+              expect(result.loading).toBeTruthy();
+              expect(result.networkStatus).toBe(4);
+              expect(result.errors).toBeFalsy();
+              break;
+            case 4:
+              // Third result's data is loaded
+              expect(result.loading).toBeFalsy();
+              expect(result.networkStatus).toBe(7);
+              expect(result.errors).toBeFalsy();
+              if (!result.data) {
+                done.fail('Should have data by this point');
+                break;
+              }
+              expect(stripSymbols(result.data.allPeople)).toEqual(
+                dataTwo.allPeople,
+              );
+              done();
+              break;
+            default:
+              throw new Error('Unexpected fall through');
+          }
+        } catch (e) {
+          done.fail(e);
+        }
+      },
+      error(error) {
+        expect(count++).toBe(2);
+        expect(error.message).toBe('Network error: This is an error!');
+
+        subscription.unsubscribe();
+
+        const lastError = observable.getLastError();
+        const lastResult = observable.getLastResult();
+
+        expect(lastResult.loading).toBeFalsy();
+        expect(lastResult.networkStatus).toBe(8);
+
+        observable.resetLastResults();
+        subscription = observable.subscribe(observerOptions);
+        Object.assign(observable, { lastError, lastResult });
+
+        // The error arrived, run a refetch to get the third result
+        // which should now contain valid data.
+        setTimeout(() => {
+          observable.refetch().catch(() => {
+            done.fail('Expected good data on second refetch.');
+          });
+        }, 0);
+      },
+    };
+
+    subscription = observable.subscribe(observerOptions);
   });
 
   it('should throw a GraphQL error', () => {

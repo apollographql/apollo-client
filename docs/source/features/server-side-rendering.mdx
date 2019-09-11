@@ -2,6 +2,7 @@
 title: Server-side rendering
 ---
 
+import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 
 Apollo provides two techniques to allow your applications to load quickly, avoiding unnecessary delays to users:
 
@@ -10,7 +11,7 @@ Apollo provides two techniques to allow your applications to load quickly, avoid
 
 You can use one or both of these techniques to provide a better user experience.
 
-<h2 id="store-rehydration">Store rehydration</h2>
+## Store rehydration
 
 For applications that can perform some queries on the server prior to rendering the UI on the client, Apollo allows for setting the initial state of data. This is sometimes called rehydration, since the data is "dehydrated" when it is serialized and included in the initial HTML payload.
 
@@ -23,6 +24,7 @@ For example, a typical approach is to include a script tag that looks something 
 ```
 
 You can then rehydrate the client using the initial state passed from the server:
+
 ```js
 const client = new ApolloClient({
   cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
@@ -30,7 +32,7 @@ const client = new ApolloClient({
 });
 ```
 
-We'll see below how you can generate both the HTML and the Apollo store's state using Node and `react-apollo`'s server rendering functions. However if you are rendering HTML via some other means, you will have to generate the state manually.
+We'll see below how you can generate both the HTML and the Apollo store's state using Node and React Apollo's server rendering functions. However if you are rendering HTML via some other means, you will have to generate the state manually.
 
 Then, when the client runs the first set of queries, the data will be returned instantly because it is already in the store!
 
@@ -44,31 +46,29 @@ const client = new ApolloClient({
 });
 ```
 
-<h2 id="server-rendering">Server-side rendering</h2>
+## Server-side rendering
 
-You can render your entire React-based Apollo application on a Node server using rendering functions built into `react-apollo`. These functions take care of the job of fetching all queries that are required to rendering your component tree. Typically you would use these functions from within a HTTP server such as [Express](https://expressjs.com).
+You can render your entire React-based Apollo application on a Node server using rendering functions built into React Apollo. These functions take care of the job of fetching all queries that are required to rendering your component tree. Typically you would use these functions from within a HTTP server such as [Express](https://expressjs.com).
 
 No changes are required to client queries to support this, so your Apollo-based React UI should support SSR out of the box.
 
-<h3 id="server-initialization">Server initialization</h3>
+### Server initialization
 
 In order to render your application on the server, you need to handle a HTTP request (using a server like Express, and a server-capable Router like React-Router), and then render your application to a string to pass back on the response.
 
 We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
 
-1. When [creating an Apollo Client instance](../basics/setup.html) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
-
+1. When [creating an Apollo Client instance](/essentials/get-started/) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
 2. Since you only want to fetch each query result once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid repeated force-fetching.
-
-3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](../recipes/authentication.html).
+3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](/recipes/authentication/).
 
 Once you put that all together, you'll end up with initialization code that looks like this:
 
-```js
+```jsx
 // This example uses React Router v4, although it should work
 // equally well with other routers that support SSR
 
-import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider } from '@apollo/react-common';
 import { ApolloClient } from 'apollo-client';
 import { createHttpLink } from 'apollo-link-http';
 import Express from 'express';
@@ -115,9 +115,8 @@ app.listen(basePort, () => console.log( // eslint-disable-line no-console
 ));
 ```
 
-```js
+```jsx
 // ./routes/Layout.js
-
 import { Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import React from 'react';
@@ -146,12 +145,10 @@ const Layout = () =>
   </div>;
 
 export default Layout;
-
 ```
 
 ```js
 // ./routes/index.js
-
 import MainPage from './MainPage';
 import AnotherPage from './AnotherPage';
 
@@ -170,21 +167,18 @@ const routes = [
 ];
 
 export default routes;
-
 ```
-
-You can check out the [GitHunt app's `src/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/src/server.js) for a complete working example.
 
 Next we'll see what that rendering code actually does.
 
-<h3 id="getDataFromTree">Using `getDataFromTree`</h3>
+### Using `getDataFromTree`
 
 The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all. It does this recursively down the whole tree if you have nested queries. It returns a promise which resolves when the data is ready in your Apollo Client store.
 
 At the point that the promise resolves, your Apollo Client store will be completely initialized, which should mean your app will now render instantly (since all queries are prefetched) and you can return the stringified results in the response:
 
 ```js
-import { getDataFromTree } from "react-apollo"
+import { getDataFromTree } from "@apollo/react-ssr";
 
 const client = new ApolloClient(....);
 
@@ -204,7 +198,7 @@ getDataFromTree(App).then(() => {
 
 Your markup in this case can look something like:
 
-```js
+```jsx
 function Html({ content, state }) {
   return (
     <html>
@@ -219,11 +213,11 @@ function Html({ content, state }) {
 }
 ```
 
-<h3 id="local-queries">Avoiding the network for local queries</h3>
+### Avoiding the network for local queries
 
 If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work.
 
-One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](https://www.apollographql.com/docs/link/links/schema.html) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
+One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](https://www.apollographql.com/docs/link/links/schema) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
 
 ```js
 import { ApolloClient } from 'apollo-client'
@@ -239,28 +233,43 @@ const client = new ApolloClient({
 });
 ```
 
-<h3 id="skip-for-ssr">Skipping queries for SSR</h3>
+### Skipping queries for SSR
 
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
-```js
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+function withClientOnlyUser() {
+  useQuery(GET_USER_WITH_ID, { ssr: false });
+  return <span>I won't be run on the server</span>;
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
 const withClientOnlyUser = () => (
   <Query query={GET_USER_WITH_ID} ssr={false}>
     {({ data }) => <span>I won't be run on the server</span>}
   </Query>
 );
-
 ```
 
-<h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>
+</div>
+</MultiCodeBlock>
+
+### Using `renderToStringWithData`
 
 The `renderToStringWithData` function simplifies the above and simply returns the content string  that you need to render. So it reduces the number of steps slightly:
 
 ```js
 // server application code (integrated usage)
-import { renderToStringWithData } from "react-apollo"
+import { renderToStringWithData } from "@apollo/react-ssr";
 
-const client = new ApolloClient(....);
+const client = new ApolloClient(...);
 
 // during request
 renderToStringWithData(App).then((content) => {

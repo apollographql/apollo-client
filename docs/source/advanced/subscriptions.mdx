@@ -3,15 +3,19 @@ title: Subscriptions
 description: Learn how to achieve realtime data with GraphQL subscriptions
 ---
 
+import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
+import SubscriptionOptions from '../../shared/subscription-options.mdx';
+import SubscriptionResult from '../../shared/subscription-result.mdx';
+
 In addition to fetching data using queries and modifying data using mutations, the GraphQL spec supports a third operation type, called `subscription`.
 
 GraphQL subscriptions are a way to push data from the server to the clients that choose to listen to real time messages from the server. Subscriptions are similar to queries in that they specify a set of fields to be delivered to the client, but instead of immediately returning a single answer, a result is sent every time a particular event happens on the server.
 
 A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](./boost-migration.html).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/advanced/boost-migration/).
 
-<h2 id="overview">Overview</h2>
+## Overview
 
 GraphQL subscriptions have to be defined in the schema, just like queries and mutations:
 
@@ -45,9 +49,9 @@ The response sent to the client looks as follows:
 }
 ```
 
-In the above example, the server is written to send a new result every time a comment is added on GitHunt for a specific repository. Note that the code above only defines the GraphQL subscription in the schema. Read [setting up subscriptions on the client](#subscriptions-client) and [setting up GraphQL subscriptions for the server](https://www.apollographql.com/docs/graphql-subscriptions/index.html) to learn how to add subscriptions to your app.
+In the above example, the server is written to send a new result every time a comment is added on GitHunt for a specific repository. Note that the code above only defines the GraphQL subscription in the schema. Read [setting up subscriptions on the client](#client-setup) and [setting up GraphQL subscriptions for the server](https://www.apollographql.com/docs/graphql-subscriptions) to learn how to add subscriptions to your app.
 
-<h3 id="when-to-use">When to use subscriptions</h3>
+### When to use subscriptions
 
 In most cases, intermittent polling or manual refetching are actually the best way to keep your client up to date. So when is a subscription the best option? Subscriptions are especially useful if:
 
@@ -56,9 +60,9 @@ In most cases, intermittent polling or manual refetching are actually the best w
 
 A future version of Apollo or GraphQL might include support for live queries, which would be a low-latency way to replace polling, but at this point general live queries in GraphQL are not yet possible outside of some relatively experimental setups.
 
-<h2 id="subscriptions-client">Client setup</h2>
+## Client setup
 
-The most popular transport for GraphQL subscriptions today is [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws). This package is maintained by the Apollo community, but can be used with any client or server GraphQL implementation. In this article, we'll explain how to set it up on the client, but you'll also need a server implementation. You can [read about how to use subscriptions with a JavaScript server](/docs/graphql-subscriptions/setup.html), or enjoy subscriptions set up out of the box if you are using a GraphQL backend as a service like [Graphcool](https://www.graph.cool/docs/tutorials/worldchat-subscriptions-example-ui0eizishe/) or [Scaphold](https://scaphold.io/blog/2016/11/09/build-realtime-apps-with-subs.html).
+The most popular transport for GraphQL subscriptions today is [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws). This package is maintained by the Apollo community, but can be used with any client or server GraphQL implementation. In this article, we'll explain how to set it up on the client, but you'll also need a server implementation. You can [read about how to use subscriptions with a JavaScript server](https://www.apollographql.com/docs/graphql-subscriptions/setup), or enjoy subscriptions set up out of the box if you are using a GraphQL backend as a service like [Graphcool](https://www.graph.cool/docs/tutorials/worldchat-subscriptions-example-ui0eizishe/) or [Scaphold](https://scaphold.io/blog/2016/11/09/build-realtime-apps-with-subs.html).
 
 Let's look at how to add support for this transport to Apollo Client.
 
@@ -80,7 +84,6 @@ const wsLink = new WebSocketLink({
   }
 });
 ```
-
 
 ```js
 import { split } from 'apollo-link';
@@ -115,15 +118,40 @@ const link = split(
   wsLink,
   httpLink,
 );
-
 ```
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
 
-<h2 id="subscription-component">Subscription Component</h2>
-The easiest way to bring live data to your UI is using the Subscription component from React Apollo. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
+## useSubscription Hook
 
-```js
+The easiest way to bring live data to your UI is by using React Apollo's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription onCommentAdded($repoFullName: String!) {
+    commentAdded(repoFullName: $repoFullName) {
+      id
+      content
+    }
+  }
+`;
+
+function DontReadTheComments({ repoFullName }) {
+  const { data: { commentAdded }, loading } = useSubscription(
+    COMMENTS_SUBSCRIPTION,
+    { variables: { repoFullName } }
+  );
+  return <h4>New comment: {!loading && commentAdded.content}</h4>;
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
 const COMMENTS_SUBSCRIPTION = gql`
   subscription onCommentAdded($repoFullName: String!) {
     commentAdded(repoFullName: $repoFullName) {
@@ -145,43 +173,28 @@ const DontReadTheComments = ({ repoFullName }) => (
 );
 ```
 
-<h2 id="api">Subscription Component API overview</h2>
+</div>
+</MultiCodeBlock>
 
-If you're looking for an overview of all the props `Subscription` accepts and its render prop function, look no further!
+## useSubscription API overview
 
-<h3 id="props">Props</h3>
+If you're looking for an overview of all the options `useSubscription` accepts, and its result properties, look no further!
 
-The Subscription component accepts the following props. Only `subscription` and `children` are **required**.
+> **Note:** If you're using React Apollo's `Subscription` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `subscription` prop (which holds a GraphQL subscription document parsed into an AST by `graphql-tag`) is also required.
 
-<dl>
-  <dt>`subscription`: DocumentNode</dt>
-  <dd>A GraphQL subscription document parsed into an AST by `graphql-tag`. **Required**</dd>
-  <dt>`children`: (result: SubscriptionResult) => React.ReactNode</dt>
-  <dd>A function returning the UI you want to render based on your subscription result.</dd>
-  <dt>`variables`: { [key: string]: any }</dt>
-  <dd>An object containing all of the variables your subscription needs to execute</dd>
-  <dt>`shouldResubscribe`: boolean | (currentProps: Object, nextProps: Object) => boolean</dt>
-  <dd>Determines if your subscription should be unsubscribed and subscribed again. By default, the component will only resubscribe if `variables` or `subscription` props change.</dd>
-  <dt>`onSubscriptionData`: (options: OnSubscriptionDataOptions<TData>) => any</dt>
-  <dd>Allows the registration of a callback function, that will be triggered each time the `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.</dd>
-  <dt>`fetchPolicy`: FetchPolicy</dt>
-  <dd>How you want your component to interact with the Apollo cache. Defaults to "cache-first".</dd>
-</dl>
+### Options
 
-<h3 id="render-prop">Render prop function</h3>
+The `useSubscription` Hook accepts the following options.
 
-The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties
+<SubscriptionOptions />
 
-<dl>
-  <dt>`data`: TData</dt>
-  <dd>An object containing the result of your GraphQL subscription. Defaults to an empty object.</dd>
-  <dt>`loading`: boolean</dt>
-  <dd>A boolean that indicates whether any initial data has been returned</dd>
-  <dt>`error`: ApolloError</dt>
-  <dd>A runtime error with `graphQLErrors` and `networkError` properties</dd>
-</dl>
+### Result
 
-<h2 id="subscribe-to-more">subscribeToMore</h2>
+After being called the `useSubscription` Hook will return a result object with the following properties.
+
+<SubscriptionResult />
+
+## subscribeToMore
 
 With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
 
@@ -190,11 +203,38 @@ With GraphQL subscriptions your client will be alerted on push from the server a
 
 With `subscribeToMore`, you can easily do the latter.
 
-`subscribeToMore` is a function available on every query result in `react-apollo`. It works just like [`fetchMore`](./caching.html#fetchMore), except that the update function gets called every time the subscription returns, instead of only once.
+`subscribeToMore` is a function available on every query result in React Apollo. It works just like [`fetchMore`](/advanced/caching/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 
-```js
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const COMMENT_QUERY = gql`
+  query Comment($repoName: String!) {
+    entry(repoFullName: $repoName) {
+      comments {
+        id
+        content
+      }
+    }
+  }
+`;
+
+function CommentsPageWithData({ params }) {
+  const result = useQuery(
+    COMMENT_QUERY,
+    { variables: { repoName: `${params.org}/${params.repoName}` } }
+  );
+  return <CommentsPage {...result} />;
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
     entry(repoFullName: $repoName) {
@@ -216,13 +256,73 @@ const CommentsPageWithData = ({ params }) => (
 );
 ```
 
+</div>
+</MultiCodeBlock>
+
 Now, let's add the subscription.
 
 Add a function called `subscribeToNewComments` that will subscribe using `subscribeToMore` and update the query's store with the new data using `updateQuery`.
 
 Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
 
-```js
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const COMMENT_QUERY = gql`
+  query Comment($repoName: String!) {
+    entry(repoFullName: $repoName) {
+      comments {
+        id
+        content
+      }
+    }
+  }
+`;
+
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription onCommentAdded($repoName: String!) {
+    commentAdded(repoName: $repoName) {
+      id
+      content
+    }
+  }
+`;
+
+function CommentsPageWithData({ params }) {
+  const { subscribeToMore, ...result } = useQuery(
+    COMMENT_QUERY,
+    { variables: { repoName: `${params.org}/${params.repoName}` } }
+  );
+
+  return (
+    <CommentsPage
+      {...result}
+      subscribeToNewComments={() =>
+        subscribeToMore({
+          document: COMMENTS_SUBSCRIPTION,
+          variables: { repoName: params.repoName },
+          updateQuery: (prev, { subscriptionData }) => {
+            if (!subscriptionData.data) return prev;
+            const newFeedItem = subscriptionData.data.commentAdded;
+
+            return Object.assign({}, prev, {
+              entry: {
+                comments: [newFeedItem, ...prev.entry.comments]
+              }
+            });
+          }
+        })
+      }
+    />
+  );
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
     entry(repoFullName: $repoName) {
@@ -271,8 +371,10 @@ const CommentsPageWithData = ({ params }) => (
     )}
   </Query>
 );
-
 ```
+
+</div>
+</MultiCodeBlock>
 
 and start the actual subscription by calling the `subscribeToNewComments` function with the subscription variables:
 
@@ -284,7 +386,7 @@ export class CommentsPage extends Component {
 }
 ```
 
-<h2 id="authentication">Authentication over WebSocket</h2>
+## Authentication over WebSocket
 
 In many cases it is necessary to authenticate clients before allowing them to receive subscription results. To do this, the `SubscriptionClient` constructor accepts a `connectionParams` field, which passes a custom object that the server can use to validate the connection before setting up any subscriptions.
 
@@ -301,4 +403,4 @@ const wsLink = new WebSocketLink({
 });
 ```
 
-> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](/docs/graphql-subscriptions/authentication.html).
+> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](https://www.apollographql.com/docs/graphql-subscriptions/authentication).

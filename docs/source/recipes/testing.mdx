@@ -161,7 +161,29 @@ it('renders without error', () => {
 });
 ```
 
-The `mocks` array takes objects with specific `request`s and their associated `result`s.  When the provider receives a `GET_DOG_QUERY` with matching `variables`, it returns the corresponding object from the `result` key.
+The `mocks` array takes objects with specific `request`s and their associated `result`s.  When the provider receives a `GET_DOG_QUERY` with matching `variables`, it returns the corresponding object from the `result` key. A `result` may alternatively be a function returning the object:
+
+```js
+const mocks = [
+  {
+    request: {
+      query: GET_DOG_QUERY,
+      variables: {
+        name: 'Buck',
+      },
+    },
+    result: () => {
+      // do something, such as recording that this function has been called
+      // ...
+      return {
+        data: {
+          dog: { id: '1', name: 'Buck', breed: 'bulldog' },
+        },
+      }
+    },
+  },
+];
+```
 
 ### `addTypename`
 
@@ -414,6 +436,44 @@ it('should delete and give visual feedback', async () => {
   button.props.onClick(); // fires the mutation
 
   await wait(0);
+
+  const tree = component.toJSON();
+  expect(tree.children).toContain('Deleted!');
+});
+```
+
+The `result` in a mocked mutation may be a function rather than an object. This gives you a simple way to check that a mutation has been called:
+
+```js
+it('should delete and give visual feedback', async () => {
+  const deleteDog = { name: 'Buck', breed: 'Poodle', id: 1 };
+  let deleteMutationCalled = false;
+  const mocks = [
+    {
+      request: {
+        query: DELETE_DOG_MUTATION,
+        variables: { name: 'Buck' },
+      },
+      result: () => {
+        deleteMutationCalled = true;
+        return { data: { deleteDog } };
+      },
+    },
+  ];
+
+  const component = renderer.create(
+    <MockedProvider mocks={mocks} addTypename={false}>
+      <DeleteButton />
+    </MockedProvider>,
+  );
+
+  // find the button and simulate a click
+  const button = component.root.findByType('button');
+  button.props.onClick(); // fires the mutation
+
+  await wait(0);
+
+  expect(deleteMutationCalled).toBe(true);
 
   const tree = component.toJSON();
   expect(tree.children).toContain('Deleted!');

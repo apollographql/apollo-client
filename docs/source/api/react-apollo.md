@@ -427,7 +427,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-The following example uses the [`compose`][] function to use multiple `graphql()` enhancers at once.
+The following example uses the [`compose` from Recompose](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` enhancers at once.
 
 ```js
 export default compose(
@@ -448,7 +448,7 @@ This property allows you to configure the name of the prop that gets passed down
 
 **Example:**
 
-This example uses the [`compose`][] function to use multiple `graphql()` HOCs together.
+This example uses the [`compose` from Recompose](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -520,7 +520,7 @@ To configure the name of your higher order component wrapper, you may use the `c
 
 **Example:**
 
-This example uses the [`compose`][] function to use multiple `graphql()` HOCs together.
+This example uses the [`compose` from Recompose](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -1310,27 +1310,6 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-## `compose(...enhancers)(component)`
-
-```js
-import { compose } from 'react-apollo';
-```
-
-For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`][], [`withApollo()`][], or [Redux `connect()`](https://github.com/reduxjs/react-redux/blob/master/docs/api/connect.md) enhancers. This should clean up your code when you use multiple enhancers. [Redux](http://redux.js.org/) also exports a `compose` function, and so does [Recompose](https://github.com/acdlite/recompose) so you may choose to use the function from whichever library feels most appropriate.
-
-An important note is that `compose()` executes the first enhancer _first_ and works its way forwards through the list of enhancers. In other words, calling three functions like this: `funcA(funcB(funcC(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`.
-
-**Example:**
-
-```js
-export default compose(
-  withApollo,
-  graphql(gql`query { ... }`),
-  graphql(gql`mutation { ... }`),
-  connect(...),
-)(MyComponent);
-```
-
 ## `withApollo(component)`
 
 ```js
@@ -1359,7 +1338,6 @@ export default withApollo(MyComponent);
 [`<ApolloProvider/>`]: #apolloprovider
 [`graphql()`]: #graphqlquery-configcomponent
 [`props.mutate`]: #propsmutate
-[`compose`]: #composeenhancerscomponent
 [`data.loading`]: #dataloading
 [`options.pollInterval`]: #optionspollinterval
 [`config.options`]: #configoptions

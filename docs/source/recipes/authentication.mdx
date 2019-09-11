@@ -69,7 +69,25 @@ const client = new ApolloClient({
 });
 ```
 
-Note that the above example is using `ApolloClient` from the `apollo-client` package. Headers can still be modified using `ApolloClient` from the `apollo-boost` package, but since `apollo-boost` doesn't allow the `HttpLink` instance it uses to be modified, headers have to be passed in as a config parameter. See the Apollo Boost [Configuration options](/essentials/get-started/#configuration-options) section for more details.
+Note that the above example is using `ApolloClient` from the `apollo-client` package. Headers can still be modified using `ApolloClient` from the `apollo-boost` package, but since `apollo-boost` doesn't allow the `HttpLink` instance it uses to be modified, headers have to be passed in as a config parameter:
+
+```js
+import ApolloClient from 'apollo-boost'
+
+const client = new ApolloClient({
+  request: (operation) => {
+    const token = localStorage.getItem('token')
+    operation.setContext({
+      headers: {
+        authorization: token ? `Bearer ${token}` : ''
+      }
+    })
+  }
+})
+
+```
+
+In this particular example headers are set individually for every request but you can also use `headers` option. See the Apollo Boost [Configuration options](/essentials/get-started/#configuration-options) section for more details.
 
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 

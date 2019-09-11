@@ -1,9 +1,12 @@
+const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
+
 module.exports = {
   pathPrefix: '/docs/react',
-  __experimentalThemes: [
+  plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
+        ...themeOptions,
         root: __dirname,
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',
@@ -13,10 +16,9 @@ module.exports = {
           2.5: 'version-2.5',
           2.4: 'version-2.4',
         },
-        checkLinksExceptions: [
-          '/api/apollo-client/',
-          '/v2.4/api/apollo-client/',
-        ],
+        checkLinksOptions: {
+          exceptions: ['/api/apollo-client/', '/v2.4/api/apollo-client/'],
+        },
         typescriptApiBox: {
           data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',

@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache",
-  "version": "1.3.0",
+  "version": "1.3.2",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -38,5 +38,8 @@
   "dependencies": {
     "apollo-utilities": "file:../apollo-utilities",
     "tslib": "^1.9.3"
+  },
+  "peerDependencies": {
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   }
 }

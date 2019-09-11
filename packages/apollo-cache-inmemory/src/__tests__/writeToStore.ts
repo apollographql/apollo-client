@@ -1241,7 +1241,7 @@ describe('writing to the store', () => {
     const expStore = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         author: {
-          id: 0,
+          id: 0 as any,
           typename: 'Author',
           type: 'id',
           generated: false,
@@ -1291,7 +1291,7 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           author: {
-            type: 'id',
+            type: 'id' as any,
             id: '$ROOT_QUERY.author',
             generated: true,
           },
@@ -1329,7 +1329,7 @@ describe('writing to the store', () => {
         ROOT_QUERY: {
           author: {
             type: 'id',
-            id: dataIdFromObject(data.author),
+            id: dataIdFromObject(data.author)!,
             generated: false,
             typename: 'Author',
           },
@@ -1374,7 +1374,7 @@ describe('writing to the store', () => {
         ROOT_QUERY: {
           author: {
             type: 'id',
-            id: dataIdFromObject(data.author),
+            id: dataIdFromObject(data.author)!,
             generated: false,
             typename: 'Author',
           },

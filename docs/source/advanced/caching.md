@@ -262,7 +262,7 @@ Here are some common situations where you would need to access the cache directl
 
 ### Bypassing the cache
 
-Sometimes it makes sense to not use the cache for a specific operation. This can be done using either the `network-only` or `no-cache` fetchPolicy. The key difference between these two policies is that `network-only` still saves the response to the cache for later use, bypassing the reading and forcing a network request. The `no-cache` policy does not read, nor does it write to the cache with the response. This may be useful for sensitive data like passwords that you don't want to keep in the cache.
+Sometimes it makes sense to not use the cache for a specific operation. This can be done using the `no-cache` `fetchPolicy`. The `no-cache` policy does not write to the cache with the response. This may be useful for sensitive data like passwords that you don’t want to keep in the cache.
 
 ### Updating after a mutation
 
@@ -310,7 +310,7 @@ mutate({
 })
 ```
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-apollo/#mutation).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
 
 ```jsx
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -620,7 +620,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check our our more in depth guide [here](/features/server-side-rendering/).
+If you would like to learn more about server side rendering, please check out our more in depth guide [here](/features/server-side-rendering/).
 
 ### Cache persistence
 

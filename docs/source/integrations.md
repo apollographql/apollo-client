@@ -15,6 +15,10 @@ React Apollo, unlike some other tools in the React ecosystem, requires _no_ comp
 
 A [Vue.js](https://vuejs.org/) integration is maintained by Guillaume Chau ([@Akryum](https://github.com/Akryum)). See the Github [repository](https://github.com/Akryum/vue-apollo) for more details.
 
+## Svelte
+
+A [Svelte](https://svelte.dev) integration is maintained by Tim Hall ([@timhall](https://github.com/timhall)). See Github [repository](https://github.com/timhall/svelte-apollo) for more details.
+
 ## Angular
 
 To use Apollo with the [Angular](https://angular.io) rendering library, see the [Angular guide](https://www.apollographql.com/docs/angular);

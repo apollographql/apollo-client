@@ -364,7 +364,7 @@ The `config.props` property allows you to define a map function that takes the `
 
 The function you define behaves almost exactly like [`mapProps` from Recompose](https://github.com/acdlite/recompose/blob/2e71fdf4270cc8022a6574aaf00731bfc25dcae6/docs/API.md#mapprops) providing the same benefits without the need for another library.
 
-`config.props` is most useful when you want to abstract away complex functions calls into a simple prop that you can pass down to your component.
+`config.props` is most useful when you want to abstract away complex function calls into a simple prop that you can pass down to your component.
 
 Another benefit of `config.props` is that it also allows you to decouple your pure UI components from your GraphQL and Apollo concerns. You can write your pure UI components in one file and then keep the logic required for them to interact with the store in a completely different place in your project. You can accomplish this by your pure UI components only asking for the props needed to render and `config.props` can contain the logic to provide exactly the props your pure component needs from the data provided by your GraphQL API.
 
@@ -427,7 +427,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-The following example uses the [`compose`][] function to use multiple `graphql()` enhancers at once.
+The following example uses the [`compose` from Recompose](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` enhancers at once.
 
 ```js
 export default compose(
@@ -448,7 +448,7 @@ This property allows you to configure the name of the prop that gets passed down
 
 **Example:**
 
-This example uses the [`compose`][] function to use multiple `graphql()` HOCs together.
+This example uses the [`compose` from Recompose](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -520,7 +520,7 @@ To configure the name of your higher order component wrapper, you may use the `c
 
 **Example:**
 
-This example uses the [`compose`][] function to use multiple `graphql()` HOCs together.
+This example uses the [`compose` from Recompose](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
 ```js
 export default compose(
@@ -1310,27 +1310,6 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-## `compose(...enhancers)(component)`
-
-```js
-import { compose } from 'react-apollo';
-```
-
-For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`][], [`withApollo()`][], or [Redux `connect()`](https://github.com/reduxjs/react-redux/blob/master/docs/api/connect.md) enhancers. This should clean up your code when you use multiple enhancers. [Redux](http://redux.js.org/) also exports a `compose` function, and so does [Recompose](https://github.com/acdlite/recompose) so you may choose to use the function from whichever library feels most appropriate.
-
-An important note is that `compose()` executes the first enhancer _first_ and works its way forwards through the list of enhancers. In other words, calling three functions like this: `funcA(funcB(funcC(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`.
-
-**Example:**
-
-```js
-export default compose(
-  withApollo,
-  graphql(gql`query { ... }`),
-  graphql(gql`mutation { ... }`),
-  connect(...),
-)(MyComponent);
-```
-
 ## `withApollo(component)`
 
 ```js
@@ -1359,7 +1338,6 @@ export default withApollo(MyComponent);
 [`<ApolloProvider/>`]: #apolloprovider
 [`graphql()`]: #graphqlquery-configcomponent
 [`props.mutate`]: #propsmutate
-[`compose`]: #composeenhancerscomponent
 [`data.loading`]: #dataloading
 [`options.pollInterval`]: #optionspollinterval
 [`config.options`]: #configoptions

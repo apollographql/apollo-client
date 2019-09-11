@@ -38,5 +38,8 @@
   "dependencies": {
     "apollo-utilities": "file:../apollo-utilities",
     "tslib": "^1.9.3"
+  },
+  "peerDependencies": {
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   }
 }

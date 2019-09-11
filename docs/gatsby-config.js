@@ -14,7 +14,7 @@ module.exports = {
         defaultVersion: 3.0,
         versions: {
           2.6: 'version-2.6-relative-links',
-          2.5: 'version-2.5',
+          2.5: 'version-2.5-relative-links',
           2.4: 'version-2.4',
         },
         checkLinksOptions: {

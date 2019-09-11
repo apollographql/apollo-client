@@ -46,6 +46,10 @@ export abstract class EntityCache implements NormalizedCache {
     return { ...this.data };
   }
 
+  public has(dataId: string): boolean {
+    return hasOwn.call(this.data, dataId);
+  }
+
   public get(dataId: string): StoreObject {
     if (this.depend) this.depend(dataId);
     return this.data[dataId]!;
@@ -60,9 +64,7 @@ export abstract class EntityCache implements NormalizedCache {
   }
 
   public delete(dataId: string): void {
-    if (this instanceof Layer) {
-      this.data[dataId] = void 0;
-    } else delete this.data[dataId];
+    delete this.data[dataId];
     delete this.refs[dataId];
     if (this.depend) this.depend.dirty(dataId);
   }
@@ -251,6 +253,24 @@ class Layer extends EntityCache {
       ...this.parent.toObject(),
       ...this.data,
     };
+  }
+
+  public has(dataId: string): boolean {
+    // Because the Layer implementation of the delete method uses void 0 to
+    // indicate absence, that's what we need to check for here, rather than
+    // calling super.has(dataId).
+    if (hasOwn.call(this.data, dataId) && this.data[dataId] === void 0) {
+      return false;
+    }
+    return this.parent.has(dataId);
+  }
+
+  public delete(dataId: string): void {
+    super.delete(dataId);
+    // In case this.parent (or one of its ancestors) has an entry for this ID,
+    // we need to shadow it with an undefined value, or it might be inherited
+    // by the Layer#get method.
+    this.data[dataId] = void 0;
   }
 
   // All the other inherited accessor methods work as-is, but the get method

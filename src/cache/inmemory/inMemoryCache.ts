@@ -3,7 +3,6 @@ import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
-import { InvariantError } from 'ts-invariant';
 import { KeyTrie } from 'optimism';
 
 import { Cache, ApolloCache, Transaction } from '../core';
@@ -201,7 +200,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    throw new InvariantError(`eviction is not implemented on InMemory Cache`);
+    if (this.optimisticData.has(query.rootId)) {
+      // Note that this deletion does not trigger a garbage collection, which
+      // is convenient in cases where you want to evict multiple entities before
+      // performing a single garbage collection.
+      this.optimisticData.delete(query.rootId);
+      return { success: !this.optimisticData.has(query.rootId) };
+    }
+    return { success: false };
   }
 
   public reset(): Promise<void> {

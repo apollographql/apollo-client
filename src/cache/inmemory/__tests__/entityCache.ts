@@ -569,4 +569,184 @@ describe('EntityCache', () => {
 
     expect(cache.gc()).toEqual([]);
   });
+
+  it('allows cache eviction', () => {
+    const { cache, query } = newBookAuthorCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: {
+          __typename: "Book",
+          isbn: "031648637X",
+          title: "The Cuckoo's Calling",
+          author: {
+            __typename: "Author",
+            name: "Robert Galbraith",
+          },
+        },
+      },
+    });
+
+    expect(cache.evict({
+      rootId: "Author:J.K. Rowling",
+      query,
+    })).toEqual({
+      success: false,
+    });
+
+    const bookAuthorFragment = gql`
+      fragment BookAuthor on Book {
+        author {
+          name
+        }
+      }
+    `;
+
+    const fragmentResult = cache.readFragment({
+      id: "Book:031648637X",
+      fragment: bookAuthorFragment,
+    });
+
+    expect(fragmentResult).toEqual({
+      __typename: "Book",
+      author: {
+        __typename: "Author",
+        name: "Robert Galbraith",
+      },
+    });
+
+    cache.recordOptimisticTransaction(proxy => {
+      proxy.writeFragment({
+        id: "Book:031648637X",
+        fragment: bookAuthorFragment,
+        data: {
+          ...fragmentResult,
+          author: {
+            __typename: "Author",
+            name: "J.K. Rowling",
+          },
+        },
+      });
+    }, "real name");
+
+    const snapshotWithBothNames = {
+      ROOT_QUERY: {
+        book: {
+          __ref: "Book:031648637X",
+        },
+      },
+      "Book:031648637X": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:J.K. Rowling",
+        },
+        title: "The Cuckoo's Calling",
+      },
+      "Author:Robert Galbraith": {
+        __typename: "Author",
+        name: "Robert Galbraith",
+      },
+      "Author:J.K. Rowling": {
+        __typename: "Author",
+        name: "J.K. Rowling",
+      },
+    };
+
+    expect(cache.extract(true)).toEqual(snapshotWithBothNames);
+
+    expect(cache.gc()).toEqual([]);
+
+    expect(cache.retain('Author:Robert Galbraith')).toBe(1);
+
+    expect(cache.gc()).toEqual([]);
+
+    expect(cache.evict({
+      rootId: 'Author:Robert Galbraith',
+      query,
+    })).toEqual({
+      success: true,
+    });
+
+    expect(cache.gc()).toEqual([]);
+
+    cache.removeOptimistic("real name");
+
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        book: {
+          __ref: "Book:031648637X",
+        },
+      },
+      "Book:031648637X": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:Robert Galbraith",
+        },
+        title: "The Cuckoo's Calling",
+      },
+      "Author:Robert Galbraith": {
+        __typename: "Author",
+        name: "Robert Galbraith",
+      },
+    });
+
+    cache.writeFragment({
+      id: "Book:031648637X",
+      fragment: bookAuthorFragment,
+      data: {
+        ...fragmentResult,
+        author: {
+          __typename: "Author",
+          name: "J.K. Rowling",
+        },
+      },
+    });
+
+    expect(cache.extract(true)).toEqual(snapshotWithBothNames);
+
+    expect(cache.retain("Author:Robert Galbraith")).toBe(2);
+
+    expect(cache.gc()).toEqual([]);
+
+    expect(cache.release("Author:Robert Galbraith")).toBe(1);
+    expect(cache.release("Author:Robert Galbraith")).toBe(0);
+
+    expect(cache.gc()).toEqual([
+      "Author:Robert Galbraith",
+    ]);
+
+    // If you're ever tempted to do this, you probably want to use cache.clear()
+    // instead, but evicting the ROOT_QUERY should work at least.
+    expect(cache.evict({
+      rootId: "ROOT_QUERY",
+      query,
+    })).toEqual({
+      success: true,
+    });
+
+    expect(cache.extract(true)).toEqual({
+      "Book:031648637X": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:J.K. Rowling",
+        },
+        title: "The Cuckoo's Calling",
+      },
+      "Author:J.K. Rowling": {
+        __typename: "Author",
+        name: "J.K. Rowling",
+      },
+    });
+
+    // The book has been retained a couple of times since we've written it
+    // directly, but J.K. has never been directly written.
+    expect(cache.release("Book:031648637X")).toBe(1);
+    expect(cache.release("Book:031648637X")).toBe(0);
+
+    expect(cache.gc().sort()).toEqual([
+      "Author:J.K. Rowling",
+      "Book:031648637X",
+    ]);
+  });
 });

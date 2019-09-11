@@ -177,7 +177,7 @@ This case is borrowed from [David Glasser's post on the Apollo blog](https://blo
 Let's look at the code:
 
 ```js
-import { graphql } from "react-apollo";
+import { graphql } from "@apollo/react-hoc";
 import gql from "graphql-tag";
 import { compose, withState, lifecycle } from "recompose";
 

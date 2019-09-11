@@ -1,31 +1,38 @@
 ---
 title: Introduction
-description: What is Apollo Client and what does it do?
+description: What is Apollo Client?
 ---
 
-Apollo Client is the best way to use GraphQL to build client applications. The client is designed to help you quickly build a UI that fetches data with GraphQL, and can be used with any JavaScript front-end. The client is:
+**Apollo Client** is a complete state management library for JavaScript apps. Simply write a GraphQL query, and Apollo Client will take care of requesting and caching your data, as well as updating your UI.
 
-- **Incrementally adoptable:** You can drop it into an existing app today.
-- **Universally compatible:** Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
-- **Simple to get started with:** Start loading data right away and learn about advanced features later.
-- **Inspectable and understandable:** Interrogate and understand exactly what is happening in an application.
-- **Built for interactive apps:** Application users make changes and see them reflected immediately.
-- **Small and flexible:** You don't get stuff your application doesn't need.
-- **Community driven:** Apollo is driven by the community and serves a variety of use cases.
+Fetching data with Apollo Client guides you to structure your code in a predictable, declarative way consistent with modern React best practices. With Apollo, you can build high-quality features faster without the hassle of writing data plumbing boilerplate.
 
-## Getting started
+## Features
 
-The docs for Apollo Client are mainly written using the [React integration](/essentials/get-started/), but most of the examples work no matter where you use Apollo. The docs are broken into five distinct sections to make it easy to find your way around:
+- **Declarative data fetching:** Write a query and receive data without manually tracking loading states
+- **Excellent developer experience:** Enjoy helpful tooling for TypeScript, Chrome DevTools, and VS Code
+- **Designed for modern React:** Take advantage of the latest React features, such as hooks
+- **Incrementally adoptable:** Drop Apollo into any JavaScript app seamlessly
+- **Universally compatible:** Use any build setup and any GraphQL API
+- **Community driven:** Share knowledge with thousands of developers, thanks to our active open source community
 
-1. **ESSENTIALS:** Outlines everything you need to know in order to get up and running quickly.
-2. **FEATURES:** Details the amazing things you can do with Apollo Client.
-3. **ADVANCED:** Covers the more advanced Apollo Client capabilities that your app may need.
-4. **RECIPES:** Learn about and understand common patterns.
-5. **API:** Full API details for Apollo Client and React Apollo.
+## Get started
 
-## Prefer a non-React platform?
+Follow the [quick start tutorial](/essentials/get-started/) to start fetching data in minutes. For a longer end-to-end example that includes pagination, local state management, and building a graph API, check out the [official Apollo tutorial](https://www.apollographql.com/docs/tutorial/introduction/).
 
-Most of this site's documentation examples are written using React, but Apollo Client supports many other platforms:
+## Explore Apollo Client
+
+The Apollo Client docs are structured into the following sections. We recommend starting with the Essentials first before moving on to advanced topics.
+
+1. **Essentials:** Start here to learn how to fetch data, update data, and manage local state with Apollo Client
+2. **Features:** Learn how to get the most out of Apollo Client's features
+3. **Advanced:** Advanced Apollo Client capabilities to cover all your needs
+4. **Recipes:** How-to guides for accomplishing specific tasks
+5. **API:** Full API details for Apollo Client, its React APIs, and additional packages
+
+## Community integrations
+
+This site's documentation focuses on React, but Apollo Client supports many other platforms:
 
 - JavaScript
   - [Angular](https://www.apollographql.com/docs/angular)
@@ -37,8 +44,3 @@ Most of this site's documentation examples are written using React, but Apollo C
 - Native mobile
   - [Native iOS with Swift](https://www.apollographql.com/docs/ios)
   - [Native Android with Java](https://www.apollographql.com/docs/android)
-
-## Just using GraphQL?
-
-We believe that using GraphQL should be easy and fun. One of the ways that Apollo supports this is that you can write your queries in [GraphiQL](https://github.com/graphql/graphiql) and they will just work with Apollo Client! Because Apollo Client doesn't assume anything beyond the official GraphQL specification, it works with every GraphQL server implementation, for *every* language. Apollo Client doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo Client can handle it. You can find a list of
-GraphQL server implementations at [graphql.org](http://graphql.org/code/#server-libraries).

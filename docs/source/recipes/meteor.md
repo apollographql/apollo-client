@@ -145,7 +145,7 @@ Meteor.logout(function() {
 ```
 
 ## SSR
-There are two additional configurations that you need to keep in mind when using [React Server Side Rendering](../features/server-side-rendering.html) with Meteor.
+There are two additional configurations that you need to keep in mind when using [React Server Side Rendering](/features/server-side-rendering/) with Meteor.
 
 1. Use `isomorphic-fetch` to polyfill `fetch` server-side (used by Apollo Client's network interface).
 2. Connect your express server to Meteor's existing server with [WebApp.connectHandlers.use](https://docs.meteor.com/packages/webapp.html)

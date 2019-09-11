@@ -41,13 +41,16 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     context: ReadStoreContext,
   ): boolean | 'heuristic' {
     const obj = context.store.get(idValue.id);
+    const isRootQuery = idValue.id === 'ROOT_QUERY';
 
     if (!obj) {
       // https://github.com/apollographql/apollo-client/pull/3507
-      return idValue.id === 'ROOT_QUERY';
+      return isRootQuery;
     }
 
-    if (!obj.__typename) {
+    const { __typename = isRootQuery && 'Query' } = obj;
+
+    if (!__typename) {
       if (shouldWarn()) {
         invariant.warn(`You're using fragments in your queries, but either don't have the addTypename:
   true option set in Apollo Client, or you are trying to write a fragment to the store without the __typename.
@@ -67,15 +70,24 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
       return 'heuristic';
     }
 
-    if (obj.__typename === typeCondition) {
+    if (__typename === typeCondition) {
       return true;
     }
 
-    // XXX here we reach an issue - we don't know if this fragment should match or not. It's either:
-    // 1. A fragment on a non-matching concrete type or interface or union
-    // 2. A fragment on a matching interface or union
-    // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
-    // difference, so we warn the user, but still try to match it (backcompat).
+    // At this point we don't know if this fragment should match or not. It's
+    // either:
+    //
+    // 1. (GOOD) A fragment on a matching interface or union.
+    // 2. (BAD) A fragment on a non-matching concrete type or interface or union.
+    //
+    // If it's 2, we don't want it to match. If it's 1, we want it to match. We
+    // can't tell the difference, so we warn the user, but still try to match
+    // it (for backwards compatibility reasons). This unfortunately means that
+    // using the `HeuristicFragmentMatcher` with unions and interfaces is
+    // very unreliable. This will be addressed in a future major version of
+    // Apollo Client, but for now the recommendation is to use the
+    // `IntrospectionFragmentMatcher` when working with unions/interfaces.
+
     if (shouldWarn()) {
       invariant.error(
         'You are using the simple (heuristic) fragment matcher, but your ' +
@@ -120,25 +132,32 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
     );
 
     const obj = context.store.get(idValue.id);
+    const isRootQuery = idValue.id === 'ROOT_QUERY';
 
     if (!obj) {
       // https://github.com/apollographql/apollo-client/pull/4620
-      return idValue.id === 'ROOT_QUERY';
+      return isRootQuery;
     }
 
+    const { __typename = isRootQuery && 'Query' } = obj;
+
     invariant(
-      obj.__typename,
+      __typename,
       `Cannot match fragment because __typename property is missing: ${JSON.stringify(
         obj,
       )}`,
     );
 
-    if (obj.__typename === typeCondition) {
+    if (__typename === typeCondition) {
       return true;
     }
 
     const implementingTypes = this.possibleTypesMap[typeCondition];
-    if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
+    if (
+      __typename &&
+      implementingTypes &&
+      implementingTypes.indexOf(__typename) > -1
+    ) {
       return true;
     }
 

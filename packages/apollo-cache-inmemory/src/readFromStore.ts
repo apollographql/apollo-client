@@ -1,27 +1,28 @@
 import {
+  argumentsObjectFromField,
   assign,
-  getDefaultValues,
-  getQueryDefinition,
-  isEqual,
+  canUseWeakMap,
+  createFragmentMap,
   DirectiveInfo,
   FragmentMap,
-  IdValue,
-  StoreValue,
-  argumentsObjectFromField,
-  createFragmentMap,
+  getDefaultValues,
   getDirectiveInfoFromField,
   getFragmentDefinitions,
   getMainDefinition,
+  getQueryDefinition,
   getStoreKeyName,
+  IdValue,
+  isEqual,
   isField,
   isIdValue,
   isInlineFragment,
   isJsonValue,
+  maybeDeepFreeze,
+  mergeDeepArray,
   resultKeyNameFromField,
   shouldInclude,
+  StoreValue,
   toIdValue,
-  mergeDeepArray,
-  maybeDeepFreeze,
 } from 'apollo-utilities';
 
 import { Cache } from 'apollo-cache';
@@ -41,8 +42,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import { wrap } from 'optimism';
-import { CacheKeyNode } from './cacheKeys';
+import { wrap, KeyTrie } from 'optimism';
 import { DepTrackingCache } from './depTrackingCache';
 import { invariant, InvariantError } from 'ts-invariant';
 
@@ -85,7 +85,7 @@ type ExecStoreQueryOptions = {
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
   // Default matcher always matches all fragments
-  fragmentMatcher: FragmentMatcher;
+  fragmentMatcher?: FragmentMatcher;
 };
 
 type ExecSelectionSetOptions = {
@@ -94,21 +94,28 @@ type ExecSelectionSetOptions = {
   execContext: ExecContext;
 };
 
-export interface StoreReaderConfig {
-  cacheKeyRoot?: CacheKeyNode;
-  freezeResults?: boolean;
+type ExecSubSelectedArrayOptions = {
+  field: FieldNode;
+  array: any[];
+  execContext: ExecContext;
 };
+
+export interface StoreReaderConfig {
+  cacheKeyRoot?: KeyTrie<object>;
+  freezeResults?: boolean;
+}
 
 export class StoreReader {
   private freezeResults: boolean;
 
   constructor({
-    cacheKeyRoot = new CacheKeyNode,
+    cacheKeyRoot = new KeyTrie<object>(canUseWeakMap),
     freezeResults = false,
   }: StoreReaderConfig = {}) {
     const {
       executeStoreQuery,
       executeSelectionSet,
+      executeSubSelectedArray,
     } = this;
 
     this.freezeResults = freezeResults;
@@ -128,14 +135,13 @@ export class StoreReader {
         // the cache when relevant data have changed.
         if (contextValue.store instanceof DepTrackingCache) {
           return cacheKeyRoot.lookup(
-            query,
             contextValue.store,
+            query,
             fragmentMatcher,
             JSON.stringify(variableValues),
             rootValue.id,
           );
         }
-        return;
       }
     });
 
@@ -149,14 +155,28 @@ export class StoreReader {
       }: ExecSelectionSetOptions) {
         if (execContext.contextValue.store instanceof DepTrackingCache) {
           return cacheKeyRoot.lookup(
-            selectionSet,
             execContext.contextValue.store,
+            selectionSet,
             execContext.fragmentMatcher,
             JSON.stringify(execContext.variableValues),
             rootValue.id,
           );
         }
-        return;
+      }
+    });
+
+    this.executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
+      return executeSubSelectedArray.call(this, options);
+    }, {
+      makeCacheKey({ field, array, execContext }) {
+        if (execContext.contextValue.store instanceof DepTrackingCache) {
+          return cacheKeyRoot.lookup(
+            execContext.contextValue.store,
+            field,
+            array,
+            JSON.stringify(execContext.variableValues),
+          );
+        }
       }
     });
   }
@@ -178,12 +198,10 @@ export class StoreReader {
    */
   public readQueryFromStore<QueryType>(
     options: ReadQueryOptions,
-  ): QueryType {
-    const optsPatch = { returnPartialData: false };
-
+  ): QueryType | undefined {
     return this.diffQueryAgainstStore<QueryType>({
       ...options,
-      ...optsPatch,
+      returnPartialData: false,
     }).result;
   }
 
@@ -213,7 +231,7 @@ export class StoreReader {
     const context: ReadStoreContext = {
       // Global settings
       store,
-      dataIdFromObject: (config && config.dataIdFromObject) || null,
+      dataIdFromObject: config && config.dataIdFromObject,
       cacheRedirects: (config && config.cacheRedirects) || {},
     };
 
@@ -234,7 +252,7 @@ export class StoreReader {
       execResult.missing && execResult.missing.length > 0;
 
     if (hasMissingFields && ! returnPartialData) {
-      execResult.missing.forEach(info => {
+      execResult.missing!.forEach(info => {
         if (info.tolerable) return;
         throw new InvariantError(
           `Can't find field ${info.fieldName} on object ${JSON.stringify(
@@ -358,9 +376,13 @@ export class StoreReader {
           }
         }
 
-        const typeCondition = fragment.typeCondition.name.value;
+        const typeCondition =
+          fragment.typeCondition && fragment.typeCondition.name.value;
 
-        const match = execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+        const match =
+          !typeCondition ||
+          execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+
         if (match) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
@@ -420,11 +442,11 @@ export class StoreReader {
     if (Array.isArray(readStoreResult.result)) {
       return this.combineExecResults(
         readStoreResult,
-        this.executeSubSelectedArray(
+        this.executeSubSelectedArray({
           field,
-          readStoreResult.result,
+          array: readStoreResult.result,
           execContext,
-        ),
+        }),
       );
     }
 
@@ -458,7 +480,7 @@ export class StoreReader {
   private combineExecResults<T>(
     ...execResults: ExecResult<T>[]
   ): ExecResult<T> {
-    let missing: ExecResultMissingField[] = null;
+    let missing: ExecResultMissingField[] | undefined;
     execResults.forEach(execResult => {
       if (execResult.missing) {
         missing = missing || [];
@@ -466,17 +488,17 @@ export class StoreReader {
       }
     });
     return {
-      result: execResults.pop().result,
+      result: execResults.pop()!.result,
       missing,
     };
   }
 
-  private executeSubSelectedArray(
-    field: FieldNode,
-    result: any[],
-    execContext: ExecContext,
-  ): ExecResult {
-    let missing: ExecResultMissingField[] = null;
+  private executeSubSelectedArray({
+    field,
+    array,
+    execContext,
+  }: ExecSubSelectedArrayOptions): ExecResult {
+    let missing: ExecResultMissingField[] | undefined;
 
     function handleMissing<T>(childResult: ExecResult<T>): T {
       if (childResult.missing) {
@@ -487,7 +509,7 @@ export class StoreReader {
       return childResult.result;
     }
 
-    result = result.map(item => {
+    array = array.map(item => {
       // null value in array
       if (item === null) {
         return null;
@@ -495,7 +517,11 @@ export class StoreReader {
 
       // This is a nested array, recurse
       if (Array.isArray(item)) {
-        return handleMissing(this.executeSubSelectedArray(field, item, execContext));
+        return handleMissing(this.executeSubSelectedArray({
+          field,
+          array: item,
+          execContext,
+        }));
       }
 
       // This is an object, run the selection set on it
@@ -513,10 +539,10 @@ export class StoreReader {
     });
 
     if (this.freezeResults && process.env.NODE_ENV !== 'production') {
-      Object.freeze(result);
+      Object.freeze(array);
     }
 
-    return { result, missing };
+    return { result: array, missing };
   }
 }
 
@@ -579,8 +605,9 @@ function readStoreResolver(
         if (resolver) {
           fieldValue = resolver(object, args, {
             getCacheKey(storeObj: StoreObject) {
-              return toIdValue({
-                id: context.dataIdFromObject(storeObj),
+              const id = context.dataIdFromObject!(storeObj);
+              return id && toIdValue({
+                id,
                 typename: storeObj.__typename,
               });
             },

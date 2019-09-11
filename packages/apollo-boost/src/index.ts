@@ -27,7 +27,7 @@ type ClientStateConfig = {
 };
 
 export interface PresetConfig {
-  request?: (operation: Operation) => Promise<void>;
+  request?: (operation: Operation) => Promise<void> | void;
   uri?: string | UriFunction;
   credentials?: string;
   headers?: any;
@@ -108,7 +108,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
 
     invariant(
       !cache || !cacheRedirects,
-      'Incompatible cache configuration. If providing `cache` then ' +
+      'Incompatible cache configuration. When not providing `cache`, ' +
         'configure the provided instance with `cacheRedirects` instead.',
     );
 
@@ -122,7 +122,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       ? onError(errorCallback)
       : onError(({ graphQLErrors, networkError }) => {
           if (graphQLErrors) {
-            graphQLErrors.map(({ message, locations, path }) =>
+            graphQLErrors.forEach(({ message, locations, path }) =>
               // tslint:disable-next-line
               invariant.warn(
                 `[GraphQL error]: Message: ${message}, Location: ` +

@@ -6,9 +6,7 @@ description: Read and write functions for fine-grained cache access.
 
 Apollo Client normalizes all of your data so that if any data you previously fetched from your GraphQL server is updated in a later data fetch from your server then your data will be updated with the latest truth from your server.
 
-This normalization process is constantly happening behind the scenes when you call `watchQuery` or use a view integration library like [`react-apollo`][], but this process is often not enough to describe the updates to your data model as the result of a mutation. For example, if you wanted to add an item to the end of an array fetched by one of your queries. You also might want to read data from the normalized Apollo Client store at a specific id without making another GraphQL server fetch.
-
-[`react-apollo`]: http://github.com/apollographql/react-apollo
+This normalization process is constantly happening behind the scenes when you call `watchQuery` or use a view integration library like [`react-apollo`](http://github.com/apollographql/react-apollo), but this process is often not enough to describe the updates to your data model as the result of a mutation. For example, if you wanted to add an item to the end of an array fetched by one of your queries. You also might want to read data from the normalized Apollo Client store at a specific id without making another GraphQL server fetch.
 
 To interact directly with your data in the Apollo Client store you may use the methods `readQuery`, `readFragment`, `writeQuery`, and `writeFragment` that are accessible from the `ApolloClient` class. This article will teach you how to use these methods to control your data.
 
@@ -21,11 +19,9 @@ import gql from 'graphql-tag';
 const client = new ApolloClient({ ... });
 ```
 
-<h2 id="readquery">`readQuery`</h2>
+## `readQuery`
 
-The `readQuery` method is very similar to the [`query` method on `ApolloClient`][] except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
-
-[`query` method on `ApolloClient`]: ../api/apollo-client.html#ApolloClient\.querynt-api.html#ApolloClient.query
+The `readQuery` method is very similar to the [`query` method on `ApolloClient`](/api/apollo-client/#ApolloClient.query) except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
 
 ```js
 const { todo } = client.readQuery({
@@ -64,10 +60,10 @@ const { todo } = client.readQuery({
 
 **Resources:**
 
-- [`ApolloClient#query` API documentation](../api/apollo-client.html#ApolloClient.query)
-- [`ApolloClient#readQuery` API documentation](../api/apollo-client.html#ApolloClient.readQuery)
+- [`ApolloClient#query` API documentation](/api/apollo-client/#ApolloClient.query)
+- [`ApolloClient#readQuery` API documentation](/api/apollo-client/#ApolloClient.readQuery)
 
-<h2 id="readfragment">`readFragment`</h2>
+## `readFragment`
 
 This method allows you great flexibility around the data in your cache. Whereas `readQuery` only allowed you to read data from your root query type, `readFragment` allows you to read data from _any node you have queried_. This is incredibly powerful. You use this method as follows:
 
@@ -116,9 +112,9 @@ The beauty of `readFragment` is that the todo could have come from anywhere! The
 
 **Resources:**
 
-- [`ApolloClient#readFragment` API documentation](../api/apollo-client.html#ApolloClient.readFragment)
+- [`ApolloClient#readFragment` API documentation](/api/apollo-client/#ApolloClient.readFragment)
 
-<h2 id="writequery-and-writefragment">`writeQuery` and `writeFragment`</h2>
+## `writeQuery` and `writeFragment`
 
 Not only can you read arbitrary data from the Apollo Client cache, but you can also write any data that you would like to the cache. The methods you use to do this are `writeQuery` and `writeFragment`. They will allow you to change data in your local cache, but it is important to remember that *they will not change any data on your server*. If you reload your environment then changes made with `writeQuery` and `writeFragment` will disappear.
 
@@ -173,13 +169,13 @@ client.writeQuery({
 
 **Resources:**
 
-- [`ApolloClient#watchQuery` API documentation](../api/apollo-client.html#ApolloClient.watchQuery)
-- [`ApolloClient#writeQuery` API documentation](../api/apollo-client.html#ApolloClient.writeQuery)
-- [`ApolloClient#writeFragment` API documentation](../api/apollo-client.html#ApolloClient.writeFragment)
-- [`DataProxy#writeQuery` API documentation](../api/apollo-client.html#ApolloClient.writeQuery)
-- [`DataProxy#writeFragment` API documentation](../api/apollo-client.html#ApolloClient.writeFragment)
+- [`ApolloClient#watchQuery` API documentation](/api/apollo-client/#ApolloClient.watchQuery)
+- [`ApolloClient#writeQuery` API documentation](/api/apollo-client/#ApolloClient.writeQuery)
+- [`ApolloClient#writeFragment` API documentation](/api/apollo-client/#ApolloClient.writeFragment)
+- [`DataProxy#writeQuery` API documentation](/api/apollo-client/#ApolloClient.writeQuery)
+- [`DataProxy#writeFragment` API documentation](/api/apollo-client/#ApolloClient.writeFragment)
 
-<h2 id="updating-the-cache-after-a-mutation">Updating the cache after a mutation</h2>
+## Updating the cache after a mutation
 
 Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update our cached data: after a mutation. As such, Apollo Client has optimized the experience for updating your cache with the read and write methods after a mutation with the `update` function. Let us say that we have the following GraphQL mutation:
 
@@ -264,4 +260,4 @@ The `update` function is not a good place for side-effects as it may be called m
 
 **Resources:**
 
-- [`ApolloClient#mutate` API documentation](../api/apollo-client.html#ApolloClient.mutate)
+- [`ApolloClient#mutate` API documentation](/api/apollo-client/#ApolloClient.mutate)

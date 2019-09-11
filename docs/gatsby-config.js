@@ -1,26 +1,30 @@
+const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
+
 module.exports = {
-  __experimentalThemes: [
+  pathPrefix: '/docs/react',
+  plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
+        ...themeOptions,
         root: __dirname,
-        docs: require('./docs.json'),
         subtitle: 'Apollo Client',
         description: 'A guide to using the Apollo GraphQL Client with React',
-        contentDir: 'docs/source',
-        basePath: '/docs/react',
         githubRepo: 'apollographql/apollo-client',
-        versions: ['2.4', '2.5'],
+        defaultVersion: 2.6,
+        versions: {
+          2.5: 'version-2.5',
+          2.4: 'version-2.4',
+        },
+        checkLinksOptions: {
+          exceptions: ['/api/apollo-client/', '/v2.4/api/apollo-client/'],
+        },
         typescriptApiBox: {
+          data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',
         },
         sidebarCategories: {
-          null: [
-            'index',
-            'why-apollo',
-            'integrations',
-            'react-apollo-migration',
-          ],
+          null: ['index', 'why-apollo', 'integrations', 'hooks-migration'],
           Essentials: [
             'essentials/get-started',
             'essentials/queries',
@@ -33,7 +37,6 @@ module.exports = {
             'features/optimistic-ui',
             'features/server-side-rendering',
             'features/developer-tooling',
-            'features/defer-support',
           ],
           Advanced: [
             'advanced/boost-migration',
@@ -45,6 +48,7 @@ module.exports = {
           Recipes: [
             'recipes/authentication',
             'recipes/testing',
+            'recipes/client-schema-mocking',
             'recipes/static-typing',
             'recipes/performance',
             'recipes/react-native',
@@ -52,9 +56,16 @@ module.exports = {
             'recipes/webpack',
             'recipes/meteor',
             'recipes/recompose',
-            'recipes/2.0-migration',
           ],
-          API: ['api/apollo-client', 'api/react-apollo'],
+          'API Reference': [
+            'api/apollo-client',
+            'api/react-hooks',
+            'api/react-ssr',
+            'api/react-testing',
+            'api/react-components',
+            'api/react-hoc',
+            'api/react-common',
+          ],
         },
       },
     },

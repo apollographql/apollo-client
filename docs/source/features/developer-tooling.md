@@ -1,25 +1,27 @@
 ---
 title: Developer tools
-description: How to use extensions and developer tools to analyze your data
+description: Improve your developer experience with these these services and extensions
 ---
 
-<h2 id="engine">Apollo Engine</h2>
+## Apollo Graph Manager
 
-[Apollo Engine](/engine) is the best way to run GraphQL in production. It is a GraphQL gateway that helps you implement and run GraphQL over REST or any other backend with confidence. With Engine, you get a number of incredible features to help you understand your GraphQL service, and to make it run faster!
+[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) is a cloud service that helps you manage, validate, and secure your organization's data graph.
 
-* **Improve response times**: With caching and persisted queries
-* **Identify and understand hotspots**: With performance tracing and history
-* **Keep an eye on your API**: With alerts and regular reports
+It provides the following features to all Apollo users for free:
 
-Apollo Engine can run anywhere your GraphQL server can. It operates in one of two modes, either as a package you install into your Node server, or as a standalone proxy you can run with Docker, which works with any GraphQL server library. We've architected it to work for the most demanding of environments.
+* A GraphQL schema registry that tracks changes and variants
+* A schema explorer that makes it easy to inspect your schema's queries, mutations, and other object definitions
+* Team collaboration via organizations
 
-To learn more about Apollo Engine, check out the [guide](/engine)
+Advanced features are available with a subscription to an Apollo Team or Enterprise plan.
 
-<h2 id="devtools">Apollo Client Devtools</h2>
+To learn more about Graph Manager, check out the [overview](https://www.apollographql.com/docs/platform/graph-manager-overview/).
+
+## Apollo Client Devtools
 
 The [Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) is a Chrome extension.
 
-<h3 id="features">Features</h3>
+### Features
 
 The devtools appear as an "Apollo" tab in your Chrome inspector, along side the "Elements" and "Console" tabs. There are currently 3 main features of the devtools:
 
@@ -39,12 +41,12 @@ View the state of your client-side cache as a tree and inspect every object insi
 
 View the queries being actively watched on any given page. See when they're loading, what variables they're using, and, if you’re using React, which React component they’re attached to. Angular support coming soon.
 
-<h3 id="installation">Installation</h3>
+### Installation
 
 You can install the extension via the [Chrome Webstore](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm).
 If you want to install a local version of the extension instead, skip ahead to the __Developing__ section.
 
-<h3 id="configuration">Configuration</h3>
+### Configuration
 
 While your app is in dev mode, the devtools will appear as an "Apollo" tab in your chrome inspector. To enable the devtools in your app even in production, pass `connectToDevTools: true` to the ApolloClient constructor in your app.  Pass `connectToDevTools: false` if want to manually disable this functionality.
 
@@ -53,7 +55,7 @@ The "Apollo" tab will appear in the Chrome console if a global `window.__APOLLO_
 Find more information about contributing and debugging on the [Apollo Client DevTools GitHub page](https://github.com/apollographql/apollo-client-devtools).
 
 
-<h2 id="codegen">Apollo Codegen</h2>
+## Apollo Codegen
 
 Apollo Codegen is a tool to generate API code or type annotations based on a GraphQL schema and query documents.
 
@@ -61,7 +63,7 @@ It currently generates Swift code, TypeScript annotations, Flow annotations, and
 
 See [Apollo iOS](https://github.com/apollographql/apollo-ios) for details on the mapping from GraphQL results to Swift types, as well as runtime support for executing queries and mutations. For Scala, see [React Apollo Scala.js](https://github.com/apollographql/react-apollo-scalajs) for details on how to use generated Scala code in a Scala.js app with Apollo Client.
 
-<h3 id="usage">Usage</h3>
+### Usage
 
 If you want to use `apollo-codegen`, you can install it command globally:
 
@@ -69,7 +71,7 @@ If you want to use `apollo-codegen`, you can install it command globally:
 npm install -g apollo-codegen
 ```
 
-<h3 id="introspect">`introspect-schema`</h3>
+### `introspect-schema`
 
 The purpose of this command is to create a JSON introspection dump file for a given graphql schema. The input schema can be fetched from a remote graphql server or from a local file. The resulting JSON introspection dump file is needed as input to the [generate](#generate) command.
 
@@ -89,7 +91,7 @@ To generate a GraphQL schema introspection JSON from a local GraphQL schema:
 apollo-codegen introspect-schema schema.graphql --output schema.json
 ```
 
-<h3 id="generate">`generate`</h3>
+### `generate`
 
 The purpose of this command is to generate types for query and mutation operations made against the schema (it will not generate types for the schema itself).
 
@@ -110,19 +112,19 @@ apollo-codegen generate **/*.graphql --schema schema.json --target flow --output
 apollo-codegen generate **/*.graphql --schema schema.json --target scala --output operation-result-types.scala
 ```
 
-<h3 id="template">`gql` template support</h3>
+### `gql` template support
 
 If the source file for generation is a javascript or typescript file, the codegen will try to extrapolate the queries inside the [gql tag](https://github.com/apollographql/graphql-tag) templates.
 
 The tag name is configurable using the CLI `--tag-name` option.
 
-<h3 id="graphqlconfig" title=".graphqlconfig">[.graphqlconfig](https://github.com/graphcool/graphql-config) support</h3>
+### .graphqlconfig support
 
-Instead of using the `--schema` option to point out your GraphQL schema, you can specify it in a `.graphqlconfig` file.
+Instead of using the `--schema` option to point out your GraphQL schema, you can specify it in a [`.graphqlconfig`](https://github.com/graphcool/graphql-config) file.
 
 In case you specify multiple schemas in your `.graphqlconfig` file, choose which one to pick by using the `--project-name` option.
 
-<h3 id="typescript-and-flow">Typescript and Flow</h3>
+### Typescript and Flow
 
 When using `apollo-codegen` with Typescript or Flow, make sure to add the `__typename` introspection field to every selection set within your graphql operations.
 
@@ -134,8 +136,8 @@ Using the type information from the GraphQL schema, we can infer the possible ty
 as the discriminant.
 
 For example, given a schema:
-```graphql
 
+```graphql
 interface Character {
   name: String!
 }
@@ -147,7 +149,6 @@ type Human implements Character {
 type Droid implements Character {
   primaryFunction: String
 }
-
 ```
 
 Whenever a field of type `Character` is encountered, it could be either a Human or Droid. Human and Droid objects
@@ -173,7 +174,7 @@ query Characters {
 
 Apollo Codegen will generate a union type for Character.
 
-```javascript
+```ts
 export type CharactersQuery = {
   characters: Array<{
     __typename: 'Human',
@@ -189,7 +190,7 @@ export type CharactersQuery = {
 
 This type can then be used as follows to ensure that all possible types are handled:
 
-```javascript
+```tsx
 function CharacterFigures({ characters }: CharactersQuery) {
   return characters.map(character => {
     switch(character.__typename) {

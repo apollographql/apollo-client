@@ -1,16 +1,11 @@
 import {
   ApolloLink,
-  Operation,
-  NextLink,
   FetchResult,
   GraphQLRequest,
   execute,
 } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
-import {
-  removeConnectionDirectiveFromDocument,
-} from 'apollo-utilities';
 
 import { invariant, InvariantError } from 'ts-invariant';
 
@@ -25,24 +20,21 @@ import { LocalState, FragmentMatcher } from './core/LocalState';
 import { Observable } from './util/Observable';
 
 import {
-  QueryBaseOptions,
   QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  ModifiableWatchQueryOptions,
-  MutationBaseOptions,
+  WatchQueryFetchPolicy,
 } from './core/watchQueryOptions';
 
 import { DataStore } from './data/store';
 
 import { version } from './version';
 
-
 export interface DefaultOptions {
-  watchQuery?: ModifiableWatchQueryOptions;
-  query?: QueryBaseOptions;
-  mutate?: MutationBaseOptions;
+  watchQuery?: Partial<WatchQueryOptions>;
+  query?: Partial<QueryOptions>;
+  mutate?: Partial<MutationOptions>;
 }
 
 let hasSuggestedDevtools = false;
@@ -151,22 +143,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       );
     }
 
-    const supportedCache = new Map<DocumentNode, DocumentNode>();
-    const supportedDirectives = new ApolloLink(
-      (operation: Operation, forward: NextLink) => {
-        let result = supportedCache.get(operation.query);
-        if (!result) {
-          result = removeConnectionDirectiveFromDocument(operation.query);
-          supportedCache.set(operation.query, result);
-          supportedCache.set(result, result);
-        }
-        operation.query = result;
-        return forward(operation);
-      },
-    );
-
     // remove apollo-client supported directives
-    this.link = supportedDirectives.concat(link);
+    this.link = link;
     this.cache = cache;
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
@@ -336,12 +314,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     invariant(
-      options.fetchPolicy !== 'cache-and-network',
-      'cache-and-network fetchPolicy can only be used with watchQuery'
+      (options.fetchPolicy as WatchQueryFetchPolicy) !== 'cache-and-network',
+      'The cache-and-network fetchPolicy does not work with client.query, because ' +
+      'client.query can only return a single result. Please use client.watchQuery ' +
+      'to receive multiple results from the cache and the network, or consider ' +
+      'using a different fetchPolicy, such as cache-first or network-only.'
     );
 
-    // XXX Overwriting options is probably not the best way to do this long
-    // term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
@@ -375,7 +354,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public subscribe<T = any, TVariables = OperationVariables>(
     options: SubscriptionOptions<TVariables>,
-  ): Observable<T> {
+  ): Observable<FetchResult<T>> {
     return this.queryManager.startGraphQLSubscription<T>(options);
   }
 
@@ -505,7 +484,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     return Promise.resolve()
       .then(() => this.queryManager.clearStore())
       .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
-      .then(() => this.queryManager.reFetchObservableQueries());
+      .then(() => this.reFetchObservableQueries());
   }
 
   /**
@@ -556,7 +535,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   public reFetchObservableQueries(
     includeStandby?: boolean,
-  ): Promise<ApolloQueryResult<any>[]> | Promise<null> {
+  ): Promise<ApolloQueryResult<any>[]> {
     return this.queryManager.reFetchObservableQueries(includeStandby);
   }
 

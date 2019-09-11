@@ -9,9 +9,9 @@ import QueryResult from '../../shared/query-result.mdx';
 
 Fetching data in a simple, predictable way is one of the core features of Apollo Client. In this guide, you'll learn how to fetch GraphQL data with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies your data management code by tracking error and loading states for you.
 
-This page assumes some familiarity with building GraphQL queries. If you'd like a refresher, we recommend [reading this guide](http://graphql.org/learn/queries/) and practicing [running queries in GraphiQL](/features/developer-tooling/#features). Since Apollo Client queries are just standard GraphQL, you can be sure that any query that successfully runs in GraphiQL will also run when used with `useQuery`.
+This page assumes some familiarity with building GraphQL queries. If you'd like a refresher, we recommend [reading this guide](http://graphql.org/learn/queries/) and practicing [running queries in GraphiQL](../features/developer-tooling/#features). Since Apollo Client queries are just standard GraphQL, you can be sure that any query that successfully runs in GraphiQL will also run when used with `useQuery`.
 
-The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](/essentials/get-started/) guide if you need help with either of those steps.
+The following examples assume that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started](./get-started/) guide if you need help with either of those steps.
 
 > If you'd like to follow along with the examples, open up our [starter project](https://codesandbox.io/s/j2ly83749w) on CodeSandbox and our sample GraphQL server on [this CodeSandbox](https://codesandbox.io/s/32ypr38l61). You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
 
@@ -349,7 +349,7 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-The `networkStatus` property is an enum with number values from 1-8 representing a different loading state. 4 corresponds to a refetch, but there are also numbers for polling and pagination. For a full list of all the possible loading states, check out the [reference guide](/api/react-hooks/).
+The `networkStatus` property is an enum with number values from 1-8 representing a different loading state. 4 corresponds to a refetch, but there are also numbers for polling and pagination. For a full list of all the possible loading states, check out the [reference guide](../api/react-hooks/).
 
 While not as complex as loading state, responding to errors in your component is also customizable via the `useQuery` `errorPolicy` option. The default value for `errorPolicy` is "none" in which we treat all GraphQL errors as runtime errors. In the event of an error, Apollo Client will discard any data that came back with the request and set the `error` property in the `useQuery` result object to true. If you'd like to show any partial data along with any error information, set the `errorPolicy` to "all".
 
@@ -462,7 +462,7 @@ function DelayedQuery() {
 
 ## useQuery API overview
 
-If you're looking for an overview of all the options `useQuery` accepts, and its result properties, look no further! Most `useQuery` calls will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `useQuery` hook API in more detail with usage examples, visit our [reference guide](/api/react-hooks/).
+If you're looking for an overview of all the options `useQuery` accepts, and its result properties, look no further! Most `useQuery` calls will not need all of these configuration options, but it's useful to know that they exist. If you'd like to learn about the `useQuery` hook API in more detail with usage examples, visit our [reference guide](../api/react-hooks/).
 
 > **Note:** If you're using React Apollo's `Query` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `query` prop (which holds a GraphQL query document parsed into an AST by `graphql-tag`) is also required.
 
@@ -482,6 +482,6 @@ After being called the `useQuery` hook will return a result object with the foll
 
 Learning how to leverage the `useQuery` hook to fetch data is one of the most important skills to mastering development with Apollo Client. Now that you're a pro at fetching data, why not try using the `useMutation` hook to update your data? Here are some resources we think will help you level up your skills:
 
-- [Mutations](/essentials/mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for the `useMutation` hook.
-- [Local state management](/essentials/local-state/): Learn how to query local data.
-- [Pagination](/features/pagination/): Building lists has never been easier thanks to Apollo Client's `fetchMore` function. Learn more in our pagination tutorial.
+- [Mutations](./mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for the `useMutation` hook.
+- [Local state management](./local-state/): Learn how to query local data.
+- [Pagination](../features/pagination/): Building lists has never been easier thanks to Apollo Client's `fetchMore` function. Learn more in our pagination tutorial.

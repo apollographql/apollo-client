@@ -1058,14 +1058,14 @@ export class QueryManager<TStore> {
   } {
     let observableQuery: ObservableQuery<TData, any>;
     if (typeof queryIdOrObservable === 'string') {
-      const { observableQuery: foundObserveableQuery } = this.getQuery(
+      const { observableQuery: foundObservableQuery } = this.getQuery(
         queryIdOrObservable,
       );
       invariant(
-        foundObserveableQuery,
+        foundObservableQuery,
         `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`
       );
-      observableQuery = foundObserveableQuery!;
+      observableQuery = foundObservableQuery!;
     } else {
       observableQuery = queryIdOrObservable;
     }

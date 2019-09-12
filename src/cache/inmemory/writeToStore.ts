@@ -27,20 +27,6 @@ import {
 } from './helpers';
 import { defaultDataIdFromObject } from './inMemoryCache';
 
-export class WriteError extends Error {
-  public type = 'WriteError';
-}
-
-export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
-  // XXX A bit hacky maybe ...
-  const enhancedError = new WriteError(
-    `Error writing result to store for query:\n ${JSON.stringify(document)}`,
-  );
-  enhancedError.message += '\n' + error.message;
-  enhancedError.stack = error.stack;
-  return enhancedError;
-}
-
 export type WriteContext = {
   readonly store: NormalizedCache;
   readonly processedData: { [x: string]: Set<FieldNode> };
@@ -90,25 +76,21 @@ export class StoreWriter {
     dataIdFromObject?: IdGetter;
   }): NormalizedCache {
     const operationDefinition = getOperationDefinition(query)!;
-    try {
-      return this.writeSelectionSetToStore({
-        result,
-        dataId,
-        selectionSet: operationDefinition.selectionSet,
-        context: {
-          store,
-          processedData: {},
-          variables: {
-            ...getDefaultValues(operationDefinition),
-            ...variables,
-          },
-          dataIdFromObject,
-          fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+    return this.writeSelectionSetToStore({
+      result,
+      dataId,
+      selectionSet: operationDefinition.selectionSet,
+      context: {
+        store,
+        processedData: {},
+        variables: {
+          ...getDefaultValues(operationDefinition),
+          ...variables,
         },
-      });
-    } catch (e) {
-      throw enhanceErrorWithDocument(e, query);
-    }
+        dataIdFromObject,
+        fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+      },
+    });
   }
 
   public writeSelectionSetToStore({

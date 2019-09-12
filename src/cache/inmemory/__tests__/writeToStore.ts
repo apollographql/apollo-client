@@ -1660,7 +1660,7 @@ describe('writing to the store', () => {
         },
         dataIdFromObject: getIdField,
       });
-    }).toThrowError(/stringField(.|\n)*abcd/g);
+    }).toThrowError(/contains an id of abcd/g);
   });
 
   it('properly handles the connection directive', () => {

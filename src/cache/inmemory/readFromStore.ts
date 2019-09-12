@@ -10,7 +10,6 @@ import { InvariantError } from 'ts-invariant';
 
 import {
   argumentsObjectFromField,
-  assign,
   canUseWeakMap,
   createFragmentMap,
   DirectiveInfo,
@@ -212,7 +211,10 @@ export class StoreReader {
     // Throw the right validation error by trying to find a query in the document
     const queryDefinition = getQueryDefinition(query);
 
-    variables = assign({}, getDefaultValues(queryDefinition), variables);
+    variables = {
+      ...getDefaultValues(queryDefinition),
+      ...variables,
+    };
 
     const context: ReadStoreContext = {
       // Global settings

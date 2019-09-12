@@ -2,7 +2,6 @@ import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
 import {
-  assign,
   createFragmentMap,
   FragmentMap,
   getDefaultValues,
@@ -99,11 +98,10 @@ export class StoreWriter {
         context: {
           store,
           processedData: {},
-          variables: assign(
-            {},
-            getDefaultValues(operationDefinition),
-            variables,
-          ),
+          variables: {
+            ...getDefaultValues(operationDefinition),
+            ...variables,
+          },
           dataIdFromObject,
           fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         },

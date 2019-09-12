@@ -45,7 +45,7 @@
     {
       "name": "apollo-client",
       "path": "./lib/apollo-client.cjs.min.js",
-      "maxSize": "16.55 kB"
+      "maxSize": "16.9 kB"
     }
   ],
   "dependencies": {

@@ -1746,7 +1746,11 @@ describe('writing to the store', () => {
       ROOT_QUERY: {
         animals: [
           {
-            species: { name: 'cat' },
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
           },
         ],
       },
@@ -1772,7 +1776,11 @@ describe('writing to the store', () => {
       ROOT_QUERY: {
         animals: [
           {
-            species: { name: 'dog' },
+            __typename: 'Animal',
+            species: {
+              __typename: 'Dog',
+              name: 'dog',
+            },
           },
         ],
       },
@@ -1821,7 +1829,11 @@ describe('writing to the store', () => {
       ROOT_QUERY: {
         animals: [
           {
-            species: { name: 'cat' },
+            __typename: 'Animal',
+            species: {
+              __typename: 'Cat',
+              name: 'cat',
+            },
           },
         ],
       },
@@ -1848,11 +1860,13 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       'Dog__dog-species': {
         id: 'dog-species',
+        __typename: 'Dog',
         name: 'dog',
       },
       ROOT_QUERY: {
         animals: [
           {
+            __typename: 'Animal',
             species: makeReference('Dog__dog-species'),
           },
         ],

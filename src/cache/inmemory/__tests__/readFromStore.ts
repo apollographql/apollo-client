@@ -62,6 +62,7 @@ describe('reading from the store', () => {
       });
 
       expect(stripSymbols(queryResult)).toEqual({
+        __typename: 'Query',
         nestedObj: {
           innerArray: [{ id: 'abcdef', someField: 3 }],
         },
@@ -356,6 +357,7 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(stripSymbols(queryResult)).toEqual({
+      __typename: 'Query',
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
@@ -837,23 +839,27 @@ describe('reading from the store', () => {
       }),
     ).toEqual({
       author: {
+        __typename: 'Author',
         name: 'Toni Morrison',
         books: [
           {
             title: 'The Bluest Eye',
             publisher: {
+              __typename: 'Publisher',
               name: 'Holt, Rinehart and Winston',
             },
           },
           {
             title: 'Song of Solomon',
             publisher: {
+              __typename: 'Publisher',
               name: 'Alfred A. Knopf, Inc.',
             },
           },
           {
             title: 'Beloved',
             publisher: {
+              __typename: 'Publisher',
               name: 'Alfred A. Knopf, Inc.',
             },
           },

@@ -93,24 +93,29 @@ type ExecSubSelectedArrayOptions = {
 
 type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 export interface StoreReaderConfig {
+  addTypename?: boolean;
   cacheKeyRoot?: KeyTrie<object>;
   possibleTypes?: PossibleTypes;
 }
 
 export class StoreReader {
-  private possibleTypes?: PossibleTypes;
+  private config: StoreReaderConfig;
 
-  constructor({
-    cacheKeyRoot = new KeyTrie<object>(canUseWeakMap),
-    possibleTypes,
-  }: StoreReaderConfig = {}) {
+  constructor(config?: StoreReaderConfig) {
+    const cacheKeyRoot =
+      config && config.cacheKeyRoot || new KeyTrie<object>(canUseWeakMap);
+
+    this.config = {
+      addTypename: true,
+      cacheKeyRoot,
+      ...config,
+    };
+
     const {
       executeStoreQuery,
       executeSelectionSet,
       executeSubSelectedArray,
     } = this;
-
-    this.possibleTypes = possibleTypes;
 
     this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
       return executeStoreQuery.call(this, options);
@@ -316,6 +321,16 @@ export class StoreReader {
       typename = object && object.__typename;
     }
 
+    if (this.config.addTypename) {
+      const typenameFromStore = object && object.__typename;
+      if (typeof typenameFromStore === 'string') {
+        // Ensure we always include a default value for the __typename field,
+        // if we have one, and this.config.addTypename is true. Note that this
+        // field can be overridden by other merged objects.
+        objectsToMerge.push({ __typename: typenameFromStore });
+      }
+    }
+
     function handleMissing<T>(result: ExecResult<T>): T {
       if (result.missing) {
         finalResult.missing = finalResult.missing || [];
@@ -358,7 +373,7 @@ export class StoreReader {
         const match = fragmentMatches(
           fragment,
           typename,
-          this.possibleTypes,
+          this.config.possibleTypes,
         );
 
         if (match && (object || typename === 'Query')) {

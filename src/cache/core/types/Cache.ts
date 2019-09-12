@@ -2,9 +2,6 @@ import { DataProxy } from './DataProxy';
 
 export namespace Cache {
   export type WatchCallback = (newData: any) => void;
-  export interface EvictionResult {
-    success: Boolean;
-  }
 
   export interface ReadOptions<TVariables = any>
     extends DataProxy.Query<TVariables> {
@@ -25,11 +22,6 @@ export namespace Cache {
 
   export interface WatchOptions extends ReadOptions {
     callback: WatchCallback;
-  }
-
-  export interface EvictOptions<TVariables = any>
-    extends DataProxy.Query<TVariables> {
-    rootId?: string;
   }
 
   export import DiffResult = DataProxy.DiffResult;

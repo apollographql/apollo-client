@@ -17,9 +17,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): void;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
-  public abstract evict<TVariables = any>(
-    query: Cache.EvictOptions<TVariables>,
-  ): Cache.EvictionResult;
+  public abstract evict(dataId: string): boolean;
   public abstract reset(): Promise<void>;
 
   // intializer / offline / ssr API

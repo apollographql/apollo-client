@@ -588,12 +588,7 @@ describe('EntityCache', () => {
       },
     });
 
-    expect(cache.evict({
-      rootId: "Author:J.K. Rowling",
-      query,
-    })).toEqual({
-      success: false,
-    });
+    expect(cache.evict("Author:J.K. Rowling")).toBe(false);
 
     const bookAuthorFragment = gql`
       fragment BookAuthor on Book {
@@ -661,12 +656,7 @@ describe('EntityCache', () => {
 
     expect(cache.gc()).toEqual([]);
 
-    expect(cache.evict({
-      rootId: 'Author:Robert Galbraith',
-      query,
-    })).toEqual({
-      success: true,
-    });
+    expect(cache.evict("Author:Robert Galbraith")).toBe(true);
 
     expect(cache.gc()).toEqual([]);
 
@@ -718,12 +708,7 @@ describe('EntityCache', () => {
 
     // If you're ever tempted to do this, you probably want to use cache.clear()
     // instead, but evicting the ROOT_QUERY should work at least.
-    expect(cache.evict({
-      rootId: "ROOT_QUERY",
-      query,
-    })).toEqual({
-      success: true,
-    });
+    expect(cache.evict("ROOT_QUERY")).toBe(true);
 
     expect(cache.extract(true)).toEqual({
       "Book:031648637X": {

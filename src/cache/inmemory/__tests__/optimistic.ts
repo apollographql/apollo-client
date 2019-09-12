@@ -53,10 +53,8 @@ describe('optimistic cache layers', () => {
     const result1984 = readOptimistic(cache);
     expect(result1984).toEqual({
       book: {
-        __typename: 'Book',
         title: '1984',
         author: {
-          __typename: 'Author',
           name: 'George Orwell',
         },
       },
@@ -87,10 +85,8 @@ describe('optimistic cache layers', () => {
       result2666InTransaction = readOptimistic(cache);
       expect(result2666InTransaction).toEqual({
         book: {
-          __typename: 'Book',
           title: '2666',
           author: {
-            __typename: 'Author',
             name: 'Roberto Bolaño',
           },
         },
@@ -120,10 +116,8 @@ describe('optimistic cache layers', () => {
 
       expect((resultCatch22 = readOptimistic(cache))).toEqual({
         book: {
-          __typename: 'Book',
           title: 'Catch-22',
           author: {
-            __typename: 'Author',
             name: 'Joseph Heller',
           },
         },
@@ -160,10 +154,8 @@ describe('optimistic cache layers', () => {
     const resultF451 = readRealistic(cache);
     expect(resultF451).toEqual({
       book: {
-        __typename: 'Book',
         title: 'Fahrenheit 451',
         author: {
-          __typename: 'Author',
           name: 'Ray Bradbury',
         },
       },
@@ -278,12 +270,10 @@ describe('optimistic cache layers', () => {
     expect(result).toEqual({
       books: [
         {
-          __typename: 'Book',
           title: 'Eager',
           subtitle: 'The Surprising, Secret Life of Beavers and Why They Matter',
         },
         {
-          __typename: 'Book',
           title: 'Spineless',
           subtitle: 'The Science of Jellyfish and the Art of Growing a Backbone',
         },
@@ -345,11 +335,12 @@ describe('optimistic cache layers', () => {
       }, optimistic);
     }
 
-    function withoutISBN(data: any) {
+    function withoutTypenameOrISBN(data: any) {
       return JSON.parse(JSON.stringify(
         data,
         (key, value) => {
           if (key === 'isbn') return;
+          if (key === '__typename') return;
           return value;
         },
       ));
@@ -358,8 +349,8 @@ describe('optimistic cache layers', () => {
     const resultWithTwoAuthors = readWithAuthors();
     expect(resultWithTwoAuthors).toEqual({
       books: [
-        withoutISBN(eagerBookData),
-        withoutISBN(spinelessBookData),
+        withoutTypenameOrISBN(eagerBookData),
+        withoutTypenameOrISBN(spinelessBookData),
       ],
     });
 
@@ -391,9 +382,9 @@ describe('optimistic cache layers', () => {
 
     expect(resultWithBuzz).toEqual({
       books: [
-        withoutISBN(eagerBookData),
-        withoutISBN(spinelessBookData),
-        withoutISBN(buzzBookData),
+        withoutTypenameOrISBN(eagerBookData),
+        withoutTypenameOrISBN(spinelessBookData),
+        withoutTypenameOrISBN(buzzBookData),
       ],
     });
     expect(resultWithBuzz.books[0]).toEqual(resultWithTwoAuthors.books[0]);

@@ -3,6 +3,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols, cloneDeep } from '../../../utilities';
 import { InMemoryCache, InMemoryCacheConfig } from '..';
 import { makeReference } from '../helpers';
+import { cloneWithoutTypename } from '../../../util/testUtils';
 
 disableFragmentWarnings();
 
@@ -1042,7 +1043,7 @@ describe('Cache', () => {
           fragment: readWriteFragment,
           id: 'query',
         });
-        expect(stripSymbols(result)).toEqual(data);
+        expect(stripSymbols(result)).toEqual(cloneWithoutTypename(data));
       },
     );
 

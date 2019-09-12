@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 
 import { InMemoryCache } from '../inMemoryCache';
+import { cloneWithoutTypename } from '../../../util/testUtils';
 
 describe('fragment matching', () => {
   it('can match exact types with or without possibleTypes', () => {
@@ -46,11 +47,13 @@ describe('fragment matching', () => {
       ],
     };
 
+    const dataWithoutTypename = cloneWithoutTypename(data);
+
     cacheWithoutPossibleTypes.writeQuery({ query, data });
-    expect(cacheWithoutPossibleTypes.readQuery({ query })).toEqual(data);
+    expect(cacheWithoutPossibleTypes.readQuery({ query })).toEqual(dataWithoutTypename);
 
     cacheWithPossibleTypes.writeQuery({ query, data });
-    expect(cacheWithPossibleTypes.readQuery({ query })).toEqual(data);
+    expect(cacheWithPossibleTypes.readQuery({ query })).toEqual(dataWithoutTypename);
   });
 
   it('can match interface subtypes', () => {
@@ -82,7 +85,7 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 
   it('can match union member types', () => {
@@ -132,7 +135,7 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 
   it('can match indirect subtypes while avoiding cycles', () => {
@@ -180,7 +183,7 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 
   it('can match against the root Query', () => {
@@ -220,6 +223,6 @@ describe('fragment matching', () => {
     };
 
     cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.readQuery({ query })).toEqual(cloneWithoutTypename(data));
   });
 });

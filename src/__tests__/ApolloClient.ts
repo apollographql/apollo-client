@@ -7,6 +7,7 @@ import { withWarning } from '../util/wrap';
 import ApolloClient from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
+import { cloneWithoutTypename } from '../util/testUtils';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -113,7 +114,7 @@ describe('ApolloClient', () => {
             `,
           }),
         ),
-      ).toEqual({ a: 1, d: { e: 4, __typename: 'Foo' } });
+      ).toEqual({ a: 1, d: { e: 4 } });
       expect(
         stripSymbols(
           client.readQuery({
@@ -132,7 +133,7 @@ describe('ApolloClient', () => {
         ),
       ).toEqual({
         a: 1,
-        d: { __typename: 'Foo', e: 4, h: { i: 7, __typename: 'Bar' } },
+        d: { e: 4, h: { i: 7 } },
       });
       expect(
         stripSymbols(
@@ -161,11 +162,10 @@ describe('ApolloClient', () => {
         b: 2,
         c: 3,
         d: {
-          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,
-          h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
+          h: { i: 7, j: 8, k: 9 },
         },
       });
     });
@@ -363,7 +363,7 @@ describe('ApolloClient', () => {
             `,
           }),
         ),
-      ).toEqual({ __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } });
+      ).toEqual({ e: 4, h: { i: 7 } });
       expect(
         stripSymbols(
           client.readFragment({
@@ -383,11 +383,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({
-        __typename: 'Foo',
         e: 4,
         f: 5,
         g: 6,
-        h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
+        h: { i: 7, j: 8, k: 9 },
       });
       expect(
         stripSymbols(
@@ -400,7 +399,7 @@ describe('ApolloClient', () => {
             `,
           }),
         ),
-      ).toEqual({ __typename: 'Bar', i: 7 });
+      ).toEqual({ i: 7 });
       expect(
         stripSymbols(
           client.readFragment({
@@ -414,7 +413,7 @@ describe('ApolloClient', () => {
             `,
           }),
         ),
-      ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
+      ).toEqual({ i: 7, j: 8, k: 9 });
       expect(
         stripSymbols(
           client.readFragment({
@@ -441,11 +440,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({
-        __typename: 'Foo',
         e: 4,
         f: 5,
         g: 6,
-        h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
+        h: { i: 7, j: 8, k: 9 },
       });
       expect(
         stripSymbols(
@@ -472,7 +470,7 @@ describe('ApolloClient', () => {
             fragmentName: 'fragmentBar',
           }),
         ),
-      ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
+      ).toEqual({ i: 7, j: 8, k: 9 });
     });
 
     it('will read some data from the store with variables', () => {
@@ -503,7 +501,7 @@ describe('ApolloClient', () => {
             },
           }),
         ),
-      ).toEqual({ __typename: 'Foo', a: 1, b: 2 });
+      ).toEqual({ a: 1, b: 2 });
     });
 
     it('will return null when an id that can’t be found is provided', () => {
@@ -561,7 +559,7 @@ describe('ApolloClient', () => {
             `,
           }),
         ),
-      ).toEqual({ __typename: 'Foo', a: 1, b: 2, c: 3 });
+      ).toEqual({ a: 1, b: 2, c: 3 });
     });
   });
 
@@ -1151,25 +1149,21 @@ describe('ApolloClient', () => {
               if (count === 1) {
                 expect(stripSymbols(nextResult.data)).toEqual(data);
                 expect(stripSymbols(observable.currentResult().data)).toEqual(
-                  data,
+                  cloneWithoutTypename(data),
                 );
 
                 const readData = stripSymbols(
                   client.readQuery<Data>({ query }),
                 );
-                expect(stripSymbols(readData)).toEqual(data);
+                expect(stripSymbols(readData)).toEqual(cloneWithoutTypename(data));
 
-                // modify readData and writeQuery
-                const bestFriends = readData.people.friends.filter(
-                  x => x.type === 'best',
-                );
                 // this should re call next
                 client.writeQuery<Data>({
                   query,
                   data: {
                     people: {
                       id: 1,
-                      friends: bestFriends,
+                      friends: [bestFriend],
                       __typename: 'Person',
                     },
                   },
@@ -1184,7 +1178,7 @@ describe('ApolloClient', () => {
                 };
                 expect(stripSymbols(nextResult.data)).toEqual(expectation);
                 expect(stripSymbols(client.readQuery<Data>({ query }))).toEqual(
-                  expectation,
+                  cloneWithoutTypename(expectation),
                 );
                 subscription.unsubscribe();
                 done();
@@ -1203,18 +1197,13 @@ describe('ApolloClient', () => {
               if (count === 1) {
                 expect(stripSymbols(nextResult.data)).toEqual(data);
                 expect(stripSymbols(observable.currentResult().data)).toEqual(
-                  data,
+                  cloneWithoutTypename(data),
                 );
 
                 const readData = stripSymbols(
                   client.readQuery<Data>({ query }),
                 );
-                expect(stripSymbols(readData)).toEqual(data);
-
-                // modify readData and writeQuery
-                const friends = readData.people.friends;
-                friends[0].type = 'okayest';
-                friends[1].type = 'okayest';
+                expect(stripSymbols(readData)).toEqual(cloneWithoutTypename(data));
 
                 // this should re call next
                 client.writeQuery<Data>({
@@ -1222,7 +1211,14 @@ describe('ApolloClient', () => {
                   data: {
                     people: {
                       id: 1,
-                      friends,
+                      friends: readData.people.friends.map(f => {
+                        return {
+                          ...f,
+                          type: 'okayest',
+                          // Add __typename back since not included in readData.
+                          __typename: 'Friend',
+                        };
+                      }),
                       __typename: 'Person',
                     },
                   },
@@ -1256,8 +1252,8 @@ describe('ApolloClient', () => {
                 const readFriends = stripSymbols(
                   client.readQuery<Data>({ query }).people.friends,
                 );
-                expect(readFriends[0]).toEqual(expectation0);
-                expect(readFriends[1]).toEqual(expectation1);
+                expect(readFriends[0]).toEqual(cloneWithoutTypename(expectation0));
+                expect(readFriends[1]).toEqual(cloneWithoutTypename(expectation1));
                 done();
               }
             },
@@ -1275,7 +1271,7 @@ describe('ApolloClient', () => {
               if (count === 1) {
                 expect(stripSymbols(result.data)).toEqual(data);
                 expect(stripSymbols(observable.currentResult().data)).toEqual(
-                  data,
+                  cloneWithoutTypename(data),
                 );
                 const bestFriends = result.data.people.friends.filter(
                   x => x.type === 'best',
@@ -1326,7 +1322,7 @@ describe('ApolloClient', () => {
               if (count === 1) {
                 expect(stripSymbols(result.data)).toEqual(data);
                 expect(stripSymbols(observable.currentResult().data)).toEqual(
-                  data,
+                  cloneWithoutTypename(data),
                 );
                 const friends = result.data.people.friends;
 
@@ -1590,11 +1586,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({
-        __typename: 'Foo',
         a: 1,
         b: 2,
         c: 3,
-        bar: { d: 4, e: 5, f: 6, __typename: 'Bar' },
+        bar: { d: 4, e: 5, f: 6 },
       });
 
       client.writeFragment({
@@ -1626,11 +1621,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({
-        __typename: 'Foo',
         a: 7,
         b: 2,
         c: 3,
-        bar: { __typename: 'Bar', d: 4, e: 5, f: 6 },
+        bar: { d: 4, e: 5, f: 6 },
       });
 
       client.writeFragment({
@@ -1664,11 +1658,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({
-        __typename: 'Foo',
         a: 7,
         b: 2,
         c: 3,
-        bar: { __typename: 'Bar', d: 8, e: 5, f: 6 },
+        bar: { d: 8, e: 5, f: 6 },
       });
 
       client.writeFragment({
@@ -1700,11 +1693,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({
-        __typename: 'Foo',
         a: 7,
         b: 2,
         c: 3,
-        bar: { __typename: 'Bar', d: 8, e: 9, f: 6 },
+        bar: { d: 8, e: 9, f: 6 },
       });
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
@@ -1770,10 +1762,9 @@ describe('ApolloClient', () => {
         a: 1,
         b: 2,
         foo: {
-          __typename: 'foo',
           c: 3,
           d: 4,
-          bar: { __typename: 'bar', key: 'foobar', e: 5, f: 6 },
+          bar: { key: 'foobar', e: 5, f: 6 },
         },
       });
 

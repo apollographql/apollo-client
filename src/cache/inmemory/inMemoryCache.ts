@@ -135,7 +135,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     return this.storeReader.readQueryFromStore({
       store: options.optimistic ? this.optimisticData : this.data,
-      query: this.transformDocument(options.query),
+      query: options.query,
       variables: options.variables,
       rootId: options.rootId,
       previousResult: options.previousResult,
@@ -156,13 +156,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.broadcastWatches();
   }
 
-  public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
+  public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
     return this.storeReader.diffQueryAgainstStore({
-      store: query.optimistic ? this.optimisticData : this.data,
-      query: this.transformDocument(query.query),
-      variables: query.variables,
-      returnPartialData: query.returnPartialData,
-      previousResult: query.previousResult,
+      store: options.optimistic ? this.optimisticData : this.data,
+      query: options.query,
+      variables: options.variables,
+      returnPartialData: options.returnPartialData,
+      previousResult: options.previousResult,
       config: this.config,
     });
   }

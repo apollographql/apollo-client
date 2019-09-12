@@ -1113,6 +1113,7 @@ describe('mutation results', () => {
               proxy.writeFragment({
                 data: {
                   ...data,
+                  __typename: 'TodoList',
                   todos: [mResult.data.createTodo, ...data.todos],
                 },
                 id,
@@ -1204,6 +1205,7 @@ describe('mutation results', () => {
               proxy.writeFragment({
                 data: {
                   ...data,
+                  __typename: 'TodoList',
                   todos: [mResult.data.createTodo, ...data.todos],
                 },
                 id,

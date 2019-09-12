@@ -1,9 +1,0 @@
-.gitignore
-.rpt2_cache
-CHANGELOG.md
-DESIGN.md
-rollup.config.js
-tsconfig.*.json
-tslint.json
-AUTHORS
-ROADMAP.md

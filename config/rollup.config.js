@@ -18,22 +18,23 @@ function onwarn(message) {
 }
 
 const defaultGlobals = {
-  'apollo-client': 'apollo.core',
-  'apollo-cache': 'apolloCache.core',
   'apollo-link': 'apolloLink.core',
-  'apollo-link-dedup': 'apolloLink.dedup',
-  'apollo-utilities': 'apollo.utilities',
   'tslib': 'tslib',
   'ts-invariant': 'invariant',
+  'symbol-observable': '$$observable',
+  'graphql/language/printer': 'print',
+  optimism: 'optimism',
+  'graphql/language/visitor': 'visitor',
+  'fast-json-stable-stringify': 'stringify',
+  '@wry/equality': 'wryEquality',
 };
 
-export function rollup({
-  name,
+function rollup({
   input = './src/index.ts',
-  outputPrefix = 'bundle',
+  outputPrefix = 'apollo-client',
   extraGlobals = {},
-}) {
-  const projectDir = path.join(__filename, '..');
+} = {}) {
+  const projectDir = path.join(__dirname, '..');
   console.info(`Building project esm ${projectDir}`);
   const tsconfig = `${projectDir}/tsconfig.json`;
 
@@ -47,7 +48,7 @@ export function rollup({
   }
 
   function outputFile(format) {
-    return './lib/' + outputPrefix + '.' + format + '.js';
+    return `./lib/${outputPrefix}.${format}.js`;
   }
 
   function fromSource(format) {
@@ -62,7 +63,6 @@ export function rollup({
       plugins: [
         nodeResolve({
           extensions: ['.ts', '.tsx'],
-          module: true,
         }),
         typescriptPlugin({ typescript, tsconfig }),
         invariantPlugin({
@@ -147,3 +147,5 @@ export function rollup({
     },
   ];
 }
+
+export default rollup();

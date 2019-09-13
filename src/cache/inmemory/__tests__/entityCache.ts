@@ -189,6 +189,8 @@ describe('EntityCache', () => {
       fragment: authorNameFragment,
     });
 
+    expect(cache.retain('Author:Ray Bradbury')).toBe(1);
+
     expect(ray).toEqual({
       __typename: 'Author',
       name: 'Ray Bradbury',
@@ -222,7 +224,14 @@ describe('EntityCache', () => {
       },
     });
 
-    // Nothing left to garbage collect.
+    expect(cache.gc()).toEqual([]);
+
+    expect(cache.release('Author:Ray Bradbury')).toBe(0);
+
+    expect(cache.gc()).toEqual([
+      'Author:Ray Bradbury',
+    ]);
+
     expect(cache.gc()).toEqual([]);
   });
 
@@ -724,8 +733,7 @@ describe('EntityCache', () => {
       },
     });
 
-    // The book has been retained a couple of times since we've written it
-    // directly, but J.K. has never been directly written.
+    expect(cache.retain("Book:031648637X")).toBe(2);
     expect(cache.release("Book:031648637X")).toBe(1);
     expect(cache.release("Book:031648637X")).toBe(0);
 

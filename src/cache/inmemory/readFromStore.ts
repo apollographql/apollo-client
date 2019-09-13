@@ -382,9 +382,37 @@ export class StoreReader {
       }
     });
 
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      objectsToMerge.length === 1 &&
+      Object.isFrozen(objectsToMerge[0])
+    ) {
+      // In development, mergeDeepArray(objectsToMerge) might return a frozen
+      // object if objectsToMerge.length === 1 and that object is frozen, which
+      // would interfere with our attempt to use Object.defineProperty below,
+      // so we prepend an empty object to ensure mergeDeepArray returns a fresh
+      // non-frozen object in this particular case.
+      objectsToMerge.unshift({});
+    }
+
     // Perform a single merge at the end so that we can avoid making more
     // defensive shallow copies than necessary.
     finalResult.result = mergeDeepArray(objectsToMerge);
+
+    // If there was a __typename in the cache, but no __typename field was
+    // explicitly read, we add a non-enumerable __typename field to this result
+    // object, so common patterns like readFragment followed by writeFragment
+    // will continue to work without explicit __typename fields.
+    const typenameFromStore = object && object.__typename;
+    if (
+      typeof typenameFromStore === 'string' &&
+      !finalResult.result.__typename
+    ) {
+      Object.defineProperty(finalResult.result, '__typename', {
+        value: typenameFromStore,
+        enumerable: false,
+      });
+    }
 
     if (process.env.NODE_ENV !== 'production') {
       Object.freeze(finalResult.result);

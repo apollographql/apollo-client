@@ -284,6 +284,9 @@ export function getTypenameFromResult(
       }
     }
   }
+  if (typeof result.__typename === 'string') {
+    return result.__typename;
+  }
 }
 
 export function isField(selection: SelectionNode): selection is FieldNode {

@@ -418,6 +418,7 @@ describe('diffing queries against the store', () => {
 
     expect(simpleDiff.result).toEqual({
       people_one: {
+        __typename: 'Person',
         name: 'Luke Skywalker',
       },
     });
@@ -429,6 +430,7 @@ describe('diffing queries against the store', () => {
 
     expect(inlineDiff.result).toEqual({
       people_one: {
+        __typename: 'Person',
         name: 'Luke Skywalker',
       },
     });
@@ -440,6 +442,7 @@ describe('diffing queries against the store', () => {
 
     expect(namedDiff.result).toEqual({
       people_one: {
+        __typename: 'Person',
         name: 'Luke Skywalker',
       },
     });
@@ -1085,24 +1088,30 @@ describe('diffing queries against the store', () => {
 
         expect(result).toEqual({
           user: {
+            __typename: 'User',
             id: 1,
             name: 'Ben',
             company: {
+              __typename: 'Company',
               id: 1,
               name: 'Apollo',
               users: [
                 {
+                  __typename: 'User',
                   id: 1,
                   name: 'Ben',
                   company: {
+                    __typename: 'Company',
                     id: 1,
                     name: 'Apollo',
                   },
                 },
                 {
+                  __typename: 'User',
                   id: 2,
                   name: 'James',
                   company: {
+                    __typename: 'Company',
                     id: 1,
                     name: 'Apollo',
                   },

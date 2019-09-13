@@ -3,7 +3,6 @@ import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
-import { InvariantError } from 'ts-invariant';
 import { KeyTrie } from 'optimism';
 
 import { Cache, ApolloCache, Transaction } from '../core';
@@ -175,8 +174,40 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     };
   }
 
-  public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    throw new InvariantError(`eviction is not implemented on InMemory Cache`);
+  // Request garbage collection of unreachable normalized entities.
+  public gc() {
+    return this.optimisticData.gc();
+  }
+
+  // Call this method to ensure the given root ID remains in the cache after
+  // garbage collection, along with its transitive child entities. Note that
+  // the cache automatically retains all directly written entities. By default,
+  // the retainment persists after optimistic updates are removed. Pass true
+  // for the optimistic argument if you would prefer for the retainment to be
+  // discarded when the top-most optimistic layer is removed. Returns the
+  // resulting (non-negative) retainment count.
+  public retain(rootId: string, optimistic?: boolean): number {
+    return (optimistic ? this.optimisticData : this.data).retain(rootId);
+  }
+
+  // Call this method to undo the effect of the retain method, above. Once the
+  // retainment count falls to zero, the given ID will no longer be preserved
+  // during garbage collection, though it may still be preserved by other safe
+  // entities that refer to it. Returns the resulting (non-negative) retainment
+  // count, in case that's useful.
+  public release(rootId: string, optimistic?: boolean): number {
+    return (optimistic ? this.optimisticData : this.data).release(rootId);
+  }
+
+  public evict(dataId: string): boolean {
+    if (this.optimisticData.has(dataId)) {
+      // Note that this deletion does not trigger a garbage collection, which
+      // is convenient in cases where you want to evict multiple entities before
+      // performing a single garbage collection.
+      this.optimisticData.delete(dataId);
+      return !this.optimisticData.has(dataId);
+    }
+    return false;
   }
 
   public reset(): Promise<void> {

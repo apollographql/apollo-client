@@ -16,6 +16,7 @@ export declare type IdGetter = (
  * StoreObjects from the cache
  */
 export interface NormalizedCache {
+  has(dataId: string): boolean;
   get(dataId: string): StoreObject;
   set(dataId: string, value: StoreObject): void;
   delete(dataId: string): void;
@@ -30,6 +31,17 @@ export interface NormalizedCache {
    * replace the state of the store
    */
   replace(newData: NormalizedCacheObject): void;
+
+  /**
+   * Retain (or release) a given root ID to protect (or expose) it and its
+   * transitive child entities from (or to) garbage collection. The current
+   * retainment count is returned by both methods. Note that releasing a root
+   * ID does not cause that entity to be garbage collected, but merely removes
+   * it from the set of root IDs that will be considered during the next
+   * mark-and-sweep collection.
+   */
+  retain(rootId: string): number;
+  release(rootId: string): number;
 }
 
 /**

@@ -143,13 +143,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }) || null;
   }
 
-  public write(write: Cache.WriteOptions): void {
+  public write(options: Cache.WriteOptions): void {
     this.storeWriter.writeQueryToStore({
       store: this.data,
-      query: this.transformDocument(write.query),
-      result: write.result,
-      dataId: write.dataId,
-      variables: write.variables,
+      query: options.query,
+      result: options.result,
+      dataId: options.dataId,
+      variables: options.variables,
       dataIdFromObject: this.config.dataIdFromObject,
     });
 

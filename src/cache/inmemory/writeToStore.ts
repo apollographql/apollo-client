@@ -117,8 +117,9 @@ export class StoreWriter {
   private processSelectionSet({
     result,
     selectionSet,
-    typename,
     context,
+    typename = getTypenameFromResult(
+      result, selectionSet, context.fragmentMap),
   }: {
     result: any;
     selectionSet: SelectionSetNode;
@@ -170,12 +171,6 @@ export class StoreWriter {
           );
         }
       } else {
-        // If the typename of the object we're processing was not provided,
-        // compute it lazily.
-        typename =
-          typename ||
-          getTypenameFromResult(result, selectionSet, context.fragmentMap);
-
         // This is not a field, so it must be a fragment, either inline or named
         const fragment = getFragmentFromSelection(
           selection,
@@ -201,6 +196,13 @@ export class StoreWriter {
         }
       }
     });
+
+    if (
+      typeof typename === 'string' &&
+      newFields.__typename === void 0
+    ) {
+      newFields.__typename = typename;
+    }
 
     return newFields;
   }

@@ -28,38 +28,45 @@ module.exports = {
           filepathPrefix: 'packages/apollo-client/src/',
         },
         sidebarCategories: {
-          null: ['index', 'why-apollo', 'integrations', 'hooks-migration'],
-          Essentials: [
+          null: [
+            'index',
+            'why-apollo',
             'essentials/get-started',
+          ],
+          'Fetching data': [
             'essentials/queries',
             'essentials/mutations',
-            'essentials/local-state',
-          ],
-          Features: [
-            'features/error-handling',
-            'features/pagination',
-            'features/optimistic-ui',
-            'features/server-side-rendering',
-            'features/developer-tooling',
-          ],
-          Advanced: [
-            'advanced/boost-migration',
             'advanced/subscriptions',
-            'advanced/network-layer',
-            'advanced/caching',
+            'features/pagination',
             'advanced/fragments',
+            'features/error-handling',
           ],
-          Recipes: [
-            'recipes/authentication',
+          'Managing local data': [
+            'essentials/local-state',
+            'advanced/caching',
+          ],
+          'Development & Testing': [
+            'recipes/static-typing',
             'recipes/testing',
             'recipes/client-schema-mocking',
-            'recipes/static-typing',
-            'recipes/performance',
-            'recipes/react-native',
-            'recipes/babel',
-            'recipes/webpack',
-            'recipes/meteor',
+            'features/developer-tooling',
             'recipes/recompose',
+          ],
+          Performance: [
+            'recipes/performance',
+            'features/optimistic-ui',
+            'features/server-side-rendering',
+            'recipes/babel',
+          ],
+          Integrations: [
+            'integrations',
+            'recipes/react-native',
+            'recipes/meteor',
+            'recipes/webpack',
+          ],
+          Networking: [
+            'advanced/network-layer',
+            'recipes/authentication',
           ],
           'API Reference': [
             'api/apollo-client',
@@ -70,6 +77,10 @@ module.exports = {
             'api/react-hoc',
             'api/react-common',
           ],
+          Migrating: [
+            'hooks-migration',
+            'advanced/boost-migration',
+          ]
         },
       },
     },

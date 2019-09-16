@@ -1,10 +1,10 @@
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
-import { wrap, OptimisticWrapperFunction } from 'optimism';
+import { dep, OptimisticDependencyFunction } from 'optimism';
 import { isReference } from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
-type DependType = OptimisticWrapperFunction<[string], StoreObject> | null;
+type DependType = OptimisticDependencyFunction<string> | null;
 
 export abstract class EntityCache implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
@@ -15,21 +15,6 @@ export abstract class EntityCache implements NormalizedCache {
   // from accessing the .depend property of an arbitrary EntityCache
   // instance, because it might be a Root instance (and vice-versa).
   public readonly depend: DependType = null;
-
-  protected makeDepend(): DependType {
-    // It's important for this.depend to return a real value instead of
-    // void, because this.depend(dataId) after this.depend.dirty(dataId)
-    // marks the ID as clean if the result has not changed since the last
-    // time the parent computation called this.depend(dataId). Returning
-    // the StoreObject ensures the ID stays dirty unless its StoreObject
-    // value is actually === the same as before.
-    return wrap((dataId: string) => this.data[dataId], {
-      disposable: true,
-      makeCacheKey(dataId) {
-        return dataId;
-      },
-    });
-  }
 
   public abstract addLayer(
     layerId: string,
@@ -187,8 +172,8 @@ export namespace EntityCache {
       super();
       if (resultCaching) {
         // Regard this.depend as publicly readonly but privately mutable.
-        (this as any).depend = this.makeDepend();
-        this.sharedLayerDepend = this.makeDepend();
+        (this as any).depend = dep<string>();
+        this.sharedLayerDepend = dep<string>();
       }
       if (seed) this.replace(seed);
     }

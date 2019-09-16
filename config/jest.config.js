@@ -10,7 +10,6 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   testURL: 'http://localhost',
-  testMatch: ['<rootDir>/src/**/__tests__/**/*.ts'],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/lib/'

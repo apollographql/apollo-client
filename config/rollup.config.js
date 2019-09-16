@@ -27,6 +27,8 @@ const defaultGlobals = {
   'graphql/language/visitor': 'visitor',
   'fast-json-stable-stringify': 'stringify',
   '@wry/equality': 'wryEquality',
+  graphql: 'graphql',
+  react: 'React'
 };
 
 function rollup({

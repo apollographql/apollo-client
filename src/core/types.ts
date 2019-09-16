@@ -11,7 +11,7 @@ export type QueryListener = (
   forceResolvers?: boolean,
 ) => void;
 
-export type OperationVariables = { [key: string]: any };
+export type OperationVariables = Record<string, any>;
 
 export type PureQueryOptions = {
   query: DocumentNode;

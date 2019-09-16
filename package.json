@@ -48,6 +48,12 @@
       "maxSize": "16.9 kB"
     }
   ],
+  "peerDependencies": {
+    "@types/react": "^16.8.0",
+    "graphql": "^14.5.4",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
+  },
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
     "@wry/equality": "^0.1.9",
@@ -59,13 +65,11 @@
     "tslib": "^1.10.0",
     "zen-observable": "^0.8.14"
   },
-  "peerDependencies": {
-    "graphql": "^14.5.4"
-  },
   "devDependencies": {
     "@babel/core": "7.6.0",
     "@babel/plugin-transform-modules-commonjs": "7.6.0",
     "@babel/plugin-transform-modules-umd": "7.2.0",
+    "@testing-library/react": "^9.1.4",
     "@types/fast-json-stable-stringify": "^2.0.0",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jest": "24.0.18",

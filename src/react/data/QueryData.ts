@@ -158,7 +158,7 @@ export class QueryData<TData, TVariables> extends OperationData {
         networkStatus: NetworkStatus.loading,
         called: true,
         data: undefined
-      };
+      } as QueryResult<TData, TVariables>;
 
       // SSR is disabled, so just return the loading event and leave it in that state.
       if (ssrDisabled) {

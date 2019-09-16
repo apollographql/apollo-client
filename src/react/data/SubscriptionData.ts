@@ -103,7 +103,7 @@ export class SubscriptionData<
       loading: true,
       error: undefined,
       data: undefined
-    };
+    } as SubscriptionResult<TData>;
   }
 
   private updateResult(result: SubscriptionResult) {

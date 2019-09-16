@@ -39,7 +39,11 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   // stable identity, so we'll exclude them from the memoization key to
   // prevent `afterExecute` from being triggered un-necessarily.
   const memo = {
-    options: { ...updatedOptions, onError: undefined, onCompleted: undefined },
+    options: {
+      ...updatedOptions,
+      onError: undefined,
+      onCompleted: undefined
+    } as QueryHookOptions<TData, TVariables>,
     context,
     tick
   };

@@ -105,7 +105,7 @@ If the `id` field on both results matches up, then the `score` field everywhere 
 
 ## Direct Cache Access
 
-To interact directly with your cache, you can use the Apollo Client class methods readQuery, readFragment, writeQuery, and writeFragment. These methods are available to us via the `DataProxy` interface. Accessing these methods will vary slightly based on your view layer implementation. If you are using React, you can wrap your component in the `withApollo` higher order component, which will give you access to `this.props.client`. From there, you can use the methods to control your data.
+To interact directly with your cache, you can use the Apollo Client class methods readQuery, readFragment, writeQuery, and writeFragment. These methods are available to us via the `DataProxy` interface. Accessing these methods will vary slightly based on your view layer implementation. If you are using React, you can use the `useApolloClient` hook, which will return the `client` instance you passed to the `ApolloProvider` during initialization. From there, you can use the methods to control your data.
 
 **Note**: The `cache` you created with `new InMemoryCache(...)` class is not meant to be used directly, but passed to the `ApolloClient` constructor. The client then accesses the `cache` using methods like `readQuery` and `writeQuery`. The difference between `cache.writeQuery` and `client.writeQuery` is that the client version also performs a broadcast after writing to the cache. This broadcast ensures your data is refreshed in the view layer after the `client.writeQuery` operation. If you only use `cache.writeQuery`, the changes may not be immediately reflected in the view layer. This behavior is sometimes useful in scenarios where you want to perform multiple cache writes without immediately updating the view layer.
 
@@ -196,7 +196,7 @@ const todo = client.readFragment({
 });
 ```
 
-> **Note:** Most people add a `__typename` to the id in `dataIdFromObject`. If you do this then don’t forget to add the `__typename` when you are reading a fragment as well. So for example your id may be `Todo_5` and not just `5`.
+> **Note:** Most people add a `__typename` to the id in `dataIdFromObject`. If you do this then don’t forget to add the `__typename` when you are reading a fragment as well. So for example your id may be `Todo:5` and not just `5`.
 
 If a todo with that id does not exist in the cache you will get `null` back. If a todo of that id does exist in the cache, but that todo does not have the `text` field then an error will be thrown.
 
@@ -262,7 +262,7 @@ Here are some common situations where you would need to access the cache directl
 
 ### Bypassing the cache
 
-Sometimes it makes sense to not use the cache for a specific operation. This can be done using the `no-cache` `fetchPolicy`. The `no-cache` policy does not write to the cache with the response. This may be useful for sensitive data like passwords that you don’t want to keep in the cache.
+Sometimes it makes sense to not use the cache for a specific operation. This can be done using the `no-cache` `fetchPolicy`. The `no-cache` policy does not read, nor write the response to the cache. This may be useful for sensitive data like passwords that you don’t want to keep in the cache.
 
 ### Updating after a mutation
 
@@ -310,7 +310,7 @@ mutate({
 })
 ```
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
+Also, you can use `update`, which gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
 
 ```jsx
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -544,35 +544,44 @@ cacheRedirects: {
 Sometimes, you may want to reset the store entirely, such as [when a user logs out](/recipes/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
 
 ```js
-export default withApollo(graphql(PROFILE_QUERY, {
-  props: ({ data: { loading, currentUser }, ownProps: { client }}) => ({
-    loading,
-    currentUser,
-    resetOnLogout: async () => client.resetStore(),
-  }),
-})(Profile));
+export const Logout = () => {
+  const client = useApolloClient();
+  const handleLogout = async () => client.resetStore();
+  
+  return (
+    <div>
+      <button type="button" onClick={handleLogout}>Logout</button>
+    </div>
+  );
+}
 ```
 
 To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
 
-In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](https://www.apollographql.com/docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
+In this example, we're using `client.onResetStore` callback to write our default values to the cache again after a reset happens.
 
 ```js
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { withClientState } from 'apollo-link-state';
-
-import { resolvers, defaults } from './resolvers';
 
 const cache = new InMemoryCache();
-const stateLink = withClientState({ cache, resolvers, defaults });
-
 const client = new ApolloClient({
   cache,
-  link: stateLink,
+  resolvers: { /* ... */ },
 });
 
-client.onResetStore(stateLink.writeDefaults);
+const data = {
+  todos: [],
+  visibilityFilter: 'SHOW_ALL',
+  networkStatus: {
+    __typename: 'NetworkStatus',
+    isConnected: false,
+  },
+};
+
+cache.writeData({ data });
+
+client.onResetStore(() => cache.writeData({ data }));
 ```
 
 You can also call `client.onResetStore` from your React components. This can be useful if you would like to force your UI to rerender after the store has been reset.
@@ -580,25 +589,19 @@ You can also call `client.onResetStore` from your React components. This can be 
 If you would like to unsubscribe your callbacks from resetStore, use the return value of `client.onResetStore` for your unsubscribe function.
 
 ```js
-import { withApollo } from "react-apollo";
+import { useApolloClient } from '@apollo/react-hooks';
 
-export class Foo extends Component {
-  constructor(props) {
-    super(props);
-    this.unsubscribe = props.client.onResetStore(
-      () => this.setState({ reset: false })
-    );
-    this.state = { reset: false };
-  }
-  componentDidUnmount() {
-    this.unsubscribe();
-  }
-  render() {
-    return this.state.reset ? <div /> : <span />
-  }
+export const Foo = () => {
+  const [reset, setReset] = useState(false);
+  const client = useApolloClient();
+  
+  useEffect(() => {
+    const unsubscribe = client.onResetStore(() => setReset(true));
+    return () => unsubscribe();
+  }, []);
+  
+  return reset ? <div /> : <span />;
 }
-
-export default withApollo(Foo);
 ```
 
 If you want to clear the store but don't want to refetch active queries, use

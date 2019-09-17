@@ -15,7 +15,7 @@ Apollo Client is the best way to use GraphQL to build client applications. The c
 
 ## Getting started
 
-The docs for Apollo Client are mainly written using the [React integration](/essentials/get-started/), but most of the examples work no matter where you use Apollo. The docs are broken into five distinct sections to make it easy to find your way around:
+The docs for Apollo Client are mainly written using the [React integration](/v2.4/essentials/get-started/), but most of the examples work no matter where you use Apollo. The docs are broken into five distinct sections to make it easy to find your way around:
 
 1. **ESSENTIALS:** Outlines everything you need to know in order to get up and running quickly.
 2. **FEATURES:** Details the amazing things you can do with Apollo Client.
@@ -29,12 +29,12 @@ Most of this sites documentation examples are written using React, but Apollo Cl
 
 - JavaScript
   - [Angular](https://www.apollographql.com/docs/angular)
-  - [Vue](/integrations/#vue)
-  - [Meteor](/recipes/meteor/)
-  - [Ember](/integrations/#ember)
+  - [Vue](/v2.4/integrations/#vue)
+  - [Meteor](/v2.4/recipes/meteor/)
+  - [Ember](/v2.4/integrations/#ember)
 - Web Components
-  - [Polymer](/integrations/#web-components)
-  - [lit-apollo](/integrations/#web-components)
+  - [Polymer](/v2.4/integrations/#web-components)
+  - [lit-apollo](/v2.4/integrations/#web-components)
 - Native mobile
   - [Native iOS with Swift](https://www.apollographql.com/docs/ios)
   - [Native Android with Java](https://www.apollographql.com/docs/android)

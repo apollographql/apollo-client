@@ -5,7 +5,7 @@ description: Learn how to quickly set up Apollo Client in your React app
 
 The simplest way to get started with Apollo Client is by using Apollo Boost, our starter kit that configures your client for you with our recommended settings. Apollo Boost includes packages that we think are essential for building an Apollo app, like our in memory cache, local state management, and error handling. It's also flexible enough to handle features like authentication.
 
-If you're an advanced user who would like to configure Apollo Client from scratch, head on over to our [Apollo Boost migration guide](/advanced/boost-migration/). For the majority of users, Apollo Boost should meet your needs, so we don't recommend switching unless you absolutely need more customization.
+If you're an advanced user who would like to configure Apollo Client from scratch, head on over to our [Apollo Boost migration guide](../advanced/boost-migration/). For the majority of users, Apollo Boost should meet your needs, so we don't recommend switching unless you absolutely need more customization.
 
 ## Installation
 
@@ -175,6 +175,6 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
 
 Now that you've learned how to fetch data with Apollo Client, you're ready to dive deeper into creating more complex queries and mutations. After this section, we recommend moving onto:
 
-- [Queries](/essentials/queries/): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
-- [Mutations](/essentials/mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
-- [Apollo Client API](/api/apollo-client/): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Visit the API reference for a full list of options.
+- [Queries](./queries/): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `Query`.
+- [Mutations](./mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `Mutation` components.
+- [Apollo Client API](../api/apollo-client/): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Visit the API reference for a full list of options.

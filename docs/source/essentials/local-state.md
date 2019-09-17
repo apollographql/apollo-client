@@ -220,7 +220,7 @@ cache.writeData({
 });
 ```
 
-Sometimes you may need to [reset the store](/api/apollo-client/#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
+Sometimes you may need to [reset the store](../api/apollo-client/#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -546,7 +546,7 @@ Pulling `@client` field values directly out of the cache isn't quite as flexible
 
 ### Working with fetch policies
 
-Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](/api/apollo-client/#ApolloClient.query) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request. Let's look at an example:
+Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](../api/apollo-client/#ApolloClient.query) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request. Let's look at an example:
 
 ```jsx
 import React, { Fragment } from 'react';
@@ -783,7 +783,7 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 ## Managing the cache
 
-When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](/advanced/caching/) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
+When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](../advanced/caching/) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
 
 ### writeData
 
@@ -1154,7 +1154,7 @@ client.setResolvers({ ... });
   <dt>`getResolvers`</dt>
   <dd>Get the currently defined resolver map.</dd>
   <dt>`setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher)`</dt>
-  <dd>Set a custom `FragmentMatcher` to be used when resolving local state queries involving [fragments on unions or interfaces](/advanced/fragments#fragments-on-unions-and-interfaces).</dd>
+  <dd>Set a custom `FragmentMatcher` to be used when resolving local state queries involving [fragments on unions or interfaces](../advanced/fragments#fragments-on-unions-and-interfaces).</dd>
 </dl>
 
 **Typescript interfaces/types:**

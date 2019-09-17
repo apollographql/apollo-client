@@ -21,7 +21,7 @@ const client = new ApolloClient({ ... });
 
 ## `readQuery`
 
-The `readQuery` method is very similar to the [`query` method on `ApolloClient`](/api/apollo-client/#ApolloClient.query) except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
+The `readQuery` method is very similar to the [`query` method on `ApolloClient`](../api/apollo-client/#ApolloClient.query) except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
 
 ```js
 const { todo } = client.readQuery({
@@ -60,8 +60,8 @@ const { todo } = client.readQuery({
 
 **Resources:**
 
-- [`ApolloClient#query` API documentation](/api/apollo-client/#ApolloClient.query)
-- [`ApolloClient#readQuery` API documentation](/api/apollo-client/#ApolloClient.readQuery)
+- [`ApolloClient#query` API documentation](../api/apollo-client/#ApolloClient.query)
+- [`ApolloClient#readQuery` API documentation](../api/apollo-client/#ApolloClient.readQuery)
 
 ## `readFragment`
 
@@ -112,7 +112,7 @@ The beauty of `readFragment` is that the todo could have come from anywhere! The
 
 **Resources:**
 
-- [`ApolloClient#readFragment` API documentation](/api/apollo-client/#ApolloClient.readFragment)
+- [`ApolloClient#readFragment` API documentation](../api/apollo-client/#ApolloClient.readFragment)
 
 ## `writeQuery` and `writeFragment`
 
@@ -169,11 +169,11 @@ client.writeQuery({
 
 **Resources:**
 
-- [`ApolloClient#watchQuery` API documentation](/api/apollo-client/#ApolloClient.watchQuery)
-- [`ApolloClient#writeQuery` API documentation](/api/apollo-client/#ApolloClient.writeQuery)
-- [`ApolloClient#writeFragment` API documentation](/api/apollo-client/#ApolloClient.writeFragment)
-- [`DataProxy#writeQuery` API documentation](/api/apollo-client/#ApolloClient.writeQuery)
-- [`DataProxy#writeFragment` API documentation](/api/apollo-client/#ApolloClient.writeFragment)
+- [`ApolloClient#watchQuery` API documentation](../api/apollo-client/#ApolloClient.watchQuery)
+- [`ApolloClient#writeQuery` API documentation](../api/apollo-client/#ApolloClient.writeQuery)
+- [`ApolloClient#writeFragment` API documentation](../api/apollo-client/#ApolloClient.writeFragment)
+- [`DataProxy#writeQuery` API documentation](../api/apollo-client/#ApolloClient.writeQuery)
+- [`DataProxy#writeFragment` API documentation](../api/apollo-client/#ApolloClient.writeFragment)
 
 ## Updating the cache after a mutation
 
@@ -260,4 +260,4 @@ The `update` function is not a good place for side-effects as it may be called m
 
 **Resources:**
 
-- [`ApolloClient#mutate` API documentation](/api/apollo-client/#ApolloClient.mutate)
+- [`ApolloClient#mutate` API documentation](../api/apollo-client/#ApolloClient.mutate)

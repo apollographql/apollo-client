@@ -60,5 +60,6 @@ node -e "\
 # Copy few more files to ./npm
 cp ../../README.md npm/
 cp ../../LICENSE npm/
+cp ../../schema.graphql npm/
 
 cd npm && npm publish

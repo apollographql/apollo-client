@@ -2329,8 +2329,6 @@ describe('ApolloClient', () => {
         defaultOptions,
       });
 
-      client.initQueryManager();
-
       let queryOptions: QueryOptions = {
         query: gql`
           {

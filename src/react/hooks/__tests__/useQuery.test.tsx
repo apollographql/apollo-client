@@ -44,12 +44,11 @@ describe('useQuery Hook', () => {
   afterEach(cleanup);
 
   describe('General use', () => {
-    it('should handle a simple query properly', done => {
+    it('should handle a simple query properly', async () => {
       const Component = () => {
         const { data, loading } = useQuery(CAR_QUERY);
         if (!loading) {
           expect(data).toEqual(CAR_RESULT_DATA);
-          done();
         }
         return null;
       };
@@ -59,16 +58,17 @@ describe('useQuery Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait();
     });
 
-    it('should keep data as undefined until data is actually returned', done => {
+    it('should keep data as undefined until data is actually returned', async () => {
       const Component = () => {
         const { data, loading } = useQuery(CAR_QUERY);
         if (loading) {
           expect(data).toBeUndefined();
         } else {
           expect(data).toEqual(CAR_RESULT_DATA);
-          done();
         }
         return null;
       };
@@ -78,6 +78,8 @@ describe('useQuery Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait();
     });
 
     it('should ensure ObservableQuery fields have a stable identity', async () => {
@@ -126,7 +128,7 @@ describe('useQuery Hook', () => {
   });
 
   describe('Polling', () => {
-    it('should support polling', done => {
+    it('should support polling', async () => {
       let renderCount = 0;
       const Component = () => {
         let { data, loading, stopPolling } = useQuery(CAR_QUERY, {
@@ -144,13 +146,9 @@ describe('useQuery Hook', () => {
             expect(loading).toBeFalsy();
             expect(data).toEqual(CAR_RESULT_DATA);
             stopPolling();
-            setTimeout(() => {
-              done();
-            }, 10);
             break;
           case 3:
-            done.fail('Uh oh - we should have stopped polling!');
-            break;
+            throw new Error('Uh oh - we should have stopped polling!');
           default:
           // Do nothing
         }
@@ -163,9 +161,13 @@ describe('useQuery Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(3);
+      });
     });
 
-    it('should stop polling when skip is true', done => {
+    it('should stop polling when skip is true', async () => {
       let renderCount = 0;
       const Component = () => {
         const [shouldSkip, setShouldSkip] = useState(false);
@@ -190,13 +192,9 @@ describe('useQuery Hook', () => {
           case 3:
             expect(loading).toBeFalsy();
             expect(data).toBeUndefined();
-            setTimeout(() => {
-              done();
-            }, 10);
             break;
           case 4:
-            done.fail('Uh oh - we should have stopped polling!');
-            break;
+            throw new Error('Uh oh - we should have stopped polling!');
           default:
           // Do nothing
         }
@@ -209,9 +207,13 @@ describe('useQuery Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(4);
+      });
     });
 
-    it('should stop polling when the component is unmounted', done => {
+    it('should stop polling when the component is unmounted', async () => {
       const mockLink = new MockLink(CAR_MOCKS);
       const linkRequestSpy = jest.spyOn(mockLink, 'request');
       let renderCount = 0;
@@ -241,11 +243,6 @@ describe('useQuery Hook', () => {
       const Component = () => {
         const [queryMounted, setQueryMounted] = useState(true);
         const unmount = () => setTimeout(() => setQueryMounted(false), 0);
-        if (!queryMounted)
-          setTimeout(() => {
-            expect(linkRequestSpy).toHaveBeenCalledTimes(2);
-            done();
-          }, 30);
         return <>{queryMounted && <QueryComponent unmount={unmount} />}</>;
       };
 
@@ -254,6 +251,10 @@ describe('useQuery Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait(() => {
+        expect(linkRequestSpy).toHaveBeenCalledTimes(2);
+      })
     });
 
     it(
@@ -314,7 +315,7 @@ describe('useQuery Hook', () => {
   });
 
   describe('Error handling', () => {
-    it("should render GraphQLError's", done => {
+    it("should render GraphQLError's", async () => {
       const query = gql`
         query TestQuery {
           rates(currency: "USD") {
@@ -337,7 +338,6 @@ describe('useQuery Hook', () => {
         if (!loading) {
           expect(error).toBeDefined();
           expect(error!.message).toEqual('GraphQL error: forced error');
-          done();
         }
         return null;
       };
@@ -347,9 +347,11 @@ describe('useQuery Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait();
     });
 
-    it('should only call onError callbacks once', done => {
+    it('should only call onError callbacks once', async () => {
       const query = gql`
         query SomeQuery {
           stuff {
@@ -408,7 +410,6 @@ describe('useQuery Hook', () => {
           case 3:
             expect(loading).toBeFalsy();
             expect(data).toEqual(resultData);
-            done();
             break;
           default: // Do nothing
         }
@@ -422,9 +423,13 @@ describe('useQuery Hook', () => {
           <Component />
         </ApolloProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(4);
+      });
     });
 
-    it('should persist errors on re-render if they are still valid', done => {
+    it('should persist errors on re-render if they are still valid', async () => {
       const query = gql`
         query SomeQuery {
           stuff {
@@ -462,7 +467,6 @@ describe('useQuery Hook', () => {
           case 2:
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: forced error');
-            done();
             break;
           default: // Do nothing
         }
@@ -476,6 +480,10 @@ describe('useQuery Hook', () => {
           <App />
         </MockedProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(3);
+      });
     });
 
     it(
@@ -1091,7 +1099,6 @@ describe('useQuery Hook', () => {
             onCompleted(data) {
               onCompletedCalled = true;
               expect(data).toBeDefined();
-              console.log(data);
             }
           });
           if (!loading) {

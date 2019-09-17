@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { MockSubscriptionLink } from '../../testing';
@@ -11,7 +11,7 @@ import { useSubscription } from '../useSubscription';
 describe('useSubscription Hook', () => {
   afterEach(cleanup);
 
-  it('should handle a simple subscription properly', done => {
+  it('should handle a simple subscription properly', async () => {
     const subscription = gql`
       subscription {
         car {
@@ -54,7 +54,6 @@ describe('useSubscription Hook', () => {
         case 4:
           expect(loading).toBe(false);
           expect(data).toEqual(results[3].result.data);
-          done();
           break;
         default:
       }
@@ -71,9 +70,13 @@ describe('useSubscription Hook', () => {
         <Component />
       </ApolloProvider>
     );
+
+    await wait(() => {
+      expect(renderCount).toBe(5);
+    });
   });
 
-  it('should cleanup after the subscription component has been unmounted', done => {
+  it('should cleanup after the subscription component has been unmounted', async () => {
     const subscription = gql`
       subscription {
         car {
@@ -124,10 +127,6 @@ describe('useSubscription Hook', () => {
             // stay at 1).
             unmount();
             link.simulateResult(results[0]);
-            setTimeout(() => {
-              expect(onSubscriptionDataCount).toEqual(1);
-              done();
-            });
           });
           break;
         default:
@@ -141,9 +140,13 @@ describe('useSubscription Hook', () => {
         <Component />
       </ApolloProvider>
     ).unmount;
+
+    await wait(() => {
+      expect(onSubscriptionDataCount).toEqual(1);
+    });
   });
 
-  it('should never execute a subscription with the skip option', done => {
+  it('should never execute a subscription with the skip option', async () => {
     const subscription = gql`
       subscription {
         car {
@@ -176,11 +179,6 @@ describe('useSubscription Hook', () => {
           expect(data).toBeUndefined();
           setTimeout(() => {
             unmount();
-            setTimeout(() => {
-              expect(onSubscriptionDataCount).toEqual(0);
-              expect(renderCount).toEqual(1);
-              done();
-            });
           });
           break;
         default:
@@ -194,9 +192,14 @@ describe('useSubscription Hook', () => {
         <Component />
       </ApolloProvider>
     ).unmount;
+
+    await wait(() => {
+      expect(onSubscriptionDataCount).toEqual(0);
+      expect(renderCount).toEqual(1);
+    });
   });
 
-  it('should create a subscription after skip has changed from true to a falsy value', done => {
+  it('should create a subscription after skip has changed from true to a falsy value', async () => {
     const subscription = gql`
       subscription {
         car {
@@ -272,10 +275,6 @@ describe('useSubscription Hook', () => {
           expect(data).toEqual(results[1].result.data);
           setTimeout(() => {
             unmount();
-            setTimeout(() => {
-              expect(renderCount).toEqual(7);
-              done();
-            });
           });
           break;
         default:
@@ -289,5 +288,9 @@ describe('useSubscription Hook', () => {
         <Component />
       </ApolloProvider>
     ).unmount;
+
+    await wait(() => {
+      expect(renderCount).toEqual(7);
+    });
   });
 });

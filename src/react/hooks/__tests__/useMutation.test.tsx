@@ -38,7 +38,7 @@ describe('useMutation Hook', () => {
   afterEach(cleanup);
 
   describe('General use', () => {
-    it('should handle a simple mutation properly', done => {
+    it('should handle a simple mutation properly', async () => {
       const variables = {
         description: 'Get milk!'
       };
@@ -71,7 +71,6 @@ describe('useMutation Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(data).toEqual(CREATE_TODO_RESULT);
-            done();
             break;
           default:
         }
@@ -84,9 +83,13 @@ describe('useMutation Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(3);
+      });
     });
 
-    it('should be able to call mutations as an effect', done => {
+    it('should be able to call mutations as an effect', async () => {
       const variables = {
         description: 'Get milk!'
       };
@@ -123,7 +126,6 @@ describe('useMutation Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(data).toEqual(CREATE_TODO_RESULT);
-            done();
             break;
           default:
         }
@@ -141,9 +143,13 @@ describe('useMutation Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(3);
+      });
     });
 
-    it('should ensure the mutation callback function has a stable identity', done => {
+    it('should ensure the mutation callback function has a stable identity', async () => {
       const variables = {
         description: 'Get milk!'
       };
@@ -181,7 +187,6 @@ describe('useMutation Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(data).toEqual(CREATE_TODO_RESULT);
-            done();
             break;
           default:
         }
@@ -194,9 +199,13 @@ describe('useMutation Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(3);
+      });
     });
 
-    it('should resolve mutate function promise with mutation results', done => {
+    it('should resolve mutate function promise with mutation results', async () => {
       const variables = {
         description: 'Get milk!'
       };
@@ -222,7 +231,6 @@ describe('useMutation Hook', () => {
           expect(data!.createTodo.description).toEqual(
             CREATE_TODO_RESULT.createTodo.description
           );
-          done();
         }
 
         useEffect(() => {
@@ -237,6 +245,8 @@ describe('useMutation Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      await wait();
     });
 
     it('should return the current client instance in the result object', async () => {
@@ -258,7 +268,7 @@ describe('useMutation Hook', () => {
   });
 
   describe('Optimistic response', () => {
-    it('should support optimistic response handling', done => {
+    it('should support optimistic response handling', async () => {
       const optimisticResponse = {
         __typename: 'Mutation',
         createTodo: {
@@ -316,7 +326,6 @@ describe('useMutation Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(data).toEqual(CREATE_TODO_RESULT);
-            done();
             break;
           default:
         }
@@ -329,6 +338,10 @@ describe('useMutation Hook', () => {
           <Component />
         </ApolloProvider>
       );
+
+      await wait(() => {
+        expect(renderCount).toBe(3);
+      });
     });
   });
 });

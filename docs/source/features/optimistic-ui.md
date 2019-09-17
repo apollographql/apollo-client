@@ -2,7 +2,7 @@
 title: Optimistic UI
 ---
 
-As explained in the [mutations](/v2.4/essentials/mutations/) section, optimistic UI is a pattern that you can use to simulate the results of a mutation and update the UI even before receiving a response from the server. Once the response is received from the server, the optimistic result is thrown away and replaced with the actual result.
+As explained in the [mutations](../essentials/mutations/) section, optimistic UI is a pattern that you can use to simulate the results of a mutation and update the UI even before receiving a response from the server. Once the response is received from the server, the optimistic result is thrown away and replaced with the actual result.
 
 Optimistic UI provides an easy way to make your UI respond much faster, while ensuring that the data becomes consistent with the actual response when it arrives.
 
@@ -10,7 +10,7 @@ Optimistic UI provides an easy way to make your UI respond much faster, while en
 
 Let's say we have an "edit comment" mutation, and we want the UI to update immediately when the user submits the mutation, instead of waiting for the server response. This is what the `optimisticResponse` parameter to the `mutate` function provides.
 
-The main way to get GraphQL data into your UI components with Apollo is to use a query, so if we want our optimistic response to update the UI, we have to make sure to return an optimistic response that will update the correct query result. Learn more about how to do this with the [`dataIdFromObject`](/v2.4/advanced/caching/#normalization) option.
+The main way to get GraphQL data into your UI components with Apollo is to use a query, so if we want our optimistic response to update the UI, we have to make sure to return an optimistic response that will update the correct query result. Learn more about how to do this with the [`dataIdFromObject`](../advanced/caching/#normalization) option.
 
 Here's what this looks like in the code:
 
@@ -54,7 +54,7 @@ We select `id` and `__typename` because that's what our `dataIdFromObject` uses 
 
 In the example above, we showed how to seamlessly edit an existing object in the store with an optimistic mutation result. However, many mutations don't just update an existing object in the store, but they insert a new one.
 
-In that case we need to specify how to integrate the new data into existing queries, and thus our UI. You can read in detail about how to do that in the article about [controlling the store](/v2.4/advanced/caching/)--in particular, we can use the `update` function to insert a result into an existing query's result set. `update` works exactly the same way for optimistic results and the real results returned from the server.
+In that case we need to specify how to integrate the new data into existing queries, and thus our UI. You can read in detail about how to do that in the article about [controlling the store](../advanced/caching/)--in particular, we can use the `update` function to insert a result into an existing query's result set. `update` works exactly the same way for optimistic results and the real results returned from the server.
 
 Here is a concrete example from GitHunt, which inserts a comment into an existing list of comments.
 

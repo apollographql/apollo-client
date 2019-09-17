@@ -119,7 +119,7 @@ fieldName: (obj, args, context, info) => result;
 
 1. `obj`: The object containing the result returned from the resolver on the parent field or the `ROOT_QUERY` object in the case of a top-level query or mutation. Don't worry about this one too much for `apollo-link-state`.
 2. `args`: An object containing all of the arguments passed into the field. For example, if you called a mutation with `updateNetworkStatus(isConnected: true)`, the `args` object would be `{ isConnected: true }`.
-3. `context`: The context object, which is shared between your React components and your Apollo Client network stack. The most important thing to note here is that we've added the Apollo cache to the context for you, so you can manipulate the cache with `readQuery`, `writeQuery`, `readFragment`, `writeFragment`, and `writeData`. Learn more about those methods [here](/v2.4/advanced/caching/#direct-cache-access).
+3. `context`: The context object, which is shared between your React components and your Apollo Client network stack. The most important thing to note here is that we've added the Apollo cache to the context for you, so you can manipulate the cache with `readQuery`, `writeQuery`, `readFragment`, `writeFragment`, and `writeData`. Learn more about those methods [here](../advanced/caching/#direct-cache-access).
 4. `info`: Information about the execution state of the query. You will probably never have to use this one.
 
 Let's take a look at an example of a resolver where we toggle a todo's completed status:

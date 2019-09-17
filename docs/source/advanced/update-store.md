@@ -29,7 +29,7 @@ By default, Apollo identifies objects based on two properties: The `__typename` 
 'Person:1234'
 ```
 
-You can also specify a custom function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](/essentials/get-started/#create-a-client), if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.
+You can also specify a custom function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](../essentials/get-started/#create-a-client), if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.
 
 ```js
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -129,7 +129,7 @@ mutate({
 
 ### `update`
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/v2.4/api/react-apollo/#optionsupdate).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-apollo/#optionsupdate).
 
 ```javascript
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -480,7 +480,7 @@ cacheResolvers: {
 
 ## Resetting the store
 
-Sometimes, you may want to reset the store entirely, such as [when a user logs out](/v2.4/recipes/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
+Sometimes, you may want to reset the store entirely, such as [when a user logs out](../recipes/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {

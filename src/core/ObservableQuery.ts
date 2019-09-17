@@ -21,17 +21,6 @@ import {
 import { QueryStoreValue } from '../data/queries';
 import { isNonEmptyArray } from '../util/arrays';
 
-// XXX remove in the next breaking semver change (3.0)
-// Deprecated, use ApolloCurrentQueryResult
-export type ApolloCurrentResult<T> = {
-  data: T | {};
-  errors?: ReadonlyArray<GraphQLError>;
-  loading: boolean;
-  networkStatus: NetworkStatus;
-  error?: ApolloError;
-  partial?: boolean;
-};
-
 export type ApolloCurrentQueryResult<T> = {
   data: T | undefined;
   errors?: ReadonlyArray<GraphQLError>;
@@ -148,16 +137,6 @@ export class ObservableQuery<
       };
       const subscription = this.subscribe(observer);
     });
-  }
-
-  // XXX remove in the next breaking semver change (3.0)
-  // Deprecated, use getCurrentResult()
-  public currentResult(): ApolloCurrentResult<TData> {
-    const result = this.getCurrentResult() as ApolloCurrentResult<TData>;
-    if (result.data === undefined) {
-      result.data = {};
-    }
-    return result;
   }
 
   /**

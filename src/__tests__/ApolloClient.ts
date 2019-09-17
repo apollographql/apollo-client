@@ -1150,7 +1150,7 @@ describe('ApolloClient', () => {
               ++count;
               if (count === 1) {
                 expect(stripSymbols(nextResult.data)).toEqual(data);
-                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
 
@@ -1202,7 +1202,7 @@ describe('ApolloClient', () => {
               count++;
               if (count === 1) {
                 expect(stripSymbols(nextResult.data)).toEqual(data);
-                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
 
@@ -1274,7 +1274,7 @@ describe('ApolloClient', () => {
               count++;
               if (count === 1) {
                 expect(stripSymbols(result.data)).toEqual(data);
-                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
                 const bestFriends = result.data.people.friends.filter(
@@ -1325,7 +1325,7 @@ describe('ApolloClient', () => {
               count++;
               if (count === 1) {
                 expect(stripSymbols(result.data)).toEqual(data);
-                expect(stripSymbols(observable.currentResult().data)).toEqual(
+                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
                 const friends = result.data.people.friends;
@@ -2328,8 +2328,6 @@ describe('ApolloClient', () => {
         cache: new InMemoryCache(),
         defaultOptions,
       });
-
-      client.initQueryManager();
 
       let queryOptions: QueryOptions = {
         query: gql`

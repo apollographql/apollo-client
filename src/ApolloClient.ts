@@ -450,17 +450,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * This initializes the query manager that tracks queries and the cache
-   */
-  public initQueryManager(): QueryManager<TCacheShape> {
-    invariant.warn(
-      'Calling the initQueryManager method is no longer necessary, ' +
-        'and it will be removed from ApolloClient in version 3.0.',
-    );
-    return this.queryManager;
-  }
-
-  /**
    * Resets your entire store by clearing out your cache and then re-executing
    * all of your active queries. This makes it so that you may guarantee that
    * there is no data left in your store from a time before you called this

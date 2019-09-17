@@ -284,8 +284,11 @@ function mergeStoreObjects(
       }
 
       if (isReference(incoming)) {
-        // Incoming references always overwrite existing references.
-        if (isReference(existing)) return incoming;
+        if (isReference(existing)) {
+          // Incoming references always replace existing references, but we can
+          // avoid changing the object identity when the __ref is the same.
+          return incoming.__ref === existing.__ref ? existing : incoming;
+        }
         // Incoming references can be merged with existing non-reference data
         // if the existing data appears to be of a compatible type.
         store.set(

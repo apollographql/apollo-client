@@ -146,7 +146,7 @@ export class QueryManager<TStore> {
 
     invariant(
       !fetchPolicy || fetchPolicy === 'no-cache',
-      "fetchPolicy for mutations currently only supports the 'no-cache' policy"
+      "Mutations only support a 'no-cache' fetchPolicy. If you don't want to disable the cache, remove your fetchPolicy setting to proceed with the default mutation behavior."
     );
 
     const mutationId = this.generateQueryId();

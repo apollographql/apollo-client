@@ -14,6 +14,7 @@
   "license": "MIT",
   "main": "./lib/apollo-client.cjs.js",
   "module": "./lib/apollo-client.esm.js",
+  "types": "./lib/index.d.ts",
   "sideEffects": [
     "./lib/cache/inmemory/fixPolyfills.js"
   ],

@@ -7,7 +7,7 @@ import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 import MutationOptions from '../../shared/mutation-options.mdx';
 import MutationResult from '../../shared/mutation-result.mdx';
 
-Now that we've [learned how to fetch data](/essentials/queries/) from our backend with Apollo Client,
+Now that we've [learned how to fetch data](/data/queries/) from our backend with Apollo Client,
 the natural next step is to learn how to update that data with **mutations**.
 This article demonstrates how to send updates to your GraphQL server with the
 `useMutation` hook. You'll also learn how to update the Apollo Client cache
@@ -18,7 +18,7 @@ after executing a mutation, and how to track loading and error states for a muta
 This article assumes you're familiar with building basic GraphQL mutations. If you need a refresher, we recommend that you
 [read this guide](http://graphql.org/learn/queries/#mutations).
 
-This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](/essentials/get-started/) if you need help with either of those steps.
+This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](/get-started/) if you need help with either of those steps.
 
 > To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/znl94y0vp) and [sample GraphQL server](https://codesandbox.io/s/plp0mopxq) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
 
@@ -158,7 +158,7 @@ object (fully documented in the [API reference](/api/react-hooks/#result-2)) inc
 ## Updating the cache after a mutation
 
 When you execute a mutation, you modify back-end data. If that data
-is also present in your [Apollo Client cache](/advanced/caching/),
+is also present in your [Apollo Client cache](/local-data/caching/),
 you might need to update your cache to reflect the result of the mutation.
 This depends on whether the mutation _updates a single existing entity_.
 
@@ -395,13 +395,13 @@ the Apollo Client cache. This object provides `readQuery` and `writeQuery`
 functions that enable you to execute GraphQL operations on the cache as though
 you're interacting with a GraphQL server.
 
-> Learn more about supported cache functions in [Caching data](/advanced/caching/).
+> Learn more about supported cache functions in [Caching data](/local-data/caching/).
 
 The update function is _also_ passed an object with a `data` property that
 contains the result of the mutation. Use this value to update the
 cache with `cache.writeQuery`.
 
-> If your mutation specifies an [optimistic response](/features/optimistic-ui/), your update function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
+> If your mutation specifies an [optimistic response](/performance/optimistic-ui/), your update function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
 
 In the example above, the update function first reads the existing to-do list from the cache with `cache.readQuery`. It then adds the new to-do item
 from our mutation to the list and writes it _back_ to the cache with `cache.writeQuery`.
@@ -545,6 +545,6 @@ The `useQuery` and `useMutation` hooks together represent Apollo Client's core
 API for performing GraphQL operations. Now that you're familiar with both,
 you can begin to take advantage of Apollo Client's full feature set, including:
 
-- [Optimistic UI](/features/optimistic-ui/): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
-- [Local state](/essentials/local-state/): Use Apollo Client to manage the entirety of your application's local state by executing client-side mutations.
-- [Caching in Apollo](/advanced/caching/): Dive deep into the Apollo Client cache and how it's normalized. Understanding the cache is helpful when writing update functions for your mutations!
+- [Optimistic UI](/performance/optimistic-ui/): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
+- [Local state](/local-data/local-state/): Use Apollo Client to manage the entirety of your application's local state by executing client-side mutations.
+- [Caching in Apollo](/local-data/caching/): Dive deep into the Apollo Client cache and how it's normalized. Understanding the cache is helpful when writing update functions for your mutations!

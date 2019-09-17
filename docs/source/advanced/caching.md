@@ -40,6 +40,9 @@ The `InMemoryCache` normalizes your data before saving it to the store by splitt
 If `id` and `_id` are not specified, or if `__typename` is not specified, `InMemoryCache` will fall back to the path to the object in the query, such as `ROOT_QUERY.allPeople.0` for the first record returned on the `allPeople` root query.
 That would make data for given type scoped for `allPeople` query and other queries would have to fetch their own separate objects.
 
+> #### ⚠️ Warning
+> If you use queries for object types that omit `id` and also queries for the same object type that include the `id` field, the Apollo `InMemoryCache` will throw an error when attempting to write query results to the cache. To avoid this, it helps to be consistent when querying object types. The error that is thrown [looks like this](https://github.com/apollographql/apollo-client/blob/451482ff85d93e1738df31007f3c2a7f0fbe8cff/packages/apollo-cache-inmemory/src/__tests__/__snapshots__/writeToStore.ts.snap#L4).
+
 This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `InMemoryCache` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions so it could be referenced by any query.
 
 For example, if you wanted to key off of the `key` field for all of your data, you could configure `dataIdFromObject` like so:
@@ -253,7 +256,7 @@ Here are some common situations where you would need to access the cache directl
 
 ### Bypassing the cache
 
-Sometimes it makes sense to not use the cache for a specific operation. This can be done using either the `network-only` or `no-cache` fetchPolicy. The key difference between these two policies is that `network-only` still saves the response to the cache for later use, bypassing the reading and forcing a network request. The `no-cache` policy does not read, nor does it write to the cache with the response. This may be useful for sensitive data like passwords that you don't want to keep in the cache.
+Sometimes it makes sense to not use the cache for a specific operation. This can be done using the `no-cache` `fetchPolicy`. The `no-cache` policy does not write to the cache with the response. This may be useful for sensitive data like passwords that you don’t want to keep in the cache.
 
 ### Updating after a mutation
 
@@ -610,7 +613,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check our our more in depth guide [here](/features/server-side-rendering/).
+If you would like to learn more about server side rendering, please check out our more in depth guide [here](/features/server-side-rendering/).
 
 ### Cache persistence
 

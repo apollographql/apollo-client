@@ -70,7 +70,7 @@
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jest": "24.0.18",
     "@types/lodash": "4.14.138",
-    "@types/node": "12.7.4",
+    "@types/node": "12.7.5",
     "@types/react": "16.9.2",
     "@types/react-dom": "16.9.0",
     "bundlesize": "0.18.0",
@@ -96,7 +96,7 @@
     "rxjs": "6.5.3",
     "ts-jest": "24.0.2",
     "tsc-watch": "3.0.1",
-    "typescript": "^3.6.2",
+    "typescript": "3.6.2",
     "uglify-js": "3.6.0"
   },
   "publishConfig": {

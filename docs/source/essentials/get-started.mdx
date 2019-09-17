@@ -1,11 +1,15 @@
 ---
 title: Get started
-description: Learn how to quickly set up Apollo Client in your React app
+description: Set up Apollo Client in your React app
 ---
 
 import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 
-Out of the box Apollo Client includes packages that we think are essential for building an Apollo app, like our in memory cache, local state management, error handling, and a React based view layer.
+Out of the box Apollo Client includes packages that we think are essential for building an Apollo app, like our in-memory cache, local state management, error handling, and a React based view layer.
+
+> This tutorial walks you through installing and configuring Apollo Client
+> for your React app. If you're just getting started with GraphQL or the Apollo
+> platform, we recommend first completing the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/).
 
 ## Installation
 
@@ -93,15 +97,17 @@ Let's create an `ExchangeRates` component in `index.js` to see the `useQuery` ho
 ```jsx
 import { useQuery, gql } from '@apollo/client';
 
-function ExchangeRates() {
-  const { loading, error, data } = useQuery(gql`
-    {
-      rates(currency: "USD") {
-        currency
-        rate
-      }
+const EXCHANGE_RATES = gql`
+  {
+    rates(currency: "USD") {
+      currency
+      rate
     }
-  `);
+  }
+`;
+
+function ExchangeRates() {
+  const { loading, error, data } = useQuery(EXCHANGE_RATES);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :(</p>;
@@ -123,16 +129,18 @@ function ExchangeRates() {
 import { Query } from '@apollo/react-components';
 import { gql } from '@apollo/client';
 
+const EXCHANGE_RATES = gql`
+  {
+    rates(currency: "USD") {
+      currency
+      rate
+    }
+  }
+`
+
 const ExchangeRates = () => (
   <Query
-    query={gql`
-      {
-        rates(currency: "USD") {
-          currency
-          rate
-        }
-      }
-    `}
+    query={EXCHANGE_RATES}
   >
     {({ loading, error, data }) => {
       if (loading) return <p>Loading...</p>;

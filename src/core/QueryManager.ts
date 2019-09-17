@@ -925,23 +925,6 @@ export class QueryManager<TStore> {
     return this.fetchQuery<T>(queryId, options);
   }
 
-  public startQuery<T>(
-    queryId: string,
-    options: WatchQueryOptions,
-    listener: QueryListener,
-  ) {
-    invariant.warn("The QueryManager.startQuery method has been deprecated");
-
-    this.addQueryListener(queryId, listener);
-
-    this.fetchQuery<T>(queryId, options)
-      // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
-      // console will show an `Uncaught (in promise)` message. Ignore the error for now.
-      .catch(() => undefined);
-
-    return queryId;
-  }
-
   public startGraphQLSubscription<T = any>({
     query,
     fetchPolicy,

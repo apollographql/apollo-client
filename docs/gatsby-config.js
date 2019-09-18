@@ -39,7 +39,7 @@ module.exports = {
             'data/error-handling',
           ],
           'Caching': [
-            'caching/cache-setup'
+            'caching/cache-configuration',
             'caching/cache-access',
           ],
           'Development & Testing': [

@@ -1,13 +1,23 @@
 ---
-title: Accessing the cache directly
-description: Interact with your cached data
+title: Interacting with cached data
 ---
 
-To interact directly with the Apollo Client cache, you can use the Apollo Client class methods readQuery, readFragment, writeQuery, and writeFragment. These methods are available to us via the `DataProxy` interface. Accessing these methods will vary slightly based on your view layer implementation. If you are using React, you can wrap your component in the `withApollo` higher order component, which will give you access to `this.props.client`. From there, you can use the methods to control your data.
+The `ApolloClient` object provides the following methods that allow you to interact
+with cached data:
 
-**Note**: The `cache` you created with `new InMemoryCache(...)` class is not meant to be used directly, but passed to the `ApolloClient` constructor. The client then accesses the `cache` using methods like `readQuery` and `writeQuery`. The difference between `cache.writeQuery` and `client.writeQuery` is that the client version also performs a broadcast after writing to the cache. This broadcast ensures your data is refreshed in the view layer after the `client.writeQuery` operation. If you only use `cache.writeQuery`, the changes may not be immediately reflected in the view layer. This behavior is sometimes useful in scenarios where you want to perform multiple cache writes without immediately updating the view layer.
+* `readQuery`
+* `readFragment`
+* `writeQuery`
+* `writeFragment`
 
-Any code demonstration in the following sections will assume that we have already initialized an instance of  `ApolloClient` and that we have imported the `gql` tag from `graphql-tag`.
+These methods are described in detail below.
+
+> **Important:** You should call these methods on the `ApolloClient` object, _not_
+> directly on its cache. The `ApolloClient` object broadcasts any cache changes
+> to your entire app, which enables automatic UI updates. If you call these
+> methods directly on the cache instead, changes are _not_ broadcast.
+
+All code samples below assume that you have already initialized an instance of  `ApolloClient` and that you have imported the `gql` tag from `graphql-tag`.
 
 ### readQuery
 

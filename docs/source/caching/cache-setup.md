@@ -1,5 +1,5 @@
 ---
-title: Caching data
+title: Configuring the cache
 description: A guide to customizing and directly accessing your Apollo cache
 ---
 

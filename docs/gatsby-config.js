@@ -32,14 +32,15 @@ module.exports = {
           'Fetching data': [
             'data/queries',
             'data/mutations',
+            'data/local-state',
             'data/subscriptions',
             'data/pagination',
             'data/fragments',
             'data/error-handling',
           ],
-          'Managing local data': [
-            'local-data/local-state',
-            'local-data/caching',
+          'Caching': [
+            'caching/cache-setup'
+            'caching/cache-access',
           ],
           'Development & Testing': [
             'development-testing/static-typing',

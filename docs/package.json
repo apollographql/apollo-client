@@ -1,13 +1,14 @@
 {
   "scripts": {
-    "start": "rm -rf .cache && gatsby develop",
+    "prestart": "rm -rf .cache",
+    "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
     "types": "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
-    "gatsby": "2.15.15",
-    "gatsby-theme-apollo-docs": "2.0.3",
+    "gatsby": "2.15.18",
+    "gatsby-theme-apollo-docs": "^2.1.0",
     "react": "16.9.0",
     "react-dom": "16.9.0"
   },

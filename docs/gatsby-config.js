@@ -8,7 +8,7 @@ module.exports = {
       options: {
         ...themeOptions,
         root: __dirname,
-        subtitle: 'Apollo Client',
+        subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: 2.6,
@@ -17,7 +17,11 @@ module.exports = {
           2.4: 'version-2.4',
         },
         checkLinksOptions: {
-          exceptions: ['/api/apollo-client/', '/v2.4/api/apollo-client/'],
+          exceptions: [
+            '/api/apollo-client/',
+            '/v2.4/api/apollo-client/',
+            '/v2.5/api/apollo-client/',
+          ],
         },
         typescriptApiBox: {
           data: require('./docs.json'),

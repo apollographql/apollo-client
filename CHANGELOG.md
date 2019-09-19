@@ -27,6 +27,9 @@
 - Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
 
+- The `queryManager` property of `ApolloClient` instances is now marked as
+  `private`, paving the way for a more aggressive redesign of its API.
+
 - The `FragmentMatcher` abstraction has been replaced with a `possibleTypes` option for the `InMemoryCache` constructor. <br/>
   [@benjamn](https://github.com/benjamn) in [#5073](https://github.com/apollographql/apollo-client/pull/5073)
 

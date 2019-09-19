@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
-import { Observable } from 'apollo-link';
+import { Observable, FetchResult } from 'apollo-link';
 
 import ApolloClient from '../../ApolloClient';
 import {
@@ -179,21 +179,12 @@ export interface MutationResult<TData = any> {
   client?: ApolloClient<object>;
 }
 
-export declare type MutationFetchResult<
-  TData = Record<string, any>,
-  C = Record<string, any>,
-  E = Record<string, any>
-> = ExecutionResult<TData> & {
-  extensions?: E;
-  context?: C;
-};
-
 export declare type MutationFunction<
   TData = any,
   TVariables = OperationVariables
 > = (
   options?: MutationFunctionOptions<TData, TVariables>
-) => Promise<MutationFetchResult<TData>>;
+) => Promise<FetchResult<TData>>;
 
 export interface MutationHookOptions<
   TData = any,

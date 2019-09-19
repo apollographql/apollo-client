@@ -158,7 +158,7 @@ object (fully documented in the [API reference](/api/react-hooks/#result-2)) inc
 ## Updating the cache after a mutation
 
 When you execute a mutation, you modify back-end data. If that data
-is also present in your [Apollo Client cache](/local-data/caching/),
+is also present in your [Apollo Client cache](/caching/cache-configuration/),
 you might need to update your cache to reflect the result of the mutation.
 This depends on whether the mutation _updates a single existing entity_.
 
@@ -395,7 +395,7 @@ the Apollo Client cache. This object provides `readQuery` and `writeQuery`
 functions that enable you to execute GraphQL operations on the cache as though
 you're interacting with a GraphQL server.
 
-> Learn more about supported cache functions in [Caching data](/local-data/caching/).
+> Learn more about supported cache functions in [Interacting with cached data](/caching/cache-interaction/).
 
 The update function is _also_ passed an object with a `data` property that
 contains the result of the mutation. Use this value to update the
@@ -546,5 +546,5 @@ API for performing GraphQL operations. Now that you're familiar with both,
 you can begin to take advantage of Apollo Client's full feature set, including:
 
 - [Optimistic UI](/performance/optimistic-ui/): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
-- [Local state](/local-data/local-state/): Use Apollo Client to manage the entirety of your application's local state by executing client-side mutations.
-- [Caching in Apollo](/local-data/caching/): Dive deep into the Apollo Client cache and how it's normalized. Understanding the cache is helpful when writing update functions for your mutations!
+- [Local state](/data/local-state/): Use Apollo Client to manage the entirety of your application's local state by executing client-side mutations.
+- [Caching in Apollo](/caching/cache-configuration/): Dive deep into the Apollo Client cache and how it's normalized. Understanding the cache is helpful when writing update functions for your mutations!

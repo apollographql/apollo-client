@@ -61,13 +61,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
-  public readonly queryManager: QueryManager<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions = {};
   public readonly typeDefs: ApolloClientOptions<TCacheShape>['typeDefs'];
 
+  private queryManager: QueryManager<TCacheShape>;
   private devToolsHookCb: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];

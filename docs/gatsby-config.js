@@ -40,7 +40,7 @@ module.exports = {
           ],
           'Caching': [
             'caching/cache-configuration',
-            'caching/cache-access',
+            'caching/cache-interaction',
           ],
           'Development & Testing': [
             'development-testing/static-typing',

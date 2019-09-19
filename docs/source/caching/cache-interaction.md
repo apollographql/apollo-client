@@ -2,7 +2,7 @@
 title: Interacting with cached data
 ---
 
-The `ApolloClient` object provides the following methods that allow you to interact
+The `ApolloClient` object provides the following methods for interacting
 with cached data:
 
 * `readQuery`
@@ -12,16 +12,27 @@ with cached data:
 
 These methods are described in detail below.
 
-> **Important:** You should call these methods on the `ApolloClient` object, _not_
-> directly on its cache. The `ApolloClient` object broadcasts any cache changes
-> to your entire app, which enables automatic UI updates. If you call these
-> methods directly on the cache instead, changes are _not_ broadcast.
+> **Important:** You should call these methods on your app's `ApolloClient` object, _not_
+> directly on the cache. By doing so, the `ApolloClient` object broadcasts 
+> cache changes to your entire app, which enables automatic UI updates. If you
+> call these methods directly on the cache instead, changes are _not_ broadcast.
 
-All code samples below assume that you have already initialized an instance of  `ApolloClient` and that you have imported the `gql` tag from `graphql-tag`.
+All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` tag from `graphql-tag`.
 
-### readQuery
+## `readQuery`
 
-The `readQuery` method is very similar to the `query` method on `ApolloClient` except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
+The `readQuery` method enables you to run GraphQL queries directly on your
+cache.
+
+If your cache contains all of the data necessary to fulfill a specified query, 
+`readQuery` returns a data object in the shape of your query, just like a GraphQL
+server does.
+
+If your cache _doesn't_ contain all of the data necessary to fulfill a specified
+query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote 
+server.
+
+Pass `readQuery` a GraphQL query string like so:
 
 ```js
 const { todo } = client.readQuery({
@@ -37,9 +48,7 @@ const { todo } = client.readQuery({
 });
 ```
 
-If all of the data needed to fulfill this read is in Apollo Client’s normalized data cache then a data object will be returned in the shape of the query you wanted to read. If not all of the data needed to fulfill this read is in Apollo Client’s cache then an error will be thrown instead, so make sure to only read data that you know you have!
-
-You can also pass variables into `readQuery`.
+You can provide GraphQL variables to `readQuery` like so:
 
 ```js
 const { todo } = client.readQuery({
@@ -58,11 +67,17 @@ const { todo } = client.readQuery({
 });
 ```
 
-Note that you should not modify the return value of `readQuery` because the same object may be reused between components.  If you want to update the data in the cache, create a new replacement object and pass it to `writeQuery`.
+> **Do not modify the return value of `readQuery`.** The same object might be 
+> returned to multiple components. To update data in the cache, instead create a
+> replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
 
-### readFragment
+## `readFragment`
 
-This method allows you great flexibility around the data in your cache. Whereas `readQuery` only allowed you to read data from your root query type, `readFragment` allows you to read data from _any node you have queried_. This is incredibly powerful. You use this method as follows:
+The `readFragment` method enables you to read data from _any_ normalized cache
+object that was stored as part of _any_ query result. Unlike `readQuery`, calls to
+`readFragment` do not need to conform to the structure of one of your data graph's supported queries.
+
+Here's an example:
 
 ```js
 const todo = client.readFragment({
@@ -77,7 +92,12 @@ const todo = client.readFragment({
 });
 ```
 
-The first argument is the id of the data you want to read from the cache. That id must be a value that was returned by the `dataIdFromObject` function you defined when initializing `ApolloClient`. So for example if you initialized `ApolloClient` like so:
+The first argument, `id`, is the [unique identifier](/caching/cache-configuration/#assigning-unique-identifiers) 
+that was assigned to the object you want to read from the cache. This should match
+the value that your `dataIdFromObject` function assigned to the object when it was 
+stored.
+
+For example, let's say you initialize `ApolloClient` like so:
 
 ```js
 const client = new ApolloClient({
@@ -89,7 +109,8 @@ const client = new ApolloClient({
 });
 ```
 
-…and you requested a todo before with an id of `5`, then you can read that todo out of your cache with the following:
+If a previously executed query cached a `Todo` object with an `id` of `5`, you can
+read that object from your cache with the following `readFragment` call:
 
 ```js
 const todo = client.readFragment({
@@ -104,17 +125,25 @@ const todo = client.readFragment({
 });
 ```
 
-> **Note:** Most people add a `__typename` to the id in `dataIdFromObject`. If you do this then don’t forget to add the `__typename` when you are reading a fragment as well. So for example your id may be `Todo_5` and not just `5`.
+In the example above, if a `Todo` object with an `id` of `5` is _not_ in the cache,
+`readFragment` returns `null`. If the `Todo` object _is_ in the cache but it's
+missing either a `text` or `completed` field, `readFragment` throws an error.
 
-If a todo with that id does not exist in the cache you will get `null` back. If a todo of that id does exist in the cache, but that todo does not have the `text` field then an error will be thrown.
+## `writeQuery` and `writeFragment`
 
-The beauty of `readFragment` is that the todo could have come from anywhere! The todo could have been selected as a singleton (`{ todo(id: 5) { ... } }`), the todo could have come from a list of todos (`{ todos { ... } }`), or the todo could have come from a mutation (`mutation { createTodo { ... } }`). As long as at some point your GraphQL server gave you a todo with the provided id and fields `id`, `text`, and `completed` you can read it from the cache at any part of your code.
+In addition to reading arbitrary data from the Apollo Client cache, you can
+_write_ arbitrary data to the cache with the `writeQuery` and `writeFragment`
+methods.
 
-### writeQuery and writeFragment
+> **Any changes you make to cached data with `writeQuery` and `writeFragment` are
+> not pushed to your GraphQL server.** If you reload your environment, these
+> changes will disappear.
 
-Not only can you read arbitrary data from the Apollo Client cache, but you can also write any data that you would like to the cache. The methods you use to do this are `writeQuery` and `writeFragment`. They will allow you to change data in your local cache, but it is important to remember that *they will not change any data on your server*. If you reload your environment then changes made with `writeQuery` and `writeFragment` will disappear.
+These methods have the same signature as their `read` counterparts, except they
+require an additional `data` variable. 
 
-These methods have the same signature as their `readQuery` and `readFragment` counterparts except they also require an additional `data` variable. So for example, if you wanted to update the `completed` flag locally for your todo with id `'5'` you could execute the following:
+For example, the following call to `writeFragment` _locally_ updates the `completed` 
+flag for a `Todo` object with an `id` of `5`:
 
 ```js
 client.writeFragment({
@@ -130,11 +159,11 @@ client.writeFragment({
 });
 ```
 
-Any subscriber to the Apollo Client store will instantly see this update and render new UI accordingly.
+All subscribers to the Apollo Client cache see this change and update your
+application's UI accordingly.
 
-> **Note:** Again, remember that using `writeQuery` or `writeFragment` only changes data *locally*. If you reload your environment then changes made with these methods will no longer exist.
-
-Or if you wanted to add a new todo to a list fetched from the server, you could use `readQuery` and `writeQuery` together.
+As another example, you can combine `readQuery` and `writeQuery` to add a new `Todo`
+item to your cached to-do list:
 
 ```js
 const query = gql`
@@ -147,6 +176,7 @@ const query = gql`
   }
 `;
 
+// Get the current to-do list
 const data = client.readQuery({ query });
 
 const myNewTodo = {
@@ -156,6 +186,7 @@ const myNewTodo = {
   __typename: 'Todo',
 };
 
+// Write back to the to-do list and include the new item
 client.writeQuery({
   query,
   data: {

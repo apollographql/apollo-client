@@ -7,19 +7,19 @@ orbs:
   # be found at http://github.com/apollographql/CircleCI-Orbs.
   oss: apollo/oss-ci-cd-tooling@0.0.5
 
-commands:
-  # These are the steps used for each version of Node which we're testing
-  # against.  Thanks to YAMLs inability to merge arrays (though it is able
-  # to merge objects), every version of Node must use the exact same steps,
-  # or these steps would need to be repeated in a version of Node that needs
-  # something different.  Probably best to avoid that, out of principle, though.
-  common_test_steps:
-    description: Commands to run on every Node.js environment
-    steps:
-      - oss/install_specific_npm_version
-      - checkout
-      - oss/npm_clean_install_with_caching
-      - run: npm run circle
+# commands:
+# These are the steps used for each version of Node which we're testing
+# against.  Thanks to YAMLs inability to merge arrays (though it is able
+# to merge objects), every version of Node must use the exact same steps,
+# or these steps would need to be repeated in a version of Node that needs
+# something different.  Probably best to avoid that, out of principle, though.
+# common_test_steps:
+#   description: Commands to run on every Node.js environment
+#   steps:
+#     - oss/install_specific_npm_version
+#     - checkout
+#     - oss/npm_clean_install_with_caching
+#     - run: npm run test:ci
 
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
@@ -35,23 +35,9 @@ jobs:
   Tests:
     executor: { name: oss/node, tag: '10' }
     steps:
+      - oss/install_specific_npm_version
       - checkout
-      - restore_cache:
-          keys:
-            # When lock file changes, use increasingly general patterns to
-            # restore cache
-            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-            - npm-v2-{{ .Branch }}-
-            - npm-v2-
-      - run: npm --version
-      - run: npm ci
-      - save_cache:
-          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          paths:
-            # This should cache the npm cache instead of node_modules, which is
-            # needed because npm ci actually removes node_modules before
-            # installing to guarantee a clean slate.
-            - ~/.npm
+      - oss/npm_clean_install_with_caching
       - run:
           name: Jest suite with coverage
           command: npm run test:ci && npm run coverage:upload
@@ -68,6 +54,15 @@ common_non_publish_filters: &common_non_publish_filters
     # This is some wild configuration thing that's pretty hard to figure out.
     tags:
       only: /.*/
+
+common_publish_filters: &common_publish_filters
+  filters:
+    # Only run pre-publish and publish steps on specific tags.
+    tags:
+      only: /^publish\/[0-9]+$/
+    # We want the publish to trigger on the above tag, not any branch.
+    branches:
+      ignore: /.*/
 
 workflows:
   version: 2

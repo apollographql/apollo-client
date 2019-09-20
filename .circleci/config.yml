@@ -24,14 +24,8 @@ commands:
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
 jobs:
-  # Platform tests, each with the same tests but different platform or version.
-  # NodeJS 10:
-  #   executor: { name: oss/node, tag: "10" }
-  #   steps:
-  #     - common_test_steps
   Filesize:
-    docker:
-      - image: circleci/node:10
+    executor: { name: oss/node, tag: "10" }
     steps:
       - checkout
       - restore_cache:
@@ -53,8 +47,7 @@ jobs:
       - run: npm run bundlesize
 
   Tests:
-    docker:
-      - image: circleci/node:10
+    executor: { name: oss/node, tag: "10" }
     steps:
       - checkout
       - restore_cache:

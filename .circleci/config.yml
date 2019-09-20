@@ -27,23 +27,9 @@ jobs:
   Filesize:
     executor: { name: oss/node, tag: '10' }
     steps:
+      - oss/install_specific_npm_version
       - checkout
-      - restore_cache:
-          keys:
-            # When lock file changes, use increasingly general patterns to
-            # restore cache
-            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-            - npm-v2-{{ .Branch }}-
-            - npm-v2-
-      - run: npm --version
-      - run: npm ci
-      - save_cache:
-          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          paths:
-            # This should cache the npm cache instead of node_modules, which is
-            # needed because npm ci actually removes node_modules before
-            # installing to guarantee a clean slate.
-            - ~/.npm
+      - oss/npm_clean_install_with_caching
       - run: npm run bundlesize
 
   Tests:

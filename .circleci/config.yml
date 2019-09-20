@@ -25,7 +25,7 @@ commands:
 # executes by also adding it to the `workflows` section below!
 jobs:
   Filesize:
-    executor: { name: oss/node, tag: "10" }
+    executor: { name: oss/node, tag: '10' }
     steps:
       - checkout
       - restore_cache:
@@ -47,7 +47,7 @@ jobs:
       - run: npm run bundlesize
 
   Tests:
-    executor: { name: oss/node, tag: "10" }
+    executor: { name: oss/node, tag: '10' }
     steps:
       - checkout
       - restore_cache:
@@ -70,7 +70,7 @@ jobs:
           name: Jest suite with coverage
           command: npm run test:ci && npm run coverage:upload
           environment:
-            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT: 'reports/junit/js-test-results.xml'
       - store_test_results:
           path: reports/junit
       - store_artifacts:
@@ -87,7 +87,7 @@ workflows:
   version: 2
   Build:
     jobs:
-      - Filesize
+      - Filesize:
           <<: *common_non_publish_filters
-      - Tests
+      - Tests:
           <<: *common_non_publish_filters

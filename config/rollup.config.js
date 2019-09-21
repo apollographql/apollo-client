@@ -8,10 +8,6 @@ import cjsModulesTransform from '@babel/plugin-transform-modules-commonjs';
 import umdModulesTransform from '@babel/plugin-transform-modules-umd';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
-import replace from 'rollup-plugin-replace';
-import { main as mainBundle } from '../package.json';
-
-const hasOwn = Object.prototype.hasOwnProperty;
 
 function onwarn(message) {
   const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];
@@ -41,6 +37,7 @@ function rollup({
   extraGlobals = {},
 } = {}) {
   const projectDir = path.join(__dirname, '..');
+  console.info(`Building project esm ${projectDir}`);
   const tsconfig = `${projectDir}/tsconfig.json`;
 
   const globals = {
@@ -49,7 +46,7 @@ function rollup({
   };
 
   function external(id) {
-    return hasOwn.call(globals, id);
+    return Object.prototype.hasOwnProperty.call(globals, id);
   }
 
   function outputFile(format) {
@@ -96,36 +93,34 @@ function rollup({
       // Rollup replaces `this` with `undefined`, but this default behavior can
       // be overridden with the `context` option.
       context: 'this',
-      plugins: [
-        {
-          transform(source, id) {
-            const output = transformSync(source, {
-              inputSourceMap: JSON.parse(fs.readFileSync(id + '.map')),
-              sourceMaps: true,
-              plugins: [
-                [toFormat === 'umd' ? umdModulesTransform : cjsModulesTransform, {
-                  loose: true,
-                  allowTopLevelThis: true,
-                }],
-              ],
-            });
+      plugins: [{
+        transform(source, id) {
+          const output = transformSync(source, {
+            inputSourceMap: JSON.parse(fs.readFileSync(id + '.map')),
+            sourceMaps: true,
+            plugins: [
+              [toFormat === 'umd' ? umdModulesTransform : cjsModulesTransform, {
+                loose: true,
+                allowTopLevelThis: true,
+              }],
+            ],
+          });
 
-            // There doesn't seem to be any way to get Rollup to emit a source map
-            // that goes all the way back to the source file (rather than just to
-            // the bundle.esm.js intermediate file), so we pass sourcemap:false in
-            // the output options above, and manually write the CJS and UMD source
-            // maps here.
-            fs.writeFileSync(
-              outputFile(toFormat) + '.map',
-              JSON.stringify(output.map),
-            );
+          // There doesn't seem to be any way to get Rollup to emit a source map
+          // that goes all the way back to the source file (rather than just to
+          // the bundle.esm.js intermediate file), so we pass sourcemap:false in
+          // the output options above, and manually write the CJS and UMD source
+          // maps here.
+          fs.writeFileSync(
+            outputFile(toFormat) + '.map',
+            JSON.stringify(output.map),
+          );
 
-            return {
-              code: output.code,
-            };
-          }
+          return {
+            code: output.code,
+          };
         }
-      ]
+      }],
     }
   }
 
@@ -150,61 +145,9 @@ function rollup({
             },
           },
         }),
-      ]
-    }
-  ];
-}
-
-// Build a separate CJS only `testing.js` bundle, that includes React
-// testing utilities like `MockedProvider` (testing utilities are kept out of
-// the main `apollo-client` bundle). This bundle can be accessed directly
-// like:
-//
-// import { MockedProvider } from '@apollo/client/lib/testing';
-//
-// Note: The `ApolloProvider` reference is marked as being global so it can
-// then be replaced with a hard coded path to the `apollo-client.cjs.js`
-// bundle. This is done to ensure that when using this bundle `MockedProvider`
-// always uses the same `ApolloProvider` instance as the rest of the
-// application under test. This means they'll share the exact same React
-// context, and be able to share the same Apollo Client instance stored in that
-// context.
-function rollupTesting() {
-  const globals = {
-    ...defaultGlobals,
-    '../../context/ApolloProvider': 'ApolloProvider'
-  };
-
-  const output = {
-    file: './lib/testing.js',
-    format: 'cjs',
-  };
-
-  return [
-    {
-      input: './src/react/testing/index.ts',
-      external: (id) => hasOwn.call(globals, id),
-      output,
-      plugins: [
-        nodeResolve({
-          extensions: ['.ts', '.tsx'],
-        }),
-        typescriptPlugin({
-          typescript,
-          tsconfig: `${path.join(__dirname, '..')}/tsconfig.json`
-        }),
-      ],
-    },
-    {
-      input: output.file,
-      output,
-      plugins: [
-        replace({
-          'context/ApolloProvider': mainBundle
-        }),
       ],
     },
   ];
 }
 
-export default rollup().concat(rollupTesting());
+export default rollup();

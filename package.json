@@ -68,7 +68,6 @@
   "devDependencies": {
     "@babel/core": "7.6.0",
     "@babel/plugin-transform-modules-commonjs": "7.6.0",
-    "@babel/plugin-transform-modules-umd": "7.2.0",
     "@testing-library/react": "^9.1.4",
     "@types/fast-json-stable-stringify": "^2.0.0",
     "@types/isomorphic-fetch": "0.0.35",

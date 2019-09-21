@@ -10,4 +10,12 @@ export { useApolloClient } from './hooks/useApolloClient';
 
 export { RenderPromises } from './ssr/RenderPromises';
 
-export * from './types/types';
+export {
+  QueryHookOptions,
+  QueryResult,
+  LazyQueryHookOptions,
+  QueryTuple,
+  MutationHookOptions,
+  MutationTuple,
+  SubscriptionHookOptions,
+} from './types/types';

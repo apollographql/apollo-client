@@ -24,10 +24,9 @@ import { shouldInclude } from '../../utilities/graphql/directives';
 import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 import { defaultNormalizedCacheFactory } from './entityCache';
-import { IdGetter, NormalizedCache, StoreObject } from './types';
-import { fragmentMatches } from './fragments';
+import { NormalizedCache, StoreObject } from './types';
 import { getTypenameFromStoreObject } from './helpers';
-import { defaultDataIdFromObject } from './inMemoryCache';
+import { Policies } from './policies';
 
 export type WriteContext = {
   readonly store: NormalizedCache;
@@ -37,7 +36,6 @@ export type WriteContext = {
   readonly mergeFields: StoreObjectMergeFunction;
   readonly mergeStoreObjects: StoreObjectMergeFunction;
   readonly variables?: any;
-  readonly dataIdFromObject?: IdGetter;
   readonly fragmentMap?: FragmentMap;
 };
 
@@ -46,13 +44,16 @@ type StoreObjectMergeFunction = (
   incoming: StoreObject,
 ) => StoreObject;
 
-type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 export interface StoreWriterConfig {
-  possibleTypes?: PossibleTypes;
-}
+  policies: Policies;
+};
 
 export class StoreWriter {
-  constructor(private config: StoreWriterConfig = {}) {}
+  private policies: Policies;
+
+  constructor(config: StoreWriterConfig) {
+    this.policies = config.policies;
+  }
 
   /**
    * Writes the result of a query to the store.
@@ -65,11 +66,6 @@ export class StoreWriter {
    *
    * @param variables A map from the name of a variable to its value. These variables can be
    * referenced by the query document.
-   *
-   * @param dataIdFromObject A function that returns an object identifier given a particular result
-   * object. See the store documentation for details and an example of this function.
-   *
-   * @param fragmentMatcherFunction A function to use for matching fragment conditions in GraphQL documents
    */
   public writeQueryToStore({
     query,
@@ -77,14 +73,12 @@ export class StoreWriter {
     dataId = 'ROOT_QUERY',
     store = defaultNormalizedCacheFactory(),
     variables,
-    dataIdFromObject = defaultDataIdFromObject,
   }: {
     query: DocumentNode;
     result: Object;
     dataId?: string;
     store?: NormalizedCache;
     variables?: Object;
-    dataIdFromObject?: IdGetter;
   }): NormalizedCache {
     const operationDefinition = getOperationDefinition(query)!;
 
@@ -120,7 +114,6 @@ export class StoreWriter {
           ...getDefaultValues(operationDefinition),
           ...variables,
         },
-        dataIdFromObject,
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       },
     });
@@ -204,7 +197,7 @@ export class StoreWriter {
             ),
           });
         } else if (
-          this.config.possibleTypes &&
+          this.policies.usingPossibleTypes &&
           !(
             selection.directives &&
             selection.directives.some(
@@ -231,12 +224,7 @@ export class StoreWriter {
           context.fragmentMap,
         );
 
-        const match = fragmentMatches(
-          fragment,
-          typename,
-          this.config.possibleTypes,
-        );
-
+        const match = this.policies.fragmentMatches(fragment, typename);
         if (match && (result || typename === 'Query')) {
           mergedFields = context.mergeFields(
             mergedFields,
@@ -270,8 +258,15 @@ export class StoreWriter {
       return value.map(item => this.processFieldValue(item, field, context));
     }
 
-    if (value && context.dataIdFromObject) {
-      const dataId = context.dataIdFromObject(value);
+    if (value) {
+      const dataId = this.policies.identify(
+        value,
+        // Since value is a result object rather than a normalized StoreObject,
+        // we need to consider aliases when computing its key fields.
+        field.selectionSet,
+        context.fragmentMap,
+      );
+
       if (typeof dataId === 'string') {
         this.writeSelectionSetToStore({
           dataId,

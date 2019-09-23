@@ -43,8 +43,8 @@ import {
   NormalizedCache,
 } from './types';
 import { supportsResultCaching } from './entityCache';
-import { fragmentMatches } from './fragments';
 import { getTypenameFromStoreObject } from './helpers';
+import { Policies } from './policies';
 
 export type VariableMap = { [name: string]: any };
 
@@ -86,17 +86,14 @@ type ExecSubSelectedArrayOptions = {
   execContext: ExecContext;
 };
 
-type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 export interface StoreReaderConfig {
   addTypename?: boolean;
   cacheKeyRoot?: KeyTrie<object>;
-  possibleTypes?: PossibleTypes;
+  policies: Policies;
 }
 
 export class StoreReader {
-  private config: StoreReaderConfig;
-
-  constructor(config?: StoreReaderConfig) {
+  constructor(private config: StoreReaderConfig) {
     const cacheKeyRoot =
       config && config.cacheKeyRoot || new KeyTrie<object>(canUseWeakMap);
 
@@ -219,8 +216,8 @@ export class StoreReader {
     const context: ReadStoreContext = {
       // Global settings
       store,
-      dataIdFromObject: config && config.dataIdFromObject,
       cacheRedirects: (config && config.cacheRedirects) || {},
+      policies: this.config.policies,
     };
 
     const execResult = this.executeStoreQuery({
@@ -365,12 +362,7 @@ export class StoreReader {
           }
         }
 
-        const match = fragmentMatches(
-          fragment,
-          typename,
-          this.config.possibleTypes,
-        );
-
+        const match = this.config.policies.fragmentMatches(fragment, typename);
         if (match && (object || typename === 'Query')) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
@@ -414,7 +406,7 @@ export class StoreReader {
       contextValue: {
         store,
         cacheRedirects,
-        dataIdFromObject,
+        policies,
       },
     } = execContext;
 
@@ -444,7 +436,7 @@ export class StoreReader {
           if (resolver) {
             fieldValue = resolver(object, args, {
               getCacheKey(storeObj: StoreObject) {
-                const id = dataIdFromObject!(storeObj);
+                const id = policies.identify(storeObj);
                 return id && makeReference(id);
               },
             });

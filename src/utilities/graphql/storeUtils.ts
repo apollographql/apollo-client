@@ -281,6 +281,7 @@ export function getTypenameFromResult(
       }
     }
   }
+  // TODO Move this first?
   if (typeof result.__typename === 'string') {
     return result.__typename;
   }

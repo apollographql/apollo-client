@@ -52,8 +52,7 @@
   "peerDependencies": {
     "@types/react": "^16.8.0",
     "graphql": "^14.5.4",
-    "react": "^16.8.0",
-    "react-dom": "^16.8.0"
+    "react": "^16.8.0"
   },
   "dependencies": {
     "@types/zen-observable": "^0.8.0",

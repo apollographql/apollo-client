@@ -4,8 +4,9 @@ import { makeReference } from '../../../utilities/graphql/storeUtils';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
-import { defaultDataIdFromObject } from '../inMemoryCache';
+import { defaultDataIdFromObject } from '../policies';
 import { NormalizedCache } from '../types';
+import { Policies } from '../policies';
 
 disableFragmentWarnings();
 
@@ -28,8 +29,11 @@ export function withError(func: Function, regex?: RegExp) {
 }
 
 describe('diffing queries against the store', () => {
-  const reader = new StoreReader();
-  const writer = new StoreWriter();
+  const policies = new Policies({
+    dataIdFromObject: defaultDataIdFromObject,
+  })
+  const reader = new StoreReader({ policies });
+  const writer = new StoreWriter({ policies });
 
   it(
     'expects named fragments to return complete as true when diffd against ' +
@@ -53,9 +57,6 @@ describe('diffing queries against the store', () => {
             }
           }
         `,
-        config: {
-          dataIdFromObject: defaultDataIdFromObject,
-        },
       });
 
       expect(queryResult.complete).toEqual(false);
@@ -98,9 +99,6 @@ describe('diffing queries against the store', () => {
             }
           }
         `,
-        config: {
-          dataIdFromObject: defaultDataIdFromObject,
-        },
       });
 
       expect(queryResult.complete).toEqual(false);
@@ -154,12 +152,15 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    const getIdField = ({ id }: { id: string }) => id;
+    const writer = new StoreWriter({
+      policies: new Policies({
+        dataIdFromObject: ({ id }: { id: string }) => id,
+      }),
+    });
 
     const store = writer.writeQueryToStore({
       result,
       query: firstQuery,
-      dataIdFromObject: getIdField,
     });
 
     const secondQuery = gql`
@@ -491,14 +492,17 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    function dataIdFromObject({ id }: { id: string }) {
-      return id;
-    }
+    const policies = new Policies({
+      dataIdFromObject({ id }: { id: string }) {
+        return id;
+      },
+    });
+
+    const writer = new StoreWriter({ policies });
 
     const store = writer.writeQueryToStore({
       query,
       result: queryResult,
-      dataIdFromObject,
     });
 
     const { result } = reader.diffQueryAgainstStore({
@@ -507,14 +511,14 @@ describe('diffing queries against the store', () => {
     });
 
     expect(result).toEqual(queryResult);
-    expect(dataIdFromObject(result.a[0])).toBe('a:1');
-    expect(dataIdFromObject(result.a[1])).toBe('a:2');
-    expect(dataIdFromObject(result.a[2])).toBe('a:3');
-    expect(dataIdFromObject(result.c.e[0])).toBe('e:1');
-    expect(dataIdFromObject(result.c.e[1])).toBe('e:2');
-    expect(dataIdFromObject(result.c.e[2])).toBe('e:3');
-    expect(dataIdFromObject(result.c.e[3])).toBe('e:4');
-    expect(dataIdFromObject(result.c.e[4])).toBe('e:5');
+    expect(policies.identify(result.a[0])).toBe('a:1');
+    expect(policies.identify(result.a[1])).toBe('a:2');
+    expect(policies.identify(result.a[2])).toBe('a:3');
+    expect(policies.identify(result.c.e[0])).toBe('e:1');
+    expect(policies.identify(result.c.e[1])).toBe('e:2');
+    expect(policies.identify(result.c.e[2])).toBe('e:3');
+    expect(policies.identify(result.c.e[3])).toBe('e:4');
+    expect(policies.identify(result.c.e[4])).toBe('e:5');
   });
 
   describe('referential equality preservation', () => {
@@ -822,10 +826,15 @@ describe('diffing queries against the store', () => {
         },
       };
 
+      const writer = new StoreWriter({
+        policies: new Policies({
+          dataIdFromObject: ({ id }: { id: string }) => id,
+        }),
+      });
+
       const store = writer.writeQueryToStore({
         query,
         result: queryResult,
-        dataIdFromObject: ({ id }: { id: string }) => id,
       });
 
       const previousResult = {
@@ -941,12 +950,15 @@ describe('diffing queries against the store', () => {
         }
       `;
 
-      const dataIdFromObject = (obj: any) => obj.id;
+      const writer = new StoreWriter({
+        policies: new Policies({
+          dataIdFromObject: (obj: any) => obj.id,
+        }),
+      });
 
       const store = writer.writeQueryToStore({
         query: listQuery,
         result: listResult,
-        dataIdFromObject,
       });
 
       const previousResult = {
@@ -963,7 +975,7 @@ describe('diffing queries against the store', () => {
         store,
         query: itemQuery,
         previousResult,
-        config: { dataIdFromObject, cacheRedirects },
+        config: { cacheRedirects },
       });
 
       expect(result).toEqual(previousResult);
@@ -1124,7 +1136,11 @@ describe('diffing queries against the store', () => {
 
       // Check first using generated IDs.
       check(
-        writer.writeQueryToStore({
+        new StoreWriter({
+          policies: new Policies({
+            dataIdFromObject: void 0,
+          })
+        }).writeQueryToStore({
           query,
           result: {
             user: company.users[0],
@@ -1134,8 +1150,11 @@ describe('diffing queries against the store', () => {
 
       // Now check with __typename-specific IDs.
       check(
-        writer.writeQueryToStore({
-          dataIdFromObject: defaultDataIdFromObject,
+        new StoreWriter({
+          policies: new Policies({
+            dataIdFromObject: defaultDataIdFromObject,
+          }),
+        }).writeQueryToStore({
           query,
           result: {
             user: company.users[0],

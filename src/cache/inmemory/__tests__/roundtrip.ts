@@ -6,6 +6,7 @@ import { withWarning } from './writeToStore';
 import { EntityCache } from '../entityCache';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
+import { Policies } from '../policies';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
@@ -20,8 +21,9 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
 }
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const reader = new StoreReader();
-  const writer = new StoreWriter();
+  const policies = new Policies();
+  const reader = new StoreReader({ policies });
+  const writer = new StoreWriter({ policies });
 
   const store = writer.writeQueryToStore({
     result,

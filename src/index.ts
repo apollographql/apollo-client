@@ -40,8 +40,8 @@ export { DataProxy } from './cache/core/types/DataProxy';
 export {
   InMemoryCache,
   InMemoryCacheConfig,
-  defaultDataIdFromObject,
 } from './cache/inmemory/inMemoryCache';
+export { defaultDataIdFromObject } from './cache/inmemory/policies';
 export * from './cache/inmemory/types';
 
 /* React */

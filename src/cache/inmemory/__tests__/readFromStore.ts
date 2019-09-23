@@ -7,9 +7,12 @@ import { StoreReader } from '../readFromStore';
 import { makeReference } from '../../../utilities/graphql/storeUtils';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { withError } from './diffAgainstStore';
+import { Policies } from '../policies';
 
 describe('reading from the store', () => {
-  const reader = new StoreReader();
+  const reader = new StoreReader({
+    policies: new Policies(),
+  });
 
   it('runs a nested query with proper fragment fields in arrays', () => {
     withError(() => {

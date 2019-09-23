@@ -20,11 +20,17 @@ module.exports = {
         },
         */
         checkLinksOptions: {
-          exceptions: ['/api/apollo-client/', '/v2.4/api/apollo-client/'],
+          exceptions: [
+            '/api/core/',
+            '/v2.4/api/core/',
+            '/v2.5/api/core/',
+            '/v2.6/api/core/',
+            '/v3.0/api/core/'
+          ],
         },
         typescriptApiBox: {
           data: require('./docs.json'),
-          filepathPrefix: 'packages/apollo-client/src/',
+          filepathPrefix: 'src/',
         },
         sidebarCategories: {
           null: ['index', 'why-apollo', 'integrations', 'hooks-migration'],

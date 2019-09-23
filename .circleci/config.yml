@@ -95,5 +95,4 @@ workflows:
           name: Package tarballs
           <<: *common_non_publish_filters
           requires:
-            - NodeJS 8
-            - NodeJS 10
+            - Tests # Node 10

@@ -61,13 +61,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
-  public readonly queryManager: QueryManager<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions = {};
   public readonly typeDefs: ApolloClientOptions<TCacheShape>['typeDefs'];
 
+  private queryManager: QueryManager<TCacheShape>;
   private devToolsHookCb: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
@@ -447,17 +447,6 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
   public __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult> {
     return execute(this.link, payload);
-  }
-
-  /**
-   * This initializes the query manager that tracks queries and the cache
-   */
-  public initQueryManager(): QueryManager<TCacheShape> {
-    invariant.warn(
-      'Calling the initQueryManager method is no longer necessary, ' +
-        'and it will be removed from ApolloClient in version 3.0.',
-    );
-    return this.queryManager;
   }
 
   /**

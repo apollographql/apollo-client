@@ -39,7 +39,6 @@ export function mergeDeepArray<T>(sources: T[]): T {
   const count = sources.length;
   if (count > 1) {
     const merger = new DeepMerger();
-    target = merger.shallowCopyForMerge(target);
     for (let i = 1; i < count; ++i) {
       target = merger.merge(target, sources[i]);
     }
@@ -67,17 +66,22 @@ export class DeepMerger {
 
   public merge(target: any, source: any): any {
     if (isObject(source) && isObject(target)) {
-      // Make a shallow copy of target so that we can merge properties into it.
-      target = this.shallowCopyForMerge(target);
-
       Object.keys(source).forEach(sourceKey => {
         if (hasOwnProperty.call(target, sourceKey)) {
-          if (source[sourceKey] !== target[sourceKey]) {
-            target[sourceKey] = this.reconciler(target, source, sourceKey);
+          const targetValue = target[sourceKey];
+          if (source[sourceKey] !== targetValue) {
+            const result = this.reconciler(target, source, sourceKey);
+            // A well-implemented reconciler may return targetValue to indicate
+            // the merge changed nothing about the structure of the target.
+            if (result !== targetValue) {
+              target = this.shallowCopyForMerge(target);
+              target[sourceKey] = result;
+            }
           }
         } else {
           // If there is no collision, the target can safely share memory with
           // the source, and the recursion can terminate here.
+          target = this.shallowCopyForMerge(target);
           target[sourceKey] = source[sourceKey];
         }
       });

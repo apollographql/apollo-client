@@ -16,6 +16,9 @@
 - Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
   [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
 
+- Eliminate "generated" cache IDs to avoid normalizing objects with no meaningful ID, significantly reducing cache memory usage. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5146](https://github.com/apollographql/apollo-client/pull/5146)
+
 ### Breaking Changes
 
 - Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
@@ -23,6 +26,20 @@
 
 - Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
+
+- The `queryManager` property of `ApolloClient` instances is now marked as
+  `private`, paving the way for a more aggressive redesign of its API.
+
+- The `FragmentMatcher` abstraction has been replaced with a `possibleTypes` option for the `InMemoryCache` constructor. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5073](https://github.com/apollographql/apollo-client/pull/5073)
+
+- Remove `freezeResults` option, assuming always `true`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5153](https://github.com/apollographql/apollo-client/pull/5153)
+
+- Several deprecated methods have been fully removed:
+  - `ApolloClient#initQueryManager`
+  - `QueryManager#startQuery`
+  - `ObservableQuery#currentResult`
 
 ## Apollo Client (2.6.4)
 

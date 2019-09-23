@@ -52,7 +52,6 @@ describe('ObservableQuery', () => {
       store: new DataStore(
         new InMemoryCache({
           addTypename: false,
-          freezeResults: true,
         }),
       ),
     });
@@ -1632,7 +1631,7 @@ describe('ObservableQuery', () => {
           returnPartialData: true,
         });
 
-        expect(observable.currentResult()).toEqual({
+        expect(observable.getCurrentResult()).toEqual({
           data: dataOne,
           loading: true,
           networkStatus: 1,
@@ -1641,7 +1640,7 @@ describe('ObservableQuery', () => {
 
         // we can use this to trigger the query
         subscribeAndCount(done, observable, (handleCount, subResult) => {
-          const { data, loading, networkStatus } = observable.currentResult();
+          const { data, loading, networkStatus } = observable.getCurrentResult();
           expect(subResult).toEqual({
             data,
             loading,

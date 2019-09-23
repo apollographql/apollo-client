@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.0.0-alpha.2",
+  "version": "3.0.0-alpha.4",
   "description": "A fully-featured caching GraphQL client.",
   "keywords": [
     "apollo",
@@ -14,6 +14,7 @@
   "license": "MIT",
   "main": "./lib/apollo-client.cjs.js",
   "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "sideEffects": [
     "./lib/cache/inmemory/fixPolyfills.js"
   ],
@@ -59,7 +60,7 @@
     "@wry/equality": "^0.1.9",
     "apollo-link": "^1.2.13",
     "fast-json-stable-stringify": "^2.0.0",
-    "optimism": "^0.10.2",
+    "optimism": "^0.11.1",
     "symbol-observable": "^1.2.0",
     "ts-invariant": "^0.4.4",
     "tslib": "^1.10.0",
@@ -71,7 +72,7 @@
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jest": "24.0.18",
     "@types/lodash": "4.14.138",
-    "@types/node": "12.7.4",
+    "@types/node": "12.7.5",
     "@types/react": "16.9.2",
     "@types/react-dom": "16.9.0",
     "bundlesize": "0.18.0",
@@ -94,7 +95,7 @@
     "rxjs": "6.5.3",
     "ts-jest": "24.0.2",
     "tsc-watch": "3.0.1",
-    "typescript": "^3.6.2"
+    "typescript": "3.6.2"
   },
   "publishConfig": {
     "access": "public"

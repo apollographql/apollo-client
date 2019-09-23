@@ -164,4 +164,104 @@ describe('mergeDeep', function() {
       b: ["I", "win"],
     });
   });
+
+  it('returns original object references when possible', function () {
+    const target = {
+      a: 1,
+      b: {
+        c: 3,
+        d: 4,
+      },
+      e: 5,
+    };
+
+    expect(mergeDeep(target, {
+      b: {
+        c: 3,
+      },
+    })).toBe(target);
+
+    const partial = mergeDeep(target, {
+      a: 1,
+      b: {
+        c: 3,
+      },
+      e: "eee",
+    });
+
+    expect(partial).not.toBe(target);
+    expect(partial.b).toBe(target.b);
+
+    const multiple = mergeDeep(target, {
+      a: 1,
+    }, {
+      b: {
+        d: 4,
+      },
+    }, {
+      e: 5,
+    });
+
+    expect(multiple).toBe(target);
+
+    const targetWithArrays = {
+      a: 1,
+      b: [2, {
+        c: [3, 4],
+        d: 5,
+      }, 6],
+      e: [7, 8, 9],
+    };
+
+    expect(mergeDeep(targetWithArrays, {
+      e: [],
+    })).toBe(targetWithArrays);
+
+    expect(mergeDeep(targetWithArrays, {
+      e: [/*hole*/, /*hole*/, 9],
+    })).toBe(targetWithArrays);
+
+    expect(mergeDeep(targetWithArrays, {
+      a: 1,
+      e: [7, 8],
+    })).toBe(targetWithArrays);
+
+    expect(mergeDeep(targetWithArrays, {
+      b: [2, {
+        c: [],
+        d: 5,
+      }],
+    })).toBe(targetWithArrays);
+
+    expect(mergeDeep(targetWithArrays, {
+      b: [2, {
+        c: [3],
+        d: 5,
+      }, 6],
+      e: [],
+    })).toBe(targetWithArrays);
+
+    const nestedInequality = mergeDeep(targetWithArrays, {
+      b: [2, {
+        c: [3],
+        d: 5,
+      }, "wrong"],
+      e: [],
+    });
+
+    expect(nestedInequality).not.toBe(targetWithArrays);
+    expect(nestedInequality.b).not.toBe(targetWithArrays.b);
+    expect(nestedInequality.b[1]).toEqual({
+      c: [3, 4],
+      d: 5,
+    });
+    expect(nestedInequality.b[1]).toBe(targetWithArrays.b[1]);
+
+    expect(mergeDeep(
+      targetWithArrays,
+      JSON.parse(JSON.stringify(targetWithArrays)),
+      JSON.parse(JSON.stringify(targetWithArrays)),
+      JSON.parse(JSON.stringify(targetWithArrays)),
+    )).toBe(targetWithArrays);
+  });
 });

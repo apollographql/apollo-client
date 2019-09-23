@@ -70,7 +70,7 @@ jobs:
           name: Publish to (local) Verdaccio
           command: |
             npm set registry http://localhost:4873/
-            DEBUG=npm publish \
+            DEBUG=npm release \
               --no-git-tag-version \
               --no-push \
               --yes \

@@ -59,14 +59,13 @@ module.exports = {
             'recipes/meteor',
             'recipes/recompose',
           ],
-          'API Reference': [
-            'api/apollo-client',
+          'Apollo Client API': [
+            'api/core',
             'api/react-hooks',
-            'api/react-ssr',
             'api/react-testing',
+            'api/react-ssr',
             'api/react-components',
-            'api/react-hoc',
-            'api/react-common',
+            'api/react-hoc'
           ],
         },
       },

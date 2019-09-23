@@ -1,20 +1,39 @@
 ---
-title: '@apollo/react-hooks'
-description: API reference
+title: React - Hooks
+description: Apollo Client React API reference
 ---
 
+import ApolloProvider from '../../shared/apollo-provider.mdx';
 import QueryOptions from '../../shared/query-options.mdx';
 import QueryResult from '../../shared/query-result.mdx';
 import MutationOptions from '../../shared/mutation-options.mdx';
 import MutationResult from '../../shared/mutation-result.mdx';
 import SubscriptionOptions from '../../shared/subscription-options.mdx';
 import SubscriptionResult from '../../shared/subscription-result.mdx';
-import ApolloProvider from '../../shared/subscription-result.mdx';
 
 ## Installation
 
-```
-npm install @apollo/react-hooks
+Apollo Client >= 3 includes React hooks functionality out of the box. You don't need to install any additional packages.
+
+## `ApolloProvider`
+
+<ApolloProvider />
+
+## `ApolloConsumer`
+
+One way to access the configured Apollo Client instance directly is to create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function will be called with your `ApolloClient` instance as its only argument. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [React Context API](https://reactjs.org/docs/context.html).
+
+### Example
+
+```jsx
+import React from 'react';
+import { ApolloConsumer } from '@apollo/client';
+
+const WithApolloClient = () => (
+  <ApolloConsumer>
+    {client => 'We have access to the client!' /* do stuff here */}
+  </ApolloConsumer>
+);
 ```
 
 ## `useQuery`
@@ -22,7 +41,7 @@ npm install @apollo/react-hooks
 ### Example
 
 ```jsx
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 import gql from 'graphql-tag';
 
 const GET_GREETING = gql`
@@ -74,7 +93,7 @@ function useQuery<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
-import { useLazyQuery } from "@apollo/react-hooks";
+import { useLazyQuery } from "@apollo/client";
 import gql from "graphql-tag";
 
 const GET_GREETING = gql`
@@ -141,7 +160,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
-import { useMutation } from '@apollo/react-hooks';
+import { useMutation } from '@apollo/client';
 import gql from 'graphql-tag';
 
 const ADD_TODO = gql`
@@ -265,6 +284,8 @@ function useSubscription<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
+import { useApolloClient } from '@apollo/client';
+
 function SomeComponent() {
   const client = useApolloClient();
   // `client` is now set to the `ApolloClient` instance being used by the
@@ -283,7 +304,3 @@ function useApolloClient(): ApolloClient<object> {}
 | Param                  | Type                       | Description                                                |
 | ---------------------- | -------------------------- | ---------------------------------------------------------- |
 | Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
-
-### `ApolloProvider`
-
-<ApolloProvider />

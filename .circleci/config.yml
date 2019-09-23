@@ -66,6 +66,18 @@ jobs:
           at: .
       - oss/write_verdaccio_config
       - oss/start_verdaccio
+      - run:
+          name: Publish to (local) Verdaccio
+          command: |
+            DEBUG=npm \
+              --registry=http://localhost:4873/ \
+              --no-git-tag-version \
+              --no-push \
+              --yes \
+              publish
+      - store_artifacts:
+          path: ~/.config/verdaccio/storage/
+          destination: packed
 
 common_non_publish_filters: &common_non_publish_filters
   filters:

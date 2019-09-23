@@ -38,6 +38,15 @@ jobs:
       - oss/install_specific_npm_version
       - checkout
       - oss/npm_clean_install_with_caching
+      # We will save the results of this one particular invocation to use in
+      # the publish step. Not only does this make the publishing step take less
+      # time, this also ensures that a passing version gets deployed even if,
+      # theoretically, rebuilding the same commit on the same version of
+      # Node.js should yield the same results!
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./**
       - run:
           name: Jest suite with coverage
           command: npm run test:ci && npm run coverage:upload
@@ -47,6 +56,16 @@ jobs:
           path: reports/junit
       - store_artifacts:
           path: reports/junit
+
+  build_tarballs:
+    executor: { name: 'oss/node', tag: '10' }
+    steps:
+      # We attach the workspace and just run with it, with no other guide.
+      # Maybe not the most reusable pattern, but also the most common case.
+      - attach_workspace:
+          at: .
+      - oss/write_verdaccio_config
+      - oss/start_verdaccio
 
 common_non_publish_filters: &common_non_publish_filters
   filters:
@@ -72,3 +91,9 @@ workflows:
           <<: *common_non_publish_filters
       - Tests:
           <<: *common_non_publish_filters
+      - build_tarballs:
+          name: Package tarballs
+          <<: *common_non_publish_filters
+          requires:
+            - NodeJS 8
+            - NodeJS 10

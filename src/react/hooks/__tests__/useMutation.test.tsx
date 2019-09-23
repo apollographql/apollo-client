@@ -84,7 +84,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     });
@@ -144,7 +144,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     });
@@ -200,7 +200,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     });
@@ -246,7 +246,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      await wait();
+      return wait();
     });
 
     it('should return the current client instance in the result object', async () => {
@@ -263,7 +263,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      await wait();
+      return wait();
     });
   });
 
@@ -339,7 +339,7 @@ describe('useMutation Hook', () => {
         </ApolloProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     });

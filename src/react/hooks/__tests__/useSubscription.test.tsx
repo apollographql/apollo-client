@@ -71,7 +71,7 @@ describe('useSubscription Hook', () => {
       </ApolloProvider>
     );
 
-    await wait(() => {
+    return wait(() => {
       expect(renderCount).toBe(5);
     });
   });
@@ -141,7 +141,7 @@ describe('useSubscription Hook', () => {
       </ApolloProvider>
     ).unmount;
 
-    await wait(() => {
+    return wait(() => {
       expect(onSubscriptionDataCount).toEqual(1);
     });
   });
@@ -193,7 +193,7 @@ describe('useSubscription Hook', () => {
       </ApolloProvider>
     ).unmount;
 
-    await wait(() => {
+    return wait(() => {
       expect(onSubscriptionDataCount).toEqual(0);
       expect(renderCount).toEqual(1);
     });
@@ -289,7 +289,7 @@ describe('useSubscription Hook', () => {
       </ApolloProvider>
     ).unmount;
 
-    await wait(() => {
+    return wait(() => {
       expect(renderCount).toEqual(7);
     });
   });

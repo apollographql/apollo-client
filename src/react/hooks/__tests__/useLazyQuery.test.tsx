@@ -70,7 +70,7 @@ describe('useLazyQuery Hook', () => {
       </MockedProvider>
     );
 
-    await wait(() => {
+    return wait(() => {
       expect(renderCount).toBe(3);
     });
   });
@@ -123,7 +123,7 @@ describe('useLazyQuery Hook', () => {
       </MockedProvider>
     );
 
-    await wait(() => {
+    return wait(() => {
       expect(renderCount).toBe(3);
     });
   });
@@ -160,7 +160,7 @@ describe('useLazyQuery Hook', () => {
       </MockedProvider>
     );
 
-    await wait(() => {
+    return wait(() => {
       expect(renderCount).toBe(3);
     });
   });
@@ -233,7 +233,7 @@ describe('useLazyQuery Hook', () => {
         </ApolloProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     }
@@ -307,7 +307,7 @@ describe('useLazyQuery Hook', () => {
         </ApolloProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     }
@@ -386,7 +386,7 @@ describe('useLazyQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(5);
       });
     }
@@ -444,7 +444,7 @@ describe('useLazyQuery Hook', () => {
       </MockedProvider>
     );
 
-    await wait(() => {
+    return wait(() => {
       expect(onCompletedCount).toBe(2);
       expect(renderCount).toBe(5);
     });

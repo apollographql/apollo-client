@@ -59,7 +59,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait();
+      return wait();
     });
 
     it('should keep data as undefined until data is actually returned', async () => {
@@ -79,7 +79,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait();
+      return wait();
     });
 
     it('should ensure ObservableQuery fields have a stable identity', async () => {
@@ -123,7 +123,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait();
+      return wait();
     });
   });
 
@@ -162,7 +162,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     });
@@ -208,7 +208,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(4);
       });
     });
@@ -252,7 +252,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(linkRequestSpy).toHaveBeenCalledTimes(2);
       })
     });
@@ -292,7 +292,7 @@ describe('useQuery Hook', () => {
           </MockedProvider>
         ).unmount;
 
-        await wait(() => {
+        return wait(() => {
           expect(renderCount).toBe(2);
         });
       }
@@ -348,7 +348,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait();
+      return wait();
     });
 
     it('should only call onError callbacks once', async () => {
@@ -424,7 +424,7 @@ describe('useQuery Hook', () => {
         </ApolloProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(4);
       });
     });
@@ -481,7 +481,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(3);
       });
     });
@@ -544,7 +544,7 @@ describe('useQuery Hook', () => {
           </MockedProvider>
         );
 
-        await wait(() => {
+        return wait(() => {
           expect(renderCount).toBe(3);
         });
       }
@@ -615,7 +615,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(4);
       });
     });
@@ -685,7 +685,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(4);
       });
     });
@@ -765,7 +765,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(6);
       });
     });
@@ -868,7 +868,7 @@ describe('useQuery Hook', () => {
           </MockedProvider>
         );
 
-        await wait(() => {
+        return wait(() => {
           expect(renderCount).toBe(4);
         });
       }
@@ -967,7 +967,7 @@ describe('useQuery Hook', () => {
           </MockedProvider>
         );
 
-        await wait(() => {
+        return wait(() => {
           expect(renderCount).toBe(3);
         });
       }
@@ -1070,7 +1070,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(renderCount).toBe(6);
       });
     });
@@ -1113,7 +1113,7 @@ describe('useQuery Hook', () => {
           </ApolloProvider>
         );
 
-        await wait(() => {
+        return wait(() => {
           expect(onCompletedCalled).toBeTruthy();
         });
       }
@@ -1151,7 +1151,7 @@ describe('useQuery Hook', () => {
         </ApolloProvider>
       );
 
-      await wait(() => {
+      return wait(() => {
         expect(onCompletedCount).toBe(1);
       });
     });

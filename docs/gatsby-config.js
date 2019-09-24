@@ -17,49 +17,53 @@ module.exports = {
           2.4: 'version-2.4',
         },
         checkLinksOptions: {
-          exceptions: [
-            '/api/apollo-client/',
-            '/v2.4/api/apollo-client/',
-            '/v2.5/api/apollo-client/',
-          ],
+          exceptions: ['/api/apollo-client/', '/v2.5/api/apollo-client/', '/v2.4/api/apollo-client/'],
         },
         typescriptApiBox: {
           data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',
         },
         sidebarCategories: {
-          null: ['index', 'why-apollo', 'integrations', 'hooks-migration'],
-          Essentials: [
-            'essentials/get-started',
-            'essentials/queries',
-            'essentials/mutations',
-            'essentials/local-state',
+          null: [
+            'index',
+            'why-apollo',
+            'get-started',
           ],
-          Features: [
-            'features/error-handling',
-            'features/pagination',
-            'features/optimistic-ui',
-            'features/server-side-rendering',
-            'features/developer-tooling',
+          'Fetching data': [
+            'data/queries',
+            'data/mutations',
+            'data/local-state',
+            'data/subscriptions',
+            'data/pagination',
+            'data/fragments',
+            'data/error-handling',
           ],
-          Advanced: [
-            'advanced/boost-migration',
-            'advanced/subscriptions',
-            'advanced/network-layer',
-            'advanced/caching',
-            'advanced/fragments',
+          'Caching': [
+            'caching/cache-configuration',
+            'caching/cache-interaction',
           ],
-          Recipes: [
-            'recipes/authentication',
-            'recipes/testing',
-            'recipes/client-schema-mocking',
-            'recipes/static-typing',
-            'recipes/performance',
-            'recipes/react-native',
-            'recipes/babel',
-            'recipes/webpack',
-            'recipes/meteor',
-            'recipes/recompose',
+          'Development & Testing': [
+            'development-testing/static-typing',
+            'development-testing/testing',
+            'development-testing/client-schema-mocking',
+            'development-testing/developer-tooling',
+            'development-testing/recompose',
+          ],
+          Performance: [
+            'performance/performance',
+            'performance/optimistic-ui',
+            'performance/server-side-rendering',
+            'performance/babel',
+          ],
+          Integrations: [
+            'integrations/integrations',
+            'integrations/react-native',
+            'integrations/meteor',
+            'integrations/webpack',
+          ],
+          Networking: [
+            'networking/network-layer',
+            'networking/authentication',
           ],
           'API Reference': [
             'api/apollo-client',
@@ -70,6 +74,10 @@ module.exports = {
             'api/react-hoc',
             'api/react-common',
           ],
+          Migrating: [
+            'migrating/hooks-migration',
+            'migrating/boost-migration',
+          ]
         },
       },
     },

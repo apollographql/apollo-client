@@ -1,5 +1,34 @@
 / /docs/react/
 
+# Apollo Client Information Architecture refresh
+# https://github.com/apollographql/apollo-client/pull/5321
+/docs/react/features/error-handling/ /docs/react/data/error-handling/
+/docs/react/advanced/fragments/ /docs/react/data/fragments/
+/docs/react/essentials/mutations/ /docs/react/data/mutations/
+/docs/react/features/pagination/ /docs/react/data/pagination/
+/docs/react/essentials/queries/ /docs/react/data/queries/
+/docs/react/advanced/subscriptions/ /docs/react/data/subscriptions/
+/docs/react/recipes/client-schema-mocking/ /docs/react/development-testing/client-schema-mocking/
+/docs/react/features/developer-tooling/ /docs/react/development-testing/developer-tooling/
+/docs/react/recipes/recompose/ /docs/react/development-testing/recompose/
+/docs/react/recipes/static-typing/ /docs/react/development-testing/static-typing/
+/docs/react/recipes/testing/ /docs/react/development-testing/testing/
+/docs/react/essentials/get-started/ /docs/react/get-started/
+/docs/react/integrations/ /docs/react/integrations/integrations/
+/docs/react/recipes/meteor/ /docs/react/integrations/meteor/
+/docs/react/recipes/react-native/ /docs/react/integrations/react-native/
+/docs/react/recipes/webpack/ /docs/react/integrations/webpack/
+/docs/react/advanced/caching/ /docs/react/local-data/caching/
+/docs/react/essentials/local-state/ /docs/react/local-data/local-state/
+/docs/react/advanced/boost-migration/ /docs/react/migrating/boost-migration/
+/docs/react/hooks-migration/ /docs/react/migrating/hooks-migration/
+/docs/react/recipes/authentication/ /docs/react/networking/authentication/
+/docs/react/advanced/network-layer/ /docs/react/networking/network-layer/
+/docs/react/recipes/babel/ /docs/react/performance/babel/
+/docs/react/features/optimistic-ui/ /docs/react/performance/optimistic-ui/
+/docs/react/recipes/performance/ /docs/react/performance/performance/
+/docs/react/features/server-side-rendering/ /docs/react/performance/server-side-rendering/
+
 # React Apollo 2.0 - Basics
 # https://github.com/apollographql/apollo-client/pull/3097
 /docs/react/basics/setup.html /docs/react/essentials/get-started.html

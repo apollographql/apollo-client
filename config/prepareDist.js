@@ -6,7 +6,8 @@
 //
 // - Copy the current root package.json into "dist" after adjusting it for
 //   publishing.
-// - Copy the root README.md into "dist"
+// - Copy the supporting files from the root into "dist" (e.g. `README.MD`,
+//   `LICENSE`, etc.)
 
 const packageJson = require('../package.json');
 const fs = require('fs');
@@ -35,5 +36,8 @@ const distPackageJson = JSON.stringify(
 // Save the modified package.json to "dist"
 fs.writeFileSync(`${__dirname}/../dist/package.json`, distPackageJson);
 
-// Copy the README into "dist"
-fs.copyFileSync(`${__dirname}/../README.md`,  `${__dirname}/../dist/README.md`);
+// Copy supporting files into "dist"
+const srcDir = `${__dirname}/..`;
+const destDir = `${srcDir}/dist`;
+fs.copyFileSync(`${srcDir}/README.md`,  `${destDir}/README.md`);
+fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);

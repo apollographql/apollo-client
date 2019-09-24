@@ -32,7 +32,7 @@
     "build": "npx tsc",
     "postbuild": "npm run bundle",
     "watch": "npx tsc-watch --onSuccess \"npm run postbuild\"",
-    "clean": "npx rimraf -r dist coverage",
+    "clean": "npx rimraf -r dist coverage lib",
     "test": "jest --config ./config/jest.config.js",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "test:watch": "jest --config ./config/jest.config.js --watch",

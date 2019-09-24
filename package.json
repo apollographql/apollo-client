@@ -2,6 +2,7 @@
   "name": "@apollo/client",
   "version": "3.0.0-alpha.4",
   "description": "A fully-featured caching GraphQL client.",
+  "private": true,
   "keywords": [
     "apollo",
     "graphql",
@@ -12,11 +13,11 @@
   ],
   "author": "opensource@apollographql.com",
   "license": "MIT",
-  "main": "./lib/apollo-client.cjs.js",
-  "module": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./dist/apollo-client.cjs.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "sideEffects": [
-    "./lib/cache/inmemory/fixPolyfills.js"
+    "./dist/cache/inmemory/fixPolyfills.js"
   ],
   "repository": {
     "type": "git",
@@ -31,7 +32,7 @@
     "build": "npx tsc",
     "postbuild": "npm run bundle",
     "watch": "npx tsc-watch --onSuccess \"npm run postbuild\"",
-    "clean": "npx rimraf -r lib coverage",
+    "clean": "npx rimraf -r dist coverage",
     "test": "jest --config ./config/jest.config.js",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "test:watch": "jest --config ./config/jest.config.js --watch",
@@ -39,13 +40,14 @@
     "coverage": "npx jest --config ./config/jest.config.js --verbose --coverage",
     "coverage:upload": "npx codecov",
     "bundlesize": "npm run build && bundlesize",
-    "predeploy": "npm run build",
-    "deploy": "npm publish --tag alpha"
+    "prepdist": "node ./config/prepareDist.js",
+    "predeploy": "npm run build && npm run prepdist",
+    "deploy": "cd dist && npm publish --tag alpha"
   },
   "bundlesize": [
     {
       "name": "apollo-client",
-      "path": "./lib/apollo-client.cjs.min.js",
+      "path": "./dist/apollo-client.cjs.min.js",
       "maxSize": "21 kB"
     }
   ],
@@ -98,8 +100,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "files": [
-    "lib"
-  ]
+  }
 }

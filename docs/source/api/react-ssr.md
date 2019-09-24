@@ -1,6 +1,6 @@
 ---
-title: "@apollo/react-ssr"
-description: API reference
+title: React - SSR
+description: Apollo Client React server side rendering API
 ---
 
 ## Installation

@@ -120,7 +120,7 @@ Now, queries and mutations will go over HTTP as normal, but subscriptions will b
 
 ## useSubscription Hook
 
-The easiest way to bring live data to your UI is by using React Apollo's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
+The easiest way to bring live data to your UI is by using Apollo Client's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
 
 <MultiCodeBlock>
 <div data-language="Hooks (JavaScript)">
@@ -199,7 +199,7 @@ With GraphQL subscriptions your client will be alerted on push from the server a
 
 With `subscribeToMore`, you can easily do the latter.
 
-`subscribeToMore` is a function available on every query result in React Apollo. It works just like [`fetchMore`](/advanced/caching/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
+`subscribeToMore` is a function available on every query result, made using Apollo Client's React integration. It works just like [`fetchMore`](/advanced/caching/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 

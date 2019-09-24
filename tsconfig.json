@@ -13,8 +13,9 @@
     "target": "es5",
     "module": "es2015",
     "esModuleInterop": true,
-    "outDir": "./lib",
-    "lib": ["es2015", "dom"]
+    "outDir": "./dist",
+    "lib": ["es2015", "esnext.asynciterable", "dom"],
+    "jsx": "react"
   },
   "include": ["src/**/*.ts"],
   "exclude": [

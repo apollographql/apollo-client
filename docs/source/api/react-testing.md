@@ -1,21 +1,19 @@
 ---
-title: "@apollo/react-testing"
-description: API reference
+title: React - Testing
+description: Apollo Client React testing API
 ---
 
 ## Installation
 
-```
-npm install @apollo/react-testing
-```
+Apollo Client >= 3 includes React testing utilities out of the box. You don't need to install any additional packages.
 
 ## `MockedProvider`
 
 ```js
-import { MockedProvider } from "@apollo/react-testing";
+import { MockedProvider } from "@apollo/client/react/testing";
 ```
 
-The `MockedProvider` is a test-utility that allows you to create a mocked version of the [`ApolloProvider`](/api/react-common/#apolloprovider) that doesn't send out network requests to your API, but rather allows you to specify the exact response payload for a given request.
+The `MockedProvider` is a test-utility that allows you to create a mocked version of the [`ApolloProvider`](/api/react-hooks/#apolloprovider) that doesn't send out network requests to your API, but rather allows you to specify the exact response payload for a given request.
 
 The `<MockedProvider />` component takes the following props:
 

@@ -15,7 +15,7 @@ Apollo Client's React integration relies on [React's context](https://reactjs.or
 
 This guide will explain step-by-step how to test Apollo Client React code. The following examples use the [Jest](https://facebook.github.io/jest/docs/en/tutorial-react.html) testing framework, but most concepts should be reusable with other libraries. These examples aim to use as simple of a toolset as possible, so React's [test renderer](https://reactjs.org/docs/test-renderer.html) will be used in place of React-specific tools like [Enzyme](https://github.com/airbnb/enzyme) and [react-testing-library](https://github.com/kentcdodds/react-testing-library).
 
-> **Note:** As of Apollo Client 3, all testing utilities can now be imported from `@apollo/client/lib/react/testing`.
+> **Note:** As of Apollo Client 3, all testing utilities can now be imported from `@apollo/client/react/testing`.
 
 Consider the component below, which makes a basic query, and displays its results:
 
@@ -131,7 +131,7 @@ Here's an example of a test for the above `Dog` component using `MockedProvider`
 ```jsx
 // dog.test.js
 
-import { MockedProvider } from '@apollo/client/lib/react/testing';
+import { MockedProvider } from '@apollo/client/react/testing';
 
 // The component AND the query need to be exported
 import { GET_DOG_QUERY, Dog } from './dog';

@@ -28,7 +28,7 @@ function prepareESM() {
     external,
     preserveModules: true,
     output: {
-      dir: './lib',
+      dir: './dist',
       format: 'esm',
       sourcemap: true,
     },

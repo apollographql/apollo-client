@@ -10,7 +10,7 @@ Apollo Client >= 3 includes React testing utilities out of the box. You don't ne
 ## `MockedProvider`
 
 ```js
-import { MockedProvider } from "@apollo/client/lib/react/testing";
+import { MockedProvider } from "@apollo/client/react/testing";
 ```
 
 The `MockedProvider` is a test-utility that allows you to create a mocked version of the [`ApolloProvider`](/api/react-hooks/#apolloprovider) that doesn't send out network requests to your API, but rather allows you to specify the exact response payload for a given request.

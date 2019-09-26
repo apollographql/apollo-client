@@ -34,10 +34,17 @@ export type WriteContext = {
   readonly written: {
     [dataId: string]: SelectionSetNode[];
   };
+  readonly mergeFields: StoreObjectMergeFunction;
+  readonly mergeStoreObjects: StoreObjectMergeFunction;
   readonly variables?: any;
   readonly dataIdFromObject?: IdGetter;
   readonly fragmentMap?: FragmentMap;
 };
+
+type StoreObjectMergeFunction = (
+  existing: StoreObject,
+  incoming: StoreObject,
+) => StoreObject;
 
 type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 export interface StoreWriterConfig {
@@ -86,6 +93,16 @@ export class StoreWriter {
     // owner DocumentNode objects, until/unless evicted for all owners.
     store.retain(dataId);
 
+    // A DeepMerger that merges arrays and objects structurally, but otherwise
+    // prefers incoming scalar values over existing values. Used to accumulate
+    // fields when processing a single selection set.
+    const simpleFieldsMerger = new DeepMerger;
+
+    // A DeepMerger used for updating normalized StoreObjects in the store,
+    // with special awareness of { __ref } objects, arrays, and custom logic
+    // for reading and writing field values.
+    const storeObjectMerger = makeStoreObjectMerger(store);
+
     return this.writeSelectionSetToStore({
       result,
       dataId,
@@ -93,6 +110,12 @@ export class StoreWriter {
       context: {
         store,
         written: Object.create(null),
+        mergeFields(existing: StoreObject, incoming: StoreObject) {
+          return simpleFieldsMerger.merge(existing, incoming);
+        },
+        mergeStoreObjects(existing: StoreObject, incoming: StoreObject) {
+          return storeObjectMerger.merge(existing, incoming);
+        },
         variables: {
           ...getDefaultValues(operationDefinition),
           ...variables,
@@ -131,7 +154,13 @@ export class StoreWriter {
       context,
     });
 
-    store.set(dataId, mergeStoreObjects(store, store.get(dataId), newFields));
+    store.set(
+      dataId,
+      context.mergeStoreObjects(
+        store.get(dataId) || Object.create(null),
+        newFields,
+      ),
+    );
 
     return store;
   }
@@ -148,9 +177,10 @@ export class StoreWriter {
     typename?: string;
     context: WriteContext;
   }): StoreObject {
-    const newFields: {
-      [storeFieldName: string]: StoreValue;
-    } = Object.create(null);
+    let mergedFields: StoreObject = Object.create(null);
+    if (typeof typename === "string") {
+      mergedFields.__typename = typename;
+    }
 
     selectionSet.selections.forEach(selection => {
       if (!shouldInclude(selection, context.variables)) {
@@ -166,11 +196,13 @@ export class StoreWriter {
             selection,
             context.variables,
           );
-          newFields[storeFieldName] = this.processFieldValue(
-            value,
-            selection,
-            context,
-          );
+          mergedFields = context.mergeFields(mergedFields, {
+            [storeFieldName]: this.processFieldValue(
+              value,
+              selection,
+              context,
+            ),
+          });
         } else if (
           this.config.possibleTypes &&
           !(
@@ -206,8 +238,8 @@ export class StoreWriter {
         );
 
         if (match && (result || typename === 'Query')) {
-          Object.assign(
-            newFields,
+          mergedFields = context.mergeFields(
+            mergedFields,
             this.processSelectionSet({
               result,
               selectionSet: fragment.selectionSet,
@@ -219,14 +251,7 @@ export class StoreWriter {
       }
     });
 
-    if (
-      typeof typename === 'string' &&
-      newFields.__typename === void 0
-    ) {
-      newFields.__typename = typename;
-    }
-
-    return newFields;
+    return mergedFields;
   }
 
   private processFieldValue(
@@ -266,11 +291,7 @@ export class StoreWriter {
   }
 }
 
-function mergeStoreObjects(
-  store: NormalizedCache,
-  existing: StoreObject,
-  incoming: StoreObject,
-): StoreObject {
+function makeStoreObjectMerger(store: NormalizedCache) {
   return new DeepMerger(function(existingObject, incomingObject, property) {
     // In the future, reconciliation logic may depend on the type of the parent
     // StoreObject, not just the values of the given property.
@@ -329,5 +350,5 @@ function mergeStoreObjects(
     }
 
     return incoming;
-  }).merge(existing, incoming);
+  });
 }

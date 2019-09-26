@@ -1,6 +1,10 @@
 export { ApolloProvider } from './context/ApolloProvider';
 export { ApolloConsumer } from './context/ApolloConsumer';
-export { getApolloContext, resetApolloContext } from './context/ApolloContext';
+export {
+  getApolloContext,
+  resetApolloContext,
+  ApolloContextValue
+} from './context/ApolloContext';
 
 export { useQuery } from './hooks/useQuery';
 export { useLazyQuery } from './hooks/useLazyQuery';
@@ -10,12 +14,5 @@ export { useApolloClient } from './hooks/useApolloClient';
 
 export { RenderPromises } from './ssr/RenderPromises';
 
-export {
-  QueryHookOptions,
-  QueryResult,
-  LazyQueryHookOptions,
-  QueryTuple,
-  MutationHookOptions,
-  MutationTuple,
-  SubscriptionHookOptions,
-} from './types/types';
+export * from './types/types';
+export * from './parser/parser';

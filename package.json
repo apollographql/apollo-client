@@ -72,7 +72,7 @@
     "@types/lodash": "4.14.139",
     "@types/node": "12.7.5",
     "@types/react": "16.9.3",
-    "@types/react-dom": "16.9.0",
+    "@types/react-dom": "16.9.1",
     "benchmark": "2.1.4",
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.5.0",

@@ -11,5 +11,4 @@ export * from './util/errorHandling';
 export * from './util/isEqual';
 export * from './util/maybeDeepFreeze';
 export * from './util/mergeDeep';
-export * from './util/warnOnce';
 export * from './util/stripSymbols';

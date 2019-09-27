@@ -192,6 +192,39 @@ describe('removeDirectivesFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
+  it('should remove inline fragments using a directive', () => {
+    const query = gql`
+      query Simple {
+        networkField
+        field {
+          ... on TypeA {
+            typeAThing
+          }
+          ... on TypeB @client {
+            typeBThing @client
+          }
+        }
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        networkField
+        field {
+          ... on TypeA {
+            typeAThing
+          }
+        }
+      }
+    `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: 'client', remove: true }],
+      query,
+    );
+    expect(print(doc)).toBe(print(expected));
+  });
+
   it('should not remove fragment spreads and definitions used without the removed directive', () => {
     const query = gql`
       query Simple {

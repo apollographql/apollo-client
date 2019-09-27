@@ -59,7 +59,6 @@
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
     "@wry/equality": "^0.1.9",
-    "apollo-link": "^1.2.13",
     "fast-json-stable-stringify": "^2.0.0",
     "optimism": "^0.11.3",
     "symbol-observable": "^1.2.0",
@@ -70,7 +69,6 @@
   "devDependencies": {
     "@testing-library/react": "^9.1.4",
     "@types/fast-json-stable-stringify": "^2.0.0",
-    "@types/isomorphic-fetch": "0.0.35",
     "@types/jest": "24.0.18",
     "@types/lodash": "4.14.139",
     "@types/node": "12.7.5",
@@ -78,10 +76,9 @@
     "@types/react-dom": "16.9.0",
     "bundlesize": "0.18.0",
     "codecov": "3.5.0",
-    "fetch-mock": "7.3.9",
-    "graphql": "14.5.4",
+    "fetch-mock": "^7.3.9",
+    "graphql": "^14.5.8",
     "graphql-tag": "2.10.1",
-    "isomorphic-fetch": "2.2.1",
     "jest": "24.9.0",
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",

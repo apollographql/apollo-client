@@ -1,13 +1,13 @@
+import Observable from 'zen-observable';
+import { print } from 'graphql/language/printer';
+import stringify from 'fast-json-stable-stringify';
+
 import {
   Operation,
   GraphQLRequest,
   ApolloLink,
   FetchResult,
-  Observable
-} from 'apollo-link';
-import { print } from 'graphql/language/printer';
-import stringify from 'fast-json-stable-stringify';
-
+} from '../../../link/core';
 import {
   addTypenameToDocument,
   removeClientSetsFromDocument,

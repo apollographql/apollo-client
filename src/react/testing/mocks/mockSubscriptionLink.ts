@@ -1,5 +1,6 @@
-import { ApolloLink, FetchResult, Observable } from 'apollo-link';
+import Observable from 'zen-observable';
 
+import { ApolloLink, FetchResult } from '../../../link/core';
 import { MockedSubscriptionResult } from './types';
 
 export class MockSubscriptionLink extends ApolloLink {

@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
-import { ApolloLink } from 'apollo-link';
 import { InvariantError } from 'ts-invariant';
 
+import { ApolloLink } from '../../../link/core';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { resetApolloContext } from '../../context/ApolloContext';
 import ApolloClient from '../../../ApolloClient';

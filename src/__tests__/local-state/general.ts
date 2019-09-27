@@ -1,8 +1,9 @@
+import Observable from 'zen-observable';
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities';
-import { ApolloLink, Observable, Operation } from 'apollo-link';
 
+import { ApolloLink, Operation } from '../../link/core';
 import ApolloClient from '../..';
 import { ApolloCache } from '../../cache/core';
 import { InMemoryCache } from '../../cache/inmemory';

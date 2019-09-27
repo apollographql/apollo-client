@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
-import { Observable, FetchResult } from 'apollo-link';
+import Observable from 'zen-observable';
 
+import { FetchResult } from '../../link/core';
 import ApolloClient from '../../ApolloClient';
 import {
   ApolloQueryResult,

@@ -1,12 +1,12 @@
+import { ExecutionResult, DocumentNode } from 'graphql';
+import { invariant, InvariantError } from 'ts-invariant';
+
 import {
   ApolloLink,
   FetchResult,
   GraphQLRequest,
   execute,
-} from 'apollo-link';
-import { ExecutionResult, DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
-
+} from './link/core';
 import { ApolloCache, DataProxy } from './cache/core';
 import { QueryManager } from './core/QueryManager';
 import {

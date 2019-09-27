@@ -8,7 +8,6 @@ import packageJson from '../package.json';
 const distDir = './dist';
 
 const globals = {
-  'apollo-link': 'apolloLink.core',
   'tslib': 'tslib',
   'ts-invariant': 'invariant',
   'symbol-observable': '$$observable',

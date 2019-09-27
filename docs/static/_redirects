@@ -18,8 +18,8 @@
 /docs/react/recipes/meteor/ /docs/react/integrations/meteor/
 /docs/react/recipes/react-native/ /docs/react/integrations/react-native/
 /docs/react/recipes/webpack/ /docs/react/integrations/webpack/
-/docs/react/advanced/caching/ /docs/react/local-data/caching/
-/docs/react/essentials/local-state/ /docs/react/local-data/local-state/
+/docs/react/advanced/caching/ /docs/react/caching/caching-configuration/
+/docs/react/essentials/local-state/ /docs/react/data/local-state/
 /docs/react/advanced/boost-migration/ /docs/react/migrating/boost-migration/
 /docs/react/hooks-migration/ /docs/react/migrating/hooks-migration/
 /docs/react/recipes/authentication/ /docs/react/networking/authentication/

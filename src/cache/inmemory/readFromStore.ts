@@ -22,7 +22,6 @@ import {
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import {
-  DirectiveInfo,
   getDirectiveInfoFromField,
   shouldInclude,
 } from '../../utilities/graphql/directives';
@@ -54,11 +53,6 @@ type ExecContext = {
   fragmentMap: FragmentMap;
   contextValue: ReadStoreContext;
   variableValues: VariableMap;
-};
-
-type ExecInfo = {
-  resultKey: string;
-  directives: DirectiveInfo;
 };
 
 export type ExecResultMissingField = {
@@ -415,23 +409,60 @@ export class StoreReader {
     field: FieldNode,
     execContext: ExecContext,
   ): ExecResult {
-    const { variableValues: variables, contextValue } = execContext;
+    const {
+      variableValues: variables,
+      contextValue: {
+        store,
+        cacheRedirects,
+        dataIdFromObject,
+      },
+    } = execContext;
+
     const fieldName = field.name.value;
     const args = argumentsObjectFromField(field, variables);
-
-    const info: ExecInfo = {
-      resultKey: resultKeyNameFromField(field),
-      directives: getDirectiveInfoFromField(field, variables),
-    };
-
-    const readStoreResult = readStoreResolver(
-      object,
-      typename,
+    const storeFieldName = getStoreKeyName(
       fieldName,
       args,
-      contextValue,
-      info,
+      getDirectiveInfoFromField(field, variables),
     );
+
+    let fieldValue: StoreValue | undefined;
+
+    if (object) {
+      fieldValue = object[storeFieldName];
+
+      if (
+        typeof fieldValue === "undefined" &&
+        cacheRedirects &&
+        typeof typename === "string"
+      ) {
+        // Look for the type in the custom resolver map
+        const type = cacheRedirects[typename];
+        if (type) {
+          // Look for the field in the custom resolver map
+          const resolver = type[fieldName];
+          if (resolver) {
+            fieldValue = resolver(object, args, {
+              getCacheKey(storeObj: StoreObject) {
+                const id = dataIdFromObject!(storeObj);
+                return id && makeReference(id);
+              },
+            });
+          }
+        }
+      }
+    }
+
+    const readStoreResult = typeof fieldValue === "undefined" ? {
+      result: fieldValue,
+      missing: [{
+        object,
+        fieldName: storeFieldName,
+        tolerable: false,
+      }],
+    } : {
+      result: fieldValue,
+    };
 
     if (Array.isArray(readStoreResult.result)) {
       return this.combineExecResults(
@@ -447,7 +478,7 @@ export class StoreReader {
     // Handle all scalar types here
     if (!field.selectionSet) {
       if (process.env.NODE_ENV !== 'production') {
-        assertSelectionSetForIdValue(contextValue.store, field, readStoreResult.result);
+        assertSelectionSetForIdValue(store, field, readStoreResult.result);
         maybeDeepFreeze(readStoreResult);
       }
       return readStoreResult;
@@ -562,64 +593,4 @@ function assertSelectionSetForIdValue(
       }
     });
   }
-}
-
-function readStoreResolver(
-  object: StoreObject,
-  typename: string | void,
-  fieldName: string,
-  args: any,
-  context: ReadStoreContext,
-  { directives }: ExecInfo,
-): ExecResult<StoreValue> {
-  let storeKeyName = fieldName;
-  if (args || directives) {
-    // We happen to know here that getStoreKeyName returns its first
-    // argument unmodified if there are no args or directives, so we can
-    // avoid calling the function at all in that case, as a small but
-    // important optimization to this frequently executed code.
-    storeKeyName = getStoreKeyName(storeKeyName, args, directives);
-  }
-
-  let fieldValue: StoreValue | void = void 0;
-
-  if (object) {
-    fieldValue = object[storeKeyName];
-
-    if (
-      typeof fieldValue === 'undefined' &&
-      context.cacheRedirects &&
-      typeof typename === 'string'
-    ) {
-      // Look for the type in the custom resolver map
-      const type = context.cacheRedirects[typename];
-      if (type) {
-        // Look for the field in the custom resolver map
-        const resolver = type[fieldName];
-        if (resolver) {
-          fieldValue = resolver(object, args, {
-            getCacheKey(storeObj: StoreObject) {
-              const id = context.dataIdFromObject!(storeObj);
-              return id && makeReference(id);
-            },
-          });
-        }
-      }
-    }
-  }
-
-  if (typeof fieldValue === 'undefined') {
-    return {
-      result: fieldValue,
-      missing: [{
-        object,
-        fieldName: storeKeyName,
-        tolerable: false,
-      }],
-    };
-  }
-
-  return {
-    result: fieldValue,
-  };
 }

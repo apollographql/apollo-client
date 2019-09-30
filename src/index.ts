@@ -40,3 +40,6 @@ export * from './cache/core';
 export * from './cache/inmemory';
 
 export * from './react';
+
+export * from './link/core';
+export * from './link/http';

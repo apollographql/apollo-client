@@ -6,12 +6,12 @@ import { ApolloError } from '../../errors/ApolloError';
 import {
   MutationOptions,
   MutationTuple,
-  ExecutionResult,
   MutationFunctionOptions,
   MutationResult
 } from '../types/types';
 import { OperationData } from './OperationData';
 import { OperationVariables } from '../../core/types';
+import { FetchResult } from '../../link/core';
 
 export class MutationData<
   TData = any,
@@ -66,7 +66,7 @@ export class MutationData<
     const mutationId = this.generateNewMutationId();
 
     return this.mutate(mutationFunctionOptions)
-      .then((response: ExecutionResult<TData>) => {
+      .then((response: FetchResult<TData>) => {
         this.onMutationCompleted(response, mutationId);
         return response;
       })
@@ -123,7 +123,7 @@ export class MutationData<
   }
 
   private onMutationCompleted(
-    response: ExecutionResult<TData>,
+    response: FetchResult<TData>,
     mutationId: number
   ) {
     const { onCompleted, ignoreResults } = this.getOptions();

@@ -111,66 +111,68 @@ export const fallbackHttpConfig = {
   options: defaultOptions,
 };
 
-export const throwServerError = (response, result, message) => {
-  const error = new Error(message) as ServerError;
+export const throwServerError =
+  (response: Response, result: any, message: string) => {
+    const error = new Error(message) as ServerError;
 
-  error.name = 'ServerError';
-  error.response = response;
-  error.statusCode = response.status;
-  error.result = result;
+    error.name = 'ServerError';
+    error.response = response;
+    error.statusCode = response.status;
+    error.result = result;
 
-  throw error;
-};
+    throw error;
+  };
 
 //TODO: when conditional types come in ts 2.8, operations should be a generic type that extends Operation | Array<Operation>
-export const parseAndCheckHttpResponse = operations => (response: Response) => {
-  return (
-    response
-      .text()
-      .then(bodyText => {
-        try {
-          return JSON.parse(bodyText);
-        } catch (err) {
-          const parseError = err as ServerParseError;
-          parseError.name = 'ServerParseError';
-          parseError.response = response;
-          parseError.statusCode = response.status;
-          parseError.bodyText = bodyText;
-          return Promise.reject(parseError);
-        }
-      })
-      //TODO: when conditional types come out then result should be T extends Array ? Array<FetchResult> : FetchResult
-      .then((result: any) => {
-        if (response.status >= 300) {
-          //Network error
-          throwServerError(
-            response,
-            result,
-            `Response not successful: Received status code ${response.status}`,
-          );
-        }
-        //TODO should really error per response in a Batch based on properties
-        //    - could be done in a validation link
-        if (
-          !Array.isArray(result) &&
-          !result.hasOwnProperty('data') &&
-          !result.hasOwnProperty('errors')
-        ) {
-          //Data error
-          throwServerError(
-            response,
-            result,
-            `Server response was missing for query '${
-              Array.isArray(operations)
-                ? operations.map(op => op.operationName)
-                : operations.operationName
-            }'.`,
-          );
-        }
-        return result;
-      })
-  );
-};
+export const parseAndCheckHttpResponse =
+  (operations: Operation | Operation[]) => (response: Response) => {
+    return (
+      response
+        .text()
+        .then(bodyText => {
+          try {
+            return JSON.parse(bodyText);
+          } catch (err) {
+            const parseError = err as ServerParseError;
+            parseError.name = 'ServerParseError';
+            parseError.response = response;
+            parseError.statusCode = response.status;
+            parseError.bodyText = bodyText;
+            return Promise.reject(parseError);
+          }
+        })
+        //TODO: when conditional types come out then result should be T extends Array ? Array<FetchResult> : FetchResult
+        .then((result: any) => {
+          if (response.status >= 300) {
+            //Network error
+            throwServerError(
+              response,
+              result,
+              `Response not successful: Received status code ${response.status}`,
+            );
+          }
+          //TODO should really error per response in a Batch based on properties
+          //    - could be done in a validation link
+          if (
+            !Array.isArray(result) &&
+            !result.hasOwnProperty('data') &&
+            !result.hasOwnProperty('errors')
+          ) {
+            //Data error
+            throwServerError(
+              response,
+              result,
+              `Server response was missing for query '${
+                Array.isArray(operations)
+                  ? operations.map(op => op.operationName)
+                  : operations.operationName
+              }'.`,
+            );
+          }
+          return result;
+        })
+    );
+  };
 
 export const checkFetcher = (fetcher: WindowOrWorkerGlobalScope['fetch']) => {
   if (!fetcher && typeof fetch === 'undefined') {
@@ -245,7 +247,7 @@ export const selectHttpOptionsAndBody = (
   };
 };
 
-export const serializeFetchParameter = (p, label) => {
+export const serializeFetchParameter = (p: any, label: string) => {
   let serialized;
   try {
     serialized = JSON.stringify(p);
@@ -261,7 +263,7 @@ export const serializeFetchParameter = (p, label) => {
 
 //selects "/graphql" by default
 export const selectURI = (
-  operation,
+  operation: Operation,
   fallbackURI?: string | ((operation: Operation) => string),
 ) => {
   const context = operation.getContext();

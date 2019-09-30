@@ -1,7 +1,6 @@
+import Observable from 'zen-observable';
+
 import { Operation, NextLink, FetchResult } from '../types';
-
-import Observable from 'zen-observable-ts';
-
 import { ApolloLink } from '../link';
 
 export default class SetContextLink extends ApolloLink {

@@ -70,7 +70,11 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
     // `context.headers`. If desired, `apollographql-client-*` headers set by
     // the `clientAwareness` object can be overridden by
     // `apollographql-client-*` headers set in `context.headers`.
-    const clientAwarenessHeaders = {};
+    const clientAwarenessHeaders: {
+      'apollographql-client-name'?: string;
+      'apollographql-client-version'?: string;
+    } = {};
+
     if (context.clientAwareness) {
       const { name, version } = context.clientAwareness;
       if (name) {
@@ -98,7 +102,7 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
       contextConfig,
     );
 
-    let controller;
+    let controller: any;
     if (!(options as any).signal) {
       const { controller: _controller, signal } = createSignalIfSupported();
       controller = _controller;
@@ -198,7 +202,7 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
 function rewriteURIForGET(chosenURI: string, body: Body) {
   // Implement the standard HTTP GET serialization, plus 'extensions'. Note
   // the extra level of JSON serialization!
-  const queryParams = [];
+  const queryParams: string[] = [];
   const addQueryParam = (key: string, value: string) => {
     queryParams.push(`${key}=${encodeURIComponent(value)}`);
   };

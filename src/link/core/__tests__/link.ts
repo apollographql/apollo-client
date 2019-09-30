@@ -4,7 +4,7 @@ import { print } from 'graphql/language/printer';
 
 import { execute, ApolloLink, from, split, concat } from '../link';
 import { MockLink, SetContextLink, testLinkResults } from '../test-utils';
-import { FetchResult, Operation, NextLink } from '../types';
+import { FetchResult, Operation, NextLink, GraphQLRequest } from '../types';
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -393,7 +393,7 @@ describe('context', () => {
 
 describe('Link static library', () => {
   describe('from', () => {
-    const uniqueOperation: Operation = {
+    const uniqueOperation: GraphQLRequest = {
       query: sampleQuery,
       context: { name: 'uniqueName' },
       operationName: 'SampleQuery',

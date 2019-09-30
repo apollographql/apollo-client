@@ -53,9 +53,6 @@ export function toPromise<R>(observable: Observable<R>): Promise<R> {
   });
 }
 
-// backwards compat
-export const makePromise = toPromise;
-
 export function fromPromise<T>(promise: Promise<T>): Observable<T> {
   return new Observable<T>(observer => {
     promise
@@ -97,7 +94,7 @@ export function createOperation(
   operation: GraphQLRequest,
 ): Operation {
   let context = { ...starting };
-  const setContext = next => {
+  const setContext = (next: any) => {
     if (typeof next === 'function') {
       context = { ...context, ...next(context) };
     } else {

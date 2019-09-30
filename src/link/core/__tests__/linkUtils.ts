@@ -1,7 +1,7 @@
 import {
   validateOperation,
   fromPromise,
-  makePromise,
+  toPromise,
   fromError,
 } from '../linkUtils';
 import Observable from 'zen-observable';
@@ -23,7 +23,7 @@ describe('Link utilities:', () => {
     });
   });
 
-  describe('makePromise', () => {
+  describe('toPromise', () => {
     const data = {
       data: {
         hello: 'world',
@@ -32,13 +32,13 @@ describe('Link utilities:', () => {
     const error = new Error('I always error');
 
     it('return next call as Promise resolution', () => {
-      return makePromise(Observable.of(data)).then(result =>
+      return toPromise(Observable.of(data)).then(result =>
         expect(data).toEqual(result),
       );
     });
 
     it('return error call as Promise rejection', () => {
-      return makePromise(fromError(error))
+      return toPromise(fromError(error))
         .then(expect.fail)
         .catch(actualError => expect(error).toEqual(actualError));
     });
@@ -57,7 +57,7 @@ describe('Link utilities:', () => {
       });
 
       it('return error call as Promise rejection', done => {
-        makePromise(Observable.of(data, data)).then(result => {
+        toPromise(Observable.of(data, data)).then(result => {
           expect(data).toEqual(result);
           expect(spy).toHaveBeenCalled();
           done();
@@ -75,14 +75,14 @@ describe('Link utilities:', () => {
 
     it('return next call as Promise resolution', () => {
       const observable = fromPromise(Promise.resolve(data));
-      return makePromise(observable).then(result =>
+      return toPromise(observable).then(result =>
         expect(data).toEqual(result),
       );
     });
 
     it('return Promise rejection as error call', () => {
       const observable = fromPromise(Promise.reject(error));
-      return makePromise(observable)
+      return toPromise(observable)
         .then(expect.fail)
         .catch(actualError => expect(error).toEqual(actualError));
     });
@@ -91,7 +91,7 @@ describe('Link utilities:', () => {
     it('acts as error call', () => {
       const error = new Error('I always error');
       const observable = fromError(error);
-      return makePromise(observable)
+      return toPromise(observable)
         .then(expect.fail)
         .catch(actualError => expect(error).toEqual(actualError));
     });

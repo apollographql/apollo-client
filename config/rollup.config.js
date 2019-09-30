@@ -31,7 +31,6 @@ function prepareESM() {
   return {
     input: packageJson.module,
     external,
-    preserveModules: true,
     output: {
       dir: distDir,
       format: 'esm',

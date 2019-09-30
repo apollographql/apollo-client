@@ -134,33 +134,33 @@ describe('diffing queries against the store', () => {
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
-    const firstQuery = gql`
-      {
-        people_one(id: "1") {
-          __typename
-          id
-          name
-        }
-      }
-    `;
-
-    const result = {
-      people_one: {
-        __typename: 'Person',
-        id: '1',
-        name: 'Luke Skywalker',
-      },
-    };
-
     const writer = new StoreWriter({
       policies: new Policies({
-        dataIdFromObject: ({ id }: { id: string }) => id,
+        typePolicies: {
+          Person: {
+            keyFields: ["id"],
+          },
+        },
       }),
     });
 
     const store = writer.writeQueryToStore({
-      result,
-      query: firstQuery,
+      query: gql`
+        {
+          people_one(id: "1") {
+            __typename
+            idAlias: id
+            name
+          }
+        }
+      `,
+      result: {
+        people_one: {
+          __typename: 'Person',
+          idAlias: '1',
+          name: 'Luke Skywalker',
+        },
+      },
     });
 
     const secondQuery = gql`
@@ -179,7 +179,11 @@ describe('diffing queries against the store', () => {
     });
 
     expect(complete).toBeTruthy();
-    expect(store.get('1')).toEqual(result.people_one);
+    expect(store.get('Person:{"id":"1"}')).toEqual({
+      __typename: 'Person',
+      id: '1',
+      name: 'Luke Skywalker',
+    });
   });
 
   it('does not swallow errors other than field errors', () => {

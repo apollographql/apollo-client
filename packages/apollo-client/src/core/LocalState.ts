@@ -41,6 +41,7 @@ export type Resolver = (
   context?: any,
   info?: {
     field: FieldNode;
+    fragmentMap: FragmentMap;
   },
 ) => any;
 

@@ -1,6 +1,6 @@
-import ApolloClient from "../..";
-import { InMemoryCache } from "apollo-cache-inmemory";
-import gql from "graphql-tag";
+import ApolloClient from '../..';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import gql from 'graphql-tag';
 
 /**
  * Creates an apollo-client instance with a local query resolver named 'localQuery'.
@@ -10,23 +10,23 @@ const setupClientWithLocalQueryResolver = localQueryResolver => {
   const cache = new InMemoryCache();
 
   const resolvers = {
-    Query: { localQuery: localQueryResolver }
+    Query: { localQuery: localQueryResolver },
   };
 
   const client = new ApolloClient({
     cache,
-    resolvers
+    resolvers,
   });
 
   return client;
 };
 
-describe("LocalState", () => {
-  test("resolver info field provides information about named fragments", async () => {
+describe('LocalState', () => {
+  test('resolver info field provides information about named fragments', async () => {
     // Create client with local resolver
     const localQueryResolver = jest.fn().mockReturnValue({
-      __typename: "LocalQueryResponse",
-      namedFragmentField: "namedFragmentFieldValue"
+      __typename: 'LocalQueryResponse',
+      namedFragmentField: 'namedFragmentFieldValue',
     });
     const client = setupClientWithLocalQueryResolver(localQueryResolver);
 
@@ -48,13 +48,15 @@ describe("LocalState", () => {
     expect(localResolverInfoParam.fragmentMap).toBeDefined();
 
     // Verify local resolver can see "namedFragmentField" selected from named fragment
-    expect(localResolverInfoParam.fragmentMap.NamedFragment.selectionSet.selections).toContainEqual(
+    expect(
+      localResolverInfoParam.fragmentMap.NamedFragment.selectionSet.selections,
+    ).toContainEqual(
       expect.objectContaining({
         name: {
-          kind: "Name",
-          value: "namedFragmentField"
-        }
-      })
+          kind: 'Name',
+          value: 'namedFragmentField',
+        },
+      }),
     );
   });
 });

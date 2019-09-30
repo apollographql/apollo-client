@@ -14,10 +14,13 @@ const globals = {
   'graphql/language/printer': 'print',
   optimism: 'optimism',
   'graphql/language/visitor': 'visitor',
+  'graphql/language/printer': 'printer',
+  'graphql/execution/execute': 'execute',
   'fast-json-stable-stringify': 'stringify',
   '@wry/equality': 'wryEquality',
   graphql: 'graphql',
-  react: 'React'
+  react: 'React',
+  'zen-observable': 'Observable'
 };
 
 const hasOwn = Object.prototype.hasOwnProperty;

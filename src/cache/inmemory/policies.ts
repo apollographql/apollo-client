@@ -2,6 +2,7 @@ import {
   InlineFragmentNode,
   FragmentDefinitionNode,
   SelectionSetNode,
+  FieldNode,
 } from "graphql";
 
 import { KeyTrie } from 'optimism';
@@ -15,6 +16,8 @@ import {
 import {
   isField,
   getTypenameFromResult,
+  valueToObjectRepresentation,
+  storeKeyNameFromField,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -48,6 +51,22 @@ type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
   // array of field names or a function that returns an arbitrary string.
   keyFields?: KeySpecifier | KeyFieldsFunction;
+  fields?: {
+    [fieldName: string]: FieldPolicy;
+  }
+};
+
+type KeyArgsFunction = (
+  this: Policies,
+  field: FieldNode,
+  context: {
+    typename: string;
+    variables: Record<string, any>;
+  },
+) => ReturnType<IdGetter>;
+
+type FieldPolicy = {
+  keyArgs?: KeySpecifier | KeyArgsFunction;
 };
 
 export function defaultDataIdFromObject(object: StoreObject) {
@@ -68,6 +87,11 @@ export class Policies {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
       subtypes?: Set<string>;
+      fields?: {
+        [fieldName: string]: {
+          keyFn?: KeyArgsFunction;
+        };
+      };
     };
   } = Object.create(null);
 
@@ -123,12 +147,24 @@ export class Policies {
     Object.keys(typePolicies).forEach(typename => {
       const existing = this.getTypePolicy(typename);
       const incoming = typePolicies[typename];
+      const { keyFields, fields } = incoming;
 
-      const { keyFields } = incoming;
       if (Array.isArray(keyFields)) {
-        existing.keyFn = keyFnFromSpecifier(keyFields);
+        existing.keyFn = keyFieldsFnFromSpecifier(keyFields);
       } else if (typeof keyFields === "function") {
         existing.keyFn = keyFields;
+      }
+
+      if (fields) {
+        Object.keys(fields).forEach(fieldName => {
+          const existing = this.getFieldPolicy(typename, fieldName);
+          const { keyArgs } = fields[fieldName];
+          if (Array.isArray(keyArgs)) {
+            existing.keyFn = keyArgsFnFromSpecifier(keyArgs);
+          } else if (typeof keyArgs === "function") {
+            existing.keyFn = keyArgs;
+          }
+        });
       }
     });
   }
@@ -149,6 +185,17 @@ export class Policies {
   private getSubtypeSet(supertype: string): Set<string> {
     const policy = this.getTypePolicy(supertype);
     return policy.subtypes || (policy.subtypes = new Set<string>());
+  }
+
+  private getFieldPolicy(
+    typename: string,
+    fieldName: string,
+  ): Policies["typePolicies"][string]["fields"][string] {
+    const typePolicy = this.getTypePolicy(typename);
+    const fieldPolicies = typePolicy.fields || (
+      typePolicy.fields = Object.create(null));
+    return fieldPolicies[fieldName] || (
+      fieldPolicies[fieldName] = Object.create(null));
   }
 
   public fragmentMatches(
@@ -181,9 +228,63 @@ export class Policies {
 
     return "heuristic";
   }
+
+  public getStoreFieldName(
+    typename: string | undefined,
+    field: FieldNode,
+    variables: Record<string, any>,
+  ): string {
+    if (typeof typename === "string") {
+      const fieldName = field.name.value;
+      const typePolicy = this.typePolicies[typename];
+      const fieldPolicies = typePolicy && typePolicy.fields;
+      const policy = fieldPolicies && fieldPolicies[fieldName];
+
+      if (policy && policy.keyFn) {
+        return policy.keyFn.call(this, field, {
+          typename,
+          variables,
+        });
+      }
+    }
+
+    return storeKeyNameFromField(field, variables);
+  }
 }
 
-function keyFnFromSpecifier(
+function keyArgsFnFromSpecifier(
+  specifier: KeySpecifier,
+): Policies["typePolicies"][string]["fields"][string]["keyFn"] {
+  const topLevelArgNames: Record<string, true> = Object.create(null);
+
+  specifier.forEach(name => {
+    if (typeof name === "string") {
+      topLevelArgNames[name] = true;
+    }
+  });
+
+  return (field, context) => {
+    const fieldName = field.name.value;
+    if (field.arguments && field.arguments.length > 0) {
+      const args = Object.create(null);
+
+      field.arguments.forEach(arg => {
+        // Avoid converting arguments that were not mentioned in the specifier.
+        if (topLevelArgNames[arg.name.value] === true) {
+          valueToObjectRepresentation(args, arg.name, arg.value, context.variables);
+        }
+      });
+
+      return `${fieldName}:${
+        JSON.stringify(computeKeyObject(args, specifier))
+      }`;
+    }
+
+    return fieldName;
+  };
+}
+
+function keyFieldsFnFromSpecifier(
   specifier: KeySpecifier,
 ): Policies["typePolicies"][string]["keyFn"] {
   const trie = new KeyTrie<{
@@ -267,6 +368,7 @@ function computeKeyObject(
       const responseName = aliases && aliases[s] || s;
       invariant(
         hasOwn.call(response, responseName),
+        // TODO Make this appropriate for keyArgs as well
         `Missing field ${responseName} while computing key fields`,
       );
       keyObj[prevKey = s] = response[responseName];

@@ -149,7 +149,7 @@ When loading `.graphql` files with [graphql-tag/loader](https://github.com/apoll
 #import "./someFragment.graphql"
 ```
 
-Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](/recipes/webpack/#fragments) section for additional details.
+Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](/integrations/webpack/#fragments) section for additional details.
 
 ## Fragments on unions and interfaces
 

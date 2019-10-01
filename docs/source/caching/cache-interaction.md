@@ -1,113 +1,38 @@
 ---
-title: Caching data
-description: A guide to customizing and directly accessing your Apollo cache
+title: Interacting with cached data
 ---
 
-## InMemoryCache
+The `ApolloClient` object provides the following methods for interacting
+with cached data:
 
-`InMemoryCache` is the default cache implementation for Apollo Client 2.0. `InMemoryCache` is a normalized data store that supports all of Apollo Client 1.0's features without the dependency on Redux.
+* `readQuery`
+* `readFragment`
+* `writeQuery`
+* `writeFragment`
 
-In some instances, you may need to manipulate the cache directly, such as updating the store after a mutation. We'll cover some common use cases [here](#recipes).
+These methods are described in detail below.
 
-### Installation
+> **Important:** You should call these methods on your app's `ApolloClient` object, _not_
+> directly on the cache. By doing so, the `ApolloClient` object broadcasts 
+> cache changes to your entire app, which enables automatic UI updates. If you
+> call these methods directly on the cache instead, changes are _not_ broadcast.
 
-After installing the `@apollo/client` package, you'll want to initialize the cache constructor. Then, you can pass in your newly created cache to ApolloClient.
+All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` tag from `graphql-tag`.
 
-```js
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
+## `readQuery`
 
-const cache = new InMemoryCache();
+The `readQuery` method enables you to run GraphQL queries directly on your
+cache.
 
-const client = new ApolloClient({
-  link: new HttpLink(),
-  cache
-});
-```
+If your cache contains all of the data necessary to fulfill a specified query, 
+`readQuery` returns a data object in the shape of your query, just like a GraphQL
+server does.
 
-### Configuration
+If your cache _doesn't_ contain all of the data necessary to fulfill a specified
+query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote 
+server.
 
-The `InMemoryCache` constructor takes an optional config object with properties to customize your cache:
-
-- `addTypename`: A boolean to determine whether to add __typename to the document (default: `true`)
-- `dataIdFromObject`: A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in the [Normalization](#normalization) section.
-- `fragmentMatcher`: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](/advanced/fragments/#fragments-on-unions-and-interfaces).
-- `cacheRedirects` (previously known as `cacheResolvers` or `customResolvers`): A map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](#cache-redirects-with-cacheredirects).
-
-### Normalization
-
-The `InMemoryCache` normalizes your data before saving it to the store by splitting the result into individual objects, creating a unique identifier for each object, and storing those objects in a flattened data structure. By default, `InMemoryCache` will attempt to use the commonly found primary keys of `id` and `_id` for the unique identifier if they exist along with `__typename` on an object.
-
-If `id` and `_id` are not specified, or if `__typename` is not specified, `InMemoryCache` will fall back to the path to the object in the query, such as `ROOT_QUERY.allPeople.0` for the first record returned on the `allPeople` root query.
-That would make data for given type scoped for `allPeople` query and other queries would have to fetch their own separate objects.
-
-> #### ⚠️ Warning
-> If you use queries for object types that omit `id` and also queries for the same object type that include the `id` field, the Apollo `InMemoryCache` will throw an error when attempting to write query results to the cache. To avoid this, it helps to be consistent when querying object types. The error that is thrown [looks like this](https://github.com/apollographql/apollo-client/blob/451482ff85d93e1738df31007f3c2a7f0fbe8cff/packages/apollo-cache-inmemory/src/__tests__/__snapshots__/writeToStore.ts.snap#L4).
-
-This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `InMemoryCache` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions so it could be referenced by any query.
-
-For example, if you wanted to key off of the `key` field for all of your data, you could configure `dataIdFromObject` like so:
-
-```js
-const cache = new InMemoryCache({
-  dataIdFromObject: object => object.key || null
-});
-```
-
-Note that Apollo Client doesn't add the type name to the cache key when you specify a custom `dataIdFromObject`, so if your IDs are not unique across all objects, you might want to include the `__typename` in your `dataIdFromObject`.
-
-You can use different unique identifiers for different data types by keying off of the `__typename` property attached to every object typed by GraphQL.  For example:
-
-```js
-import { InMemoryCache, defaultDataIdFromObject } from '@apollo/client';
-
-const cache = new InMemoryCache({
-  dataIdFromObject: object => {
-    switch (object.__typename) {
-      case 'foo': return object.key; // use `key` as the primary key
-      case 'bar': return `bar:${object.blah}`; // use `bar` prefix and `blah` as the primary key
-      default: return defaultDataIdFromObject(object); // fall back to default handling
-    }
-  }
-});
-```
-
-### Automatic cache updates
-
-Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we perform the following query:
-
-```graphql
-{
-  post(id: '5') {
-    id
-    score
-  }
-}
-```
-
-Then, we perform the following mutation:
-
-```graphql
-mutation {
-  upvotePost(id: '5') {
-    id
-    score
-  }
-}
-```
-
-If the `id` field on both results matches up, then the `score` field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use [fragments](/advanced/fragments/) to share fields between the query and the mutation that affects it.
-
-## Direct Cache Access
-
-To interact directly with your cache, you can use the Apollo Client class methods readQuery, readFragment, writeQuery, and writeFragment. These methods are available to us via the `DataProxy` interface. Accessing these methods will vary slightly based on your view layer implementation. If you are using React, you can wrap your component in the `withApollo` higher order component, which will give you access to `this.props.client`. From there, you can use the methods to control your data.
-
-**Note**: The `cache` you created with `new InMemoryCache(...)` class is not meant to be used directly, but passed to the `ApolloClient` constructor. The client then accesses the `cache` using methods like `readQuery` and `writeQuery`. The difference between `cache.writeQuery` and `client.writeQuery` is that the client version also performs a broadcast after writing to the cache. This broadcast ensures your data is refreshed in the view layer after the `client.writeQuery` operation. If you only use `cache.writeQuery`, the changes may not be immediately reflected in the view layer. This behavior is sometimes useful in scenarios where you want to perform multiple cache writes without immediately updating the view layer.
-
-Any code demonstration in the following sections will assume that we have already initialized an instance of  `ApolloClient` and that we have imported the `gql` tag from `graphql-tag`.
-
-### readQuery
-
-The `readQuery` method is very similar to the `query` method on `ApolloClient` except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
+Pass `readQuery` a GraphQL query string like so:
 
 ```js
 const { todo } = client.readQuery({
@@ -123,9 +48,7 @@ const { todo } = client.readQuery({
 });
 ```
 
-If all of the data needed to fulfill this read is in Apollo Client’s normalized data cache then a data object will be returned in the shape of the query you wanted to read. If not all of the data needed to fulfill this read is in Apollo Client’s cache then an error will be thrown instead, so make sure to only read data that you know you have!
-
-You can also pass variables into `readQuery`.
+You can provide GraphQL variables to `readQuery` like so:
 
 ```js
 const { todo } = client.readQuery({
@@ -144,11 +67,17 @@ const { todo } = client.readQuery({
 });
 ```
 
-Note that you should not modify the return value of `readQuery` because the same object may be reused between components.  If you want to update the data in the cache, create a new replacement object and pass it to `writeQuery`.
+> **Do not modify the return value of `readQuery`.** The same object might be 
+> returned to multiple components. To update data in the cache, instead create a
+> replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
 
-### readFragment
+## `readFragment`
 
-This method allows you great flexibility around the data in your cache. Whereas `readQuery` only allowed you to read data from your root query type, `readFragment` allows you to read data from _any node you have queried_. This is incredibly powerful. You use this method as follows:
+The `readFragment` method enables you to read data from _any_ normalized cache
+object that was stored as part of _any_ query result. Unlike `readQuery`, calls to
+`readFragment` do not need to conform to the structure of one of your data graph's supported queries.
+
+Here's an example:
 
 ```js
 const todo = client.readFragment({
@@ -163,7 +92,12 @@ const todo = client.readFragment({
 });
 ```
 
-The first argument is the id of the data you want to read from the cache. That id must be a value that was returned by the `dataIdFromObject` function you defined when initializing `ApolloClient`. So for example if you initialized `ApolloClient` like so:
+The first argument, `id`, is the [unique identifier](/caching/cache-configuration/#assigning-unique-identifiers) 
+that was assigned to the object you want to read from the cache. This should match
+the value that your `dataIdFromObject` function assigned to the object when it was 
+stored.
+
+For example, let's say you initialize `ApolloClient` like so:
 
 ```js
 const client = new ApolloClient({
@@ -175,7 +109,8 @@ const client = new ApolloClient({
 });
 ```
 
-…and you requested a todo before with an id of `5`, then you can read that todo out of your cache with the following:
+If a previously executed query cached a `Todo` object with an `id` of `5`, you can
+read that object from your cache with the following `readFragment` call:
 
 ```js
 const todo = client.readFragment({
@@ -190,17 +125,25 @@ const todo = client.readFragment({
 });
 ```
 
-> **Note:** Most people add a `__typename` to the id in `dataIdFromObject`. If you do this then don’t forget to add the `__typename` when you are reading a fragment as well. So for example your id may be `Todo_5` and not just `5`.
+In the example above, if a `Todo` object with an `id` of `5` is _not_ in the cache,
+`readFragment` returns `null`. If the `Todo` object _is_ in the cache but it's
+missing either a `text` or `completed` field, `readFragment` throws an error.
 
-If a todo with that id does not exist in the cache you will get `null` back. If a todo of that id does exist in the cache, but that todo does not have the `text` field then an error will be thrown.
+## `writeQuery` and `writeFragment`
 
-The beauty of `readFragment` is that the todo could have come from anywhere! The todo could have been selected as a singleton (`{ todo(id: 5) { ... } }`), the todo could have come from a list of todos (`{ todos { ... } }`), or the todo could have come from a mutation (`mutation { createTodo { ... } }`). As long as at some point your GraphQL server gave you a todo with the provided id and fields `id`, `text`, and `completed` you can read it from the cache at any part of your code.
+In addition to reading arbitrary data from the Apollo Client cache, you can
+_write_ arbitrary data to the cache with the `writeQuery` and `writeFragment`
+methods.
 
-### writeQuery and writeFragment
+> **Any changes you make to cached data with `writeQuery` and `writeFragment` are
+> not pushed to your GraphQL server.** If you reload your environment, these
+> changes will disappear.
 
-Not only can you read arbitrary data from the Apollo Client cache, but you can also write any data that you would like to the cache. The methods you use to do this are `writeQuery` and `writeFragment`. They will allow you to change data in your local cache, but it is important to remember that *they will not change any data on your server*. If you reload your environment then changes made with `writeQuery` and `writeFragment` will disappear.
+These methods have the same signature as their `read` counterparts, except they
+require an additional `data` variable. 
 
-These methods have the same signature as their `readQuery` and `readFragment` counterparts except they also require an additional `data` variable. So for example, if you wanted to update the `completed` flag locally for your todo with id `'5'` you could execute the following:
+For example, the following call to `writeFragment` _locally_ updates the `completed` 
+flag for a `Todo` object with an `id` of `5`:
 
 ```js
 client.writeFragment({
@@ -216,11 +159,11 @@ client.writeFragment({
 });
 ```
 
-Any subscriber to the Apollo Client store will instantly see this update and render new UI accordingly.
+All subscribers to the Apollo Client cache see this change and update your
+application's UI accordingly.
 
-> **Note:** Again, remember that using `writeQuery` or `writeFragment` only changes data *locally*. If you reload your environment then changes made with these methods will no longer exist.
-
-Or if you wanted to add a new todo to a list fetched from the server, you could use `readQuery` and `writeQuery` together.
+As another example, you can combine `readQuery` and `writeQuery` to add a new `Todo`
+item to your cached to-do list:
 
 ```js
 const query = gql`
@@ -233,6 +176,7 @@ const query = gql`
   }
 `;
 
+// Get the current to-do list
 const data = client.readQuery({ query });
 
 const myNewTodo = {
@@ -242,6 +186,7 @@ const myNewTodo = {
   __typename: 'Todo',
 };
 
+// Write back to the to-do list and include the new item
 client.writeQuery({
   query,
   data: {
@@ -535,7 +480,7 @@ cacheRedirects: {
 
 ### Resetting the store
 
-Sometimes, you may want to reset the store entirely, such as [when a user logs out](/recipes/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
+Sometimes, you may want to reset the store entirely, such as [when a user logs out](/networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {
@@ -613,7 +558,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check out our more in depth guide [here](/features/server-side-rendering/).
+If you would like to learn more about server side rendering, please check out our more in depth guide [here](/performance/server-side-rendering/).
 
 ### Cache persistence
 

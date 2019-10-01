@@ -1000,7 +1000,7 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 ## Managing the cache
 
-When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](/advanced/caching/) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
+When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](/caching/cache-interaction/) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
 
 ### writeData
 
@@ -1401,7 +1401,7 @@ client.setResolvers({ ... });
 | addResolvers(resolvers: Resolvers \| Resolvers[]) | A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache. Resolver functions added through `addResolvers` are added to the internal resolver function map, meaning any existing resolvers (that aren't overwritten) are preserved. |
 | setResolvers(resolvers: Resolvers \| Resolvers[]) | A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache. Resolver functions added through `setResolvers` overwrite all existing resolvers (a pre-existing resolver map is wiped out, before the new resolvers are added). |
 | `getResolvers` | Get the currently defined resolver map. |
-| `setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher)` | Set a custom `FragmentMatcher` to be used when resolving local state queries involving [fragments on unions or interfaces](/advanced/fragments/#fragments-on-unions-and-interfaces). |
+| `setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher)` | Set a custom `FragmentMatcher` to be used when resolving local state queries involving [fragments on unions or interfaces](/data/fragments/#fragments-on-unions-and-interfaces). |
 
 **Typescript interfaces/types:**
 

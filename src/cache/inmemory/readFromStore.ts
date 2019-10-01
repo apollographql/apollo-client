@@ -10,7 +10,6 @@ import { InvariantError } from 'ts-invariant';
 
 import {
   argumentsObjectFromField,
-  getStoreKeyName,
   isField,
   isInlineFragment,
   resultKeyNameFromField,
@@ -21,10 +20,7 @@ import {
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
-import {
-  getDirectiveInfoFromField,
-  shouldInclude,
-} from '../../utilities/graphql/directives';
+import { shouldInclude } from '../../utilities/graphql/directives';
 import {
   getDefaultValues,
   getFragmentDefinitions,
@@ -397,7 +393,7 @@ export class StoreReader {
 
   private executeField(
     object: StoreObject,
-    typename: string | void,
+    typename: string | undefined,
     field: FieldNode,
     execContext: ExecContext,
   ): ExecResult {
@@ -410,12 +406,10 @@ export class StoreReader {
       },
     } = execContext;
 
-    const fieldName = field.name.value;
-    const args = argumentsObjectFromField(field, variables);
-    const storeFieldName = getStoreKeyName(
-      fieldName,
-      args,
-      getDirectiveInfoFromField(field, variables),
+    const storeFieldName = policies.getStoreFieldName(
+      typename,
+      field,
+      variables,
     );
 
     let fieldValue: StoreValue | undefined;
@@ -432,8 +426,9 @@ export class StoreReader {
         const type = cacheRedirects[typename];
         if (type) {
           // Look for the field in the custom resolver map
-          const resolver = type[fieldName];
+          const resolver = type[field.name.value];
           if (resolver) {
+            const args = argumentsObjectFromField(field, variables);
             fieldValue = resolver(object, args, {
               getCacheKey(storeObj: StoreObject) {
                 const id = policies.identify(storeObj);

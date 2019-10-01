@@ -14,7 +14,6 @@ import {
 import {
   isField,
   resultKeyNameFromField,
-  storeKeyNameFromField,
   StoreValue,
   getTypenameFromResult,
   makeReference,
@@ -185,7 +184,8 @@ export class StoreWriter {
         const value = result[resultFieldKey];
 
         if (typeof value !== 'undefined') {
-          const storeFieldName = storeKeyNameFromField(
+          const storeFieldName = this.policies.getStoreFieldName(
+            typename,
             selection,
             context.variables,
           );

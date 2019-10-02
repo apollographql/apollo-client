@@ -87,12 +87,14 @@ export class MockLink extends ApolloLink {
 
     this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
-    const { result, error, delay, newData } = response;
+    const { newData } = response;
 
     if (newData) {
       response.result = newData();
       this.mockedResponsesByKey[key].push(response);
     }
+
+    const { result, error, delay } = response;
 
     if (!result && !error) {
       throw new Error(

@@ -48,7 +48,7 @@ export class QueryData<TData, TVariables> extends OperationData {
   public execute(): QueryResult<TData, TVariables> {
     this.refreshClient();
 
-    const { skip, query, ssr } = this.getOptions();
+    const { skip, query } = this.getOptions();
     if (skip || query !== this.previousData.query) {
       this.removeQuerySubscription();
       this.previousData.query = query;
@@ -58,9 +58,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
     if (this.isMounted) this.startQuerySubscription();
 
-    const ssrDisabled = ssr === false;
-
-    return this.getExecuteSsrResult(ssrDisabled) || this.getExecuteResult();
+    return this.getExecuteSsrResult() || this.getExecuteResult();
   }
 
   public executeLazy(): QueryTuple<TData, TVariables> {
@@ -90,6 +88,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
     this.isMounted = true;
+
     if (!lazy || this.runLazy) {
       this.handleErrorOrCompleted();
 
@@ -103,6 +102,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       });
     }
 
+    this.previousOptions = this.getOptions();
     return this.unmount.bind(this);
   }
 
@@ -114,25 +114,24 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   public getOptions() {
     const options = super.getOptions();
-    const lazyOptions = this.lazyOptions || {};
-    const updatedOptions = {
-      ...options,
-      variables: {
+
+    if (this.lazyOptions) {
+      options.variables = {
         ...options.variables,
-        ...lazyOptions.variables
-      },
-      context: {
+        ...this.lazyOptions.variables
+      };
+      options.context = {
         ...options.context,
-        ...lazyOptions.context
-      }
-    };
+        ...this.lazyOptions.context
+      };
+    }
 
     // skip is not supported when using lazy query execution.
     if (this.runLazy) {
-      delete updatedOptions.skip;
+      delete options.skip;
     }
 
-    return updatedOptions;
+    return options;
   }
 
   private runLazyQuery = (options?: QueryLazyOptions<TVariables>) => {
@@ -149,29 +148,31 @@ export class QueryData<TData, TVariables> extends OperationData {
     return result;
   };
 
-  private getExecuteSsrResult(ssrDisabled: boolean) {
+  private getExecuteSsrResult() {
+    const treeRenderingInitiated = this.context && this.context.renderPromises;
+    const ssrDisabled = this.getOptions().ssr === false;
+    const fetchDisabled = this.refreshClient().client.disableNetworkFetches;
+
+    const ssrLoading = {
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      called: true,
+      data: undefined
+    } as QueryResult<TData, TVariables>;
+
+    // If SSR has been explicitly disabled, and this function has been called
+    // on the server side, return the default loading state.
+    if (ssrDisabled && (treeRenderingInitiated || fetchDisabled)) {
+      return ssrLoading;
+    }
+
     let result;
-
-    if (this.context && this.context.renderPromises) {
-      const ssrLoading = {
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        called: true,
-        data: undefined
-      } as QueryResult<TData, TVariables>;
-
-      // SSR is disabled, so just return the loading event and leave it in that state.
-      if (ssrDisabled) {
-        return ssrLoading;
-      }
-
-      result = this.context.renderPromises.addQueryPromise(
-        this,
-        this.getExecuteResult
-      );
-      if (!result) {
-        result = ssrLoading as QueryResult<TData, TVariables>;
-      }
+    if (treeRenderingInitiated) {
+      result =
+        this.context.renderPromises!.addQueryPromise(
+          this,
+          this.getExecuteResult
+        ) || ssrLoading;
     }
 
     return result;
@@ -196,7 +197,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     return {
       ...options,
       displayName,
-      context: options.context || {},
+      context: options.context,
       metadata: { reactComponent: { displayName } }
     };
   }
@@ -213,13 +214,14 @@ export class QueryData<TData, TVariables> extends OperationData {
 
     if (!this.currentObservable.query) {
       const observableQueryOptions = this.prepareObservableQueryOptions();
+
       this.previousData.observableQueryOptions = {
         ...observableQueryOptions,
         children: null
       };
-      this.currentObservable.query = this.refreshClient().client.watchQuery(
-        observableQueryOptions
-      );
+      this.currentObservable.query = this.refreshClient().client.watchQuery({
+        ...observableQueryOptions
+      });
 
       if (this.context && this.context.renderPromises) {
         this.context.renderPromises.registerSSRObservable(

@@ -26,8 +26,11 @@ export abstract class OperationData<TOptions = any> {
     return this.options;
   }
 
-  public setOptions(newOptions: CommonOptions<TOptions>) {
-    if (!isEqual(this.options, newOptions)) {
+  public setOptions(
+    newOptions: CommonOptions<TOptions>,
+    storePrevious: boolean = false
+  ) {
+    if (storePrevious && !isEqual(this.options, newOptions)) {
       this.previousOptions = this.options;
     }
     this.options = newOptions;

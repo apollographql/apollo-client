@@ -417,7 +417,7 @@ describe('useLazyQuery Hook', () => {
           expect(loading).toEqual(false);
           expect(data).toEqual(CAR_RESULT_DATA);
           setTimeout(() => {
-            execute();
+            execute({ variables: { someProp: 'someValue' } });
           });
           break;
         case 3:

@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "rm -rf .cache && gatsby develop",
+    "prestart": "rm -rf .cache",
+    "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
     "types": "cd .. && typedoc --json ./docs/docs.json --ignoreCompilerErrors ./src/index.ts"

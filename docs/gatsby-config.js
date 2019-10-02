@@ -8,7 +8,7 @@ module.exports = {
       options: {
         ...themeOptions,
         root: __dirname,
-        subtitle: 'Apollo Client',
+        subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: 3.0,
@@ -33,37 +33,46 @@ module.exports = {
           filepathPrefix: 'src/',
         },
         sidebarCategories: {
-          null: ['index', 'why-apollo', 'integrations', 'hooks-migration'],
-          Essentials: [
-            'essentials/get-started',
-            'essentials/queries',
-            'essentials/mutations',
-            'essentials/local-state',
+          null: [
+            'index',
+            'why-apollo',
+            'get-started',
           ],
-          Features: [
-            'features/error-handling',
-            'features/pagination',
-            'features/optimistic-ui',
-            'features/server-side-rendering',
-            'features/developer-tooling',
+          'Fetching data': [
+            'data/queries',
+            'data/mutations',
+            'data/local-state',
+            'data/subscriptions',
+            'data/pagination',
+            'data/fragments',
+            'data/error-handling',
           ],
-          Advanced: [
-            'advanced/subscriptions',
-            'advanced/network-layer',
-            'advanced/caching',
-            'advanced/fragments',
+          'Caching': [
+            'caching/cache-configuration',
+            'caching/cache-interaction',
           ],
-          Recipes: [
-            'recipes/authentication',
-            'recipes/testing',
-            'recipes/client-schema-mocking',
-            'recipes/static-typing',
-            'recipes/performance',
-            'recipes/react-native',
-            'recipes/babel',
-            'recipes/webpack',
-            'recipes/meteor',
-            'recipes/recompose',
+          'Development & Testing': [
+            'development-testing/static-typing',
+            'development-testing/testing',
+            'development-testing/client-schema-mocking',
+            'development-testing/developer-tooling',
+            'development-testing/recompose',
+          ],
+          Performance: [
+            'performance/performance',
+            'performance/optimistic-ui',
+            'performance/server-side-rendering',
+            'performance/babel',
+          ],
+          Integrations: [
+            'integrations/integrations',
+            'integrations/react-native',
+            'integrations/meteor',
+            'integrations/webpack',
+          ],
+          Networking: [
+            'networking/network-layer',
+            'networking/authentication',
           ],
           'Apollo Client API': [
             'api/core',
@@ -73,6 +82,10 @@ module.exports = {
             'api/react-components',
             'api/react-hoc'
           ],
+          Migrating: [
+            'migrating/hooks-migration',
+            'migrating/boost-migration',
+          ]
         },
       },
     },

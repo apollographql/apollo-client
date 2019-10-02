@@ -33,7 +33,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
   }
 
   const subscriptionData = getSubscriptionDataRef();
-  subscriptionData.setOptions(updatedOptions);
+  subscriptionData.setOptions(updatedOptions, true);
   subscriptionData.context = context;
 
   useEffect(() => subscriptionData.afterExecute());

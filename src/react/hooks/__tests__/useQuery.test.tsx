@@ -852,6 +852,11 @@ describe('useQuery Hook', () => {
             case 3:
               expect(loading).toBeFalsy();
               expect(data).toEqual({
+                cars: [carResults.cars[0]]
+              });
+              break;
+            case 4:
+              expect(data).toEqual({
                 cars: [carResults.cars[0], moreCarResults.cars[0]]
               });
               break;
@@ -869,7 +874,7 @@ describe('useQuery Hook', () => {
         );
 
         return wait(() => {
-          expect(renderCount).toBe(4);
+          expect(renderCount).toBe(5);
         });
       }
     );

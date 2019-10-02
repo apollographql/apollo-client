@@ -29,7 +29,9 @@ import { defaultDataIdFromObject } from './inMemoryCache';
 
 export type WriteContext = {
   readonly store: NormalizedCache;
-  readonly processedData: { [x: string]: Set<FieldNode> };
+  readonly written: {
+    [dataId: string]: SelectionSetNode[];
+  };
   readonly variables?: any;
   readonly dataIdFromObject?: IdGetter;
   readonly fragmentMap?: FragmentMap;
@@ -88,7 +90,7 @@ export class StoreWriter {
       selectionSet: operationDefinition.selectionSet,
       context: {
         store,
-        processedData: {},
+        written: Object.create(null),
         variables: {
           ...getDefaultValues(operationDefinition),
           ...variables,
@@ -110,13 +112,25 @@ export class StoreWriter {
     selectionSet: SelectionSetNode;
     context: WriteContext;
   }): NormalizedCache {
-    const { store } = context;
+    const { store, written } = context;
+
+    // Avoid processing the same entity object using the same selection set
+    // more than once. We use an array instead of a Set since most entity IDs
+    // will be written using only one selection set, so the size of this array
+    // is likely to be very small, meaning indexOf is likely to be faster than
+    // Set.prototype.has.
+    const sets = written[dataId] || (written[dataId] = []);
+    if (sets.indexOf(selectionSet) >= 0) return store;
+    sets.push(selectionSet);
+
     const newFields = this.processSelectionSet({
       result,
       selectionSet,
       context,
     });
+
     store.set(dataId, mergeStoreObjects(store, store.get(dataId), newFields));
+
     return store;
   }
 
@@ -232,14 +246,12 @@ export class StoreWriter {
     if (value && context.dataIdFromObject) {
       const dataId = context.dataIdFromObject(value);
       if (typeof dataId === 'string') {
-        if (!isDataProcessed(dataId, field, context.processedData)) {
-          this.writeSelectionSetToStore({
-            dataId,
-            result: value,
-            selectionSet: field.selectionSet,
-            context,
-          });
-        }
+        this.writeSelectionSetToStore({
+          dataId,
+          result: value,
+          selectionSet: field.selectionSet,
+          context,
+        });
         return makeReference(dataId);
       }
     }
@@ -316,19 +328,4 @@ function mergeStoreObjects(
 
     return incoming;
   }).merge(existing, incoming);
-}
-
-function isDataProcessed(
-  dataId: string,
-  field: FieldNode,
-  processedData: { [x: string]: Set<typeof field> },
-): boolean {
-  const fieldSet = processedData[dataId];
-  if (fieldSet) {
-    if (fieldSet.has(field)) return true;
-    fieldSet.add(field);
-  } else {
-    processedData[dataId] = new Set([field]);
-  }
-  return false;
 }

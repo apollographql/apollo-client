@@ -4,6 +4,7 @@ export {
   UpdateQueryOptions,
   ApolloCurrentQueryResult,
 } from './core/ObservableQuery';
+
 export {
   QueryBaseOptions,
   QueryOptions,
@@ -17,8 +18,11 @@ export {
   SubscribeToMoreOptions,
   MutationUpdaterFn,
 } from './core/watchQueryOptions';
+
 export { NetworkStatus } from './core/networkStatus';
+
 export * from './core/types';
+
 export {
   Resolver,
   FragmentMatcher as LocalStateFragmentMatcher,
@@ -43,3 +47,8 @@ export * from './react';
 
 export * from './link/core';
 export * from './link/http';
+
+import Observable from 'zen-observable';
+export { Observable };
+
+export * from './utilities';

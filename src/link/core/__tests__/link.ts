@@ -3,8 +3,26 @@ import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
 
 import { execute, ApolloLink, from, split, concat } from '../link';
-import { SetContextLink, testLinkResults } from '../test-utils';
+import { testLinkResults } from '../test-utils';
 import { FetchResult, Operation, NextLink, GraphQLRequest } from '../types';
+
+class SetContextLink extends ApolloLink {
+  constructor(
+    private setContext: (
+      context: Record<string, any>,
+    ) => Record<string, any> = c => c,
+  ) {
+    super();
+  }
+
+  public request(
+    operation: Operation,
+    forward: NextLink,
+  ): Observable<FetchResult> {
+    operation.setContext(this.setContext(operation.getContext()));
+    return forward(operation);
+  }
+}
 
 const sampleQuery = gql`
   query SampleQuery {

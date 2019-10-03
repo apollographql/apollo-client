@@ -27,6 +27,14 @@ import { NormalizedCache, StoreObject } from './types';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 
+const { hasOwnProperty } = Object.prototype;
+
+const DefaultTypenamesByRootID: Record<string, string> = {
+  ROOT_QUERY: "Query",
+  ROOT_MUTATION: "Mutation",
+  ROOT_SUBSCRIPTION: "Subscription",
+};
+
 export type WriteContext = {
   readonly store: NormalizedCache;
   readonly written: {
@@ -97,7 +105,7 @@ export class StoreWriter {
     const storeObjectMerger = makeStoreObjectMerger(store);
 
     return this.writeSelectionSetToStore({
-      result,
+      result: result || Object.create(null),
       dataId,
       selectionSet: operationDefinition.selectionSet,
       context: {
@@ -119,13 +127,13 @@ export class StoreWriter {
   }
 
   private writeSelectionSetToStore({
-    result,
     dataId,
+    result,
     selectionSet,
     context,
   }: {
     dataId: string;
-    result: any;
+    result: Record<string, any>;
     selectionSet: SelectionSetNode;
     context: WriteContext;
   }): NormalizedCache {
@@ -140,10 +148,19 @@ export class StoreWriter {
     if (sets.indexOf(selectionSet) >= 0) return store;
     sets.push(selectionSet);
 
+    let defaultRootTypename: string | undefined;
+    if (hasOwnProperty.call(DefaultTypenamesByRootID, dataId)) {
+      const rootQueryStoreObject = store.get(dataId);
+      defaultRootTypename = rootQueryStoreObject
+        && rootQueryStoreObject.__typename
+        || DefaultTypenamesByRootID[dataId];
+    }
+
     const newFields = this.processSelectionSet({
       result,
       selectionSet,
       context,
+      defaultRootTypename,
     });
 
     store.set(
@@ -161,13 +178,15 @@ export class StoreWriter {
     result,
     selectionSet,
     context,
+    defaultRootTypename,
     typename = getTypenameFromResult(
       result, selectionSet, context.fragmentMap),
   }: {
-    result: any;
+    result: Record<string, any>;
     selectionSet: SelectionSetNode;
-    typename?: string;
     context: WriteContext;
+    defaultRootTypename?: string;
+    typename?: string;
   }): StoreObject {
     let mergedFields: StoreObject = Object.create(null);
     if (typeof typename === "string") {
@@ -185,7 +204,7 @@ export class StoreWriter {
 
         if (typeof value !== 'undefined') {
           const storeFieldName = this.policies.getStoreFieldName(
-            typename,
+            typename || defaultRootTypename,
             selection,
             context.variables,
           );
@@ -224,15 +243,20 @@ export class StoreWriter {
           context.fragmentMap,
         );
 
-        const match = this.policies.fragmentMatches(fragment, typename);
-        if (match && (result || typename === 'Query')) {
+        const match = this.policies.fragmentMatches(
+          fragment,
+          typename || defaultRootTypename,
+        );
+
+        if (match) {
           mergedFields = context.mergeFields(
             mergedFields,
             this.processSelectionSet({
               result,
               selectionSet: fragment.selectionSet,
-              typename,
               context,
+              defaultRootTypename,
+              typename,
             }),
           );
         }

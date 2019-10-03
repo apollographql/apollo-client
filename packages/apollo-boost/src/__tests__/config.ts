@@ -31,7 +31,7 @@ describe('config', () => {
     jest.spyOn(global.console, 'warn');
 
     const client = new ApolloClient({
-      link: [],
+      fuga: [],
     });
 
     expect(global.console.warn.mock.calls).toMatchSnapshot();

@@ -42,6 +42,7 @@ export interface PresetConfig {
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: LocalStateFragmentMatcher;
+  link?: ApolloLink;
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -104,7 +105,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       fragmentMatcher,
     } = config;
 
-    let { cache } = config;
+    let { cache, link } = config;
 
     invariant(
       !cache || !cacheRedirects,
@@ -161,15 +162,17 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
         )
       : false;
 
-    const httpLink = new HttpLink({
-      uri: uri || '/graphql',
-      fetch,
-      fetchOptions: fetchOptions || {},
-      credentials: credentials || 'same-origin',
-      headers: headers || {},
-    });
+    link =
+      link ||
+      new HttpLink({
+        uri: uri || '/graphql',
+        fetch,
+        fetchOptions: fetchOptions || {},
+        credentials: credentials || 'same-origin',
+        headers: headers || {},
+      });
 
-    const link = ApolloLink.from([errorLink, requestHandler, httpLink].filter(
+    link = ApolloLink.from([errorLink, requestHandler, link].filter(
       x => !!x,
     ) as ApolloLink[]);
 

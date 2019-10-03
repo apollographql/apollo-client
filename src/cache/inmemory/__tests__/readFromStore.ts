@@ -742,7 +742,7 @@ describe('reading from the store', () => {
     });
   });
 
-  it('properly handles the connection directive', () => {
+  it('properly handles the @connection directive', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         abc: [
@@ -758,6 +758,51 @@ describe('reading from the store', () => {
       query: gql`
         {
           books(skip: 0, limit: 2) @connection(key: "abc") {
+            name
+          }
+        }
+      `,
+    });
+
+    expect(stripSymbols(queryResult)).toEqual({
+      books: [
+        {
+          name: 'efgh',
+        },
+      ],
+    });
+  });
+
+  it('can use keyArgs function instead of @connection directive', () => {
+    const reader = new StoreReader({
+      policies: new Policies({
+        typePolicies: {
+          Query: {
+            fields: {
+              books: {
+                keyArgs: () => "abc",
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: {
+        abc: [
+          {
+            name: 'efgh',
+          },
+        ],
+      },
+    });
+
+    const queryResult = reader.readQueryFromStore({
+      store,
+      query: gql`
+        {
+          books(skip: 0, limit: 2) {
             name
           }
         }

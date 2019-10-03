@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
 
-describe("cache policies", function () {
+describe("type policies", function () {
   const bookQuery = gql`
     query {
       book {
@@ -268,5 +268,118 @@ describe("cache policies", function () {
         },
       });
     }).toThrow("Missing field year while computing key fields");
+  });
+
+  describe("field policies", function () {
+    it("can filter key arguments", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              book: {
+                keyArgs: ["isbn"],
+              },
+            },
+          },
+        },
+      });
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            book(junk: "ignored", isbn: "0465030793") {
+              title
+            }
+          }
+        `,
+        data: {
+          book: {
+            __typename: "Book",
+            isbn: "0465030793",
+            title: "I Am a Strange Loop",
+          },
+        },
+      });
+
+      expect(cache.extract(true)).toEqual({
+        ROOT_QUERY: {
+          'book:{"isbn":"0465030793"}': {
+            __typename: "Book",
+            title: "I Am a Strange Loop",
+          },
+        },
+      });
+    });
+
+    it("can filter key arguments in non-Query fields", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+            fields: {
+              author: {
+                keyArgs: ["firstName", "lastName"],
+              },
+            },
+          },
+          Author: {
+            keyFields: ["name"],
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          book {
+            isbn
+            title
+            author(
+              firstName: "Douglas",
+              middleName: "Richard",
+              lastName: "Hofstadter"
+            ) {
+              name
+            }
+          }
+        }
+      `;
+
+      const data = {
+        book: {
+          __typename: "Book",
+          isbn: "0465030793",
+          title: "I Am a Strange Loop",
+          author: {
+            __typename: "Author",
+            name: "Douglas Hofstadter",
+          },
+        },
+      };
+
+      cache.writeQuery({ query, data });
+
+      expect(cache.extract(true)).toEqual({
+        ROOT_QUERY: {
+          book: {
+            __ref: 'Book:{"isbn":"0465030793"}',
+          },
+        },
+        'Book:{"isbn":"0465030793"}': {
+          __typename: "Book",
+          isbn: "0465030793",
+          title: "I Am a Strange Loop",
+          'author:{"firstName":"Douglas","lastName":"Hofstadter"}': {
+            __ref: 'Author:{"name":"Douglas Hofstadter"}',
+          },
+        },
+        'Author:{"name":"Douglas Hofstadter"}': {
+          __typename: "Author",
+          name: "Douglas Hofstadter",
+        },
+      });
+
+      const result = cache.readQuery({ query });
+      expect(result).toEqual(data);
+    });
   });
 });

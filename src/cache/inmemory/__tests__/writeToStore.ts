@@ -1713,7 +1713,7 @@ describe('writing to the store', () => {
     }).toThrowError(/contains an id of abcd/g);
   });
 
-  it('properly handles the connection directive', () => {
+  it('properly handles the @connection directive', () => {
     const store = defaultNormalizedCacheFactory();
 
     writer.writeQueryToStore({
@@ -1738,6 +1738,79 @@ describe('writing to the store', () => {
       query: gql`
         {
           books(skip: 2, limit: 4) @connection(key: "abc") {
+            name
+          }
+        }
+      `,
+      result: {
+        books: [
+          {
+            name: 'efgh',
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      ROOT_QUERY: {
+        abc: [
+          {
+            name: 'efgh',
+          },
+        ],
+      },
+    });
+  });
+
+  it('can use keyArgs function instead of @connection directive', () => {
+    const store = defaultNormalizedCacheFactory();
+    const writer = new StoreWriter({
+      policies: new Policies({
+        typePolicies: {
+          Query: {
+            fields: {
+              books: {
+                keyArgs: () => "abc",
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    writer.writeQueryToStore({
+      query: gql`
+        {
+          books(skip: 0, limit: 2) {
+            name
+          }
+        }
+      `,
+      result: {
+        books: [
+          {
+            name: 'abcd',
+          },
+        ],
+      },
+      store,
+    });
+
+    expect(store.toObject()).toEqual({
+      ROOT_QUERY: {
+        abc: [
+          {
+            name: 'abcd',
+          },
+        ],
+      },
+    });
+
+    writer.writeQueryToStore({
+      query: gql`
+        {
+          books(skip: 2, limit: 4) {
             name
           }
         }

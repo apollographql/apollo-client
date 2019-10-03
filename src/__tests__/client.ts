@@ -2715,6 +2715,58 @@ describe('client', () => {
     });
   });
 
+  it('runs query with cache field policy analogous to @connection', () => {
+    const query = gql`
+      {
+        books(skip: 0, limit: 2) {
+          name
+        }
+      }
+    `;
+
+    const transformedQuery = gql`
+      {
+        books(skip: 0, limit: 2) {
+          name
+          __typename
+        }
+      }
+    `;
+
+    const result = {
+      books: [
+        {
+          name: 'abcd',
+          __typename: 'Book',
+        },
+      ],
+    };
+
+    const link = mockSingleLink({
+      request: { query: transformedQuery },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              books: {
+                keyArgs: () => "abc",
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    return client.query({ query }).then(actualResult => {
+      expect(stripSymbols(actualResult.data)).toEqual(result);
+    });
+  });
+
   it('should remove the connection directive before the link is sent', () => {
     const query = gql`
       {
@@ -2758,7 +2810,7 @@ describe('client', () => {
   });
 });
 
-describe('@connect', () => {
+describe('@connection', () => {
   it('should run a query with the connection directive and write the result to the store key defined in the directive', () => {
     const query = gql`
       {
@@ -2839,6 +2891,60 @@ describe('@connect', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+    });
+
+    return client.query({ query, variables }).then(actualResult => {
+      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
+    });
+  });
+
+  it('should support cache field policies that filter key arguments', () => {
+    const query = gql`
+      query books($order: string) {
+        books(skip: 0, limit: 2, order: $order) {
+          name
+        }
+      }
+    `;
+    const transformedQuery = gql`
+      query books($order: string) {
+        books(skip: 0, limit: 2, order: $order) {
+          name
+          __typename
+        }
+      }
+    `;
+
+    const result = {
+      books: [
+        {
+          name: 'abcd',
+          __typename: 'Book',
+        },
+      ],
+    };
+
+    const variables = { order: 'popularity' };
+
+    const link = mockSingleLink({
+      request: { query: transformedQuery, variables },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              books: {
+                keyArgs: ["order"],
+              }
+            }
+          }
+        }
+      }),
     });
 
     return client.query({ query, variables }).then(actualResult => {

@@ -1,15 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ApolloClient constructor will throw an error if cache is not passed in 1`] = `
-"In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.
-These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.
-For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
+"To initialize Apollo Client, you must specify 'uri' or 'link' and 'cache' properties in the options object. 
+For more information, please visit: https://www.apollographql.com/docs/react/"
 `;
 
 exports[`ApolloClient constructor will throw an error if link is not passed in 1`] = `
-"In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.
-These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.
-For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
+"To initialize Apollo Client, you must specify 'uri' or 'link' and 'cache' properties in the options object. 
+For more information, please visit: https://www.apollographql.com/docs/react/"
 `;
 
 exports[`ApolloClient write then read will not use a default id getter if either _id or id is present when __typename is not also present 1`] = `

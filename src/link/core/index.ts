@@ -1,8 +1,11 @@
-export * from './link';
 export {
-  createOperation,
-  toPromise,
-  fromPromise,
-  fromError,
-} from './linkUtils';
+  empty,
+  from,
+  split,
+  concat,
+  execute,
+  LinkError,
+  ApolloLink,
+} from './link';
+
 export * from './types';

@@ -8,14 +8,9 @@ import {
   RequestHandler,
   FetchResult,
 } from './types';
-
-import {
-  validateOperation,
-  isTerminating,
-  LinkError,
-  transformOperation,
-  createOperation,
-} from './linkUtils';
+import { validateOperation } from '../utils/validateOperation';
+import { createOperation } from '../utils/createOperation';
+import { transformOperation } from '../utils/transformOperation';
 
 function passthrough(op: Operation, forward: NextLink) {
   return forward ? forward(op) : Observable.of();
@@ -32,6 +27,10 @@ export function empty(): ApolloLink {
 export function from(links: ApolloLink[]): ApolloLink {
   if (links.length === 0) return empty();
   return links.map(toLink).reduce((x, y) => x.concat(y));
+}
+
+function isTerminating(link: ApolloLink): boolean {
+  return link.request.length <= 1;
 }
 
 export function split(
@@ -57,7 +56,14 @@ export function split(
   }
 }
 
-// join two Links together
+export class LinkError extends Error {
+  public link: ApolloLink;
+  constructor(message?: string, link?: ApolloLink) {
+    super(message);
+    this.link = link;
+  }
+}
+
 export const concat = (
   first: ApolloLink | RequestHandler,
   second: ApolloLink | RequestHandler,

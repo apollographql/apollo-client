@@ -47,6 +47,7 @@ export * from './react';
 
 export * from './link/core';
 export * from './link/http';
+export { fromError } from './link/utils/fromError';
 
 import Observable from 'zen-observable';
 export { Observable };

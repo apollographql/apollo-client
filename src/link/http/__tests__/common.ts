@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
 
-import { createOperation } from '../../core';
+import { createOperation } from '../../utils/createOperation';
 
 import {
   parseAndCheckHttpResponse,

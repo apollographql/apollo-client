@@ -13,7 +13,8 @@ import {
   HttpOptions,
   UriFunction as _UriFunction,
 } from './common';
-import { ApolloLink, RequestHandler, fromError } from '../core';
+import { ApolloLink, RequestHandler } from '../core';
+import { fromError } from '../utils/fromError';
 
 export namespace HttpLink {
   //TODO Would much rather be able to export directly

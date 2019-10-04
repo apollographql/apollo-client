@@ -12,6 +12,7 @@ export {
   HttpOptions,
   fallbackHttpConfig,
   selectHttpOptionsAndBody,
+  UriFunction
 } from './selectHttpOptionsAndBody';
 
 export { checkFetcher } from './checkFetcher';

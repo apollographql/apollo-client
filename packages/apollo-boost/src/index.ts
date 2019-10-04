@@ -149,6 +149,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
                     error: observer.error.bind(observer),
                     complete: observer.complete.bind(observer),
                   });
+                  return null;
                 })
                 .catch(observer.error.bind(observer));
 

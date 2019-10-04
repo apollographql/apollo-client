@@ -1,11 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApolloClient constructor will throw an error if cache is not passed in 1`] = `
+exports[`ApolloClient constructor will throw an error if \`uri\` or \`link\` is not passed in 1`] = `
 "To initialize Apollo Client, you must specify 'uri' or 'link' and 'cache' properties in the options object. 
 For more information, please visit: https://www.apollographql.com/docs/react/"
 `;
 
-exports[`ApolloClient constructor will throw an error if link is not passed in 1`] = `
+exports[`ApolloClient constructor will throw an error if cache is not passed in 1`] = `
 "To initialize Apollo Client, you must specify 'uri' or 'link' and 'cache' properties in the options object. 
 For more information, please visit: https://www.apollographql.com/docs/react/"
 `;

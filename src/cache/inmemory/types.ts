@@ -2,7 +2,6 @@ import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
 import { StoreValue } from '../../utilities/graphql/storeUtils';
-import { Policies } from './policies';
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -83,12 +82,6 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   addTypename?: boolean;
   cacheRedirects?: CacheResolverMap;
-};
-
-export type ReadStoreContext = {
-  readonly store: NormalizedCache;
-  readonly cacheRedirects: CacheResolverMap;
-  readonly policies: Policies;
 };
 
 export type CacheResolver = (

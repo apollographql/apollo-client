@@ -145,7 +145,7 @@ export class Policies {
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const existing = this.getTypePolicy(typename);
+      const existing = this.getTypePolicy(typename, true);
       const incoming = typePolicies[typename];
       const { keyFields, fields } = incoming;
 
@@ -157,7 +157,7 @@ export class Policies {
 
       if (fields) {
         Object.keys(fields).forEach(fieldName => {
-          const existing = this.getFieldPolicy(typename, fieldName);
+          const existing = this.getFieldPolicy(typename, fieldName, true);
           const { keyArgs } = fields[fieldName];
           if (Array.isArray(keyArgs)) {
             existing.keyFn = keyArgsFnFromSpecifier(keyArgs);
@@ -172,30 +172,45 @@ export class Policies {
   public addPossibleTypes(possibleTypes: PossibleTypesMap) {
     (this.usingPossibleTypes as boolean) = true;
     Object.keys(possibleTypes).forEach(supertype => {
-      const subtypeSet = this.getSubtypeSet(supertype);
+      const subtypeSet = this.getSubtypeSet(supertype, true);
       possibleTypes[supertype].forEach(subtypeSet.add, subtypeSet);
     });
   }
 
-  private getTypePolicy(typename: string): Policies["typePolicies"][string] {
-    return this.typePolicies[typename] || (
-      this.typePolicies[typename] = Object.create(null));
+  private getTypePolicy(
+    typename: string,
+    createIfMissing: boolean,
+  ): Policies["typePolicies"][string] {
+    const { typePolicies } = this;
+    return typePolicies[typename] || (
+      createIfMissing && (typePolicies[typename] = Object.create(null)));
   }
 
-  private getSubtypeSet(supertype: string): Set<string> {
-    const policy = this.getTypePolicy(supertype);
-    return policy.subtypes || (policy.subtypes = new Set<string>());
+  private getSubtypeSet(
+    supertype: string,
+    createIfMissing: boolean,
+  ): Set<string> {
+    const policy = this.getTypePolicy(supertype, createIfMissing);
+    if (policy) {
+      return policy.subtypes || (
+        createIfMissing && (policy.subtypes = new Set<string>()));
+    }
   }
 
   private getFieldPolicy(
     typename: string,
     fieldName: string,
+    createIfMissing: boolean,
   ): Policies["typePolicies"][string]["fields"][string] {
-    const typePolicy = this.getTypePolicy(typename);
-    const fieldPolicies = typePolicy.fields || (
-      typePolicy.fields = Object.create(null));
-    return fieldPolicies[fieldName] || (
-      fieldPolicies[fieldName] = Object.create(null));
+    const typePolicy = this.getTypePolicy(typename, createIfMissing);
+    if (typePolicy) {
+      const fieldPolicies = typePolicy.fields || (
+        createIfMissing && (typePolicy.fields = Object.create(null)));
+      if (fieldPolicies) {
+        return fieldPolicies[fieldName] || (
+          createIfMissing && (fieldPolicies[fieldName] = Object.create(null)));
+      }
+    }
   }
 
   public fragmentMatches(
@@ -208,18 +223,20 @@ export class Policies {
     if (typename === supertype) return true;
 
     if (this.usingPossibleTypes) {
-      const workQueue = [this.getSubtypeSet(supertype)];
+      const workQueue = [this.getSubtypeSet(supertype, false)];
       // It's important to keep evaluating workQueue.length each time through
       // the loop, because the queue can grow while we're iterating over it.
       for (let i = 0; i < workQueue.length; ++i) {
         const subtypes = workQueue[i];
-        if (subtypes.has(typename)) return true;
-        subtypes.forEach(subtype => {
-          const subsubtypes = this.getSubtypeSet(subtype);
-          if (workQueue.indexOf(subsubtypes) < 0) {
-            workQueue.push(subsubtypes);
-          }
-        });
+        if (subtypes) {
+          if (subtypes.has(typename)) return true;
+          subtypes.forEach(subtype => {
+            const subsubtypes = this.getSubtypeSet(subtype, false);
+            if (subsubtypes && workQueue.indexOf(subsubtypes) < 0) {
+              workQueue.push(subsubtypes);
+            }
+          });
+        }
       }
       // When possibleTypes is defined, we always either return true from the
       // loop above or return false here (never 'heuristic' below).
@@ -235,11 +252,7 @@ export class Policies {
     variables: Record<string, any>,
   ): string {
     if (typeof typename === "string") {
-      const fieldName = field.name.value;
-      const typePolicy = this.typePolicies[typename];
-      const fieldPolicies = typePolicy && typePolicy.fields;
-      const policy = fieldPolicies && fieldPolicies[fieldName];
-
+      const policy = this.getFieldPolicy(typename, field.name.value, false);
       if (policy && policy.keyFn) {
         return policy.keyFn.call(this, field, {
           typename,
@@ -247,7 +260,6 @@ export class Policies {
         });
       }
     }
-
     return storeKeyNameFromField(field, variables);
   }
 }

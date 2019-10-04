@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { makeReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference } from '../../../utilities/graphql/storeUtils';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
@@ -923,6 +923,7 @@ describe('diffing queries against the store', () => {
       expect(result.d).not.toEqual(previousResult.d);
       expect(result.d.f).toEqual(previousResult.d.f);
     });
+
     it('will preserve equality with custom resolvers', () => {
       const listQuery = gql`
         {
@@ -937,7 +938,7 @@ describe('diffing queries against the store', () => {
       const listResult = {
         people: [
           {
-            id: '4',
+            id: 4,
             name: 'Luke Skywalker',
             __typename: 'Person',
           },
@@ -954,11 +955,29 @@ describe('diffing queries against the store', () => {
         }
       `;
 
-      const writer = new StoreWriter({
-        policies: new Policies({
-          dataIdFromObject: (obj: any) => obj.id,
-        }),
+      const policies = new Policies({
+        typePolicies: {
+          Query: {
+            fields: {
+              person(rootQuery, args) {
+                expect(typeof args.id).toBe('number');
+                const id = this.identify({ __typename: 'Person', id: args.id });
+                expect(id).toBe(`Person:${JSON.stringify({ id: args.id })}`);
+                const found = (rootQuery.people as Reference[]).find(
+                  person => person.__ref === id);
+                expect(found).toBeTruthy();
+                return found;
+              },
+            },
+          },
+          Person: {
+            keyFields: ["id"],
+          },
+        },
       });
+
+      const writer = new StoreWriter({ policies });
+      const reader = new StoreReader({ policies });
 
       const store = writer.writeQueryToStore({
         query: listQuery,
@@ -969,17 +988,10 @@ describe('diffing queries against the store', () => {
         person: listResult.people[0],
       };
 
-      const cacheRedirects = {
-        Query: {
-          person: (_: any, args: any) => makeReference(args['id'])
-        },
-      };
-
       const { result } = reader.diffQueryAgainstStore({
         store,
         query: itemQuery,
         previousResult,
-        config: { cacheRedirects },
       });
 
       expect(result).toEqual(previousResult);

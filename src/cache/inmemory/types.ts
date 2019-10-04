@@ -81,7 +81,6 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   addTypename?: boolean;
-  cacheRedirects?: CacheResolverMap;
 };
 
 export type CacheResolver = (

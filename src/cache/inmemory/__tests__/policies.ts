@@ -381,5 +381,82 @@ describe("type policies", function () {
       const result = cache.readQuery({ query });
       expect(result).toEqual(data);
     });
+
+    it("can use read function to implement synthetic/computed keys", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Person: {
+            keyFields: ["firstName", "lastName"],
+            fields: {
+              fullName(person) {
+                return `${person.firstName} ${person.lastName}`;
+              },
+            },
+          },
+        },
+      });
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            me {
+              firstName
+              lastName
+            }
+          }
+        `,
+        data: {
+          me: {
+            __typename: "Person",
+            firstName: "Ben",
+            lastName: "Newman",
+          },
+        },
+      });
+
+      const expectedExtraction = {
+        ROOT_QUERY: {
+          me: {
+            __ref: 'Person:{"firstName":"Ben","lastName":"Newman"}',
+          },
+        },
+        'Person:{"firstName":"Ben","lastName":"Newman"}': {
+          __typename: "Person",
+          firstName: "Ben",
+          lastName: "Newman",
+        },
+      };
+
+      expect(cache.extract(true)).toEqual(expectedExtraction);
+
+      const expectedResult = {
+        me: {
+          __typename: "Person",
+          fullName: "Ben Newman",
+        },
+      };
+
+      expect(cache.readQuery({
+        query: gql`
+          query {
+            me {
+              fullName
+            }
+          }
+        `,
+      })).toEqual(expectedResult);
+
+      expect(cache.readQuery({
+        query: gql`
+          query {
+            me {
+              fullName @client
+            }
+          }
+        `,
+      })).toEqual(expectedResult);
+
+      expect(cache.extract(true)).toEqual(expectedExtraction);
+    });
   });
 });

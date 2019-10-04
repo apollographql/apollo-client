@@ -18,6 +18,8 @@ import {
   getTypenameFromResult,
   valueToObjectRepresentation,
   storeKeyNameFromField,
+  StoreValue,
+  argumentsObjectFromField,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -52,7 +54,7 @@ type TypePolicy = {
   // array of field names or a function that returns an arbitrary string.
   keyFields?: KeySpecifier | KeyFieldsFunction;
   fields?: {
-    [fieldName: string]: FieldPolicy;
+    [fieldName: string]: FieldPolicy | FieldReadFunction;
   }
 };
 
@@ -67,7 +69,40 @@ type KeyArgsFunction = (
 
 type FieldPolicy = {
   keyArgs?: KeySpecifier | KeyArgsFunction;
+  read?: FieldReadFunction;
 };
+
+interface CommonFieldFunctionOptions {
+  typename: string;
+  field: FieldNode;
+  variables: Record<string, any>;
+}
+
+interface FieldReadOptions<TValue> extends CommonFieldFunctionOptions {
+  storeFieldName: string;
+  storeFieldValue: Readonly<TValue>;
+}
+
+interface FieldReadFunction<TValue = StoreValue> {
+  (this: Policies,
+   storeObject: Readonly<StoreObject>,
+   args: Record<string, any>,
+   options: FieldReadOptions<TValue>,
+  ): StoreValue;
+
+  // The TypeScript typings for Function.prototype.call are much too generic
+  // to enforce the type safety we need here, for reasons discussed in this
+  // issue: https://github.com/microsoft/TypeScript/issues/212
+  // The strictBindCallApply compiler option (released in TS 3.2) promises to
+  // improve the behavior of the default F.p.call signature:
+  // https://github.com/microsoft/TypeScript/pull/27028
+  call(
+    self: Policies,
+    storeObject: Readonly<StoreObject>,
+    args: Record<string, any>,
+    options: FieldReadOptions<TValue>,
+  ): StoreValue;
+}
 
 export function defaultDataIdFromObject(object: StoreObject) {
   const { __typename, id, _id } = object;
@@ -90,6 +125,7 @@ export class Policies {
       fields?: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
+          read?: FieldReadFunction;
         };
       };
     };
@@ -153,20 +189,24 @@ export class Policies {
       const incoming = typePolicies[typename];
       const { keyFields, fields } = incoming;
 
-      if (Array.isArray(keyFields)) {
-        existing.keyFn = keyFieldsFnFromSpecifier(keyFields);
-      } else if (typeof keyFields === "function") {
-        existing.keyFn = keyFields;
-      }
+      existing.keyFn = Array.isArray(keyFields)
+        ? keyFieldsFnFromSpecifier(keyFields)
+        : typeof keyFields === "function" ? keyFields : void 0;
 
       if (fields) {
         Object.keys(fields).forEach(fieldName => {
           const existing = this.getFieldPolicy(typename, fieldName, true);
-          const { keyArgs } = fields[fieldName];
-          if (Array.isArray(keyArgs)) {
-            existing.keyFn = keyArgsFnFromSpecifier(keyArgs);
-          } else if (typeof keyArgs === "function") {
-            existing.keyFn = keyArgs;
+          const incoming = fields[fieldName];
+          if (typeof incoming === "function") {
+            existing.read = incoming;
+          } else {
+            const { keyArgs, read } = incoming;
+            existing.keyFn = Array.isArray(keyArgs)
+              ? keyArgsFnFromSpecifier(keyArgs)
+              : typeof keyArgs === "function" ? keyArgs : void 0;
+            if (typeof read === "function") {
+              existing.read = read;
+            }
           }
         });
       }
@@ -265,6 +305,28 @@ export class Policies {
       }
     }
     return storeKeyNameFromField(field, variables);
+  }
+
+  public readFieldFromStoreObject(
+    typename: string,
+    storeObject: Readonly<StoreObject>,
+    field: FieldNode,
+    variables: Record<string, any>,
+  ): StoreValue {
+    const storeFieldName = this.getStoreFieldName(typename, field, variables);
+    const storeFieldValue = storeObject[storeFieldName];
+    const policy = this.getFieldPolicy(typename, field.name.value, false);
+    if (policy && policy.read) {
+      const args = argumentsObjectFromField(field, variables);
+      return policy.read.call(this, storeObject, args, {
+        typename,
+        field,
+        variables,
+        storeFieldName,
+        storeFieldValue,
+      });
+    }
+    return storeFieldValue;
   }
 }
 

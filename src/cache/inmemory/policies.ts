@@ -133,14 +133,18 @@ export class Policies {
       fragmentMap,
     };
 
+    let id: string | null;
+
     const policy = typename && this.typePolicies[typename];
     if (policy && policy.keyFn) {
-      return policy.keyFn.call(this, object, context);
+      id = policy.keyFn.call(this, object, context);
+    } else {
+      id = this.config.dataIdFromObject
+        ? this.config.dataIdFromObject.call(this, object, context)
+        : null;
     }
 
-    return this.config.dataIdFromObject
-      ? this.config.dataIdFromObject.call(this, object, context)
-      : null;
+    return id && String(id);
   }
 
   public addTypePolicies(typePolicies: TypePolicies) {

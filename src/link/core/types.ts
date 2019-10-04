@@ -18,7 +18,6 @@ export interface Operation {
   extensions: Record<string, any>;
   setContext: (context: Record<string, any>) => Record<string, any>;
   getContext: () => Record<string, any>;
-  toKey: () => string;
 }
 
 export type FetchResult<

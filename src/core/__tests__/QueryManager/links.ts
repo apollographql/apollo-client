@@ -12,6 +12,7 @@ import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 // core
 import { QueryManager } from '../../QueryManager';
 import { DataStore } from '../../../data/store';
+import { Reference } from '../../../utilities/graphql/storeUtils';
 
 describe('Link interactions', () => {
   it('includes the cache on the context for eviction links', done => {
@@ -328,16 +329,17 @@ describe('Link interactions', () => {
       link,
       store: new DataStore(
         new InMemoryCache({
-          cacheRedirects: {
+          typePolicies: {
             Query: {
-              book(_, { id }, context) {
-                expect(context.getCacheKey).toBeDefined();
-                const cacheKey = context.getCacheKey({
-                  id,
-                  __typename: 'Book',
-                });
-                expect(cacheKey.__ref).toEqual(`Book:${id}`);
-                return cacheKey;
+              fields: {
+                book(rootQuery, args) {
+                  const id = this.identify({ __typename: "Book", id: args.id });
+                  expect(id).toEqual(`Book:${args.id}`);
+                  const found = (rootQuery.books as Reference[]).find(
+                    book => book.__ref === id);
+                  expect(found).toBeTruthy();
+                  return found;
+                },
               },
             },
           },

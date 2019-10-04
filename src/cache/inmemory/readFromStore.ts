@@ -9,7 +9,6 @@ import { wrap, KeyTrie } from 'optimism';
 import { InvariantError } from 'ts-invariant';
 
 import {
-  argumentsObjectFromField,
   isField,
   isInlineFragment,
   resultKeyNameFromField,
@@ -36,7 +35,6 @@ import {
   ReadQueryOptions,
   StoreObject,
   NormalizedCache,
-  CacheResolverMap,
 } from './types';
 import { supportsResultCaching } from './entityCache';
 import { getTypenameFromStoreObject } from './helpers';
@@ -50,7 +48,6 @@ interface ExecContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
-  cacheRedirects: CacheResolverMap;
 };
 
 export type ExecResultMissingField = {
@@ -189,7 +186,6 @@ export class StoreReader {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        cacheRedirects: config && config.cacheRedirects || {},
       },
     });
 
@@ -326,56 +322,32 @@ export class StoreReader {
 
   private executeField(
     object: StoreObject,
-    typename: string | undefined,
+    typename: string,
     field: FieldNode,
     context: ExecContext,
   ): ExecResult {
     const {
       variables: variables,
       store,
-      cacheRedirects,
       policies,
     } = context;
-
-    const storeFieldName = policies.getStoreFieldName(
-      typename,
-      field,
-      variables,
-    );
 
     let fieldValue: StoreValue | undefined;
 
     if (object) {
-      fieldValue = object[storeFieldName];
-
-      if (
-        typeof fieldValue === "undefined" &&
-        cacheRedirects &&
-        typeof typename === "string"
-      ) {
-        // Look for the type in the custom resolver map
-        const type = cacheRedirects[typename];
-        if (type) {
-          // Look for the field in the custom resolver map
-          const resolver = type[field.name.value];
-          if (resolver) {
-            const args = argumentsObjectFromField(field, variables);
-            fieldValue = resolver(object, args, {
-              getCacheKey(storeObj: StoreObject) {
-                const id = policies.identify(storeObj);
-                return id && makeReference(id);
-              },
-            });
-          }
-        }
-      }
+      fieldValue = policies.readFieldFromStoreObject(
+        typename,
+        object,
+        field,
+        variables,
+      );
     }
 
     const readStoreResult = typeof fieldValue === "undefined" ? {
       result: fieldValue,
       missing: [{
         object,
-        fieldName: storeFieldName,
+        fieldName: field.name.value,
         tolerable: false,
       }],
     } : {

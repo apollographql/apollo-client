@@ -128,7 +128,6 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery, variables }).subscribe({
         next: makeCallback(done, result => {
-          console.log(fetchMock.lastCall());
           const [uri, options] = fetchMock.lastCall();
           const { method, body } = options;
           expect(body).toBeUndefined();

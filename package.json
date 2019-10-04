@@ -77,7 +77,7 @@
     "check-if-folder-contents-changed-in-git-commit-range": "1.0.0",
     "codecov": "3.6.1",
     "danger": "7.1.4",
-    "fetch-mock": "7.3.9",
+    "fetch-mock": "7.4.0",
     "flow-bin": "0.107.0",
     "graphql": "14.5.6",
     "graphql-tag": "2.10.1",

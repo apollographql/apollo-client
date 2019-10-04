@@ -862,7 +862,7 @@ describe('HttpLink', () => {
         done.fail("warning wasn't called");
       } catch (e) {
         makeCallback(done, () =>
-          expect(e.message).toMatch(/fetch is not found globally/),
+          expect(e.message).toMatch(/has not been found globally/),
         )();
       }
     });
@@ -874,7 +874,7 @@ describe('HttpLink', () => {
         done.fail("warning wasn't called");
       } catch (e) {
         makeCallback(done, () =>
-          expect(e.message).toMatch(/fetch is not found globally/),
+          expect(e.message).toMatch(/has not been found globally/),
         )();
       }
     });

@@ -13,7 +13,7 @@ describe('checkFetcher', () => {
 
   it('throws if no fetch is present', () => {
     expect(() => checkFetcher(undefined)).toThrow(
-      /fetch is not found globally/,
+      /has not been found globally/,
     );
   });
 

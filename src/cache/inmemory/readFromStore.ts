@@ -547,17 +547,18 @@ function assertSelectionSetForIdValue(
   fieldValue: any,
 ) {
   if (!field.selectionSet) {
-    // This ensures not only that value contains no Reference objects, but also
-    // that the result contains no cycles.
-    JSON.stringify(fieldValue, (_key, nestedValue) => {
-      if (isReference(nestedValue)) {
-        throw new InvariantError(
-          `Missing selection set for object of type ${
-            getTypenameFromStoreObject(store, nestedValue)
-          } returned for query field ${field.name.value}`,
-        )
+    const workSet = new Set([fieldValue]);
+    workSet.forEach(value => {
+      if (value && typeof value === "object") {
+        if (isReference(value)) {
+          throw new InvariantError(
+            `Missing selection set for object of type ${
+              getTypenameFromStoreObject(store, value)
+            } returned for query field ${field.name.value}`,
+          )
+        }
+        Object.values(value).forEach(workSet.add, workSet);
       }
-      return nestedValue;
     });
   }
 }

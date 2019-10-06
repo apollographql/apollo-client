@@ -1,8 +1,8 @@
-import Observable from 'zen-observable';
 import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
+import { Observable } from '../util/Observable';
 import { ApolloLink } from '../link/core';
 import { InMemoryCache, PossibleTypesMap } from '../cache/inmemory';
 import { stripSymbols } from '../utilities';

@@ -1,5 +1,6 @@
-import Observable from 'zen-observable';
 import { invariant } from 'ts-invariant';
+
+import { Observable } from '../../util/Observable';
 
 export function toPromise<R>(observable: Observable<R>): Promise<R> {
   let completed = false;

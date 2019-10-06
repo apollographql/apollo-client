@@ -1,7 +1,7 @@
-import Observable from 'zen-observable';
 import { print } from 'graphql/language/printer';
 import stringify from 'fast-json-stable-stringify';
 
+import { Observable } from '../../../util/Observable';
 import {
   Operation,
   GraphQLRequest,

@@ -49,6 +49,6 @@ export * from './link/core';
 export * from './link/http';
 export * from './link/utils';
 
-export { default as Observable } from 'zen-observable';
+export { Observable } from './util/Observable';
 
 export * from './utilities';

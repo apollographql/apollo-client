@@ -1,5 +1,4 @@
-import Observable from 'zen-observable';
-
+import { Observable } from '../../../util/Observable';
 import { toPromise } from '../toPromise';
 import { fromError } from '../fromError';
 

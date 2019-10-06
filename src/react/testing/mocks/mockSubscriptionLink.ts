@@ -1,5 +1,4 @@
-import Observable from 'zen-observable';
-
+import { Observable } from '../../../util/Observable';
 import { ApolloLink, FetchResult } from '../../../link/core';
 import { MockedSubscriptionResult } from './types';
 

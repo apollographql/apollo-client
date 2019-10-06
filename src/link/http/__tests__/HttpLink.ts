@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
-import Observable from 'zen-observable';
 import { print } from 'graphql';
 
+import { Observable } from '../../../util/Observable';
 import { ApolloLink, execute } from '../../core';
 import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';

@@ -4,8 +4,8 @@ import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
-import Observable from 'zen-observable';
 
+import { Observable } from '../../../util/Observable';
 import { ApolloLink, Operation } from '../../../link/core';
 import {
   InMemoryCache,

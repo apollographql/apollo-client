@@ -1,6 +1,6 @@
-import Observable from 'zen-observable';
 import { InvariantError, invariant } from 'ts-invariant';
 
+import { Observable } from '../../util/Observable';
 import {
   NextLink,
   Operation,

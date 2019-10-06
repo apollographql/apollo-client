@@ -1,6 +1,6 @@
-import Observable from 'zen-observable';
 import { DefinitionNode } from 'graphql';
 
+import { Observable } from '../../util/Observable';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
 import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';

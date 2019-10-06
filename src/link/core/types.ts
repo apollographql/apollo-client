@@ -1,7 +1,8 @@
-import Observable from 'zen-observable';
 import { DocumentNode } from 'graphql/language/ast';
 import { ExecutionResult } from 'graphql/execution/execute';
 export { ExecutionResult, DocumentNode };
+
+import { Observable } from '../../util/Observable';
 
 export interface GraphQLRequest {
   query: DocumentNode;
@@ -30,6 +31,7 @@ export type FetchResult<
 };
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
+
 export type RequestHandler = (
   operation: Operation,
   forward: NextLink,

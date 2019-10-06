@@ -1,7 +1,7 @@
-import Observable from 'zen-observable';
 import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
 
+import { Observable } from '../../../util/Observable';
 import { FetchResult, Operation, NextLink, GraphQLRequest } from '../types';
 import { ApolloLink } from '../ApolloLink';
 

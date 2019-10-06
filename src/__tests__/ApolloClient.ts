@@ -1,6 +1,6 @@
-import Observable from 'zen-observable';
 import gql from 'graphql-tag';
 
+import { Observable } from '../util/Observable';
 import { ApolloLink } from '../link/core';
 import { HttpLink } from '../link/http';
 import { InMemoryCache, makeReference } from '../cache/inmemory';

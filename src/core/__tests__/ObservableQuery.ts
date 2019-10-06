@@ -1,7 +1,7 @@
-import Observable from 'zen-observable';
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 
+import { Observable } from '../../util/Observable';
 import { ApolloLink } from '../../link/core';
 import { InMemoryCache } from '../../cache/inmemory';
 import mockQueryManager from '../../__mocks__/mockQueryManager';

@@ -1,7 +1,7 @@
 // externals
-import Observable from 'zen-observable';
 import gql from 'graphql-tag';
 
+import { Observable } from '../../../util/Observable';
 import { ApolloLink } from '../../../link/core';
 import { InMemoryCache } from '../../../cache/inmemory';
 import { stripSymbols } from '../../../utilities';

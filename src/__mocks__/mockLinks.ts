@@ -1,6 +1,6 @@
-import Observable from 'zen-observable';
 import { print } from 'graphql/language/printer';
 
+import { Observable } from '../util/Observable';
 import {
   Operation,
   ApolloLink,

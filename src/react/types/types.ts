@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { DocumentNode } from 'graphql';
-import Observable from 'zen-observable';
 
+import { Observable } from '../../util/Observable';
 import { FetchResult } from '../../link/core';
 import ApolloClient from '../../ApolloClient';
 import {

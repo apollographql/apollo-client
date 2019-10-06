@@ -1,8 +1,8 @@
-import Observable from 'zen-observable';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 
+import { Observable } from '../../util/Observable';
 import { ApolloLink } from '../../link/core';
 import ApolloClient from '../..';
 import mockQueryManager from '../../__mocks__/mockQueryManager';

@@ -1,7 +1,7 @@
-import Observable from 'zen-observable';
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
+import { Observable } from '../util/Observable';
 import { ApolloLink } from '../link/core';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import ApolloClient from '..';

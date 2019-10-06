@@ -1,7 +1,7 @@
-import { execute, ApolloLink, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
+import { execute, ApolloLink, FetchResult } from '../link/core';
 import { Cache } from '../cache/core';
 import {
   getDefaultValues,

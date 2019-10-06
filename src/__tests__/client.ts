@@ -1,8 +1,9 @@
 import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { ApolloLink, Observable } from 'apollo-link';
 
+import { Observable } from '../util/Observable';
+import { ApolloLink } from '../link/core';
 import { InMemoryCache, PossibleTypesMap } from '../cache/inmemory';
 import { stripSymbols } from '../utilities';
 import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';

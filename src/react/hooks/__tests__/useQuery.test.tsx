@@ -2,8 +2,9 @@ import React, { useState, useReducer } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
-import { ApolloLink, Observable } from 'apollo-link';
 
+import { Observable } from '../../../util/Observable';
+import { ApolloLink } from '../../../link/core';
 import { MockedProvider, MockLink } from '../../testing';
 import ApolloClient from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';

@@ -1,6 +1,6 @@
-import { FetchResult } from 'apollo-link';
 import { DocumentNode, GraphQLError } from 'graphql';
 
+import { FetchResult } from '../link/core';
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';

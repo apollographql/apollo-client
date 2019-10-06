@@ -1,6 +1,8 @@
 import gql from 'graphql-tag';
-import { ApolloLink, Observable } from 'apollo-link';
 
+import { Observable } from '../util/Observable';
+import { ApolloLink } from '../link/core';
+import { HttpLink } from '../link/http';
 import { InMemoryCache, makeReference } from '../cache/inmemory';
 import { stripSymbols } from '../utilities';
 import { withWarning } from '../util/wrap';
@@ -10,7 +12,18 @@ import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
-    it('will throw an error if link is not passed in', () => {
+    let oldFetch: any;
+
+    beforeEach(() => {
+      oldFetch = window.fetch;
+      window.fetch = () => null;
+    })
+
+    afterEach(() => {
+      window.fetch = oldFetch;
+    });
+
+    it('will throw an error if `uri` or `link` is not passed in', () => {
       expect(() => {
         new ApolloClient({ cache: new InMemoryCache() } as any);
       }).toThrowErrorMatchingSnapshot();
@@ -20,6 +33,28 @@ describe('ApolloClient', () => {
       expect(() => {
         new ApolloClient({ link: ApolloLink.empty() } as any);
       }).toThrowErrorMatchingSnapshot();
+    });
+
+    it('should create an `HttpLink` instance if `uri` is provided', () => {
+      const uri = 'http://localhost:4000';
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        uri,
+      });
+
+      expect(client.link).toBeDefined();
+      expect((client.link as HttpLink).options.uri).toEqual(uri);
+    });
+
+    it('should accept `link` over `uri` if both are provided', () => {
+      const uri1 = 'http://localhost:3000';
+      const uri2 = 'http://localhost:4000';
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        uri: uri1,
+        link: new HttpLink({ uri: uri2 })
+      });
+      expect((client.link as HttpLink).options.uri).toEqual(uri2);
     });
   });
 

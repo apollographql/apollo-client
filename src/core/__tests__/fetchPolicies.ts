@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
-import { ApolloLink } from 'apollo-link';
 
+import { ApolloLink } from '../../link/core';
 import { InMemoryCache } from '../../cache/inmemory';
 import { stripSymbols } from '../../utilities';
 import ApolloClient from '../..';

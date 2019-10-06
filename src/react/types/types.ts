@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
-import { DocumentNode, GraphQLError } from 'graphql';
-import { Observable, FetchResult } from 'apollo-link';
+import { DocumentNode } from 'graphql';
 
+import { Observable } from '../../util/Observable';
+import { FetchResult } from '../../link/core';
 import ApolloClient from '../../ApolloClient';
 import {
   ApolloQueryResult,
@@ -22,12 +23,6 @@ import { NetworkStatus } from '../../core/networkStatus';
 /* Common types */
 
 export type Context = Record<string, any>;
-
-export interface ExecutionResult<T = Record<string, any>> {
-  data?: T;
-  extensions?: Record<string, any>;
-  errors?: GraphQLError[];
-}
 
 export type CommonOptions<TOptions> = TOptions & {
   client?: ApolloClient<object>;
@@ -201,7 +196,7 @@ export interface MutationOptions<TData = any, TVariables = OperationVariables>
 export type MutationTuple<TData, TVariables> = [
   (
     options?: MutationFunctionOptions<TData, TVariables>
-  ) => Promise<ExecutionResult<TData>>,
+  ) => Promise<FetchResult<TData>>,
   MutationResult<TData>
 ];
 

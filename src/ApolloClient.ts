@@ -1,12 +1,12 @@
+import { ExecutionResult, DocumentNode } from 'graphql';
+import { invariant, InvariantError } from 'ts-invariant';
+
 import {
   ApolloLink,
   FetchResult,
   GraphQLRequest,
   execute,
-} from 'apollo-link';
-import { ExecutionResult, DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
-
+} from './link/core';
 import { ApolloCache, DataProxy } from './cache/core';
 import { QueryManager } from './core/QueryManager';
 import {
@@ -26,6 +26,7 @@ import {
 } from './core/watchQueryOptions';
 import { DataStore } from './data/store';
 import { version } from './version';
+import { UriFunction, HttpLink } from './link/http';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions>;
@@ -36,6 +37,9 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export type ApolloClientOptions<TCacheShape> = {
+  uri?: string | UriFunction;
+  credentials?: string;
+  headers?: Record<string, string>;
   link?: ApolloLink;
   cache: ApolloCache<TCacheShape>;
   ssrForceFetchDelay?: number;
@@ -76,6 +80,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Constructs an instance of {@link ApolloClient}.
    *
+   * @param uri The GraphQL endpoint that Apollo Client will connect to. If
+   *            `link` is configured, this option is ignored.
    * @param link The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
    *
    * @param cache The initial cache to use in the data store.
@@ -109,6 +115,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
+      uri,
+      credentials,
+      headers,
       cache,
       ssrMode = false,
       ssrForceFetchDelay = 0,
@@ -125,21 +134,23 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
 
     let { link } = options;
 
-    // If a link hasn't been defined, but local state resolvers have been set,
-    // setup a default empty link.
-    if (!link && resolvers) {
-      link = ApolloLink.empty();
+    if (!link) {
+      if (uri) {
+        link = new HttpLink({ uri, credentials, headers });
+      } else if (resolvers) {
+        link = ApolloLink.empty();
+      }
     }
 
     if (!link || !cache) {
       throw new InvariantError(
-        "In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.\n" +
-        "These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.\n" +
-        "For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
+        "To initialize Apollo Client, you must specify 'uri' or 'link' and " +
+        "'cache' properties in the options object. \n" +
+        "For more information, please visit: " +
+        "https://www.apollographql.com/docs/react/"
       );
     }
 
-    // remove apollo-client supported directives
     this.link = link;
     this.cache = cache;
     this.store = new DataStore(cache);

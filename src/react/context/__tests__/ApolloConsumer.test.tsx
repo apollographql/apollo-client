@@ -1,7 +1,7 @@
 import React from 'react';
-import { ApolloLink } from 'apollo-link';
 import { render, cleanup } from '@testing-library/react';
 
+import { ApolloLink } from '../../../link/core';
 import ApolloClient from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../ApolloProvider';

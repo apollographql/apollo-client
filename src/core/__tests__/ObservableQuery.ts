@@ -1,8 +1,9 @@
 import gql from 'graphql-tag';
-import { ApolloLink, Observable } from 'apollo-link';
-import { InMemoryCache } from '../../cache/inmemory';
 import { GraphQLError } from 'graphql';
 
+import { Observable } from '../../util/Observable';
+import { ApolloLink } from '../../link/core';
+import { InMemoryCache } from '../../cache/inmemory';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import mockWatchQuery from '../../__mocks__/mockWatchQuery';
 import { mockSingleLink } from '../../__mocks__/mockLinks';

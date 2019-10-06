@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
-import { ApolloLink, Operation } from 'apollo-link';
-
 import { DocumentNode, OperationDefinitionNode } from 'graphql';
+
+import { ApolloLink, Operation } from '../link/core';
 import { mockSingleLink, mockObservableLink } from '../__mocks__/mockLinks';
 import ApolloClient from '../';
 import { InMemoryCache } from '../cache/inmemory';

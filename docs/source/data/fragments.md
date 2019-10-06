@@ -37,6 +37,8 @@ To do so, we can simply share a fragment describing the fields we need for a com
 ```js
 import gql from 'graphql-tag';
 
+let CommentsPage = {};
+
 CommentsPage.fragments = {
   comment: gql`
     fragment CommentsPageComment on Comment {
@@ -50,6 +52,8 @@ CommentsPage.fragments = {
     }
   `,
 };
+
+export CommentsPage;
 ```
 
 We put the fragment on `CommentsPage.fragments.comment` by convention, and use the familiar `gql` helper to create it.

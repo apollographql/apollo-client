@@ -13,7 +13,7 @@ GraphQL subscriptions are a way to push data from the server to the clients that
 
 A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/advanced/boost-migration/).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/migrating/boost-migration/).
 
 ## Overview
 
@@ -203,7 +203,7 @@ With GraphQL subscriptions your client will be alerted on push from the server a
 
 With `subscribeToMore`, you can easily do the latter.
 
-`subscribeToMore` is a function available on every query result in React Apollo. It works just like [`fetchMore`](/advanced/caching/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
+`subscribeToMore` is a function available on every query result in React Apollo. It works just like [`fetchMore`](/caching/cache-interaction/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 

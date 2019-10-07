@@ -60,7 +60,7 @@ const client = new ApolloClient({
 });
 ```
 
-The `InMemoryCache` is our recommended cache implementation for Apollo Client. The `HttpLink` is an Apollo Link that sends HTTP requests. Your network stack can be made up of one or more links, which you can chain together to create a customizable network stack. Learn more in our [network layer](/advanced/network-layer/) guide or the [Apollo Link](https://www.apollographql.com/docs/link) docs.
+The `InMemoryCache` is our recommended cache implementation for Apollo Client. The `HttpLink` is an Apollo Link that sends HTTP requests. Your network stack can be made up of one or more links, which you can chain together to create a customizable network stack. Learn more in our [network layer](/networking/network-layer/) guide or the [Apollo Link](https://www.apollographql.com/docs/link) docs.
 
 ## Advanced migration
 

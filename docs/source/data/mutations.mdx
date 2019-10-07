@@ -1,0 +1,550 @@
+---
+title: Mutations
+description: Learn how to update data with the useMutation hook
+---
+
+import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
+import MutationOptions from '../../shared/mutation-options.mdx';
+import MutationResult from '../../shared/mutation-result.mdx';
+
+Now that we've [learned how to fetch data](/data/queries/) from our backend with Apollo Client,
+the natural next step is to learn how to update that data with **mutations**.
+This article demonstrates how to send updates to your GraphQL server with the
+`useMutation` hook. You'll also learn how to update the Apollo Client cache
+after executing a mutation, and how to track loading and error states for a mutation.
+
+## Prerequisites
+
+This article assumes you're familiar with building basic GraphQL mutations. If you need a refresher, we recommend that you
+[read this guide](http://graphql.org/learn/queries/#mutations).
+
+This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](/get-started/) if you need help with either of those steps.
+
+> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/znl94y0vp) and [sample GraphQL server](https://codesandbox.io/s/plp0mopxq) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
+
+## Executing a mutation
+
+The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the primary API for executing mutations in an Apollo application. To run a mutation, you first call `useMutation` within a React component and pass it a GraphQL string that represents the mutation. When your component renders, `useMutation` returns a tuple that includes:
+
+* A **mutate function** that you can call at any time to execute the mutation
+* An object with fields that represent the current status of the mutation's execution
+
+Let's look at an example. First, we'll create a GraphQL mutation named `ADD_TODO`, which represents adding an item to a to-do list. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx:title=index.js
+import gql from 'graphql-tag';
+import { useMutation } from '@apollo/react-hooks';
+
+const ADD_TODO = gql`
+  mutation AddTodo($type: String!) {
+    addTodo(type: $type) {
+      id
+      type
+    }
+  }
+`;
+
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx:title=index.js
+import gql from 'graphql-tag';
+import { Mutation } from '@apollo/react-components';
+
+const ADD_TODO = gql`
+  mutation AddTodo($type: String!) {
+    addTodo(type: $type) {
+      id
+      type
+    }
+  }
+`;
+```
+
+</div>
+</MultiCodeBlock>
+
+Next, we'll create a component named `AddTodo` that represents the submission form for the to-do list. Inside it, we'll pass our
+`ADD_TODO` mutation to the `useMutation` hook:
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx:title=index.js
+function AddTodo() {
+  let input;
+  const [addTodo, { data }] = useMutation(ADD_TODO);
+
+  return (
+    <div>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          addTodo({ variables: { type: input.value } });
+          input.value = '';
+        }}
+      >
+        <input
+          ref={node => {
+            input = node;
+          }}
+        />
+        <button type="submit">Add Todo</button>
+      </form>
+    </div>
+  );
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx:title=index.js
+const AddTodo = () => {
+  let input;
+
+  return (
+    <Mutation mutation={ADD_TODO}>
+      {(addTodo, { data }) => (
+        <div>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              addTodo({ variables: { type: input.value } });
+              input.value = '';
+            }}
+          >
+            <input
+              ref={node => {
+                input = node;
+              }}
+            />
+            <button type="submit">Add Todo</button>
+          </form>
+        </div>
+      )}
+    </Mutation>
+  );
+};
+```
+
+</div>
+</MultiCodeBlock>
+
+### Calling the mutate function
+
+The `useMutation` hook does _not_ automatically execute the mutation you
+pass it when the component renders. Instead, it returns a tuple with a **mutate function** in its first position (which we assign to `addTodo` in the example above). You then call the mutate function
+at any time to instruct Apollo Client to execute the mutation. In the example above, we call `addTodo` when the user submits the form.
+
+### Providing options
+
+Both `useMutation` itself and the mutate function accept options that are described in the [API reference](/api/react-hooks/#usemutation). Any options you provide to a mutate function _override_ corresponding options
+you previously provided to `useMutation`. In the example above, we provide the
+`variables` option to `addTodo`, which enables us to specify any GraphQL variables that the mutation requires.
+
+
+### Tracking mutation status
+
+In addition to a mutate function, the `useMutation` hook returns an object that
+represents the current state of the mutation's execution. The fields of this
+object (fully documented in the [API reference](/api/react-hooks/#result-2)) include booleans that indicate whether the mutate function has been `called` yet, and whether the mutation's result is currently `loading`.
+
+## Updating the cache after a mutation
+
+When you execute a mutation, you modify back-end data. If that data
+is also present in your [Apollo Client cache](/caching/cache-configuration/),
+you might need to update your cache to reflect the result of the mutation.
+This depends on whether the mutation _updates a single existing entity_.
+
+### Updating a single existing entity
+
+If a mutation updates a single existing entity, Apollo Client can automatically
+update that entity's value in its cache when the mutation returns. To do so,
+the mutation must return the `id` of the modified entity, along with the values
+of the fields that were modified. Conveniently, mutations do this by default in
+Apollo Client.
+
+Let's look at an example that enables us to modify the value of any existing
+item in our to-do list:
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const UPDATE_TODO = gql`
+  mutation UpdateTodo($id: String!, $type: String!) {
+    updateTodo(id: $id, type: $type) {
+      id
+      type
+    }
+  }
+`;
+
+function Todos() {
+  const { loading, error, data } = useQuery(GET_TODOS);
+  const [updateTodo] = useMutation(UPDATE_TODO);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error :(</p>;
+
+  return data.todos.map(({ id, type }) => {
+    let input;
+
+    return (
+      <div key={id}>
+        <p>{type}</p>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            updateTodo({ variables: { id, type: input.value } });
+
+            input.value = '';
+          }}
+        >
+          <input
+            ref={node => {
+              input = node;
+            }}
+          />
+          <button type="submit">Update Todo</button>
+        </form>
+      </div>
+    );
+  });
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
+const UPDATE_TODO = gql`
+  mutation UpdateTodo($id: String!, $type: String!) {
+    updateTodo(id: $id, type: $type) {
+      id
+      type
+    }
+  }
+`;
+
+const Todos = () => (
+  <Query query={GET_TODOS}>
+    {({ loading, error, data }) => {
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :(</p>;
+
+      return data.todos.map(({ id, type }) => {
+        let input;
+
+        return (
+          <Mutation mutation={UPDATE_TODO} key={id}>
+            {updateTodo => (
+              <div>
+                <p>{type}</p>
+                <form
+                  onSubmit={e => {
+                    e.preventDefault();
+                    updateTodo({ variables: { id, type: input.value } });
+
+                    input.value = '';
+                  }}
+                >
+                  <input
+                    ref={node => {
+                      input = node;
+                    }}
+                  />
+                  <button type="submit">Update Todo</button>
+                </form>
+              </div>
+            )}
+          </Mutation>
+        );
+      });
+    }}
+  </Query>
+);
+```
+
+</div>
+</MultiCodeBlock>
+
+If you execute the `UPDATE_TODO` mutation using this component, the mutation
+returns both the `id` of the modified to-do item and the item's new `type`.
+Because Apollo Client caches entities by `id`, it knows how to automatically
+update the corresponding entity in its cache. The application's UI also updates
+immediately to reflect changes in the cache.
+
+### Making all other cache updates
+
+If a mutation modifies multiple entities, or if it creates or deletes entities, the Apollo Client cache is _not_ automatically updated to reflect the result of the
+mutation. To resolve this, your call to `useMutation` can include an **update function**.
+
+The purpose of an update function is to modify your _cached_ data to
+match the modifications that a mutation makes to your _back-end_
+data. In the example in [Executing a mutation](#executing-a-mutation), the
+update function for the `ADD_TODO` mutation should add the same item to our
+cached version of the to-do list.
+
+The following sample illustrates defining an update function in a call to `useMutation`:
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+const GET_TODOS = gql`
+  query GetTodos {
+    todos
+  }
+`;
+
+function AddTodo() {
+  let input;
+  const [addTodo] = useMutation(
+    ADD_TODO,
+    {
+      update(cache, { data: { addTodo } }) {
+        const { todos } = cache.readQuery({ query: GET_TODOS });
+        cache.writeQuery({
+          query: GET_TODOS,
+          data: { todos: todos.concat([addTodo]) },
+        });
+      }
+    }
+  );
+
+  return (
+    <div>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          addTodo({ variables: { type: input.value } });
+          input.value = "";
+        }}
+      >
+        <input
+          ref={node => {
+            input = node;
+          }}
+        />
+        <button type="submit">Add Todo</button>
+      </form>
+    </div>
+  );
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
+const GET_TODOS = gql`
+  query GetTodos {
+    todos
+  }
+`;
+
+const AddTodo = () => {
+  let input;
+
+  return (
+    <Mutation
+      mutation={ADD_TODO}
+      update={(cache, { data: { addTodo } }) => {
+        const { todos } = cache.readQuery({ query: GET_TODOS });
+        cache.writeQuery({
+          query: GET_TODOS,
+          data: { todos: todos.concat([addTodo]) },
+        });
+      }}
+    >
+      {addTodo => (
+        <div>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              addTodo({ variables: { type: input.value } });
+              input.value = '';
+            }}
+          >
+            <input
+              ref={node => {
+                input = node;
+              }}
+            />
+            <button type="submit">Add Todo</button>
+          </form>
+        </div>
+      )}
+    </Mutation>
+  );
+};
+```
+
+</div>
+</MultiCodeBlock>
+
+As shown, the update function is passed a `cache` object that represents
+the Apollo Client cache. This object provides `readQuery` and `writeQuery`
+functions that enable you to execute GraphQL operations on the cache as though
+you're interacting with a GraphQL server.
+
+> Learn more about supported cache functions in [Interacting with cached data](/caching/cache-interaction/).
+
+The update function is _also_ passed an object with a `data` property that
+contains the result of the mutation. Use this value to update the
+cache with `cache.writeQuery`.
+
+> If your mutation specifies an [optimistic response](/performance/optimistic-ui/), your update function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
+
+In the example above, the update function first reads the existing to-do list from the cache with `cache.readQuery`. It then adds the new to-do item
+from our mutation to the list and writes it _back_ to the cache with `cache.writeQuery`.
+
+Any changes you make to cached data inside of an update function are
+automatically broadcast to queries that are listening for changes to that data.
+Consequently, your application's UI will update to reflect newly cached
+values.
+
+## Tracking loading and error states
+
+The `useMutation` hook provides mechanisms for tracking the loading and error
+state of a mutation.
+
+Let's revisit the `Todos` component from [Updating a single existing entity](#updating-a-single-existing-entity):
+
+<MultiCodeBlock>
+<div data-language="Hooks (JavaScript)">
+
+```jsx
+function Todos() {
+  const { loading: queryLoading, error: queryError, data } = useQuery(
+    GET_TODOS,
+  );
+
+  const [
+    updateTodo,
+    { loading: mutationLoading, error: mutationError },
+  ] = useMutation(UPDATE_TODO);
+
+  if (queryLoading) return <p>Loading...</p>;
+  if (queryError) return <p>Error :(</p>;
+
+  return data.todos.map(({ id, type }) => {
+    let input;
+
+    return (
+      <div key={id}>
+        <p>{type}</p>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            updateTodo({ variables: { id, type: input.value } });
+
+            input.value = '';
+          }}
+        >
+          <input
+            ref={node => {
+              input = node;
+            }}
+          />
+          <button type="submit">Update Todo</button>
+        </form>
+        {mutationLoading && <p>Loading...</p>}
+        {mutationError && <p>Error :( Please try again</p>}
+      </div>
+    );
+  });
+}
+```
+
+</div>
+<div data-language="Render Props (JavaScript)">
+
+```jsx
+const Todos = () => (
+  <Query query={GET_TODOS}>
+    {({ loading, error, data }) => {
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :(</p>;
+
+      return data.todos.map(({ id, type }) => {
+        let input;
+
+        return (
+          <Mutation mutation={UPDATE_TODO} key={id}>
+            {(updateTodo, { loading, error }) => (
+              <div>
+                <p>{type}</p>
+                <form
+                  onSubmit={e => {
+                    e.preventDefault();
+                    updateTodo({ variables: { id, type: input.value } });
+
+                    input.value = '';
+                  }}
+                >
+                  <input
+                    ref={node => {
+                      input = node;
+                    }}
+                  />
+                  <button type="submit">Update Todo</button>
+                </form>
+                {loading && <p>Loading...</p>}
+                {error && <p>Error :( Please try again</p>}
+              </div>
+            )}
+          </Mutation>
+        );
+      });
+    }}
+  </Query>
+);
+```
+
+</div>
+</MultiCodeBlock>
+
+As shown above, we can destructure the `loading` and `error` properties from
+the result object returned by `useMutation` to track the mutation's state in our UI. The `useMutation` hook also supports `onCompleted` and `onError` options if you prefer to use callbacks.
+
+Learn about all of the fields returned by `useMutation` in the [API reference](/api/react-hooks/#result-2).
+
+## `useMutation` API
+
+Supported options and result fields for the `useMutation` hook are listed below.
+
+Most calls to `useMutation` can omit the majority of these options, but it's
+useful to know they exist. To learn about the `useMutation` hook API in more
+detail with usage examples, see the [API reference](/api/react-hooks/#usemutation).
+
+### Options
+
+The `useMutation` hook accepts the following options:
+
+<MutationOptions />
+
+### Result
+
+The `useMutation` result is a tuple with a mutate function in the first position and an object representing the mutation result in the second position.
+
+You call the mutate function to trigger the mutation from your UI.
+
+<MutationResult />
+
+## Next steps
+
+The `useQuery` and `useMutation` hooks together represent Apollo Client's core
+API for performing GraphQL operations. Now that you're familiar with both,
+you can begin to take advantage of Apollo Client's full feature set, including:
+
+- [Optimistic UI](/performance/optimistic-ui/): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
+- [Local state](/data/local-state/): Use Apollo Client to manage the entirety of your application's local state by executing client-side mutations.
+- [Caching in Apollo](/caching/cache-configuration/): Dive deep into the Apollo Client cache and how it's normalized. Understanding the cache is helpful when writing update functions for your mutations!

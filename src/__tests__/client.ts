@@ -2718,7 +2718,7 @@ describe('client', () => {
   it('should remove the connection directive before the link is sent', () => {
     const query = gql`
       {
-        books(skip: 0, limit: 2) @connection {
+        books(skip: 0, limit: 2) @connection(key: "books") {
           name
         }
       }

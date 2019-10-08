@@ -1,5 +1,6 @@
 import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
+import { StoreValue } from "../../../utilities";
 
 describe("type policies", function () {
   const bookQuery = gql`
@@ -508,6 +509,219 @@ describe("type policies", function () {
       }).toThrow("Can't find field secret");
 
       expect(secretReadAttempted).toBe(true);
+    });
+
+    it("can define custom merge functions", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Person: {
+            fields: {
+              todos: {
+                keyArgs: [],
+
+                read(person, args, { storeFieldValue }) {
+                  return (storeFieldValue as any[]).slice(
+                    args.offset,
+                    args.offset + args.limit,
+                  );
+                },
+
+                merge({
+                  args,
+                  existingValue = [],
+                  incomingValue,
+                }): StoreValue[] {
+                  const limit = args.offset + args.limit;
+                  for (let i = args.offset; i < limit; ++i) {
+                    existingValue[i] = incomingValue[i - args.offset];
+                  }
+                  return existingValue as any;
+                }
+              },
+            },
+          },
+
+          Todo: {
+            keyFields: ["id"],
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          me {
+            todos(offset: $offset, limit: $limit) {
+              text
+            }
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          me: {
+            __typename: "Person",
+            todos: [
+              { __typename: "Todo", id: 1, text: "Write more merge tests" },
+              { __typename: "Todo", id: 2, text: "Write pagination tests" },
+            ],
+          },
+        },
+        variables: {
+          offset: 0,
+          limit: 2,
+        },
+      });
+
+      expect(cache.extract(true)).toEqual({
+        ROOT_QUERY: {
+          me: {
+            __typename: "Person",
+            "todos:{}": [
+              { __ref: 'Todo:{"id":1}' },
+              { __ref: 'Todo:{"id":2}' },
+            ],
+          },
+        },
+        'Todo:{"id":1}': {
+          __typename: "Todo",
+          text: "Write more merge tests",
+        },
+        'Todo:{"id":2}': {
+          __typename: "Todo",
+          text: "Write pagination tests",
+        },
+      });
+
+      cache.writeQuery({
+        query,
+        data: {
+          me: {
+            __typename: "Person",
+            todos: [
+              { __typename: "Todo", id: 5, text: "Submit pull request" },
+              { __typename: "Todo", id: 6, text: "Merge pull request" },
+            ],
+          },
+        },
+        variables: {
+          offset: 4,
+          limit: 2,
+        },
+      });
+
+      expect(cache.extract(true)).toEqual({
+        ROOT_QUERY: {
+          me: {
+            __typename: "Person",
+            "todos:{}": [
+              { __ref: 'Todo:{"id":1}' },
+              { __ref: 'Todo:{"id":2}' },
+              void 0,
+              void 0,
+              { __ref: 'Todo:{"id":5}' },
+              { __ref: 'Todo:{"id":6}' },
+            ],
+          },
+        },
+        'Todo:{"id":1}': {
+          __typename: "Todo",
+          text: "Write more merge tests",
+        },
+        'Todo:{"id":2}': {
+          __typename: "Todo",
+          text: "Write pagination tests",
+        },
+        'Todo:{"id":5}': {
+          __typename: "Todo",
+          text: "Submit pull request",
+        },
+        'Todo:{"id":6}': {
+          __typename: "Todo",
+          text: "Merge pull request",
+        },
+      });
+
+      cache.writeQuery({
+        query,
+        data: {
+          me: {
+            __typename: "Person",
+            todos: [
+              { __typename: "Todo", id: 3, text: "Iron out merge API" },
+              { __typename: "Todo", id: 4, text: "Take a nap" },
+            ],
+          },
+        },
+        variables: {
+          offset: 2,
+          limit: 2,
+        },
+      });
+
+      expect(cache.extract(true)).toEqual({
+        ROOT_QUERY: {
+          me: {
+            __typename: "Person",
+            "todos:{}": [
+              { __ref: 'Todo:{"id":1}' },
+              { __ref: 'Todo:{"id":2}' },
+              { __ref: 'Todo:{"id":3}' },
+              { __ref: 'Todo:{"id":4}' },
+              { __ref: 'Todo:{"id":5}' },
+              { __ref: 'Todo:{"id":6}' },
+            ],
+          },
+        },
+        'Todo:{"id":1}': {
+          __typename: "Todo",
+          text: "Write more merge tests",
+        },
+        'Todo:{"id":2}': {
+          __typename: "Todo",
+          text: "Write pagination tests",
+        },
+        'Todo:{"id":3}': {
+          __typename: "Todo",
+          text: "Iron out merge API",
+        },
+        'Todo:{"id":4}': {
+          __typename: "Todo",
+          text: "Take a nap",
+        },
+        'Todo:{"id":5}': {
+          __typename: "Todo",
+          text: "Submit pull request",
+        },
+        'Todo:{"id":6}': {
+          __typename: "Todo",
+          text: "Merge pull request",
+        },
+      });
+
+      expect(cache.gc()).toEqual([]);
+
+      // The moment of truth!
+      expect(
+        cache.readQuery({
+          query,
+          variables: {
+            offset: 1,
+            limit: 4,
+          },
+        })
+      ).toEqual({
+        me: {
+          __typename: "Person",
+          todos: [
+            { __typename: "Todo", text: "Write pagination tests" },
+            { __typename: "Todo", text: "Iron out merge API" },
+            { __typename: "Todo", text: "Take a nap" },
+            { __typename: "Todo", text: "Submit pull request" },
+          ],
+        },
+      });
     });
   });
 });

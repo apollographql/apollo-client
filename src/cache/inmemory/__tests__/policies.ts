@@ -458,5 +458,56 @@ describe("type policies", function () {
 
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
+
+    it("can return void to indicate missing field", function () {
+      let secretReadAttempted = false;
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Person: {
+            fields: {
+              secret() {
+                secretReadAttempted = true;
+                // Return nothing to signal field is missing.
+              },
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          me {
+            name
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          me: {
+            __typename: "Person",
+            name: "Ben Newman",
+          },
+        },
+      });
+
+      expect(secretReadAttempted).toBe(false);
+
+      expect(() => {
+        cache.readQuery({
+          query: gql`
+            query {
+              me {
+                secret
+              }
+            }
+          `
+        });
+      }).toThrow("Can't find field secret");
+
+      expect(secretReadAttempted).toBe(true);
+    });
   });
 });

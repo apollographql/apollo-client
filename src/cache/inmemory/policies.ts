@@ -67,9 +67,10 @@ type KeyArgsFunction = (
   },
 ) => ReturnType<IdGetter>;
 
-type FieldPolicy = {
+type FieldPolicy<TValue = StoreValue> = {
   keyArgs?: KeySpecifier | KeyArgsFunction;
-  read?: FieldReadFunction;
+  read?: FieldReadFunction<TValue>;
+  merge?: FieldMergeFunction<TValue>;
 };
 
 interface CommonFieldFunctionOptions {
@@ -104,6 +105,17 @@ interface FieldReadFunction<TValue = StoreValue> {
   ): StoreValue;
 }
 
+interface FieldMergeOptions<TValue> extends CommonFieldFunctionOptions {
+  incomingValue: Readonly<StoreValue>;
+  existingValue?: Readonly<TValue>;
+  args: Record<string, any>;
+}
+
+interface FieldMergeFunction<TValue = StoreValue> {
+  (this: Policies, options: FieldMergeOptions<TValue>): TValue;
+  call(self: Policies, options: FieldMergeOptions<TValue>): TValue;
+}
+
 export function defaultDataIdFromObject(object: StoreObject) {
   const { __typename, id, _id } = object;
   if (typeof __typename === "string") {
@@ -125,7 +137,8 @@ export class Policies {
       fields?: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
-          read?: FieldReadFunction;
+          read?: FieldReadFunction<StoreValue>;
+          merge?: FieldMergeFunction<StoreValue>;
         };
       };
     };
@@ -200,13 +213,12 @@ export class Policies {
           if (typeof incoming === "function") {
             existing.read = incoming;
           } else {
-            const { keyArgs, read } = incoming;
+            const { keyArgs, read, merge } = incoming;
             existing.keyFn = Array.isArray(keyArgs)
               ? keyArgsFnFromSpecifier(keyArgs)
               : typeof keyArgs === "function" ? keyArgs : void 0;
-            if (typeof read === "function") {
-              existing.read = read;
-            }
+            if (typeof read === "function") existing.read = read;
+            if (typeof merge === "function") existing.merge = merge;
           }
         });
       }
@@ -317,6 +329,7 @@ export class Policies {
     const storeFieldValue = storeObject[storeFieldName];
     const policy = this.getFieldPolicy(typename, field.name.value, false);
     if (policy && policy.read) {
+      // TODO Avoid recomputing this.
       const args = argumentsObjectFromField(field, variables);
       return policy.read.call(this, storeObject, args, {
         typename,
@@ -328,7 +341,34 @@ export class Policies {
     }
     return storeFieldValue;
   }
+
+  public getFieldMergeFunction(
+    typename: string,
+    field: FieldNode,
+    variables: Record<string, any>,
+  ): StoreValueMergeFunction {
+    const policy = this.getFieldPolicy(typename, field.name.value, false);
+    if (policy && policy.merge) {
+      return (
+        existingValue: StoreValue,
+        incomingValue: StoreValue,
+      ) => policy.merge.call(this, {
+        typename,
+        field,
+        variables,
+        incomingValue,
+        existingValue,
+        // TODO Avoid recomputing this.
+        args: argumentsObjectFromField(field, variables),
+      });
+    }
+  }
 }
+
+export type StoreValueMergeFunction = (
+  existing: StoreValue,
+  incoming: StoreValue,
+) => StoreValue;
 
 function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,

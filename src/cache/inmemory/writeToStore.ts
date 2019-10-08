@@ -33,7 +33,7 @@ import { cloneDeep } from '../../utilities/common/cloneDeep';
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { NormalizedCache, StoreObject } from './types';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies } from './policies';
+import { Policies, StoreValueMergeFunction } from './policies';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -57,7 +57,14 @@ export type WriteContext = {
 type StoreObjectMergeFunction = (
   existing: StoreObject,
   incoming: StoreObject,
+  overrides?: MergeOverrides,
 ) => StoreObject;
+
+type MergeOverrides = Record<string | number,
+  | StoreValueMergeFunction
+  // TODO This should be replaced with MergeOverrides when TypeScript 3.7+
+  // starts supporting recursive type aliases.
+  | Record<string | number, any>>;
 
 export interface StoreWriterConfig {
   policies: Policies;
@@ -119,11 +126,11 @@ export class StoreWriter {
       context: {
         store,
         written: Object.create(null),
-        mergeFields(existing: StoreObject, incoming: StoreObject) {
+        mergeFields(existing, incoming) {
           return simpleFieldsMerger.merge(existing, incoming);
         },
-        mergeStoreObjects(existing: StoreObject, incoming: StoreObject) {
-          return storeObjectMerger.merge(existing, incoming, store);
+        mergeStoreObjects(existing, incoming, overrides) {
+          return storeObjectMerger.merge(existing, incoming, store, overrides);
         },
         variables: {
           ...getDefaultValues(operationDefinition),
@@ -164,18 +171,37 @@ export class StoreWriter {
         || DefaultTypenamesByRootID[dataId];
     }
 
-    const newFields = this.processSelectionSet({
+    const processed = this.processSelectionSet({
       result,
       selectionSet,
       context,
       defaultRootTypename,
     });
 
+    const existing: StoreObject = store.get(dataId) || Object.create(null);
+
+    if (processed.mergeOverrides) {
+      // If processSelectionSet reported any custom merge functions, walk
+      // the processed.mergeOverrides structure and preemptively merge
+      // incoming values with (possibly non-existent) existing values
+      // using the custom function. This function updates processed.result
+      // in place with the custom-merged values.
+      walkWithMergeOverrides(
+        existing,
+        processed.result,
+        processed.mergeOverrides,
+      );
+    }
+
     store.set(
       dataId,
       context.mergeStoreObjects(
-        store.get(dataId) || Object.create(null),
-        newFields,
+        existing,
+        processed.result,
+        // To avoid re-merging values that have already been merged by
+        // custom merge functions, give context.mergeStoreObjects access
+        // to the mergeOverrides information that was used above.
+        processed.mergeOverrides,
       ),
     );
 
@@ -187,6 +213,7 @@ export class StoreWriter {
     selectionSet,
     context,
     defaultRootTypename,
+    mergeOverrides,
     typename = getTypenameFromResult(
       result, selectionSet, context.fragmentMap),
   }: {
@@ -194,8 +221,12 @@ export class StoreWriter {
     selectionSet: SelectionSetNode;
     context: WriteContext;
     defaultRootTypename?: string;
+    mergeOverrides?: MergeOverrides;
     typename?: string;
-  }): StoreObject {
+  }): {
+    result: StoreObject;
+    mergeOverrides?: MergeOverrides;
+  } {
     let mergedFields: StoreObject = Object.create(null);
     if (typeof typename === "string") {
       mergedFields.__typename = typename;
@@ -216,13 +247,25 @@ export class StoreWriter {
             selection,
             context.variables,
           );
+
+          const processed = this.processFieldValue(value, selection, context);
+
+          const merge = this.policies.getFieldMergeFunction(
+            typename || defaultRootTypename,
+            selection,
+            context.variables,
+          );
+
+          const override = merge || processed.mergeOverrides;
+          if (override) {
+            mergeOverrides = mergeOverrides || Object.create(null);
+            mergeOverrides[storeFieldName] = override;
+          }
+
           mergedFields = context.mergeFields(mergedFields, {
-            [storeFieldName]: this.processFieldValue(
-              value,
-              selection,
-              context,
-            ),
+            [storeFieldName]: processed.result,
           });
+
         } else if (
           this.policies.usingPossibleTypes &&
           !(
@@ -264,30 +307,49 @@ export class StoreWriter {
               selectionSet: fragment.selectionSet,
               context,
               defaultRootTypename,
+              mergeOverrides,
               typename,
-            }),
+            }).result,
           );
         }
       }
     });
 
-    return mergedFields;
+    return {
+      result: mergedFields,
+      mergeOverrides,
+    };
   }
 
   private processFieldValue(
     value: any,
     field: FieldNode,
     context: WriteContext,
-  ): StoreValue {
+  ): {
+    result: StoreValue;
+    mergeOverrides?: MergeOverrides;
+  } {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
       // safely frozen with maybeDeepFreeze in readFromStore.ts. In production,
       // it's cheaper to store the scalar values directly in the cache.
-      return process.env.NODE_ENV === 'production' ? value : cloneDeep(value);
+      return {
+        result: process.env.NODE_ENV === 'production' ? value : cloneDeep(value),
+      };
     }
 
     if (Array.isArray(value)) {
-      return value.map(item => this.processFieldValue(item, field, context));
+      let overrides: Record<number, MergeOverrides>;
+      const result = value.map((item, i) => {
+        const { result, mergeOverrides } =
+          this.processFieldValue(item, field, context);
+        if (mergeOverrides) {
+          overrides = overrides || [];
+          overrides[i] = mergeOverrides;
+        }
+        return result;
+      });
+      return { result, mergeOverrides: overrides };
     }
 
     if (value) {
@@ -306,7 +368,7 @@ export class StoreWriter {
           selectionSet: field.selectionSet,
           context,
         });
-        return makeReference(dataId);
+        return { result: makeReference(dataId) };
       }
     }
 
@@ -318,18 +380,47 @@ export class StoreWriter {
   }
 }
 
-const storeObjectReconciler: ReconcilerFunction<[NormalizedCache]> = function (
+function walkWithMergeOverrides(
+  existingObject: StoreObject,
+  incomingObject: StoreObject,
+  overrides: MergeOverrides,
+): void {
+  Object.keys(overrides).forEach(name => {
+    const override = overrides[name];
+    const existingValue: any = existingObject && existingObject[name];
+    const incomingValue: any = incomingObject && incomingObject[name];
+    if (typeof override === "function") {
+      return incomingObject[name] = override(existingValue, incomingValue);
+    }
+    if (override && typeof override === "object") {
+      return walkWithMergeOverrides(existingValue, incomingValue, override);
+    }
+  });
+}
+
+const storeObjectReconciler: ReconcilerFunction<[
+  NormalizedCache,
+  MergeOverrides | undefined,
+]> = function (
   existingObject,
   incomingObject,
   property,
   // This parameter comes from the additional argument we pass to the
   // merge method in context.mergeStoreObjects (see writeQueryToStore).
   store,
+  mergeOverrides,
 ) {
   // In the future, reconciliation logic may depend on the type of the parent
   // StoreObject, not just the values of the given property.
   const existing = existingObject[property];
   const incoming = incomingObject[property];
+
+  if (mergeOverrides && hasOwnProperty.call(mergeOverrides, property)) {
+    // If this property was overridden by a custom merge function, then
+    // its merged value has already been determined, so we should return
+    // incoming without recursively merging it into existing.
+    return incoming;
+  }
 
   if (
     existing !== incoming &&
@@ -351,6 +442,14 @@ const storeObjectReconciler: ReconcilerFunction<[NormalizedCache]> = function (
       return incoming;
     }
 
+    let childMergeOverrides: MergeOverrides;
+    if (mergeOverrides) {
+      const child = mergeOverrides[property];
+      if (typeof child === "object") {
+        childMergeOverrides = child;
+      }
+    }
+
     if (isReference(incoming)) {
       if (isReference(existing)) {
         // Incoming references always replace existing references, but we can
@@ -361,7 +460,12 @@ const storeObjectReconciler: ReconcilerFunction<[NormalizedCache]> = function (
       // if the existing data appears to be of a compatible type.
       store.set(
         incoming.__ref,
-        this.merge(existing, store.get(incoming.__ref), store),
+        this.merge(
+          existing,
+          store.get(incoming.__ref),
+          store,
+          childMergeOverrides,
+        ),
       );
       return incoming;
     } else if (isReference(existing)) {
@@ -379,11 +483,12 @@ const storeObjectReconciler: ReconcilerFunction<[NormalizedCache]> = function (
           existing.slice(0, incoming.length),
           incoming,
           store,
+          childMergeOverrides,
         );
       }
     }
 
-    return this.merge(existing, incoming, store);
+    return this.merge(existing, incoming, store, childMergeOverrides);
   }
 
   return incoming;

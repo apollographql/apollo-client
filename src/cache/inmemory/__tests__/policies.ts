@@ -523,6 +523,13 @@ describe("type policies", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Person: {
+            // Disables normalization for the Person type, which means the
+            // todos field will be nested inside a non-normalized object
+            // (with __typename "Person") directly under the ROOT_QUERY.me
+            // field, which exercises what happens when mergeOverrides
+            // becomes nested (see writeToStore.ts).
+            keyFields: false,
+
             fields: {
               todos: {
                 keyArgs: [],
@@ -570,6 +577,7 @@ describe("type policies", function () {
         data: {
           me: {
             __typename: "Person",
+            id: "ignored",
             todos: [
               { __typename: "Todo", id: 1, text: "Write more merge tests" },
               { __typename: "Todo", id: 2, text: "Write pagination tests" },

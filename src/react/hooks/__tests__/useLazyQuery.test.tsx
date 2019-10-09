@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { render, wait } from '@testing-library/react';
 
 import { MockedProvider } from '../../testing';
-import ApolloClient from '../../../ApolloClient';
+import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useLazyQuery } from '../useLazyQuery';

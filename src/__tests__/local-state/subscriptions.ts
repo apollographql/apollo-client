@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 
 import { Observable } from '../../util/Observable';
 import { ApolloLink } from '../../link/core';
-import ApolloClient from '../..';
+import { ApolloClient } from '../..';
 import { InMemoryCache } from '../../cache/inmemory';
 
 describe('Basic functionality', () => {

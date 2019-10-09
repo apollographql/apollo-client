@@ -1,6 +1,6 @@
 import React from 'react';
 
-import ApolloClient from '../../../ApolloClient';
+import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { MockLink } from './mockLink';

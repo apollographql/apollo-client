@@ -53,6 +53,9 @@
   - `QueryManager#startQuery`
   - `ObservableQuery#currentResult`
 
+- `ApolloClient` is now only available as a named export. The default
+  `ApolloClient` export has been removed.
+
 ## Apollo Client (2.6.4)
 
 ### Apollo Client (2.6.4)

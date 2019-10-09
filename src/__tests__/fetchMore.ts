@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import { InMemoryCache } from '../cache/inmemory';
-import ApolloClient, { NetworkStatus, ObservableQuery } from '../';
+import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
 
 describe('updateQuery on a simple query', () => {
   const query = gql`

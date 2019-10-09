@@ -61,7 +61,7 @@ export type ApolloClientOptions<TCacheShape> = {
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
-export default class ApolloClient<TCacheShape> implements DataProxy {
+export class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;

@@ -52,7 +52,7 @@ type KeyFieldsFunction = (
 type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
   // array of field names or a function that returns an arbitrary string.
-  keyFields?: KeySpecifier | KeyFieldsFunction;
+  keyFields?: KeySpecifier | KeyFieldsFunction | false;
 
   // In the rare event that your schema happens to use a different
   // __typename for the root Query, Mutation, and/or Schema types, you can
@@ -132,6 +132,8 @@ export function defaultDataIdFromObject(object: StoreObject) {
   }
   return null;
 }
+
+const nullKeyFn: KeyFieldsFunction = () => null;
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -221,9 +223,14 @@ export class Policies {
       if (incoming.mutationType) this.setRootTypename("Mutation", typename);
       if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
 
-      existing.keyFn = Array.isArray(keyFields)
-        ? keyFieldsFnFromSpecifier(keyFields)
-        : typeof keyFields === "function" ? keyFields : void 0;
+      existing.keyFn =
+        // Pass false to disable normalization for this typename.
+        keyFields === false ? nullKeyFn :
+        // Pass an array of strings to use those fields to compute a
+        // composite ID for objects of this typename.
+        Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
+        // Pass a function to take full control over identification.
+        typeof keyFields === "function" ? keyFields : void 0;
 
       if (fields) {
         Object.keys(fields).forEach(fieldName => {

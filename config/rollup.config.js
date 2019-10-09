@@ -5,8 +5,6 @@ import fs from 'fs';
 
 import packageJson from '../package.json';
 
-const distDir = './dist';
-
 const globals = {
   'tslib': 'tslib',
   'ts-invariant': 'invariant',
@@ -29,12 +27,15 @@ function external(id) {
   return hasOwn.call(globals, id);
 }
 
+const distDir = './dist';
+const esmFile = packageJson.main.replace('.cjs', '.esm')
+
 function prepareESM() {
   return {
     input: packageJson.module,
     external,
     output: {
-      dir: distDir,
+      file: esmFile,
       format: 'esm',
       sourcemap: true,
     },
@@ -55,7 +56,7 @@ function prepareESM() {
 
 function prepareCJS() {
   return {
-    input: packageJson.module,
+    input: esmFile,
     external,
     output: {
       file: packageJson.main,

@@ -50,27 +50,33 @@ function isObject(obj: any): obj is Record<string | number, any> {
   return obj !== null && typeof obj === 'object';
 }
 
-function defaultReconciler(
-  this: DeepMerger,
+export type ReconcilerFunction<TContextArgs extends any[]> = (
+  this: DeepMerger<TContextArgs>,
   target: Record<string | number, any>,
   source: Record<string | number, any>,
   property: string | number,
-) {
-  return this.merge(target[property], source[property]);
-}
+  ...context: TContextArgs
+) => any;
 
-export class DeepMerger {
+const defaultReconciler: ReconcilerFunction<any[]> =
+  function (target, source, property) {
+    return this.merge(target[property], source[property]);
+  };
+
+export class DeepMerger<TContextArgs extends any[]> {
   private pastCopies: any[] = [];
 
-  constructor(private reconciler = defaultReconciler) {}
+  constructor(
+    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler,
+  ) {}
 
-  public merge(target: any, source: any): any {
+  public merge(target: any, source: any, ...context: TContextArgs): any {
     if (isObject(source) && isObject(target)) {
       Object.keys(source).forEach(sourceKey => {
         if (hasOwnProperty.call(target, sourceKey)) {
           const targetValue = target[sourceKey];
           if (source[sourceKey] !== targetValue) {
-            const result = this.reconciler(target, source, sourceKey);
+            const result = this.reconciler(target, source, sourceKey, ...context);
             // A well-implemented reconciler may return targetValue to indicate
             // the merge changed nothing about the structure of the target.
             if (result !== targetValue) {

@@ -38,6 +38,7 @@ function prepareESM() {
       format: 'esm',
       sourcemap: true,
     },
+    preserveModules: true,
     plugins: [
       nodeResolve(),
       invariantPlugin({

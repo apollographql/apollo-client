@@ -6,22 +6,30 @@ import {
   FragmentMap,
   getFragmentFromSelection,
 } from '../../utilities/graphql/fragments';
+
 import {
   getDefaultValues,
   getFragmentDefinitions,
   getOperationDefinition,
 } from '../../utilities/graphql/getFromAST';
+
 import {
-  isField,
-  resultKeyNameFromField,
-  StoreValue,
   getTypenameFromResult,
   makeReference,
   isReference,
+  isField,
+  resultKeyNameFromField,
+  StoreValue,
 } from '../../utilities/graphql/storeUtils';
+
+import {
+  DeepMerger,
+  ReconcilerFunction,
+} from '../../utilities/common/mergeDeep';
+
 import { shouldInclude } from '../../utilities/graphql/directives';
-import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
+
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { NormalizedCache, StoreObject } from './types';
 import { getTypenameFromStoreObject } from './helpers';
@@ -102,7 +110,7 @@ export class StoreWriter {
     // A DeepMerger used for updating normalized StoreObjects in the store,
     // with special awareness of { __ref } objects, arrays, and custom logic
     // for reading and writing field values.
-    const storeObjectMerger = makeStoreObjectMerger(store);
+    const storeObjectMerger = new DeepMerger(storeObjectReconciler);
 
     return this.writeSelectionSetToStore({
       result: result || Object.create(null),
@@ -115,7 +123,7 @@ export class StoreWriter {
           return simpleFieldsMerger.merge(existing, incoming);
         },
         mergeStoreObjects(existing: StoreObject, incoming: StoreObject) {
-          return storeObjectMerger.merge(existing, incoming);
+          return storeObjectMerger.merge(existing, incoming, store);
         },
         variables: {
           ...getDefaultValues(operationDefinition),
@@ -310,64 +318,73 @@ export class StoreWriter {
   }
 }
 
-function makeStoreObjectMerger(store: NormalizedCache) {
-  return new DeepMerger(function(existingObject, incomingObject, property) {
-    // In the future, reconciliation logic may depend on the type of the parent
-    // StoreObject, not just the values of the given property.
-    const existing = existingObject[property];
-    const incoming = incomingObject[property];
+const storeObjectReconciler: ReconcilerFunction<[NormalizedCache]> = function (
+  existingObject,
+  incomingObject,
+  property,
+  // This parameter comes from the additional argument we pass to the
+  // merge method in context.mergeStoreObjects (see writeQueryToStore).
+  store,
+) {
+  // In the future, reconciliation logic may depend on the type of the parent
+  // StoreObject, not just the values of the given property.
+  const existing = existingObject[property];
+  const incoming = incomingObject[property];
 
+  if (
+    existing !== incoming &&
+    // The DeepMerger class has various helpful utilities that we might as
+    // well reuse here.
+    this.isObject(existing) &&
+    this.isObject(incoming)
+  ) {
+    const eType = getTypenameFromStoreObject(store, existing);
+    const iType = getTypenameFromStoreObject(store, incoming);
+    // If both objects have a typename and the typename is different, let the
+    // incoming object win. The typename can change when a different subtype
+    // of a union or interface is written to the cache.
     if (
-      existing !== incoming &&
-      // The DeepMerger class has various helpful utilities that we might as
-      // well reuse here.
-      this.isObject(existing) &&
-      this.isObject(incoming)
+      typeof eType === 'string' &&
+      typeof iType === 'string' &&
+      eType !== iType
     ) {
-      const eType = getTypenameFromStoreObject(store, existing);
-      const iType = getTypenameFromStoreObject(store, incoming);
-      // If both objects have a typename and the typename is different, let the
-      // incoming object win. The typename can change when a different subtype
-      // of a union or interface is written to the cache.
-      if (
-        typeof eType === 'string' &&
-        typeof iType === 'string' &&
-        eType !== iType
-      ) {
-        return incoming;
-      }
-
-      if (isReference(incoming)) {
-        if (isReference(existing)) {
-          // Incoming references always replace existing references, but we can
-          // avoid changing the object identity when the __ref is the same.
-          return incoming.__ref === existing.__ref ? existing : incoming;
-        }
-        // Incoming references can be merged with existing non-reference data
-        // if the existing data appears to be of a compatible type.
-        store.set(
-          incoming.__ref,
-          this.merge(existing, store.get(incoming.__ref)),
-        );
-        return incoming;
-      } else if (isReference(existing)) {
-        throw new InvariantError(
-          `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
-        );
-      }
-
-      if (Array.isArray(incoming)) {
-        if (!Array.isArray(existing)) return incoming;
-        if (existing.length > incoming.length) {
-          // Allow the incoming array to truncate the existing array, if the
-          // incoming array is shorter.
-          return this.merge(existing.slice(0, incoming.length), incoming);
-        }
-      }
-
-      return this.merge(existing, incoming);
+      return incoming;
     }
 
-    return incoming;
-  });
+    if (isReference(incoming)) {
+      if (isReference(existing)) {
+        // Incoming references always replace existing references, but we can
+        // avoid changing the object identity when the __ref is the same.
+        return incoming.__ref === existing.__ref ? existing : incoming;
+      }
+      // Incoming references can be merged with existing non-reference data
+      // if the existing data appears to be of a compatible type.
+      store.set(
+        incoming.__ref,
+        this.merge(existing, store.get(incoming.__ref), store),
+      );
+      return incoming;
+    } else if (isReference(existing)) {
+      throw new InvariantError(
+        `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
+      );
+    }
+
+    if (Array.isArray(incoming)) {
+      if (!Array.isArray(existing)) return incoming;
+      if (existing.length > incoming.length) {
+        // Allow the incoming array to truncate the existing array, if the
+        // incoming array is shorter.
+        return this.merge(
+          existing.slice(0, incoming.length),
+          incoming,
+          store,
+        );
+      }
+    }
+
+    return this.merge(existing, incoming, store);
+  }
+
+  return incoming;
 }

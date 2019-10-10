@@ -5,7 +5,7 @@ import { InvariantError } from 'ts-invariant';
 import { ApolloLink } from '../../../link/core';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { resetApolloContext } from '../../context/ApolloContext';
-import ApolloClient from '../../../ApolloClient';
+import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { useApolloClient } from '../useApolloClient';
 

@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 
 import { mockObservableLink, MockedSubscription } from '../__mocks__/mockLinks';
 import { InMemoryCache } from '../cache/inmemory';
-import ApolloClient from '../';
+import { ApolloClient } from '../';
 import { QueryManager } from '../core/QueryManager';
 import { DataStore } from '../data/store';
 

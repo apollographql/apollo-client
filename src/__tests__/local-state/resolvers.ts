@@ -4,7 +4,7 @@ import { assign } from 'lodash';
 
 import { Observable } from '../../util/Observable';
 import { ApolloLink } from '../../link/core';
-import ApolloClient from '../..';
+import { ApolloClient } from '../..';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import { Observer } from '../../util/Observable';
 import wrap from '../../util/wrap';

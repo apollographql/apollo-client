@@ -6,7 +6,7 @@ import { HttpLink } from '../link/http';
 import { InMemoryCache, makeReference } from '../cache/inmemory';
 import { stripSymbols } from '../utilities';
 import { withWarning } from '../util/wrap';
-import ApolloClient from '../';
+import { ApolloClient } from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
 

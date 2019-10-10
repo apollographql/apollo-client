@@ -29,7 +29,7 @@ import {
   isField,
   isInlineFragment,
 } from '../utilities';
-import ApolloClient from '../ApolloClient';
+import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
 

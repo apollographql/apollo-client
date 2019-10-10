@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { Observable } from '../util/Observable';
 import { ApolloLink } from '../link/core';
 import { mockSingleLink } from '../__mocks__/mockLinks';
-import ApolloClient from '..';
+import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory';
 import { Subscription } from '../util/Observable';
 import { withWarning } from '../util/wrap';

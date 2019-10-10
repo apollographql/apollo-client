@@ -12,7 +12,7 @@ import { ObservableQuery } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';
 import { QueryManager } from '../QueryManager';
 import { DataStore } from '../../data/store';
-import ApolloClient from '../../';
+import { ApolloClient } from '../../';
 
 import wrap from '../../util/wrap';
 import subscribeAndCount from '../../util/subscribeAndCount';

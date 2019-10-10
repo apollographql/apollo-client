@@ -1,5 +1,5 @@
 import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
-import ApolloClient, { DefaultOptions } from '../../../ApolloClient';
+import { ApolloClient, DefaultOptions } from '../../../ApolloClient';
 import { Resolvers } from '../../../core/types';
 import { ApolloCache } from '../../../cache/core/cache';
 

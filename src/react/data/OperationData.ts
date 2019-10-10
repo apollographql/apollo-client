@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql';
 import { equal as isEqual } from '@wry/equality';
 import { invariant } from 'ts-invariant';
 
-import ApolloClient from '../../ApolloClient';
+import { ApolloClient } from '../../ApolloClient';
 import { DocumentType, parser, operationName } from '../parser/parser';
 import { ApolloContextValue } from '../context/ApolloContext';
 import { CommonOptions } from '../types/types';

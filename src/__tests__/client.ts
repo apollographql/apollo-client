@@ -8,7 +8,7 @@ import { InMemoryCache, PossibleTypesMap } from '../cache/inmemory';
 import { stripSymbols } from '../utilities';
 import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
 import { ApolloError } from '../errors/ApolloError';
-import ApolloClient from '..';
+import { ApolloClient } from '..';
 import subscribeAndCount from '../util/subscribeAndCount';
 import { withWarning } from '../util/wrap';
 import { mockSingleLink } from '../__mocks__/mockLinks';
@@ -16,7 +16,7 @@ import { mockSingleLink } from '../__mocks__/mockLinks';
 describe('client', () => {
   it('can be loaded via require', () => {
     /* tslint:disable */
-    const ApolloClientRequire = require('../').default;
+    const ApolloClientRequire = require('../').ApolloClient;
     /* tslint:enable */
 
     const client = new ApolloClientRequire({

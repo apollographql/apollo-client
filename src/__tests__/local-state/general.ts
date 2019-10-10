@@ -4,7 +4,7 @@ import { introspectionQuery } from 'graphql/utilities';
 
 import { Observable } from '../../util/Observable';
 import { ApolloLink, Operation } from '../../link/core';
-import ApolloClient from '../..';
+import { ApolloClient } from '../..';
 import { ApolloCache } from '../../cache/core';
 import { InMemoryCache } from '../../cache/inmemory';
 import { hasDirectives } from '../../utilities';

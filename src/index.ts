@@ -1,4 +1,10 @@
 export {
+  ApolloClient,
+  ApolloClientOptions,
+  DefaultOptions
+} from './ApolloClient';
+
+export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
@@ -29,16 +35,6 @@ export {
 } from './core/LocalState';
 
 export { isApolloError, ApolloError } from './errors/ApolloError';
-
-import ApolloClient, {
-  ApolloClientOptions,
-  DefaultOptions,
-} from './ApolloClient';
-export { ApolloClientOptions, DefaultOptions };
-
-// Export the client as both default and named.
-export { ApolloClient };
-export default ApolloClient;
 
 export * from './cache/core';
 export * from './cache/inmemory';

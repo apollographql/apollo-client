@@ -3,7 +3,7 @@ import { DocumentNode } from 'graphql';
 
 import { Observable } from '../../util/Observable';
 import { FetchResult } from '../../link/core';
-import ApolloClient from '../../ApolloClient';
+import { ApolloClient } from '../../ApolloClient';
 import {
   ApolloQueryResult,
   PureQueryOptions,

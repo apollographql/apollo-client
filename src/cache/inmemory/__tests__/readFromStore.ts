@@ -65,7 +65,6 @@ describe('reading from the store', () => {
       });
 
       expect(stripSymbols(queryResult)).toEqual({
-        __typename: 'Query',
         nestedObj: {
           innerArray: [{ id: 'abcdef', someField: 3 }],
         },
@@ -360,7 +359,6 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(stripSymbols(queryResult)).toEqual({
-      __typename: 'Query',
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,

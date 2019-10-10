@@ -53,6 +53,14 @@ type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
   // array of field names or a function that returns an arbitrary string.
   keyFields?: KeySpecifier | KeyFieldsFunction;
+
+  // In the rare event that your schema happens to use a different
+  // __typename for the root Query, Mutation, and/or Schema types, you can
+  // express your deviant preferences by enabling one of these options.
+  queryType?: true,
+  mutationType?: true,
+  subscriptionType?: true,
+
   fields?: {
     [fieldName: string]: FieldPolicy | FieldReadFunction;
   }
@@ -144,6 +152,13 @@ export class Policies {
     };
   } = Object.create(null);
 
+  public readonly rootTypenamesById: Readonly<Record<string, string>> = {
+    __proto__: null, // Equivalent to Object.create(null)
+    ROOT_QUERY: "Query",
+    ROOT_MUTATION: "Mutation",
+    ROOT_SUBSCRIPTION: "Subscription",
+  };
+
   public readonly usingPossibleTypes = false;
 
   constructor(private config: {
@@ -202,6 +217,10 @@ export class Policies {
       const incoming = typePolicies[typename];
       const { keyFields, fields } = incoming;
 
+      if (incoming.queryType) this.setRootTypename("Query", typename);
+      if (incoming.mutationType) this.setRootTypename("Mutation", typename);
+      if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
+
       existing.keyFn = Array.isArray(keyFields)
         ? keyFieldsFnFromSpecifier(keyFields)
         : typeof keyFields === "function" ? keyFields : void 0;
@@ -223,6 +242,18 @@ export class Policies {
         });
       }
     });
+  }
+
+  private setRootTypename(
+    which: "Query" | "Mutation" | "Subscription",
+    typename: string,
+  ) {
+    const rootId = "ROOT_" + which.toUpperCase();
+    const old = this.rootTypenamesById[rootId];
+    if (typename !== old) {
+      invariant(old === which, `Cannot change root ${which} __typename more than once`);
+      (this.rootTypenamesById as any)[rootId] = typename;
+    }
   }
 
   public addPossibleTypes(possibleTypes: PossibleTypesMap) {

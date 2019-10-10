@@ -13,6 +13,7 @@ For more information, please visit: https://www.apollographql.com/docs/react/"
 exports[`ApolloClient write then read will not use a default id getter if either _id or id is present when __typename is not also present 1`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "b": 2,
     "bar": Object {
@@ -46,6 +47,7 @@ Object {
 exports[`ApolloClient write then read will not use a default id getter if id and _id are not present 1`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "b": 2,
     "bar": Object {
@@ -77,6 +79,7 @@ Object {
 exports[`ApolloClient write then read will use a default id getter if __typename and _id are present 1`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "b": 2,
     "foo": Object {
@@ -100,6 +103,7 @@ Object {
 exports[`ApolloClient write then read will use a default id getter if __typename and id are present 1`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "b": 2,
     "foo": Object {
@@ -123,6 +127,7 @@ Object {
 exports[`ApolloClient write then read will use a default id getter if one is not specified and __typename is present along with either _id or id 1`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "b": 2,
     "bar": Object {
@@ -182,6 +187,7 @@ Object {
 exports[`ApolloClient write then read will write data to a specific id 1`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "b": 2,
     "foo": Object {
@@ -321,6 +327,7 @@ Object {
 exports[`ApolloClient writeQuery will write some deeply nested data to the store 1`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "d": Object {
       "__typename": "D",
@@ -333,6 +340,7 @@ Object {
 exports[`ApolloClient writeQuery will write some deeply nested data to the store 2`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "d": Object {
       "__typename": "D",
@@ -349,6 +357,7 @@ Object {
 exports[`ApolloClient writeQuery will write some deeply nested data to the store 3`] = `
 Object {
   "ROOT_QUERY": Object {
+    "__typename": "Query",
     "a": 1,
     "b": 2,
     "c": 3,

@@ -172,15 +172,15 @@ export class StoreReader {
     rootId = 'ROOT_QUERY',
     config,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
+    const { policies } = this.config;
+
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
-      objectOrReference: rootId === 'ROOT_QUERY'
-        ? makeReference('ROOT_QUERY')
-        : store.get(rootId) || makeReference(rootId),
+      objectOrReference: makeReference(rootId),
       context: {
         store,
         query,
-        policies: this.config.policies,
+        policies,
         variables: {
           ...getDefaultValues(getQueryDefinition(query)),
           ...variables,
@@ -222,17 +222,17 @@ export class StoreReader {
     objectOrReference,
     context,
   }: ExecSelectionSetOptions): ExecResult {
-    const { fragmentMap, variables: variables } = context;
+    const { store, fragmentMap, variables, policies } = context;
     const finalResult: ExecResult = { result: null };
     const objectsToMerge: { [key: string]: any }[] = [];
 
     let object: StoreObject;
     let typename: string;
     if (isReference(objectOrReference)) {
-      object = context.store.get(objectOrReference.__ref);
+      object = store.get(objectOrReference.__ref);
       typename =
         (object && object.__typename) ||
-        (objectOrReference.__ref === 'ROOT_QUERY' && 'Query');
+        policies.rootTypenamesById[objectOrReference.__ref];
     } else {
       object = objectOrReference;
       typename = object && object.__typename;
@@ -240,7 +240,10 @@ export class StoreReader {
 
     if (this.config.addTypename) {
       const typenameFromStore = object && object.__typename;
-      if (typeof typenameFromStore === 'string') {
+      if (typeof typenameFromStore === "string" &&
+          Object.values(
+            policies.rootTypenamesById
+          ).indexOf(typenameFromStore) < 0) {
         // Ensure we always include a default value for the __typename field,
         // if we have one, and this.config.addTypename is true. Note that this
         // field can be overridden by other merged objects.
@@ -287,11 +290,12 @@ export class StoreReader {
           }
         }
 
-        const match = this.config.policies.fragmentMatches(fragment, typename);
-        if (match && (object || typename === 'Query')) {
+        const match = policies.fragmentMatches(fragment, typename);
+
+        if (match) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
-            objectOrReference: object,
+            objectOrReference,
             context,
           });
 

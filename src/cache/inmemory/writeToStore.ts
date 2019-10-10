@@ -37,12 +37,6 @@ import { Policies, StoreValueMergeFunction } from './policies';
 
 const { hasOwnProperty } = Object.prototype;
 
-const DefaultTypenamesByRootID: Record<string, string> = {
-  ROOT_QUERY: "Query",
-  ROOT_MUTATION: "Mutation",
-  ROOT_SUBSCRIPTION: "Subscription",
-};
-
 export type WriteContext = {
   readonly store: NormalizedCache;
   readonly written: {
@@ -163,19 +157,11 @@ export class StoreWriter {
     if (sets.indexOf(selectionSet) >= 0) return store;
     sets.push(selectionSet);
 
-    let defaultRootTypename: string | undefined;
-    if (hasOwnProperty.call(DefaultTypenamesByRootID, dataId)) {
-      const rootQueryStoreObject = store.get(dataId);
-      defaultRootTypename = rootQueryStoreObject
-        && rootQueryStoreObject.__typename
-        || DefaultTypenamesByRootID[dataId];
-    }
-
     const processed = this.processSelectionSet({
       result,
       selectionSet,
       context,
-      defaultRootTypename,
+      typename: this.policies.rootTypenamesById[dataId],
     });
 
     const existing: StoreObject = store.get(dataId) || Object.create(null);
@@ -212,7 +198,6 @@ export class StoreWriter {
     result,
     selectionSet,
     context,
-    defaultRootTypename,
     mergeOverrides,
     typename = getTypenameFromResult(
       result, selectionSet, context.fragmentMap),
@@ -220,7 +205,6 @@ export class StoreWriter {
     result: Record<string, any>;
     selectionSet: SelectionSetNode;
     context: WriteContext;
-    defaultRootTypename?: string;
     mergeOverrides?: MergeOverrides;
     typename?: string;
   }): {
@@ -243,7 +227,7 @@ export class StoreWriter {
 
         if (typeof value !== 'undefined') {
           const storeFieldName = this.policies.getStoreFieldName(
-            typename || defaultRootTypename,
+            typename,
             selection,
             context.variables,
           );
@@ -251,7 +235,7 @@ export class StoreWriter {
           const processed = this.processFieldValue(value, selection, context);
 
           const merge = this.policies.getFieldMergeFunction(
-            typename || defaultRootTypename,
+            typename,
             selection,
             context.variables,
           );
@@ -294,19 +278,13 @@ export class StoreWriter {
           context.fragmentMap,
         );
 
-        const match = this.policies.fragmentMatches(
-          fragment,
-          typename || defaultRootTypename,
-        );
-
-        if (match) {
+        if (this.policies.fragmentMatches(fragment, typename)) {
           mergedFields = context.mergeFields(
             mergedFields,
             this.processSelectionSet({
               result,
               selectionSet: fragment.selectionSet,
               context,
-              defaultRootTypename,
               mergeOverrides,
               typename,
             }).result,

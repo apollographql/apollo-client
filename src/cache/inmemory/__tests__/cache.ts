@@ -612,6 +612,7 @@ describe('Cache', () => {
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
         },
       });
@@ -628,6 +629,7 @@ describe('Cache', () => {
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
           b: 2,
           c: 3,
@@ -647,6 +649,7 @@ describe('Cache', () => {
 
       expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 4,
           b: 5,
           c: 6,
@@ -672,6 +675,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toEqual({
           ROOT_QUERY: {
+            __typename: "Query",
             a: 1,
             d: {
               e: 4,
@@ -695,6 +699,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toEqual({
           ROOT_QUERY: {
+            __typename: "Query",
             a: 1,
             d: {
               e: 4,
@@ -733,6 +738,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toEqual({
           ROOT_QUERY: {
+            __typename: "Query",
             a: 1,
             b: 2,
             c: 3,
@@ -774,6 +780,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toEqual({
           ROOT_QUERY: {
+            __typename: "Query",
             'field({"literal":true,"value":42})': 1,
             'field({"literal":false,"value":42})': 2,
           },
@@ -804,6 +811,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toEqual({
           ROOT_QUERY: {
+            __typename: "Query",
             'field({"literal":true,"value":42})': 1,
             'field({"literal":false,"value":null})': 2,
           },

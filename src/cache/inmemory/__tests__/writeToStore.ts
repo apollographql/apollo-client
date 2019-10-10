@@ -73,7 +73,10 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: result,
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
+      },
     });
   });
 
@@ -101,6 +104,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'abcd',
         stringField: 'This is a string!',
         numberField: 5,
@@ -135,6 +139,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'abcd',
         'stringField({"arg":1})': 'The arg was 1!',
         'stringField({"arg":2})': 'The arg was 2!',
@@ -175,6 +180,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'abcd',
         nullField: null,
         'numberField({"floatArg":3.14,"intArg":5})': 5,
@@ -217,6 +223,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'abcd',
         nullField: null,
         'numberField({"floatArg":3.14,"intArg":5})': 5,
@@ -249,6 +256,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'abcd',
         firstName: 'James',
         'lastName@upperCase': 'BOND',
@@ -300,9 +308,11 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
         nestedObj: makeReference(result.nestedObj.id),
-      }),
+      },
       [result.nestedObj.id]: result.nestedObj,
     });
   });
@@ -342,7 +352,10 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: result,
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
+      },
     });
   });
 
@@ -382,6 +395,7 @@ describe('writing to the store', () => {
         .toObject(),
     ).toEqual({
       ROOT_QUERY: assign(omit(result, 'nestedObj'), {
+        __typename: "Query",
         'nestedObj({"arg":"val"})': result.nestedObj,
       }),
     });
@@ -439,6 +453,7 @@ describe('writing to the store', () => {
         .toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
+        __typename: "Query",
         nestedArray: result.nestedArray.map(
           (obj: any) => makeReference(obj.id),
         ),
@@ -495,6 +510,7 @@ describe('writing to the store', () => {
         .toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
+        __typename: "Query",
         nestedArray: [makeReference(result.nestedArray[0].id), null],
       }),
       [result.nestedArray[0].id]: result.nestedArray[0],
@@ -541,7 +557,10 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: result,
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
+      },
     });
   });
 
@@ -581,7 +600,10 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: result,
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
+      },
     });
   });
 
@@ -616,7 +638,10 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: result,
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
+      },
     });
   });
 
@@ -645,7 +670,10 @@ describe('writing to the store', () => {
     });
 
     expect(normalized.toObject()).toEqual({
-      ROOT_QUERY: result,
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
+      },
     });
   });
 
@@ -689,6 +717,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'a',
         object1: makeReference('aa'),
         object2: makeReference('aa'),
@@ -761,6 +790,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'a',
         array1: [makeReference('aa')],
         array2: [makeReference('ab')],
@@ -836,6 +866,7 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         id: 'a',
         array1: [makeReference('aa'), makeReference('ab')],
       },
@@ -904,7 +935,11 @@ describe('writing to the store', () => {
     });
 
     expect(store2.toObject()).toEqual({
-      ROOT_QUERY: assign({}, result, result2),
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
+        ...result2,
+      },
     });
   });
 
@@ -940,9 +975,11 @@ describe('writing to the store', () => {
         })
         .toObject(),
     ).toEqual({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+      ROOT_QUERY: {
+        __typename: 'Query',
+        ...result,
         nestedObj: null,
-      }),
+      },
     });
   });
 
@@ -972,6 +1009,7 @@ describe('writing to the store', () => {
         .toObject(),
     ).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         'people_one({"id":"5"})': {
           id: 'abcd',
           stringField: 'This is a string!',
@@ -1175,7 +1213,10 @@ describe('writing to the store', () => {
         },
       };
       const expStore = defaultNormalizedCacheFactory({
-        ROOT_QUERY: data,
+        ROOT_QUERY: {
+          __typename: 'Query',
+          ...data,
+        },
       });
       expect(
         writer
@@ -1206,6 +1247,7 @@ describe('writing to the store', () => {
       };
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
+          __typename: 'Query',
           author: makeReference(policies.identify(data.author)),
         },
         [policies.identify(data.author)!]: {
@@ -1245,6 +1287,7 @@ describe('writing to the store', () => {
       };
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
+          __typename: 'Query',
           author: makeReference(policies.identify(data.author)),
         },
         [policies.identify(data.author)!]: {
@@ -1301,6 +1344,7 @@ describe('writing to the store', () => {
     `;
     const expStoreWithoutId = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
+        __typename: 'Query',
         author: {
           firstName: 'John',
           lastName: 'Smith',
@@ -1316,6 +1360,7 @@ describe('writing to the store', () => {
         __typename: 'Author',
       },
       ROOT_QUERY: {
+        __typename: 'Query',
         author: makeReference('Author__129'),
       },
     });
@@ -1365,6 +1410,7 @@ describe('writing to the store', () => {
     `;
     const expStoreWithPlaceholder = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
+        __typename: 'Query',
         author: {
           hello: 'Foo',
           __typename: 'Placeholder',
@@ -1379,6 +1425,7 @@ describe('writing to the store', () => {
         __typename: 'Author',
       },
       ROOT_QUERY: {
+        __typename: 'Query',
         author: makeReference('Author__129'),
       },
     });
@@ -1623,7 +1670,10 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('ROOT_QUERY')).toEqual({ todos: null });
+      expect(newStore.get('ROOT_QUERY')).toEqual({
+        __typename: 'Query',
+        todos: null,
+      });
     });
     it('should not warn if a field is defered', () => {
       let originalWarn = console.warn;
@@ -1649,7 +1699,7 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('ROOT_QUERY')).toEqual({ id: 1 });
+      expect(newStore.get('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
       expect(console.warn).not.toBeCalled();
       console.warn = originalWarn;
     });
@@ -1754,6 +1804,7 @@ describe('writing to the store', () => {
 
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         abc: [
           {
             name: 'efgh',
@@ -1799,6 +1850,7 @@ describe('writing to the store', () => {
 
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         abc: [
           {
             name: 'abcd',
@@ -1827,6 +1879,7 @@ describe('writing to the store', () => {
 
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         abc: [
           {
             name: 'efgh',
@@ -1867,6 +1920,7 @@ describe('writing to the store', () => {
 
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         animals: [
           {
             __typename: 'Animal',
@@ -1897,6 +1951,7 @@ describe('writing to the store', () => {
 
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         animals: [
           {
             __typename: 'Animal',
@@ -1942,6 +1997,7 @@ describe('writing to the store', () => {
 
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         animals: [
           {
             __typename: 'Animal',
@@ -1978,6 +2034,7 @@ describe('writing to the store', () => {
         name: 'dog',
       },
       ROOT_QUERY: {
+        __typename: "Query",
         animals: [
           {
             __typename: 'Animal',

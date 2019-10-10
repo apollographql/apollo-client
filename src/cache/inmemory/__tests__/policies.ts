@@ -63,6 +63,7 @@ describe("type policies", function () {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: 'Book:{"isbn":"1400096235"}',
         },
@@ -97,6 +98,7 @@ describe("type policies", function () {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: 'Book:{"title":"The Information","author":{"name":"James Gleick"}}',
         },
@@ -131,6 +133,7 @@ describe("type policies", function () {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: 'Book:{"author":{"name":"James Gleick"},"title":"The Information"}',
         },
@@ -169,6 +172,7 @@ describe("type policies", function () {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:1400096235",
         },
@@ -216,6 +220,7 @@ describe("type policies", function () {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: 'Book:{"ISBN":"1400096235","title":"The Information"}',
         },
@@ -304,6 +309,7 @@ describe("type policies", function () {
 
       expect(cache.extract(true)).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           'book:{"isbn":"0465030793"}': {
             __typename: "Book",
             title: "I Am a Strange Loop",
@@ -361,6 +367,7 @@ describe("type policies", function () {
 
       expect(cache.extract(true)).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           book: {
             __ref: 'Book:{"isbn":"0465030793"}',
           },
@@ -417,6 +424,7 @@ describe("type policies", function () {
 
       const expectedExtraction = {
         ROOT_QUERY: {
+          __typename: "Query",
           me: {
             __ref: 'Person:{"firstName":"Ben","lastName":"Newman"}',
           },
@@ -576,6 +584,7 @@ describe("type policies", function () {
 
       expect(cache.extract(true)).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           me: {
             __typename: "Person",
             "todos:{}": [
@@ -613,6 +622,7 @@ describe("type policies", function () {
 
       expect(cache.extract(true)).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           me: {
             __typename: "Person",
             "todos:{}": [
@@ -662,6 +672,7 @@ describe("type policies", function () {
 
       expect(cache.extract(true)).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           me: {
             __typename: "Person",
             "todos:{}": [

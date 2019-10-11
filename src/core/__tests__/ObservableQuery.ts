@@ -2,8 +2,8 @@ import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 
 import { Observable } from '../../util/Observable';
-import { ApolloLink } from '../../link/core';
-import { InMemoryCache } from '../../cache/inmemory';
+import { ApolloLink } from '../../link/core/ApolloLink';
+import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import mockWatchQuery from '../../__mocks__/mockWatchQuery';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
@@ -16,7 +16,7 @@ import { ApolloClient } from '../../';
 
 import wrap from '../../util/wrap';
 import subscribeAndCount from '../../util/subscribeAndCount';
-import { stripSymbols } from '../../utilities';
+import { stripSymbols } from '../../utilities/util/stripSymbols';
 import { ApolloError } from '../../errors/ApolloError';
 
 describe('ObservableQuery', () => {

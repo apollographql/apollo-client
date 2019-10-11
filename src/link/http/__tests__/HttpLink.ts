@@ -3,7 +3,8 @@ import fetchMock from 'fetch-mock';
 import { print } from 'graphql';
 
 import { Observable } from '../../../util/Observable';
-import { ApolloLink, execute } from '../../core';
+import { ApolloLink } from '../../core/ApolloLink';
+import { execute } from '../../core/execute';
 import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
 

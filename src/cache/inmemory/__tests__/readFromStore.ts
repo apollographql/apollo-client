@@ -1,8 +1,8 @@
 import { assign, omit } from 'lodash';
 import gql from 'graphql-tag';
 
-import { stripSymbols } from '../../../utilities';
-import { StoreObject } from '../';
+import { stripSymbols } from '../../../utilities/util/stripSymbols';
+import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { withError } from './diffAgainstStore';

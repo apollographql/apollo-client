@@ -3,7 +3,7 @@ import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 
 import { Observable } from '../../util/Observable';
-import { ApolloLink } from '../../link/core';
+import { ApolloLink } from '../../link/core/ApolloLink';
 import { ApolloClient } from '../..';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import { Observer } from '../../util/Observable';
@@ -11,7 +11,7 @@ import wrap from '../../util/wrap';
 import { ApolloQueryResult, Resolvers } from '../../core/types';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
 import { LocalState } from '../../core/LocalState';
-import { InMemoryCache } from '../../cache/inmemory';
+import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.

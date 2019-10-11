@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 
-import { InMemoryCache } from '../../cache/inmemory';
-import { stripSymbols } from '../../utilities';
+import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
+import { stripSymbols } from '../../utilities/util/stripSymbols';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';

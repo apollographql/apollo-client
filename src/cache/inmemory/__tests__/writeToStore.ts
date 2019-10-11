@@ -9,11 +9,9 @@ import {
 } from 'graphql';
 import gql from 'graphql-tag';
 
-import {
-  storeKeyNameFromField,
-  addTypenameToDocument,
-  cloneDeep,
-} from '../../../utilities';
+import { storeKeyNameFromField } from '../../../utilities/storeUtils';
+import { addTypenameToDocument } from '../../../utilities/transform';
+import { cloneDeep } from '../../../utilities/util/cloneDeep';
 import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { makeReference } from '../helpers';

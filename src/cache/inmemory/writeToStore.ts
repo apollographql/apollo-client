@@ -4,19 +4,23 @@ import { invariant, InvariantError } from 'ts-invariant';
 import {
   createFragmentMap,
   FragmentMap,
+  getFragmentFromSelection,
+} from '../../utilities/fragments';
+import {
   getDefaultValues,
   getFragmentDefinitions,
-  getFragmentFromSelection,
   getOperationDefinition,
+} from '../../utilities/getFromAST';
+import {
   isField,
   resultKeyNameFromField,
-  shouldInclude,
   storeKeyNameFromField,
   StoreValue,
-  DeepMerger,
   getTypenameFromResult,
-  cloneDeep,
-} from '../../utilities';
+} from '../../utilities/storeUtils';
+import { shouldInclude } from '../../utilities/directives';
+import { DeepMerger } from '../../utilities/util/mergeDeep';
+import { cloneDeep } from '../../utilities/util/cloneDeep';
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';

@@ -3,11 +3,12 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities';
 
 import { Observable } from '../../util/Observable';
-import { ApolloLink, Operation } from '../../link/core';
+import { ApolloLink } from '../../link/core/ApolloLink';
+import { Operation } from '../../link/core/types';
 import { ApolloClient } from '../..';
-import { ApolloCache } from '../../cache/core';
-import { InMemoryCache } from '../../cache/inmemory';
-import { hasDirectives } from '../../utilities';
+import { ApolloCache } from '../../cache/core/cache';
+import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
+import { hasDirectives } from '../../utilities/directives';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {

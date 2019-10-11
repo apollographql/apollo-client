@@ -5,8 +5,10 @@ import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 import { KeyTrie } from 'optimism';
 
-import { Cache, ApolloCache, Transaction } from '../core';
-import { addTypenameToDocument, canUseWeakMap } from '../../utilities';
+import { ApolloCache, Transaction } from '../core/cache';
+import { Cache } from '../core/types/Cache';
+import { addTypenameToDocument } from '../../utilities/transform';
+import { canUseWeakMap } from '../../utilities/util/canUse';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,

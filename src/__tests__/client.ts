@@ -3,9 +3,10 @@ import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
 import { Observable } from '../util/Observable';
-import { ApolloLink } from '../link/core';
-import { InMemoryCache, PossibleTypesMap } from '../cache/inmemory';
-import { stripSymbols } from '../utilities';
+import { ApolloLink } from '../link/core/ApolloLink';
+import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
+import { PossibleTypesMap } from '../cache/inmemory/types';
+import { stripSymbols } from '../utilities/util/stripSymbols';
 import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
 import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';

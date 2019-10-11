@@ -10,26 +10,29 @@ import { InvariantError } from 'ts-invariant';
 
 import {
   argumentsObjectFromField,
-  canUseWeakMap,
-  createFragmentMap,
+  getStoreKeyName,
+  isField,
+  isInlineFragment,
+  resultKeyNameFromField,
+  StoreValue,
+} from '../../utilities/storeUtils';
+import { canUseWeakMap } from '../../utilities/util/canUse';
+import { createFragmentMap, FragmentMap } from '../../utilities/fragments';
+import {
   DirectiveInfo,
-  FragmentMap,
-  getDefaultValues,
   getDirectiveInfoFromField,
+  shouldInclude,
+} from '../../utilities/directives';
+import {
+  getDefaultValues,
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-  getStoreKeyName,
-  isEqual,
-  isField,
-  isInlineFragment,
-  maybeDeepFreeze,
-  mergeDeepArray,
-  resultKeyNameFromField,
-  shouldInclude,
-  StoreValue,
-} from '../../utilities';
-import { Cache } from '../core';
+} from '../../utilities/getFromAST';
+import { isEqual } from '../../utilities/util/isEqual';
+import { maybeDeepFreeze } from '../../utilities/util/maybeDeepFreeze';
+import { mergeDeepArray } from '../../utilities/util/mergeDeep';
+import { Cache } from '../core/types/Cache';
 import {
   ReadStoreContext,
   DiffQueryAgainstStoreOptions,

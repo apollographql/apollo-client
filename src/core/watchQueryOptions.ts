@@ -1,7 +1,7 @@
 import { DocumentNode, ExecutionResult } from 'graphql';
 
-import { FetchResult } from '../link/core';
-import { DataProxy } from '../cache/core';
+import { FetchResult } from '../link/core/types';
+import { DataProxy } from '../cache/core/types/DataProxy';
 import { MutationQueryReducersMap } from './types';
 import { PureQueryOptions, OperationVariables } from './types';
 

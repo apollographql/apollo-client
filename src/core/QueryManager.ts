@@ -1,18 +1,22 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { execute, ApolloLink, FetchResult } from '../link/core';
-import { Cache } from '../cache/core';
+import { ApolloLink } from '../link/core/ApolloLink';
+import { execute } from '../link/core/execute';
+import { FetchResult } from '../link/core/types';
+import { Cache } from '../cache/core/types/Cache';
 import {
   getDefaultValues,
   getOperationDefinition,
   getOperationName,
+} from '../utilities/getFromAST';
+import {
   hasDirectives,
-  graphQLResultHasError,
   hasClientExports,
-  removeConnectionDirectiveFromDocument,
-  canUseWeakMap,
-} from '../utilities';
+} from '../utilities/directives';
+import { graphQLResultHasError } from '../utilities/util/errorHandling';
+import { removeConnectionDirectiveFromDocument } from '../utilities/transform';
+import { canUseWeakMap } from '../utilities/util/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';
 import { QueryWithUpdater, DataStore } from '../data/store';

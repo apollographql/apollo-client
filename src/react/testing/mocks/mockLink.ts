@@ -2,19 +2,19 @@ import { print } from 'graphql/language/printer';
 import stringify from 'fast-json-stable-stringify';
 
 import { Observable } from '../../../util/Observable';
+import { ApolloLink } from '../../../link/core/ApolloLink';
 import {
   Operation,
   GraphQLRequest,
-  ApolloLink,
   FetchResult,
-} from '../../../link/core';
+} from '../../../link/core/types';
 import {
   addTypenameToDocument,
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
-  cloneDeep,
-  isEqual
-} from '../../../utilities';
+} from '../../../utilities/transform';
+import { cloneDeep } from '../../../utilities/util/cloneDeep';
+import { isEqual } from '../../../utilities/util/isEqual';
 import { MockedResponse, ResultFunction } from './types';
 
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {

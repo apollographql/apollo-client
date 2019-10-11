@@ -12,7 +12,7 @@ import {
 } from './selectHttpOptionsAndBody';
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
-import { ApolloLink } from '../core';
+import { ApolloLink } from '../core/ApolloLink';
 import { fromError } from '../utils/fromError';
 
 export const createHttpLink = (linkOptions: HttpOptions = {}) => {

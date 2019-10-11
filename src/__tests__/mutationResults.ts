@@ -2,10 +2,10 @@ import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
 import { Observable } from '../util/Observable';
-import { ApolloLink } from '../link/core';
+import { ApolloLink } from '../link/core/ApolloLink';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import { ApolloClient } from '..';
-import { InMemoryCache } from '../cache/inmemory';
+import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { Subscription } from '../util/Observable';
 import { withWarning } from '../util/wrap';
 

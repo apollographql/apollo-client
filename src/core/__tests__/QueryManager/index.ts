@@ -6,12 +6,13 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 
 import { Observable } from '../../../util/Observable';
-import { ApolloLink, Operation } from '../../../link/core';
+import { ApolloLink } from '../../../link/core/ApolloLink';
+import { Operation } from '../../../link/core/types';
+import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import {
-  InMemoryCache,
   ApolloReducerConfig,
-  NormalizedCacheObject,
-} from '../../../cache/inmemory';
+  NormalizedCacheObject
+} from '../../../cache/inmemory/types';
 
 // mocks
 import mockQueryManager from '../../../__mocks__/mockQueryManager';
@@ -36,7 +37,7 @@ import wrap from '../../../util/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../util/observableToPromise';
-import { stripSymbols } from '../../../utilities';
+import { stripSymbols } from '../../../utilities/util/stripSymbols';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.

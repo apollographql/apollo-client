@@ -4,7 +4,8 @@ import gql from 'graphql-tag';
 import { withError } from './diffAgainstStore';
 import { withWarning } from './writeToStore';
 import { EntityCache } from '../entityCache';
-import { StoreReader, StoreWriter } from '../';
+import { StoreReader } from '../readFromStore';
+import { StoreWriter } from '../writeToStore';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {

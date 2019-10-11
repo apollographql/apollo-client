@@ -1,12 +1,10 @@
 import { GraphQLError } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
-import {
-  isEqual,
-  tryFunctionOrLogError,
-  cloneDeep,
-  getOperationDefinition,
-} from '../utilities';
+import { isEqual } from '../utilities/util/isEqual';
+import { tryFunctionOrLogError } from '../utilities/util/errorHandling';
+import { cloneDeep } from '../utilities/util/cloneDeep';
+import { getOperationDefinition } from '../utilities/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
 import { ApolloError } from '../errors/ApolloError';

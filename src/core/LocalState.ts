@@ -12,23 +12,24 @@ import {
 import { visit, BREAK } from 'graphql/language/visitor';
 import { invariant } from 'ts-invariant';
 
-import { ApolloCache } from '../cache/core';
+import { ApolloCache } from '../cache/core/cache';
 import {
   getMainDefinition,
+  getFragmentDefinitions,
+} from '../utilities/getFromAST';
+import { hasDirectives, shouldInclude } from '../utilities/directives';
+import { FragmentMap, createFragmentMap } from '../utilities/fragments';
+import {
   buildQueryFromSelectionSet,
-  hasDirectives,
   removeClientSetsFromDocument,
-  mergeDeep,
-  mergeDeepArray,
-  FragmentMap,
+} from '../utilities/transform';
+import { mergeDeep, mergeDeepArray } from '../utilities/util/mergeDeep';
+import {
   argumentsObjectFromField,
   resultKeyNameFromField,
-  getFragmentDefinitions,
-  createFragmentMap,
-  shouldInclude,
   isField,
   isInlineFragment,
-} from '../utilities';
+} from '../utilities/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';

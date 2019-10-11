@@ -2,9 +2,9 @@
 import gql from 'graphql-tag';
 
 import { Observable } from '../../../util/Observable';
-import { ApolloLink } from '../../../link/core';
-import { InMemoryCache } from '../../../cache/inmemory';
-import { stripSymbols } from '../../../utilities';
+import { ApolloLink } from '../../../link/core/ApolloLink';
+import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
+import { stripSymbols } from '../../../utilities/util/stripSymbols';
 
 // mocks
 import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';

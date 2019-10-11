@@ -32,7 +32,7 @@ import {
 } from '../utilities/graphql/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
-import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
+import { capitalizeFirstLetter } from '../utilities/common/capitalizeFirstLetter';
 
 export type Resolver = (
   rootValue?: any,

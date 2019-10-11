@@ -106,7 +106,6 @@ export * from './utilities/graphql/fragments';
 export * from './utilities/graphql/getFromAST';
 export * from './utilities/graphql/transform';
 export * from './utilities/graphql/storeUtils';
-export * from './utilities/common/isEqual';
 export * from './utilities/common/maybeDeepFreeze';
 export * from './utilities/common/mergeDeep';
 export * from './utilities/common/stripSymbols';

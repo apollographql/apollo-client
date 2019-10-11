@@ -1,6 +1,7 @@
 import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
+import { FieldPolicy } from "../policies";
 
 describe("type policies", function () {
   const bookQuery = gql`
@@ -396,7 +397,7 @@ describe("type policies", function () {
           Person: {
             keyFields: ["firstName", "lastName"],
             fields: {
-              fullName(person) {
+              fullName(_, { parentObject: person }) {
                 return `${person.firstName} ${person.lastName}`;
               },
             },
@@ -534,23 +535,20 @@ describe("type policies", function () {
               todos: {
                 keyArgs: [],
 
-                read(person, args, { storeFieldValue }) {
-                  return (storeFieldValue as any[]).slice(
+                read(existing: any[], { args }) {
+                  return existing.slice(
                     args.offset,
                     args.offset + args.limit,
                   );
                 },
 
-                merge({
-                  args,
-                  existingValue = [],
-                  incomingValue,
-                }): StoreValue[] {
+                merge(existing: any[], incoming: any[], { args }) {
+                  const copy = existing ? existing.slice(0) : [];
                   const limit = args.offset + args.limit;
                   for (let i = args.offset; i < limit; ++i) {
-                    existingValue[i] = incomingValue[i - args.offset];
+                    copy[i] = incoming[i - args.offset];
                   }
-                  return existingValue as any;
+                  return copy;
                 }
               },
             },

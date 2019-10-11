@@ -12,7 +12,6 @@ import {
   isField,
   isInlineFragment,
   resultKeyNameFromField,
-  StoreValue,
   Reference,
   isReference,
   makeReference,
@@ -336,16 +335,8 @@ export class StoreReader {
       policies,
     } = context;
 
-    let fieldValue: StoreValue | undefined;
-
-    if (object) {
-      fieldValue = policies.readFieldFromStoreObject(
-        typename,
-        object,
-        field,
-        variables,
-      );
-    }
+    const fieldValue = object &&
+      policies.readFieldFromStoreObject(object, field, typename, variables);
 
     const readStoreResult = typeof fieldValue === "undefined" ? {
       result: fieldValue,

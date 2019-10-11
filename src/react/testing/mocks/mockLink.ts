@@ -13,8 +13,8 @@ import {
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
 } from '../../../utilities/graphql/transform';
-import { cloneDeep } from '../../../utilities/util/cloneDeep';
-import { isEqual } from '../../../utilities/util/isEqual';
+import { cloneDeep } from '../../../utilities/common/cloneDeep';
+import { isEqual } from '../../../utilities/common/isEqual';
 import { MockedResponse, ResultFunction } from './types';
 
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {

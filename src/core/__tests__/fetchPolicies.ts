@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../utilities/util/stripSymbols';
+import { stripSymbols } from '../../utilities/common/stripSymbols';
 import { ApolloClient } from '../..';
 import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
 import { mockSingleLink } from '../../__mocks__/mockLinks';

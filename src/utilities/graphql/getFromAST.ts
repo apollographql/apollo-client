@@ -7,7 +7,7 @@ import {
 
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { assign } from '../util/assign';
+import { assign } from '../common/assign';
 
 import { valueToObjectRepresentation, JsonValue } from './storeUtils';
 

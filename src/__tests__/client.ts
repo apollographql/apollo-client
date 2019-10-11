@@ -6,7 +6,7 @@ import { Observable } from '../util/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { PossibleTypesMap } from '../cache/inmemory/types';
-import { stripSymbols } from '../utilities/util/stripSymbols';
+import { stripSymbols } from '../utilities/common/stripSymbols';
 import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
 import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';

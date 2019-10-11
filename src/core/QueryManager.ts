@@ -14,9 +14,9 @@ import {
   hasDirectives,
   hasClientExports,
 } from '../utilities/graphql/directives';
-import { graphQLResultHasError } from '../utilities/util/errorHandling';
+import { graphQLResultHasError } from '../utilities/common/errorHandling';
 import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
-import { canUseWeakMap } from '../utilities/util/canUse';
+import { canUseWeakMap } from '../utilities/common/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';
 import { QueryWithUpdater, DataStore } from '../data/store';

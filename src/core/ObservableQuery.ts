@@ -1,9 +1,9 @@
 import { GraphQLError } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { isEqual } from '../utilities/util/isEqual';
-import { tryFunctionOrLogError } from '../utilities/util/errorHandling';
-import { cloneDeep } from '../utilities/util/cloneDeep';
+import { isEqual } from '../utilities/common/isEqual';
+import { tryFunctionOrLogError } from '../utilities/common/errorHandling';
+import { cloneDeep } from '../utilities/common/cloneDeep';
 import { getOperationDefinition } from '../utilities/graphql/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';

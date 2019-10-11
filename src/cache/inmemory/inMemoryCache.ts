@@ -8,7 +8,7 @@ import { KeyTrie } from 'optimism';
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { canUseWeakMap } from '../../utilities/util/canUse';
+import { canUseWeakMap } from '../../utilities/common/canUse';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,

@@ -19,8 +19,8 @@ import {
   getTypenameFromResult,
 } from '../../utilities/graphql/storeUtils';
 import { shouldInclude } from '../../utilities/graphql/directives';
-import { DeepMerger } from '../../utilities/util/mergeDeep';
-import { cloneDeep } from '../../utilities/util/cloneDeep';
+import { DeepMerger } from '../../utilities/common/mergeDeep';
+import { cloneDeep } from '../../utilities/common/cloneDeep';
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';

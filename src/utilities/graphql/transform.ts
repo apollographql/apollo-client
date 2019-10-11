@@ -21,7 +21,7 @@ import {
   getFragmentDefinitions,
   getMainDefinition,
 } from './getFromAST';
-import { filterInPlace } from '../util/filterInPlace';
+import { filterInPlace } from '../common/filterInPlace';
 import { isField, isInlineFragment } from './storeUtils';
 import {
   createFragmentMap,

@@ -23,7 +23,7 @@ import {
   buildQueryFromSelectionSet,
   removeClientSetsFromDocument,
 } from '../utilities/graphql/transform';
-import { mergeDeep, mergeDeepArray } from '../utilities/util/mergeDeep';
+import { mergeDeep, mergeDeepArray } from '../utilities/common/mergeDeep';
 import {
   argumentsObjectFromField,
   resultKeyNameFromField,

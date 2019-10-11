@@ -8,7 +8,7 @@ import { getOperationName } from '../utilities/graphql/getFromAST';
 import {
   tryFunctionOrLogError,
   graphQLResultHasError,
-} from '../utilities/util/errorHandling';
+} from '../utilities/common/errorHandling';
 import { MutationQueryReducer } from '../core/types';
 
 export type QueryWithUpdater = {

@@ -16,7 +16,7 @@ import {
   resultKeyNameFromField,
   StoreValue,
 } from '../../utilities/graphql/storeUtils';
-import { canUseWeakMap } from '../../utilities/util/canUse';
+import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import {
   DirectiveInfo,
@@ -29,9 +29,9 @@ import {
   getMainDefinition,
   getQueryDefinition,
 } from '../../utilities/graphql/getFromAST';
-import { isEqual } from '../../utilities/util/isEqual';
-import { maybeDeepFreeze } from '../../utilities/util/maybeDeepFreeze';
-import { mergeDeepArray } from '../../utilities/util/mergeDeep';
+import { isEqual } from '../../utilities/common/isEqual';
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
+import { mergeDeepArray } from '../../utilities/common/mergeDeep';
 import { Cache } from '../core/types/Cache';
 import {
   ReadStoreContext,

@@ -1,7 +1,7 @@
 import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
 import { invariant } from 'ts-invariant';
 
-import { isEqual } from '../utilities/util/isEqual';
+import { isEqual } from '../utilities/common/isEqual';
 import { NetworkStatus } from '../core/networkStatus';
 import { isNonEmptyArray } from '../util/arrays';
 

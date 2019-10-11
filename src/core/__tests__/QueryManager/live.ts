@@ -7,7 +7,7 @@
 // externals
 import gql from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../../utilities/util/stripSymbols';
+import { stripSymbols } from '../../../utilities/common/stripSymbols';
 import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core

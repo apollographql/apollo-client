@@ -1,6 +1,6 @@
 import { DefinitionNode } from 'graphql';
 
-import { Observable } from '../../util/Observable';
+import { Observable } from '../../utilities/observables/Observable';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
 import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';
@@ -12,7 +12,7 @@ import {
 } from './selectHttpOptionsAndBody';
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
-import { ApolloLink } from '../core';
+import { ApolloLink } from '../core/ApolloLink';
 import { fromError } from '../utils/fromError';
 
 export const createHttpLink = (linkOptions: HttpOptions = {}) => {

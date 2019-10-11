@@ -1,20 +1,24 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { execute, ApolloLink, FetchResult } from '../link/core';
-import { Cache } from '../cache/core';
+import { ApolloLink } from '../link/core/ApolloLink';
+import { execute } from '../link/core/execute';
+import { FetchResult } from '../link/core/types';
+import { Cache } from '../cache/core/types/Cache';
 import {
   getDefaultValues,
   getOperationDefinition,
   getOperationName,
+} from '../utilities/graphql/getFromAST';
+import {
   hasDirectives,
-  graphQLResultHasError,
   hasClientExports,
-  removeConnectionDirectiveFromDocument,
-  canUseWeakMap,
-} from '../utilities';
+} from '../utilities/graphql/directives';
+import { graphQLResultHasError } from '../utilities/common/errorHandling';
+import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
+import { canUseWeakMap } from '../utilities/common/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
-import { Observer, Subscription, Observable } from '../util/Observable';
+import { Observer, Subscription, Observable } from '../utilities/observables/Observable';
 import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
@@ -34,8 +38,8 @@ import {
   OperationVariables,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap, multiplex } from '../util/observables';
-import { isNonEmptyArray } from '../util/arrays';
+import { asyncMap, multiplex } from '../utilities/observables/observables';
+import { isNonEmptyArray } from '../utilities/common/arrays';
 
 const { hasOwnProperty } = Object.prototype;
 

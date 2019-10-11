@@ -1,12 +1,14 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 
-import { ApolloCache, Cache, DataProxy } from '../cache/core';
+import { ApolloCache } from '../cache/core/cache';
+import { Cache } from '../cache/core/types/Cache';
+import { DataProxy } from '../cache/core/types/DataProxy';
 import { QueryStoreValue } from '../data/queries';
+import { getOperationName } from '../utilities/graphql/getFromAST';
 import {
-  getOperationName,
   tryFunctionOrLogError,
   graphQLResultHasError,
-} from '../utilities';
+} from '../utilities/common/errorHandling';
 import { MutationQueryReducer } from '../core/types';
 
 export type QueryWithUpdater = {

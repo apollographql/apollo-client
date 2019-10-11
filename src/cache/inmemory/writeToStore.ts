@@ -4,19 +4,23 @@ import { invariant, InvariantError } from 'ts-invariant';
 import {
   createFragmentMap,
   FragmentMap,
+  getFragmentFromSelection,
+} from '../../utilities/graphql/fragments';
+import {
   getDefaultValues,
   getFragmentDefinitions,
-  getFragmentFromSelection,
   getOperationDefinition,
+} from '../../utilities/graphql/getFromAST';
+import {
   isField,
   resultKeyNameFromField,
-  shouldInclude,
   storeKeyNameFromField,
   StoreValue,
-  DeepMerger,
   getTypenameFromResult,
-  cloneDeep,
-} from '../../utilities';
+} from '../../utilities/graphql/storeUtils';
+import { shouldInclude } from '../../utilities/graphql/directives';
+import { DeepMerger } from '../../utilities/common/mergeDeep';
+import { cloneDeep } from '../../utilities/common/cloneDeep';
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';

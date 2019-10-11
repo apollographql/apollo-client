@@ -1,14 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
-import {
-  isEqual,
-  tryFunctionOrLogError,
-  cloneDeep,
-  getOperationDefinition,
-} from '../utilities';
+import { isEqual } from '../utilities/common/isEqual';
+import { tryFunctionOrLogError } from '../utilities/common/errorHandling';
+import { cloneDeep } from '../utilities/common/cloneDeep';
+import { getOperationDefinition } from '../utilities/graphql/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import { Observable, Observer, Subscription } from '../util/Observable';
+import { Observable, Observer, Subscription } from '../utilities/observables/Observable';
 import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, FetchType, OperationVariables } from './types';
@@ -19,7 +17,7 @@ import {
   ErrorPolicy,
 } from './watchQueryOptions';
 import { QueryStoreValue } from '../data/queries';
-import { isNonEmptyArray } from '../util/arrays';
+import { isNonEmptyArray } from '../utilities/common/arrays';
 
 export type ApolloCurrentQueryResult<T> = {
   data: T | undefined;

@@ -2,7 +2,7 @@ import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
-import { InMemoryCache } from '../cache/inmemory';
+import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
 
 describe('updateQuery on a simple query', () => {

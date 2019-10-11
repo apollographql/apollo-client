@@ -12,26 +12,27 @@ import {
 import { visit, BREAK } from 'graphql/language/visitor';
 import { invariant } from 'ts-invariant';
 
-import { ApolloCache } from '../cache/core';
+import { ApolloCache } from '../cache/core/cache';
 import {
   getMainDefinition,
+  getFragmentDefinitions,
+} from '../utilities/graphql/getFromAST';
+import { hasDirectives, shouldInclude } from '../utilities/graphql/directives';
+import { FragmentMap, createFragmentMap } from '../utilities/graphql/fragments';
+import {
   buildQueryFromSelectionSet,
-  hasDirectives,
   removeClientSetsFromDocument,
-  mergeDeep,
-  mergeDeepArray,
-  FragmentMap,
+} from '../utilities/graphql/transform';
+import { mergeDeep, mergeDeepArray } from '../utilities/common/mergeDeep';
+import {
   argumentsObjectFromField,
   resultKeyNameFromField,
-  getFragmentDefinitions,
-  createFragmentMap,
-  shouldInclude,
   isField,
   isInlineFragment,
-} from '../utilities';
+} from '../utilities/graphql/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
-import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';
+import { capitalizeFirstLetter } from '../utilities/common/capitalizeFirstLetter';
 
 export type Resolver = (
   rootValue?: any,

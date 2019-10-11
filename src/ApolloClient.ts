@@ -1,13 +1,11 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
-import {
-  ApolloLink,
-  FetchResult,
-  GraphQLRequest,
-  execute,
-} from './link/core';
-import { ApolloCache, DataProxy } from './cache/core';
+import { ApolloLink } from './link/core/ApolloLink';
+import { FetchResult, GraphQLRequest } from './link/core/types';
+import { execute } from './link/core/execute';
+import { ApolloCache } from './cache/core/cache';
+import { DataProxy } from './cache/core/types/DataProxy';
 import { QueryManager } from './core/QueryManager';
 import {
   ApolloQueryResult,
@@ -16,7 +14,7 @@ import {
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 import { LocalState, FragmentMatcher } from './core/LocalState';
-import { Observable } from './util/Observable';
+import { Observable } from './utilities/observables/Observable';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -26,7 +24,8 @@ import {
 } from './core/watchQueryOptions';
 import { DataStore } from './data/store';
 import { version } from './version';
-import { UriFunction, HttpLink } from './link/http';
+import { HttpLink } from './link/http/HttpLink';
+import { UriFunction } from './link/http/selectHttpOptionsAndBody';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions>;

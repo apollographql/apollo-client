@@ -5,13 +5,14 @@ import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 
-import { Observable } from '../../../util/Observable';
-import { ApolloLink, Operation } from '../../../link/core';
+import { Observable, Observer } from '../../../utilities/observables/Observable';
+import { ApolloLink } from '../../../link/core/ApolloLink';
+import { Operation } from '../../../link/core/types';
+import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import {
-  InMemoryCache,
   ApolloReducerConfig,
-  NormalizedCacheObject,
-} from '../../../cache/inmemory';
+  NormalizedCacheObject
+} from '../../../cache/inmemory/types';
 
 // mocks
 import mockQueryManager from '../../../__mocks__/mockQueryManager';
@@ -29,14 +30,13 @@ import { QueryManager } from '../../QueryManager';
 
 import { ApolloError } from '../../../errors/ApolloError';
 import { DataStore } from '../../../data/store';
-import { Observer } from '../../../util/Observable';
 
 // testing utils
-import wrap from '../../../util/wrap';
+import wrap from '../../../__tests__/utils/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
-} from '../../../util/observableToPromise';
-import { stripSymbols } from '../../../utilities';
+} from '../../../__tests__/utils/observableToPromise';
+import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.

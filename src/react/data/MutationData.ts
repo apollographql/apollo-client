@@ -11,7 +11,7 @@ import {
 } from '../types/types';
 import { OperationData } from './OperationData';
 import { OperationVariables } from '../../core/types';
-import { FetchResult } from '../../link/core';
+import { FetchResult } from '../../link/core/types';
 
 export class MutationData<
   TData = any,

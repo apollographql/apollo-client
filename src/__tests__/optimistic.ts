@@ -5,10 +5,12 @@ import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import { MutationQueryReducersMap } from '../core/types';
-import { Subscription } from '../util/Observable';
+import { Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';
-import { addTypenameToDocument, stripSymbols } from '../utilities';
-import { InMemoryCache, makeReference } from '../cache/inmemory';
+import { addTypenameToDocument } from '../utilities/graphql/transform';
+import { stripSymbols } from './utils/stripSymbols';
+import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
+import { makeReference } from '../cache/inmemory/helpers';
 
 describe('optimistic mutation results', () => {
   const query = gql`

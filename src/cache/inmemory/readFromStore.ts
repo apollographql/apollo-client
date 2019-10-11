@@ -10,26 +10,29 @@ import { InvariantError } from 'ts-invariant';
 
 import {
   argumentsObjectFromField,
-  canUseWeakMap,
-  createFragmentMap,
+  getStoreKeyName,
+  isField,
+  isInlineFragment,
+  resultKeyNameFromField,
+  StoreValue,
+} from '../../utilities/graphql/storeUtils';
+import { canUseWeakMap } from '../../utilities/common/canUse';
+import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
+import {
   DirectiveInfo,
-  FragmentMap,
-  getDefaultValues,
   getDirectiveInfoFromField,
+  shouldInclude,
+} from '../../utilities/graphql/directives';
+import {
+  getDefaultValues,
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-  getStoreKeyName,
-  isEqual,
-  isField,
-  isInlineFragment,
-  maybeDeepFreeze,
-  mergeDeepArray,
-  resultKeyNameFromField,
-  shouldInclude,
-  StoreValue,
-} from '../../utilities';
-import { Cache } from '../core';
+} from '../../utilities/graphql/getFromAST';
+import { isEqual } from '../../utilities/common/isEqual';
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
+import { mergeDeepArray } from '../../utilities/common/mergeDeep';
+import { Cache } from '../core/types/Cache';
 import {
   ReadStoreContext,
   DiffQueryAgainstStoreOptions,

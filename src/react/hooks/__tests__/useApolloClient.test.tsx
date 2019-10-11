@@ -2,7 +2,7 @@ import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 import { InvariantError } from 'ts-invariant';
 
-import { ApolloLink } from '../../../link/core';
+import { ApolloLink } from '../../../link/core/ApolloLink';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { resetApolloContext } from '../../context/ApolloContext';
 import { ApolloClient } from '../../../ApolloClient';

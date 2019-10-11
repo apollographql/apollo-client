@@ -1,11 +1,12 @@
 import gql from 'graphql-tag';
 
-import { Observable } from '../util/Observable';
-import { ApolloLink } from '../link/core';
-import { HttpLink } from '../link/http';
-import { InMemoryCache, makeReference } from '../cache/inmemory';
-import { stripSymbols } from '../utilities';
-import { withWarning } from '../util/wrap';
+import { Observable } from '../utilities/observables/Observable';
+import { ApolloLink } from '../link/core/ApolloLink';
+import { HttpLink } from '../link/http/HttpLink';
+import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
+import { makeReference } from '../cache/inmemory/helpers';
+import { stripSymbols } from './utils/stripSymbols';
+import { withWarning } from './utils/wrap';
 import { ApolloClient } from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';

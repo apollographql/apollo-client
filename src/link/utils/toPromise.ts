@@ -1,6 +1,6 @@
 import { invariant } from 'ts-invariant';
 
-import { Observable } from '../../util/Observable';
+import { Observable } from '../../utilities/observables/Observable';
 
 export function toPromise<R>(observable: Observable<R>): Promise<R> {
   let completed = false;

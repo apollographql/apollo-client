@@ -1,4 +1,4 @@
-import { Observable } from '../../../util/Observable';
+import { Observable } from '../../../utilities/observables/Observable';
 import { toPromise } from '../toPromise';
 import { fromError } from '../fromError';
 

@@ -36,7 +36,7 @@ import { Observer } from '../../../util/Observable';
 import wrap from '../../../util/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
-} from '../../../util/observableToPromise';
+} from '../../../__tests__/utils/observableToPromise';
 import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
 
 describe('QueryManager', () => {

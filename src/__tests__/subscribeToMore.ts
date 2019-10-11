@@ -6,7 +6,7 @@ import { Operation } from '../link/core/types';
 import { mockSingleLink, mockObservableLink } from '../__mocks__/mockLinks';
 import { ApolloClient } from '../';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../utilities/common/stripSymbols';
+import { stripSymbols } from './utils/stripSymbols';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions

@@ -37,7 +37,7 @@ import wrap from '../../../util/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../util/observableToPromise';
-import { stripSymbols } from '../../../utilities/common/stripSymbols';
+import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.

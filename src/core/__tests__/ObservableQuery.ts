@@ -16,7 +16,7 @@ import { ApolloClient } from '../../';
 
 import wrap from '../../util/wrap';
 import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
-import { stripSymbols } from '../../utilities/common/stripSymbols';
+import { stripSymbols } from '../../__tests__/utils/stripSymbols';
 import { ApolloError } from '../../errors/ApolloError';
 
 describe('ObservableQuery', () => {

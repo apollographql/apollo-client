@@ -53,8 +53,11 @@
   - `QueryManager#startQuery`
   - `ObservableQuery#currentResult`
 
-- `ApolloClient` is now only available as a named export. The default
-  `ApolloClient` export has been removed.
+- `ApolloClient` is now only available as a named export. The default `ApolloClient` export has been removed. <br/>
+  [@hwillson](https://github.com/hwillson) in [#5425](https://github.com/apollographql/apollo-client/pull/5425)
+
+- Utilities that were previously externally available through the `apollo-utilities` package, are now internal only. <br/>
+  [@hwillson](https://github.com/hwillson) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
 
 ## Apollo Client (2.6.4)
 

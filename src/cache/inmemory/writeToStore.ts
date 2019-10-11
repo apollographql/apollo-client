@@ -17,6 +17,8 @@ import {
   storeKeyNameFromField,
   StoreValue,
   getTypenameFromResult,
+  makeReference,
+  isReference,
 } from '../../utilities/graphql/storeUtils';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { DeepMerger } from '../../utilities/common/mergeDeep';
@@ -24,11 +26,7 @@ import { cloneDeep } from '../../utilities/common/cloneDeep';
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { IdGetter, NormalizedCache, StoreObject } from './types';
 import { fragmentMatches } from './fragments';
-import {
-  makeReference,
-  isReference,
-  getTypenameFromStoreObject,
-} from './helpers';
+import { getTypenameFromStoreObject } from './helpers';
 import { defaultDataIdFromObject } from './inMemoryCache';
 
 export type WriteContext = {

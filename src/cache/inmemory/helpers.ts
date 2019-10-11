@@ -1,16 +1,5 @@
 import { NormalizedCache, StoreObject } from './types';
-
-export interface Reference {
-  readonly __ref: string;
-}
-
-export function makeReference(id: string): Reference {
-  return { __ref: String(id) };
-}
-
-export function isReference(obj: any): obj is Reference {
-  return obj && typeof obj === 'object' && typeof obj.__ref === 'string';
-}
+import { Reference, isReference } from '../../utilities/graphql/storeUtils';
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,

@@ -43,11 +43,6 @@ export {
   defaultDataIdFromObject,
 } from './cache/inmemory/inMemoryCache';
 export * from './cache/inmemory/types';
-export {
-  Reference,
-  makeReference,
-  isReference,
-} from './cache/inmemory/helpers';
 
 /* React */
 

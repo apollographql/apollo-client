@@ -15,6 +15,9 @@ import {
   isInlineFragment,
   resultKeyNameFromField,
   StoreValue,
+  Reference,
+  isReference,
+  makeReference,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
@@ -42,12 +45,7 @@ import {
 } from './types';
 import { supportsResultCaching } from './entityCache';
 import { fragmentMatches } from './fragments';
-import {
-  isReference,
-  makeReference,
-  Reference,
-  getTypenameFromStoreObject,
-} from './helpers';
+import { getTypenameFromStoreObject } from './helpers';
 
 export type VariableMap = { [name: string]: any };
 

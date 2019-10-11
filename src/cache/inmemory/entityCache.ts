@@ -1,6 +1,6 @@
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 import { dep, OptimisticDependencyFunction } from 'optimism';
-import { isReference } from './helpers';
+import { isReference } from '../../utilities/graphql/storeUtils';
+import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 

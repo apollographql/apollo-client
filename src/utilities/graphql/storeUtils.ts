@@ -21,27 +21,24 @@ import stringify from 'fast-json-stable-stringify';
 import { InvariantError } from 'ts-invariant';
 import { FragmentMap, getFragmentFromSelection } from './fragments';
 
-export interface IdValue {
-  type: 'id';
-  id: string;
-  generated: boolean;
-  typename: string | undefined;
+export interface Reference {
+  readonly __ref: string;
 }
 
-export interface JsonValue {
-  type: 'json';
-  json: any;
+export function makeReference(id: string): Reference {
+  return { __ref: String(id) };
 }
 
-export type ListValue = Array<null | IdValue>;
+export function isReference(obj: any): obj is Reference {
+  return obj && typeof obj === 'object' && typeof obj.__ref === 'string';
+}
 
 export type StoreValue =
   | number
   | string
   | string[]
-  | IdValue
-  | ListValue
-  | JsonValue
+  | Reference
+  | Reference[]
   | null
   | undefined
   | void
@@ -297,38 +294,6 @@ export function isInlineFragment(
   selection: SelectionNode,
 ): selection is InlineFragmentNode {
   return selection.kind === 'InlineFragment';
-}
-
-export function isIdValue(idObject: StoreValue): idObject is IdValue {
-  return idObject &&
-    (idObject as IdValue | JsonValue).type === 'id' &&
-    typeof (idObject as IdValue).generated === 'boolean';
-}
-
-export type IdConfig = {
-  id: string;
-  typename: string | undefined;
-};
-
-export function toIdValue(
-  idConfig: string | IdConfig,
-  generated = false,
-): IdValue {
-  return {
-    type: 'id',
-    generated,
-    ...(typeof idConfig === 'string'
-      ? { id: idConfig, typename: undefined }
-      : idConfig),
-  };
-}
-
-export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
-  return (
-    jsonObject != null &&
-    typeof jsonObject === 'object' &&
-    (jsonObject as IdValue | JsonValue).type === 'json'
-  );
 }
 
 function defaultValueFromVariable(node: VariableNode) {

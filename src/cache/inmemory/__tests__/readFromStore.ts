@@ -4,9 +4,9 @@ import gql from 'graphql-tag';
 import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
+import { makeReference } from '../../../utilities/graphql/storeUtils';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { withError } from './diffAgainstStore';
-import { makeReference } from '../helpers';
 
 describe('reading from the store', () => {
   const reader = new StoreReader();

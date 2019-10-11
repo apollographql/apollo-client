@@ -9,7 +9,7 @@ import { invariant, InvariantError } from 'ts-invariant';
 
 import { assign } from '../common/assign';
 
-import { valueToObjectRepresentation, JsonValue } from './storeUtils';
+import { valueToObjectRepresentation } from './storeUtils';
 
 export function getMutationDefinition(
   doc: DocumentNode,
@@ -169,7 +169,7 @@ export function getMainDefinition(
 
 export function getDefaultValues(
   definition: OperationDefinitionNode | undefined,
-): { [key: string]: JsonValue } {
+): Record<string, any> {
   if (
     definition &&
     definition.variableDefinitions &&
@@ -178,8 +178,8 @@ export function getDefaultValues(
     const defaultValues = definition.variableDefinitions
       .filter(({ defaultValue }) => defaultValue)
       .map(
-        ({ variable, defaultValue }): { [key: string]: JsonValue } => {
-          const defaultValueObj: { [key: string]: JsonValue } = {};
+        ({ variable, defaultValue }): Record<string, any> => {
+          const defaultValueObj: Record<string, any> = {};
           valueToObjectRepresentation(
             defaultValueObj,
             variable.name,

@@ -8,9 +8,9 @@ import { MutationQueryReducersMap } from '../core/types';
 import { Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
+import { makeReference } from '../utilities/graphql/storeUtils';
 import { stripSymbols } from './utils/stripSymbols';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { makeReference } from '../cache/inmemory/helpers';
 
 describe('optimistic mutation results', () => {
   const query = gql`

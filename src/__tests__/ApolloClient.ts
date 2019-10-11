@@ -1,10 +1,10 @@
 import gql from 'graphql-tag';
 
 import { Observable } from '../utilities/observables/Observable';
+import { makeReference } from '../utilities/graphql/storeUtils';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { HttpLink } from '../link/http/HttpLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { makeReference } from '../cache/inmemory/helpers';
 import { stripSymbols } from './utils/stripSymbols';
 import { withWarning } from './utils/wrap';
 import { ApolloClient } from '../';

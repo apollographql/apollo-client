@@ -9,12 +9,14 @@ import {
 } from 'graphql';
 import gql from 'graphql-tag';
 
-import { storeKeyNameFromField } from '../../../utilities/graphql/storeUtils';
+import {
+  storeKeyNameFromField,
+  makeReference,
+} from '../../../utilities/graphql/storeUtils';
 import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory } from '../entityCache';
-import { makeReference } from '../helpers';
 import { InMemoryCache } from '../inMemoryCache';
 
 export function withWarning(func: Function, regex?: RegExp) {

@@ -330,7 +330,7 @@ describe('Link interactions', () => {
         typePolicies: {
           Query: {
             fields: {
-              book(rootQuery, args) {
+              book(_, { parentObject: rootQuery, args }) {
                 const id = this.identify({ __typename: "Book", id: args.id });
                 expect(id).toEqual(`Book:${args.id}`);
                 const found = (rootQuery.books as Reference[]).find(

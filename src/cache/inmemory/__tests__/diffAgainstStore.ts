@@ -959,7 +959,7 @@ describe('diffing queries against the store', () => {
         typePolicies: {
           Query: {
             fields: {
-              person(rootQuery, args) {
+              person(_, { args, parentObject: rootQuery }) {
                 expect(typeof args.id).toBe('number');
                 const id = this.identify({ __typename: 'Person', id: args.id });
                 expect(id).toBe(`Person:${JSON.stringify({ id: args.id })}`);

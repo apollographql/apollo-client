@@ -62,7 +62,9 @@ type TypePolicy = {
   subscriptionType?: true,
 
   fields?: {
-    [fieldName: string]: FieldPolicy | FieldReadFunction;
+    [fieldName: string]:
+      | FieldPolicy<StoreValue>
+      | FieldReadFunction<StoreValue>;
   }
 };
 
@@ -75,29 +77,32 @@ type KeyArgsFunction = (
   },
 ) => ReturnType<IdGetter>;
 
-type FieldPolicy<TValue = StoreValue> = {
+export type FieldPolicy<TValue> = {
   keyArgs?: KeySpecifier | KeyArgsFunction;
   read?: FieldReadFunction<TValue>;
   merge?: FieldMergeFunction<TValue>;
 };
 
-interface CommonFieldFunctionOptions {
-  typename: string;
+interface FieldFunctionOptions {
+  args: Record<string, any>;
+  parentObject: Readonly<StoreObject>;
   field: FieldNode;
-  variables: Record<string, any>;
+  variables?: Record<string, any>;
 }
 
-interface FieldReadOptions<TValue> extends CommonFieldFunctionOptions {
-  storeFieldName: string;
-  storeFieldValue: Readonly<TValue>;
-}
-
-interface FieldReadFunction<TValue = StoreValue> {
+interface FieldReadFunction<TExisting, TResult = TExisting> {
   (this: Policies,
-   storeObject: Readonly<StoreObject>,
-   args: Record<string, any>,
-   options: FieldReadOptions<TValue>,
-  ): StoreValue;
+   // When reading a field, one often needs to know about any existing
+   // value stored for that field. If the field is read before any value
+   // has been written to the cache, this existing parameter will be
+   // undefined, which makes it easy to use a default parameter expression
+   // to supply the initial value. This parameter is positional (rather
+   // than one of the named options) because that makes it possible for
+   // the developer to annotate it with a type, without also having to
+   // provide a whole new type for the options object.
+   existing: Readonly<TExisting> | undefined,
+   options: FieldFunctionOptions,
+  ): TResult;
 
   // The TypeScript typings for Function.prototype.call are much too generic
   // to enforce the type safety we need here, for reasons discussed in this
@@ -107,21 +112,26 @@ interface FieldReadFunction<TValue = StoreValue> {
   // https://github.com/microsoft/TypeScript/pull/27028
   call(
     self: Policies,
-    storeObject: Readonly<StoreObject>,
-    args: Record<string, any>,
-    options: FieldReadOptions<TValue>,
-  ): StoreValue;
+    existing: Readonly<TExisting> | undefined,
+    options: FieldFunctionOptions,
+  ): TResult;
 }
 
-interface FieldMergeOptions<TValue> extends CommonFieldFunctionOptions {
-  incomingValue: Readonly<StoreValue>;
-  existingValue?: Readonly<TValue>;
-  args: Record<string, any>;
-}
+interface FieldMergeFunction<TExisting> {
+  (this: Policies,
+   existing: Readonly<TExisting> | undefined,
+   // The incoming parameter needs to be positional as well, for the same
+   // reasons discussed in FieldReadFunction above.
+   incoming: Readonly<StoreValue>,
+   options: FieldFunctionOptions,
+  ): TExisting;
 
-interface FieldMergeFunction<TValue = StoreValue> {
-  (this: Policies, options: FieldMergeOptions<TValue>): TValue;
-  call(self: Policies, options: FieldMergeOptions<TValue>): TValue;
+  call(
+    self: Policies,
+    existing: Readonly<TExisting> | undefined,
+    incoming: Readonly<StoreValue>,
+    options: FieldFunctionOptions,
+  ): TExisting;
 }
 
 export function defaultDataIdFromObject(object: StoreObject) {
@@ -358,46 +368,43 @@ export class Policies {
   }
 
   public readFieldFromStoreObject(
-    typename: string,
-    storeObject: Readonly<StoreObject>,
+    parentObject: Readonly<StoreObject>,
     field: FieldNode,
-    variables: Record<string, any>,
+    typename = parentObject.__typename,
+    variables?: Record<string, any>,
   ): StoreValue {
     const storeFieldName = this.getStoreFieldName(typename, field, variables);
-    const storeFieldValue = storeObject[storeFieldName];
+    const existing = parentObject[storeFieldName];
     const policy = this.getFieldPolicy(typename, field.name.value, false);
     if (policy && policy.read) {
-      // TODO Avoid recomputing this.
-      const args = argumentsObjectFromField(field, variables);
-      return policy.read.call(this, storeObject, args, {
-        typename,
+      return policy.read.call(this, existing, {
+        // TODO Avoid recomputing this.
+        args: argumentsObjectFromField(field, variables),
+        parentObject,
         field,
         variables,
-        storeFieldName,
-        storeFieldValue,
       });
     }
-    return storeFieldValue;
+    return existing;
   }
 
   public getFieldMergeFunction(
     typename: string,
     field: FieldNode,
-    variables: Record<string, any>,
+    variables?: Record<string, any>,
   ): StoreValueMergeFunction {
     const policy = this.getFieldPolicy(typename, field.name.value, false);
     if (policy && policy.merge) {
       return (
-        existingValue: StoreValue,
-        incomingValue: StoreValue,
-      ) => policy.merge.call(this, {
-        typename,
-        field,
-        variables,
-        incomingValue,
-        existingValue,
+        existing: StoreValue,
+        incoming: StoreValue,
+        parentObject: Readonly<StoreObject>,
+      ) => policy.merge.call(this, existing, incoming, {
         // TODO Avoid recomputing this.
         args: argumentsObjectFromField(field, variables),
+        parentObject,
+        field,
+        variables,
       });
     }
   }
@@ -406,6 +413,7 @@ export class Policies {
 export type StoreValueMergeFunction = (
   existing: StoreValue,
   incoming: StoreValue,
+  parentObject: Readonly<StoreObject>,
 ) => StoreValue;
 
 function keyArgsFnFromSpecifier(

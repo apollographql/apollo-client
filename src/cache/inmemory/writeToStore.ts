@@ -368,10 +368,11 @@ function walkWithMergeOverrides(
     const existingValue: any = existingObject && existingObject[name];
     const incomingValue: any = incomingObject && incomingObject[name];
     if (typeof override === "function") {
-      return incomingObject[name] = override(existingValue, incomingValue);
-    }
-    if (override && typeof override === "object") {
-      return walkWithMergeOverrides(existingValue, incomingValue, override);
+      incomingObject[name] = override(existingValue, incomingValue, existingObject);
+    } else if (override && typeof override === "object") {
+      // StoreObjects can have multiple layers of nested objects/arrays,
+      // each layer with its own nested fields and override functions.
+      walkWithMergeOverrides(existingValue, incomingValue, override);
     }
   });
 }

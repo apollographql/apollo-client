@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 
-import { Observable } from '../util/Observable';
+import { Observable } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { HttpLink } from '../link/http/HttpLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';

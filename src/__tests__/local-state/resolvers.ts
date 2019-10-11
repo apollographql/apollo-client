@@ -2,11 +2,10 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 
-import { Observable } from '../../util/Observable';
+import { Observable, Observer } from '../../utilities/observables/Observable';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { ApolloClient } from '../..';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
-import { Observer } from '../../util/Observable';
 import wrap from '../../__tests__/utils/wrap';
 import { ApolloQueryResult, Resolvers } from '../../core/types';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';

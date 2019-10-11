@@ -100,7 +100,7 @@ export { ServerError, throwServerError } from './link/utils/throwServerError';
 
 /* Utilities */
 
-export { Observable } from './util/Observable';
+export { Observable } from './utilities/observables/Observable';
 export * from './utilities/graphql/directives';
 export * from './utilities/graphql/fragments';
 export * from './utilities/graphql/getFromAST';

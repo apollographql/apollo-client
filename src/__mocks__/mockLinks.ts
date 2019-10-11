@@ -1,6 +1,6 @@
 import { print } from 'graphql/language/printer';
 
-import { Observable } from '../util/Observable';
+import { Observable } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import {
   Operation,

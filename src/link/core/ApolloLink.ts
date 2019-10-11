@@ -1,6 +1,6 @@
 import { InvariantError, invariant } from 'ts-invariant';
 
-import { Observable } from '../../util/Observable';
+import { Observable } from '../../utilities/observables/Observable';
 import {
   NextLink,
   Operation,

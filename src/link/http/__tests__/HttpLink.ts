@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
 import { print } from 'graphql';
 
-import { Observable } from '../../../util/Observable';
+import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
 import { HttpLink } from '../HttpLink';

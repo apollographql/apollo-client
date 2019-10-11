@@ -2,7 +2,7 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
-import { Observable } from '../util/Observable';
+import { Observable } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { PossibleTypesMap } from '../cache/inmemory/types';

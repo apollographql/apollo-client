@@ -18,7 +18,7 @@ import { graphQLResultHasError } from '../utilities/common/errorHandling';
 import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
 import { canUseWeakMap } from '../utilities/common/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
-import { Observer, Subscription, Observable } from '../util/Observable';
+import { Observer, Subscription, Observable } from '../utilities/observables/Observable';
 import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
@@ -38,7 +38,7 @@ import {
   OperationVariables,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap, multiplex } from '../util/observables';
+import { asyncMap, multiplex } from '../utilities/observables/observables';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 
 const { hasOwnProperty } = Object.prototype;

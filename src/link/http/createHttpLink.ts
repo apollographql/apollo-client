@@ -1,6 +1,6 @@
 import { DefinitionNode } from 'graphql';
 
-import { Observable } from '../../util/Observable';
+import { Observable } from '../../utilities/observables/Observable';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
 import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';

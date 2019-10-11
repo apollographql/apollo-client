@@ -14,7 +14,7 @@ import {
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 import { LocalState, FragmentMatcher } from './core/LocalState';
-import { Observable } from './util/Observable';
+import { Observable } from './utilities/observables/Observable';
 import {
   QueryOptions,
   WatchQueryOptions,

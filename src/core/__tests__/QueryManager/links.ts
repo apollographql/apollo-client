@@ -1,7 +1,7 @@
 // externals
 import gql from 'graphql-tag';
 
-import { Observable } from '../../../util/Observable';
+import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../../__tests__/utils/stripSymbols';

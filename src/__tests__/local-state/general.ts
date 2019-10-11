@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities';
 
-import { Observable } from '../../util/Observable';
+import { Observable } from '../../utilities/observables/Observable';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { Operation } from '../../link/core/types';
 import { ApolloClient } from '../..';

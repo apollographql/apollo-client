@@ -1,7 +1,7 @@
 import { print } from 'graphql/language/printer';
 import stringify from 'fast-json-stable-stringify';
 
-import { Observable } from '../../../util/Observable';
+import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import {
   Operation,

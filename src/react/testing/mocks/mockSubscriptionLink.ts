@@ -1,4 +1,4 @@
-import { Observable } from '../../../util/Observable';
+import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { FetchResult } from '../../../link/core/types';
 import { MockedSubscriptionResult } from './types';

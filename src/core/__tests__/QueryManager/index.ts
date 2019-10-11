@@ -5,7 +5,7 @@ import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 
-import { Observable } from '../../../util/Observable';
+import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { Operation } from '../../../link/core/types';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
@@ -30,7 +30,6 @@ import { QueryManager } from '../../QueryManager';
 
 import { ApolloError } from '../../../errors/ApolloError';
 import { DataStore } from '../../../data/store';
-import { Observer } from '../../../util/Observable';
 
 // testing utils
 import wrap from '../../../__tests__/utils/wrap';

@@ -1,12 +1,11 @@
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { Observable } from '../util/Observable';
+import { Observable, Subscription } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { Subscription } from '../util/Observable';
 import { withWarning } from './utils/wrap';
 
 describe('mutation results', () => {

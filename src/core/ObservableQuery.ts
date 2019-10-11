@@ -17,7 +17,7 @@ import {
   ErrorPolicy,
 } from './watchQueryOptions';
 import { QueryStoreValue } from '../data/queries';
-import { isNonEmptyArray } from '../util/arrays';
+import { isNonEmptyArray } from '../utilities/common/arrays';
 
 export type ApolloCurrentQueryResult<T> = {
   data: T | undefined;

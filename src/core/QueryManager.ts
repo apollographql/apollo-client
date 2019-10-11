@@ -39,7 +39,7 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 import { asyncMap, multiplex } from '../util/observables';
-import { isNonEmptyArray } from '../util/arrays';
+import { isNonEmptyArray } from '../utilities/common/arrays';
 
 const { hasOwnProperty } = Object.prototype;
 

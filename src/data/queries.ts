@@ -3,7 +3,7 @@ import { invariant } from 'ts-invariant';
 
 import { isEqual } from '../utilities/common/isEqual';
 import { NetworkStatus } from '../core/networkStatus';
-import { isNonEmptyArray } from '../util/arrays';
+import { isNonEmptyArray } from '../utilities/common/arrays';
 
 export type QueryStoreValue = {
   document: DocumentNode;

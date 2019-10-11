@@ -12,7 +12,7 @@ import {
   addTypenameToDocument,
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
-} from '../../../utilities/transform';
+} from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/util/cloneDeep';
 import { isEqual } from '../../../utilities/util/isEqual';
 import { MockedResponse, ResultFunction } from './types';

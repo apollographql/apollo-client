@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { StoreValue } from '../../utilities/storeUtils';
+import { StoreValue } from '../../utilities/graphql/storeUtils';
 
 export interface IdGetterObj extends Object {
   __typename?: string;

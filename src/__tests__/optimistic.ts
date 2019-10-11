@@ -7,7 +7,7 @@ import { mockSingleLink } from '../__mocks__/mockLinks';
 import { MutationQueryReducersMap } from '../core/types';
 import { Subscription } from '../util/Observable';
 import { ApolloClient } from '../';
-import { addTypenameToDocument } from '../utilities/transform';
+import { addTypenameToDocument } from '../utilities/graphql/transform';
 import { stripSymbols } from '../utilities/util/stripSymbols';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { makeReference } from '../cache/inmemory/helpers';

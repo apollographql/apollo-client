@@ -9,13 +9,13 @@ import {
   getDefaultValues,
   getOperationDefinition,
   getOperationName,
-} from '../utilities/getFromAST';
+} from '../utilities/graphql/getFromAST';
 import {
   hasDirectives,
   hasClientExports,
-} from '../utilities/directives';
+} from '../utilities/graphql/directives';
 import { graphQLResultHasError } from '../utilities/util/errorHandling';
-import { removeConnectionDirectiveFromDocument } from '../utilities/transform';
+import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
 import { canUseWeakMap } from '../utilities/util/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import { Observer, Subscription, Observable } from '../util/Observable';

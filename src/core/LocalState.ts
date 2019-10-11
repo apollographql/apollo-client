@@ -16,20 +16,20 @@ import { ApolloCache } from '../cache/core/cache';
 import {
   getMainDefinition,
   getFragmentDefinitions,
-} from '../utilities/getFromAST';
-import { hasDirectives, shouldInclude } from '../utilities/directives';
-import { FragmentMap, createFragmentMap } from '../utilities/fragments';
+} from '../utilities/graphql/getFromAST';
+import { hasDirectives, shouldInclude } from '../utilities/graphql/directives';
+import { FragmentMap, createFragmentMap } from '../utilities/graphql/fragments';
 import {
   buildQueryFromSelectionSet,
   removeClientSetsFromDocument,
-} from '../utilities/transform';
+} from '../utilities/graphql/transform';
 import { mergeDeep, mergeDeepArray } from '../utilities/util/mergeDeep';
 import {
   argumentsObjectFromField,
   resultKeyNameFromField,
   isField,
   isInlineFragment,
-} from '../utilities/storeUtils';
+} from '../utilities/graphql/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { capitalizeFirstLetter } from '../util/capitalizeFirstLetter';

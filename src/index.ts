@@ -101,11 +101,11 @@ export { ServerError, throwServerError } from './link/utils/throwServerError';
 /* Utilities */
 
 export { Observable } from './util/Observable';
-export * from './utilities/directives';
-export * from './utilities/fragments';
-export * from './utilities/getFromAST';
-export * from './utilities/transform';
-export * from './utilities/storeUtils';
+export * from './utilities/graphql/directives';
+export * from './utilities/graphql/fragments';
+export * from './utilities/graphql/getFromAST';
+export * from './utilities/graphql/transform';
+export * from './utilities/graphql/storeUtils';
 export * from './utilities/util/assign';
 export * from './utilities/util/canUse';
 export * from './utilities/util/cloneDeep';

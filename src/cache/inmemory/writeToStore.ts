@@ -5,20 +5,20 @@ import {
   createFragmentMap,
   FragmentMap,
   getFragmentFromSelection,
-} from '../../utilities/fragments';
+} from '../../utilities/graphql/fragments';
 import {
   getDefaultValues,
   getFragmentDefinitions,
   getOperationDefinition,
-} from '../../utilities/getFromAST';
+} from '../../utilities/graphql/getFromAST';
 import {
   isField,
   resultKeyNameFromField,
   storeKeyNameFromField,
   StoreValue,
   getTypenameFromResult,
-} from '../../utilities/storeUtils';
-import { shouldInclude } from '../../utilities/directives';
+} from '../../utilities/graphql/storeUtils';
+import { shouldInclude } from '../../utilities/graphql/directives';
 import { DeepMerger } from '../../utilities/util/mergeDeep';
 import { cloneDeep } from '../../utilities/util/cloneDeep';
 import { defaultNormalizedCacheFactory } from './entityCache';

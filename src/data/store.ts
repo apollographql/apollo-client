@@ -4,7 +4,7 @@ import { ApolloCache } from '../cache/core/cache';
 import { Cache } from '../cache/core/types/Cache';
 import { DataProxy } from '../cache/core/types/DataProxy';
 import { QueryStoreValue } from '../data/queries';
-import { getOperationName } from '../utilities/getFromAST';
+import { getOperationName } from '../utilities/graphql/getFromAST';
 import {
   tryFunctionOrLogError,
   graphQLResultHasError,

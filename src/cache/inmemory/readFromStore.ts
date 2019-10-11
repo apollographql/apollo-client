@@ -15,20 +15,20 @@ import {
   isInlineFragment,
   resultKeyNameFromField,
   StoreValue,
-} from '../../utilities/storeUtils';
+} from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/util/canUse';
-import { createFragmentMap, FragmentMap } from '../../utilities/fragments';
+import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import {
   DirectiveInfo,
   getDirectiveInfoFromField,
   shouldInclude,
-} from '../../utilities/directives';
+} from '../../utilities/graphql/directives';
 import {
   getDefaultValues,
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-} from '../../utilities/getFromAST';
+} from '../../utilities/graphql/getFromAST';
 import { isEqual } from '../../utilities/util/isEqual';
 import { maybeDeepFreeze } from '../../utilities/util/maybeDeepFreeze';
 import { mergeDeepArray } from '../../utilities/util/mergeDeep';

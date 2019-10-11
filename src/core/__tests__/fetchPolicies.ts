@@ -4,7 +4,7 @@ import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../utilities/util/stripSymbols';
 import { ApolloClient } from '../..';
-import subscribeAndCount from '../../util/subscribeAndCount';
+import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
 import { NetworkStatus } from '../networkStatus';
 

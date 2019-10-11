@@ -10,7 +10,7 @@ import { stripSymbols } from '../utilities/util/stripSymbols';
 import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
 import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';
-import subscribeAndCount from '../util/subscribeAndCount';
+import subscribeAndCount from './utils/subscribeAndCount';
 import { withWarning } from '../util/wrap';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 

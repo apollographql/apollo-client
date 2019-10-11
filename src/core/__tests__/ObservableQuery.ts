@@ -15,7 +15,7 @@ import { DataStore } from '../../data/store';
 import { ApolloClient } from '../../';
 
 import wrap from '../../util/wrap';
-import subscribeAndCount from '../../util/subscribeAndCount';
+import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
 import { stripSymbols } from '../../utilities/util/stripSymbols';
 import { ApolloError } from '../../errors/ApolloError';
 

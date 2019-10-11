@@ -11,7 +11,7 @@ import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
 import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';
 import subscribeAndCount from './utils/subscribeAndCount';
-import { withWarning } from '../util/wrap';
+import { withWarning } from './utils/wrap';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
 describe('client', () => {

@@ -7,7 +7,7 @@ import { ApolloLink } from '../../link/core/ApolloLink';
 import { ApolloClient } from '../..';
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import { Observer } from '../../util/Observable';
-import wrap from '../../util/wrap';
+import wrap from '../../__tests__/utils/wrap';
 import { ApolloQueryResult, Resolvers } from '../../core/types';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
 import { LocalState } from '../../core/LocalState';

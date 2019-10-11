@@ -33,7 +33,7 @@ import { DataStore } from '../../../data/store';
 import { Observer } from '../../../util/Observable';
 
 // testing utils
-import wrap from '../../../util/wrap';
+import wrap from '../../../__tests__/utils/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../__tests__/utils/observableToPromise';

@@ -7,7 +7,7 @@ import { mockSingleLink } from '../__mocks__/mockLinks';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { Subscription } from '../util/Observable';
-import { withWarning } from '../util/wrap';
+import { withWarning } from './utils/wrap';
 
 describe('mutation results', () => {
   const query = gql`

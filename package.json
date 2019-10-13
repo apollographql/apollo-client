@@ -55,7 +55,7 @@
     "graphql": "^14.5.4"
   },
   "optionalDependencies": {
-    "react": "^16.8.0"
+    "react": "^16.10.2"
   },
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
@@ -84,7 +84,6 @@
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",
     "prop-types": "15.7.2",
-    "react": "16.9.0",
     "react-dom": "16.9.0",
     "rimraf": "^3.0.0",
     "rollup": "1.21.2",

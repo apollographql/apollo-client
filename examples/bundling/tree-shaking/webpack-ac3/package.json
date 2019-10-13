@@ -1,0 +1,39 @@
+{
+  "name": "tree-shaking-webpack-ac3",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "file:../../../../",
+    "graphql": "^14.5.8",
+    "graphql-tag": "^2.10.1",
+    "react": "file:../../../../node_modules/react",
+    "react-dom": "file:../../../../node_modules/react-dom",
+    "react-scripts": "3.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "start:prod": "npm run build && npx serve -s build",
+    "build": "react-scripts build && npm run gzip",
+    "gzip": "gzip -k build/static/js/*.chunk.js",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "serve": "^11.2.0"
+  }
+}

@@ -52,8 +52,9 @@
     }
   ],
   "peerDependencies": {
-    "@types/react": "^16.8.0",
-    "graphql": "^14.5.4",
+    "graphql": "^14.5.4"
+  },
+  "optionalDependencies": {
     "react": "^16.8.0"
   },
   "dependencies": {

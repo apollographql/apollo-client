@@ -30,11 +30,9 @@ const client = new ApolloClient({
 });
 ```
 
-The `InMemoryCache` constructor accepts a variety of named options, described below.
-
-## Basic usage
-
 To learn how to use the `InMemoryCache` to read or write data, consult the [Cache interaction](/caching/cache-interaction) documentation.
+
+The `InMemoryCache` constructor accepts a variety of named options, described below.
 
 ## Configuring the cache
 
@@ -44,7 +42,7 @@ You can provide an options object to the `InMemoryCache` constructor to configur
 | ------- | ----- | --------- |
 | `addTypename`  | boolean | Causes the cache to add `__typename` fields to outgoing queries automatically, so the developer does not have to worry about explicitly requesting this vital information. (default: `true`) |
 | `resultCaching` | boolean | When this option is enabled, the cache will return identical (`===`) response objects whenever the underlying data have not changed, simplifying change detection. (default: `true`) |
-| `possibleTypes` | `{ [supertype: string]: string[] }` | To support polymorphic fragment type matching, the cache needs to know about any subtype relationships defined in your schema, such as a union type and its member types, or an interface and any interfaces that extend it. This option replaces the `fragmentMatcher` option from the `apollo-cache-inmemory` package. |
+| `possibleTypes` | `{ [supertype: string]: string[] }` | To support polymorphic fragment type matching, the cache needs to know about any subtype relationships defined in your schema, such as a union type and its member types, or an interface and any interfaces that extend it. This option replaces `fragmentMatcher` from the old `apollo-cache-inmemory` package. |
 | `typePolicies` | `{ [typename: string]: TypePolicy }` | Map from `__typename` to type-specific configuration options (see `TypePolicy` documentation [below](#TODO)). |
 | `dataIdFromObject` | function | A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store. Deprecated in favor of the `keyFields` option of `TypePolicy` objects. |
 
@@ -66,7 +64,7 @@ The only scenario in which your application might not benefit from normalization
 
 By default, the `InMemoryCache` attempts to generate a unique identifier for any object that has a `__typename` by combining the `__typename` string with the object's `id` or `_id` field.
 
-In other words, if you receive a response that contains objects like `{ __typename: 'Task', id: 14 }`, the default ID will look like `Task:14`.
+In other words, if you receive a response that contains objects like `{ __typename: 'Task', id: 14 }`, the default ID will be `Task:14`.
 
 #### Custom identifiers
 
@@ -95,9 +93,11 @@ const cache = new InMemoryCache({
 });
 ```
 
-In the `Book` example above, the ID computed for any object with `object.__typename === 'Book'` would be `'Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}'`, with `title` and `author` always in that order. This ordering is important because other common tools like `JSON.stringify` serialize object properties in the order they were created, which can differ from response object to response object, causing subtle normalization bugs.
+These arrays of strings are meant to resemble fields that can appear in the selection set of a GraphQL fragment. So, for example `["title", "author", ["name"]]` expresses the fragment `...{ title author { name }}`.
 
-Note that these `keyFields` strings always refer to the actual field names as defined in your schema, so the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias). This note is important if you ever attempt to use a function to implement `keyFields`:
+In the `Book` example above, the ID computed for any object with `object.__typename === 'Book'` would be `'Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}'`, with `title` and `author` always in that order. This ordering is important because tools like `JSON.stringify` serialize object properties in the order they were created, which can differ from response object to response object, causing subtle normalization bugs.
+
+Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias). This note is important if you ever attempt to use a function to implement `keyFields`:
 
 ```ts
 const cache = new InMemoryCache({
@@ -116,6 +116,8 @@ const cache = new InMemoryCache({
               id = `${typename}:${responseObject[responseFieldName]}`;
               return true;
             }
+          } else {
+            // Handle fragments using the fragmentMap...
           }
           return false;
         });
@@ -126,13 +128,13 @@ const cache = new InMemoryCache({
 });
 ```
 
-If this edge case seems obscure, you should probably steer clear of implementing your own `keyFields` functions, and instead stick to passing an array of strings for `keyFields`, so that you never have to worry about subtle bugs like these. As a general rule, the `typePolicies` API allows you to configure normalization behavior in one place, when you first create your cache, and does not require you to write your queries differently by aliasing fields (or not) or using directives.
+If this edge case seems obscure, you should probably steer clear of implementing your own `keyFields` functions, and instead stick to passing an array of strings for `keyFields`, so that you never have to worry about subtle bugs like these. As a general rule, the `typePolicies` API allows you to configure normalization behavior in one place, when you first create your cache, and does not require you to write your queries differently by aliasing fields or using directives.
 
 #### Disabling normalization for specific `__typename`s
 
-As you might have noticed above, it's possible to return `null` from the `keyFields` function to disable normalization for a given `__typename`. Alternatively, you can simply provide `keyFields: false` to disable normalization.
+As you might have noticed above, it's possible to return `null` from the `keyFields` function to disable normalization for a given object. Alternatively, you can disable normalization for all objects with a certain `__typename` by assigning it a `TypePolicy` with `keyFields: false`.
 
-Objects that are not normalized will be embedded as ordinary objects within their parent objects in the cache, instead of being hoisted by ID to the top level of the normalized cache.
+Objects that are not normalized will be embedded as ordinary objects within their parent objects in the cache, instead of being hoisted by ID to the top level of the normalized cache. Unlike `apollo-cache-inmemory`, the Apollo Client 3.0 cache never generates fake identifiers for unidentified objects.
 
 Disabling normalization may make sense for transient data such as metrics that are identified by timestamp, and will never receive updates, though they may eventually be replaced by more recent data.
 
@@ -157,3 +159,179 @@ const cache = new InMemoryCache({
 Notice how this function ends up needing to select different keys based on specific `object.__typename` strings anyway, so you might as well have used `keyFields` arrays for the `Product` and `Person` types via `typePolicies`. Also, this code is sensitive to aliasing mistakes, it does nothing to protect against undefined `object` properties, and accidentally using different key fields at different times could cause inconsistencies in the cache.
 
 The `dataIdFromObject` API is meant to ease the transition from Apollo Client 2.x to 3.0, and may be removed in future versions of `@apollo/client`.
+
+## A closer look at the `TypePolicy` type
+
+Although we have already seen several examples of `TypePolicy` objects, those examples only used the `keyFields` option. Here is the rest of the `TypePolicy` type:
+
+```ts
+type TypePolicy = {
+  // Allows defining the primary key fields for this type, either using an
+  // array of field names or a function that returns an arbitrary string.
+  keyFields?: KeySpecifier | KeyFieldsFunction | false;
+
+  // In the rare event that your schema happens to use a different
+  // __typename for the root Query, Mutation, and/or Schema types, you can
+  // express your preferences by enabling one of these options.
+  queryType?: true,
+  mutationType?: true,
+  subscriptionType?: true,
+
+  fields?: {
+    [fieldName: string]:
+      | FieldPolicy<StoreValue>
+      | FieldReadFunction<StoreValue>;
+  }
+};
+
+// Recursive type aliases are coming in TypeScript 3.7, so this isn't the
+// actual type we use, but it's what it should be:
+type KeySpecifier = (string | KeySpecifier)[];
+
+type KeyFieldsFunction = (
+  object: Readonly<StoreObject>,
+  context: {
+    typename: string;
+    selectionSet?: SelectionSetNode;
+    fragmentMap?: FragmentMap;
+  },
+) => string | null | void;
+```
+
+### Overriding root operation types (uncommon)
+
+In addition to `keyFields`, a `TypePolicy` can indicate that it represents the root query, mutation, or subscription type by setting `queryType`, `mutationType`, or `subscriptionType` as `true`:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    UnconventionalRootQuery: {
+      // The RootQueryFragment can only match if the cache knows the __typename
+      // of the root query object.
+      queryType: true,
+    },
+  },
+});
+
+const result = cache.readQuery({
+  query: gql`
+    query {
+      ...RootQueryFragment
+    }
+    fragment RootQueryFragment on UnconventionalRootQuery {
+      field1
+      field2 {
+        subfield
+      }
+    }
+  `,
+});
+
+const equivalentResult = cache.readQuery({
+  query: gql`
+    query {
+      field1
+      field2 {
+        subfield
+      }
+    }
+  `,
+});
+```
+
+The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use the same trick for the outermost selection set of every operation, but the `__typename` of the root query or mutation is almost always simply `"Query"` or `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
+
+Compared to the `__typename`s of entity objects like `Book`s or `Person`s, which are absolutely vital to proper identification and normalization, the `__typename` of the root query or mutation type is not nearly as useful or important, because those types are singletons with only one instance per client.
+
+### The `fields` property
+
+The final property within `TypePolicy` is the `fields` property, which is a map from string field names to `FieldPolicy` objects. The next section covers field policies in depth.
+
+## Field policies
+
+In addition to configuring the identification and normalization of `__typename`-having entity objects, a `TypePolicy` can provide policies for any of the fields supported by that type.
+
+Here are the `FieldPolicy` type and its related types:
+
+```ts
+export type FieldPolicy<TValue> = {
+  keyArgs?: KeySpecifier | KeyArgsFunction;
+  read?: FieldReadFunction<TValue>;
+  merge?: FieldMergeFunction<TValue>;
+};
+
+type KeyArgsFunction = (
+  field: FieldNode,
+  context: {
+    typename: string;
+    variables: Record<string, any>;
+  },
+) => string | null | void;
+
+type FieldReadFunction<TExisting, TResult = TExisting> = (
+  existing: Readonly<TExisting> | undefined,
+  options: FieldFunctionOptions,
+) => TResult;
+
+type FieldMergeFunction<TExisting> = (
+  existing: Readonly<TExisting> | undefined,
+  incoming: Readonly<StoreValue>,
+  options: FieldFunctionOptions,
+) => TExisting;
+
+interface FieldFunctionOptions {
+  args: Record<string, any>;
+  parentObject: Readonly<StoreObject>;
+  field: FieldNode;
+  variables?: Record<string, any>;
+}
+```
+
+In the sections below, we will break down these types with explanations and examples.
+
+### Key arguments
+
+Similar to the `keyFields` property of `TypePolicy` objects, the `keyArgs` property of `FieldPolicy` objects tells the cache which arguments passed to the field are "important" in the sense that their values (together with the enclosing entity object) determine the field's value.
+
+By default, the cache assumes all field arguments might be important, so it stores a separate field value for each unique combination of argument values it has received for that field. This is a safe policy because it ensures field values do not collide with each other if there was any difference in their arguments. However, this policy can also lead to unnecessary copies of field values, as well as missed opportunities for fields to share the same logical value even if their arguments were slightly different.
+
+For example, imagine you have a field that returns a secret value according to a given key, but also requires an access token to authenticate the request:
+
+```ts
+query GetSecret {
+  secret(key: $secretKey, token: $secretAccessToken) {
+    message
+  }
+}
+```
+
+As long as you have a valid access token, the value of this field depends only on the `key`. In other words, you won't get a different secret message back just because you used a different (valid) token.
+
+In cases like this, it would be wasteful and potentially inconsistent to let the access token factor into the storage of the field value, so you should let the cache know that only `key` is "important" by using the `keyArgs` option of the `FieldPolicy` for the `secret` field:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        secret: {
+          keyArgs: ["key"],
+        },
+      },
+    },
+  },
+});
+```
+
+That said, you might be able to assume the `token` is always the same, or you might not be worried about duplicating field values in the cache, so neglecting to specify `keyArgs: ["key"]` probably will not cause any major problems. Use `keyArgs` when it helps.
+
+On the other hand, perhaps you've requested the secret from the server using the access `token`, but you want various components on your page to be able to access the secret using only they `key`, without having to know the `token`. Storing the value in the cache using only the `key` makes this retrieval possible.
+
+### Custom field `read` functions
+
+TODO Example of { book, books }
+TODO Example of textual search
+
+### Custom field `merge` functions
+
+### Pagination example

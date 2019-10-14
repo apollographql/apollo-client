@@ -58,7 +58,7 @@ The Query component accepts the following props. Only `query` and `children` are
 
 <dl>
   <dt><code>query</code>: DocumentNode</dt>
-  <dd>A GraphQL query document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
+  <dd>A GraphQL query document parsed into an AST using the <code>gql</code> function. <strong>Required</strong></dd>
   <dt><code>children</code>: (result: QueryResult) => React.ReactNode</dt>
   <dd>A function returning the UI you want to render based on your query result. <strong>Required</strong></dd>
   <dt><code>variables</code>: { [key: string]: any }</dt>
@@ -130,7 +130,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
 
 <dl>
   <dt><code>mutation</code>: DocumentNode</dt>
-  <dd>A GraphQL mutation document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
+  <dd>A GraphQL mutation document parsed into an AST using the <code>gql</code> function. <strong>Required</strong></dd>
   <dt><code>children</code>: (mutate: Function, result: MutationResult) => React.ReactNode</dt>
   <dd>A function that allows you to trigger a mutation from your UI. <strong>Required</strong></dd>
   <dt><code>variables</code>: { [key: string]: any }</dt>
@@ -187,7 +187,7 @@ The Subscription component accepts the following props. Only `subscription` and 
 
 <dl>
   <dt><code>subscription</code>: DocumentNode</dt>
-  <dd>A GraphQL subscription document parsed into an AST by <code>graphql-tag</code>. <strong>Required</strong></dd>
+  <dd>A GraphQL subscription document parsed into an AST using the <code>gql</code> function. <strong>Required</strong></dd>
   <dt><code>children</code>: (result: SubscriptionResult) => React.ReactNode</dt>
   <dd>A function returning the UI you want to render based on your subscription result. <strong>Required</strong></dd>
   <dt><code>variables</code>: { [key: string]: any }</dt>
@@ -730,7 +730,7 @@ This function returns an `unsubscribe` function handler which can be used to uns
 
 A common practice is to wrap the `subscribeToMore` call within `getDerivedStateFromProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can add it to component state. See the example for more details.
 
-- `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
+- `[document]`: Document is a required property that accepts a GraphQL subscription created with the `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
 - `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#datafetchmoreoptions) callback.
 - `[onError]`: An optional error callback.
@@ -1185,7 +1185,7 @@ If `options.refetchQueries` is an array of strings then Apollo Client will look 
 
 If `options.refetchQueries` is an array of objects then the objects must have two properties:
 
-- `query`: Query is a required property that accepts a GraphQL query created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL query operation that will be executed once the mutation has completed.
+- `query`: Query is a required property that accepts a GraphQL query created with the `gql` template string tag. It should contain a single GraphQL query operation that will be executed once the mutation has completed.
 - `[variables]`: Is an optional object of variables that is required when `query` accepts some variables.
 
 If an array of objects with this shape is specified then Apollo Client will refetch these queries with their variables.

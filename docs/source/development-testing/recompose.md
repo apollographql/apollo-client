@@ -172,7 +172,7 @@ Let's look at the code:
 
 ```js
 import { graphql } from "@apollo/react-hoc";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 import { compose, withState, lifecycle } from "recompose";
 
 const DEFAULT_INTERVAL = 30 * 1000;

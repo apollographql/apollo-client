@@ -13,23 +13,23 @@ with cached data:
 These methods are described in detail below.
 
 > **Important:** You should call these methods on your app's `ApolloClient` object, _not_
-> directly on the cache. By doing so, the `ApolloClient` object broadcasts 
+> directly on the cache. By doing so, the `ApolloClient` object broadcasts
 > cache changes to your entire app, which enables automatic UI updates. If you
 > call these methods directly on the cache instead, changes are _not_ broadcast.
 
-All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` tag from `graphql-tag`.
+All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
 
 ## `readQuery`
 
 The `readQuery` method enables you to run GraphQL queries directly on your
 cache.
 
-If your cache contains all of the data necessary to fulfill a specified query, 
+If your cache contains all of the data necessary to fulfill a specified query,
 `readQuery` returns a data object in the shape of your query, just like a GraphQL
 server does.
 
 If your cache _doesn't_ contain all of the data necessary to fulfill a specified
-query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote 
+query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote
 server.
 
 Pass `readQuery` a GraphQL query string like so:
@@ -67,7 +67,7 @@ const { todo } = client.readQuery({
 });
 ```
 
-> **Do not modify the return value of `readQuery`.** The same object might be 
+> **Do not modify the return value of `readQuery`.** The same object might be
 > returned to multiple components. To update data in the cache, instead create a
 > replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
 
@@ -92,9 +92,9 @@ const todo = client.readFragment({
 });
 ```
 
-The first argument, `id`, is the [unique identifier](/caching/cache-configuration/#assigning-unique-identifiers) 
+The first argument, `id`, is the [unique identifier](/caching/cache-configuration/#assigning-unique-identifiers)
 that was assigned to the object you want to read from the cache. This should match
-the value that your `dataIdFromObject` function assigned to the object when it was 
+the value that your `dataIdFromObject` function assigned to the object when it was
 stored.
 
 For example, let's say you initialize `ApolloClient` like so:
@@ -140,9 +140,9 @@ methods.
 > changes will disappear.
 
 These methods have the same signature as their `read` counterparts, except they
-require an additional `data` variable. 
+require an additional `data` variable.
 
-For example, the following call to `writeFragment` _locally_ updates the `completed` 
+For example, the following call to `writeFragment` _locally_ updates the `completed`
 flag for a `Todo` object with an `id` of `5`:
 
 ```js

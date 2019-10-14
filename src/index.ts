@@ -96,3 +96,7 @@ export { ServerError, throwServerError } from './link/utils/throwServerError';
 /* Utilities */
 
 export { Observable } from './utilities/observables/Observable';
+
+/* Supporting */
+
+export { default as gql } from 'graphql-tag';

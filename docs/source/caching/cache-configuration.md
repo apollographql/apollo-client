@@ -16,10 +16,7 @@ This article covers cache setup and configuration.
 
 ## Installation
 
-As of Apollo Client 3.0, the `InMemoryCache` class is provided by the `@apollo/client` package, so you no longer need to install a separate package after running
-```bash
-npm install @apollo/client
-```
+As of Apollo Client 3.0, the `InMemoryCache` class is provided by the `@apollo/client` package, so you no longer need to install a separate package after running `npm install @apollo/client`.
 
 ## Initializing the cache
 
@@ -37,7 +34,7 @@ The `InMemoryCache` constructor accepts a variety of named options, described be
 
 ## Basic usage
 
-To learn how to use the `InMemoryCache` to read or write data, consult the [Cache interaction](/caching/cache-interaction.md) documentation.
+To learn how to use the `InMemoryCache` to read or write data, consult the [Cache interaction](/caching/cache-interaction) documentation.
 
 ## Configuring the cache
 
@@ -63,43 +60,44 @@ This process effectively reconstructs a partial copy of your data graph on the c
 
 The only scenario in which your application might not benefit from normalization is if you execute a single query during page load and then never make any further queries or mutations. Even then, your single-serving application could probably benefit from persisting the cache to `localStorage`, IndexedDB, or some similar device storage API, in which case normalization would allow efficiently computing the differences between cached data and fresh data, so your UI can rerender only what has changed. In short, GraphQL-aware normalization is your friend and ally in almost any conceivable Apollo Client setup.
 
-### Assigning unique identifiers
+### Computing unique identifiers
 
 #### Default identifiers
 
 By default, the `InMemoryCache` attempts to generate a unique identifier for any object that has a `__typename` by combining the `__typename` string with the object's `id` or `_id` field.
 
-In other words, if you receive a response that contains objects like `{ __typename: 'Task', id: 14, text: 'finish docs' }`, the default ID will look like `Task:14`.
+In other words, if you receive a response that contains objects like `{ __typename: 'Task', id: 14 }`, the default ID will look like `Task:14`.
 
 #### Custom identifiers
 
-If your entity objects use a primary key field (or _fields_) different from `id` or `_id`, you can configure the cache using a `TypePolicy` object with a `keyFields` option:
+If your entity objects use primary key fields different from `id` or `_id`, you can configure the cache using a `TypePolicy` object with a `keyFields` option:
 
 ```ts
 const cache = new InMemoryCache({
   typePolicies: {
     Product: {
-      // In most inventory management systems, a single UPC code uniquely identifies
-      // any product.
+      // In most inventory management systems, a single UPC code uniquely
+      // identifies any product.
       keyFields: ["upc"],
     },
     Person: {
-      // In some user account systems, names or emails alone do not have to be unique,
-      // but the combination of a person's name and email is uniquely identifying.
+      // In some user account systems, names or emails alone do not have to
+      // be unique, but the combination of a person's name and email is
+      // uniquely identifying.
       keyFields: ["name", "email"],
     },
     Book: {
-      // If one of the keyFields is an object with fields of its own, you can include
-      // those nested keyFields by using a nested array of strings:
+      // If one of the keyFields is an object with fields of its own, you can
+      // include those nested keyFields by using a nested array of strings:
       keyFields: ["title", "author", ["name"]],
     },
   },
 });
 ```
 
-In the `Book` example above, the ID computed for any object with `object.__typename === 'Book'` would look something like `'Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}'`, with `title` and `author` always in that order. This ordering is important because other common tools like `JSON.stringify` serialize object properties in the order they were created, which can differ from response object to response object, causing subtle normalization bugs.
+In the `Book` example above, the ID computed for any object with `object.__typename === 'Book'` would be `'Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}'`, with `title` and `author` always in that order. This ordering is important because other common tools like `JSON.stringify` serialize object properties in the order they were created, which can differ from response object to response object, causing subtle normalization bugs.
 
-Note that these `keyFields` strings always refer to the actual field names as defined in your schema, so the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias). This note is important if you ever decide to use a function to implement `keyFields`:
+Note that these `keyFields` strings always refer to the actual field names as defined in your schema, so the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias). This note is important if you ever attempt to use a function to implement `keyFields`:
 
 ```ts
 const cache = new InMemoryCache({
@@ -109,8 +107,9 @@ const cache = new InMemoryCache({
         let id: string | null = null;
         selectionSet.selections.some(selection => {
           if (selection.kind === 'Field') {
-            // If you fail to take aliasing into account, your custom normalization
-            // is likely to break whenever a query contains an alias for key field.
+            // If you fail to take aliasing into account, your custom
+            // normalization is likely to break whenever a query contains
+            // an alias for key field.
             const actualFieldName = selection.name.value;
             const responseFieldName = (selection.alias || selection.name).value;
             if (actualFieldName === 'socialSecurityNumber') {
@@ -127,7 +126,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-If this edge case seems obscure, then you should probably steer clear of implementing your own `keyFields` functions, and instead stick to passing an array of strings for `keyFields`, so that you never have to worry about subtle bugs like these. As a general rule, the `typePolicies` API allows you to configure normalization behavior in one place, when you first create your cache, and does not require you to write your queries differently by aliasing fields (or not) or using directives.
+If this edge case seems obscure, you should probably steer clear of implementing your own `keyFields` functions, and instead stick to passing an array of strings for `keyFields`, so that you never have to worry about subtle bugs like these. As a general rule, the `typePolicies` API allows you to configure normalization behavior in one place, when you first create your cache, and does not require you to write your queries differently by aliasing fields (or not) or using directives.
 
 #### Disabling normalization for specific `__typename`s
 
@@ -143,6 +142,7 @@ If you need to define a single fallback `keyFields` function that isn't specific
 
 ```ts
 import { defaultDataIdFromObject } from '@apollo/client';
+
 const cache = new InMemoryCache({
   dataIdFromObject(responseObject) {
     switch (object.__typename) {
@@ -154,6 +154,6 @@ const cache = new InMemoryCache({
 });
 ```
 
-Notice how this function ends up needing to select different keys based on specific `object.__typename` strings, so you might as well have used `keyFields` arrays for the `Product` and `Person` types via `typePolicies`. Also, this code is sensitive to aliasing mistakes, it does nothing to protect against undefined `object` properties, and accidentally using different key fields at different times could cause inconsistencies in the cache.
+Notice how this function ends up needing to select different keys based on specific `object.__typename` strings anyway, so you might as well have used `keyFields` arrays for the `Product` and `Person` types via `typePolicies`. Also, this code is sensitive to aliasing mistakes, it does nothing to protect against undefined `object` properties, and accidentally using different key fields at different times could cause inconsistencies in the cache.
 
 The `dataIdFromObject` API is meant to ease the transition from Apollo Client 2.x to 3.0, and may be removed in future versions of `@apollo/client`.

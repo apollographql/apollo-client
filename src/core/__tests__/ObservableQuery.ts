@@ -11,7 +11,6 @@ import { mockSingleLink } from '../../__mocks__/mockLinks';
 import { ObservableQuery } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';
 import { QueryManager } from '../QueryManager';
-import { DataStore } from '../../data/store';
 import { ApolloClient } from '../../';
 
 import wrap from '../../__tests__/utils/wrap';
@@ -50,11 +49,9 @@ describe('ObservableQuery', () => {
     return new QueryManager({
       link: link || mockSingleLink(),
       assumeImmutableResults: true,
-      store: new DataStore(
-        new InMemoryCache({
-          addTypename: false,
-        }),
-      ),
+      cache: new InMemoryCache({
+        addTypename: false,
+      }),
     });
   };
 

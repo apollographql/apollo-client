@@ -12,7 +12,6 @@ import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core
 import { QueryManager } from '../../QueryManager';
-import { DataStore } from '../../../data/store';
 
 describe('Subscription lifecycles', () => {
   it('cleans up and reuses data like QueryRecycler wants', done => {
@@ -36,7 +35,7 @@ describe('Subscription lifecycles', () => {
 
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 

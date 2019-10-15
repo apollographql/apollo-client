@@ -8,7 +8,6 @@ import { WatchQueryOptions } from '../../core/watchQueryOptions';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
 import { NetworkStatus } from '../../core/networkStatus';
 
-import { DataStore } from '../../data/store';
 import { ObservableQuery } from '../../core/ObservableQuery';
 
 // Used only for unit testing.
@@ -40,7 +39,7 @@ describe('QueryScheduler', () => {
   it('should throw an error if we try to start polling a non-polling query', () => {
     const queryManager = new QueryManager({
       link: mockSingleLink(),
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const query = gql`
@@ -85,8 +84,7 @@ describe('QueryScheduler', () => {
       result: { data },
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
-
+      cache: new InMemoryCache({ addTypename: false }),
       link: link,
     });
     let timesFired = 0;
@@ -126,7 +124,7 @@ describe('QueryScheduler', () => {
       result: { data },
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link: link,
     });
     let timesFired = 0;
@@ -172,8 +170,7 @@ describe('QueryScheduler', () => {
       result: { data },
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
-
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
     let timesFired = 0;
@@ -218,7 +215,7 @@ describe('QueryScheduler', () => {
       { request: queryOptions, result: { data: data[2] } },
     );
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
     let timesFired = 0;
@@ -265,7 +262,7 @@ describe('QueryScheduler', () => {
       error,
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
     let observableQuery = registerPollingQuery(queryManager, queryOptions);
@@ -308,7 +305,7 @@ describe('QueryScheduler', () => {
       delay: 20000,
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache()),
+      cache: new InMemoryCache(),
       link,
     });
     const observer = registerPollingQuery(queryManager, queryOptions);
@@ -338,7 +335,7 @@ describe('QueryScheduler', () => {
       result: { data },
     });
     const queryManager = new QueryManager<any>({
-      store: new DataStore(new InMemoryCache()),
+      cache: new InMemoryCache(),
       link,
     });
     const queryId = 'fake-id';
@@ -387,7 +384,7 @@ describe('QueryScheduler', () => {
       pollInterval: interval,
     };
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link: mockSingleLink(
         {
           request: { query: query1 },
@@ -438,7 +435,7 @@ describe('QueryScheduler', () => {
       },
     };
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link: mockSingleLink({
         request: { query },
         result: { data },
@@ -498,7 +495,7 @@ describe('QueryScheduler', () => {
       networkResult,
     );
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link: link,
     });
     let timesFired = 0;

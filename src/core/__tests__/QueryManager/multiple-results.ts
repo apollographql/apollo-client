@@ -8,7 +8,6 @@ import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core
 import { QueryManager } from '../../QueryManager';
-import { DataStore } from '../../../data/store';
 
 describe('mutiple results', () => {
   it('allows multiple query results from link', done => {
@@ -39,7 +38,7 @@ describe('mutiple results', () => {
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -96,7 +95,7 @@ describe('mutiple results', () => {
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -165,7 +164,7 @@ describe('mutiple results', () => {
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -236,7 +235,7 @@ describe('mutiple results', () => {
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -311,7 +310,7 @@ describe('mutiple results', () => {
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 

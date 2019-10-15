@@ -1,8 +1,5 @@
 import { QueryManager } from '../core/QueryManager';
-
 import { mockSingleLink, MockedResponse } from './mockLinks';
-
-import { DataStore } from '../data/store';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 
 // Helper method for the tests that construct a query manager out of a
@@ -10,6 +7,6 @@ import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 export default (...mockedResponses: MockedResponse[]) => {
   return new QueryManager({
     link: mockSingleLink(...mockedResponses),
-    store: new DataStore(new InMemoryCache({ addTypename: false })),
+    cache: new InMemoryCache({ addTypename: false }),
   });
 };

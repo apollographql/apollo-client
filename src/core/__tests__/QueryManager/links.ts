@@ -11,7 +11,6 @@ import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core
 import { QueryManager } from '../../QueryManager';
-import { DataStore } from '../../../data/store';
 
 describe('Link interactions', () => {
   it('includes the cache on the context for eviction links', done => {
@@ -52,7 +51,7 @@ describe('Link interactions', () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -95,7 +94,7 @@ describe('Link interactions', () => {
 
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -166,7 +165,7 @@ describe('Link interactions', () => {
 
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -245,7 +244,7 @@ describe('Link interactions', () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -283,7 +282,7 @@ describe('Link interactions', () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -326,23 +325,21 @@ describe('Link interactions', () => {
 
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(
-        new InMemoryCache({
-          cacheRedirects: {
-            Query: {
-              book(_, { id }, context) {
-                expect(context.getCacheKey).toBeDefined();
-                const cacheKey = context.getCacheKey({
-                  id,
-                  __typename: 'Book',
-                });
-                expect(cacheKey.__ref).toEqual(`Book:${id}`);
-                return cacheKey;
-              },
+      cache: new InMemoryCache({
+        cacheRedirects: {
+          Query: {
+            book(_, { id }, context) {
+              expect(context.getCacheKey).toBeDefined();
+              const cacheKey = context.getCacheKey({
+                id,
+                __typename: 'Book',
+              });
+              expect(cacheKey.__ref).toEqual(`Book:${id}`);
+              return cacheKey;
             },
           },
-        }),
-      ),
+        },
+      }),
     });
 
     await queryManager.query({ query });

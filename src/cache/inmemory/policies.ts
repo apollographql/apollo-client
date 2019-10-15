@@ -211,7 +211,7 @@ export class Policies {
 
     let id: string | null;
 
-    const policy = typename && this.typePolicies[typename];
+    const policy = this.getTypePolicy(typename, false);
     if (policy && policy.keyFn) {
       id = policy.keyFn.call(this, object, context);
     } else {

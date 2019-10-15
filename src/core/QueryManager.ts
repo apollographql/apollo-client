@@ -259,10 +259,9 @@ export class QueryManager<TStore> {
 
         error(err: Error) {
           self.mutationStore.markMutationError(mutationId, err);
-          self.markMutationComplete({
-            mutationId,
-            optimisticResponse,
-          });
+          if (optimisticResponse) {
+            self.cache.removeOptimistic(mutationId);
+          }
           self.broadcastQueries();
           self.setQuery(mutationId, () => ({ document: null }));
           reject(
@@ -277,10 +276,9 @@ export class QueryManager<TStore> {
             self.mutationStore.markMutationError(mutationId, error);
           }
 
-          self.markMutationComplete({
-            mutationId,
-            optimisticResponse,
-          });
+          if (optimisticResponse) {
+            self.cache.removeOptimistic(mutationId);
+          }
 
           self.broadcastQueries();
 
@@ -446,18 +444,6 @@ export class QueryManager<TStore> {
           tryFunctionOrLogError(() => update(c, mutation.result));
         }
       });
-    }
-  }
-
-  private markMutationComplete({
-    mutationId,
-    optimisticResponse,
-  }: {
-    mutationId: string;
-    optimisticResponse?: any;
-  }) {
-    if (optimisticResponse) {
-      this.cache.removeOptimistic(mutationId);
     }
   }
 

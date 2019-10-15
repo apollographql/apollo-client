@@ -42,6 +42,7 @@ export interface PresetConfig {
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: LocalStateFragmentMatcher;
+  queryDeduplication: boolean;
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're
@@ -102,6 +103,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       resolvers,
       typeDefs,
       fragmentMatcher,
+      queryDeduplication
     } = config;
 
     let { cache } = config;
@@ -196,6 +198,7 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       resolvers: activeResolvers,
       typeDefs: activeTypeDefs,
       fragmentMatcher: activeFragmentMatcher,
+      queryDeduplication
     } as any);
   }
 }

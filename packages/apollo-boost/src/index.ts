@@ -42,7 +42,7 @@ export interface PresetConfig {
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: LocalStateFragmentMatcher;
-  queryDeduplication: boolean;
+  queryDeduplication?: boolean;
 }
 
 // Yes, these are the exact same as the `PresetConfig` interface. We're

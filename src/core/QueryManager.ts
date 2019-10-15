@@ -207,14 +207,28 @@ export class QueryManager<TStore> {
       variables,
     );
 
-    this.markMutationInit({
-      mutationId,
-      document: mutation,
-      variables,
-      updateQueries: generateUpdateQueriesInfo(),
-      update: updateWithProxyFn,
-      optimisticResponse,
-    });
+    if (optimisticResponse) {
+      const optimistic = typeof optimisticResponse === 'function'
+        ? optimisticResponse(variables)
+        : optimisticResponse;
+
+      this.cache.recordOptimisticTransaction(c => {
+        const { cache } = this;
+        this.cache = c;
+        try {
+          this.markMutationResult({
+            mutationId: mutationId,
+            result: { data: optimistic },
+            document: mutation,
+            variables: variables,
+            updateQueries: generateUpdateQueriesInfo(),
+            update: updateWithProxyFn,
+          });
+        } finally {
+          this.cache = cache;
+        }
+      }, mutationId);
+    }
 
     this.broadcastQueries();
 
@@ -342,42 +356,6 @@ export class QueryManager<TStore> {
         },
       });
     });
-  }
-
-  private markMutationInit(mutation: {
-    mutationId: string;
-    document: DocumentNode;
-    variables: any;
-    updateQueries: { [queryId: string]: QueryWithUpdater };
-    update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
-    optimisticResponse: Object | Function | undefined;
-  }) {
-    if (mutation.optimisticResponse) {
-      let optimistic: Object;
-      if (typeof mutation.optimisticResponse === 'function') {
-        optimistic = mutation.optimisticResponse(mutation.variables);
-      } else {
-        optimistic = mutation.optimisticResponse;
-      }
-
-      this.cache.recordOptimisticTransaction(c => {
-        const orig = this.cache;
-        this.cache = c;
-
-        try {
-          this.markMutationResult({
-            mutationId: mutation.mutationId,
-            result: { data: optimistic },
-            document: mutation.document,
-            variables: mutation.variables,
-            updateQueries: mutation.updateQueries,
-            update: mutation.update,
-          });
-        } finally {
-          this.cache = orig;
-        }
-      }, mutation.mutationId);
-    }
   }
 
   private markMutationResult(mutation: {

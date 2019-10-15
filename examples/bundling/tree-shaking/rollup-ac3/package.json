@@ -30,7 +30,6 @@
   "dependencies": {
     "@apollo/client": "file:../../../../",
     "graphql": "^14.5.8",
-    "graphql-tag": "^2.10.1",
     "react": "file:../../../../node_modules/react",
     "react-dom": "file:../../../../node_modules/react-dom"
   },

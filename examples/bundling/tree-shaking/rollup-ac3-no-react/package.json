@@ -29,8 +29,7 @@
   },
   "dependencies": {
     "@apollo/client": "file:../../../../",
-    "graphql": "^14.5.8",
-    "graphql-tag": "^2.10.1"
+    "graphql": "^14.5.8"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.6.3",

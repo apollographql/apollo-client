@@ -1,5 +1,4 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
-import gql from "graphql-tag";
+import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 
 const ALL_COUNTRIES = gql`
   query AllCountries {

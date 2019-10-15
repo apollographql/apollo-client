@@ -1079,7 +1079,17 @@ export class QueryManager<TStore> {
         false,
       ).map(result => {
         if (!fetchPolicy || fetchPolicy !== 'no-cache') {
-          this.markSubscriptionResult(result, query, variables);
+          // the subscription interface should handle not sending us results we no longer subscribe to.
+          // XXX I don't think we ever send in an object with errors, but we might in the future...
+          if (!graphQLResultHasError(result)) {
+            this.cache.write({
+              query,
+              result: result.data,
+              dataId: 'ROOT_SUBSCRIPTION',
+              variables: variables,
+            });
+          }
+
           this.broadcastQueries();
         }
 
@@ -1109,23 +1119,6 @@ export class QueryManager<TStore> {
     }
 
     return makeObservable(variables);
-  }
-
-  private markSubscriptionResult(
-    result: ExecutionResult,
-    document: DocumentNode,
-    variables: any,
-  ) {
-    // the subscription interface should handle not sending us results we no longer subscribe to.
-    // XXX I don't think we ever send in an object with errors, but we might in the future...
-    if (!graphQLResultHasError(result)) {
-      this.cache.write({
-        result: result.data,
-        dataId: 'ROOT_SUBSCRIPTION',
-        query: document,
-        variables: variables,
-      });
-    }
   }
 
   public stopQuery(queryId: string) {

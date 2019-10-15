@@ -16,6 +16,7 @@ const globals = {
   optimism: 'optimism',
   'graphql/language/visitor': 'visitor',
   'graphql/execution/execute': 'execute',
+  'graphql-tag': 'graphqlTag',
   'fast-json-stable-stringify': 'stringify',
   '@wry/equality': 'wryEquality',
   graphql: 'graphql',

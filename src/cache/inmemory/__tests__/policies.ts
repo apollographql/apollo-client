@@ -740,5 +740,175 @@ describe("type policies", function () {
         },
       });
     });
+
+    it("runs nested merge functions as well as ancestors", function () {
+      let eventMergeCount = 0;
+      let attendeeMergeCount = 0;
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Event: {
+            fields: {
+              attendees: {
+                merge(existing: any[], incoming: any[]) {
+                  ++eventMergeCount;
+                  expect(Array.isArray(incoming)).toBe(true);
+                  return existing ? existing.concat(incoming) : incoming;
+                },
+              },
+            },
+          },
+
+          Attendee: {
+            fields: {
+              events: {
+                merge(existing: any[], incoming: any[]) {
+                  ++attendeeMergeCount;
+                  expect(Array.isArray(incoming)).toBe(true);
+                  return existing ? existing.concat(incoming) : incoming;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            eventsToday {
+              name
+              attendees {
+                name
+                events {
+                  time
+                }
+              }
+            }
+          }
+        `,
+        data: {
+          eventsToday: [{
+            __typename: "Event",
+            id: 123,
+            name: "One-person party",
+            time: "noonish",
+            attendees: [{
+              __typename: "Attendee",
+              id: 234,
+              name: "Ben Newman",
+              events: [
+                { __typename: "Event", id: 123 },
+              ],
+            }],
+          }],
+        },
+      });
+
+      expect(eventMergeCount).toBe(1);
+      expect(attendeeMergeCount).toBe(1);
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          eventsToday: [
+            { __ref: "Event:123" },
+          ],
+        },
+        "Event:123": {
+          __typename: "Event",
+          name: "One-person party",
+          attendees: [
+            { __ref: "Attendee:234" },
+          ],
+        },
+        "Attendee:234": {
+          __typename: "Attendee",
+          name: "Ben Newman",
+          events: [
+            { __ref: "Event:123" },
+          ],
+        },
+      });
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            people {
+              name
+              events {
+                time
+                attendees {
+                  name
+                }
+              }
+            }
+          }
+        `,
+        data: {
+          people: [{
+            __typename: "Attendee",
+            id: 234,
+            name: "Ben Newman",
+            events: [{
+              __typename: "Event",
+              id: 345,
+              name: "Rooftop dog party",
+              attendees: [{
+                __typename: "Attendee",
+                id: 456,
+                name: "Inspector Beckett",
+              }, {
+                __typename: "Attendee",
+                id: 234,
+              }],
+            }],
+          }],
+        },
+      });
+
+      expect(eventMergeCount).toBe(2);
+      expect(attendeeMergeCount).toBe(2);
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          eventsToday: [
+            { __ref: "Event:123" },
+          ],
+          people: [
+            { __ref: "Attendee:234" },
+          ],
+        },
+        "Event:123": {
+          __typename: "Event",
+          name: "One-person party",
+          attendees: [
+            { __ref: "Attendee:234" },
+          ],
+        },
+        "Event:345": {
+          __typename: "Event",
+          attendees: [
+            { __ref: "Attendee:456" },
+            { __ref: "Attendee:234" },
+          ],
+        },
+        "Attendee:234": {
+          __typename: "Attendee",
+          name: "Ben Newman",
+          events: [
+            { __ref: "Event:123" },
+            { __ref: "Event:345" },
+          ],
+        },
+        "Attendee:456": {
+          __typename: "Attendee",
+          name: "Inspector Beckett",
+        },
+      });
+
+      expect(cache.gc()).toEqual([]);
+    });
   });
 });

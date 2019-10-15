@@ -35,8 +35,6 @@ import { NormalizedCache, StoreObject } from './types';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies, StoreValueMergeFunction } from './policies';
 
-const { hasOwnProperty } = Object.prototype;
-
 export type WriteContext = {
   readonly store: NormalizedCache;
   readonly written: {
@@ -54,11 +52,10 @@ type StoreObjectMergeFunction = (
   overrides?: MergeOverrides,
 ) => StoreObject;
 
-type MergeOverrides = Record<string | number,
-  | StoreValueMergeFunction
-  // TODO This should be replaced with MergeOverrides when TypeScript 3.7+
-  // starts supporting recursive type aliases.
-  | Record<string | number, any>>;
+type MergeOverrides = Record<string, {
+  merge?: StoreValueMergeFunction;
+  child?: MergeOverrides;
+}>;
 
 export interface StoreWriterConfig {
   policies: Policies;
@@ -240,10 +237,12 @@ export class StoreWriter {
             context.variables,
           );
 
-          const override = merge || processed.mergeOverrides;
-          if (override) {
+          if (merge || processed.mergeOverrides) {
             mergeOverrides = mergeOverrides || Object.create(null);
-            mergeOverrides[storeFieldName] = override;
+            mergeOverrides[storeFieldName] = context.mergeFields(
+              mergeOverrides[storeFieldName],
+              { merge, child: processed.mergeOverrides },
+            ) as MergeOverrides[string];
           }
 
           mergedFields = context.mergeFields(mergedFields, {
@@ -364,15 +363,16 @@ function walkWithMergeOverrides(
   overrides: MergeOverrides,
 ): void {
   Object.keys(overrides).forEach(name => {
-    const override = overrides[name];
+    const { merge, child } = overrides[name];
     const existingValue: any = existingObject && existingObject[name];
     const incomingValue: any = incomingObject && incomingObject[name];
-    if (typeof override === "function") {
-      incomingObject[name] = override(existingValue, incomingValue, existingObject);
-    } else if (override && typeof override === "object") {
-      // StoreObjects can have multiple layers of nested objects/arrays,
-      // each layer with its own nested fields and override functions.
-      walkWithMergeOverrides(existingValue, incomingValue, override);
+    if (child) {
+      // StoreObjects can have multiple layers of child objects/arrays,
+      // each layer with its own child fields and override functions.
+      walkWithMergeOverrides(existingValue, incomingValue, child);
+    }
+    if (merge) {
+      incomingObject[name] = merge(existingValue, incomingValue, existingObject);
     }
   });
 }
@@ -394,7 +394,8 @@ const storeObjectReconciler: ReconcilerFunction<[
   const existing = existingObject[property];
   const incoming = incomingObject[property];
 
-  if (mergeOverrides && hasOwnProperty.call(mergeOverrides, property)) {
+  const mergeChildObj = mergeOverrides && mergeOverrides[property];
+  if (mergeChildObj && typeof mergeChildObj.merge === "function") {
     // If this property was overridden by a custom merge function, then
     // its merged value has already been determined, so we should return
     // incoming without recursively merging it into existing.
@@ -421,13 +422,7 @@ const storeObjectReconciler: ReconcilerFunction<[
       return incoming;
     }
 
-    let childMergeOverrides: MergeOverrides;
-    if (mergeOverrides) {
-      const child = mergeOverrides[property];
-      if (typeof child === "object") {
-        childMergeOverrides = child;
-      }
-    }
+    const childMergeOverrides = mergeChildObj && mergeChildObj.child;
 
     if (isReference(incoming)) {
       if (isReference(existing)) {

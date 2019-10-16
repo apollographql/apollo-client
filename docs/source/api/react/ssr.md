@@ -1,5 +1,5 @@
 ---
-title: React - SSR
+title: SSR
 description: Apollo Client React server side rendering API
 ---
 

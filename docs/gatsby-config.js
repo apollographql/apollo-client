@@ -74,13 +74,29 @@ module.exports = {
             'networking/network-layer',
             'networking/authentication',
           ],
-          'Apollo Client API': [
-            'api/core',
-            'api/react-hooks',
-            'api/react-testing',
-            'api/react-ssr',
-            'api/react-components',
-            'api/react-hoc'
+          'API - Core': [
+            'api/core/ApolloClient',
+            'api/core/ObservableQuery'
+          ],
+          'API - React': [
+            'api/react/hooks',
+            'api/react/testing',
+            'api/react/ssr',
+            'api/react/components',
+            'api/react/hoc'
+          ],
+          'API - Link': [
+            'api/link/intro',
+            'api/link/concepts',
+            'api/link/apollo-link-state',
+            'api/link/apollo-link-rest',
+            'api/link/apollo-link-error',
+            'api/link/apollo-link-context',
+            'api/link/apollo-link-retry',
+            'api/link/apollo-link-ws',
+            'api/link/apollo-link-batch-http',
+            'api/link/apollo-link-dedup',
+            'api/link/apollo-link-schema'
           ],
           Migrating: [
             'migrating/hooks-migration',

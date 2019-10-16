@@ -1,9 +1,9 @@
 ---
-title: 'React - HOC (DEPRECATED)'
+title: 'HOC (DEPRECATED)'
 description: Deprecated React Apollo HOC API
 ---
 
-import ApolloProvider from '../../shared/apollo-provider.mdx';
+import ApolloProvider from '../../../shared/apollo-provider.mdx';
 
 > **NOTE:** React Apollo's higher order components have been deprecated. They will continue to receive bug fixes until March 2020, after which they will no longer be maintained by Apollo.
 
@@ -57,7 +57,7 @@ const TodoAppWithData = withTodoAppQuery(TodoApp);
 export default TodoAppWithData;
 ```
 
-The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](/api/react-hooks/#apolloprovider) component higher up in your tree to provide an [`ApolloClient`](/api/core/) instance that will be used to fetch your data.
+The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](/api/react/hooks/#apolloprovider) component higher up in your tree to provide an [`ApolloClient`](/api/core/) instance that will be used to fetch your data.
 
 The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](/data/queries/), a [mutation](/data/mutations/), or a [subscription](/data/subscriptions/). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
@@ -898,7 +898,7 @@ export default graphql(gql`
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
 
-`options.update` takes two arguments. The first is an instance of a `DataProxy` object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](/api/react-components/#render-prop-function-1) section for more details).
+`options.update` takes two arguments. The first is an instance of a `DataProxy` object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](/api/react/components/#render-prop-function-1) section for more details).
 
 In order to change the data in your store call methods on your `DataProxy` instance like [`writeQuery` and `writeFragment`](/caching/cache-interaction/#writequery-and-writefragment). This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
 
@@ -1074,7 +1074,7 @@ A simple enhancer which provides direct access to your [`ApolloClient`](/api/cor
 
 If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphqlquery-configcomponent) the answer is that most of the time you will want to use `graphql()`. `graphql()` provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
 
-This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](/api/react-hooks/#apolloprovider) component higher up in your tree to actually provide the client.
+This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](/api/react/hooks/#apolloprovider) component higher up in your tree to actually provide the client.
 
 **Example:**
 

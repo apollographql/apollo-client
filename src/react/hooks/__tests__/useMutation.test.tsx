@@ -268,7 +268,7 @@ describe('useMutation Hook', () => {
   });
 
   describe('Optimistic response', () => {
-    it('should support optimistic response handling', async () => {
+    it('should support optimistic response handling', async () => new Promise((resolve, reject) => {
       const optimisticResponse = {
         __typename: 'Mutation',
         createTodo: {
@@ -293,7 +293,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const link = mockSingleLink(...mocks);
+      const link = mockSingleLink(reject, ...mocks);
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -341,7 +341,7 @@ describe('useMutation Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(3);
-      });
-    });
+      }).then(resolve, reject);
+    }));
   });
 });

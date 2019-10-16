@@ -4,9 +4,12 @@ import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 
 // Helper method for the tests that construct a query manager out of a
 // a list of mocked responses for a mocked network interface.
-export default (...mockedResponses: MockedResponse[]) => {
+export default (
+  reject: (reason: any) => any,
+  ...mockedResponses: MockedResponse[]
+) => {
   return new QueryManager({
-    link: mockSingleLink(...mockedResponses),
+    link: mockSingleLink(reject, ...mockedResponses),
     cache: new InMemoryCache({ addTypename: false }),
   });
 };

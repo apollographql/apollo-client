@@ -25,9 +25,9 @@ describe('updateQuery on a simple query', () => {
     },
   };
 
-  it('triggers new result from updateQuery', () => {
+  it('triggers new result from updateQuery', () => new Promise((resolve, reject) => {
     let latestResult: any = null;
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result,
     });
@@ -58,8 +58,9 @@ describe('updateQuery on a simple query', () => {
         });
       })
       .then(() => expect(latestResult.data.entry.value).toBe(2))
-      .then(() => sub.unsubscribe());
-  });
+      .then(() => sub.unsubscribe())
+      .then(resolve, reject);
+  }));
 });
 
 describe('updateQuery on a query with required and optional variables', () => {
@@ -87,9 +88,9 @@ describe('updateQuery on a query with required and optional variables', () => {
     },
   };
 
-  it('triggers new result from updateQuery', () => {
+  it('triggers new result from updateQuery', () => new Promise((resolve, reject) => {
     let latestResult: any = null;
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: {
         query,
         variables,
@@ -124,8 +125,9 @@ describe('updateQuery on a query with required and optional variables', () => {
         });
       })
       .then(() => expect(latestResult.data.entry.value).toBe(2))
-      .then(() => sub.unsubscribe());
-  });
+      .then(() => sub.unsubscribe())
+      .then(resolve, reject);
+  }));
 });
 
 describe('fetchMore on an observable query', () => {
@@ -199,8 +201,12 @@ describe('fetchMore on an observable query', () => {
   let link: any;
   let sub: any;
 
-  function setup(...mockedResponses: any[]) {
+  function setup(
+    reject: (reason: any) => any,
+    ...mockedResponses: any[]
+  ) {
     link = mockSingleLink(
+      reject,
       {
         request: {
           query,
@@ -235,9 +241,9 @@ describe('fetchMore on an observable query', () => {
     sub = null;
   }
 
-  it('triggers new result with new variables', () => {
+  it('triggers new result with new variables', () => new Promise((resolve, reject) => {
     latestResult = null;
-    return setup({
+    return setup(reject, {
       request: {
         query,
         variables: variablesMore,
@@ -270,12 +276,13 @@ describe('fetchMore on an observable query', () => {
           expect(comments[i - 1].text).toEqual(`comment ${i}`);
         }
         unsetup();
-      });
-  });
+      })
+      .then(resolve, reject);
+  }));
 
-  it('basic fetchMore results merging', () => {
+  it('basic fetchMore results merging', () => new Promise((resolve, reject) => {
     latestResult = null;
-    return setup({
+    return setup(reject, {
       request: {
         query,
         variables: variablesMore,
@@ -304,12 +311,13 @@ describe('fetchMore on an observable query', () => {
           expect(comments[i - 1].text).toEqual(`comment ${i}`);
         }
         unsetup();
-      });
-  });
+      })
+      .then(resolve, reject);
+  }));
 
-  it('fetching more with a different query', () => {
+  it('fetching more with a different query', () => new Promise((resolve, reject) => {
     latestResult = null;
-    return setup({
+    return setup(reject, {
       request: {
         query: query2,
         variables: variables2,
@@ -340,11 +348,13 @@ describe('fetchMore on an observable query', () => {
           expect(comments[i - 1].text).toEqual(`new comment ${i}`);
         }
         unsetup();
-      });
-  });
+      })
+      .then(resolve, reject);
+  }));
 
-  it('will set the `network` status to `fetchMore`', done => {
+  it('will set the `network` status to `fetchMore`', () => new Promise((resolve, reject) => {
     link = mockSingleLink(
+      reject,
       { request: { query, variables }, result, delay: 5 },
       {
         request: { query, variables: variablesMore },
@@ -394,20 +404,21 @@ describe('fetchMore on an observable query', () => {
           case 3:
             expect(networkStatus).toBe(NetworkStatus.ready);
             expect((data as any).entry.comments.length).toBe(20);
-            done();
+            resolve();
             break;
           default:
-            done.fail(new Error('`next` called too many times'));
+            reject(new Error('`next` called too many times'));
         }
       },
-      error: error => done.fail(error),
-      complete: () => done.fail(new Error('Should not have completed')),
+      error: error => reject(error),
+      complete: () => reject(new Error('Should not have completed')),
     });
-  });
+  }));
 
-  it('will not get an error from `fetchMore` if thrown', done => {
+  it('will not get an error from `fetchMore` if thrown', () => new Promise((resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
+      reject,
       { request: { query, variables }, result, delay: 5 },
       {
         request: { query, variables: variablesMore },
@@ -457,25 +468,25 @@ describe('fetchMore on an observable query', () => {
           default:
             expect(networkStatus).toBe(NetworkStatus.ready);
             expect((data as any).entry.comments.length).toBe(10);
-            done();
+            resolve();
             break;
         }
       },
       error: () => {
-        done.fail(new Error('`error` called when it wasn’t supposed to be.'));
+        reject(new Error('`error` called when it wasn’t supposed to be.'));
       },
       complete: () => {
-        done.fail(
+        reject(
           new Error('`complete` called when it wasn’t supposed to be.'),
         );
       },
     });
-  });
+  }));
 
-  it('will not leak fetchMore query', () => {
+  it('will not leak fetchMore query', () => new Promise((resolve, reject) => {
     latestResult = null;
     var beforeQueryCount;
-    return setup({
+    return setup(reject, {
       request: {
         query,
         variables: variablesMore,
@@ -504,8 +515,9 @@ describe('fetchMore on an observable query', () => {
         ).length;
         expect(afterQueryCount).toBe(beforeQueryCount);
         unsetup();
-      });
-  });
+      })
+      .then(resolve, reject);
+  }));
 });
 
 describe('fetchMore on an observable query with connection', () => {
@@ -568,8 +580,12 @@ describe('fetchMore on an observable query with connection', () => {
   let link: any;
   let sub: any;
 
-  function setup(...mockedResponses: any[]) {
+  function setup(
+    reject: (reason: any) => any,
+    ...mockedResponses: any[]
+  ) {
     link = mockSingleLink(
+      reject,
       {
         request: {
           query: transformedQuery,
@@ -604,9 +620,9 @@ describe('fetchMore on an observable query with connection', () => {
     sub = null;
   }
 
-  it('fetchMore with connection results merging', () => {
+  it('fetchMore with connection results merging', () => new Promise((resolve, reject) => {
     latestResult = null;
-    return setup({
+    return setup(reject, {
       request: {
         query: transformedQuery,
         variables: variablesMore,
@@ -635,11 +651,13 @@ describe('fetchMore on an observable query with connection', () => {
           expect(comments[i - 1].text).toBe(`comment ${i}`);
         }
         unsetup();
-      });
-  });
+      })
+      .then(resolve, reject);
+  }));
 
-  it('will set the network status to `fetchMore`', done => {
+  it('will set the network status to `fetchMore`', () => new Promise((resolve, reject) => {
     link = mockSingleLink(
+      reject,
       { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
         request: { query: transformedQuery, variables: variablesMore },
@@ -689,20 +707,21 @@ describe('fetchMore on an observable query with connection', () => {
           case 3:
             expect(networkStatus).toBe(NetworkStatus.ready);
             expect((data as any).entry.comments.length).toBe(20);
-            done();
+            resolve();
             break;
           default:
-            done.fail(new Error('`next` called too many times'));
+            reject(new Error('`next` called too many times'));
         }
       },
-      error: error => done.fail(error),
-      complete: () => done.fail(new Error('Should not have completed')),
+      error: error => reject(error),
+      complete: () => reject(new Error('Should not have completed')),
     });
-  });
+  }));
 
-  it('will not get an error from `fetchMore` if thrown', done => {
+  it('will not get an error from `fetchMore` if thrown', () => new Promise((resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
+      reject,
       { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
         request: { query: transformedQuery, variables: variablesMore },
@@ -752,17 +771,17 @@ describe('fetchMore on an observable query with connection', () => {
           default:
             expect(networkStatus).toBe(NetworkStatus.ready);
             expect((data as any).entry.comments.length).toBe(10);
-            done();
+            resolve();
         }
       },
       error: () => {
-        done.fail(new Error('`error` called when it wasn’t supposed to be.'));
+        reject(new Error('`error` called when it wasn’t supposed to be.'));
       },
       complete: () => {
-        done.fail(
+        reject(
           new Error('`complete` called when it wasn’t supposed to be.'),
         );
       },
     });
-  });
+  }));
 });

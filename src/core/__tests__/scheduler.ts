@@ -36,9 +36,9 @@ function eachPollingQuery(
 }
 
 describe('QueryScheduler', () => {
-  it('should throw an error if we try to start polling a non-polling query', () => {
+  it('should throw an error if we try to start polling a non-polling query', () => new Promise((resolve, reject) => {
     const queryManager = new QueryManager({
-      link: mockSingleLink(),
+      link: mockSingleLink(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -50,15 +50,15 @@ describe('QueryScheduler', () => {
         }
       }
     `;
-    const queryOptions: WatchQueryOptions = {
-      query,
-    };
-    expect(() => {
-      queryManager.startPollingQuery(queryOptions, null as never);
-    }).toThrow();
-  });
 
-  it('should correctly start polling queries', done => {
+    expect(() => {
+      queryManager.startPollingQuery({ query }, null as never);
+    }).toThrow();
+
+    resolve();
+  }));
+
+  it('should correctly start polling queries', () => new Promise((resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -79,7 +79,7 @@ describe('QueryScheduler', () => {
       pollInterval: 80,
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
     });
@@ -94,11 +94,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toBeGreaterThanOrEqual(0);
       queryManager.stop();
-      done();
+      resolve();
     }, 120);
-  });
+  }));
 
-  it('should correctly stop polling queries', done => {
+  it('should correctly stop polling queries', () => new Promise((resolve, reject) => {
     const query = gql`
       query {
         someAlias: author {
@@ -117,7 +117,7 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 20,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: {
         query: queryOptions.query,
       },
@@ -142,11 +142,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toEqual(1);
       queryManager.stop();
-      done();
+      resolve();
     }, 170);
-  });
+  }));
 
-  it('should register a query and return an observable that can be unsubscribed', done => {
+  it('should register a query and return an observable that can be unsubscribed', () => new Promise((resolve, reject) => {
     const myQuery = gql`
       query {
         someAuthorAlias: author {
@@ -165,7 +165,7 @@ describe('QueryScheduler', () => {
       query: myQuery,
       pollInterval: 20,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
     });
@@ -186,11 +186,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toEqual(1);
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
-  });
+  }));
 
-  it('should register a query and return an observable that can adjust interval', done => {
+  it('should register a query and return an observable that can adjust interval', () => new Promise((resolve, reject) => {
     const myQuery = gql`
       query {
         someAuthorAlias: author {
@@ -210,6 +210,7 @@ describe('QueryScheduler', () => {
       pollInterval: 20,
     };
     const link = mockSingleLink(
+      reject,
       { request: queryOptions, result: { data: data[0] } },
       { request: queryOptions, result: { data: data[1] } },
       { request: queryOptions, result: { data: data[2] } },
@@ -239,11 +240,11 @@ describe('QueryScheduler', () => {
       expect(timesFired).toEqual(2);
       subscription.unsubscribe();
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
-  });
+  }));
 
-  it('should handle network errors on polling queries correctly', done => {
+  it('should handle network errors on polling queries correctly', () => new Promise((resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -257,7 +258,7 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 80,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       error,
     });
@@ -269,7 +270,7 @@ describe('QueryScheduler', () => {
     const subscription = observableQuery.subscribe({
       next() {
         queryManager.stop();
-        done.fail(
+        reject(
           new Error('Observer provided a result despite a network error.'),
         );
       },
@@ -281,12 +282,12 @@ describe('QueryScheduler', () => {
         });
         subscription.unsubscribe();
         queryManager.stop();
-        done();
+        resolve();
       },
     });
-  });
+  }));
 
-  it('should not fire another query if one with the same id is in flight', done => {
+  it('should not fire another query if one with the same id is in flight', () => new Promise((resolve, reject) => {
     const query = gql`
       query B {
         fortuneCookie
@@ -299,7 +300,7 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
       delay: 20000,
@@ -313,11 +314,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       subscription.unsubscribe();
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
-  });
+  }));
 
-  it('should add a query to an interval correctly', () => {
+  it('should add a query to an interval correctly', () => new Promise((resolve, reject) => {
     const query = gql`
       query {
         fortuneCookie
@@ -330,7 +331,7 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10000,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
     });
@@ -349,9 +350,11 @@ describe('QueryScheduler', () => {
     });
     expect(count).toEqual(1);
     queryManager.stop();
-  });
 
-  it('should add multiple queries to an interval correctly', () => {
+    resolve();
+  }));
+
+  it('should add multiple queries to an interval correctly', () => new Promise((resolve, reject) => {
     const query1 = gql`
       query {
         fortuneCookie
@@ -386,6 +389,7 @@ describe('QueryScheduler', () => {
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
       link: mockSingleLink(
+        reject,
         {
           request: { query: query1 },
           result: { data: data1 },
@@ -417,9 +421,11 @@ describe('QueryScheduler', () => {
     });
     expect(count).toEqual(2);
     queryManager.stop();
-  });
 
-  it('should remove queries from the interval list correctly', done => {
+    resolve();
+  }));
+
+  it('should remove queries from the interval list correctly', () => new Promise((resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -436,7 +442,7 @@ describe('QueryScheduler', () => {
     };
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
-      link: mockSingleLink({
+      link: mockSingleLink(reject, {
         request: { query },
         result: { data },
       }),
@@ -461,11 +467,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toEqual(1);
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
-  });
+  }));
 
-  it('should correctly start new polling query after removing old one', done => {
+  it('should correctly start new polling query after removing old one', () => new Promise((resolve, reject) => {
     const query = gql`
       query {
         someAlias: author {
@@ -489,6 +495,7 @@ describe('QueryScheduler', () => {
       result: { data },
     };
     const link = mockSingleLink(
+      reject,
       networkResult,
       networkResult,
       networkResult,
@@ -513,8 +520,8 @@ describe('QueryScheduler', () => {
       setTimeout(() => {
         expect(timesFired).toBeGreaterThanOrEqual(1);
         queryManager.stop();
-        done();
+        resolve();
       }, 80);
     }, 200);
-  });
+  }));
 });

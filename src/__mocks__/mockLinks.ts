@@ -15,9 +15,10 @@ interface MockApolloLink extends ApolloLink {
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
 export function mockSingleLink(
+  reject: (reason: any) => any,
   ...mockedResponses: MockedResponse[]
 ): MockApolloLink {
-  return new MockLink(mockedResponses);
+  return new MockLink(reject, mockedResponses);
 }
 
 export function mockObservableLink(): MockSubscriptionLink {
@@ -45,8 +46,14 @@ export class MockLink extends ApolloLink {
   public operation: Operation;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
-  constructor(mockedResponses: MockedResponse[]) {
+  constructor(
+    private reject: (reason: any) => any,
+    mockedResponses: MockedResponse[],
+  ) {
     super();
+    if (typeof this.reject !== "function") {
+      throw new Error("Must pass a failure callback when creating MockLink");
+    }
     mockedResponses.forEach(mockedResponse => {
       this.addMockedResponse(mockedResponse);
     });
@@ -67,18 +74,20 @@ export class MockLink extends ApolloLink {
     const key = requestToKey(operation);
     const responses = this.mockedResponsesByKey[key];
     if (!responses || responses.length === 0) {
-      throw new Error(
+      this.reject(new Error(
         `No more mocked responses for the query: ${print(
           operation.query,
         )}, variables: ${JSON.stringify(operation.variables)}`,
-      );
+      ));
+      return;
     }
 
     const { result, error, delay } = responses.shift()!;
     if (!result && !error) {
-      throw new Error(
+      this.reject(new Error(
         `Mocked response should contain either result or error: ${key}`,
-      );
+      ));
+      return;
     }
 
     return new Observable<FetchResult>(observer => {

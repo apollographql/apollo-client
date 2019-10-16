@@ -57,10 +57,10 @@ describe('subscribeToMore', () => {
     name: string;
   }
 
-  it('triggers new result from subscription data', done => {
+  it('triggers new result from subscription data', () => new Promise((resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = mockSingleLink(reject, req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -101,18 +101,18 @@ describe('subscribeToMore', () => {
         networkStatus: 7,
         stale: false,
       });
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {
       wSLink.simulateResult(results[i]);
     }
-  });
+  }));
 
-  it('calls error callback on error', done => {
+  it('calls error callback on error', () => new Promise((resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = mockSingleLink(reject, req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -159,19 +159,19 @@ describe('subscribeToMore', () => {
       });
       expect(counter).toBe(2);
       expect(errorCount).toBe(1);
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {
       wSLink.simulateResult(results2[i]);
     }
-  });
+  }));
 
-  it('prints unhandled subscription errors to the console', done => {
+  it('prints unhandled subscription errors to the console', () => new Promise((resolve, reject) => {
     let latestResult: any = null;
 
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = mockSingleLink(reject, req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -220,18 +220,18 @@ describe('subscribeToMore', () => {
       expect(counter).toBe(1);
       expect(errorCount).toBe(1);
       console.error = consoleErr;
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {
       wSLink.simulateResult(results3[i]);
     }
-  });
+  }));
 
-  it('should not corrupt the cache (#3062)', async done => {
+  it('should not corrupt the cache (#3062)', () => new Promise(async (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req4);
+    const httpLink = mockSingleLink(reject, req4);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -323,11 +323,11 @@ describe('subscribeToMore', () => {
       networkStatus: 7,
       stale: false,
     });
-    done();
-  });
+    resolve();
+  }));
   // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.
 
-  it('allows specification of custom types for variables and payload (#4246)', done => {
+  it('allows specification of custom types for variables and payload (#4246)', () => new Promise((resolve, reject) => {
     interface TypedOperation extends Operation {
       variables: {
         someNumber: number;
@@ -343,7 +343,7 @@ describe('subscribeToMore', () => {
 
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(typedReq);
+    const httpLink = mockSingleLink(reject, typedReq);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -391,11 +391,11 @@ describe('subscribeToMore', () => {
         networkStatus: 7,
         stale: false,
       });
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {
       wSLink.simulateResult(results[i]);
     }
-  });
+  }));
 });

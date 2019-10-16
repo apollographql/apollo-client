@@ -43,7 +43,7 @@
     "prepdist": "node ./config/prepareDist.js",
     "predeploy": "npm run build && npm run prepdist",
     "deploy": "cd dist && npm publish --tag beta",
-    "prepare": "npm run build && npm run prepdist"
+    "prepare": "npm run build"
   },
   "bundlesize": [
     {

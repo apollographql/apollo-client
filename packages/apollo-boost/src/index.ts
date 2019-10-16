@@ -40,6 +40,8 @@ export interface PresetConfig {
   name?: string;
   version?: string;
   resolvers?: Resolvers | Resolvers[];
+  ssrForceFetchDelay?: number;
+  ssrMode?: boolean;
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: LocalStateFragmentMatcher;
 }
@@ -68,6 +70,8 @@ const PRESET_CONFIG_KEYS = [
   'name',
   'version',
   'resolvers',
+  'ssrForceFetchDelay',
+  'ssrMode',
   'typeDefs',
   'fragmentMatcher',
 ];
@@ -99,6 +103,8 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       onError: errorCallback,
       name,
       version,
+      ssrForceFetchDelay,
+      ssrMode,
       resolvers,
       typeDefs,
       fragmentMatcher,
@@ -193,6 +199,8 @@ export default class DefaultClient<TCache> extends ApolloClient<TCache> {
       link,
       name,
       version,
+      ssrForceFetchDelay,
+      ssrMode,
       resolvers: activeResolvers,
       typeDefs: activeTypeDefs,
       fragmentMatcher: activeFragmentMatcher,

@@ -172,7 +172,7 @@ Objects that are not normalized are instead embedded within their _parent_ objec
 
 ## The `TypePolicy` type
 
-You can provide an array of `TypePolicy` objects to the `InMemoryCache` constructor to customize how the cache interacts with specific types in your schema.
+To customize how the cache interacts with specific types in your schema, you can provide an object mapping `__typename` strings to `TypePolicy` objects when you create a new `InMemoryCache` object.
 
 A `TypePolicy` object can include the following fields:
 

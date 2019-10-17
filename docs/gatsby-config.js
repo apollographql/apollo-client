@@ -88,15 +88,14 @@ module.exports = {
           'API - Link': [
             'api/link/introduction',
             'api/link/concepts',
-            'api/link/apollo-link-state',
-            'api/link/apollo-link-rest',
             'api/link/apollo-link-error',
             'api/link/apollo-link-context',
             'api/link/apollo-link-retry',
             'api/link/apollo-link-ws',
             'api/link/apollo-link-batch-http',
             'api/link/apollo-link-dedup',
-            'api/link/apollo-link-schema'
+            'api/link/apollo-link-schema',
+            'api/link/apollo-link-rest'
           ],
           Migrating: [
             'migrating/hooks-migration',

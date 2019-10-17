@@ -9,6 +9,7 @@ import { ApolloClient } from '../..';
 import { ApolloCache } from '../../cache/core/cache';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import { hasDirectives } from '../../utilities/graphql/directives';
+import { itAsync } from '../utils/itAsync';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {
@@ -303,10 +304,10 @@ describe('Cache manipulation', () => {
       });
   });
 
-  it(
+  itAsync(
     'should be able to write to the cache with a local mutation and have ' +
       'things rerender automatically',
-    () => new Promise((resolve, reject) => {
+    (resolve, reject) => {
       const query = gql`
         {
           field @client
@@ -352,7 +353,7 @@ describe('Cache manipulation', () => {
           }
         },
       });
-    }),
+    },
   );
 
   it('should support writing to the cache with a local mutation using variables', () => {
@@ -405,7 +406,7 @@ describe('Cache manipulation', () => {
       });
   });
 
-  it("should read @client fields from cache on refetch (#4741)", () => new Promise((resolve, reject) => {
+  itAsync("should read @client fields from cache on refetch (#4741)", (resolve, reject) => {
     const query = gql`
       query FetchInitialData {
         serverData {
@@ -473,11 +474,11 @@ describe('Cache manipulation', () => {
         }
       },
     });
-  }));
+  });
 });
 
 describe('Sample apps', () => {
-  it('should support a simple counter app using local state', () => new Promise((resolve, reject) => {
+  itAsync('should support a simple counter app using local state', (resolve, reject) => {
     const query = gql`
       query GetCount {
         count @client
@@ -579,9 +580,9 @@ describe('Sample apps', () => {
       error: e => reject(e),
       complete: reject,
     });
-  }));
+  });
 
-  it('should support a simple todo app using local state', () => new Promise((resolve, reject) => {
+  itAsync('should support a simple todo app using local state', (resolve, reject) => {
     const query = gql`
       query GetTasks {
         todos @client {
@@ -662,11 +663,11 @@ describe('Sample apps', () => {
         }
       },
     });
-  }));
+  });
 });
 
 describe('Combining client and server state/operations', () => {
-  it('should merge remote and local state', () => new Promise((resolve, reject) => {
+  itAsync('should merge remote and local state', (resolve, reject) => {
     const query = gql`
       query list {
         list(name: "my list") {
@@ -761,9 +762,9 @@ describe('Combining client and server state/operations', () => {
     setTimeout(() => {
       client.mutate({ mutation, variables });
     }, 10);
-  }));
+  });
 
-  it('should correctly propagate an error from a client resolver', () => new Promise(async (resolve, reject) => {
+  itAsync('should correctly propagate an error from a client resolver', async (resolve, reject) => {
     const data = {
       list: {
         __typename: 'List',
@@ -827,9 +828,9 @@ describe('Combining client and server state/operations', () => {
     }
 
     resolve();
-  }));
+  });
 
-  it('should handle a simple query with both server and client fields', () => new Promise((resolve, reject) => {
+  itAsync('should handle a simple query with both server and client fields', (resolve, reject) => {
     const query = gql`
       query GetCount {
         count @client
@@ -861,9 +862,9 @@ describe('Combining client and server state/operations', () => {
         resolve();
       },
     });
-  }));
+  });
 
-  it('should support nested quering of both server and client fields', () => new Promise((resolve, reject) => {
+  itAsync('should support nested quering of both server and client fields', (resolve, reject) => {
     const query = gql`
       query GetUser {
         user {
@@ -911,9 +912,9 @@ describe('Combining client and server state/operations', () => {
         resolve();
       },
     });
-  }));
+  });
 
-  it('should combine both server and client mutations', () => new Promise((resolve, reject) => {
+  itAsync('should combine both server and client mutations', (resolve, reject) => {
     const query = gql`
       query SampleQuery {
         count @client
@@ -1015,5 +1016,5 @@ describe('Combining client and server state/operations', () => {
         }
       },
     });
-  }));
+  });
 });

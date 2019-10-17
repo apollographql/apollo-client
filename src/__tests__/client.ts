@@ -12,6 +12,7 @@ import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';
 import subscribeAndCount from './utils/subscribeAndCount';
 import { withWarning } from './utils/wrap';
+import { itAsync } from './utils/itAsync';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
 describe('client', () => {
@@ -78,7 +79,7 @@ describe('client', () => {
     );
   });
 
-  it('should allow for a single query to take place', () => new Promise((resolve, reject) => {
+  itAsync('should allow for a single query to take place', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -104,9 +105,9 @@ describe('client', () => {
     };
 
     return clientRoundtrip(resolve, reject, query, { data });
-  }));
+  });
 
-  it('should allow a single query with an apollo-link enabled network interface', () => new Promise((resolve, reject) => {
+  itAsync('should allow a single query with an apollo-link enabled network interface', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -144,9 +145,9 @@ describe('client', () => {
       expect(stripSymbols(actualResult.data)).toEqual(data);
       resolve();
     });
-  }));
+  });
 
-  it('should allow for a single query with complex default variables to take place', () => new Promise((resolve, reject) => {
+  itAsync('should allow for a single query with complex default variables to take place', (resolve, reject) => {
     const query = gql`
       query stuff(
         $test: Input = { key1: ["value", "value2"], key2: { key3: 4 } }
@@ -198,9 +199,9 @@ describe('client', () => {
       basic,
       withDefault,
     ]).then(resolve, reject);
-  }));
+  });
 
-  it('should allow for a single query with default values that get overridden with variables', () => new Promise((resolve, reject) => {
+  itAsync('should allow for a single query with default values that get overridden with variables', (resolve, reject) => {
     const query = gql`
       query people($first: Int = 1) {
         allPeople(first: $first) {
@@ -275,9 +276,9 @@ describe('client', () => {
       withDefault,
       withOverride,
     ]).then(resolve, reject);
-  }));
+  });
 
-  it('should allow fragments on root query', () => new Promise((resolve, reject) => {
+  itAsync('should allow fragments on root query', (resolve, reject) => {
     const query = gql`
       query {
         ...QueryFragment
@@ -302,9 +303,9 @@ describe('client', () => {
     };
 
     return clientRoundtrip(resolve, reject, query, { data }, null);
-  }));
+  });
 
-  it('should allow fragments on root query with ifm', () => new Promise((resolve, reject) => {
+  itAsync('should allow fragments on root query with ifm', (resolve, reject) => {
     const query = gql`
       query {
         ...QueryFragment
@@ -331,9 +332,9 @@ describe('client', () => {
     return clientRoundtrip(resolve, reject, query, { data }, null, {
       Query: ['Record'],
     });
-  }));
+  });
 
-  it('should merge fragments on root query', () => new Promise((resolve, reject) => {
+  itAsync('should merge fragments on root query', (resolve, reject) => {
     // The fragment should be used after the selected fields for the query.
     // Otherwise, the results aren't merged.
     // see: https://github.com/apollographql/apollo-client/issues/1479
@@ -366,9 +367,9 @@ describe('client', () => {
     return clientRoundtrip(resolve, reject, query, { data }, null, {
       Query: ['Record'],
     });
-  }));
+  });
 
-  it('store can be rehydrated from the server', () => new Promise((resolve, reject) => {
+  itAsync('store can be rehydrated from the server', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -424,9 +425,9 @@ describe('client', () => {
         (client.cache as InMemoryCache).extract(),
       );
     }).then(resolve, reject);
-  }));
+  });
 
-  it('store can be rehydrated from the server using the shadow method', () => new Promise((resolve, reject) => {
+  itAsync('store can be rehydrated from the server using the shadow method', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -480,9 +481,9 @@ describe('client', () => {
       expect(stripSymbols(result.data)).toEqual(data);
       expect(finalState.data).toEqual(client.extract());
     }).then(resolve, reject);
-  }));
+  });
 
-  it('stores shadow of restore returns the same result as accessing the method directly on the cache', () => new Promise((resolve, reject) => {
+  itAsync('stores shadow of restore returns the same result as accessing the method directly on the cache', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -545,9 +546,9 @@ describe('client', () => {
     );
 
     resolve();
-  }));
+  });
 
-  it('should return errors correctly for a single query', () => new Promise((resolve, reject) => {
+  itAsync('should return errors correctly for a single query', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -578,9 +579,9 @@ describe('client', () => {
     return client.query({ query }).catch((error: ApolloError) => {
       expect(error.graphQLErrors).toEqual(errors);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should return GraphQL errors correctly for a single query with an apollo-link enabled network interface', () => new Promise((resolve, reject) => {
+  itAsync('should return GraphQL errors correctly for a single query with an apollo-link enabled network interface', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -625,9 +626,9 @@ describe('client', () => {
       expect(error.graphQLErrors).toEqual(errors);
       resolve();
     });
-  }));
+  });
 
-  xit('should pass a network error correctly on a query using an observable network interface with a warning', () => new Promise((resolve, reject) => {
+  itAsync.skip('should pass a network error correctly on a query using an observable network interface with a warning', (resolve, reject) => {
     withWarning(() => {
       const query = gql`
         query people {
@@ -660,9 +661,9 @@ describe('client', () => {
         resolve();
       });
     }, /deprecated/);
-  }));
+  });
 
-  it('should pass a network error correctly on a query with apollo-link network interface', () => new Promise((resolve, reject) => {
+  itAsync('should pass a network error correctly on a query with apollo-link network interface', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -693,7 +694,7 @@ describe('client', () => {
       expect(error.networkError!.message).toEqual(networkError.message);
       resolve();
     });
-  }));
+  });
 
   it('should not warn when receiving multiple results from apollo-link network interface', () => {
     const query = gql`
@@ -728,7 +729,7 @@ describe('client', () => {
     });
   });
 
-  xit('should surface errors in observer.next as uncaught', () => new Promise((resolve, reject) => {
+  itAsync.skip('should surface errors in observer.next as uncaught', (resolve, reject) => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
@@ -783,9 +784,9 @@ describe('client', () => {
         throw expectedError;
       },
     });
-  }));
+  });
 
-  xit('should surfaces errors in observer.error as uncaught', () => new Promise((resolve, reject) => {
+  itAsync.skip('should surfaces errors in observer.error as uncaught', (resolve, reject) => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
@@ -830,9 +831,9 @@ describe('client', () => {
         throw expectedError;
       },
     });
-  }));
+  });
 
-  it('should allow for subscribing to a request', () => new Promise((resolve, reject) => {
+  itAsync('should allow for subscribing to a request', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -871,9 +872,9 @@ describe('client', () => {
         resolve();
       },
     });
-  }));
+  });
 
-  it('should be able to transform queries', () => new Promise((resolve, reject) => {
+  itAsync('should be able to transform queries', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -926,9 +927,9 @@ describe('client', () => {
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should be able to transform queries on network-only fetches', () => new Promise((resolve, reject) => {
+  itAsync('should be able to transform queries on network-only fetches', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -982,9 +983,9 @@ describe('client', () => {
         expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('should handle named fragments on mutations', () => new Promise((resolve, reject) => {
+  itAsync('should handle named fragments on mutations', (resolve, reject) => {
     const mutation = gql`
       mutation {
         starAuthor(id: 12) {
@@ -1021,9 +1022,9 @@ describe('client', () => {
     return client.mutate({ mutation }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should be able to handle named fragments on network-only queries', () => new Promise((resolve, reject) => {
+  itAsync('should be able to handle named fragments on network-only queries', (resolve, reject) => {
     const query = gql`
       fragment authorDetails on Author {
         firstName
@@ -1061,9 +1062,9 @@ describe('client', () => {
         expect(stripSymbols(actualResult.data)).toEqual(result);
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('should be able to handle named fragments with multiple fragments', () => new Promise((resolve, reject) => {
+  itAsync('should be able to handle named fragments with multiple fragments', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1103,9 +1104,9 @@ describe('client', () => {
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should be able to handle named fragments', () => new Promise((resolve, reject) => {
+  itAsync('should be able to handle named fragments', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1139,9 +1140,9 @@ describe('client', () => {
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should be able to handle inlined fragments on an Interface type', () => new Promise((resolve, reject) => {
+  itAsync('should be able to handle inlined fragments on an Interface type', (resolve, reject) => {
     const query = gql`
       query items {
         items {
@@ -1188,9 +1189,9 @@ describe('client', () => {
     return client.query({ query }).then((actualResult: any) => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', () => new Promise((resolve, reject) => {
+  itAsync('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', (resolve, reject) => {
     const query = gql`
       query items {
         items {
@@ -1239,9 +1240,9 @@ describe('client', () => {
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should call updateQueries and update after mutation on query with inlined fragments on an Interface type', () => new Promise((resolve, reject) => {
+  itAsync('should call updateQueries and update after mutation on query with inlined fragments on an Interface type', (resolve, reject) => {
     const query = gql`
       query items {
         items {
@@ -1334,7 +1335,7 @@ describe('client', () => {
         reject(err);
       },
     });
-  }));
+  });
 
   it('should send operationName along with the query to the server', () => {
     const query = gql`
@@ -1386,7 +1387,7 @@ describe('client', () => {
     });
   });
 
-  it('does not deduplicate queries if option is set to false', () => new Promise((resolve, reject) => {
+  itAsync('does not deduplicate queries if option is set to false', (resolve, reject) => {
     const queryDoc = gql`
       query {
         author {
@@ -1434,9 +1435,9 @@ describe('client', () => {
       expect(stripSymbols(result1.data)).toEqual(data);
       expect(stripSymbols(result2.data)).toEqual(data2);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('deduplicates queries by default', () => new Promise((resolve, reject) => {
+  itAsync('deduplicates queries by default', (resolve, reject) => {
     const queryDoc = gql`
       query {
         author {
@@ -1481,9 +1482,9 @@ describe('client', () => {
     return Promise.all([q1, q2]).then(([result1, result2]) => {
       expect(result1.data).toEqual(result2.data);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('unsubscribes from deduplicated observables only once', () => new Promise((resolve, reject) => {
+  itAsync('unsubscribes from deduplicated observables only once', (resolve, reject) => {
     const document: DocumentNode = gql`
       query test1($x: String) {
         test(x: $x)
@@ -1526,7 +1527,7 @@ describe('client', () => {
     expect(unsubscribed).toBe(false);
 
     sub2.unsubscribe();
-  }));
+  });
 
   describe('deprecated options', () => {
     const query = gql`
@@ -1579,7 +1580,7 @@ describe('client', () => {
       },
     };
 
-    it('for internal store', () => new Promise((resolve, reject) => {
+    itAsync('for internal store', (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { data },
@@ -1601,7 +1602,7 @@ describe('client', () => {
           name: 'Luke Skywalker',
         });
       }).then(resolve, reject);
-    }));
+    });
   });
 
   describe('cache-and-network fetchPolicy', () => {
@@ -1668,7 +1669,7 @@ describe('client', () => {
       checkCacheAndNetworkError(() => client.query({ query }));
     });
 
-    it('fetches from cache first, then network', () => new Promise((resolve, reject) => {
+    itAsync('fetches from cache first, then network', (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
@@ -1694,9 +1695,9 @@ describe('client', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('does not fail if cache entry is not present', () => new Promise((resolve, reject) => {
+    itAsync('does not fail if cache entry is not present', (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
@@ -1721,9 +1722,9 @@ describe('client', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('fails if network request fails', () => new Promise((resolve, reject) => {
+    itAsync('fails if network request fails', (resolve, reject) => {
       const link = mockSingleLink(error => { throw error }); // no queries = no replies.
       const client = new ApolloClient({
         link,
@@ -1748,9 +1749,9 @@ describe('client', () => {
           setTimeout(resolve, 100);
         },
       });
-    }));
+    });
 
-    it('fetches from cache first, then network and does not have an unhandled error', () => new Promise((resolve, reject) => {
+    itAsync('fetches from cache first, then network and does not have an unhandled error', (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { errors: [{ message: 'network failure' }] },
@@ -1787,7 +1788,7 @@ describe('client', () => {
           }, 0);
         },
       });
-    }));
+    });
   });
 
   describe('standby queries', () => {
@@ -1813,7 +1814,7 @@ describe('client', () => {
       );
     });
 
-    it('are not watching the store or notifying on updates', () => new Promise((resolve, reject) => {
+    itAsync('are not watching the store or notifying on updates', (resolve, reject) => {
       const query = gql`
         {
           test
@@ -1852,9 +1853,9 @@ describe('client', () => {
           );
         }
       });
-    }));
+    });
 
-    it('return the current result when coming out of standby', () => new Promise((resolve, reject) => {
+    itAsync('return the current result when coming out of standby', (resolve, reject) => {
       const query = gql`
         {
           test
@@ -1890,7 +1891,7 @@ describe('client', () => {
           resolve();
         }
       });
-    }));
+    });
   });
 
   describe('network-only fetchPolicy', () => {
@@ -1927,7 +1928,7 @@ describe('client', () => {
       );
     }
 
-    it('forces the query to rerun', () => new Promise((resolve, reject) => {
+    itAsync('forces the query to rerun', (resolve, reject) => {
       const client = new ApolloClient({
         link: makeLink(reject),
         cache: new InMemoryCache({ addTypename: false }),
@@ -1942,9 +1943,9 @@ describe('client', () => {
           expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('can be disabled with ssrMode', () => new Promise((resolve, reject) => {
+    itAsync('can be disabled with ssrMode', (resolve, reject) => {
       const client = new ApolloClient({
         link: makeLink(reject),
         ssrMode: true,
@@ -1967,9 +1968,9 @@ describe('client', () => {
           });
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('can temporarily be disabled with ssrForceFetchDelay', () => new Promise((resolve, reject) => {
+    itAsync('can temporarily be disabled with ssrForceFetchDelay', (resolve, reject) => {
       const client = new ApolloClient({
         link: makeLink(reject),
         ssrForceFetchDelay: 100,
@@ -1992,10 +1993,10 @@ describe('client', () => {
           expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
-    }));
+    });
   });
 
-  it('should pass a network error correctly on a mutation', () => new Promise((resolve, reject) => {
+  itAsync('should pass a network error correctly on a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
         person {
@@ -2030,9 +2031,9 @@ describe('client', () => {
         expect(error.networkError!.message).toBe(networkError.message);
         resolve();
       });
-  }));
+  });
 
-  it('should pass a GraphQL error correctly on a mutation', () => new Promise((resolve, reject) => {
+  itAsync('should pass a GraphQL error correctly on a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2068,8 +2069,8 @@ describe('client', () => {
         expect(error.graphQLErrors[0].message).toBe(errors[0].message);
         resolve();
       });
-  }));
-  it('should allow errors to be returned from a mutation', () => new Promise((resolve, reject) => {
+  });
+  itAsync('should allow errors to be returned from a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2106,8 +2107,9 @@ describe('client', () => {
       .catch((error: ApolloError) => {
         throw error;
       });
-  }));
-  it('should strip errors on a mutation if ignored', () => new Promise((resolve, reject) => {
+  });
+
+  itAsync('should strip errors on a mutation if ignored', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2142,9 +2144,9 @@ describe('client', () => {
       .catch((error: ApolloError) => {
         throw error;
       });
-  }));
+  });
 
-  it('should rollback optimistic after mutation got a GraphQL error', () => new Promise((resolve, reject) => {
+  itAsync('should rollback optimistic after mutation got a GraphQL error', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2196,7 +2198,7 @@ describe('client', () => {
         expect(optimisticData).toBe(data);
         resolve();
       });
-  }));
+  });
 
   it('has a clearStore method which calls QueryManager', async () => {
     const client = new ApolloClient({
@@ -2458,7 +2460,7 @@ describe('client', () => {
     // });
   });
 
-  it('should propagate errors from network interface to observers', () => new Promise((resolve, reject) => {
+  itAsync('should propagate errors from network interface to observers', (resolve, reject) => {
     const link = ApolloLink.from([
       () =>
         new Observable(x => {
@@ -2488,9 +2490,9 @@ describe('client', () => {
         resolve();
       },
     });
-  }));
+  });
 
-  it('should be able to refetch after there was a network error', () => new Promise((resolve, reject) => {
+  itAsync('should be able to refetch after there was a network error', (resolve, reject) => {
     const query: DocumentNode = gql`
       query somethingelse {
         allPeople(first: 1) {
@@ -2605,9 +2607,9 @@ describe('client', () => {
     };
 
     subscription = observable.subscribe(observerOptions);
-  }));
+  });
 
-  it('should throw a GraphQL error', () => new Promise((resolve, reject) => {
+  itAsync('should throw a GraphQL error', (resolve, reject) => {
     const query = gql`
       query {
         posts {
@@ -2636,9 +2638,9 @@ describe('client', () => {
         'GraphQL error: Cannot query field "foo" on type "Post".',
       );
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should warn if server returns wrong data', () => new Promise((resolve, reject) => {
+  itAsync('should warn if server returns wrong data', (resolve, reject) => {
     const query = gql`
       query {
         todos {
@@ -2677,9 +2679,9 @@ describe('client', () => {
       () => client.query({ query }),
       /Missing field description/,
     ).then(resolve, reject);
-  }));
+  });
 
-  it('runs a query with the connection directive and writes it to the store key defined in the directive', () => new Promise((resolve, reject) => {
+  itAsync('runs a query with the connection directive and writes it to the store key defined in the directive', (resolve, reject) => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2719,9 +2721,9 @@ describe('client', () => {
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should remove the connection directive before the link is sent', () => new Promise((resolve, reject) => {
+  itAsync('should remove the connection directive before the link is sent', (resolve, reject) => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "books") {
@@ -2761,11 +2763,11 @@ describe('client', () => {
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     }).then(resolve, reject);
-  }));
+  });
 });
 
 describe('@connection', () => {
-  it('should run a query with the connection directive and write the result to the store key defined in the directive', () => new Promise((resolve, reject) => {
+  itAsync('should run a query with the connection directive and write the result to the store key defined in the directive', (resolve, reject) => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2806,9 +2808,9 @@ describe('@connection', () => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => new Promise((resolve, reject) => {
+  itAsync('should run a query with the connection directive and filter arguments and write the result to the correct store key', (resolve, reject) => {
     const query = gql`
       query books($order: string) {
         books(skip: 0, limit: 2, order: $order)
@@ -2851,7 +2853,7 @@ describe('@connection', () => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
-  }));
+  });
 
   describe('default settings', () => {
     const query = gql`
@@ -2873,7 +2875,7 @@ describe('@connection', () => {
       },
     };
 
-    it('allows setting default options for watchQuery', () => new Promise((resolve, reject) => {
+    itAsync('allows setting default options for watchQuery', (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
@@ -2904,9 +2906,9 @@ describe('@connection', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('allows setting default options for query', () => new Promise((resolve, reject) => {
+    itAsync('allows setting default options for query', (resolve, reject) => {
       const errors = [{ message: 'failure', name: 'failure' }];
       const link = mockSingleLink(reject, {
         request: { query },
@@ -2923,9 +2925,9 @@ describe('@connection', () => {
       return client.query({ query }).then(result => {
         expect(result.errors).toEqual(errors);
       }).then(resolve, reject);
-    }));
+    });
 
-    it('allows setting default options for mutation', () => new Promise((resolve, reject) => {
+    itAsync('allows setting default options for mutation', (resolve, reject) => {
       const mutation = gql`
         mutation upVote($id: ID!) {
           upvote(id: $id) {
@@ -2954,7 +2956,7 @@ describe('@connection', () => {
       return client.mutate({ mutation }).then(result => {
         expect(result.data).toEqual(data);
       }).then(resolve, reject);
-    }));
+    });
   });
 });
 

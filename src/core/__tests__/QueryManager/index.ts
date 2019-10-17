@@ -36,6 +36,7 @@ import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../__tests__/utils/observableToPromise';
 import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
+import { itAsync } from '../../../__tests__/utils/itAsync';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.
@@ -186,7 +187,7 @@ describe('QueryManager', () => {
     return mockQueryManager(reject, ...args);
   };
 
-  it('handles GraphQL errors', () => new Promise((resolve, reject) => {
+  itAsync('handles GraphQL errors', (resolve, reject) => {
     assertWithObserver({
       reject,
       query: gql`
@@ -220,9 +221,9 @@ describe('QueryManager', () => {
         },
       },
     });
-  }));
+  });
 
-  it('handles GraphQL errors as data', () => new Promise((resolve, reject) => {
+  itAsync('handles GraphQL errors as data', (resolve, reject) => {
     assertWithObserver({
       reject,
       query: gql`
@@ -260,9 +261,9 @@ describe('QueryManager', () => {
         },
       },
     });
-  }));
+  });
 
-  it('handles GraphQL errors with data returned', () => new Promise((resolve, reject) => {
+  itAsync('handles GraphQL errors with data returned', (resolve, reject) => {
     assertWithObserver({
       reject,
       query: gql`
@@ -302,9 +303,9 @@ describe('QueryManager', () => {
         },
       },
     });
-  }));
+  });
 
-  it('empty error array (handle non-spec-compliant server) #156', () => new Promise((resolve, reject) => {
+  itAsync('empty error array (handle non-spec-compliant server) #156', (resolve, reject) => {
     assertWithObserver({
       reject,
       query: gql`
@@ -334,11 +335,11 @@ describe('QueryManager', () => {
         },
       },
     });
-  }));
+  });
 
   // Easy to get into this state if you write an incorrect `formatError`
   // function with graphql-server or express-graphql
-  it('error array with nulls (handle non-spec-compliant server) #1185', () => new Promise((resolve, reject) => {
+  itAsync('error array with nulls (handle non-spec-compliant server) #1185', (resolve, reject) => {
     assertWithObserver({
       reject,
       query: gql`
@@ -364,9 +365,9 @@ describe('QueryManager', () => {
         },
       },
     });
-  }));
+  });
 
-  it('handles network errors', () => new Promise((resolve, reject) => {
+  itAsync('handles network errors', (resolve, reject) => {
     assertWithObserver({
       reject,
       query: gql`
@@ -391,9 +392,9 @@ describe('QueryManager', () => {
         },
       },
     });
-  }));
+  });
 
-  it('uses console.error to log unhandled errors', () => new Promise((resolve, reject) => {
+  itAsync('uses console.error to log unhandled errors', (resolve, reject) => {
     const oldError = console.error;
     let printed: any;
     console.error = (...args: any[]) => {
@@ -424,11 +425,11 @@ describe('QueryManager', () => {
       console.error = oldError;
       resolve();
     }, 10);
-  }));
+  });
 
   // XXX this looks like a bug in zen-observable but we should figure
   // out a solution for it
-  xit('handles an unsubscribe action that happens before data returns', () => new Promise((resolve, reject) => {
+  itAsync.skip('handles an unsubscribe action that happens before data returns', (resolve, reject) => {
     const subscription = assertWithObserver({
       reject,
       query: gql`
@@ -452,9 +453,9 @@ describe('QueryManager', () => {
     });
 
     expect(subscription.unsubscribe).not.toThrow();
-  }));
+  });
 
-  it('supports interoperability with other Observable implementations like RxJS', () => new Promise((resolve, reject) => {
+  itAsync('supports interoperability with other Observable implementations like RxJS', (resolve, reject) => {
     const expResult = {
       data: {
         allPeople: {
@@ -494,9 +495,9 @@ describe('QueryManager', () => {
         resolve();
       }),
     });
-  }));
+  });
 
-  it('allows you to subscribe twice to one query', () => new Promise((resolve, reject) => {
+  itAsync('allows you to subscribe twice to one query', (resolve, reject) => {
     const request = {
       query: gql`
         query fetchLuke($id: String) {
@@ -596,9 +597,9 @@ describe('QueryManager', () => {
         },
       });
     });
-  }));
+  });
 
-  it('resolves all queries when one finishes after another', () => new Promise((resolve, reject) => {
+  itAsync('resolves all queries when one finishes after another', (resolve, reject) => {
     const request = {
       query: gql`
         query fetchLuke($id: String) {
@@ -693,9 +694,9 @@ describe('QueryManager', () => {
       expect(stripSymbols(result.data)).toEqual(data3);
       finishCount++;
     });
-  }));
+  });
 
-  it('allows you to refetch queries', () => new Promise((resolve, reject) => {
+  itAsync('allows you to refetch queries', (resolve, reject) => {
     const request = {
       query: gql`
         query fetchLuke($id: String) {
@@ -737,9 +738,9 @@ describe('QueryManager', () => {
       },
       result => expect(stripSymbols(result.data)).toEqual(data2),
     ).then(resolve, reject);
-  }));
+  });
 
-  it('will return referentially equivalent data if nothing changed in a refetch', () => new Promise((resolve, reject) => {
+  itAsync('will return referentially equivalent data if nothing changed in a refetch', (resolve, reject) => {
     const request = {
       query: gql`
         {
@@ -823,9 +824,9 @@ describe('QueryManager', () => {
       },
       error: reject,
     });
-  }));
+  });
 
-  it('will return referentially equivalent data in getCurrentResult if nothing changed', () => new Promise((resolve, reject) => {
+  itAsync('will return referentially equivalent data in getCurrentResult if nothing changed', (resolve, reject) => {
     const request = {
       query: gql`
         {
@@ -871,9 +872,9 @@ describe('QueryManager', () => {
       },
       error: reject,
     });
-  }));
+  });
 
-  it('sets networkStatus to `refetch` when refetching', () => new Promise((resolve, reject) => {
+  itAsync('sets networkStatus to `refetch` when refetching', (resolve, reject) => {
     const request = {
       query: gql`
         query fetchLuke($id: String) {
@@ -919,9 +920,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(data2);
       },
     ).then(resolve, reject);
-  }));
+  });
 
-  it('allows you to refetch queries with promises', () => new Promise(async (resolve, reject) => {
+  itAsync('allows you to refetch queries with promises', async (resolve, reject) => {
     const request = {
       query: gql`
         {
@@ -957,9 +958,9 @@ describe('QueryManager', () => {
       .refetch()
       .then(result => expect(stripSymbols(result.data)).toEqual(data2))
       .then(resolve, reject);
-  }));
+  });
 
-  it('allows you to refetch queries with new variables', () => new Promise((resolve, reject) => {
+  itAsync('allows you to refetch queries with new variables', (resolve, reject) => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -1050,9 +1051,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(data4);
       },
     ).then(resolve, reject);
-  }));
+  });
 
-  it('only modifies varaibles when refetching', () => new Promise((resolve, reject) => {
+  itAsync('only modifies varaibles when refetching', (resolve, reject) => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -1104,9 +1105,9 @@ describe('QueryManager', () => {
         expect(updatedOptions).toEqual(originalOptions);
       },
     ).then(resolve, reject);
-  }));
+  });
 
-  it('continues to poll after refetch', () => new Promise((resolve, reject) => {
+  itAsync('continues to poll after refetch', (resolve, reject) => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -1167,9 +1168,9 @@ describe('QueryManager', () => {
         observable.stopPolling();
       },
     ).then(resolve, reject);
-  }));
+  });
 
-  it('sets networkStatus to `poll` if a polling query is in flight', () => new Promise((resolve, reject) => {
+  itAsync('sets networkStatus to `poll` if a polling query is in flight', (resolve, reject) => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -1232,9 +1233,9 @@ describe('QueryManager', () => {
         }
       },
     });
-  }));
+  });
 
-  it('supports returnPartialData #193', () => new Promise((resolve, reject) => {
+  itAsync('supports returnPartialData #193', (resolve, reject) => {
     const primeQuery = gql`
       query primeQuery {
         people_one(id: 1) {
@@ -1304,9 +1305,9 @@ describe('QueryManager', () => {
         });
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('can handle null values in arrays (#1551)', () => new Promise((resolve, reject) => {
+  itAsync('can handle null values in arrays (#1551)', (resolve, reject) => {
     const query = gql`
       {
         list {
@@ -1328,9 +1329,9 @@ describe('QueryManager', () => {
         resolve();
       },
     });
-  }));
+  });
 
-  it('should error if we pass fetchPolicy = cache-only on a polling query', () => new Promise((resolve, reject) => {
+  itAsync('should error if we pass fetchPolicy = cache-only on a polling query', (resolve, reject) => {
     assertWithObserver({
       reject,
       observer: {
@@ -1350,9 +1351,9 @@ describe('QueryManager', () => {
       `,
       queryOptions: { pollInterval: 200, fetchPolicy: 'cache-only' },
     });
-  }));
+  });
 
-  it('should error if we pass fetchPolicy = cache-first on a polling query', () => new Promise((resolve, reject) => {
+  itAsync('should error if we pass fetchPolicy = cache-first on a polling query', (resolve, reject) => {
     assertWithObserver({
       reject,
       observer: {
@@ -1374,9 +1375,9 @@ describe('QueryManager', () => {
       `,
       queryOptions: { pollInterval: 200, fetchPolicy: 'cache-first' },
     });
-  }));
+  });
 
-  it('supports cache-only fetchPolicy fetching only cached data', () => new Promise((resolve, reject) => {
+  itAsync('supports cache-only fetchPolicy fetching only cached data', (resolve, reject) => {
     const primeQuery = gql`
       query primeQuery {
         luke: people_one(id: 1) {
@@ -1424,9 +1425,9 @@ describe('QueryManager', () => {
         });
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('runs a mutation', () => new Promise((resolve, reject) => {
+  itAsync('runs a mutation', (resolve, reject) => {
     return assertMutationRoundtrip({
       resolve,
       reject,
@@ -1437,9 +1438,9 @@ describe('QueryManager', () => {
       `,
       data: { makeListPrivate: true },
     });
-  }));
+  });
 
-  it('runs a mutation even when errors is empty array #2912', () => new Promise((resolve, reject) => {
+  itAsync('runs a mutation even when errors is empty array #2912', (resolve, reject) => {
     const errors = [];
     return assertMutationRoundtrip({
       resolve,
@@ -1452,9 +1453,9 @@ describe('QueryManager', () => {
       errors,
       data: { makeListPrivate: true },
     });
-  }));
+  });
 
-  it('runs a mutation with default errorPolicy equal to "none"', () => new Promise((resolve, reject) => {
+  itAsync('runs a mutation with default errorPolicy equal to "none"', (resolve, reject) => {
     const errors = [new GraphQLError('foo')];
 
     return mockMutation({
@@ -1475,9 +1476,9 @@ describe('QueryManager', () => {
         expect(error.graphQLErrors).toEqual(errors);
       },
     ).then(resolve, reject);
-  }));
+  });
 
-  it('runs a mutation with variables', () => new Promise((resolve, reject) => {
+  itAsync('runs a mutation with variables', (resolve, reject) => {
     return assertMutationRoundtrip({
       resolve,
       reject,
@@ -1489,11 +1490,11 @@ describe('QueryManager', () => {
       variables: { listId: '1' },
       data: { makeListPrivate: true },
     });
-  }));
+  });
 
   const getIdField = ({ id }: { id: string }) => id;
 
-  it('runs a mutation with object parameters and puts the result in the store', () => new Promise((resolve, reject) => {
+  itAsync('runs a mutation with object parameters and puts the result in the store', (resolve, reject) => {
     const data = {
       makeListPrivate: {
         id: '5',
@@ -1523,9 +1524,9 @@ describe('QueryManager', () => {
         isPrivate: true,
       });
     }).then(resolve, reject);
-  }));
+  });
 
-  it('runs a mutation and puts the result in the store', () => new Promise((resolve, reject) => {
+  itAsync('runs a mutation and puts the result in the store', (resolve, reject) => {
     const data = {
       makeListPrivate: {
         id: '5',
@@ -1556,9 +1557,9 @@ describe('QueryManager', () => {
         isPrivate: true,
       });
     }).then(resolve, reject);
-  }));
+  });
 
-  it('runs a mutation and puts the result in the store with root key', () => new Promise((resolve, reject) => {
+  itAsync('runs a mutation and puts the result in the store with root key', (resolve, reject) => {
     const mutation = gql`
       mutation makeListPrivate {
         makeListPrivate(id: "5") {
@@ -1598,9 +1599,9 @@ describe('QueryManager', () => {
           isPrivate: true,
         });
       }).then(resolve, reject);
-  }));
+  });
 
-  it(`doesn't return data while query is loading`, () => new Promise((resolve, reject) => {
+  itAsync(`doesn't return data while query is loading`, (resolve, reject) => {
     const query1 = gql`
       {
         people_one(id: 1) {
@@ -1653,9 +1654,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(data2),
       ),
     ]).then(resolve, reject);
-  }));
+  });
 
-  it(`updates result of previous query if the result of a new query overlaps`, () => new Promise((resolve, reject) => {
+  itAsync(`updates result of previous query if the result of a new query overlaps`, (resolve, reject) => {
     const query1 = gql`
       {
         people_one(id: 1) {
@@ -1717,9 +1718,9 @@ describe('QueryManager', () => {
           },
         }),
     ).then(resolve, reject);
-  }));
+  });
 
-  it('warns if you forget the template literal tag', () => new Promise(async (resolve, reject) => {
+  itAsync('warns if you forget the template literal tag', async (resolve, reject) => {
     const queryManager = mockQueryManager(reject);
     expect(() => {
       queryManager.query<any>({
@@ -1743,9 +1744,9 @@ describe('QueryManager', () => {
     }).toThrowError(/wrap the query string in a "gql" tag/);
 
     resolve();
-  }));
+  });
 
-  it('should transform queries correctly when given a QueryTransformer', () => new Promise((resolve, reject) => {
+  itAsync('should transform queries correctly when given a QueryTransformer', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1786,9 +1787,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(transformedQueryResult);
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('should transform mutations correctly', () => new Promise((resolve, reject) => {
+  itAsync('should transform mutations correctly', (resolve, reject) => {
     const mutation = gql`
       mutation {
         createAuthor(firstName: "John", lastName: "Smith") {
@@ -1827,9 +1828,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(transformedMutationResult);
         resolve();
       });
-  }));
+  });
 
-  it('should reject a query promise given a network error', () => new Promise((resolve, reject) => {
+  itAsync('should reject a query promise given a network error', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1856,9 +1857,9 @@ describe('QueryManager', () => {
         resolve();
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('should reject a query promise given a GraphQL error', () => new Promise((resolve, reject) => {
+  itAsync('should reject a query promise given a GraphQL error', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1884,9 +1885,9 @@ describe('QueryManager', () => {
           expect(!apolloError.networkError).toBeTruthy();
         },
       ).then(resolve, reject);
-  }));
+  });
 
-  it('should not empty the store when a non-polling query fails due to a network error', () => new Promise((resolve, reject) => {
+  itAsync('should not empty the store when a non-polling query fails due to a network error', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1935,9 +1936,9 @@ describe('QueryManager', () => {
       .catch(() => {
         reject(new Error('Threw an error on the first query.'));
       });
-  }));
+  });
 
-  it('should be able to unsubscribe from a polling query subscription', () => new Promise((resolve, reject) => {
+  itAsync('should be able to unsubscribe from a polling query subscription', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1970,9 +1971,9 @@ describe('QueryManager', () => {
     );
 
     return promise.then(resolve, reject);
-  }));
+  });
 
-  it('should not empty the store when a polling query fails due to a network error', () => new Promise((resolve, reject) => {
+  itAsync('should not empty the store when a polling query fails due to a network error', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -2022,9 +2023,9 @@ describe('QueryManager', () => {
         ).toEqual(data.author);
       },
     ).then(resolve, reject);
-  }));
+  });
 
-  it('should not fire next on an observer if there is no change in the result', () => new Promise((resolve, reject) => {
+  itAsync('should not fire next on an observer if there is no change in the result', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -2063,9 +2064,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(data);
       }),
     ]).then(resolve, reject);
-  }));
+  });
 
-  it('should store metadata with watched queries', () => new Promise((resolve, reject) => {
+  itAsync('should store metadata with watched queries', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -2098,9 +2099,9 @@ describe('QueryManager', () => {
         foo: 'bar',
       });
     }).then(resolve, reject);
-  }));
+  });
 
-  it('should return stale data when we orphan a real-id node in the store with a real-id node', () => new Promise((resolve, reject) => {
+  itAsync('should return stale data when we orphan a real-id node in the store with a real-id node', (resolve, reject) => {
     const query1 = gql`
       query {
         author {
@@ -2203,9 +2204,9 @@ describe('QueryManager', () => {
         },
       ),
     ]).then(resolve, reject);
-  }));
+  });
 
-  it('should return partial data when configured when we orphan a real-id node in the store with a real-id node', () => new Promise((resolve, reject) => {
+  itAsync('should return partial data when configured when we orphan a real-id node in the store with a real-id node', (resolve, reject) => {
     const query1 = gql`
       query {
         author {
@@ -2318,9 +2319,9 @@ describe('QueryManager', () => {
         },
       ),
     ]).then(resolve, reject);
-  }));
+  });
 
-  it('should error if we replace a real id node in the store with a generated id node', () => new Promise((resolve, reject) => {
+  itAsync('should error if we replace a real id node in the store with a generated id node', (resolve, reject) => {
     const queryWithId = gql`
       query {
         author {
@@ -2385,9 +2386,9 @@ describe('QueryManager', () => {
         wait: 60,
       }),
     ]).then(resolve, reject);
-  }));
+  });
 
-  it('should not error when merging a generated id store node  with a real id node', () => new Promise((resolve, reject) => {
+  itAsync('should not error when merging a generated id store node  with a real id node', (resolve, reject) => {
     const queryWithoutId = gql`
       query {
         author {
@@ -2473,9 +2474,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(dataWithId),
       ),
     ]).then(resolve, reject);
-  }));
+  });
 
-  it('exposes errors on a refetch as a rejection', () => new Promise(async (resolve, reject) => {
+  itAsync('exposes errors on a refetch as a rejection', async (resolve, reject) => {
     const request = {
       query: gql`
         {
@@ -2532,9 +2533,9 @@ describe('QueryManager', () => {
         checkError(error);
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('does not return incomplete data when two queries for the same item are executed', () => new Promise((resolve, reject) => {
+  itAsync('does not return incomplete data when two queries for the same item are executed', (resolve, reject) => {
     const queryA = gql`
       query queryA {
         person(id: "abc") {
@@ -2614,10 +2615,10 @@ describe('QueryManager', () => {
         });
       }),
     ]).then(resolve, reject);
-  }));
+  });
 
   describe('polling queries', () => {
-    it('allows you to poll queries', () => new Promise((resolve, reject) => {
+    itAsync('allows you to poll queries', (resolve, reject) => {
       const query = gql`
         query fetchLuke($id: String) {
           people_one(id: $id) {
@@ -2665,9 +2666,9 @@ describe('QueryManager', () => {
         result => expect(stripSymbols(result.data)).toEqual(data1),
         result => expect(stripSymbols(result.data)).toEqual(data2),
       ).then(resolve, reject);
-    }));
+    });
 
-    it('does not poll during SSR', () => new Promise((resolve, reject) => {
+    itAsync('does not poll during SSR', (resolve, reject) => {
       const query = gql`
         query fetchLuke($id: String) {
           people_one(id: $id) {
@@ -2737,9 +2738,9 @@ describe('QueryManager', () => {
           }
         },
       });
-    }));
+    });
 
-    it('should let you handle multiple polled queries and unsubscribe from one of them', () => new Promise((resolve, reject) => {
+    itAsync('should let you handle multiple polled queries and unsubscribe from one of them', (resolve, reject) => {
       const query1 = gql`
         query {
           author {
@@ -2854,9 +2855,9 @@ describe('QueryManager', () => {
 
         resolve();
       }, 400);
-    }));
+    });
 
-    it('allows you to unsubscribe from polled queries', () => new Promise((resolve, reject) => {
+    itAsync('allows you to unsubscribe from polled queries', (resolve, reject) => {
       const query = gql`
         query fetchLuke($id: String) {
           people_one(id: $id) {
@@ -2914,9 +2915,9 @@ describe('QueryManager', () => {
       );
 
       return promise.then(resolve, reject);
-    }));
+    });
 
-    it('allows you to unsubscribe from polled query errors', () => new Promise((resolve, reject) => {
+    itAsync('allows you to unsubscribe from polled query errors', (resolve, reject) => {
       const query = gql`
         query fetchLuke($id: String) {
           people_one(id: $id) {
@@ -2989,9 +2990,9 @@ describe('QueryManager', () => {
           resolve();
         }, 4);
       });
-    }));
+    });
 
-    it('exposes a way to start a polling query', () => new Promise((resolve, reject) => {
+    itAsync('exposes a way to start a polling query', (resolve, reject) => {
       const query = gql`
         query fetchLuke($id: String) {
           people_one(id: $id) {
@@ -3040,9 +3041,9 @@ describe('QueryManager', () => {
         result => expect(stripSymbols(result.data)).toEqual(data1),
         result => expect(stripSymbols(result.data)).toEqual(data2),
       ).then(resolve, reject);
-    }));
+    });
 
-    it('exposes a way to stop a polling query', () => new Promise((resolve, reject) => {
+    itAsync('exposes a way to stop a polling query', (resolve, reject) => {
       const query = gql`
         query fetchLeia($id: String) {
           people_one(id: $id) {
@@ -3088,9 +3089,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(data1);
         observable.stopPolling();
       }).then(resolve, reject);
-    }));
+    });
 
-    it('stopped polling queries still get updates', () => new Promise((resolve, reject) => {
+    itAsync('stopped polling queries still get updates', (resolve, reject) => {
       const query = gql`
         query fetchLeia($id: String) {
           people_one(id: $id) {
@@ -3150,10 +3151,10 @@ describe('QueryManager', () => {
           timeout = (error: Error) => reject(error);
         }),
       ]).then(resolve, reject);
-    }));
+    });
   });
   describe('store resets', () => {
-    it('returns a promise resolving when all queries have been refetched', () => new Promise((resolve, reject) => {
+    itAsync('returns a promise resolving when all queries have been refetched', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3246,9 +3247,9 @@ describe('QueryManager', () => {
           expect(stripSymbols(result2.data)).toEqual(data2Changed);
         });
       }).then(resolve, reject);
-    }));
+    });
 
-    it('should change the store state to an empty state', () => new Promise((resolve, reject) => {
+    itAsync('should change the store state to an empty state', (resolve, reject) => {
       const queryManager = createQueryManager({
         link: mockSingleLink(reject),
       });
@@ -3262,7 +3263,7 @@ describe('QueryManager', () => {
       expect(queryManager.mutationStore.getStore()).toEqual({});
 
       resolve();
-    }));
+    });
 
     xit('should only refetch once when we store reset', () => {
       let queryManager: QueryManager<NormalizedCacheObject>;
@@ -3322,7 +3323,7 @@ describe('QueryManager', () => {
       );
     });
 
-    it('should not refetch torn-down queries', () => new Promise((resolve, reject) => {
+    itAsync('should not refetch torn-down queries', (resolve, reject) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const query = gql`
@@ -3368,7 +3369,7 @@ describe('QueryManager', () => {
           resolve();
         }, 50);
       });
-    }));
+    });
 
     it('should not error on queries that are already in the store', () => {
       let queryManager: QueryManager<NormalizedCacheObject>;
@@ -3434,7 +3435,7 @@ describe('QueryManager', () => {
       );
     });
 
-    it('should not error on a stopped query()', () => new Promise((resolve, reject) => {
+    itAsync('should not error on a stopped query()', (resolve, reject) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
@@ -3468,9 +3469,9 @@ describe('QueryManager', () => {
 
       queryManager.removeQuery(queryId);
       queryManager.resetStore().then(resolve, reject);
-    }));
+    });
 
-    it('should throw an error on an inflight fetch query if the store is reset', () => new Promise((resolve, reject) => {
+    itAsync('should throw an error on an inflight fetch query if the store is reset', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3502,9 +3503,9 @@ describe('QueryManager', () => {
       // Need to delay the reset at least until the fetchRequest method
       // has had a chance to enter this request into fetchQueryRejectFns.
       setTimeout(() => queryManager.resetStore(), 100);
-    }));
+    });
 
-    it('should call refetch on a mocked Observable if the store is reset', () => new Promise((resolve, reject) => {
+    itAsync('should call refetch on a mocked Observable if the store is reset', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3530,9 +3531,9 @@ describe('QueryManager', () => {
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
-    }));
+    });
 
-    it('should not call refetch on a cache-only Observable if the store is reset', () => new Promise((resolve, reject) => {
+    itAsync('should not call refetch on a cache-only Observable if the store is reset', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3566,9 +3567,9 @@ describe('QueryManager', () => {
         expect(refetchCount).toEqual(0);
         resolve();
       }, 50);
-    }));
+    });
 
-    it('should not call refetch on a standby Observable if the store is reset', () => new Promise((resolve, reject) => {
+    itAsync('should not call refetch on a standby Observable if the store is reset', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3602,9 +3603,9 @@ describe('QueryManager', () => {
         expect(refetchCount).toEqual(0);
         resolve();
       }, 50);
-    }));
+    });
 
-    it('should throw an error on an inflight query() if the store is reset', () => new Promise((resolve, reject) => {
+    itAsync('should throw an error on an inflight query() if the store is reset', (resolve, reject) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
@@ -3640,10 +3641,10 @@ describe('QueryManager', () => {
         .catch(() => {
           resolve();
         });
-    }));
+    });
   });
   describe('refetching observed queries', () => {
-    it('returns a promise resolving when all queries have been refetched', () => new Promise((resolve, reject) => {
+    itAsync('returns a promise resolving when all queries have been refetched', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3736,9 +3737,9 @@ describe('QueryManager', () => {
           expect(stripSymbols(result2.data)).toEqual(data2Changed);
         });
       }).then(resolve, reject);
-    }));
+    });
 
-    it('should only refetch once when we refetch observable queries', () => new Promise((resolve, reject) => {
+    itAsync('should only refetch once when we refetch observable queries', (resolve, reject) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
@@ -3797,9 +3798,9 @@ describe('QueryManager', () => {
       ).catch(e => {
         reject(e);
       });
-    }));
+    });
 
-    it('should not refetch torn-down queries', () => new Promise((resolve, reject) => {
+    itAsync('should not refetch torn-down queries', (resolve, reject) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const query = gql`
@@ -3845,7 +3846,7 @@ describe('QueryManager', () => {
           resolve();
         }, 50);
       });
-    }));
+    });
 
     it('should not error on queries that are already in the store', () => {
       let queryManager: QueryManager<NormalizedCacheObject>;
@@ -3897,7 +3898,7 @@ describe('QueryManager', () => {
       );
     });
 
-    it('should NOT throw an error on an inflight fetch query if the observable queries are refetched', () => new Promise((resolve, reject) => {
+    itAsync('should NOT throw an error on an inflight fetch query if the observable queries are refetched', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3924,9 +3925,9 @@ describe('QueryManager', () => {
           reject(new Error('Should not return an error'));
         });
       queryManager.reFetchObservableQueries();
-    }));
+    });
 
-    it('should call refetch on a mocked Observable if the observed queries are refetched', () => new Promise((resolve, reject) => {
+    itAsync('should call refetch on a mocked Observable if the observed queries are refetched', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3952,9 +3953,9 @@ describe('QueryManager', () => {
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.reFetchObservableQueries();
-    }));
+    });
 
-    it('should not call refetch on a cache-only Observable if the observed queries are refetched', () => new Promise((resolve, reject) => {
+    itAsync('should not call refetch on a cache-only Observable if the observed queries are refetched', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3988,9 +3989,9 @@ describe('QueryManager', () => {
         expect(refetchCount).toEqual(0);
         resolve();
       }, 50);
-    }));
+    });
 
-    it('should not call refetch on a standby Observable if the observed queries are refetched', () => new Promise((resolve, reject) => {
+    itAsync('should not call refetch on a standby Observable if the observed queries are refetched', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -4024,9 +4025,9 @@ describe('QueryManager', () => {
         expect(refetchCount).toEqual(0);
         resolve();
       }, 50);
-    }));
+    });
 
-    it('should refetch on a standby Observable if the observed queries are refetched and the includeStandby parameter is set to true', () => new Promise((resolve, reject) => {
+    itAsync('should refetch on a standby Observable if the observed queries are refetched and the includeStandby parameter is set to true', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -4061,9 +4062,9 @@ describe('QueryManager', () => {
         expect(refetchCount).toEqual(1);
         resolve();
       }, 50);
-    }));
+    });
 
-    it('should NOT throw an error on an inflight query() if the observed queries are refetched', () => new Promise((resolve, reject) => {
+    itAsync('should NOT throw an error on an inflight query() if the observed queries are refetched', (resolve, reject) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
@@ -4103,11 +4104,11 @@ describe('QueryManager', () => {
             ),
           );
         });
-    }));
+    });
   });
 
   describe('loading state', () => {
-    it('should be passed as false if we are not watching a query', () => new Promise((resolve, reject) => {
+    itAsync('should be passed as false if we are not watching a query', (resolve, reject) => {
       const query = gql`
         query {
           fortuneCookie
@@ -4126,9 +4127,9 @@ describe('QueryManager', () => {
           expect(stripSymbols(result.data)).toEqual(data);
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('should be passed to the observer as true if we are returning partial data', () => new Promise((resolve, reject) => {
+    itAsync('should be passed to the observer as true if we are returning partial data', (resolve, reject) => {
       const fortuneCookie =
         'You must stick to your goal but rethink your approach';
       const primeQuery = gql`
@@ -4183,9 +4184,9 @@ describe('QueryManager', () => {
           );
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('should be passed to the observer as false if we are returning all the data', () => new Promise((resolve, reject) => {
+    itAsync('should be passed to the observer as false if we are returning all the data', (resolve, reject) => {
       assertWithObserver({
         reject,
         query: gql`
@@ -4211,9 +4212,9 @@ describe('QueryManager', () => {
           },
         },
       });
-    }));
+    });
 
-    it('will update on `resetStore`', () => new Promise((resolve, reject) => {
+    itAsync('will update on `resetStore`', (resolve, reject) => {
       const testQuery = gql`
         query {
           author {
@@ -4273,9 +4274,9 @@ describe('QueryManager', () => {
           },
           error: error => reject(error),
         });
-    }));
+    });
 
-    it('will be true when partial data may be returned', () => new Promise((resolve, reject) => {
+    itAsync('will be true when partial data may be returned', (resolve, reject) => {
       const query1 = gql`{
         a { x1 y1 z1 }
       }`;
@@ -4331,7 +4332,7 @@ describe('QueryManager', () => {
               error: reject,
             });
         }).then(resolve, reject);
-    }));
+    });
   });
 
   describe('refetchQueries', () => {
@@ -4350,7 +4351,7 @@ describe('QueryManager', () => {
       };
     });
 
-    it('should refetch the right query when a result is successfully returned', () => new Promise((resolve, reject) => {
+    itAsync('should refetch the right query when a result is successfully returned', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4419,9 +4420,9 @@ describe('QueryManager', () => {
           expect(stripSymbols(result.data)).toEqual(secondReqData);
         },
       ).then(resolve, reject);
-    }));
+    });
 
-    it('should not warn and continue when an unknown query name is asked to refetch', () => new Promise((resolve, reject) => {
+    itAsync('should not warn and continue when an unknown query name is asked to refetch', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4489,9 +4490,9 @@ describe('QueryManager', () => {
           expect(timesWarned).toBe(0);
         },
       ).then(resolve, reject);
-    }));
+    });
 
-    it('should ignore without warning a query name that is asked to refetch with no active subscriptions', () => new Promise((resolve, reject) => {
+    itAsync('should ignore without warning a query name that is asked to refetch with no active subscriptions', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4555,9 +4556,9 @@ describe('QueryManager', () => {
         })
         .then(() => expect(timesWarned).toBe(0))
         .then(resolve, reject);
-    }));
+    });
 
-    it('also works with a query document and variables', () => new Promise((resolve, reject) => {
+    itAsync('also works with a query document and variables', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName($id: ID!) {
           changeAuthorName(newName: "Jack Smith", id: $id) {
@@ -4640,9 +4641,9 @@ describe('QueryManager', () => {
           count++;
         },
       });
-    }));
+    });
 
-    it('also works with a conditional function that returns false', () => new Promise((resolve, reject) => {
+    itAsync('also works with a conditional function that returns false', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4702,9 +4703,9 @@ describe('QueryManager', () => {
         expect(stripSymbols(result.data)).toEqual(data);
         queryManager.mutate({ mutation, refetchQueries: conditional });
       }).then(resolve, reject);
-    }));
+    });
 
-    it('also works with a conditional function that returns an array of refetches', () => new Promise((resolve, reject) => {
+    itAsync('also works with a conditional function that returns an array of refetches', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4768,9 +4769,9 @@ describe('QueryManager', () => {
         },
         result => expect(stripSymbols(result.data)).toEqual(secondReqData),
       ).then(resolve, reject);
-    }));
+    });
 
-    it('should refetch using the original query context (if any)', () => new Promise((resolve, reject) => {
+    itAsync('should refetch using the original query context (if any)', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4848,9 +4849,9 @@ describe('QueryManager', () => {
           expect(context.headers.someHeader).toEqual(headers.someHeader);
         },
       ).then(resolve, reject);
-    }));
+    });
 
-    it('should refetch using the specified context, if provided', () => new Promise((resolve, reject) => {
+    itAsync('should refetch using the specified context, if provided', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4934,7 +4935,7 @@ describe('QueryManager', () => {
           expect(context.headers.someHeader).toEqual(headers.someHeader);
         },
       ).then(resolve, reject);
-    }));
+    });
 
     afterEach(() => {
       console.warn = oldWarn;
@@ -5056,7 +5057,7 @@ describe('QueryManager', () => {
   });
 
   describe('store watchers', () => {
-    it('does not fill up the store on resolved queries', () => new Promise((resolve, reject) => {
+    itAsync('does not fill up the store on resolved queries', (resolve, reject) => {
       const query1 = gql`
         query One {
           one
@@ -5112,13 +5113,13 @@ describe('QueryManager', () => {
           expect(cache.watches.size).toBe(0);
         })
         .then(resolve, reject);
-    }));
+    });
   });
 
   describe('`no-cache` handling', () => {
-    it(
+    itAsync(
       'should return a query result (if one exists) when a `no-cache` fetch policy is used',
-      () => new Promise((resolve, reject) => {
+      (resolve, reject) => {
         const query = gql`
           query {
             author {
@@ -5152,12 +5153,12 @@ describe('QueryManager', () => {
           expect(currentResult.data).toEqual(data);
           resolve();
         });
-      })
+      },
     );
   });
 
   describe('client awareness', () => {
-    it('should pass client awareness settings into the link chain via context', () => new Promise((resolve, reject) => {
+    itAsync('should pass client awareness settings into the link chain via context', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -5200,6 +5201,6 @@ describe('QueryManager', () => {
         expect(context.clientAwareness).toEqual(clientAwareness);
         resolve();
       });
-    }));
+    });
   });
 });

@@ -7,6 +7,7 @@ import { mockSingleLink } from '../__mocks__/mockLinks';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { withWarning } from './utils/wrap';
+import { itAsync } from './utils/itAsync';
 
 describe('mutation results', () => {
   const query = gql`
@@ -195,13 +196,13 @@ describe('mutation results', () => {
     return obsHandle.result();
   }
 
-  it('correctly primes cache for tests', () => new Promise((resolve, reject) => {
+  itAsync('correctly primes cache for tests', (resolve, reject) => {
     return setup(reject).then(
       () => client.query({ query })
     ).then(resolve, reject);
-  }));
+  });
 
-  it('correctly integrates field changes by default', () => new Promise((resolve, reject) => {
+  itAsync('correctly integrates field changes by default', (resolve, reject) => {
     const mutation = gql`
       mutation setCompleted {
         setCompleted(todoId: "3") {
@@ -238,9 +239,9 @@ describe('mutation results', () => {
         expect(newResult.data.todoList.todos[0].completed).toBe(true);
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('correctly integrates field changes by default with variables', () => new Promise((resolve, reject) => {
+  itAsync('correctly integrates field changes by default with variables', (resolve, reject) => {
     const query = gql`
       query getMini($id: ID!) {
         mini(id: $id) {
@@ -327,9 +328,9 @@ describe('mutation results', () => {
       },
       error: reject,
     });
-  }));
+  });
 
-  it("should warn when the result fields don't match the query fields", () => new Promise((resolve, reject) => {
+  itAsync("should warn when the result fields don't match the query fields", (resolve, reject) => {
     let handle: any;
     let subscriptionHandle: Subscription;
     let counter = 0;
@@ -421,7 +422,7 @@ describe('mutation results', () => {
         .then(() => subscriptionHandle.unsubscribe())
         .then(resolve, reject);
     }, /Missing field description/);
-  }));
+  });
 
   describe('updateQueries', () => {
     const mutation = gql`
@@ -449,7 +450,7 @@ describe('mutation results', () => {
       },
     };
 
-    it('analogous of ARRAY_INSERT', () => new Promise((resolve, reject) => {
+    itAsync('analogous of ARRAY_INSERT', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       return setup(reject, {
         request: { query: mutation },
@@ -499,9 +500,9 @@ describe('mutation results', () => {
           );
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('does not fail if optional query variables are not supplied', () => new Promise((resolve, reject) => {
+    itAsync('does not fail if optional query variables are not supplied', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       const mutationWithVars = gql`
         mutation createTodo($requiredVar: String!, $optionalVar: String) {
@@ -575,9 +576,9 @@ describe('mutation results', () => {
           );
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('does not fail if the query did not complete correctly', () => new Promise((resolve, reject) => {
+    itAsync('does not fail if the query did not complete correctly', (resolve, reject) => {
       const obsHandle = setupObsHandle(reject, {
         request: { query: mutation },
         result: mutationResult,
@@ -603,9 +604,9 @@ describe('mutation results', () => {
           },
         },
       }).then(resolve, reject);
-    }));
+    });
 
-    it('does not fail if the query did not finish loading', () => new Promise((resolve, reject) => {
+    itAsync('does not fail if the query did not finish loading', (resolve, reject) => {
       const obsHandle = setupDelayObsHandle(reject, 15, {
         request: { query: mutation },
         result: mutationResult,
@@ -629,9 +630,9 @@ describe('mutation results', () => {
           },
         },
       }).then(resolve, reject);
-    }));
+    });
 
-    it('does not make next queries fail if a mutation fails', () => new Promise((resolve, reject) => {
+    itAsync('does not make next queries fail if a mutation fails', (resolve, reject) => {
       const obsHandle = setupObsHandle(
         error => { throw error },
         {
@@ -684,9 +685,9 @@ describe('mutation results', () => {
             .then(resolve, reject);
         },
       });
-    }));
+    });
 
-    it('error handling in reducer functions', () => new Promise((resolve, reject) => {
+    itAsync('error handling in reducer functions', (resolve, reject) => {
       const oldError = console.error;
       const errors: any[] = [];
       console.error = (msg: string) => {
@@ -726,10 +727,10 @@ describe('mutation results', () => {
           console.error = oldError;
         })
         .then(resolve, reject);
-    }));
+    });
   });
 
-  it('does not fail if one of the previous queries did not complete correctly', () => new Promise((resolve, reject) => {
+  itAsync('does not fail if one of the previous queries did not complete correctly', (resolve, reject) => {
     const variableQuery = gql`
       query Echo($message: String) {
         echo(message: $message)
@@ -831,9 +832,9 @@ describe('mutation results', () => {
     });
 
     watchedQuery.refetch(variables2);
-  }));
+  });
 
-  it('allows mutations with optional arguments', () => new Promise((resolve, reject) => {
+  itAsync('allows mutations with optional arguments', (resolve, reject) => {
     let count = 0;
 
     client = new ApolloClient({
@@ -909,9 +910,9 @@ describe('mutation results', () => {
         resolve();
       })
       .catch(reject);
-  }));
+  });
 
-  it('allows mutations with default values', () => new Promise((resolve, reject) => {
+  itAsync('allows mutations with default values', (resolve, reject) => {
     let count = 0;
 
     client = new ApolloClient({
@@ -985,9 +986,9 @@ describe('mutation results', () => {
         resolve();
       })
       .catch(reject);
-  }));
+  });
 
-  it('will pass null to the network interface when provided', () => new Promise((resolve, reject) => {
+  itAsync('will pass null to the network interface when provided', (resolve, reject) => {
     let count = 0;
 
     client = new ApolloClient({
@@ -1062,7 +1063,7 @@ describe('mutation results', () => {
         resolve();
       })
       .catch(reject);
-  }));
+  });
 
   describe('store transaction updater', () => {
     const mutation = gql`
@@ -1090,7 +1091,7 @@ describe('mutation results', () => {
       },
     };
 
-    it('analogous of ARRAY_INSERT', () => new Promise((resolve, reject) => {
+    itAsync('analogous of ARRAY_INSERT', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       return setup(reject, {
         request: { query: mutation },
@@ -1156,9 +1157,9 @@ describe('mutation results', () => {
           );
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('does not fail if optional query variables are not supplied', () => new Promise((resolve, reject) => {
+    itAsync('does not fail if optional query variables are not supplied', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       const mutationWithVars = gql`
         mutation createTodo($requiredVar: String!, $optionalVar: String) {
@@ -1248,9 +1249,9 @@ describe('mutation results', () => {
           );
         })
         .then(resolve, reject);
-    }));
+    });
 
-    it('does not make next queries fail if a mutation fails', () => new Promise((resolve, reject) => {
+    itAsync('does not make next queries fail if a mutation fails', (resolve, reject) => {
       const obsHandle = setupObsHandle(
         error => { throw error },
         {
@@ -1341,9 +1342,9 @@ describe('mutation results', () => {
             .then(resolve, reject);
         },
       });
-    }));
+    });
 
-    it('error handling in reducer functions', () => new Promise((resolve, reject) => {
+    itAsync('error handling in reducer functions', (resolve, reject) => {
       const oldError = console.error;
       const errors: any[] = [];
       console.error = (msg: string) => {
@@ -1381,6 +1382,6 @@ describe('mutation results', () => {
           console.error = oldError;
         })
         .then(resolve, reject);
-    }));
+    });
   });
 });

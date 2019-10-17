@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
+import { itAsync } from './utils/itAsync';
 
 describe('updateQuery on a simple query', () => {
   const query = gql`
@@ -25,7 +26,7 @@ describe('updateQuery on a simple query', () => {
     },
   };
 
-  it('triggers new result from updateQuery', () => new Promise((resolve, reject) => {
+  itAsync('triggers new result from updateQuery', (resolve, reject) => {
     let latestResult: any = null;
     const link = mockSingleLink(reject, {
       request: { query },
@@ -60,7 +61,7 @@ describe('updateQuery on a simple query', () => {
       .then(() => expect(latestResult.data.entry.value).toBe(2))
       .then(() => sub.unsubscribe())
       .then(resolve, reject);
-  }));
+  });
 });
 
 describe('updateQuery on a query with required and optional variables', () => {
@@ -88,7 +89,7 @@ describe('updateQuery on a query with required and optional variables', () => {
     },
   };
 
-  it('triggers new result from updateQuery', () => new Promise((resolve, reject) => {
+  itAsync('triggers new result from updateQuery', (resolve, reject) => {
     let latestResult: any = null;
     const link = mockSingleLink(reject, {
       request: {
@@ -127,7 +128,7 @@ describe('updateQuery on a query with required and optional variables', () => {
       .then(() => expect(latestResult.data.entry.value).toBe(2))
       .then(() => sub.unsubscribe())
       .then(resolve, reject);
-  }));
+  });
 });
 
 describe('fetchMore on an observable query', () => {
@@ -241,7 +242,7 @@ describe('fetchMore on an observable query', () => {
     sub = null;
   }
 
-  it('triggers new result with new variables', () => new Promise((resolve, reject) => {
+  itAsync('triggers new result withAsync new variables', (resolve, reject) => {
     latestResult = null;
     return setup(reject, {
       request: {
@@ -278,9 +279,9 @@ describe('fetchMore on an observable query', () => {
         unsetup();
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('basic fetchMore results merging', () => new Promise((resolve, reject) => {
+  itAsync('basic fetchMore results merging', (resolve, reject) => {
     latestResult = null;
     return setup(reject, {
       request: {
@@ -313,9 +314,9 @@ describe('fetchMore on an observable query', () => {
         unsetup();
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('fetching more with a different query', () => new Promise((resolve, reject) => {
+  itAsync('fetching more with a different query', (resolve, reject) => {
     latestResult = null;
     return setup(reject, {
       request: {
@@ -350,9 +351,9 @@ describe('fetchMore on an observable query', () => {
         unsetup();
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('will set the `network` status to `fetchMore`', () => new Promise((resolve, reject) => {
+  itAsync('will set the `network` status to `fetchMore`', (resolve, reject) => {
     link = mockSingleLink(
       reject,
       { request: { query, variables }, result, delay: 5 },
@@ -413,9 +414,9 @@ describe('fetchMore on an observable query', () => {
       error: error => reject(error),
       complete: () => reject(new Error('Should not have completed')),
     });
-  }));
+  });
 
-  it('will not get an error from `fetchMore` if thrown', () => new Promise((resolve, reject) => {
+  itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
       reject,
@@ -481,9 +482,9 @@ describe('fetchMore on an observable query', () => {
         );
       },
     });
-  }));
+  });
 
-  it('will not leak fetchMore query', () => new Promise((resolve, reject) => {
+  itAsync('will not leak fetchMore query', (resolve, reject) => {
     latestResult = null;
     var beforeQueryCount;
     return setup(reject, {
@@ -517,7 +518,7 @@ describe('fetchMore on an observable query', () => {
         unsetup();
       })
       .then(resolve, reject);
-  }));
+  });
 });
 
 describe('fetchMore on an observable query with connection', () => {
@@ -620,7 +621,7 @@ describe('fetchMore on an observable query with connection', () => {
     sub = null;
   }
 
-  it('fetchMore with connection results merging', () => new Promise((resolve, reject) => {
+  itAsync('fetchMore with connection results merging', (resolve, reject) => {
     latestResult = null;
     return setup(reject, {
       request: {
@@ -653,9 +654,9 @@ describe('fetchMore on an observable query with connection', () => {
         unsetup();
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('will set the network status to `fetchMore`', () => new Promise((resolve, reject) => {
+  itAsync('will set the network status to `fetchMore`', (resolve, reject) => {
     link = mockSingleLink(
       reject,
       { request: { query: transformedQuery, variables }, result, delay: 5 },
@@ -716,9 +717,9 @@ describe('fetchMore on an observable query with connection', () => {
       error: error => reject(error),
       complete: () => reject(new Error('Should not have completed')),
     });
-  }));
+  });
 
-  it('will not get an error from `fetchMore` if thrown', () => new Promise((resolve, reject) => {
+  itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
     link = mockSingleLink(
       reject,
@@ -783,5 +784,5 @@ describe('fetchMore on an observable query with connection', () => {
         );
       },
     });
-  }));
+  });
 });

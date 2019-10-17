@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../__tests__/utils/stripSymbols';
+import { itAsync } from '../../__tests__/utils/itAsync';
 import { ApolloClient } from '../..';
 import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
@@ -100,7 +101,7 @@ const createMutationLink = (reject: (reason: any) => any) =>
   );
 
 describe('network-only', () => {
-  it('requests from the network even if already in cache', () => new Promise((resolve, reject) => {
+  itAsync('requests from the network even if already in cache', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -123,9 +124,9 @@ describe('network-only', () => {
           expect(called).toBe(4);
         }),
     ).then(resolve, reject);
-  }));
+  });
 
-  it('saves data to the cache on success', () => new Promise((resolve, reject) => {
+  itAsync('saves data to the cache on success', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -146,9 +147,9 @@ describe('network-only', () => {
         expect(called).toBe(2);
       }),
     ).then(resolve, reject);
-  }));
+  });
 
-  it('does not save data to the cache on failure', () => new Promise((resolve, reject) => {
+  itAsync('does not save data to the cache on failure', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -177,9 +178,9 @@ describe('network-only', () => {
         expect(didFail).toBe(true);
       }))
       .then(resolve, reject);
-  }));
+  });
 
-  it('updates the cache on a mutation', () => new Promise((resolve, reject) => {
+  itAsync('updates the cache on a mutation', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -207,11 +208,11 @@ describe('network-only', () => {
         });
       })
       .then(resolve, reject);
-  }));
+  });
 });
 
 describe('no-cache', () => {
-  it('requests from the network when not in cache', () => new Promise((resolve, reject) => {
+  itAsync('requests from the network when not in cache', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -233,9 +234,9 @@ describe('no-cache', () => {
         expect(called).toBe(2);
       })
       .then(resolve, reject);
-  }));
+  });
 
-  it('requests from the network even if already in cache', () => new Promise((resolve, reject) => {
+  itAsync('requests from the network even if already in cache', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -256,9 +257,9 @@ describe('no-cache', () => {
         expect(called).toBe(4);
       }),
     ).then(resolve, reject);
-  }));
+  });
 
-  it('does not save the data to the cache on success', () => new Promise((resolve, reject) => {
+  itAsync('does not save the data to the cache on success', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -280,9 +281,9 @@ describe('no-cache', () => {
         expect(called).toBe(4);
       }),
     ).then(resolve, reject);
-  }));
+  });
 
-  it('does not save data to the cache on failure', () => new Promise((resolve, reject) => {
+  itAsync('does not save data to the cache on failure', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -311,9 +312,9 @@ describe('no-cache', () => {
         expect(didFail).toBe(true);
       }))
       .then(resolve, reject);
-  }));
+  });
 
-  it('does not update the cache on a mutation', () => new Promise((resolve, reject) => {
+  itAsync('does not update the cache on a mutation', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -339,11 +340,11 @@ describe('no-cache', () => {
         });
       })
       .then(resolve, reject);
-  }));
+  });
 });
 
 describe('cache-and-network', function() {
-  it('gives appropriate networkStatus for refetched queries', done => {
+  itAsync('gives appropriate networkStatus for refetched queries', (resolve, reject) => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
@@ -384,7 +385,7 @@ describe('cache-and-network', function() {
       };
     }
 
-    subscribeAndCount(done, observable, (count, result) => {
+    subscribeAndCount(reject, observable, (count, result) => {
       if (count === 1) {
         expect(result).toEqual({
           data: void 0,
@@ -444,7 +445,7 @@ describe('cache-and-network', function() {
           networkStatus: NetworkStatus.ready,
           stale: false,
         });
-        done();
+        resolve();
       }
     });
   });

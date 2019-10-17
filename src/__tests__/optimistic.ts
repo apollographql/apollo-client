@@ -10,6 +10,7 @@ import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
 import { makeReference } from '../utilities/graphql/storeUtils';
 import { stripSymbols } from './utils/stripSymbols';
+import { itAsync } from './utils/itAsync';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 
 describe('optimistic mutation results', () => {
@@ -192,7 +193,7 @@ describe('optimistic mutation results', () => {
         },
       };
 
-      it('handles a single error for a single mutation', () => new Promise(async (resolve, reject) => {
+      itAsync('handles a single error for a single mutation', async (resolve, reject) => {
         expect.assertions(6);
         await setup(reject, {
           request: { query: mutation },
@@ -221,9 +222,9 @@ describe('optimistic mutation results', () => {
         }
 
         resolve();
-      }));
+      });
 
-      it('handles errors produced by one mutation in a series', () => new Promise(async (resolve, reject) => {
+      itAsync('handles errors produced by one mutation in a series', async (resolve, reject) => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
         await setup(
@@ -291,9 +292,9 @@ describe('optimistic mutation results', () => {
         );
 
         resolve();
-      }));
+      });
 
-      it('can run 2 mutations concurrently and handles all intermediate states well', () => new Promise(async (resolve, reject) => {
+      itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
         expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
@@ -391,7 +392,7 @@ describe('optimistic mutation results', () => {
         );
 
         resolve();
-      }));
+      });
     });
 
     describe('with `update`', () => {
@@ -426,7 +427,7 @@ describe('optimistic mutation results', () => {
         });
       };
 
-      it('handles a single error for a single mutation', () => new Promise(async (resolve, reject) => {
+      itAsync('handles a single error for a single mutation', async (resolve, reject) => {
         expect.assertions(6);
         try {
           await setup(reject, {
@@ -457,9 +458,9 @@ describe('optimistic mutation results', () => {
         }
 
         resolve();
-      }));
+      });
 
-      it('handles errors produced by one mutation in a series', () => new Promise(async (resolve, reject) => {
+      itAsync('handles errors produced by one mutation in a series', async (resolve, reject) => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
         await setup(
@@ -527,9 +528,9 @@ describe('optimistic mutation results', () => {
         );
 
         resolve();
-      }));
+      });
 
-      it('can run 2 mutations concurrently and handles all intermediate states well', () => new Promise(async (resolve, reject) => {
+      itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
         expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
@@ -627,7 +628,7 @@ describe('optimistic mutation results', () => {
         );
 
         resolve();
-      }));
+      });
     });
   });
 
@@ -697,11 +698,11 @@ describe('optimistic mutation results', () => {
       }
     `;
 
-    it(
+    itAsync(
       'should read the optimistic response of a mutation when making an ' +
         'ApolloClient.readQuery() call, if the `optimistic` param is set to ' +
         'true',
-      () => new Promise((resolve, reject) => {
+      (resolve, reject) => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
@@ -717,14 +718,14 @@ describe('optimistic mutation results', () => {
             },
           });
         }).then(resolve, reject);
-      }),
+      },
     );
 
-    it(
+    itAsync(
       'should not read the optimistic response of a mutation when making ' +
         'an ApolloClient.readQuery() call, if the `optimistic` param is set ' +
         'to false',
-      () => new Promise((resolve, reject) => {
+      (resolve, reject) => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
@@ -739,7 +740,7 @@ describe('optimistic mutation results', () => {
             },
           });
         }).then(resolve, reject);
-      })
+      },
     );
 
     const todoListFragment = gql`
@@ -753,11 +754,11 @@ describe('optimistic mutation results', () => {
       }
     `;
 
-    it(
+    itAsync(
       'should read the optimistic response of a mutation when making an ' +
         'ApolloClient.readFragment() call, if the `optimistic` param is set ' +
         'to true',
-      () => new Promise((resolve, reject) => {
+      (resolve, reject) => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
@@ -779,14 +780,14 @@ describe('optimistic mutation results', () => {
             },
           });
         }).then(resolve, reject);
-      })
+      },
     );
 
-    it(
+    itAsync(
       'should not read the optimistic response of a mutation when making ' +
         'an ApolloClient.readFragment() call, if the `optimistic` param is ' +
         'set to false',
-      () => new Promise((resolve, reject) => {
+      (resolve, reject) => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
@@ -807,7 +808,7 @@ describe('optimistic mutation results', () => {
             },
           });
         }).then(resolve, reject);
-      })
+      },
     );
   });
 
@@ -848,7 +849,7 @@ describe('optimistic mutation results', () => {
       },
     });
 
-    it('will use a passed variable in optimisticResponse', () => new Promise(async (resolve, reject) => {
+    itAsync('will use a passed variable in optimisticResponse', async (resolve, reject) => {
       expect.assertions(6);
       let subscriptionHandle: Subscription;
       await setup(reject, {
@@ -918,7 +919,7 @@ describe('optimistic mutation results', () => {
       );
 
       resolve();
-    }));
+    });
   });
 
   describe('optimistic updates using `updateQueries`', () => {
@@ -986,7 +987,7 @@ describe('optimistic mutation results', () => {
       },
     };
 
-    it('will insert a single item to the beginning', () => new Promise(async (resolve, reject) => {
+    itAsync('will insert a single itemAsync to the beginning', async (resolve, reject) => {
       expect.assertions(7);
       let subscriptionHandle: Subscription;
       await setup(reject, {
@@ -1045,9 +1046,9 @@ describe('optimistic mutation results', () => {
       );
 
       resolve();
-    }));
+    });
 
-    it('two array insert like mutations', () => new Promise(async (resolve, reject) => {
+    itAsync('two array insert like mutations', async (resolve, reject) => {
       expect.assertions(9);
       let subscriptionHandle: Subscription;
       await setup(
@@ -1138,9 +1139,9 @@ describe('optimistic mutation results', () => {
       );
 
       resolve();
-    }));
+    });
 
-    it('two mutations, one fails', () => new Promise(async (resolve, reject) => {
+    itAsync('two mutations, one fails', async (resolve, reject) => {
       expect.assertions(10);
       let subscriptionHandle: Subscription;
       await setup(
@@ -1228,9 +1229,9 @@ describe('optimistic mutation results', () => {
       );
 
       resolve();
-    }));
+    });
 
-    it('will handle dependent updates', () => new Promise(async (resolve, reject) => {
+    itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
       link = mockSingleLink(
         reject,
@@ -1345,7 +1346,7 @@ describe('optimistic mutation results', () => {
       ]);
 
       resolve();
-    }));
+    });
   });
 
   describe('optimistic updates using `update`', () => {
@@ -1403,7 +1404,7 @@ describe('optimistic mutation results', () => {
       },
     };
 
-    it('will insert a single item to the beginning', () => new Promise(async (resolve, reject) => {
+    itAsync('will insert a single itemAsync to the beginning', async (resolve, reject) => {
       expect.assertions(6);
       let subscriptionHandle: Subscription;
       await setup(reject, {
@@ -1472,9 +1473,9 @@ describe('optimistic mutation results', () => {
       });
 
       resolve();
-    }));
+    });
 
-    it('two array insert like mutations', () => new Promise(async (resolve, reject) => {
+    itAsync('two array insert like mutations', async (resolve, reject) => {
       expect.assertions(9);
       let subscriptionHandle: Subscription;
       await setup(
@@ -1583,9 +1584,9 @@ describe('optimistic mutation results', () => {
       );
 
       resolve();
-    }));
+    });
 
-    it('two mutations, one fails', () => new Promise(async (resolve, reject) => {
+    itAsync('two mutations, one fails', async (resolve, reject) => {
       expect.assertions(10);
       let subscriptionHandle: Subscription;
       await setup(
@@ -1693,9 +1694,9 @@ describe('optimistic mutation results', () => {
       );
 
       resolve();
-    }));
+    });
 
-    it('will handle dependent updates', () => new Promise(async (resolve, reject) => {
+    itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
       link = mockSingleLink(
         reject,
@@ -1825,7 +1826,7 @@ describe('optimistic mutation results', () => {
       ]);
 
       resolve();
-    }));
+    });
   });
 });
 
@@ -1982,7 +1983,7 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
 
-  it('can post a new comment', () => new Promise(async (resolve, reject) => {
+  itAsync('can post a new comment', async (resolve, reject) => {
     expect.assertions(1);
     const mutationVariables = {
       repoFullName: 'org/repo',
@@ -2021,5 +2022,5 @@ describe('optimistic mutation - githunt comments', () => {
     expect(newResult.data.entry.comments.length).toBe(2);
 
     resolve();
-  }));
+  });
 });

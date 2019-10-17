@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../__tests__/utils/stripSymbols';
+import { itAsync } from '../../__tests__/utils/itAsync';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
@@ -36,7 +37,7 @@ function eachPollingQuery(
 }
 
 describe('QueryScheduler', () => {
-  it('should throw an error if we try to start polling a non-polling query', () => new Promise((resolve, reject) => {
+  itAsync('should throw an error if we try to start polling a non-polling query', (resolve, reject) => {
     const queryManager = new QueryManager({
       link: mockSingleLink(reject),
       cache: new InMemoryCache({ addTypename: false }),
@@ -56,9 +57,9 @@ describe('QueryScheduler', () => {
     }).toThrow();
 
     resolve();
-  }));
+  });
 
-  it('should correctly start polling queries', () => new Promise((resolve, reject) => {
+  itAsync('should correctly start polling queries', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -96,9 +97,9 @@ describe('QueryScheduler', () => {
       queryManager.stop();
       resolve();
     }, 120);
-  }));
+  });
 
-  it('should correctly stop polling queries', () => new Promise((resolve, reject) => {
+  itAsync('should correctly stop polling queries', (resolve, reject) => {
     const query = gql`
       query {
         someAlias: author {
@@ -144,9 +145,9 @@ describe('QueryScheduler', () => {
       queryManager.stop();
       resolve();
     }, 170);
-  }));
+  });
 
-  it('should register a query and return an observable that can be unsubscribed', () => new Promise((resolve, reject) => {
+  itAsync('should register a query and return an observable that can be unsubscribed', (resolve, reject) => {
     const myQuery = gql`
       query {
         someAuthorAlias: author {
@@ -188,9 +189,9 @@ describe('QueryScheduler', () => {
       queryManager.stop();
       resolve();
     }, 100);
-  }));
+  });
 
-  it('should register a query and return an observable that can adjust interval', () => new Promise((resolve, reject) => {
+  itAsync('should register a query and return an observable that can adjust interval', (resolve, reject) => {
     const myQuery = gql`
       query {
         someAuthorAlias: author {
@@ -242,9 +243,9 @@ describe('QueryScheduler', () => {
       queryManager.stop();
       resolve();
     }, 100);
-  }));
+  });
 
-  it('should handle network errors on polling queries correctly', () => new Promise((resolve, reject) => {
+  itAsync('should handle network errors on polling queries correctly', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -285,9 +286,9 @@ describe('QueryScheduler', () => {
         resolve();
       },
     });
-  }));
+  });
 
-  it('should not fire another query if one with the same id is in flight', () => new Promise((resolve, reject) => {
+  itAsync('should not fire another query if one with the same id is in flight', (resolve, reject) => {
     const query = gql`
       query B {
         fortuneCookie
@@ -316,9 +317,9 @@ describe('QueryScheduler', () => {
       queryManager.stop();
       resolve();
     }, 100);
-  }));
+  });
 
-  it('should add a query to an interval correctly', () => new Promise((resolve, reject) => {
+  itAsync('should add a query to an interval correctly', (resolve, reject) => {
     const query = gql`
       query {
         fortuneCookie
@@ -352,9 +353,9 @@ describe('QueryScheduler', () => {
     queryManager.stop();
 
     resolve();
-  }));
+  });
 
-  it('should add multiple queries to an interval correctly', () => new Promise((resolve, reject) => {
+  itAsync('should add multiple queries to an interval correctly', (resolve, reject) => {
     const query1 = gql`
       query {
         fortuneCookie
@@ -423,9 +424,9 @@ describe('QueryScheduler', () => {
     queryManager.stop();
 
     resolve();
-  }));
+  });
 
-  it('should remove queries from the interval list correctly', () => new Promise((resolve, reject) => {
+  itAsync('should remove queries from the interval list correctly', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -469,9 +470,9 @@ describe('QueryScheduler', () => {
       queryManager.stop();
       resolve();
     }, 100);
-  }));
+  });
 
-  it('should correctly start new polling query after removing old one', () => new Promise((resolve, reject) => {
+  itAsync('should correctly start new polling query after removing old one', (resolve, reject) => {
     const query = gql`
       query {
         someAlias: author {
@@ -523,5 +524,5 @@ describe('QueryScheduler', () => {
         resolve();
       }, 80);
     }, 200);
-  }));
+  });
 });

@@ -16,6 +16,7 @@ import { ApolloClient } from '../../';
 import wrap from '../../__tests__/utils/wrap';
 import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
 import { stripSymbols } from '../../__tests__/utils/stripSymbols';
+import { itAsync } from '../../__tests__/utils/itAsync';
 import { ApolloError } from '../../errors/ApolloError';
 
 describe('ObservableQuery', () => {
@@ -57,7 +58,7 @@ describe('ObservableQuery', () => {
 
   describe('setOptions', () => {
     describe('to change pollInterval', () => {
-      it('starts polling if goes from 0 -> something', () => new Promise((resolve, reject) => {
+      itAsync('starts polling if goes from 0 -> something', (resolve, reject) => {
         const manager = mockQueryManager(
           reject,
           {
@@ -90,9 +91,9 @@ describe('ObservableQuery', () => {
             resolve();
           }
         });
-      }));
+      });
 
-      it('stops polling if goes from something -> 0', () => new Promise((resolve, reject) => {
+      itAsync('stops polling if goes from something -> 0', (resolve, reject) => {
         const manager = mockQueryManager(
           reject,
           {
@@ -124,9 +125,9 @@ describe('ObservableQuery', () => {
             reject(new Error('Should not get more than one result'));
           }
         });
-      }));
+      });
 
-      it('can change from x>0 to y>0', () => new Promise((resolve, reject) => {
+      itAsync('can change from x>0 to y>0', (resolve, reject) => {
         const manager = mockQueryManager(
           reject,
           {
@@ -160,10 +161,10 @@ describe('ObservableQuery', () => {
             resolve();
           }
         });
-      }));
+      });
     });
 
-    it('does not break refetch', () => new Promise((resolve, reject) => {
+    itAsync('does not break refetch', (resolve, reject) => {
       // This query and variables are copied from react-apollo
       const queryWithVars = gql`
         query people($first: Int) {
@@ -211,9 +212,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('rerenders when refetch is called', () => new Promise((resolve, reject) => {
+    itAsync('rerenders when refetch is called', (resolve, reject) => {
       // This query and variables are copied from react-apollo
       const query = gql`
         query people($first: Int) {
@@ -257,9 +258,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('rerenders with new variables then shows correct data for previous variables', () => new Promise((resolve, reject) => {
+    itAsync('rerenders with new variables then shows correct data for previous variables', (resolve, reject) => {
       // This query and variables are copied from react-apollo
       const query = gql`
         query people($first: Int) {
@@ -313,11 +314,11 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
     // TODO: Something isn't quite right with this test. It's failing but not
     // for the right reasons.
-    it.skip('if query is refetched, and an error is returned, no other observer callbacks will be called', () => new Promise((resolve, reject) => {
+    itAsync.skip('if query is refetched, and an error is returned, no other observer callbacks will be called', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -352,9 +353,9 @@ describe('ObservableQuery', () => {
           setTimeout(resolve, 25);
         },
       });
-    }));
+    });
 
-    it('does a network request if fetchPolicy becomes networkOnly', () => new Promise((resolve, reject) => {
+    itAsync('does a network request if fetchPolicy becomes networkOnly', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -376,9 +377,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', () => new Promise((resolve, reject) => {
+    itAsync('does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (resolve, reject) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -432,9 +433,9 @@ describe('ObservableQuery', () => {
           reject(e);
         }
       });
-    }));
+    });
 
-    it('does a network request if fetchPolicy changes from cache-only', () => new Promise((resolve, reject) => {
+    itAsync('does a network request if fetchPolicy changes from cache-only', (resolve, reject) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -481,9 +482,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('can set queries to standby and will not fetch when doing so', () => new Promise((resolve, reject) => {
+    itAsync('can set queries to standby and will not fetch when doing so', (resolve, reject) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -531,9 +532,9 @@ describe('ObservableQuery', () => {
           throw new Error('Handle should not be triggered on standby query');
         }
       });
-    }));
+    });
 
-    it('will not fetch when setting a cache-only query to standby', () => new Promise((resolve, reject) => {
+    itAsync('will not fetch when setting a cache-only query to standby', (resolve, reject) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -584,9 +585,9 @@ describe('ObservableQuery', () => {
           }
         });
       });
-    }));
+    });
 
-    it('returns a promise which eventually returns data', () => new Promise((resolve, reject) => {
+    itAsync('returns a promise which eventually returns data', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -611,9 +612,9 @@ describe('ObservableQuery', () => {
             resolve();
           });
       });
-    }));
+    });
 
-    it('can bypass looking up results if passed to options', () => new Promise((resolve, reject) => {
+    itAsync('can bypass looking up results if passed to options', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -640,11 +641,11 @@ describe('ObservableQuery', () => {
           throw new Error('Handle should not be called twice');
         }
       });
-    }));
+    });
   });
 
   describe('setVariables', () => {
-    it('reruns query if the variables change', () => new Promise((resolve, reject) => {
+    itAsync('reruns query if the variables change', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -670,9 +671,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('does invalidate the currentResult data if the variables change', () => new Promise((resolve, reject) => {
+    itAsync('does invalidate the currentResult data if the variables change', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -706,9 +707,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('does invalidate the currentResult data if the variables change', () => new Promise((resolve, reject) => {
+    itAsync('does invalidate the currentResult data if the variables change', (resolve, reject) => {
       // Standard data for all these tests
       const query = gql`
         query UsersQuery($page: Int) {
@@ -775,9 +776,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('does not invalidate the currentResult errors if the variables change', () => new Promise((resolve, reject) => {
+    itAsync('does not invalidate the currentResult errors if the variables change', (resolve, reject) => {
       const queryManager = mockQueryManager(
         reject,
         {
@@ -813,17 +814,17 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('does not perform a query when unsubscribed if variables change', () => new Promise((resolve, reject) => {
+    itAsync('does not perform a query when unsubscribed if variables change', (resolve, reject) => {
       // Note: no responses, will throw if a query is made
       const queryManager = mockQueryManager(reject);
       const observable = queryManager.watchQuery({ query, variables });
       return observable.setVariables(differentVariables)
         .then(resolve, reject);
-    }));
+    });
 
-    it('sets networkStatus to `setVariables` when fetching', () => new Promise((resolve, reject) => {
+    itAsync('sets networkStatus to `setVariables` when fetching', (resolve, reject) => {
       const mockedResponses = [
         {
           request: { query, variables },
@@ -859,9 +860,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('sets networkStatus to `setVariables` when calling refetch with new variables', () => new Promise((resolve, reject) => {
+    itAsync('sets networkStatus to `setVariables` when calling refetch with new variables', (resolve, reject) => {
       const mockedResponses = [
         {
           request: { query, variables },
@@ -897,9 +898,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('reruns observer callback if the variables change but data does not', () => new Promise((resolve, reject) => {
+    itAsync('reruns observer callback if the variables change but data does not', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -924,9 +925,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('does not rerun observer callback if the variables change but new data is in store', () => new Promise((resolve, reject) => {
+    itAsync('does not rerun observer callback if the variables change but new data is in store', (resolve, reject) => {
       const manager = mockQueryManager(
         reject,
         {
@@ -959,9 +960,9 @@ describe('ObservableQuery', () => {
           }
         });
       });
-    }));
+    });
 
-    it('does not rerun query if variables do not change', () => new Promise((resolve, reject) => {
+    itAsync('does not rerun query if variables do not change', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -987,9 +988,9 @@ describe('ObservableQuery', () => {
           throw new Error('Observable callback should not fire twice');
         }
       });
-    }));
+    });
 
-    it('does not rerun query if set to not refetch', () => new Promise((resolve, reject) => {
+    itAsync('does not rerun query if set to not refetch', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         reject,
         {
@@ -1015,9 +1016,9 @@ describe('ObservableQuery', () => {
           throw new Error('Observable callback should not fire twice');
         }
       });
-    }));
+    });
 
-    it('handles variables changing while a query is in-flight', () => new Promise((resolve, reject) => {
+    itAsync('handles variables changing while a query is in-flight', (resolve, reject) => {
       // The expected behavior is that the original variables are forgotten
       // and the query stays in loading state until the result for the new variables
       // has returned.
@@ -1045,11 +1046,11 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
   });
 
   describe('refetch', () => {
-    it('calls fetchRequest with fetchPolicy `network-only` when using a non-networked fetch policy', () => new Promise((resolve, reject) => {
+    itAsync('calls fetchRequest with fetchPolicy `network-only` when using a non-networked fetch policy', (resolve, reject) => {
       const mockedResponses = [
         {
           request: { query, variables },
@@ -1084,11 +1085,11 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it(
+    itAsync(
       'calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy',
-      () => new Promise((resolve, reject) => {
+      (resolve, reject) => {
         const mockedResponses = [
           {
             request: { query, variables },
@@ -1123,10 +1124,10 @@ describe('ObservableQuery', () => {
             resolve();
           }
         });
-      }),
+      }
     );
 
-    it('calls ObservableQuery.next even after hitting cache', () => new Promise((resolve, reject) => {
+    itAsync('calls ObservableQuery.next even after hitting cache', (resolve, reject) => {
       // This query and variables are copied from react-apollo
       const queryWithVars = gql`
         query people($first: Int) {
@@ -1195,9 +1196,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it('cache-and-network refetch should run @client(always: true) resolvers when network request fails', () => new Promise((resolve, reject) => {
+    itAsync('cache-and-network refetch should run @client(always: true) resolvers when network request fails', (resolve, reject) => {
       const query = gql`
         query MixedQuery {
           counter @client(always: true)
@@ -1320,11 +1321,11 @@ describe('ObservableQuery', () => {
           }
         },
       });
-    }));
+    });
   });
 
   describe('currentResult', () => {
-    it('returns the same value as observableQuery.next got', () => new Promise((resolve, reject) => {
+    itAsync('returns the same value as observableQuery.next got', (resolve, reject) => {
       const queryWithFragment = gql`
         fragment CatInfo on Cat {
           isTabby
@@ -1441,9 +1442,9 @@ describe('ObservableQuery', () => {
           reject(new Error('Observable.next called too many times'));
         }
       });
-    }));
+    });
 
-    it('returns the current query status immediately', () => new Promise((resolve, reject) => {
+    itAsync('returns the current query status immediately', (resolve, reject) => {
       const observable: ObservableQuery<any> = mockWatchQuery(reject, {
         request: { query, variables },
         result: { data: dataOne },
@@ -1478,9 +1479,9 @@ describe('ObservableQuery', () => {
         }),
         0,
       );
-    }));
+    });
 
-    it('returns results from the store immediately', () => new Promise((resolve, reject) => {
+    itAsync('returns results from the store immediately', (resolve, reject) => {
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },
         result: { data: dataOne },
@@ -1504,9 +1505,9 @@ describe('ObservableQuery', () => {
           partial: false,
         });
       }).then(resolve, reject);
-    }));
+    });
 
-    it('returns errors from the store immediately', () => new Promise((resolve, reject) => {
+    itAsync('returns errors from the store immediately', (resolve, reject) => {
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },
         result: { errors: [error] },
@@ -1527,9 +1528,9 @@ describe('ObservableQuery', () => {
           resolve();
         },
       });
-    }));
+    });
 
-    it('returns referentially equal errors', () => new Promise((resolve, reject) => {
+    itAsync('returns referentially equal errors', (resolve, reject) => {
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },
         result: { errors: [error] },
@@ -1549,9 +1550,9 @@ describe('ObservableQuery', () => {
         const currentResult2 = observable.getCurrentResult();
         expect(currentResult.error === currentResult2.error).toBe(true);
       }).then(resolve, reject);
-    }));
+    });
 
-    it('returns errors with data if errorPolicy is all', () => new Promise((resolve, reject) => {
+    itAsync('returns errors with data if errorPolicy is all', (resolve, reject) => {
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },
         result: { data: dataOne, errors: [error] },
@@ -1571,9 +1572,9 @@ describe('ObservableQuery', () => {
         expect(currentResult.errors).toEqual([error]);
         expect(currentResult.error).toBeUndefined();
       }).then(resolve, reject);
-    }));
+    });
 
-    it('ignores errors with data if errorPolicy is ignore', () => new Promise((resolve, reject) => {
+    itAsync('ignores errors with data if errorPolicy is ignore', (resolve, reject) => {
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },
         result: { errors: [error], data: dataOne },
@@ -1593,9 +1594,9 @@ describe('ObservableQuery', () => {
         expect(currentResult.errors).toBeUndefined();
         expect(currentResult.error).toBeUndefined();
       }).then(resolve, reject);
-    }));
+    });
 
-    it('returns partial data from the store immediately', () => new Promise((resolve, reject) => {
+    itAsync('returns partial data from the store immediately', (resolve, reject) => {
       const superQuery = gql`
         query superQuery($id: ID!) {
           people_one(id: $id) {
@@ -1667,9 +1668,9 @@ describe('ObservableQuery', () => {
           }
         });
       });
-    }));
+    });
 
-    it('returns loading even if full data is available when using network-only fetchPolicy', () => new Promise((resolve, reject) => {
+    itAsync('returns loading even if full data is available when using network-only fetchPolicy', (resolve, reject) => {
       const queryManager = mockQueryManager(
         reject,
         {
@@ -1719,9 +1720,9 @@ describe('ObservableQuery', () => {
           }
         });
       });
-    }));
+    });
 
-    it('returns loading on no-cache fetchPolicy queries when calling getCurrentResult', () => new Promise((resolve, reject) => {
+    itAsync('returns loading on no-cache fetchPolicy queries when calling getCurrentResult', (resolve, reject) => {
       const queryManager = mockQueryManager(
         reject,
         {
@@ -1771,7 +1772,7 @@ describe('ObservableQuery', () => {
           }
         });
       });
-    }));
+    });
 
     describe('mutations', () => {
       const mutation = gql`
@@ -1796,7 +1797,7 @@ describe('ObservableQuery', () => {
         },
       };
 
-      it('returns optimistic mutation results from the store', () => new Promise((resolve, reject) => {
+      itAsync('returns optimistic mutation results from the store', (resolve, reject) => {
         const queryManager = mockQueryManager(
           reject,
           {
@@ -1848,12 +1849,12 @@ describe('ObservableQuery', () => {
             resolve();
           }
         });
-      }));
+      });
     });
   });
 
   describe('assumeImmutableResults', () => {
-    it('should prevent costly (but safe) cloneDeep calls', async () => new Promise(async (resolve, reject) => {
+    itAsync('should prevent costly (but safe) cloneDeep calls', async (resolve, reject) => {
       const queryOptions = {
         query: gql`
           query {
@@ -1947,11 +1948,11 @@ describe('ObservableQuery', () => {
       await checkThrows(false);
 
       resolve();
-    }));
+    });
   });
 
   describe('stopPolling', () => {
-    it('does not restart polling after stopping and resubscribing', () => new Promise((resolve, reject) => {
+    itAsync('does not restart polling after stopping and resubscribing', (resolve, reject) => {
       const observable = mockWatchQuery(
         reject,
         {
@@ -1989,11 +1990,11 @@ describe('ObservableQuery', () => {
           reject(new Error('should not start polling, already stopped'));
         }
       });
-    }));
+    });
   });
 
   describe('resetQueryStoreErrors', () => {
-    it("should remove any GraphQLError's stored in the query store", () => new Promise((resolve, reject) => {
+    itAsync("should remove any GraphQLError's stored in the query store", (resolve, reject) => {
       const graphQLError = new GraphQLError('oh no!');
 
       const observable: ObservableQuery<any> = mockWatchQuery(reject, {
@@ -2013,9 +2014,9 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
 
-    it("should remove network error's stored in the query store", () => new Promise((resolve, reject) => {
+    itAsync("should remove network error's stored in the query store", (resolve, reject) => {
       const networkError = new Error('oh no!');
 
       const observable: ObservableQuery<any> = mockWatchQuery(reject, {
@@ -2033,6 +2034,6 @@ describe('ObservableQuery', () => {
           resolve();
         }
       });
-    }));
+    });
   });
 });

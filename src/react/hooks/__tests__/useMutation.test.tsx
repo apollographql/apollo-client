@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
 import { MockedProvider, mockSingleLink } from '../../testing';
+import { itAsync } from '../../../__tests__/utils/itAsync';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
@@ -268,7 +269,7 @@ describe('useMutation Hook', () => {
   });
 
   describe('Optimistic response', () => {
-    it('should support optimistic response handling', async () => new Promise((resolve, reject) => {
+    itAsync('should support optimistic response handling', async (resolve, reject) => {
       const optimisticResponse = {
         __typename: 'Mutation',
         createTodo: {
@@ -342,6 +343,6 @@ describe('useMutation Hook', () => {
       return wait(() => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
-    }));
+    });
   });
 });

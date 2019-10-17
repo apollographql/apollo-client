@@ -86,7 +86,7 @@ module.exports = {
             'api/react/hoc'
           ],
           'API - Link': [
-            'api/link/intro',
+            'api/link/introduction',
             'api/link/concepts',
             'api/link/apollo-link-state',
             'api/link/apollo-link-rest',

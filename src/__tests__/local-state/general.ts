@@ -9,6 +9,7 @@ import { ApolloClient } from '../..';
 import { ApolloCache } from '../../cache/core/cache';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import { hasDirectives } from '../../utilities/graphql/directives';
+import { itAsync } from '../utils/itAsync';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {
@@ -303,10 +304,10 @@ describe('Cache manipulation', () => {
       });
   });
 
-  it(
+  itAsync(
     'should be able to write to the cache with a local mutation and have ' +
       'things rerender automatically',
-    done => {
+    (resolve, reject) => {
       const query = gql`
         {
           field @client
@@ -348,7 +349,7 @@ describe('Cache manipulation', () => {
 
           if (count === 2) {
             expect({ ...data }).toMatchObject({ field: 1 });
-            done();
+            resolve();
           }
         },
       });
@@ -405,7 +406,7 @@ describe('Cache manipulation', () => {
       });
   });
 
-  it("should read @client fields from cache on refetch (#4741)", function (done) {
+  itAsync("should read @client fields from cache on refetch (#4741)", (resolve, reject) => {
     const query = gql`
       query FetchInitialData {
         serverData {
@@ -469,7 +470,7 @@ describe('Cache manipulation', () => {
             ],
           });
         } else {
-          done();
+          resolve();
         }
       },
     });
@@ -477,7 +478,7 @@ describe('Cache manipulation', () => {
 });
 
 describe('Sample apps', () => {
-  it('should support a simple counter app using local state', done => {
+  itAsync('should support a simple counter app using local state', (resolve, reject) => {
     const query = gql`
       query GetCount {
         count @client
@@ -554,7 +555,7 @@ describe('Sample apps', () => {
           try {
             expect({ ...data }).toMatchObject({ count: 0, lastCount: 1 });
           } catch (e) {
-            done.fail(e);
+            reject(e);
           }
           client.mutate({ mutation: increment, variables: { amount: 2 } });
         }
@@ -563,7 +564,7 @@ describe('Sample apps', () => {
           try {
             expect({ ...data }).toMatchObject({ count: 2, lastCount: 1 });
           } catch (e) {
-            done.fail(e);
+            reject(e);
           }
           client.mutate({ mutation: decrement, variables: { amount: 1 } });
         }
@@ -571,17 +572,17 @@ describe('Sample apps', () => {
           try {
             expect({ ...data }).toMatchObject({ count: 1, lastCount: 1 });
           } catch (e) {
-            done.fail(e);
+            reject(e);
           }
-          done();
+          resolve();
         }
       },
-      error: e => done.fail(e),
-      complete: done.fail,
+      error: e => reject(e),
+      complete: reject,
     });
   });
 
-  it('should support a simple todo app using local state', done => {
+  itAsync('should support a simple todo app using local state', (resolve, reject) => {
     const query = gql`
       query GetTasks {
         todos @client {
@@ -658,7 +659,7 @@ describe('Sample apps', () => {
               __typename: 'Todo',
             },
           ]);
-          done();
+          resolve();
         }
       },
     });
@@ -666,7 +667,7 @@ describe('Sample apps', () => {
 });
 
 describe('Combining client and server state/operations', () => {
-  it('should merge remote and local state', done => {
+  itAsync('should merge remote and local state', (resolve, reject) => {
     const query = gql`
       query list {
         list(name: "my list") {
@@ -745,11 +746,11 @@ describe('Combining client and server state/operations', () => {
         if (count === 1) {
           expect((response.data as any).list.items[0].isSelected).toBe(true);
           expect((response.data as any).list.items[1].isSelected).toBe(false);
-          done();
+          resolve();
         }
         count++;
       },
-      error: done.fail,
+      error: reject,
     });
     const variables = { id: 1 };
     const mutation = gql`
@@ -763,7 +764,7 @@ describe('Combining client and server state/operations', () => {
     }, 10);
   });
 
-  it('should correctly propagate an error from a client resolver', async done => {
+  itAsync('should correctly propagate an error from a client resolver', async (resolve, reject) => {
     const data = {
       list: {
         __typename: 'List',
@@ -808,7 +809,7 @@ describe('Combining client and server state/operations', () => {
 
     try {
       await client.query({ query, variables });
-      done.fail('Should have thrown!');
+      reject('Should have thrown!');
     } catch (e) {
       // Test Passed!
       expect(() => {
@@ -818,7 +819,7 @@ describe('Combining client and server state/operations', () => {
 
     try {
       await client.mutate({ mutation, variables });
-      done.fail('Should have thrown!');
+      reject('Should have thrown!');
     } catch (e) {
       // Test Passed!
       expect(() => {
@@ -826,10 +827,10 @@ describe('Combining client and server state/operations', () => {
       }).toThrowErrorMatchingSnapshot();
     }
 
-    done();
+    resolve();
   });
 
-  it('should handle a simple query with both server and client fields', done => {
+  itAsync('should handle a simple query with both server and client fields', (resolve, reject) => {
     const query = gql`
       query GetCount {
         count @client
@@ -858,12 +859,12 @@ describe('Combining client and server state/operations', () => {
     client.watchQuery({ query }).subscribe({
       next: ({ data }) => {
         expect({ ...data }).toMatchObject({ count: 0, lastCount: 1 });
-        done();
+        resolve();
       },
     });
   });
 
-  it('should support nested quering of both server and client fields', done => {
+  itAsync('should support nested quering of both server and client fields', (resolve, reject) => {
     const query = gql`
       query GetUser {
         user {
@@ -906,14 +907,14 @@ describe('Combining client and server state/operations', () => {
             __typename: 'User',
           });
         } catch (e) {
-          done.fail(e);
+          reject(e);
         }
-        done();
+        resolve();
       },
     });
   });
 
-  it('should combine both server and client mutations', done => {
+  itAsync('should combine both server and client mutations', (resolve, reject) => {
     const query = gql`
       query SampleQuery {
         count @client
@@ -1011,7 +1012,7 @@ describe('Combining client and server state/operations', () => {
             __typename: 'User',
             firstName: 'Harry',
           });
-          done();
+          resolve();
         }
       },
     });

@@ -12,6 +12,7 @@ import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';
 import subscribeAndCount from './utils/subscribeAndCount';
 import { withWarning } from './utils/wrap';
+import { itAsync } from './utils/itAsync';
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
 describe('client', () => {
@@ -78,7 +79,7 @@ describe('client', () => {
     );
   });
 
-  it('should allow for a single query to take place', () => {
+  itAsync('should allow for a single query to take place', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -103,10 +104,10 @@ describe('client', () => {
       },
     };
 
-    return clientRoundtrip(query, { data });
+    return clientRoundtrip(resolve, reject, query, { data });
   });
 
-  it('should allow a single query with an apollo-link enabled network interface', done => {
+  itAsync('should allow a single query with an apollo-link enabled network interface', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -142,11 +143,11 @@ describe('client', () => {
 
     client.query({ query, variables }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(data);
-      done();
+      resolve();
     });
   });
 
-  it('should allow for a single query with complex default variables to take place', () => {
+  itAsync('should allow for a single query with complex default variables to take place', (resolve, reject) => {
     const query = gql`
       query stuff(
         $test: Input = { key1: ["value", "value2"], key2: { key3: 4 } }
@@ -176,7 +177,7 @@ describe('client', () => {
       test: { key1: ['value', 'value2'], key2: { key3: 4 } },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query, variables },
       result: { data: result },
     });
@@ -194,10 +195,13 @@ describe('client', () => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
     });
 
-    return Promise.all([basic, withDefault]);
+    return Promise.all([
+      basic,
+      withDefault,
+    ]).then(resolve, reject);
   });
 
-  it('should allow for a single query with default values that get overridden with variables', () => {
+  itAsync('should allow for a single query with default values that get overridden with variables', (resolve, reject) => {
     const query = gql`
       query people($first: Int = 1) {
         allPeople(first: $first) {
@@ -235,6 +239,7 @@ describe('client', () => {
     };
 
     const link = mockSingleLink(
+      reject,
       {
         request: { query, variables },
         result: { data: result },
@@ -266,10 +271,14 @@ describe('client', () => {
         );
       });
 
-    return Promise.all([basic, withDefault, withOverride]);
+    return Promise.all([
+      basic,
+      withDefault,
+      withOverride,
+    ]).then(resolve, reject);
   });
 
-  it('should allow fragments on root query', () => {
+  itAsync('should allow fragments on root query', (resolve, reject) => {
     const query = gql`
       query {
         ...QueryFragment
@@ -293,10 +302,10 @@ describe('client', () => {
       __typename: 'Query',
     };
 
-    return clientRoundtrip(query, { data }, null);
+    return clientRoundtrip(resolve, reject, query, { data }, null);
   });
 
-  it('should allow fragments on root query with ifm', () => {
+  itAsync('should allow fragments on root query with ifm', (resolve, reject) => {
     const query = gql`
       query {
         ...QueryFragment
@@ -320,12 +329,12 @@ describe('client', () => {
       __typename: 'Query',
     };
 
-    return clientRoundtrip(query, { data }, null, {
+    return clientRoundtrip(resolve, reject, query, { data }, null, {
       Query: ['Record'],
     });
   });
 
-  it('should merge fragments on root query', () => {
+  itAsync('should merge fragments on root query', (resolve, reject) => {
     // The fragment should be used after the selected fields for the query.
     // Otherwise, the results aren't merged.
     // see: https://github.com/apollographql/apollo-client/issues/1479
@@ -355,12 +364,12 @@ describe('client', () => {
       __typename: 'Query',
     };
 
-    return clientRoundtrip(query, { data }, null, {
+    return clientRoundtrip(resolve, reject, query, { data }, null, {
       Query: ['Record'],
     });
   });
 
-  it('store can be rehydrated from the server', () => {
+  itAsync('store can be rehydrated from the server', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -381,7 +390,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data },
     });
@@ -415,10 +424,10 @@ describe('client', () => {
       expect(finalState.data).toEqual(
         (client.cache as InMemoryCache).extract(),
       );
-    });
+    }).then(resolve, reject);
   });
 
-  it('store can be rehydrated from the server using the shadow method', () => {
+  itAsync('store can be rehydrated from the server using the shadow method', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -439,7 +448,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data },
     });
@@ -471,10 +480,10 @@ describe('client', () => {
     return client.query({ query }).then(result => {
       expect(stripSymbols(result.data)).toEqual(data);
       expect(finalState.data).toEqual(client.extract());
-    });
+    }).then(resolve, reject);
   });
 
-  it('stores shadow of restore returns the same result as accessing the method directly on the cache', () => {
+  itAsync('stores shadow of restore returns the same result as accessing the method directly on the cache', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -495,7 +504,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data },
     });
@@ -535,9 +544,11 @@ describe('client', () => {
     expect(client.restore(initialState.data)).toEqual(
       client.cache.restore(initialState.data),
     );
+
+    resolve();
   });
 
-  it('should return errors correctly for a single query', () => {
+  itAsync('should return errors correctly for a single query', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -555,7 +566,7 @@ describe('client', () => {
       },
     ];
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { errors },
     });
@@ -567,10 +578,10 @@ describe('client', () => {
 
     return client.query({ query }).catch((error: ApolloError) => {
       expect(error.graphQLErrors).toEqual(errors);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should return GraphQL errors correctly for a single query with an apollo-link enabled network interface', done => {
+  itAsync('should return GraphQL errors correctly for a single query with an apollo-link enabled network interface', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -613,11 +624,11 @@ describe('client', () => {
 
     client.query({ query }).catch((error: ApolloError) => {
       expect(error.graphQLErrors).toEqual(errors);
-      done();
+      resolve();
     });
   });
 
-  xit('should pass a network error correctly on a query using an observable network interface with a warning', done => {
+  itAsync.skip('should pass a network error correctly on a query using an observable network interface with a warning', (resolve, reject) => {
     withWarning(() => {
       const query = gql`
         query people {
@@ -647,12 +658,12 @@ describe('client', () => {
       client.query({ query }).catch((error: ApolloError) => {
         expect(error.networkError).toBeDefined();
         expect(error.networkError!.message).toEqual(networkError.message);
-        done();
+        resolve();
       });
     }, /deprecated/);
   });
 
-  it('should pass a network error correctly on a query with apollo-link network interface', done => {
+  itAsync('should pass a network error correctly on a query with apollo-link network interface', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -681,7 +692,7 @@ describe('client', () => {
     client.query({ query }).catch((error: ApolloError) => {
       expect(error.networkError).toBeDefined();
       expect(error.networkError!.message).toEqual(networkError.message);
-      done();
+      resolve();
     });
   });
 
@@ -718,7 +729,7 @@ describe('client', () => {
     });
   });
 
-  xit('should surface errors in observer.next as uncaught', done => {
+  itAsync.skip('should surface errors in observer.next as uncaught', (resolve, reject) => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
@@ -728,9 +739,9 @@ describe('client', () => {
       if (typeof oldHandler === 'function')
         process.addListener('uncaughtException', oldHandler);
       if (e === expectedError) {
-        done();
+        resolve();
       } else {
-        done.fail(e);
+        reject(e);
       }
     };
     process.removeListener('uncaughtException', oldHandler);
@@ -756,7 +767,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data },
     });
@@ -775,7 +786,7 @@ describe('client', () => {
     });
   });
 
-  xit('should surfaces errors in observer.error as uncaught', done => {
+  itAsync.skip('should surfaces errors in observer.error as uncaught', (resolve, reject) => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
@@ -783,9 +794,9 @@ describe('client', () => {
       process.removeListener('uncaughtException', handleUncaught);
       process.addListener('uncaughtException', oldHandler);
       if (e === expectedError) {
-        done();
+        resolve();
       } else {
-        done.fail(e);
+        reject(e);
       }
     };
     process.removeListener('uncaughtException', oldHandler);
@@ -801,7 +812,7 @@ describe('client', () => {
       }
     `;
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: {},
     });
@@ -814,7 +825,7 @@ describe('client', () => {
     const handle = client.watchQuery({ query });
     handle.subscribe({
       next() {
-        done.fail(new Error('did not expect next to be called'));
+        reject(new Error('did not expect next to be called'));
       },
       error() {
         throw expectedError;
@@ -822,7 +833,7 @@ describe('client', () => {
     });
   });
 
-  it('should allow for subscribing to a request', done => {
+  itAsync('should allow for subscribing to a request', (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -843,7 +854,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data },
     });
@@ -858,12 +869,12 @@ describe('client', () => {
     handle.subscribe({
       next(result) {
         expect(stripSymbols(result.data)).toEqual(data);
-        done();
+        resolve();
       },
     });
   });
 
-  it('should be able to transform queries', () => {
+  itAsync('should be able to transform queries', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -897,6 +908,7 @@ describe('client', () => {
     };
 
     const link = mockSingleLink(
+      reject,
       {
         request: { query },
         result: { data: result },
@@ -914,10 +926,10 @@ describe('client', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should be able to transform queries on network-only fetches', () => {
+  itAsync('should be able to transform queries on network-only fetches', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -949,6 +961,7 @@ describe('client', () => {
       },
     };
     const link = mockSingleLink(
+      reject,
       {
         request: { query },
         result: { data: result },
@@ -968,10 +981,11 @@ describe('client', () => {
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
         expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
-      });
+      })
+      .then(resolve, reject);
   });
 
-  it('should handle named fragments on mutations', () => {
+  itAsync('should handle named fragments on mutations', (resolve, reject) => {
     const mutation = gql`
       mutation {
         starAuthor(id: 12) {
@@ -996,7 +1010,7 @@ describe('client', () => {
         },
       },
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query: mutation },
       result: { data: result },
     });
@@ -1007,10 +1021,10 @@ describe('client', () => {
 
     return client.mutate({ mutation }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should be able to handle named fragments on network-only queries', () => {
+  itAsync('should be able to handle named fragments on network-only queries', (resolve, reject) => {
     const query = gql`
       fragment authorDetails on Author {
         firstName
@@ -1032,7 +1046,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data: result },
     });
@@ -1046,10 +1060,11 @@ describe('client', () => {
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
         expect(stripSymbols(actualResult.data)).toEqual(result);
-      });
+      })
+      .then(resolve, reject);
   });
 
-  it('should be able to handle named fragments with multiple fragments', () => {
+  itAsync('should be able to handle named fragments with multiple fragments', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1077,7 +1092,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data: result },
     });
@@ -1088,10 +1103,10 @@ describe('client', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should be able to handle named fragments', () => {
+  itAsync('should be able to handle named fragments', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -1113,7 +1128,7 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data: result },
     });
@@ -1124,10 +1139,10 @@ describe('client', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should be able to handle inlined fragments on an Interface type', () => {
+  itAsync('should be able to handle inlined fragments on an Interface type', (resolve, reject) => {
     const query = gql`
       query items {
         items {
@@ -1159,7 +1174,7 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data: result },
     });
@@ -1173,10 +1188,10 @@ describe('client', () => {
     });
     return client.query({ query }).then((actualResult: any) => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', () => {
+  itAsync('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', (resolve, reject) => {
     const query = gql`
       query items {
         items {
@@ -1208,7 +1223,7 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { data: result },
     });
@@ -1224,10 +1239,10 @@ describe('client', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should call updateQueries and update after mutation on query with inlined fragments on an Interface type', done => {
+  itAsync('should call updateQueries and update after mutation on query with inlined fragments on an Interface type', (resolve, reject) => {
     const query = gql`
       query items {
         items {
@@ -1269,6 +1284,7 @@ describe('client', () => {
     };
 
     const link = mockSingleLink(
+      reject,
       {
         request: { query },
         result: { data: result },
@@ -1309,14 +1325,14 @@ describe('client', () => {
             expect(queryUpdaterSpy).toBeCalled();
             expect(updateSpy).toBeCalled();
             sub.unsubscribe();
-            done();
+            resolve();
           })
           .catch(err => {
-            done.fail(err);
+            reject(err);
           });
       },
       error(err) {
-        done.fail(err);
+        reject(err);
       },
     });
   });
@@ -1371,7 +1387,7 @@ describe('client', () => {
     });
   });
 
-  it('does not deduplicate queries if option is set to false', () => {
+  itAsync('does not deduplicate queries if option is set to false', (resolve, reject) => {
     const queryDoc = gql`
       query {
         author {
@@ -1393,6 +1409,7 @@ describe('client', () => {
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
     const link = mockSingleLink(
+      reject,
       {
         request: { query: queryDoc },
         result: { data },
@@ -1417,10 +1434,10 @@ describe('client', () => {
     return Promise.all([q1, q2]).then(([result1, result2]) => {
       expect(stripSymbols(result1.data)).toEqual(data);
       expect(stripSymbols(result2.data)).toEqual(data2);
-    });
+    }).then(resolve, reject);
   });
 
-  it('deduplicates queries by default', () => {
+  itAsync('deduplicates queries by default', (resolve, reject) => {
     const queryDoc = gql`
       query {
         author {
@@ -1442,6 +1459,7 @@ describe('client', () => {
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
     const link = mockSingleLink(
+      reject,
       {
         request: { query: queryDoc },
         result: { data },
@@ -1463,10 +1481,10 @@ describe('client', () => {
     // if deduplication didn't happen, result.data will equal data2.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
       expect(result1.data).toEqual(result2.data);
-    });
+    }).then(resolve, reject);
   });
 
-  it('unsubscribes from deduplicated observables only once', done => {
+  itAsync('unsubscribes from deduplicated observables only once', (resolve, reject) => {
     const document: DocumentNode = gql`
       query test1($x: String) {
         test(x: $x)
@@ -1484,7 +1502,7 @@ describe('client', () => {
           observer.complete();
           return () => {
             unsubscribed = true;
-            setTimeout(done, 0);
+            setTimeout(resolve, 0);
           };
         });
       }),
@@ -1562,8 +1580,8 @@ describe('client', () => {
       },
     };
 
-    it('for internal store', () => {
-      const link = mockSingleLink({
+    itAsync('for internal store', (resolve, reject) => {
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { data },
       });
@@ -1583,7 +1601,7 @@ describe('client', () => {
           id: '1',
           name: 'Luke Skywalker',
         });
-      });
+      }).then(resolve, reject);
     });
   });
 
@@ -1651,8 +1669,8 @@ describe('client', () => {
       checkCacheAndNetworkError(() => client.query({ query }));
     });
 
-    it('fetches from cache first, then network', done => {
-      const link = mockSingleLink({
+    itAsync('fetches from cache first, then network', (resolve, reject) => {
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
       });
@@ -1669,18 +1687,18 @@ describe('client', () => {
         fetchPolicy: 'cache-and-network',
       });
 
-      subscribeAndCount(done, obs, (handleCount, result) => {
+      subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(initialData);
         } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(networkFetch);
-          done();
+          resolve();
         }
       });
     });
 
-    it('does not fail if cache entry is not present', done => {
-      const link = mockSingleLink({
+    itAsync('does not fail if cache entry is not present', (resolve, reject) => {
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
       });
@@ -1694,20 +1712,20 @@ describe('client', () => {
         fetchPolicy: 'cache-and-network',
       });
 
-      subscribeAndCount(done, obs, (handleCount, result) => {
+      subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toBe(undefined);
           expect(result.loading).toBe(true);
         } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(networkFetch);
           expect(result.loading).toBe(false);
-          done();
+          resolve();
         }
       });
     });
 
-    it('fails if network request fails', done => {
-      const link = mockSingleLink(); // no queries = no replies.
+    itAsync('fails if network request fails', (resolve, reject) => {
+      const link = mockSingleLink(error => { throw error }); // no queries = no replies.
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -1728,13 +1746,13 @@ describe('client', () => {
         error: e => {
           expect(e.message).toMatch(/No more mocked responses/);
           expect(count).toBe(1); // make sure next was called.
-          setTimeout(done, 100);
+          setTimeout(resolve, 100);
         },
       });
     });
 
-    it('fetches from cache first, then network and does not have an unhandled error', done => {
-      const link = mockSingleLink({
+    itAsync('fetches from cache first, then network and does not have an unhandled error', (resolve, reject) => {
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { errors: [{ message: 'network failure' }] },
       });
@@ -1752,7 +1770,7 @@ describe('client', () => {
       });
       let shouldFail = true;
       process.once('unhandledRejection', rejection => {
-        if (shouldFail) done.fail('promise had an unhandledRejection');
+        if (shouldFail) reject('promise had an unhandledRejection');
       });
       let count = 0;
       obs.subscribe({
@@ -1766,7 +1784,7 @@ describe('client', () => {
           expect(count).toBe(1); // make sure next was called.
           setTimeout(() => {
             shouldFail = false;
-            done();
+            resolve();
           }, 0);
         },
       });
@@ -1796,7 +1814,7 @@ describe('client', () => {
       );
     });
 
-    it('are not watching the store or notifying on updates', done => {
+    itAsync('are not watching the store or notifying on updates', (resolve, reject) => {
       const query = gql`
         {
           test
@@ -1805,7 +1823,7 @@ describe('client', () => {
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
-      const link = mockSingleLink({
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { data },
       });
@@ -1815,7 +1833,7 @@ describe('client', () => {
       const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
 
       let handleCalled = false;
-      subscribeAndCount(done, obs, (handleCount, result) => {
+      subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
           obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
@@ -1824,20 +1842,20 @@ describe('client', () => {
           });
           setTimeout(() => {
             if (!handleCalled) {
-              done();
+              resolve();
             }
           }, 20);
         }
         if (handleCount === 2) {
           handleCalled = true;
-          done.fail(
+          reject(
             new Error('Handle should never be called on standby query'),
           );
         }
       });
     });
 
-    it('return the current result when coming out of standby', done => {
+    itAsync('return the current result when coming out of standby', (resolve, reject) => {
       const query = gql`
         {
           test
@@ -1846,7 +1864,7 @@ describe('client', () => {
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
-      const link = mockSingleLink({
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { data },
       });
@@ -1856,7 +1874,7 @@ describe('client', () => {
       const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
 
       let handleCalled = false;
-      subscribeAndCount(done, obs, (handleCount, result) => {
+      subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
           obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
@@ -1870,7 +1888,7 @@ describe('client', () => {
         if (handleCount === 2) {
           handleCalled = true;
           expect(stripSymbols(result.data)).toEqual(data2);
-          done();
+          resolve();
         }
       });
     });
@@ -1896,9 +1914,9 @@ describe('client', () => {
       },
     };
 
-    let link: any;
-    beforeEach(() => {
-      link = mockSingleLink(
+    function makeLink(reject: (reason: any) => any) {
+      return mockSingleLink(
+        reject,
         {
           request: { query },
           result: { data: firstFetch },
@@ -1908,32 +1926,28 @@ describe('client', () => {
           result: { data: secondFetch },
         },
       );
-      //
-    });
+    }
 
-    afterAll(() => jest.useRealTimers());
-
-    it('forces the query to rerun', () => {
+    itAsync('forces the query to rerun', (resolve, reject) => {
       const client = new ApolloClient({
-        link,
+        link: makeLink(reject),
         cache: new InMemoryCache({ addTypename: false }),
       });
 
       // Run a query first to initialize the store
-      return (
-        client
-          .query({ query })
-          // then query for real
-          .then(() => client.query({ query, fetchPolicy: 'network-only' }))
-          .then(result => {
-            expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
-          })
-      );
+      return client
+        .query({ query })
+        // then query for real
+        .then(() => client.query({ query, fetchPolicy: 'network-only' }))
+        .then(result => {
+          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
+        })
+        .then(resolve, reject);
     });
 
-    it('can be disabled with ssrMode', () => {
+    itAsync('can be disabled with ssrMode', (resolve, reject) => {
       const client = new ApolloClient({
-        link,
+        link: makeLink(reject),
         ssrMode: true,
         cache: new InMemoryCache({ addTypename: false }),
       });
@@ -1941,56 +1955,48 @@ describe('client', () => {
       const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
 
       // Run a query first to initialize the store
-      return (
-        client
-          .query({ query })
-          // then query for real
-          .then(() => client.query(options))
-          .then(result => {
-            expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
-
-            // Test that options weren't mutated, issue #339
-            expect(options).toEqual({
-              query,
-              fetchPolicy: 'network-only',
-            });
-          })
-      );
+      return client
+        .query({ query })
+        // then query for real
+        .then(() => client.query(options))
+        .then(result => {
+          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
+          // Test that options weren't mutated, issue #339
+          expect(options).toEqual({
+            query,
+            fetchPolicy: 'network-only',
+          });
+        })
+        .then(resolve, reject);
     });
 
-    it('can temporarily be disabled with ssrForceFetchDelay', () => {
-      jest.useFakeTimers();
+    itAsync('can temporarily be disabled with ssrForceFetchDelay', (resolve, reject) => {
       const client = new ApolloClient({
-        link,
+        link: makeLink(reject),
         ssrForceFetchDelay: 100,
         cache: new InMemoryCache({ addTypename: false }),
       });
 
       // Run a query first to initialize the store
-      const outerPromise = client
+      return client
         .query({ query })
         // then query for real
         .then(() => {
-          const promise = client.query({ query, fetchPolicy: 'network-only' });
-          jest.runTimersToTime(0);
-          return promise;
+          return client.query({ query, fetchPolicy: 'network-only' });
         })
-        .then(result => {
+        .then(async result => {
           expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
-          jest.runTimersToTime(100);
-          const promise = client.query({ query, fetchPolicy: 'network-only' });
-          jest.runTimersToTime(0);
-          return promise;
+          await new Promise(resolve => setTimeout(resolve, 100));
+          return client.query({ query, fetchPolicy: 'network-only' });
         })
         .then(result => {
           expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
-        });
-      jest.runTimersToTime(0);
-      return outerPromise;
+        })
+        .then(resolve, reject);
     });
   });
 
-  it('should pass a network error correctly on a mutation', done => {
+  itAsync('should pass a network error correctly on a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
         person {
@@ -2007,7 +2013,7 @@ describe('client', () => {
     };
     const networkError = new Error('Some kind of network error.');
     const client = new ApolloClient({
-      link: mockSingleLink({
+      link: mockSingleLink(reject, {
         request: { query: mutation },
         result: { data },
         error: networkError,
@@ -2018,16 +2024,16 @@ describe('client', () => {
     client
       .mutate({ mutation })
       .then(_ => {
-        done.fail(new Error('Returned a result when it should not have.'));
+        reject(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
         expect(error.networkError).toBeDefined();
         expect(error.networkError!.message).toBe(networkError.message);
-        done();
+        resolve();
       });
   });
 
-  it('should pass a GraphQL error correctly on a mutation', done => {
+  itAsync('should pass a GraphQL error correctly on a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2046,7 +2052,7 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink({
+      link: mockSingleLink(reject, {
         request: { query: mutation },
         result: { data, errors },
       }),
@@ -2055,16 +2061,16 @@ describe('client', () => {
     client
       .mutate({ mutation })
       .then(_ => {
-        done.fail(new Error('Returned a result when it should not have.'));
+        reject(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
         expect(error.graphQLErrors).toBeDefined();
         expect(error.graphQLErrors.length).toBe(1);
         expect(error.graphQLErrors[0].message).toBe(errors[0].message);
-        done();
+        resolve();
       });
   });
-  it('should allow errors to be returned from a mutation', done => {
+  itAsync('should allow errors to be returned from a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2083,7 +2089,7 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink({
+      link: mockSingleLink(reject, {
         request: { query: mutation },
         result: { data, errors },
       }),
@@ -2096,13 +2102,14 @@ describe('client', () => {
         expect(result.errors.length).toBe(1);
         expect(result.errors[0].message).toBe(errors[0].message);
         expect(result.data).toEqual(data);
-        done();
+        resolve();
       })
       .catch((error: ApolloError) => {
         throw error;
       });
   });
-  it('should strip errors on a mutation if ignored', done => {
+
+  itAsync('should strip errors on a mutation if ignored', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2121,7 +2128,7 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink({
+      link: mockSingleLink(reject, {
         request: { query: mutation },
         result: { data, errors },
       }),
@@ -2132,14 +2139,14 @@ describe('client', () => {
       .then(result => {
         expect(result.errors).toBeUndefined();
         expect(stripSymbols(result.data)).toEqual(data);
-        done();
+        resolve();
       })
       .catch((error: ApolloError) => {
         throw error;
       });
   });
 
-  it('should rollback optimistic after mutation got a GraphQL error', done => {
+  itAsync('should rollback optimistic after mutation got a GraphQL error', (resolve, reject) => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2160,7 +2167,7 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink({
+      link: mockSingleLink(reject, {
         request: { query: mutation },
         result: { data, errors },
       }),
@@ -2184,12 +2191,12 @@ describe('client', () => {
 
     mutatePromise
       .then(_ => {
-        done.fail(new Error('Returned a result when it should not have.'));
+        reject(new Error('Returned a result when it should not have.'));
       })
       .catch((_: ApolloError) => {
         const { data, optimisticData } = client.cache as any;
         expect(optimisticData).toBe(data);
-        done();
+        resolve();
       });
   });
 
@@ -2431,7 +2438,7 @@ describe('client', () => {
     };
 
     // it('with self-made store', () => {
-    //   const link = mockSingleLink({
+    //   const link = mockSingleLink(reject, {
     //     request: { query: cloneDeep(query) },
     //     result: { data },
     //   });
@@ -2453,7 +2460,7 @@ describe('client', () => {
     // });
   });
 
-  it('should propagate errors from network interface to observers', done => {
+  itAsync('should propagate errors from network interface to observers', (resolve, reject) => {
     const link = ApolloLink.from([
       () =>
         new Observable(x => {
@@ -2480,12 +2487,12 @@ describe('client', () => {
     handle.subscribe({
       error(error) {
         expect(error.message).toBe('Network error: Uh oh!');
-        done();
+        resolve();
       },
     });
   });
 
-  it('should be able to refetch after there was a network error', done => {
+  itAsync('should be able to refetch after there was a network error', (resolve, reject) => {
     const query: DocumentNode = gql`
       query somethingelse {
         allPeople(first: 1) {
@@ -2499,6 +2506,7 @@ describe('client', () => {
     const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
     const dataTwo = { allPeople: { people: [{ name: 'Princess Leia' }] } };
     const link = mockSingleLink(
+      reject,
       { request: { query }, result: { data } },
       { request: { query }, error: new Error('This is an error!') },
       { request: { query }, result: { data: dataTwo } },
@@ -2524,7 +2532,7 @@ describe('client', () => {
           switch (count++) {
             case 0:
               if (!result.data!.allPeople) {
-                done.fail('Should have data by this point');
+                reject('Should have data by this point');
                 break;
               }
               // First result is loaded, run a refetch to get the second result
@@ -2536,7 +2544,7 @@ describe('client', () => {
               );
               setTimeout(() => {
                 observable.refetch().then(() => {
-                  done.fail('Expected error value on first refetch.');
+                  reject('Expected error value on first refetch.');
                 }, noop);
               }, 0);
               break;
@@ -2557,19 +2565,19 @@ describe('client', () => {
               expect(result.networkStatus).toBe(7);
               expect(result.errors).toBeFalsy();
               if (!result.data) {
-                done.fail('Should have data by this point');
+                reject('Should have data by this point');
                 break;
               }
               expect(stripSymbols(result.data.allPeople)).toEqual(
                 dataTwo.allPeople,
               );
-              done();
+              resolve();
               break;
             default:
               throw new Error('Unexpected fall through');
           }
         } catch (e) {
-          done.fail(e);
+          reject(e);
         }
       },
       error(error) {
@@ -2592,7 +2600,7 @@ describe('client', () => {
         // which should now contain valid data.
         setTimeout(() => {
           observable.refetch().catch(() => {
-            done.fail('Expected good data on second refetch.');
+            reject('Expected good data on second refetch.');
           });
         }, 0);
       },
@@ -2601,7 +2609,7 @@ describe('client', () => {
     subscription = observable.subscribe(observerOptions);
   });
 
-  it('should throw a GraphQL error', () => {
+  itAsync('should throw a GraphQL error', (resolve, reject) => {
     const query = gql`
       query {
         posts {
@@ -2616,7 +2624,7 @@ describe('client', () => {
         message: 'Cannot query field "foo" on type "Post".',
       },
     ];
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result: { errors },
     });
@@ -2629,10 +2637,10 @@ describe('client', () => {
       expect(err.message).toBe(
         'GraphQL error: Cannot query field "foo" on type "Post".',
       );
-    });
+    }).then(resolve, reject);
   });
 
-  it('should warn if server returns wrong data', () => {
+  itAsync('should warn if server returns wrong data', (resolve, reject) => {
     const query = gql`
       query {
         todos {
@@ -2655,7 +2663,7 @@ describe('client', () => {
         ],
       },
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query },
       result,
     });
@@ -2670,10 +2678,10 @@ describe('client', () => {
     return withWarning(
       () => client.query({ query }),
       /Missing field description/,
-    );
+    ).then(resolve, reject);
   });
 
-  it('runs a query with the connection directive and writes it to the store key defined in the directive', () => {
+  itAsync('runs a query with the connection directive and writes it to the store key defined in the directive', (resolve, reject) => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2700,7 +2708,7 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query: transformedQuery },
       result: { data: result },
     });
@@ -2712,10 +2720,10 @@ describe('client', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
-    });
+    }).then(resolve, reject);
   });
 
-  it('should remove the connection directive before the link is sent', () => {
+  itAsync('should remove the connection directive before the link is sent', (resolve, reject) => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "books") {
@@ -2742,7 +2750,7 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query: transformedQuery },
       result: { data: result },
     });
@@ -2754,12 +2762,12 @@ describe('client', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
-    });
+    }).then(resolve, reject);
   });
 });
 
-describe('@connect', () => {
-  it('should run a query with the connection directive and write the result to the store key defined in the directive', () => {
+describe('@connection', () => {
+  itAsync('should run a query with the connection directive and write the result to the store key defined in the directive', (resolve, reject) => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2786,7 +2794,7 @@ describe('@connect', () => {
       ],
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query: transformedQuery },
       result: { data: result },
     });
@@ -2799,10 +2807,10 @@ describe('@connect', () => {
     return client.query({ query }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
-    });
+    }).then(resolve, reject);
   });
 
-  it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
+  itAsync('should run a query with the connection directive and filter arguments and write the result to the correct store key', (resolve, reject) => {
     const query = gql`
       query books($order: string) {
         books(skip: 0, limit: 2, order: $order)
@@ -2831,7 +2839,7 @@ describe('@connect', () => {
 
     const variables = { order: 'popularity' };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: { query: transformedQuery, variables },
       result: { data: result },
     });
@@ -2844,7 +2852,7 @@ describe('@connect', () => {
     return client.query({ query, variables }).then(actualResult => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
-    });
+    }).then(resolve, reject);
   });
 
   describe('default settings', () => {
@@ -2866,8 +2874,9 @@ describe('@connect', () => {
         n: 2,
       },
     };
-    it('allows setting default options for watchQuery', done => {
-      const link = mockSingleLink({
+
+    itAsync('allows setting default options for watchQuery', (resolve, reject) => {
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
       });
@@ -2888,19 +2897,20 @@ describe('@connect', () => {
 
       const obs = client.watchQuery({ query });
 
-      subscribeAndCount(done, obs, (handleCount, result) => {
+      subscribeAndCount(reject, obs, (handleCount, result) => {
         const resultData = stripSymbols(result.data);
         if (handleCount === 1) {
           expect(resultData).toEqual(initialData);
         } else if (handleCount === 2) {
           expect(resultData).toEqual(networkFetch);
-          done();
+          resolve();
         }
       });
     });
-    it('allows setting default options for query', () => {
+
+    itAsync('allows setting default options for query', (resolve, reject) => {
       const errors = [{ message: 'failure', name: 'failure' }];
-      const link = mockSingleLink({
+      const link = mockSingleLink(reject, {
         request: { query },
         result: { errors },
       });
@@ -2914,9 +2924,10 @@ describe('@connect', () => {
 
       return client.query({ query }).then(result => {
         expect(result.errors).toEqual(errors);
-      });
+      }).then(resolve, reject);
     });
-    it('allows setting default options for mutation', () => {
+
+    itAsync('allows setting default options for mutation', (resolve, reject) => {
       const mutation = gql`
         mutation upVote($id: ID!) {
           upvote(id: $id) {
@@ -2929,7 +2940,7 @@ describe('@connect', () => {
         upvote: { success: true },
       };
 
-      const link = mockSingleLink({
+      const link = mockSingleLink(reject, {
         request: { query: mutation, variables: { id: 1 } },
         result: { data },
       });
@@ -2944,18 +2955,20 @@ describe('@connect', () => {
 
       return client.mutate({ mutation }).then(result => {
         expect(result.data).toEqual(data);
-      });
+      }).then(resolve, reject);
     });
   });
 });
 
 function clientRoundtrip(
+  resolve: (result: any) => any,
+  reject: (reason: any) => any,
   query: DocumentNode,
   data: ExecutionResult,
   variables?: any,
   possibleTypes?: PossibleTypesMap,
 ) {
-  const link = mockSingleLink({
+  const link = mockSingleLink(reject, {
     request: { query: cloneDeep(query) },
     result: data,
   });
@@ -2969,5 +2982,5 @@ function clientRoundtrip(
 
   return client.query({ query, variables }).then(result => {
     expect(stripSymbols(result.data)).toEqual(data.data);
-  });
+  }).then(resolve, reject);
 }

@@ -6,6 +6,7 @@ import { render, cleanup, wait } from '@testing-library/react';
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { MockedProvider, MockLink } from '../../testing';
+import { itAsync } from '../../../__tests__/utils/itAsync';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
@@ -214,8 +215,8 @@ describe('useQuery Hook', () => {
       });
     });
 
-    it('should stop polling when the component is unmounted', async () => {
-      const mockLink = new MockLink(CAR_MOCKS);
+    itAsync('should stop polling when the component is unmounted', async (resolve, reject) => {
+      const mockLink = new MockLink(error => { throw error }, CAR_MOCKS);
       const linkRequestSpy = jest.spyOn(mockLink, 'request');
       let renderCount = 0;
       const QueryComponent = ({ unmount }: { unmount: () => void }) => {
@@ -255,7 +256,7 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(linkRequestSpy).toHaveBeenCalledTimes(2);
-      })
+      }).then(resolve, reject);
     });
 
     it(

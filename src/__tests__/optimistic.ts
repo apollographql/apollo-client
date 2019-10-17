@@ -10,6 +10,7 @@ import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
 import { makeReference } from '../utilities/graphql/storeUtils';
 import { stripSymbols } from './utils/stripSymbols';
+import { itAsync } from './utils/itAsync';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 
 describe('optimistic mutation results', () => {
@@ -99,8 +100,12 @@ describe('optimistic mutation results', () => {
   let client: ApolloClient;
   let link: any;
 
-  function setup(...mockedResponses: any[]) {
+  function setup(
+    reject: (reason: any) => any,
+    ...mockedResponses: any[]
+  ) {
     link = mockSingleLink(
+      reject,
       {
         request: { query },
         result,
@@ -188,9 +193,9 @@ describe('optimistic mutation results', () => {
         },
       };
 
-      it('handles a single error for a single mutation', async () => {
+      itAsync('handles a single error for a single mutation', async (resolve, reject) => {
         expect.assertions(6);
-        await setup({
+        await setup(reject, {
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
         });
@@ -215,12 +220,15 @@ describe('optimistic mutation results', () => {
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
           expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
         }
+
+        resolve();
       });
 
-      it('handles errors produced by one mutation in a series', async () => {
+      itAsync('handles errors produced by one mutation in a series', async (resolve, reject) => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
         await setup(
+          reject,
           {
             request: { query: mutation },
             error: new Error('forbidden (test error)'),
@@ -282,9 +290,11 @@ describe('optimistic mutation results', () => {
         expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
           makeReference('Todo99'),
         );
+
+        resolve();
       });
 
-      it('can run 2 mutations concurrently and handles all intermediate states well', async () => {
+      itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
         expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
@@ -306,6 +316,7 @@ describe('optimistic mutation results', () => {
         }
         let subscriptionHandle: Subscription;
         await setup(
+          reject,
           {
             request: { query: mutation },
             result: mutationResult,
@@ -379,6 +390,8 @@ describe('optimistic mutation results', () => {
           'This one was created with a mutation.',
           'Second mutation.',
         );
+
+        resolve();
       });
     });
 
@@ -414,10 +427,10 @@ describe('optimistic mutation results', () => {
         });
       };
 
-      it('handles a single error for a single mutation', async () => {
+      itAsync('handles a single error for a single mutation', async (resolve, reject) => {
         expect.assertions(6);
         try {
-          await setup({
+          await setup(reject, {
             request: { query: mutation },
             error: new Error('forbidden (test error)'),
           });
@@ -443,12 +456,15 @@ describe('optimistic mutation results', () => {
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
           expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
         }
+
+        resolve();
       });
 
-      it('handles errors produced by one mutation in a series', async () => {
+      itAsync('handles errors produced by one mutation in a series', async (resolve, reject) => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
         await setup(
+          reject,
           {
             request: { query: mutation },
             error: new Error('forbidden (test error)'),
@@ -510,9 +526,11 @@ describe('optimistic mutation results', () => {
         expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
           makeReference('Todo99'),
         );
+
+        resolve();
       });
 
-      it('can run 2 mutations concurrently and handles all intermediate states well', async () => {
+      itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
         expect.assertions(34);
         function checkBothMutationsAreApplied(
           expectedText1: any,
@@ -533,6 +551,7 @@ describe('optimistic mutation results', () => {
         }
         let subscriptionHandle: Subscription;
         await setup(
+          reject,
           {
             request: { query: mutation },
             result: mutationResult,
@@ -607,6 +626,8 @@ describe('optimistic mutation results', () => {
           'This one was created with a mutation.',
           'Second mutation.',
         );
+
+        resolve();
       });
     });
   });
@@ -677,12 +698,12 @@ describe('optimistic mutation results', () => {
       }
     `;
 
-    it(
+    itAsync(
       'should read the optimistic response of a mutation when making an ' +
         'ApolloClient.readQuery() call, if the `optimistic` param is set to ' +
         'true',
-      () => {
-        return setup({
+      (resolve, reject) => {
+        return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
         }).then(() => {
@@ -696,16 +717,16 @@ describe('optimistic mutation results', () => {
               );
             },
           });
-        });
+        }).then(resolve, reject);
       },
     );
 
-    it(
+    itAsync(
       'should not read the optimistic response of a mutation when making ' +
         'an ApolloClient.readQuery() call, if the `optimistic` param is set ' +
         'to false',
-      () => {
-        return setup({
+      (resolve, reject) => {
+        return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
         }).then(() => {
@@ -718,7 +739,7 @@ describe('optimistic mutation results', () => {
               expect(data.todoList.todos[0].text).toEqual(incomingText);
             },
           });
-        });
+        }).then(resolve, reject);
       },
     );
 
@@ -733,12 +754,12 @@ describe('optimistic mutation results', () => {
       }
     `;
 
-    it(
+    itAsync(
       'should read the optimistic response of a mutation when making an ' +
         'ApolloClient.readFragment() call, if the `optimistic` param is set ' +
         'to true',
-      () => {
-        return setup({
+      (resolve, reject) => {
+        return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
         }).then(() => {
@@ -758,16 +779,16 @@ describe('optimistic mutation results', () => {
               );
             },
           });
-        });
+        }).then(resolve, reject);
       },
     );
 
-    it(
+    itAsync(
       'should not read the optimistic response of a mutation when making ' +
         'an ApolloClient.readFragment() call, if the `optimistic` param is ' +
         'set to false',
-      () => {
-        return setup({
+      (resolve, reject) => {
+        return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
         }).then(() => {
@@ -786,7 +807,7 @@ describe('optimistic mutation results', () => {
               expect(data.todos[0].text).toEqual(incomingText);
             },
           });
-        });
+        }).then(resolve, reject);
       },
     );
   });
@@ -828,10 +849,10 @@ describe('optimistic mutation results', () => {
       },
     });
 
-    it('will use a passed variable in optimisticResponse', async () => {
+    itAsync('will use a passed variable in optimisticResponse', async (resolve, reject) => {
       expect.assertions(6);
       let subscriptionHandle: Subscription;
-      await setup({
+      await setup(reject, {
         request: { query: mutation, variables },
         result: mutationResult,
       });
@@ -896,6 +917,8 @@ describe('optimistic mutation results', () => {
       expect(newResult.data.todoList.todos[0].text).toEqual(
         'This one was created with a mutation.',
       );
+
+      resolve();
     });
   });
 
@@ -964,10 +987,10 @@ describe('optimistic mutation results', () => {
       },
     };
 
-    it('will insert a single item to the beginning', async () => {
+    itAsync('will insert a single itemAsync to the beginning', async (resolve, reject) => {
       expect.assertions(7);
       let subscriptionHandle: Subscription;
-      await setup({
+      await setup(reject, {
         request: { query: mutation },
         result: mutationResult,
       });
@@ -1021,12 +1044,15 @@ describe('optimistic mutation results', () => {
       expect(newResult.data.todoList.todos[0].text).toEqual(
         'This one was created with a mutation.',
       );
+
+      resolve();
     });
 
-    it('two array insert like mutations', async () => {
+    itAsync('two array insert like mutations', async (resolve, reject) => {
       expect.assertions(9);
       let subscriptionHandle: Subscription;
       await setup(
+        reject,
         {
           request: { query: mutation },
           result: mutationResult,
@@ -1111,12 +1137,15 @@ describe('optimistic mutation results', () => {
       expect(newResult.data.todoList.todos[1].text).toEqual(
         'This one was created with a mutation.',
       );
+
+      resolve();
     });
 
-    it('two mutations, one fails', async () => {
+    itAsync('two mutations, one fails', async (resolve, reject) => {
       expect.assertions(10);
       let subscriptionHandle: Subscription;
       await setup(
+        reject,
         {
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
@@ -1198,11 +1227,14 @@ describe('optimistic mutation results', () => {
       expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
         makeReference('Todo99'),
       );
+
+      resolve();
     });
 
-    it('will handle dependent updates', async () => {
+    itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
       link = mockSingleLink(
+        reject,
         {
           request: { query },
           result,
@@ -1312,6 +1344,8 @@ describe('optimistic mutation results', () => {
           ...defaultTodos,
         ],
       ]);
+
+      resolve();
     });
   });
 
@@ -1370,10 +1404,10 @@ describe('optimistic mutation results', () => {
       },
     };
 
-    it('will insert a single item to the beginning', async () => {
+    itAsync('will insert a single itemAsync to the beginning', async (resolve, reject) => {
       expect.assertions(6);
       let subscriptionHandle: Subscription;
-      await setup({
+      await setup(reject, {
         request: { query: mutation },
         delay: 300,
         result: mutationResult,
@@ -1437,12 +1471,15 @@ describe('optimistic mutation results', () => {
           'This one was created with a mutation.',
         );
       });
+
+      resolve();
     });
 
-    it('two array insert like mutations', async () => {
+    itAsync('two array insert like mutations', async (resolve, reject) => {
       expect.assertions(9);
       let subscriptionHandle: Subscription;
       await setup(
+        reject,
         {
           request: { query: mutation },
           result: mutationResult,
@@ -1545,12 +1582,15 @@ describe('optimistic mutation results', () => {
       expect(newResult.data.todoList.todos[1].text).toBe(
         'This one was created with a mutation.',
       );
+
+      resolve();
     });
 
-    it('two mutations, one fails', async () => {
+    itAsync('two mutations, one fails', async (resolve, reject) => {
       expect.assertions(10);
       let subscriptionHandle: Subscription;
       await setup(
+        reject,
         {
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
@@ -1652,11 +1692,14 @@ describe('optimistic mutation results', () => {
       expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
         makeReference('Todo99'),
       );
+
+      resolve();
     });
 
-    it('will handle dependent updates', async () => {
+    itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
       link = mockSingleLink(
+        reject,
         {
           request: { query },
           result,
@@ -1781,6 +1824,8 @@ describe('optimistic mutation results', () => {
           ...defaultTodos,
         ],
       ]);
+
+      resolve();
     });
   });
 });
@@ -1841,8 +1886,12 @@ describe('optimistic mutation - githunt comments', () => {
   let client: ApolloClient;
   let link: any;
 
-  function setup(...mockedResponses: any[]) {
+  function setup(
+    reject: (reason: any) => any,
+    ...mockedResponses: any[]
+  ) {
     link = mockSingleLink(
+      reject,
       {
         request: {
           query: addTypenameToDocument(query),
@@ -1934,7 +1983,7 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
 
-  it('can post a new comment', async () => {
+  itAsync('can post a new comment', async (resolve, reject) => {
     expect.assertions(1);
     const mutationVariables = {
       repoFullName: 'org/repo',
@@ -1942,7 +1991,7 @@ describe('optimistic mutation - githunt comments', () => {
     };
 
     let subscriptionHandle: Subscription;
-    await setup({
+    await setup(reject, {
       request: {
         query: addTypenameToDocument(mutation),
         variables: mutationVariables,
@@ -1971,5 +2020,7 @@ describe('optimistic mutation - githunt comments', () => {
 
     subscriptionHandle.unsubscribe();
     expect(newResult.data.entry.comments.length).toBe(2);
+
+    resolve();
   });
 });

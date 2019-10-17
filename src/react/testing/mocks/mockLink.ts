@@ -30,10 +30,14 @@ export class MockLink extends ApolloLink {
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
+    private reject: (reason: any) => any,
     mockedResponses: ReadonlyArray<MockedResponse>,
     addTypename: Boolean = true
   ) {
     super();
+    if (typeof this.reject !== "function") {
+      throw new Error("Must pass a failure callback when creating MockLink");
+    }
     this.addTypename = addTypename;
     if (mockedResponses)
       mockedResponses.forEach(mockedResponse => {
@@ -78,11 +82,11 @@ export class MockLink extends ApolloLink {
     );
 
     if (!response || typeof responseIndex === 'undefined') {
-      throw new Error(
+      this.reject(new Error(
         `No more mocked responses for the query: ${print(
           operation.query
         )}, variables: ${JSON.stringify(operation.variables)}`
-      );
+      ));
     }
 
     this.mockedResponsesByKey[key].splice(responseIndex, 1);
@@ -97,9 +101,9 @@ export class MockLink extends ApolloLink {
     const { result, error, delay } = response;
 
     if (!result && !error) {
-      throw new Error(
+      this.reject(new Error(
         `Mocked response should contain either result or error: ${key}`
-      );
+      ));
     }
 
     return new Observable(observer => {
@@ -145,7 +149,10 @@ export class MockLink extends ApolloLink {
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server.
 // NOTE: The last arg can optionally be an `addTypename` arg.
-export function mockSingleLink(...mockedResponses: Array<any>): ApolloLink {
+export function mockSingleLink(
+  reject: (reason: any) => any,
+  ...mockedResponses: Array<any>
+): ApolloLink {
   // To pull off the potential typename. If this isn't a boolean, we'll just
   // set it true later.
   let maybeTypename = mockedResponses[mockedResponses.length - 1];
@@ -156,5 +163,5 @@ export function mockSingleLink(...mockedResponses: Array<any>): ApolloLink {
     maybeTypename = true;
   }
 
-  return new MockLink(mocks, maybeTypename);
+  return new MockLink(reject, mocks, maybeTypename);
 }

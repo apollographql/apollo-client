@@ -431,9 +431,9 @@ export class QueryManager<TStore> {
       fetchMoreForQueryId,
     });
 
-    this.broadcastQueries();
-
     if (shouldFetch) {
+      this.broadcastQueries();
+
       const networkResult = this.fetchRequest<T>({
         requestId,
         queryId,

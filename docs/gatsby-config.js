@@ -71,7 +71,9 @@ module.exports = {
             'integrations/webpack',
           ],
           Networking: [
-            'networking/network-layer',
+            'networking/basic-http-networking',
+            'networking/advanced-http-networking',
+            'networking/non-http-networking',
             'networking/authentication',
           ],
           'API - Core': [

@@ -48,7 +48,8 @@ const client = new ApolloClient({
 
 | Name | Description |
 | - | - |
-| `link` | Apollo Client uses an Apollo Link instance to serve as its network layer. The vast majority of clients use HTTP and should provide an instance of `HttpLink` from the `apollo-link-http` package. <br/><br/> For more information, see the [Apollo Link documentation](https://www.apollographql.com/docs/link/). |
+| `uri` | A URI pointing to the backend GraphQL endpoint that Apollo Client will communicate with. **Note:** One of `uri` or `link` is required; if both are specified, `link` will take precedence. |
+| `link` | You can provide an Apollo Link instance to serve as Apollo Client's network layer. For more information, see the [advanced HTTP networking](/networking/advanced-http-networking/) section. **Note:** One of `uri` or `link` is required; if both are specified, `link` will take precedence. |
 | `cache` | Apollo Client uses an Apollo Cache instance to handle its caching strategy. The recommended cache is `apollo-cache-inmemory`, which exports an `{ InMemoryCache }`. For more information, see [Configuring the cache](/caching/cache-configuration/). |
 
 ### Optional fields

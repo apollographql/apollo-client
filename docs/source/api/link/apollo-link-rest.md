@@ -394,7 +394,7 @@ const link = new RestLink({
 
 ## Link Context
 
-`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`apollo-link-context`](/api/link/apollo-link-context) page for a discussion of why you might want this).
+`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`apollo-link-context`](/api/link/apollo-link-context/) page for a discussion of why you might want this).
 
 | Option | Type | Description |
 | - | - | - |
@@ -406,7 +406,7 @@ const link = new RestLink({
 
 ### Example
 
-`RestLink` uses the `headers` field on the [`apollo-link-context`](/api/link/apollo-link-context) so you can compose other links that provide additional & dynamic headers to a given query.
+`RestLink` uses the `headers` field on the [`apollo-link-context`](/api/link/apollo-link-context/) so you can compose other links that provide additional & dynamic headers to a given query.
 
 Here is one way to add request `headers` to the context and retrieve the response headers of the operation:
 
@@ -458,7 +458,7 @@ const client = new ApolloClient({
 });
 ```
 
-_Note: you should also consider this if you're using [`apollo-link-context`](/api/link/apollo-link-context) to set `Headers`, you need that link to be before `restLink` as well._
+_Note: you should also consider this if you're using [`apollo-link-context`](/api/link/apollo-link-context/) to set `Headers`, you need that link to be before `restLink` as well._
 
 ## @rest directive
 

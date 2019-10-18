@@ -11,7 +11,7 @@ Apollo Client's pluggable network interface layer is called Apollo Link. Apollo 
 
 ### Using a link
 
-To create a link to use with Apollo Client, you can install and import one from npm or create your own. Here's a quick example using Apollo Client's [`HttpLink`](#HttpLink):
+To create a link to use with Apollo Client, you can install and import one from npm or create your own. Here's a quick example using Apollo Client's `HttpLink`:
 
 ```js
 import { ApolloClient, HttpLink } from '@apollo/client';

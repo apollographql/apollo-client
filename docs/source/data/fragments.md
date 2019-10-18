@@ -3,14 +3,22 @@ title: Using fragments
 description: Learn how to use fragments to share fields across queries
 ---
 
-A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) is a shared piece of query logic.
+A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) is a piece of logic that a client can share between multiple queries and mutations.
+
+Here, we declare a `NameParts` fragment that is "`on`" a `Person` type:
 
 ```graphql
 fragment NameParts on Person {
   firstName
   lastName
 }
+```
 
+A fragment includes a subset of the fields that are declared for its associated type. In the above example, the `Person` type must declare `firstName` and `lastName` fields for the `NameParts` fragment to be valid.
+
+We can now include the `NameParts` fragment in any number of queries and mutations that refer to `Person` objects, like so:
+
+```graphql
 query GetPerson {
   people(id: "7") {
     ...NameParts
@@ -19,20 +27,25 @@ query GetPerson {
 }
 ```
 
-It's important to note that the component after the `on` clause is designated for the type we are selecting from. In this case, `people` is of type `Person` and we want to select the `firstName` and `lastName` fields from `people(id: "7")`.
+Based on our `NameParts` definition, the above query is equivalent to:
 
-There are two principal uses for fragments in Apollo:
+```graphql
+query GetPerson {
+  people(id: "7") {
+    firstName
+    lastName
+    avatar(size: LARGE)
+  }
+}
+```
 
-  - Sharing fields between multiple queries, mutations or subscriptions.
-  - Breaking your queries up to allow you to co-locate field access with the places they are used.
+However, if we later change which fields are included in the `NameParts` fragment, we automatically change which fields are included in every operation that _uses_ the `NameParts` fragment. This makes it much easier to keep fields consistent across a set of operations.
 
-In this document we'll outline patterns to do both using the `gql` function.
+## Creating and reusing fragments
 
-## Reusing fragments
+Fragments are useful for including an identical set of fields across multiple GraphQL operations. For example, a blog might define several operations related to comments, and each of those operations might need to include the same baseline set of fields from a `Comment` type.
 
-The most straightforward use of fragments is to reuse parts of queries (or mutations or subscriptions) in various parts of your application. For instance, in GitHunt on the comments page, we want to fetch the same fields after posting a comment as we originally query. This way we can be sure that we render consistent comment objects as the data changes.
-
-To do so, we can simply share a fragment describing the fields we need for a comment:
+To specify this baseline set of fields, we define a fragment that lists the `Comment` fields that every comment-related operation should include:
 
 ```js
 import { gql } from '@apollo/client';
@@ -52,14 +65,14 @@ CommentsPage.fragments = {
 };
 ```
 
-We put the fragment on `CommentsPage.fragments.comment` by convention, and use the familiar `gql` helper to create it.
+We assign the fragment to `CommentsPage.fragments.comment` as a convention.
 
-When it's time to embed the fragment in a query, we simply use the `...Name` syntax in our GraphQL, and embed the fragment inside our query GraphQL document:
+To embed a fragment inside GraphQL operation, prefix its name with three periods (`...`), like so:
 
 ```js
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
-    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+  mutation SubmitComment($postFullName: String!, $commentContent: String!) {
+    submitComment(postFullName: $postFullName, commentContent: $commentContent) {
       ...CommentsPageComment
     }
   }
@@ -67,39 +80,32 @@ const SUBMIT_COMMENT_MUTATION = gql`
 `;
 
 export const COMMENT_QUERY = gql`
-  query Comment($repoName: String!) {
-    # ...
-    entry(repoFullName: $repoName) {
-      # ...
+  query Comment($postName: String!) {
+    entry(postFullName: $postName) {
       comments {
         ...CommentsPageComment
       }
-      # ...
     }
   }
   ${CommentsPage.fragments.comment}
 `;
 ```
 
-You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollographql/GitHunt-React/blob/master/src/routes/CommentsPage.js).
-
 ## Colocating fragments
 
-A key advantage of GraphQL is the tree-like nature of the response data, which in many cases mirrors your rendered component hierarchy. This, combined with GraphQL's support for fragments, allows you to split your queries up in such a way that the various fields fetched by the queries are located right alongside the code that uses the field.
+The tree-like structure of a GraphQL response resembles the hierarchy of a frontend's rendered components. Because of this similarity, you can use fragments to split queries up _between_ components, so that each component requests exactly the fields that it uses. This helps you make your component logic more succinct.
 
-Although this technique doesn't always make sense (for instance it's not always the case that the GraphQL schema is driven by the UI requirements), when it does, it's possible to use some patterns in Apollo client to take full advantage of it.
-
-In GitHunt, we show an example of this on the [`FeedPage`](https://github.com/apollographql/GitHunt-React/blob/master/src/routes/FeedPage.js), which constructs the following view hierarchy:
+Consider the following view hierarchy for an app:
 
 ```
 FeedPage
 └── Feed
     └── FeedEntry
-        ├── RepoInfo
+        ├── EntryInfo
         └── VoteButtons
 ```
 
-The `FeedPage` conducts a query to fetch a list of `Entry`s, and each of the subcomponents requires different subfields of each `Entry`.
+The `FeedPage` components executes a query to fetch a list of `Entry`s, and each of its _sub_components requires different subfields of each `Entry`.
 
 ### Creating fragments
 

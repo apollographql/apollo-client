@@ -3,17 +3,15 @@ title: Advanced HTTP Networking
 description: Taking full network control with Apollo Link.
 ---
 
-Now that you have learned how to read and update your data, it's helpful to know how to direct where your data comes from and where it goes! Apollo has a powerful way to manage your network layer using a library called [Apollo Link](https://www.apollographql.com/docs/link/).
+If you're looking for more fine-grained control over your Apollo Client HTTP based network requests (and the [basic HTTP networking](/networking/basic-http-networking/) features don't give you enough flexibility), you can take command of Apollo Client's network layer using Apollo Link.
 
 ## Apollo Link
 
-Apollo Client has a pluggable network interface layer, which can let you configure how queries are sent over HTTP, or replace the whole network part with something completely custom, like a websocket transport, mocked server data, or anything else you can imagine.
+Apollo Client's pluggable network interface layer is called Apollo Link. Apollo Link allows you to configure how queries are sent over HTTP. It can also be used to replace the entire network piece of Apollo Client with something completely custom, like a websocket transport, mocked server data, or anything else you can imagine.
 
 ### Using a link
 
-To create a link to use with Apollo Client, you can install and import one from npm or create your own. We recommend using `HttpLink` for most setups.
-
-Here's how you would instantiate a new client with a custom endpoint URL using the HttpLink:
+To create a link to use with Apollo Client, you can install and import one from npm or create your own. Here's a quick example using Apollo Client's [`HttpLink`](#HttpLink):
 
 ```js
 import { ApolloClient, HttpLink } from '@apollo/client';
@@ -21,33 +19,13 @@ import { ApolloClient, HttpLink } from '@apollo/client';
 const link = new HttpLink({ uri: 'https://example.com/graphql' });
 
 const client = new ApolloClient({
-  link,
-  // other options like cache
-});
-```
-
-And if you needed to pass additional options to [`fetch`](https://github.github.io/fetch/):
-
-```js
-import { ApolloClient, HttpLink } from '@apollo/client';
-
-const link = new HttpLink({
-  uri: 'https://example.com/graphql',
-  // Additional fetch options like `credentials` or `headers`
-  credentials: 'same-origin',
-});
-
-const client = new ApolloClient({
-  link,
-  // other options like cache
+  link
 });
 ```
 
 ### Middleware
 
-Apollo Link is designed from day one to be easy to use middleware on your requests. Middlewares are used to inspect and modify every request made over the `link`, for example, adding authentication tokens to every query. In order to add middleware, you simply create a new link and join it with the `HttpLink`.
-
-The following examples shows how you'd create a middleware. In both examples, we'll show how you would add an authentication token to the HTTP header of the requests being sent by the client.
+Apollo Link was designed from day one to be easy to use middleware for your requests. Apollo Link can inspect and modify all Apollo Client request's, which comes in handy for doing things like adding authentication tokens to every query.
 
 ```js
 import { ApolloClient, HttpLink, ApolloLink, concat } from '@apollo/client';
@@ -70,9 +48,9 @@ const client = new ApolloClient({
 });
 ```
 
-The above example shows the use of a single middleware joined with the HttpLink. It checks to see if we have a token (JWT, for example) and passes that token into the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
+The above example shows the use of a single middleware joined with `HttpLink`. It checks to see if we have a token (JWT, for example) and passes that token into the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
 
-The following example shows the use of multiple middlewares passed as an array:
+The following example shows the use of multiple middleware's passed as an array:
 
 ```js
 import { ApolloClient, HttpLink, ApolloLink, from } from '@apollo/client';
@@ -112,14 +90,11 @@ const client = new ApolloClient({
 });
 ```
 
-Given the code above, the header's `Authorization` value will be that of `token` from `localStorage` by `authMiddleware` and the `recent-activity` value will  be set by `otherMiddleware` to `lastOnlineTime` again from `localStorage`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware using Apollo Link.
+In the code above, the header's `Authorization` value will be that of `token` from `localStorage` by `authMiddleware` and the `recent-activity` value will be set by `otherMiddleware` to `lastOnlineTime` again from `localStorage`. This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain. This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware using Apollo Link.
 
 ### Afterware
 
-'Afterware' is very similar to a middleware, except that an afterware runs after a request has been made,
-that is when a response is going to get processed. It's perfect for responding to the situation where a user becomes logged out during their session.
-
-Much like middlewares, Apollo Link was designed to make afterwares easy and powerful to use with Apollo!
+Afterware is very similar to middleware, except that it runs after a request has been made, and the response is about to be processed. Much like middleware, Apollo Link was designed to make afterware easy and powerful to use with Apollo. As an example, it's perfect for responding to situations where a user becomes logged out during their session.
 
 The following example demonstrates how to implement an afterware function.
 
@@ -140,32 +115,108 @@ const client = new ApolloClient({
 });
 ```
 
-The above example shows the use of `apollo-link-error` to handle network errors from a response.
-It checks to see if the response status code is equal to 401 and if it is then we will
-logout the user from the application.
+The above example shows the use of [`apollo-link-error`](/api/link/apollo-link-error/) to handle network errors from a response. It checks to see if the response status code is equal to 401, and if it is logs the user out of the application.
 
-### Query deduplication
+## HttpLink
 
-Query deduplication can help reduce the number of queries that are sent over the wire. It is turned on by default, but can be turned off by passing `queryDeduplication: false` to the context on each requests or using the `defaultOptions` key on Apollo Client setup. If turned on, query deduplication happens before the query hits the network layer.
+`HttpLink` is the most common Apollo Link. It's used to fetch GraphQL results from a GraphQL endpoint over an HTTP connection. `HttpLink` supports both POST and GET requests, and has the ability to change HTTP options on a per query basis. This comes in handy when using authentication, persisted queries, dynamic URI's, and other granular updates.
 
-Query deduplication can be useful if many components display the same data, but you don't want to fetch that data from the server many times. It works by comparing a query to all queries currently in flight. If an identical query is currently in flight, the new query will be mapped to the same promise and resolved when the currently in-flight query returns.
+> **Note:** Depending on the complexity of your HTTP request needs, there's a good chance you can connect Apollo Client to a backend GraphQL endpoint without having to worry about creating your own `HttpLink` instance. For more details about this, refer to the [basic HTTP networking](/networking/basic-http-networking/) section.
+
+### Usage
+
+```js
+import { HttpLink } from "@apollo/client";
+
+const link = new HttpLink({ uri: "/graphql" });
+```
+
+### Options
+
+The `HttpLink` constructor accepts the following options:
+
+| Options | Description |
+| - | - |
+| `uri` | The URI key is a string endpoint or function resolving to an endpoint -- will default to "/graphql" if not specified. |
+| `includeExtensions` | Allow passing the extensions field to your graphql server, defaults to false. |
+| `fetch` | A `fetch` compatible API for making a request. |
+| `headers` | An object representing values to be sent as headers on the request. |
+| `credentials` | A string representing the credentials policy you want for the fetch call. Possible values are: `omit`, `include` and `same-origin`. |
+| `fetchOptions` | Any overrides of the fetch options argument to pass to the fetch call. |
+| `useGETForQueries` | Set to `true` to use the HTTP `GET` method for queries (but not for mutations). |
+
+### Fetch polyfill
+
+`HttpLink` relies on having `fetch` present in your runtime environment. If you are running on react-native, or modern browsers, this should not be a problem. If you are targeting an environment without `fetch` such as older browsers or the server however, you will need to pass your own `fetch` to the link through its options. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for Node.
+
+### Context
+
+Many of the `HttpLink` constructor options can be overridden at the request level, by passing them into the context. For example, the `headers` field on the context can be used to pass headers to the HTTP request. It also supports the `credentials` field for defining credentials policy, `uri` for changing the endpoint dynamically, and `fetchOptions` to allow generic fetch overrides (i.e. `method: "GET"`). These options will override the same key if set by the `HttpLink` constructor.
+
+Note that if you set `fetchOptions.method` to `GET`, `HttpLink` will follow the [standard GraphQL HTTP GET encoding](http://graphql.org/learn/serving-over-http/#get-request): the query, variables, operation name, and extensions will be passed as query parameters rather than in the HTTP request body. If you want mutations to continue to be sent as non-idempotent `POST` requests, set the top-level `useGETForQueries` option to `true` instead of setting `fetchOptions.method` to `GET`.
+
+`HttpLink` also attaches the response from the `fetch` operation to the context as `response`, so you can access it in another link.
+
+Context options:
+
+| Option | Description |
+| - | - |
+| `headers` | An object representing values to be sent as headers on the request. |
+| `credentials` | A string representing the credentials policy you want for the fetch call. Possible values are: `omit`, `include` and `same-origin`. |
+| `uri` | A string of the endpoint you want to fetch from. |
+| `fetchOptions` | Any overrides of the fetch options argument to pass to the fetch call. |
+| `response` | This is the raw response from the fetch request after it is made. |
+| `http` | This is an object to control fine grained aspects of the http link itself, such as persisted queries (see below). |
+
+The following example shows how to leverage the context to pass a special header for a single query invocation:
+
+```js
+import { ApolloClient } from "@apollo/client";
+
+const client = new ApolloClient({ uri: "/graphql" });
+
+client.query({
+  query: MY_QUERY,
+  context: {
+    // example of setting the headers with context per operation
+    headers: {
+      special: "Special header value"
+    }
+  }
+});
+```
+
+### Custom fetching
+
+`HttpLink`'s `fetch` option can be used to wire in custom networking. This is useful if you want to modify the request based on calculated headers, or calculate the URI based on an operation. For example:
+
+**Custom auth:**
+
+```js
+const customFetch = (uri, options) => {
+  const { header } = Hawk.client.header(
+    "http://example.com:8000/resource/1?b=1&a=2",
+    "POST",
+    { credentials: credentials, ext: "some-app-data" }
+  );
+  options.headers.Authorization = header;
+  return fetch(uri, options);
+};
+
+const link = new HttpLink({ fetch: customFetch });
+```
+
+**Dynamic URI:**
+
+```js
+const customFetch = (uri, options) => {
+  const { operationName } = JSON.parse(options.body);
+  return fetch(`${uri}/graph/graphql?opname=${operationName}`, options);
+};
+
+const link = new HttpLink({ fetch: customFetch });
+```
 
 ## Other links
 
-The network stack of Apollo Client is easily customized using Apollo Link! It can log errors, send side effects, send data over WebSockets or HTTP, and so much more. A few examples are below but make sure to check out the [link docs](https://www.apollographql.com/docs/link/) to learn more!
-
-### GraphQL over WebSocket
-
-Another alternative for network interface is GraphQL over WebSocket, using [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws/).
-
-You can then create WebSocket as full-transport, and pass all GraphQL operations over the WebSocket (`Query`, `Mutation` and `Subscription`), or use a hybrid network interface and execute `Query` and `Mutation` over HTTP, and only `Subscription` over the WebSocket.
-
-For more information about using WebSockets with Apollo Link, check out the [in-depth guide](https://www.apollographql.com/docs/link/links/ws)
-
-### Query Batching
-
-Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. Batching works only with server that support batched queries (for example graphql-server). Batched requests to servers that don’t support batching will fail. To learn how to use batching with Apollo checkout the [in-depth guide](https://www.apollographql.com/docs/link/links/batch-http)
-
-### Mutation batching
-
-Apollo also lets you automatically run multiple mutations in one request, similar to queries, by batching multiple mutations into one request.
+Apollo Client's network stack can be easily customized using Apollo Link. It can log errors, trigger side effects, send data over WebSockets or HTTP, and so much more. Refer to the [Link API](/api/link/introduction/) for more details around building your own custom links, and for a list of additional Apollo supported links. [NPM](https://www.npmjs.com/search?q=apollo-link) is also a great place to find community created links.

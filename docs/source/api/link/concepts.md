@@ -29,6 +29,8 @@ We can chain these links together so that the first link operates on an operatio
 
 Note that although we have the last link in the above figure (the terminating link) requesting GraphQL results from a server, this doesn't necessarily have to be the case. Your GraphQL results can come from anywhere.
 
+> **Note:** Apollo Link currently uses the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional `Observable` API details.
+
 ### Requests
 
 At the core of an `ApolloLink` based object is the `request` method, otherwise known as the `RequestHandler`. It takes the following arguments:

@@ -552,7 +552,7 @@ export class QueryManager<TStore> {
       }
     }
 
-    return (
+    return async (
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
     ) => {
@@ -635,7 +635,7 @@ export class QueryManager<TStore> {
             data = lastResult.data;
             isMissing = false;
           } else {
-            const diffResult = this.cache.diff({
+            const diffResult = await this.cache.diff({
               query: document as DocumentNode,
               variables:
                 queryStoreValue.previousVariables ||

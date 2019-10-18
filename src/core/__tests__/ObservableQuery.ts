@@ -138,10 +138,6 @@ describe('ObservableQuery', () => {
             request: { query, variables },
             result: { data: dataTwo },
           },
-          {
-            request: { query, variables },
-            result: { data: dataTwo },
-          },
         );
 
         const observable = manager.watchQuery({
@@ -798,7 +794,7 @@ describe('ObservableQuery', () => {
         if (handleCount === 1) {
           expect(result.errors).toEqual([error]);
           expect(observable.getCurrentResult().errors).toEqual([error]);
-          observable.setVariables(differentVariables);
+          await observable.setVariables(differentVariables);
           expect(observable.getCurrentResult().errors).toEqual([error]);
         }
         // after loading is done and new results are returned

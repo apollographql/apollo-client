@@ -809,10 +809,15 @@ describe('mutation results', () => {
 
     let yieldCount = 0;
     watchedQuery.subscribe({
-      next: ({ data }: any) => {
+      next(result) {
         yieldCount += 1;
         if (yieldCount === 1) {
-          expect(data.echo).toBe('b');
+          expect(result.data.echo).toBe('a');
+          watchedQuery.refetch(variables2);
+        } else if (yieldCount === 2) {
+          expect(result.data.echo).toBe('a');
+        } else if (yieldCount === 3) {
+          expect(result.data.echo).toBe('b');
           client.mutate({
             mutation: resetMutation,
             updateQueries: {
@@ -821,17 +826,15 @@ describe('mutation results', () => {
               },
             },
           });
-        } else if (yieldCount === 2) {
-          expect(data.echo).toBe('0');
+        } else if (yieldCount === 4) {
+          expect(result.data.echo).toBe('0');
           resolve();
         }
       },
-      error: () => {
+      error() {
         // Do nothing, but quash unhandled error
       },
     });
-
-    watchedQuery.refetch(variables2);
   });
 
   itAsync('allows mutations with optional arguments', (resolve, reject) => {

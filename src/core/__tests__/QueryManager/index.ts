@@ -952,7 +952,10 @@ describe('QueryManager', () => {
     });
 
     const handle = queryManager.watchQuery<any>(request);
-    handle.subscribe({});
+
+    await new Promise((next, error) => {
+      handle.subscribe({ next, error });
+    });
 
     return handle
       .refetch()
@@ -2520,11 +2523,14 @@ describe('QueryManager', () => {
       ]);
     };
 
-    handle.subscribe({
-      error: checkError,
+    await new Promise(next => {
+      handle.subscribe({
+        next,
+        error: checkError,
+      });
     });
 
-    handle
+    return handle
       .refetch()
       .then(() => {
         reject(new Error('Error on refetch should reject promise'));
@@ -3731,10 +3737,10 @@ describe('QueryManager', () => {
         observableToPromise({ observable: observable2 }, result =>
           expect(stripSymbols(result.data)).toEqual(data2),
         ),
-      ]).then(() => {
-        observable.subscribe({ next: () => null });
-        observable2.subscribe({ next: () => null });
-
+      ]).then(() => Promise.all([
+        new Promise((next, error) => observable.subscribe({ next, error })),
+        new Promise((next, error) => observable2.subscribe({ next, error })),
+      ])).then(() => {
         return queryManager.reFetchObservableQueries().then(() => {
           return Promise.all([
             queryManager.getCurrentQueryResult(observable),

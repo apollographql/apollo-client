@@ -385,7 +385,7 @@ export class QueryManager<TStore> {
     // Unless we are completely skipping the cache, we want to diff the query
     // against the cache before we fetch it from the network interface.
     if (!isNetworkOnly) {
-      const { complete, result } = this.cache.diff({
+      const { complete, result } = await this.cache.diff({
         query,
         variables,
         returnPartialData: true,

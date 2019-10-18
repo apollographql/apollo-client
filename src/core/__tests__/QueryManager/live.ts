@@ -12,7 +12,6 @@ import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core
 import { QueryManager } from '../../QueryManager';
-import { DataStore } from '../../../data/store';
 
 describe('Live queries', () => {
   it('handles mutliple results for live queries', done => {
@@ -42,7 +41,7 @@ describe('Live queries', () => {
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -108,7 +107,7 @@ describe('Live queries', () => {
     let count = 0;
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -192,7 +191,7 @@ describe('Live queries', () => {
     link.onUnsubscribe(() => cleanedupTimes++);
 
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 

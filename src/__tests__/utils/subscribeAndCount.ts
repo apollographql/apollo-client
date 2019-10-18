@@ -4,7 +4,7 @@ import { Subscription } from '../../utilities/observables/Observable';
 import { asyncMap } from '../../utilities/observables/observables';
 
 export default function subscribeAndCount(
-  done: jest.DoneCallback,
+  reject: (reason: any) => any,
   observable: ObservableQuery<any>,
   cb: (handleCount: number, result: ApolloQueryResult<any>) => any,
 ): Subscription {
@@ -20,12 +20,12 @@ export default function subscribeAndCount(
         // to be defined.
         setImmediate(() => {
           subscription.unsubscribe();
-          done.fail(e);
+          reject(e);
         });
       }
     },
   ).subscribe({
-    error: done.fail,
+    error: reject,
   });
   return subscription;
 }

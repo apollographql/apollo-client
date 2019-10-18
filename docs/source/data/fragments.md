@@ -26,7 +26,7 @@ There are two principal uses for fragments in Apollo:
   - Sharing fields between multiple queries, mutations or subscriptions.
   - Breaking your queries up to allow you to co-locate field access with the places they are used.
 
-In this document we'll outline patterns to do both using the [`graphql-tag`](https://github.com/apollographql/graphql-tag) package.
+In this document we'll outline patterns to do both using the `gql` function.
 
 ## Reusing fragments
 
@@ -35,7 +35,7 @@ The most straightforward use of fragments is to reuse parts of queries (or mutat
 To do so, we can simply share a fragment describing the fields we need for a comment:
 
 ```js
-import gql from 'graphql-tag';
+import { gql } from '@apollo/client';
 
 CommentsPage.fragments = {
   comment: gql`
@@ -171,37 +171,31 @@ query {
 }
 ```
 
-In the query above, `all_people` returns a result of type `Character[]`. Both `Jedi` and `Droid` are possible concrete types of `Character`, but on the client there is no way to know that without having some information about the schema. By default, Apollo Client's cache will use a heuristic fragment matcher, which assumes that a fragment matched if the result included all the fields in its selection set, and didn't match when any field was missing. This works in most cases, but it also means that Apollo Client cannot check the server response for you, and it cannot tell you when you're manually writing invalid data into the store using `update`, `updateQuery`, `writeQuery`, etc. Also, the heuristic fragment matcher will not work accurately when using fragments with unions or interfaces. Apollo Client will let you know this with a console warning (in development), if it attempts to use the default heuristic fragment matcher with unions/interfaces. The `IntrospectionFragmentMatcher` is the solution for working with unions/interfaces, and is explained in more detail below.
+In the query above, `all_people` returns a result of type `Character[]`. Both `Jedi` and `Droid` are possible concrete types of `Character`, but on the client there is no way to know that without having some information about the schema. By default, Apollo Client's `InMemoryCache` assumes that a fragment matched if the result included all the fields in the fragment's selection set, and did not match if any field was missing. This heuristic works in most cases, but it also means that Apollo Client cannot check the server response for you, or warn you when you're manually writing invalid data into the store using `update`, `updateQuery`, `writeQuery`, etc. The heuristic is also more likely to be wrong when matching fragments against unions or interfaces.
 
-The section below explains how to pass the necessary schema knowledge to the Apollo Client cache so unions and interfaces can be accurately matched and results validated before writing them into the store.
+### Configuring `possibleTypes`
 
-To support result validation and accurate fragment matching on unions and interfaces, a special fragment matcher called the `IntrospectionFragmentMatcher` can be used. If there are any changes related to union or interface types in your schema, you will have to update the fragment matcher accordingly.
+Whereas past versions of Apollo Client used something called an `IntrospectionFragmentMatcher` to match fragments against unions and interfaces, Apollo Client 3.0 takes a simpler approach.
 
-We recommend setting up a build step that extracts the necessary information from the schema into a JSON file, where it can be imported from when constructing the fragment matcher. To set it up, follow the three steps below:
+When you create an instance of the `InMemoryCache`, you can pass an option called `possibleTypes`, which maps the names of supertypes to arrays of subtype names:
 
-1. Query your server / schema to obtain the necessary information about unions and interfaces and write it to a file.
-
-You can automate this or set this as a script to run at build time.
-
-If you want to auto-generate the introspection result, there's a tool called [GraphQL Code Generator](https://graphql-code-generator.com) that does it. Define where your GraphQL Schema is available and where to write the file:
-
-```yaml
-# codegen.yml
-schema: YOUR_API
-overwrite: true
-generates:
-  ./fragmentTypes.json:
-    plugins:
-      - fragment-matcher
+```ts
+const cache = new InMemoryCache({
+  possibleTypes: {
+    Character: ['Jedi', 'Droid'],
+    Test: ["PassingTest", "FailingTest", "SkippedTest"],
+    Snake: ["Viper", "Python"],
+  },
+});
 ```
 
-With all of that, you simply run:
+In many applications, the code required for this configuration is short enough to write by hand. That's because unions and interfaces are relatively rare compared to other kinds of types in GraphQL schemas, and you can get away with worrying only about the ones your application actually uses as fragment type constraints.
 
-    gql-gen
+However, new union or interface types might be added to your schema in the future, or your client application could start using more of the ones that already exist, so it's important to have a way of generating the `possibleTypes` configuration automatically from your schema.
 
-> To learn more, you can read the ["Fragment Matcher" chapter](https://graphql-code-generator.com/docs/plugins/fragment-matcher).
+### Generating `possibleTypes`
 
-In order to introspect the server manually, set this as a script to run at build time.
+Here's a script you can use to translate an introspection query into the `possibleTypes` configuration object:
 
 ```js
 const fetch = require('node-fetch');
@@ -226,17 +220,20 @@ fetch(`${YOUR_API_HOST}/graphql`, {
       }
     `,
   }),
-})
-  .then(result => result.json())
+}).then(result => result.json())
   .then(result => {
-    // here we're filtering out any type information unrelated to unions or interfaces
-    const filteredData = result.data.__schema.types.filter(
-      type => type.possibleTypes !== null,
-    );
-    result.data.__schema.types = filteredData;
-    fs.writeFile('./fragmentTypes.json', JSON.stringify(result.data), err => {
+    const possibleTypes = {};
+
+    result.data.__schema.types.forEach(supertype => {
+      if (supertype.possibleTypes) {
+        possibleTypes[supertype.name] =
+          supertype.possibleTypes.map(subtype => subtype.name);
+      }
+    });
+
+    fs.writeFile('./possibleTypes.json', JSON.stringify(possibleTypes), err => {
       if (err) {
-        console.error('Error writing fragmentTypes file', err);
+        console.error('Error writing possibleTypes.json', err);
       } else {
         console.log('Fragment types successfully extracted!');
       }
@@ -244,28 +241,12 @@ fetch(`${YOUR_API_HOST}/graphql`, {
   });
 ```
 
-2. Create a new IntrospectionFragment matcher by passing in the `fragmentTypes.json` file you just created. You'll want to do this in the same file where you initialize the cache for Apollo Client.
+To use the generated `possibleTypes` information, simply import it from the generated `.json` module:
 
-```js
-import { IntrospectionFragmentMatcher } from '@apollo/client';
-import introspectionQueryResultData from './fragmentTypes.json';
+```ts
+import possibleTypes from './path/to/possibleTypes.json';
 
-const fragmentMatcher = new IntrospectionFragmentMatcher({
-  introspectionQueryResultData
-});
-```
-
-3. Pass in the newly created `IntrospectionFragmentMatcher` to configure your cache during construction. Then, you pass your newly configured cache to `ApolloClient` to complete the process.
-
-```js
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
-
-// add fragmentMatcher code from step 2 here
-
-const cache = new InMemoryCache({ fragmentMatcher });
-
-const client = new ApolloClient({
-  cache,
-  link: new HttpLink(),
+const cache = new InMemoryCache({
+  possibleTypes,
 });
 ```

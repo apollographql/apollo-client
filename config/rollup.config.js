@@ -1,6 +1,7 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
+import cjs from 'rollup-plugin-commonjs';
 import fs from 'fs';
 
 import packageJson from '../package.json';
@@ -15,6 +16,7 @@ const globals = {
   optimism: 'optimism',
   'graphql/language/visitor': 'visitor',
   'graphql/execution/execute': 'execute',
+  'graphql-tag': 'graphqlTag',
   'fast-json-stable-stringify': 'stringify',
   '@wry/equality': 'wryEquality',
   graphql: 'graphql',
@@ -54,6 +56,11 @@ function prepareESM() {
         // where the full error string can be found. See #4519.
         errorCodes: true,
       }),
+      cjs({
+        namedExports: {
+          'graphql-tag': ['gql']
+        }
+      }),
     ]
   };
 }
@@ -67,7 +74,15 @@ function prepareCJS() {
       format: 'cjs',
       sourcemap: true,
       exports: 'named'
-    }
+    },
+    plugins: [
+      nodeResolve(),
+      cjs({
+        namedExports: {
+          'graphql-tag': ['gql']
+        }
+      }),
+    ]
   }
 }
 

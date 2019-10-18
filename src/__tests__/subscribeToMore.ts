@@ -7,6 +7,7 @@ import { mockSingleLink, mockObservableLink } from '../__mocks__/mockLinks';
 import { ApolloClient } from '../';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { stripSymbols } from './utils/stripSymbols';
+import { itAsync } from './utils/itAsync';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
@@ -57,10 +58,10 @@ describe('subscribeToMore', () => {
     name: string;
   }
 
-  it('triggers new result from subscription data', done => {
+  itAsync('triggers new result from subscription data', (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = mockSingleLink(reject, req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -101,7 +102,7 @@ describe('subscribeToMore', () => {
         networkStatus: 7,
         stale: false,
       });
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {
@@ -109,10 +110,10 @@ describe('subscribeToMore', () => {
     }
   });
 
-  it('calls error callback on error', done => {
+  itAsync('calls error callback on error', (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = mockSingleLink(reject, req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -159,7 +160,7 @@ describe('subscribeToMore', () => {
       });
       expect(counter).toBe(2);
       expect(errorCount).toBe(1);
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {
@@ -167,11 +168,11 @@ describe('subscribeToMore', () => {
     }
   });
 
-  it('prints unhandled subscription errors to the console', done => {
+  itAsync('prints unhandled subscription errors to the console', (resolve, reject) => {
     let latestResult: any = null;
 
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = mockSingleLink(reject, req1);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -220,7 +221,7 @@ describe('subscribeToMore', () => {
       expect(counter).toBe(1);
       expect(errorCount).toBe(1);
       console.error = consoleErr;
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {
@@ -228,10 +229,10 @@ describe('subscribeToMore', () => {
     }
   });
 
-  it('should not corrupt the cache (#3062)', async done => {
+  itAsync('should not corrupt the cache (#3062)', async (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req4);
+    const httpLink = mockSingleLink(reject, req4);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -323,11 +324,11 @@ describe('subscribeToMore', () => {
       networkStatus: 7,
       stale: false,
     });
-    done();
+    resolve();
   });
   // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.
 
-  it('allows specification of custom types for variables and payload (#4246)', done => {
+  itAsync('allows specification of custom types for variables and payload (#4246)', (resolve, reject) => {
     interface TypedOperation extends Operation {
       variables: {
         someNumber: number;
@@ -343,7 +344,7 @@ describe('subscribeToMore', () => {
 
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(typedReq);
+    const httpLink = mockSingleLink(reject, typedReq);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -391,7 +392,7 @@ describe('subscribeToMore', () => {
         networkStatus: 7,
         stale: false,
       });
-      done();
+      resolve();
     }, 15);
 
     for (let i = 0; i < 2; i++) {

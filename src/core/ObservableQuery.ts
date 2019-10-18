@@ -521,11 +521,13 @@ export class ObservableQuery<
     );
 
     if (newResult) {
-      queryManager.dataStore.markUpdateQueryResult(
-        document,
+      queryManager.cache.write({
+        query: document,
+        result: newResult,
+        dataId: 'ROOT_QUERY',
         variables,
-        newResult,
-      );
+      });
+
       queryManager.broadcastQueries();
     }
   }

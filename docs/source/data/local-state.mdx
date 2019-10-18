@@ -107,7 +107,7 @@ function FilterLink({ filter, children }) {
 ```jsx
 import React from "react";
 import { Query } from "@apollo/react-components";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 
 import Link from "./Link";
 
@@ -220,7 +220,7 @@ function Todo({ id, completed, text }) {
 ```jsx
 import React from "react";
 import { Mutation } from "@apollo/react-components";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 
 const TOGGLE_TODO = gql`
   mutation ToggleTodo($id: Int!) {
@@ -291,7 +291,7 @@ function TodoList() {
 ```jsx
 import React from "react";
 import { Query } from "@apollo/react-components";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 
 import Todo from "./Todo";
 
@@ -589,7 +589,7 @@ const client = new ApolloClient({
 [`CameraRoll.getPhotos()`](https://facebook.github.io/react-native/docs/cameraroll.html#getphotos) returns a `Promise` resolving to an object with a `edges` property, which is an array of camera node objects, and a `page_info` property, which is an object with pagination information. This is a great use case for GraphQL, since we can filter down the return value to only the data that our components consume.
 
 ```js
-import gql from 'graphql-tag';
+import { gql } from "@apollo/client";
 
 const GET_PHOTOS = gql`
   query getPhotos($assetType: String!) {
@@ -776,7 +776,7 @@ export default function Launch({ launchId }) {
 ```jsx
 import React, { Fragment } from "react";
 import { Query } from "@apollo/react-components";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 
 import { Loading, Header, LaunchDetail } from "../components";
 import { ActionButton } from "../containers";
@@ -1234,7 +1234,7 @@ export function MessageCount() {
 ```js
 import React from "react";
 import { ApolloConsumer, Query } from "@apollo/react-components";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 
 const GET_MESSAGE_COUNT = gql`
   {

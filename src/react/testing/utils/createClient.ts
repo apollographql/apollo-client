@@ -11,7 +11,7 @@ export function createClient<TData>(
   variables = {},
 ): ApolloClient<NormalizedCacheObject> {
   return new ApolloClient({
-    link: mockSingleLink({
+    link: mockSingleLink(error => { throw error }, {
       request: { query, variables },
       result: { data },
     }),

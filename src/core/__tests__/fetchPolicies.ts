@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../__tests__/utils/stripSymbols';
+import { itAsync } from '../../__tests__/utils/itAsync';
 import { ApolloClient } from '../..';
 import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
@@ -53,8 +54,9 @@ const mutationResult = {
 
 const merged = { author: { ...result.author, firstName: 'James' } };
 
-const createLink = () =>
+const createLink = (reject: (reason: any) => any) =>
   mockSingleLink(
+    reject,
     {
       request: { query },
       result: { data: result },
@@ -65,8 +67,9 @@ const createLink = () =>
     },
   );
 
-const createFailureLink = () =>
+const createFailureLink = (reject: (reason: any) => any) =>
   mockSingleLink(
+    reject,
     {
       request: { query },
       error: new Error('query failed'),
@@ -77,9 +80,10 @@ const createFailureLink = () =>
     },
   );
 
-const createMutationLink = () =>
+const createMutationLink = (reject: (reason: any) => any) =>
   // fetch the data
   mockSingleLink(
+    reject,
     {
       request: { query },
       result: { data: result },
@@ -97,7 +101,7 @@ const createMutationLink = () =>
   );
 
 describe('network-only', () => {
-  it('requests from the network even if already in cache', () => {
+  itAsync('requests from the network even if already in cache', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -108,20 +112,21 @@ describe('network-only', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createLink()),
+      link: inspector.concat(createLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client.query({ query }).then(() =>
-      client
+    return client.query({ query }).then(
+      () => client
         .query({ fetchPolicy: 'network-only', query })
         .then(actualResult => {
           expect(stripSymbols(actualResult.data)).toEqual(result);
           expect(called).toBe(4);
         }),
-    );
+    ).then(resolve, reject);
   });
-  it('saves data to the cache on success', () => {
+
+  itAsync('saves data to the cache on success', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -132,18 +137,19 @@ describe('network-only', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createLink()),
+      link: inspector.concat(createLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client.query({ query, fetchPolicy: 'network-only' }).then(() =>
-      client.query({ query }).then(actualResult => {
+    return client.query({ query, fetchPolicy: 'network-only' }).then(
+      () => client.query({ query }).then(actualResult => {
         expect(stripSymbols(actualResult.data)).toEqual(result);
         expect(called).toBe(2);
       }),
-    );
+    ).then(resolve, reject);
   });
-  it('does not save data to the cache on failure', () => {
+
+  itAsync('does not save data to the cache on failure', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -154,7 +160,7 @@ describe('network-only', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createFailureLink()),
+      link: inspector.concat(createFailureLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -165,17 +171,16 @@ describe('network-only', () => {
         expect(e.message).toMatch('query failed');
         didFail = true;
       })
-      .then(() =>
-        client.query({ query }).then(actualResult => {
-          expect(stripSymbols(actualResult.data)).toEqual(result);
-          // the first error doesn't call .map on the inspector
-          expect(called).toBe(3);
-          expect(didFail).toBe(true);
-        }),
-      );
+      .then(() => client.query({ query }).then(actualResult => {
+        expect(stripSymbols(actualResult.data)).toEqual(result);
+        // the first error doesn't call .map on the inspector
+        expect(called).toBe(3);
+        expect(didFail).toBe(true);
+      }))
+      .then(resolve, reject);
   });
 
-  it('updates the cache on a mutation', () => {
+  itAsync('updates the cache on a mutation', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -186,7 +191,7 @@ describe('network-only', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createMutationLink()),
+      link: inspector.concat(createMutationLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -201,11 +206,13 @@ describe('network-only', () => {
         return client.query({ query }).then(actualResult => {
           expect(stripSymbols(actualResult.data)).toEqual(merged);
         });
-      });
+      })
+      .then(resolve, reject);
   });
 });
+
 describe('no-cache', () => {
-  it('requests from the network when not in cache', () => {
+  itAsync('requests from the network when not in cache', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -216,7 +223,7 @@ describe('no-cache', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createLink()),
+      link: inspector.concat(createLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -225,9 +232,11 @@ describe('no-cache', () => {
       .then(actualResult => {
         expect(actualResult.data).toEqual(result);
         expect(called).toBe(2);
-      });
+      })
+      .then(resolve, reject);
   });
-  it('requests from the network even if already in cache', () => {
+
+  itAsync('requests from the network even if already in cache', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -238,18 +247,19 @@ describe('no-cache', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createLink()),
+      link: inspector.concat(createLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client.query({ query }).then(() =>
-      client.query({ fetchPolicy: 'no-cache', query }).then(actualResult => {
+    return client.query({ query }).then(
+      () => client.query({ fetchPolicy: 'no-cache', query }).then(actualResult => {
         expect(actualResult.data).toEqual(result);
         expect(called).toBe(4);
       }),
-    );
+    ).then(resolve, reject);
   });
-  it('does not save the data to the cache on success', () => {
+
+  itAsync('does not save the data to the cache on success', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -260,20 +270,20 @@ describe('no-cache', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createLink()),
+      link: inspector.concat(createLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client.query({ query, fetchPolicy: 'no-cache' }).then(() =>
-      client.query({ query }).then(actualResult => {
+    return client.query({ query, fetchPolicy: 'no-cache' }).then(
+      () => client.query({ query }).then(actualResult => {
         expect(stripSymbols(actualResult.data)).toEqual(result);
         // the second query couldn't read anything from the cache
         expect(called).toBe(4);
       }),
-    );
+    ).then(resolve, reject);
   });
 
-  it('does not save data to the cache on failure', () => {
+  itAsync('does not save data to the cache on failure', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -284,7 +294,7 @@ describe('no-cache', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createFailureLink()),
+      link: inspector.concat(createFailureLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -295,16 +305,16 @@ describe('no-cache', () => {
         expect(e.message).toMatch('query failed');
         didFail = true;
       })
-      .then(() =>
-        client.query({ query }).then(actualResult => {
-          expect(stripSymbols(actualResult.data)).toEqual(result);
-          // the first error doesn't call .map on the inspector
-          expect(called).toBe(3);
-          expect(didFail).toBe(true);
-        }),
-      );
+      .then(() => client.query({ query }).then(actualResult => {
+        expect(stripSymbols(actualResult.data)).toEqual(result);
+        // the first error doesn't call .map on the inspector
+        expect(called).toBe(3);
+        expect(didFail).toBe(true);
+      }))
+      .then(resolve, reject);
   });
-  it('does not update the cache on a mutation', () => {
+
+  itAsync('does not update the cache on a mutation', (resolve, reject) => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -315,7 +325,7 @@ describe('no-cache', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createMutationLink()),
+      link: inspector.concat(createMutationLink(reject)),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -328,12 +338,13 @@ describe('no-cache', () => {
         return client.query({ query }).then(actualResult => {
           expect(stripSymbols(actualResult.data)).toEqual(result);
         });
-      });
+      })
+      .then(resolve, reject);
   });
 });
 
 describe('cache-and-network', function() {
-  it('gives appropriate networkStatus for refetched queries', done => {
+  itAsync('gives appropriate networkStatus for refetched queries', (resolve, reject) => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
@@ -374,7 +385,7 @@ describe('cache-and-network', function() {
       };
     }
 
-    subscribeAndCount(done, observable, (count, result) => {
+    subscribeAndCount(reject, observable, (count, result) => {
       if (count === 1) {
         expect(result).toEqual({
           data: void 0,
@@ -434,7 +445,7 @@ describe('cache-and-network', function() {
           networkStatus: NetworkStatus.ready,
           stale: false,
         });
-        done();
+        resolve();
       }
     });
   });

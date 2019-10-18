@@ -17,7 +17,7 @@ These methods are described in detail below.
 > cache changes to your entire app, which enables automatic UI updates. If you
 > call these methods directly on the cache instead, changes are _not_ broadcast.
 
-All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` tag from `graphql-tag`.
+All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
 
 ## `readQuery`
 

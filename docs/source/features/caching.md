@@ -10,7 +10,7 @@ This normalization process is constantly happening behind the scenes when you ca
 
 To interact directly with your data in the Apollo Client store you may use the methods `readQuery`, `readFragment`, `writeQuery`, and `writeFragment` that are accessible from the `ApolloClient` class. This article will teach you how to use these methods to control your data.
 
-All of the methods we will discuss can be called from the `ApolloClient` class. Any code demonstration in this article will assume that we have already initialized an instance of `ApolloClient` and assigned it to the `client`, and that we have imported the `gql` tag from `graphql-tag`. Like so:
+All of the methods we will discuss can be called from the `ApolloClient` class. Any code demonstration in this article will assume that we have already initialized an instance of `ApolloClient` and assigned it to the `client`, and that we have imported the `gql` function. Like so:
 
 ```js
 import { ApolloClient, gql } from '@apollo/client';

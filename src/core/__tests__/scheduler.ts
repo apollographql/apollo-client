@@ -2,13 +2,13 @@ import gql from 'graphql-tag';
 
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../__tests__/utils/stripSymbols';
+import { itAsync } from '../../__tests__/utils/itAsync';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
 import { mockSingleLink } from '../../__mocks__/mockLinks';
 import { NetworkStatus } from '../../core/networkStatus';
 
-import { DataStore } from '../../data/store';
 import { ObservableQuery } from '../../core/ObservableQuery';
 
 // Used only for unit testing.
@@ -37,10 +37,10 @@ function eachPollingQuery(
 }
 
 describe('QueryScheduler', () => {
-  it('should throw an error if we try to start polling a non-polling query', () => {
+  itAsync('should throw an error if we try to start polling a non-polling query', (resolve, reject) => {
     const queryManager = new QueryManager({
-      link: mockSingleLink(),
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      link: mockSingleLink(reject),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const query = gql`
@@ -51,15 +51,15 @@ describe('QueryScheduler', () => {
         }
       }
     `;
-    const queryOptions: WatchQueryOptions = {
-      query,
-    };
+
     expect(() => {
-      queryManager.startPollingQuery(queryOptions, null as never);
+      queryManager.startPollingQuery({ query }, null as never);
     }).toThrow();
+
+    resolve();
   });
 
-  it('should correctly start polling queries', done => {
+  itAsync('should correctly start polling queries', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -80,13 +80,12 @@ describe('QueryScheduler', () => {
       pollInterval: 80,
     };
 
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
-
+      cache: new InMemoryCache({ addTypename: false }),
       link: link,
     });
     let timesFired = 0;
@@ -96,11 +95,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toBeGreaterThanOrEqual(0);
       queryManager.stop();
-      done();
+      resolve();
     }, 120);
   });
 
-  it('should correctly stop polling queries', done => {
+  itAsync('should correctly stop polling queries', (resolve, reject) => {
     const query = gql`
       query {
         someAlias: author {
@@ -119,14 +118,14 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 20,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: {
         query: queryOptions.query,
       },
       result: { data },
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link: link,
     });
     let timesFired = 0;
@@ -144,11 +143,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toEqual(1);
       queryManager.stop();
-      done();
+      resolve();
     }, 170);
   });
 
-  it('should register a query and return an observable that can be unsubscribed', done => {
+  itAsync('should register a query and return an observable that can be unsubscribed', (resolve, reject) => {
     const myQuery = gql`
       query {
         someAuthorAlias: author {
@@ -167,13 +166,12 @@ describe('QueryScheduler', () => {
       query: myQuery,
       pollInterval: 20,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
-
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
     let timesFired = 0;
@@ -189,11 +187,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toEqual(1);
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
   });
 
-  it('should register a query and return an observable that can adjust interval', done => {
+  itAsync('should register a query and return an observable that can adjust interval', (resolve, reject) => {
     const myQuery = gql`
       query {
         someAuthorAlias: author {
@@ -213,12 +211,13 @@ describe('QueryScheduler', () => {
       pollInterval: 20,
     };
     const link = mockSingleLink(
+      reject,
       { request: queryOptions, result: { data: data[0] } },
       { request: queryOptions, result: { data: data[1] } },
       { request: queryOptions, result: { data: data[2] } },
     );
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
     let timesFired = 0;
@@ -242,11 +241,11 @@ describe('QueryScheduler', () => {
       expect(timesFired).toEqual(2);
       subscription.unsubscribe();
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
   });
 
-  it('should handle network errors on polling queries correctly', done => {
+  itAsync('should handle network errors on polling queries correctly', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -260,19 +259,19 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 80,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       error,
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
     let observableQuery = registerPollingQuery(queryManager, queryOptions);
     const subscription = observableQuery.subscribe({
       next() {
         queryManager.stop();
-        done.fail(
+        reject(
           new Error('Observer provided a result despite a network error.'),
         );
       },
@@ -284,12 +283,12 @@ describe('QueryScheduler', () => {
         });
         subscription.unsubscribe();
         queryManager.stop();
-        done();
+        resolve();
       },
     });
   });
 
-  it('should not fire another query if one with the same id is in flight', done => {
+  itAsync('should not fire another query if one with the same id is in flight', (resolve, reject) => {
     const query = gql`
       query B {
         fortuneCookie
@@ -302,13 +301,13 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
       delay: 20000,
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache()),
+      cache: new InMemoryCache(),
       link,
     });
     const observer = registerPollingQuery(queryManager, queryOptions);
@@ -316,11 +315,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       subscription.unsubscribe();
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
   });
 
-  it('should add a query to an interval correctly', () => {
+  itAsync('should add a query to an interval correctly', (resolve, reject) => {
     const query = gql`
       query {
         fortuneCookie
@@ -333,12 +332,12 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10000,
     };
-    const link = mockSingleLink({
+    const link = mockSingleLink(reject, {
       request: queryOptions,
       result: { data },
     });
     const queryManager = new QueryManager<any>({
-      store: new DataStore(new InMemoryCache()),
+      cache: new InMemoryCache(),
       link,
     });
     const queryId = 'fake-id';
@@ -352,9 +351,11 @@ describe('QueryScheduler', () => {
     });
     expect(count).toEqual(1);
     queryManager.stop();
+
+    resolve();
   });
 
-  it('should add multiple queries to an interval correctly', () => {
+  itAsync('should add multiple queries to an interval correctly', (resolve, reject) => {
     const query1 = gql`
       query {
         fortuneCookie
@@ -387,8 +388,9 @@ describe('QueryScheduler', () => {
       pollInterval: interval,
     };
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link: mockSingleLink(
+        reject,
         {
           request: { query: query1 },
           result: { data: data1 },
@@ -420,9 +422,11 @@ describe('QueryScheduler', () => {
     });
     expect(count).toEqual(2);
     queryManager.stop();
+
+    resolve();
   });
 
-  it('should remove queries from the interval list correctly', done => {
+  itAsync('should remove queries from the interval list correctly', (resolve, reject) => {
     const query = gql`
       query {
         author {
@@ -438,8 +442,8 @@ describe('QueryScheduler', () => {
       },
     };
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
-      link: mockSingleLink({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: mockSingleLink(reject, {
         request: { query },
         result: { data },
       }),
@@ -464,11 +468,11 @@ describe('QueryScheduler', () => {
     setTimeout(() => {
       expect(timesFired).toEqual(1);
       queryManager.stop();
-      done();
+      resolve();
     }, 100);
   });
 
-  it('should correctly start new polling query after removing old one', done => {
+  itAsync('should correctly start new polling query after removing old one', (resolve, reject) => {
     const query = gql`
       query {
         someAlias: author {
@@ -492,13 +496,14 @@ describe('QueryScheduler', () => {
       result: { data },
     };
     const link = mockSingleLink(
+      reject,
       networkResult,
       networkResult,
       networkResult,
       networkResult,
     );
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
       link: link,
     });
     let timesFired = 0;
@@ -516,7 +521,7 @@ describe('QueryScheduler', () => {
       setTimeout(() => {
         expect(timesFired).toBeGreaterThanOrEqual(1);
         queryManager.stop();
-        done();
+        resolve();
       }, 80);
     }, 200);
   });

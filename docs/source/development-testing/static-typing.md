@@ -249,7 +249,7 @@ Since the result of a query will be sent to the wrapped component as props, we w
 
 ```tsx
 import React from "react";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 import { ChildDataProps, graphql } from "@apollo/react-hoc";
 
 const HERO_QUERY = gql`
@@ -306,7 +306,7 @@ Typically, variables to the query will be computed from the props of the wrapper
 
 ```tsx
 import React from "react";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 import { ChildDataProps, graphql } from "@apollo/react-hoc";
 
 const HERO_QUERY = gql`
@@ -394,7 +394,7 @@ The `graphql` wrapper from `@apollo/react-hoc` supports manually declaring the s
 
 ```tsx
 import React from "react";
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 import { graphql, ChildDataProps } from "@apollo/react-hoc";
 
 const HERO_QUERY = gql`

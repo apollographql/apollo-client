@@ -22,7 +22,6 @@ import {
   MutationOptions,
   WatchQueryFetchPolicy,
 } from './core/watchQueryOptions';
-import { DataStore } from './data/store';
 import { version } from './version';
 import { HttpLink } from './link/http/HttpLink';
 import { UriFunction } from './link/http/selectHttpOptionsAndBody';
@@ -62,7 +61,6 @@ export type ApolloClientOptions<TCacheShape> = {
  */
 export class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
-  public store: DataStore<TCacheShape>;
   public cache: ApolloCache<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
@@ -152,7 +150,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     this.link = link;
     this.cache = cache;
-    this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || {};
@@ -227,8 +224,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     });
 
     this.queryManager = new QueryManager({
+      cache: this.cache,
       link: this.link,
-      store: this.store,
       queryDeduplication,
       ssrMode,
       clientAwareness: {

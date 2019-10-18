@@ -4,7 +4,6 @@ import { mockObservableLink, MockedSubscription } from '../__mocks__/mockLinks';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient } from '../';
 import { QueryManager } from '../core/QueryManager';
-import { DataStore } from '../data/store';
 
 describe('GraphQL Subscriptions', () => {
   const results = [
@@ -129,7 +128,7 @@ describe('GraphQL Subscriptions', () => {
     const link = mockObservableLink(sub1);
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const obs = queryManager.startGraphQLSubscription(options);
@@ -167,7 +166,7 @@ describe('GraphQL Subscriptions', () => {
     let numResults = 0;
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     // tslint:disable-next-line
@@ -212,7 +211,7 @@ describe('GraphQL Subscriptions', () => {
     const link = mockObservableLink(sub1);
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const obs = queryManager.startGraphQLSubscription(options);

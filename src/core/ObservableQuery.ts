@@ -580,7 +580,7 @@ export class ObservableQuery<
       iterateObserversSafely(this.observers, 'error', this.lastError = error);
     };
 
-    queryManager.observeQuery<TData>(queryId, this.options, {
+    return queryManager.observeQuery<TData>(queryId, this.options, {
       next: (result: ApolloQueryResult<TData>) => {
         if (this.lastError || this.isDifferentFromLastResult(result)) {
           const previousResult = this.updateLastResult(result);

@@ -12,6 +12,7 @@ import { makeReference } from '../utilities/graphql/storeUtils';
 import { stripSymbols } from './utils/stripSymbols';
 import { itAsync } from './utils/itAsync';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
+import { asyncMap } from '../utilities/observables/observables';
 
 describe('optimistic mutation results', () => {
   const query = gql`
@@ -1232,7 +1233,8 @@ describe('optimistic mutation results', () => {
     });
 
     itAsync('will handle dependent updates', async (resolve, reject) => {
-      expect.assertions(1);
+      expect.assertions(2);
+
       link = mockSingleLink(
         reject,
         {
@@ -1297,19 +1299,22 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      // wrap the QueryObservable with an rxjs observable
-      const promise = from(client.watchQuery({ query }))
-        .pipe(
-          map(value => stripSymbols(value.data.todoList.todos)),
-          take(5),
-          toArray(),
-        )
-        .toPromise();
+      let firstResolve;
+      const firstResultPromise = new Promise(resolve => firstResolve = resolve);
+      const promise = from(
+        asyncMap(client.watchQuery({ query }), result => {
+          firstResolve(result);
+          return result;
+        })
+      ).pipe(
+        map(value => stripSymbols(value.data.todoList.todos)),
+        take(5),
+        toArray(),
+      ).toPromise();
 
-      // Mutations will not trigger a watchQuery with the results of an optimistic response
-      // if set in the same tick of the event loop.
-      // https://github.com/apollographql/apollo-client/issues/3723
-      await new Promise(setTimeout);
+      const firstResult = await firstResultPromise;
+      const defaultTodos = stripSymbols(result.data.todoList.todos);
+      expect(firstResult.data.todoList.todos).toEqual(defaultTodos);
 
       client.mutate({
         mutation,
@@ -1324,7 +1329,7 @@ describe('optimistic mutation results', () => {
       });
 
       const responses = await promise;
-      const defaultTodos = stripSymbols(result.data.todoList.todos);
+
       expect(responses).toEqual([
         defaultTodos,
         [customOptimisticResponse1.createTodo, ...defaultTodos],
@@ -1697,7 +1702,8 @@ describe('optimistic mutation results', () => {
     });
 
     itAsync('will handle dependent updates', async (resolve, reject) => {
-      expect.assertions(1);
+      expect.assertions(2);
+
       link = mockSingleLink(
         reject,
         {
@@ -1781,15 +1787,22 @@ describe('optimistic mutation results', () => {
 
       let count = 0;
 
-      const promise = from(client.watchQuery({ query }))
-        .pipe(
-          map(value => stripSymbols(value.data.todoList.todos)),
-          take(5),
-          toArray(),
-        )
-        .toPromise();
+      let firstResolve;
+      const firstResultPromise = new Promise(resolve => firstResolve = resolve);
+      const promise = from(
+        asyncMap(client.watchQuery({ query }), result => {
+          firstResolve(result);
+          return result;
+        })
+      ).pipe(
+        map(value => stripSymbols(value.data.todoList.todos)),
+        take(5),
+        toArray(),
+      ).toPromise();
 
-      await new Promise(setTimeout);
+      const firstResult = await firstResultPromise;
+      const defaultTodos = stripSymbols(result.data.todoList.todos);
+      expect(firstResult.data.todoList.todos).toEqual(defaultTodos);
 
       client.mutate({
         mutation,
@@ -1804,7 +1817,7 @@ describe('optimistic mutation results', () => {
       });
 
       const responses = await promise;
-      const defaultTodos = stripSymbols(result.data.todoList.todos);
+
       expect(responses).toEqual([
         defaultTodos,
         [customOptimisticResponse1.createTodo, ...defaultTodos],

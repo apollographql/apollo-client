@@ -257,12 +257,16 @@ describe('subscribeToMore', () => {
       query,
     });
 
+    let nextResolve;
+    const nextPromise = new Promise(resolve, nextResolve = resolve);
     const sub = obsHandle.subscribe({
       next(queryResult) {
-        latestResult = queryResult;
+        nextResolve(latestResult = queryResult);
         counter++;
       },
     });
+
+    await nextPromise;
 
     let nextMutation: { value: string };
     obsHandle.subscribeToMore<SubscriptionData>({

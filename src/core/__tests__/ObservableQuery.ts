@@ -472,11 +472,11 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(reject, observable, async (handleCount, result) => {
-        if (handleCount === 2) {
+        if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual({});
           expect(timesFired).toBe(0);
           await observable.setOptions({ fetchPolicy: 'cache-first' });
-        } else if (handleCount === 3) {
+        } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
           resolve();

@@ -2379,12 +2379,17 @@ describe('client', () => {
     client.onResetStore(onResetStoreTwo);
 
     let called = false;
+
+    let nextResolve;
+    const nextPromise = new Promise(resolve => nextResolve = resolve);
+
     const next = jest.fn(d => {
       if (called) {
         expect(onResetStoreOne).toHaveBeenCalled();
       } else {
         expect(stripSymbols(d.data)).toEqual(data);
         called = true;
+        nextResolve();
       }
     });
 
@@ -2398,6 +2403,8 @@ describe('client', () => {
         error: fail,
         complete: fail,
       });
+
+    await nextPromise;
 
     expect(count).toEqual(0);
     await client.resetStore();

@@ -403,38 +403,37 @@ describe('useLazyQuery Hook', () => {
         }
       });
 
-      switch (renderCount) {
-        case 0:
+      switch (++renderCount) {
+        case 1:
           expect(loading).toEqual(false);
           setTimeout(() => {
             execute();
           });
           break;
-        case 1:
+        case 2:
           expect(loading).toEqual(true);
           break;
-        case 2:
+        case 3:
           expect(loading).toEqual(false);
           expect(data).toEqual(CAR_RESULT_DATA);
           setTimeout(() => {
             execute({ variables: { someProp: 'someValue' } });
           });
           break;
-        case 3:
+        case 4:
           expect(loading).toEqual(false);
           expect(data).toEqual(CAR_RESULT_DATA);
           // Force a render to help make sure onCompleted isn't called again
           // since the query isn't re-run.
           setCounter(1);
           break;
-        case 4:
+        case 5:
           expect(loading).toEqual(false);
           expect(data).toEqual(CAR_RESULT_DATA);
           break;
         default: // Do nothing
       }
 
-      renderCount += 1;
       return null;
     };
 

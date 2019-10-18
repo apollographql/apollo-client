@@ -264,17 +264,16 @@ describe('useQuery Hook', () => {
         'a component has unmounted (even though polling has already been ' +
         'stopped automatically)',
       async () => {
-        let unmount: any;
         let renderCount = 0;
         const Component = () => {
           const { data, loading, stopPolling } = useQuery(CAR_QUERY, {
             pollInterval: 10
           });
-          switch (renderCount) {
-            case 0:
+          switch (++renderCount) {
+            case 1:
               expect(loading).toBeTruthy();
               break;
-            case 1:
+            case 2:
               expect(loading).toBeFalsy();
               expect(data).toEqual(CAR_RESULT_DATA);
               setTimeout(() => {
@@ -284,11 +283,10 @@ describe('useQuery Hook', () => {
               break;
             default:
           }
-          renderCount += 1;
           return null;
         };
 
-        unmount = render(
+        const unmount = render(
           <MockedProvider mocks={CAR_MOCKS}>
             <Component />
           </MockedProvider>
@@ -582,22 +580,17 @@ describe('useQuery Hook', () => {
           notifyOnNetworkStatusChange: true
         });
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             expect(error).toBeUndefined();
             break;
-          case 1:
+          case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: an error 1');
-            setTimeout(() => {
-              // catch here to avoid failing due to 'uncaught promise rejection'
-              refetch().catch(() => {});
-            });
-            break;
-          case 2:
-            expect(loading).toBeTruthy();
+            // catch here to avoid failing due to 'uncaught promise rejection'
+            refetch().catch(() => {});
             break;
           case 3:
             expect(loading).toBeFalsy();
@@ -607,7 +600,6 @@ describe('useQuery Hook', () => {
           default: // Do nothing
         }
 
-        renderCount += 1;
         return null;
       }
 
@@ -618,7 +610,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(4);
+        expect(renderCount).toBe(3);
       });
     });
 
@@ -652,32 +644,30 @@ describe('useQuery Hook', () => {
           notifyOnNetworkStatusChange: true
         });
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             expect(error).toBeUndefined();
             break;
-          case 1:
+          case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: same error message');
-            setTimeout(() => {
-              // catch here to avoid failing due to 'uncaught promise rejection'
-              refetch().catch(() => {});
-            });
-            break;
-          case 2:
-            expect(loading).toBeTruthy();
+            // catch here to avoid failing due to 'uncaught promise rejection'
+            refetch().catch(() => {});
             break;
           case 3:
+            // The refetch should not cause another render, because the
+            // error message is the same. If a render occurs somehow, then
+            // the loading state and error.message must be the same.
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: same error message');
             break;
-          default: // Do nothing
+          default:
+            throw new Error("unreached");
         }
 
-        renderCount += 1;
         return null;
       }
 
@@ -688,7 +678,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(4);
+        expect(renderCount).toBe(2);
       });
     });
 
@@ -720,31 +710,24 @@ describe('useQuery Hook', () => {
           notifyOnNetworkStatusChange: true
         });
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             expect(error).toBeUndefined();
             break;
-          case 1:
+          case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: same error message');
-            setTimeout(() => {
-              // catch here to avoid failing due to 'uncaught promise rejection'
-              refetch().catch(() => {});
-            });
-            break;
-          case 2:
-            expect(loading).toBeTruthy();
+            // catch here to avoid failing due to 'uncaught promise rejection'
+            refetch().catch(() => {});
             break;
           case 3:
             expect(loading).toBeFalsy();
             expect(error).toBeUndefined();
             expect(data).toEqual(CAR_RESULT_DATA);
-            setTimeout(() => {
-              // catch here to avoid failing due to 'uncaught promise rejection'
-              refetch().catch(() => {});
-            });
+            // catch here to avoid failing due to 'uncaught promise rejection'
+            refetch().catch(() => {});
             break;
           case 4:
             expect(loading).toBeTruthy();
@@ -754,10 +737,10 @@ describe('useQuery Hook', () => {
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: same error message');
             break;
-          default: // Do nothing
+          default:
+            throw new Error("unreached");
         }
 
-        renderCount += 1;
         return null;
       }
 
@@ -768,7 +751,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(6);
+        expect(renderCount).toBe(5);
       });
     });
   });

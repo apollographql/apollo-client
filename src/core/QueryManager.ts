@@ -1285,6 +1285,10 @@ export class QueryManager<TStore> {
           // the original result in case an @connection directive is used.
           resultFromStore = result.data;
         } else {
+          // If we've reached this point, we don't want the request to be
+          // rejected if the store happens to get reset during the await.
+          this.fetchQueryRejectFns.delete(fqrfId);
+
           // ensure result is combined with data already in store
           const { result, complete } = await this.cache.diff<T>({
             variables,

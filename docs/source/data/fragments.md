@@ -5,7 +5,7 @@ description: Learn how to use fragments to share fields across queries
 
 A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) is a piece of logic that a client can share between multiple queries and mutations.
 
-Here, we declare a `NameParts` fragment that is "`on`" a `Person` type:
+Here, we declare a `NameParts` fragment that can be used with any `Person` object:
 
 ```graphql
 fragment NameParts on Person {
@@ -105,31 +105,31 @@ FeedPage
         └── VoteButtons
 ```
 
-In this app, the `FeedPage` component executes a query to fetch a list of `Entry`s, and each of its _sub_components uses different fields from each `Entry`.
+In this app, the `FeedPage` component executes a query to fetch a list of `FeedEntry` objects. The `EntryInfo` and `VoteButtons` subcomponents need specific fields from the enclosing `FeedEntry` object.
 
 ### Creating colocated fragments
 
-You create a colocated fragment like any other fragment, but you define it within the component that will use its fields. For example, the `VoteButtons` subcomponent of `FeedPage` might use the following fields of an `Entry`:
+A colocated fragment is just like any other fragment, except it is attached to a particular component that uses the fragment's fields. For example, the `VoteButtons` child component of `FeedPage` might use the fields `score` and `vote { choice }` from the `FeedEntry` object:
 
 ```js
 VoteButtons.fragments = {
   entry: gql`
-    fragment VoteButtons on Entry {
+    fragment VoteButtonsFragment on FeedEntry {
       score
       vote {
-        vote_value
+        choice
       }
     }
   `,
 };
 ```
 
-After you define a fragment in a subcomponent, the subcomponent's parents can refer to the fragment in their own fragment definitions, like so:
+After you define a fragment in a child component, the parent component can refer to child component fragments in its own fragment definitions, like so:
 
 ```js
 FeedEntry.fragments = {
   entry: gql`
-    fragment FeedEntry on Entry {
+    fragment FeedEntryFragment on FeedEntry {
       commentCount
       repository {
         full_name
@@ -138,14 +138,16 @@ FeedEntry.fragments = {
           avatar_url
         }
       }
-      ...VoteButtons
-      ...RepoInfo
+      ...VoteButtonsFragment
+      ...RepoInfoFragment
     }
     ${VoteButtons.fragments.entry}
     ${RepoInfo.fragments.entry}
   `,
 };
 ```
+
+There's nothing special about the naming of `VoteButtons.fragments.entry` or `RepoInfo.fragments.entry`. Any naming convention will work as long as you can easily and consistently retrieve a component's fragments given the component.
 
 ### Importing fragments when using Webpack
 
@@ -184,13 +186,13 @@ query {
 
 The `all_characters` query above returns a list of `Character` objects. The `Character` type is an interface that both the `Jedi` and `Droid` types implement. Each item in the list includes a `side` field if it's an object of type `Jedi`, and it includes a `model` field if it's of type `Droid`.
 
-**However**, for this query to work, your client needs to understand the polymorphic relationship between the `Character` interface and the types that implement it. To do this, you define the `possibleTypes` for a given interface or union.
+**However**, for this query to work, your client needs to understand the polymorphic relationship between the `Character` interface and the types that implement it. To inform the client about these relationships, you can pass a `possibleTypes` option when creating the `InMemoryCache`.
 
 ### Defining `possibleTypes` manually
 
 > The `possibleTypes` option is available in Apollo Client 3.0 and later.
 
-You can pass a `possibleTypes` option to the `InMemoryCache` constructor to define polymorphic relationships that exist in your schema. This object maps the name of an interface or union to the types that implement or belong to it.
+You can pass a `possibleTypes` option to the `InMemoryCache` constructor to specify supertype-subtype relationships in your schema. This object maps the name of an interface or union type (the supertype) to the types that implement or belong to it (the subtypes).
 
 Here's an example `possibleTypes` declaration:
 
@@ -206,7 +208,7 @@ const cache = new InMemoryCache({
 
 This example lists three interfaces (`Character`, `Test`, and `Snake`) and the object types that implement them.
 
-If your schema includes only a few unions and interfaces, you can probably specify your `possibleTypes` manually without issue. However, as your schema grows in size and complexity, you should [generate `possibleTypes` automatically from your schema](#generating-possibletypes-manually).
+If your schema includes only a few unions and interfaces, you can probably specify your `possibleTypes` manually without issue. However, as your schema grows in size and complexity, you should consider [generating `possibleTypes` automatically from your schema](#generating-possibletypes-manually).
 
 ### Generating `possibleTypes` automatically
 

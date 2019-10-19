@@ -2393,16 +2393,14 @@ describe('client', () => {
       }
     });
 
-    const observable = client
-      .watchQuery<any>({
-        query,
-        notifyOnNetworkStatusChange: false,
-      })
-      .subscribe({
-        next,
-        error: fail,
-        complete: fail,
-      });
+    client.watchQuery<any>({
+      query,
+      notifyOnNetworkStatusChange: false,
+    }).subscribe({
+      next,
+      error: fail,
+      complete: fail,
+    });
 
     await nextPromise;
 

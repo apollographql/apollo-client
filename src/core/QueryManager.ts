@@ -212,21 +212,15 @@ export class QueryManager<TStore> {
         ? optimisticResponse(variables)
         : optimisticResponse;
 
-      this.cache.recordOptimisticTransaction(c => {
-        const { cache } = this;
-        this.cache = c;
-        try {
-          this.markMutationResult({
-            mutationId: mutationId,
-            result: { data: optimistic },
-            document: mutation,
-            variables: variables,
-            updateQueries: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
-          });
-        } finally {
-          this.cache = cache;
-        }
+      this.cache.recordOptimisticTransaction(cache => {
+        markMutationResult({
+          mutationId: mutationId,
+          result: { data: optimistic },
+          document: mutation,
+          variables: variables,
+          queryUpdatersById: generateUpdateQueriesInfo(),
+          update: updateWithProxyFn,
+        }, cache);
       }, mutationId);
     }
 
@@ -258,14 +252,14 @@ export class QueryManager<TStore> {
           self.mutationStore.markMutationResult(mutationId);
 
           if (fetchPolicy !== 'no-cache') {
-            self.markMutationResult({
+            markMutationResult({
               mutationId,
               result,
               document: mutation,
               variables,
-              updateQueries: generateUpdateQueriesInfo(),
+              queryUpdatersById: generateUpdateQueriesInfo(),
               update: updateWithProxyFn,
-            });
+            }, self.cache);
           }
 
           storeResult = result as FetchResult<T>;
@@ -356,73 +350,6 @@ export class QueryManager<TStore> {
         },
       });
     });
-  }
-
-  private markMutationResult(mutation: {
-    mutationId: string;
-    result: ExecutionResult;
-    document: DocumentNode;
-    variables: any;
-    updateQueries: { [queryId: string]: QueryWithUpdater };
-    update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
-  }) {
-    // Incorporate the result from this mutation into the store
-    if (!graphQLResultHasError(mutation.result)) {
-      const cacheWrites: Cache.WriteOptions[] = [{
-        result: mutation.result.data,
-        dataId: 'ROOT_MUTATION',
-        query: mutation.document,
-        variables: mutation.variables,
-      }];
-
-      const { updateQueries } = mutation;
-      if (updateQueries) {
-        Object.keys(updateQueries).forEach(id => {
-          const { query, updater } = updateQueries[id];
-
-          // Read the current query result from the store.
-          const { result: currentQueryResult, complete } = this.cache.diff({
-            query: query.document,
-            variables: query.variables,
-            returnPartialData: true,
-            optimistic: false,
-          });
-
-          if (complete) {
-            // Run our reducer using the current query result and the mutation result.
-            const nextQueryResult = tryFunctionOrLogError(() =>
-              updater(currentQueryResult, {
-                mutationResult: mutation.result,
-                queryName: getOperationName(query.document) || undefined,
-                queryVariables: query.variables,
-              }),
-            );
-
-            // Write the modified result back into the store if we got a new result.
-            if (nextQueryResult) {
-              cacheWrites.push({
-                result: nextQueryResult,
-                dataId: 'ROOT_QUERY',
-                query: query.document,
-                variables: query.variables,
-              });
-            }
-          }
-        });
-      }
-
-      this.cache.performTransaction(c => {
-        cacheWrites.forEach(write => c.write(write));
-
-        // If the mutation has some writes associated with it then we need to
-        // apply those writes to the store by running this reducer again with a
-        // write action.
-        const { update } = mutation;
-        if (update) {
-          tryFunctionOrLogError(() => update(c, mutation.result));
-        }
-      });
-    }
   }
 
   public async fetchQuery<T>(
@@ -1493,5 +1420,75 @@ export class QueryManager<TStore> {
 
   public stopPollingQuery(queryId: string) {
     this.pollingInfoByQueryId.delete(queryId);
+  }
+}
+
+function markMutationResult<TStore>(
+  mutation: {
+    mutationId: string;
+    result: ExecutionResult;
+    document: DocumentNode;
+    variables: any;
+    queryUpdatersById: Record<string, QueryWithUpdater>;
+    update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
+  },
+  cache: ApolloCache<TStore>,
+) {
+  // Incorporate the result from this mutation into the store
+  if (!graphQLResultHasError(mutation.result)) {
+    const cacheWrites: Cache.WriteOptions[] = [{
+      result: mutation.result.data,
+      dataId: 'ROOT_MUTATION',
+      query: mutation.document,
+      variables: mutation.variables,
+    }];
+
+    const { queryUpdatersById } = mutation;
+    if (queryUpdatersById) {
+      Object.keys(queryUpdatersById).forEach(id => {
+        const { query, updater } = queryUpdatersById[id];
+
+        // Read the current query result from the store.
+        const { result: currentQueryResult, complete } = cache.diff({
+          query: query.document,
+          variables: query.variables,
+          returnPartialData: true,
+          optimistic: false,
+        });
+
+        if (complete) {
+          // Run our reducer using the current query result and the mutation result.
+          const nextQueryResult = tryFunctionOrLogError(
+            () => updater(currentQueryResult, {
+              mutationResult: mutation.result,
+              queryName: getOperationName(query.document) || undefined,
+              queryVariables: query.variables,
+            }),
+          );
+
+          // Write the modified result back into the store if we got a new result.
+          if (nextQueryResult) {
+            cacheWrites.push({
+              result: nextQueryResult,
+              dataId: 'ROOT_QUERY',
+              query: query.document,
+              variables: query.variables,
+            });
+          }
+        }
+      });
+    }
+
+    cache.performTransaction(c => {
+      cacheWrites.forEach(write => c.write(write));
+
+      // If the mutation has some writes associated with it then we need to
+      // apply those writes to the store by running this reducer again with a
+      // write action.
+      const { update } = mutation;
+      if (update) {
+        tryFunctionOrLogError(() => update(c, mutation.result));
+      }
+    });
   }
 }

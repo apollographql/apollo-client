@@ -1249,7 +1249,7 @@ export class QueryManager<TStore> {
         });
       };
 
-      const subscription = observable.map((result: ExecutionResult) => {
+      const subscription = asyncMap(observable, async (result: ExecutionResult) => {
         if (requestId >= this.getQuery(queryId).lastRequestId) {
           this.markQueryResult(
             queryId,
@@ -1286,7 +1286,7 @@ export class QueryManager<TStore> {
           resultFromStore = result.data;
         } else {
           // ensure result is combined with data already in store
-          const { result, complete } = this.cache.diff<T>({
+          const { result, complete } = await this.cache.diff<T>({
             variables,
             query: document,
             optimistic: false,

@@ -406,24 +406,25 @@ describe('ObservableQuery', () => {
       observable = queryManager.watchQuery({ query: testQuery });
 
       subscribeAndCount(reject, observable, async (handleCount, result) => {
-        try {
-          if (handleCount === 1) {
-            expect(stripSymbols(result.data)).toEqual(data);
-            expect(timesFired).toBe(1);
-            // set policy to be cache-only but data is found
-            await observable.setOptions({ fetchPolicy: 'cache-only' });
-            await queryManager.resetStore();
-          } else if (handleCount === 2) {
-            expect(stripSymbols(result.data)).toEqual({});
-            expect(timesFired).toBe(1);
-            await observable.setOptions({ fetchPolicy: 'cache-first' });
-          } else if (handleCount === 3) {
-            expect(stripSymbols(result.data)).toEqual(data);
-            expect(timesFired).toBe(2);
-            resolve();
-          }
-        } catch (e) {
-          reject(e);
+        if (handleCount === 1) {
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(timesFired).toBe(1);
+          // set policy to be cache-only but data is found
+          await observable.setOptions({
+            fetchPolicy: 'cache-only',
+          }).catch(error => {
+            // This error is expected because we're resetting the store below.
+            expect(error.message).toMatch(/Store reset while query was in flight/);
+          });
+          await queryManager.resetStore();
+        } else if (handleCount === 2) {
+          expect(stripSymbols(result.data)).toEqual({});
+          expect(timesFired).toBe(1);
+          await observable.setOptions({ fetchPolicy: 'cache-first' });
+        } else if (handleCount === 3) {
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(timesFired).toBe(2);
+          resolve();
         }
       });
     });

@@ -223,29 +223,24 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public performTransaction(
-    transaction: Transaction<NormalizedCacheObject>,
+    transaction: (proxy: InMemoryCache) => any,
     // This parameter is not part of the performTransaction signature inherited
     // from the ApolloCache abstract class, but it's useful because it saves us
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
     const perform = (layer?: EntityCache) => {
-      const { data, optimisticData, silenceBroadcast } = this;
-      this.silenceBroadcast = true;
-      // Temporarily make this.data refer to the new layer for the duration of
-      // the transaction.
+      const proxy: InMemoryCache = Object.create(this);
+      proxy.silenceBroadcast = true;
       if (layer) {
-        this.data = this.optimisticData = layer;
+        // The proxy object is just like this except that silenceBroadcast
+        // is set to true, and proxy.data and proxy.optimisticData both
+        // point to the same layer.
+        proxy.data = proxy.optimisticData = layer;
       }
-      try {
-        return transaction(this);
-      } finally {
-        this.silenceBroadcast = silenceBroadcast;
-        if (layer) {
-          this.data = data;
-          this.optimisticData = optimisticData;
-        }
-      }
+      // Because the proxy object can simply be forgotten, we do not need
+      // to wrap this call with a try-finally block.
+      return transaction(proxy);
     };
 
     if (typeof optimisticId === 'string') {

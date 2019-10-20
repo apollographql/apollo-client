@@ -84,7 +84,7 @@ describe('optimistic cache layers', () => {
         },
       });
 
-      result2666InTransaction = readOptimistic(cache);
+      result2666InTransaction = readOptimistic(proxy);
       expect(result2666InTransaction).toEqual({
         book: {
           __typename: 'Book',
@@ -118,7 +118,7 @@ describe('optimistic cache layers', () => {
         },
       });
 
-      expect((resultCatch22 = readOptimistic(cache))).toEqual({
+      expect((resultCatch22 = readOptimistic(proxy))).toEqual({
         book: {
           __typename: 'Book',
           title: 'Catch-22',

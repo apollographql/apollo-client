@@ -711,7 +711,7 @@ describe('optimistic mutation results', () => {
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
             update: (proxy, mResult: any) => {
-              const data = client.readQuery({ query: todoListQuery }, true);
+              const data = proxy.readQuery({ query: todoListQuery }, true);
               expect(data.todoList.todos[0].text).toEqual(
                 todoListOptimisticResponse.createTodo.todos[0].text,
               );
@@ -735,7 +735,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse: todoListOptimisticResponse,
             update: (proxy, mResult: any) => {
               const incomingText = mResult.data.createTodo.todos[0].text;
-              const data = client.readQuery({ query: todoListQuery }, false);
+              const data = proxy.readQuery({ query: todoListQuery }, false);
               expect(data.todoList.todos[0].text).toEqual(incomingText);
             },
           });
@@ -767,7 +767,7 @@ describe('optimistic mutation results', () => {
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
             update: (proxy, mResult: any) => {
-              const data: any = client.readFragment(
+              const data: any = proxy.readFragment(
                 {
                   id: 'TodoList5',
                   fragment: todoListFragment,
@@ -797,7 +797,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse: todoListOptimisticResponse,
             update: (proxy, mResult: any) => {
               const incomingText = mResult.data.createTodo.todos[0].text;
-              const data: any = client.readFragment(
+              const data: any = proxy.readFragment(
                 {
                   id: 'TodoList5',
                   fragment: todoListFragment,

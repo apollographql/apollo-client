@@ -9,22 +9,16 @@ import { wrap, KeyTrie } from 'optimism';
 import { InvariantError } from 'ts-invariant';
 
 import {
-  argumentsObjectFromField,
-  getStoreKeyName,
   isField,
   isInlineFragment,
   resultKeyNameFromField,
-  StoreValue,
   Reference,
   isReference,
   makeReference,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
-import {
-  getDirectiveInfoFromField,
-  shouldInclude,
-} from '../../utilities/graphql/directives';
+import { shouldInclude } from '../../utilities/graphql/directives';
 import {
   getDefaultValues,
   getFragmentDefinitions,
@@ -36,23 +30,23 @@ import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { mergeDeepArray } from '../../utilities/common/mergeDeep';
 import { Cache } from '../core/types/Cache';
 import {
-  ReadStoreContext,
   DiffQueryAgainstStoreOptions,
   ReadQueryOptions,
   StoreObject,
   NormalizedCache,
 } from './types';
 import { supportsResultCaching } from './entityCache';
-import { fragmentMatches } from './fragments';
 import { getTypenameFromStoreObject } from './helpers';
+import { Policies } from './policies';
 
 export type VariableMap = { [name: string]: any };
 
-type ExecContext = {
+interface ExecContext {
   query: DocumentNode;
+  store: NormalizedCache;
+  policies: Policies;
   fragmentMap: FragmentMap;
-  contextValue: ReadStoreContext;
-  variableValues: VariableMap;
+  variables: VariableMap;
 };
 
 export type ExecResultMissingField = {
@@ -67,36 +61,26 @@ export type ExecResult<R = any> = {
   missing?: ExecResultMissingField[];
 };
 
-type ExecStoreQueryOptions = {
-  query: DocumentNode;
-  objectOrReference: StoreObject | Reference;
-  contextValue: ReadStoreContext;
-  variableValues: VariableMap;
-};
-
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
   objectOrReference: StoreObject | Reference;
-  execContext: ExecContext;
+  context: ExecContext;
 };
 
 type ExecSubSelectedArrayOptions = {
   field: FieldNode;
   array: any[];
-  execContext: ExecContext;
+  context: ExecContext;
 };
 
-type PossibleTypes = import('./inMemoryCache').InMemoryCache['possibleTypes'];
 export interface StoreReaderConfig {
   addTypename?: boolean;
   cacheKeyRoot?: KeyTrie<object>;
-  possibleTypes?: PossibleTypes;
+  policies: Policies;
 }
 
 export class StoreReader {
-  private config: StoreReaderConfig;
-
-  constructor(config?: StoreReaderConfig) {
+  constructor(private config: StoreReaderConfig) {
     const cacheKeyRoot =
       config && config.cacheKeyRoot || new KeyTrie<object>(canUseWeakMap);
 
@@ -107,30 +91,9 @@ export class StoreReader {
     };
 
     const {
-      executeStoreQuery,
       executeSelectionSet,
       executeSubSelectedArray,
     } = this;
-
-    this.executeStoreQuery = wrap((options: ExecStoreQueryOptions) => {
-      return executeStoreQuery.call(this, options);
-    }, {
-      makeCacheKey({
-        query,
-        objectOrReference,
-        contextValue,
-        variableValues,
-      }: ExecStoreQueryOptions) {
-        if (supportsResultCaching(contextValue.store)) {
-          return cacheKeyRoot.lookup(
-            contextValue.store,
-            query,
-            JSON.stringify(variableValues),
-            isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
-          );
-        }
-      }
-    });
 
     this.executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
       return executeSelectionSet.call(this, options);
@@ -138,13 +101,13 @@ export class StoreReader {
       makeCacheKey({
         selectionSet,
         objectOrReference,
-        execContext,
+        context,
       }: ExecSelectionSetOptions) {
-        if (supportsResultCaching(execContext.contextValue.store)) {
+        if (supportsResultCaching(context.store)) {
           return cacheKeyRoot.lookup(
-            execContext.contextValue.store,
+            context.store,
             selectionSet,
-            JSON.stringify(execContext.variableValues),
+            JSON.stringify(context.variables),
             isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
           );
         }
@@ -154,13 +117,13 @@ export class StoreReader {
     this.executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
       return executeSubSelectedArray.call(this, options);
     }, {
-      makeCacheKey({ field, array, execContext }) {
-        if (supportsResultCaching(execContext.contextValue.store)) {
+      makeCacheKey({ field, array, context }) {
+        if (supportsResultCaching(context.store)) {
           return cacheKeyRoot.lookup(
-            execContext.contextValue.store,
+            context.store,
             field,
             array,
-            JSON.stringify(execContext.variableValues),
+            JSON.stringify(context.variables),
           );
         }
       }
@@ -208,28 +171,21 @@ export class StoreReader {
     rootId = 'ROOT_QUERY',
     config,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
-    // Throw the right validation error by trying to find a query in the document
-    const queryDefinition = getQueryDefinition(query);
+    const { policies } = this.config;
 
-    variables = {
-      ...getDefaultValues(queryDefinition),
-      ...variables,
-    };
-
-    const context: ReadStoreContext = {
-      // Global settings
-      store,
-      dataIdFromObject: config && config.dataIdFromObject,
-      cacheRedirects: (config && config.cacheRedirects) || {},
-    };
-
-    const execResult = this.executeStoreQuery({
-      query,
-      objectOrReference: rootId === 'ROOT_QUERY'
-        ? makeReference('ROOT_QUERY')
-        : store.get(rootId) || makeReference(rootId),
-      contextValue: context,
-      variableValues: variables,
+    const execResult = this.executeSelectionSet({
+      selectionSet: getMainDefinition(query).selectionSet,
+      objectOrReference: makeReference(rootId),
+      context: {
+        store,
+        query,
+        policies,
+        variables: {
+          ...getDefaultValues(getQueryDefinition(query)),
+          ...variables,
+        },
+        fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+      },
     });
 
     const hasMissingFields =
@@ -260,57 +216,22 @@ export class StoreReader {
     };
   }
 
-  /**
-   * Based on graphql function from graphql-js:
-   *
-   * graphql(
-   *   schema: GraphQLSchema,
-   *   requestString: string,
-   *   rootValue?: ?any,
-   *   contextValue?: ?any,
-   *   variableValues?: ?{[key: string]: any},
-   *   operationName?: ?string
-   * ): Promise<GraphQLResult>
-   */
-  private executeStoreQuery({
-    query,
-    objectOrReference,
-    contextValue,
-    variableValues,
-  }: ExecStoreQueryOptions): ExecResult {
-    const mainDefinition = getMainDefinition(query);
-    const fragments = getFragmentDefinitions(query);
-    const fragmentMap = createFragmentMap(fragments);
-    const execContext: ExecContext = {
-      query,
-      fragmentMap,
-      contextValue,
-      variableValues,
-    };
-
-    return this.executeSelectionSet({
-      selectionSet: mainDefinition.selectionSet,
-      objectOrReference,
-      execContext,
-    });
-  }
-
   private executeSelectionSet({
     selectionSet,
     objectOrReference,
-    execContext,
+    context,
   }: ExecSelectionSetOptions): ExecResult {
-    const { fragmentMap, variableValues: variables } = execContext;
+    const { store, fragmentMap, variables, policies } = context;
     const finalResult: ExecResult = { result: null };
     const objectsToMerge: { [key: string]: any }[] = [];
 
     let object: StoreObject;
     let typename: string;
     if (isReference(objectOrReference)) {
-      object = execContext.contextValue.store.get(objectOrReference.__ref);
+      object = store.get(objectOrReference.__ref);
       typename =
         (object && object.__typename) ||
-        (objectOrReference.__ref === 'ROOT_QUERY' && 'Query');
+        policies.rootTypenamesById[objectOrReference.__ref];
     } else {
       object = objectOrReference;
       typename = object && object.__typename;
@@ -318,7 +239,10 @@ export class StoreReader {
 
     if (this.config.addTypename) {
       const typenameFromStore = object && object.__typename;
-      if (typeof typenameFromStore === 'string') {
+      if (typeof typenameFromStore === "string" &&
+          Object.values(
+            policies.rootTypenamesById
+          ).indexOf(typenameFromStore) < 0) {
         // Ensure we always include a default value for the __typename field,
         // if we have one, and this.config.addTypename is true. Note that this
         // field can be overridden by other merged objects.
@@ -342,7 +266,7 @@ export class StoreReader {
 
       if (isField(selection)) {
         const fieldResult = handleMissing(
-          this.executeField(object, typename, selection, execContext),
+          this.executeField(object, typename, selection, context),
         );
 
         if (typeof fieldResult !== 'undefined') {
@@ -365,17 +289,13 @@ export class StoreReader {
           }
         }
 
-        const match = fragmentMatches(
-          fragment,
-          typename,
-          this.config.possibleTypes,
-        );
+        const match = policies.fragmentMatches(fragment, typename);
 
-        if (match && (object || typename === 'Query')) {
+        if (match) {
           let fragmentExecResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
-            objectOrReference: object,
-            execContext,
+            objectOrReference,
+            context,
           });
 
           if (match === 'heuristic' && fragmentExecResult.missing) {
@@ -405,59 +325,24 @@ export class StoreReader {
 
   private executeField(
     object: StoreObject,
-    typename: string | void,
+    typename: string,
     field: FieldNode,
-    execContext: ExecContext,
+    context: ExecContext,
   ): ExecResult {
     const {
-      variableValues: variables,
-      contextValue: {
-        store,
-        cacheRedirects,
-        dataIdFromObject,
-      },
-    } = execContext;
+      variables: variables,
+      store,
+      policies,
+    } = context;
 
-    const fieldName = field.name.value;
-    const args = argumentsObjectFromField(field, variables);
-    const storeFieldName = getStoreKeyName(
-      fieldName,
-      args,
-      getDirectiveInfoFromField(field, variables),
-    );
-
-    let fieldValue: StoreValue | undefined;
-
-    if (object) {
-      fieldValue = object[storeFieldName];
-
-      if (
-        typeof fieldValue === "undefined" &&
-        cacheRedirects &&
-        typeof typename === "string"
-      ) {
-        // Look for the type in the custom resolver map
-        const type = cacheRedirects[typename];
-        if (type) {
-          // Look for the field in the custom resolver map
-          const resolver = type[fieldName];
-          if (resolver) {
-            fieldValue = resolver(object, args, {
-              getCacheKey(storeObj: StoreObject) {
-                const id = dataIdFromObject!(storeObj);
-                return id && makeReference(id);
-              },
-            });
-          }
-        }
-      }
-    }
+    const fieldValue = object &&
+      policies.readFieldFromStoreObject(object, field, typename, variables);
 
     const readStoreResult = typeof fieldValue === "undefined" ? {
       result: fieldValue,
       missing: [{
         object,
-        fieldName: storeFieldName,
+        fieldName: field.name.value,
         tolerable: false,
       }],
     } : {
@@ -470,7 +355,7 @@ export class StoreReader {
         this.executeSubSelectedArray({
           field,
           array: readStoreResult.result,
-          execContext,
+          context,
         }),
       );
     }
@@ -497,7 +382,7 @@ export class StoreReader {
       this.executeSelectionSet({
         selectionSet: field.selectionSet,
         objectOrReference: readStoreResult.result as StoreObject | Reference,
-        execContext,
+        context,
       }),
     );
   }
@@ -521,7 +406,7 @@ export class StoreReader {
   private executeSubSelectedArray({
     field,
     array,
-    execContext,
+    context,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: ExecResultMissingField[] | undefined;
 
@@ -545,7 +430,7 @@ export class StoreReader {
         return handleMissing(this.executeSubSelectedArray({
           field,
           array: item,
-          execContext,
+          context,
         }));
       }
 
@@ -554,12 +439,12 @@ export class StoreReader {
         return handleMissing(this.executeSelectionSet({
           selectionSet: field.selectionSet,
           objectOrReference: item,
-          execContext,
+          context,
         }));
       }
 
       if (process.env.NODE_ENV !== 'production') {
-        assertSelectionSetForIdValue(execContext.contextValue.store, field, item);
+        assertSelectionSetForIdValue(context.store, field, item);
       }
 
       return item;

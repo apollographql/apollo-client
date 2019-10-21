@@ -619,6 +619,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
         },
       });
@@ -635,6 +636,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
           b: 2,
           c: 3,
@@ -654,6 +656,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 4,
           b: 5,
           c: 6,
@@ -762,6 +765,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
         },
@@ -805,6 +809,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           'field({"literal":true,"value":42})': 2,
           'field({"literal":false,"value":-1})': 1,
         },
@@ -1872,6 +1877,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
           b: 2,
           g: 8,
@@ -2068,6 +2074,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
           b: 2,
           foo: {
@@ -2116,6 +2123,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
           b: 2,
           foo: {
@@ -2418,6 +2426,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as any).data.data).toEqual({
         ROOT_QUERY: {
+          __typename: "Query",
           a: 1,
         },
       });

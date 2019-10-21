@@ -7,9 +7,12 @@ import { StoreReader } from '../readFromStore';
 import { makeReference } from '../../../utilities/graphql/storeUtils';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { withError } from './diffAgainstStore';
+import { Policies } from '../policies';
 
 describe('reading from the store', () => {
-  const reader = new StoreReader();
+  const reader = new StoreReader({
+    policies: new Policies(),
+  });
 
   it('runs a nested query with proper fragment fields in arrays', () => {
     withError(() => {
@@ -62,7 +65,6 @@ describe('reading from the store', () => {
       });
 
       expect(stripSymbols(queryResult)).toEqual({
-        __typename: 'Query',
         nestedObj: {
           innerArray: [{ id: 'abcdef', someField: 3 }],
         },
@@ -357,7 +359,6 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(stripSymbols(queryResult)).toEqual({
-      __typename: 'Query',
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
@@ -739,7 +740,7 @@ describe('reading from the store', () => {
     });
   });
 
-  it('properly handles the connection directive', () => {
+  it('properly handles the @connection directive', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         abc: [
@@ -755,6 +756,51 @@ describe('reading from the store', () => {
       query: gql`
         {
           books(skip: 0, limit: 2) @connection(key: "abc") {
+            name
+          }
+        }
+      `,
+    });
+
+    expect(stripSymbols(queryResult)).toEqual({
+      books: [
+        {
+          name: 'efgh',
+        },
+      ],
+    });
+  });
+
+  it('can use keyArgs function instead of @connection directive', () => {
+    const reader = new StoreReader({
+      policies: new Policies({
+        typePolicies: {
+          Query: {
+            fields: {
+              books: {
+                keyArgs: () => "abc",
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: {
+        abc: [
+          {
+            name: 'efgh',
+          },
+        ],
+      },
+    });
+
+    const queryResult = reader.readQueryFromStore({
+      store,
+      query: gql`
+        {
+          books(skip: 0, limit: 2) {
             name
           }
         }

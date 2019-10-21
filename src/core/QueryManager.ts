@@ -1,5 +1,6 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
+import { Task } from '@wry/task';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -207,32 +208,42 @@ export class QueryManager<TStore> {
       variables,
     );
 
-    if (optimisticResponse) {
-      const optimistic = typeof optimisticResponse === 'function'
-        ? optimisticResponse(variables)
-        : optimisticResponse;
-
-      this.cache.recordOptimisticTransaction(cache => {
-        markMutationResult({
+    return new Task(task => {
+      // If we have an optimisticResponse, await the completion of the
+      // optimistic transaction using a Task before continuing on to
+      // broadcasting and making the network request.
+      task.resolve(optimisticResponse && this.cache.recordOptimisticTransaction(
+        cache => markMutationResult({
           mutationId: mutationId,
-          result: { data: optimistic },
+          result: {
+            data: typeof optimisticResponse === 'function'
+              ? optimisticResponse(variables)
+              : optimisticResponse,
+          },
           document: mutation,
           variables: variables,
           queryUpdatersById: generateUpdateQueriesInfo(),
           update: updateWithProxyFn,
-        }, cache);
-      }, mutationId);
-    }
+        }, cache),
+        mutationId,
+      ));
+    }).then(() => new Task(finalTask => {
+      this.broadcastQueries();
 
-    this.broadcastQueries();
-
-    const self = this;
-
-    return new Promise((resolve, reject) => {
+      const self = this;
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
 
-      self.getObservableFromLink(
+      const cleanup = (error?: Error) => {
+        if (error) {
+          self.mutationStore.markMutationError(mutationId, error);
+        }
+        return Task.resolve(
+          optimisticResponse && self.cache.removeOptimistic(mutationId)
+        ).then(() => self.broadcastQueries());
+      };
+
+      asyncMap(self.getObservableFromLink(
         mutation,
         {
           ...context,
@@ -240,73 +251,58 @@ export class QueryManager<TStore> {
         },
         variables,
         false,
-      ).subscribe({
-        next(result: ExecutionResult) {
-          if (graphQLResultHasError(result) && errorPolicy === 'none') {
-            error = new ApolloError({
-              graphQLErrors: result.errors,
-            });
-            return;
-          }
+      ), (result: ExecutionResult) => {
+        if (graphQLResultHasError(result) && errorPolicy === 'none') {
+          error = new ApolloError({
+            graphQLErrors: result.errors,
+          });
+          return;
+        }
 
-          self.mutationStore.markMutationResult(mutationId);
+        self.mutationStore.markMutationResult(mutationId);
 
-          if (fetchPolicy !== 'no-cache') {
-            markMutationResult({
-              mutationId,
-              result,
-              document: mutation,
-              variables,
-              queryUpdatersById: generateUpdateQueriesInfo(),
-              update: updateWithProxyFn,
-            }, self.cache);
-          }
+        let markingTask = Task.VOID;
+        if (fetchPolicy !== 'no-cache') {
+          markingTask = markMutationResult({
+            mutationId,
+            result,
+            document: mutation,
+            variables,
+            queryUpdatersById: generateUpdateQueriesInfo(),
+            update: updateWithProxyFn,
+          }, self.cache);
+        }
 
-          storeResult = result as FetchResult<T>;
-        },
+        return markingTask.then(() => {
+          return storeResult = result as FetchResult<T>;
+        });
 
+      }).subscribe({
         error(err: Error) {
-          self.mutationStore.markMutationError(mutationId, err);
-          if (optimisticResponse) {
-            self.cache.removeOptimistic(mutationId);
-          }
-          self.broadcastQueries();
-          self.setQuery(mutationId, () => ({ document: null }));
-          reject(
-            new ApolloError({
-              networkError: err,
-            }),
-          );
+          cleanup(err).then(() => {
+            self.setQuery(mutationId, () => ({ document: null }));
+            finalTask.reject(new ApolloError({ networkError: err }));
+          }, finalTask.reject);
         },
 
         complete() {
-          if (error) {
-            self.mutationStore.markMutationError(mutationId, error);
-          }
+          cleanup(error).then(() => {
+            if (error) {
+              finalTask.reject(error);
+              return;
+            }
 
-          if (optimisticResponse) {
-            self.cache.removeOptimistic(mutationId);
-          }
+            // allow for conditional refetches
+            // XXX do we want to make this the only API one day?
+            if (typeof refetchQueries === 'function') {
+              refetchQueries = refetchQueries(storeResult as ExecutionResult);
+            }
 
-          self.broadcastQueries();
+            const refetchQueryPromises: Promise<
+              ApolloQueryResult<any>[] | ApolloQueryResult<{}>
+            >[] = [];
 
-          if (error) {
-            reject(error);
-            return;
-          }
-
-          // allow for conditional refetches
-          // XXX do we want to make this the only API one day?
-          if (typeof refetchQueries === 'function') {
-            refetchQueries = refetchQueries(storeResult as ExecutionResult);
-          }
-
-          const refetchQueryPromises: Promise<
-            ApolloQueryResult<any>[] | ApolloQueryResult<{}>
-          >[] = [];
-
-          if (isNonEmptyArray(refetchQueries)) {
-            refetchQueries.forEach(refetchQuery => {
+            isNonEmptyArray(refetchQueries) && refetchQueries.forEach(refetchQuery => {
               if (typeof refetchQuery === 'string') {
                 self.queries.forEach(({ observableQuery }) => {
                   if (
@@ -330,26 +326,26 @@ export class QueryManager<TStore> {
                 refetchQueryPromises.push(self.query(queryOptions));
               }
             });
-          }
 
-          Promise.all(
-            awaitRefetchQueries ? refetchQueryPromises : [],
-          ).then(() => {
-            self.setQuery(mutationId, () => ({ document: null }));
+            Promise.all(
+              awaitRefetchQueries ? refetchQueryPromises : [],
+            ).then(() => {
+              self.setQuery(mutationId, () => ({ document: null }));
 
-            if (
-              errorPolicy === 'ignore' &&
-              storeResult &&
-              graphQLResultHasError(storeResult)
-            ) {
-              delete storeResult.errors;
-            }
+              if (
+                errorPolicy === 'ignore' &&
+                storeResult &&
+                graphQLResultHasError(storeResult)
+              ) {
+                delete storeResult.errors;
+              }
 
-            resolve(storeResult!);
-          });
+              finalTask.resolve(storeResult!);
+            });
+          }, finalTask.reject);
         },
       });
-    });
+    }));
   }
 
   public async fetchQuery<T>(
@@ -1454,7 +1450,9 @@ function markMutationResult<TStore>(
     update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
   },
   cache: ApolloCache<TStore>,
-) {
+): Task<void> {
+  let task: Task<any> = Task.VOID;
+
   // Incorporate the result from this mutation into the store
   if (!graphQLResultHasError(mutation.result)) {
     const cacheWrites: Cache.WriteOptions[] = [{
@@ -1466,41 +1464,44 @@ function markMutationResult<TStore>(
 
     const { queryUpdatersById } = mutation;
     if (queryUpdatersById) {
-      Object.keys(queryUpdatersById).forEach(id => {
+      for (const id of Object.keys(queryUpdatersById)) {
         const { query, updater } = queryUpdatersById[id];
 
-        // Read the current query result from the store.
-        const { result: currentQueryResult, complete } = cache.diff({
+        // Read the current query result from the store, accommodating the
+        // possibility that cache.diff may return a PromiseLike result.
+        task = task.then(() => cache.diff({
           query: query.document,
           variables: query.variables,
           returnPartialData: true,
           optimistic: false,
-        });
+        })).then(({ result: currentQueryResult, complete }) => {
+          if (complete) {
+            // Run our reducer using the current query result and the mutation result.
+            const nextQueryResult = tryFunctionOrLogError(
+              () => updater(currentQueryResult, {
+                mutationResult: mutation.result,
+                queryName: getOperationName(query.document) || undefined,
+                queryVariables: query.variables,
+              }),
+            );
 
-        if (complete) {
-          // Run our reducer using the current query result and the mutation result.
-          const nextQueryResult = tryFunctionOrLogError(
-            () => updater(currentQueryResult, {
-              mutationResult: mutation.result,
-              queryName: getOperationName(query.document) || undefined,
-              queryVariables: query.variables,
-            }),
-          );
-
-          // Write the modified result back into the store if we got a new result.
-          if (nextQueryResult) {
-            cacheWrites.push({
-              result: nextQueryResult,
-              dataId: 'ROOT_QUERY',
-              query: query.document,
-              variables: query.variables,
-            });
+            // Write the modified result back into the store if we got a new result.
+            if (nextQueryResult) {
+              cacheWrites.push({
+                result: nextQueryResult,
+                dataId: 'ROOT_QUERY',
+                query: query.document,
+                variables: query.variables,
+              });
+            }
           }
-        }
-      });
+        });
+      }
     }
 
-    cache.performTransaction(c => {
+    return task.then(() => cache.performTransaction(c => {
+      // Cache writes are always synchronous, so we don't need to chain
+      // Task objects together here as we did above.
       cacheWrites.forEach(write => c.write(write));
 
       // If the mutation has some writes associated with it then we need to
@@ -1510,6 +1511,8 @@ function markMutationResult<TStore>(
       if (update) {
         tryFunctionOrLogError(() => update(c, mutation.result));
       }
-    });
+    }));
   }
+
+  return task;
 }

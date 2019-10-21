@@ -39,16 +39,17 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public abstract extract(optimistic?: boolean): TSerialized;
 
   // optimistic API
-  public abstract removeOptimistic(id: string): void;
+  public abstract removeOptimistic(id: string): void | PromiseLike<void>;
 
   // transactional API
   public abstract performTransaction(
     transaction: Transaction<TSerialized>,
-  ): void;
+  ): void | PromiseLike<void>;
+
   public abstract recordOptimisticTransaction(
     transaction: Transaction<TSerialized>,
     id: string,
-  ): void;
+  ): void | PromiseLike<void>;
 
   // optional API
   public transformDocument(document: DocumentNode): DocumentNode {

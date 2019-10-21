@@ -1,3 +1,4 @@
+import { Task } from '@wry/task';
 import { Observable, Observer, Subscription } from './Observable';
 
 // Returns a normal Observable that can have any number of subscribers,
@@ -41,8 +42,8 @@ export function asyncMap<V, R>(
     const handler: Observer<V> = {
       next(value) {
         ++activeNextCount;
-        new Promise(resolve => {
-          resolve(mapFn(value));
+        new Task(task => {
+          task.resolve(mapFn(value));
         }).then(
           result => {
             --activeNextCount;

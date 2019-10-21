@@ -4,6 +4,7 @@ import './fixPolyfills';
 import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 import { KeyTrie } from 'optimism';
+import { Task } from '@wry/task';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
@@ -215,20 +216,23 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public removeOptimistic(idToRemove: string) {
-    const newOptimisticData = this.optimisticData.removeLayer(idToRemove);
-    if (newOptimisticData !== this.optimisticData) {
-      this.optimisticData = newOptimisticData;
-      this.broadcastWatches();
-    }
+    return this.optimisticData.removeLayer(idToRemove).then(
+      newOptimisticData => {
+        if (newOptimisticData !== this.optimisticData) {
+          this.optimisticData = newOptimisticData;
+          this.broadcastWatches();
+        }
+      },
+    );
   }
 
   public performTransaction(
-    transaction: (proxy: InMemoryCache) => any,
+    transaction: Transaction<NormalizedCacheObject>,
     // This parameter is not part of the performTransaction signature inherited
     // from the ApolloCache abstract class, but it's useful because it saves us
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
-  ) {
+  ): PromiseLike<void> {
     const perform = (layer?: EntityCache) => {
       const proxy: InMemoryCache = Object.create(this);
       proxy.silenceBroadcast = true;
@@ -240,22 +244,22 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
       // Because the proxy object can simply be forgotten, we do not need
       // to wrap this call with a try-finally block.
-      return transaction(proxy);
+      return new Task<void>(task => task.resolve(transaction(proxy)));
     };
 
     if (typeof optimisticId === 'string') {
       // Note that there can be multiple layers with the same optimisticId.
       // When removeOptimistic(id) is called for that id, all matching layers
       // will be removed, and the remaining layers will be reapplied.
-      this.optimisticData = this.optimisticData.addLayer(optimisticId, perform);
-    } else {
-      // If we don't have an optimisticId, perform the transaction anyway. Note
-      // that this.optimisticData.addLayer calls perform, too.
-      perform();
+      return this.optimisticData.addLayer(optimisticId, perform).then(layer => {
+        this.optimisticData = layer;
+        this.broadcastWatches();
+      });
     }
 
-    // This broadcast does nothing if this.silenceBroadcast is true.
-    this.broadcastWatches();
+    // If we don't have an optimisticId, perform the transaction anyway. Note
+    // that this.optimisticData.addLayer calls perform, too.
+    return perform().then(() => this.broadcastWatches());
   }
 
   public recordOptimisticTransaction(

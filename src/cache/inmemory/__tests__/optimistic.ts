@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 import { InMemoryCache } from '../inMemoryCache';
 
 describe('optimistic cache layers', () => {
-  it('return === results for repeated reads', () => {
+  it('return === results for repeated reads', async () => {
     const cache = new InMemoryCache({
       resultCaching: true,
       dataIdFromObject(value: any) {
@@ -66,7 +66,7 @@ describe('optimistic cache layers', () => {
     expect(result1984).toBe(readRealistic(cache));
 
     let result2666InTransaction: ReturnType<typeof readOptimistic>;
-    cache.performTransaction(proxy => {
+    await cache.performTransaction(proxy => {
       expect(readOptimistic(cache)).toEqual(result1984);
 
       proxy.writeQuery({
@@ -102,7 +102,7 @@ describe('optimistic cache layers', () => {
     expect(result1984).toBe(readRealistic(cache));
 
     let resultCatch22: ReturnType<typeof readOptimistic>;
-    cache.performTransaction(proxy => {
+    await cache.performTransaction(proxy => {
       proxy.writeQuery({
         query,
         data: {
@@ -200,7 +200,7 @@ describe('optimistic cache layers', () => {
     });
   });
 
-  it('dirties appropriate IDs when optimistic layers are removed', () => {
+  it('dirties appropriate IDs when optimistic layers are removed', async () => {
     const cache = new InMemoryCache({
       resultCaching: true,
       dataIdFromObject(value: any) {
@@ -317,7 +317,7 @@ describe('optimistic cache layers', () => {
     expect(resultWithSpinlessAuthor.books[0]).toBe(result.books[0]);
     expect(resultWithSpinlessAuthor.books[1]).not.toBe(result.books[1]);
 
-    cache.recordOptimisticTransaction(proxy => {
+    await cache.recordOptimisticTransaction(proxy => {
       proxy.writeFragment({
         id: 'Book:1603589082',
         fragment: bookAuthorNameFragment,
@@ -376,7 +376,7 @@ describe('optimistic cache layers', () => {
       },
     };
 
-    cache.recordOptimisticTransaction(proxy => {
+    await cache.recordOptimisticTransaction(proxy => {
       proxy.writeQuery({
         query: queryWithAuthors,
         data: {

@@ -19,6 +19,7 @@ const globals = {
   'graphql-tag': 'graphqlTag',
   'fast-json-stable-stringify': 'stringify',
   '@wry/equality': 'wryEquality',
+  '@wry/task': 'wryTask',
   graphql: 'graphql',
   react: 'React',
   'zen-observable': 'Observable'

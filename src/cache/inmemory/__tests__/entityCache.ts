@@ -3,7 +3,7 @@ import { EntityCache, supportsResultCaching } from '../entityCache';
 import { InMemoryCache } from '../inMemoryCache';
 
 describe('EntityCache', () => {
-  it('should support result caching if so configured', () => {
+  it('should support result caching if so configured', async () => {
     const cacheWithResultCaching = new EntityCache.Root({
       resultCaching: true,
     });
@@ -16,20 +16,20 @@ describe('EntityCache', () => {
     expect(supportsResultCaching(cacheWithResultCaching)).toBe(true);
     expect(supportsResultCaching(cacheWithoutResultCaching)).toBe(false);
 
-    const layerWithCaching = cacheWithResultCaching.addLayer("with caching", () => {});
+    const layerWithCaching = await cacheWithResultCaching.addLayer("with caching", () => {});
     expect(supportsResultCaching(layerWithCaching)).toBe(true);
-    const anotherLayer = layerWithCaching.addLayer("another layer", () => {});
+    const anotherLayer = await layerWithCaching.addLayer("another layer", () => {});
     expect(supportsResultCaching(anotherLayer)).toBe(true);
     expect(
-      anotherLayer
-        .removeLayer("with caching")
-        .removeLayer("another layer")
+      await (
+        await anotherLayer.removeLayer("with caching")
+      ).removeLayer("another layer")
     ).toBe(cacheWithResultCaching);
     expect(supportsResultCaching(cacheWithResultCaching)).toBe(true);
 
-    const layerWithoutCaching = cacheWithoutResultCaching.addLayer("with caching", () => {});
+    const layerWithoutCaching = await cacheWithoutResultCaching.addLayer("with caching", () => {});
     expect(supportsResultCaching(layerWithoutCaching)).toBe(false);
-    expect(layerWithoutCaching.removeLayer("with caching")).toBe(cacheWithoutResultCaching);
+    expect(await layerWithoutCaching.removeLayer("with caching")).toBe(cacheWithoutResultCaching);
     expect(supportsResultCaching(cacheWithoutResultCaching)).toBe(false);
   });
 
@@ -239,7 +239,7 @@ describe('EntityCache', () => {
     expect(cache.gc()).toEqual([]);
   });
 
-  it('should respect optimistic updates, when active', () => {
+  it('should respect optimistic updates, when active', async () => {
     const { cache, query } = newBookAuthorCache();
 
     cache.writeQuery({
@@ -275,7 +275,7 @@ describe('EntityCache', () => {
       }
     });
 
-    cache.recordOptimisticTransaction(proxy => {
+    await cache.recordOptimisticTransaction(proxy => {
       proxy.writeFragment({
         id: 'Author:Ray Bradbury',
         fragment: gql`
@@ -398,7 +398,7 @@ describe('EntityCache', () => {
     expect(cache.gc()).toEqual([]);
   });
 
-  it('should respect retain/release methods', () => {
+  it('should respect retain/release methods', async () => {
     const { query, cache } = newBookAuthorCache();
 
     const eagerBookData = {
@@ -496,7 +496,7 @@ describe('EntityCache', () => {
 
     expect(cache.retain("Author:Juli Berwald")).toBe(1);
 
-    cache.recordOptimisticTransaction(proxy => {
+    await cache.recordOptimisticTransaction(proxy => {
       proxy.writeFragment({
         id: "Author:Juli Berwald",
         fragment: gql`
@@ -589,7 +589,7 @@ describe('EntityCache', () => {
     expect(cache.gc()).toEqual([]);
   });
 
-  it('allows cache eviction', () => {
+  it('allows cache eviction', async () => {
     const { cache, query } = newBookAuthorCache();
 
     cache.writeQuery({
@@ -630,7 +630,7 @@ describe('EntityCache', () => {
       },
     });
 
-    cache.recordOptimisticTransaction(proxy => {
+    await cache.recordOptimisticTransaction(proxy => {
       proxy.writeFragment({
         id: "Book:031648637X",
         fragment: bookAuthorFragment,

@@ -1092,7 +1092,7 @@ describe('Cache', () => {
   });
 
   describe('performTransaction', () => {
-    itWithInitialData('will not broadcast mid-transaction', [{}], cache => {
+    itWithInitialData('will not broadcast mid-transaction', [{}], async cache => {
       let numBroadcasts = 0;
 
       const query = gql`
@@ -1111,7 +1111,7 @@ describe('Cache', () => {
 
       expect(numBroadcasts).toEqual(0);
 
-      cache.performTransaction(proxy => {
+      await cache.performTransaction(proxy => {
         proxy.writeQuery({
           data: { a: 1 },
           query,
@@ -1138,7 +1138,7 @@ describe('Cache', () => {
   });
 
   describe('performOptimisticTransaction', () => {
-    itWithInitialData('will only broadcast once', [{}], cache => {
+    itWithInitialData('will only broadcast once', [{}], async cache => {
       let numBroadcasts = 0;
 
       const query = gql`
@@ -1157,7 +1157,7 @@ describe('Cache', () => {
 
       expect(numBroadcasts).toEqual(0);
 
-      cache.recordOptimisticTransaction(
+      await cache.recordOptimisticTransaction(
         proxy => {
           proxy.writeQuery({
             data: { a: 1 },

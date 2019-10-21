@@ -1,4 +1,5 @@
 import { dep, OptimisticDependencyFunction } from 'optimism';
+import { Task } from "@wry/task";
 import { isReference } from '../../utilities/graphql/storeUtils';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 
@@ -19,9 +20,11 @@ export abstract class EntityCache implements NormalizedCache {
   public abstract addLayer(
     layerId: string,
     replay: (layer: EntityCache) => any,
-  ): EntityCache;
+  ): PromiseLike<EntityCache>;
 
-  public abstract removeLayer(layerId: string): EntityCache;
+  public abstract removeLayer(
+    layerId: string,
+  ): PromiseLike<EntityCache>;
 
   // Although the EntityCache class is abstract, it contains concrete
   // implementations of the various NormalizedCache interface methods that
@@ -155,6 +158,10 @@ export abstract class EntityCache implements NormalizedCache {
 export namespace EntityCache {
   // Refer to this class as EntityCache.Root outside this namespace.
   export class Root extends EntityCache {
+    // The Root cache is born ready because, unlike Layer, it never needs
+    // to await the result of a replay function.
+    public readonly ready: PromiseLike<Root> = Task.resolve(this);
+
     // Although each Root instance gets its own unique this.depend
     // function, any Layer instances created by calling addLayer need to
     // share a single distinct dependency function. Since this shared
@@ -181,14 +188,14 @@ export namespace EntityCache {
     public addLayer(
       layerId: string,
       replay: (layer: EntityCache) => any,
-    ): EntityCache {
+    ): PromiseLike<EntityCache> {
       // The replay function will be called in the Layer constructor.
-      return new Layer(layerId, this, replay, this.sharedLayerDepend);
+      return new Layer(layerId, this, replay, this.sharedLayerDepend).ready;
     }
 
-    public removeLayer(layerId: string): Root {
+    public removeLayer(layerId: string): PromiseLike<Root> {
       // Never remove the root layer.
-      return this;
+      return this.ready;
     }
   }
 }
@@ -196,6 +203,8 @@ export namespace EntityCache {
 // Not exported, since all Layer instances are created by the addLayer method
 // of the EntityCache.Root class.
 class Layer extends EntityCache {
+  public readonly ready: PromiseLike<Layer>;
+
   constructor(
     public readonly id: string,
     public readonly parent: Layer | EntityCache.Root,
@@ -203,34 +212,38 @@ class Layer extends EntityCache {
     public readonly depend: DependType,
   ) {
     super();
-    replay(this);
+    // In case the replay function is asynchronous, delay the readiness of
+    // this Layer using a Task.
+    this.ready = new Task<Layer>(task => {
+      task.resolve(replay(this));
+    }).then(() => this);
   }
 
   public addLayer(
     layerId: string,
     replay: (layer: EntityCache) => any,
-  ): EntityCache {
-    return new Layer(layerId, this, replay, this.depend);
+  ): PromiseLike<EntityCache> {
+    return new Layer(layerId, this, replay, this.depend).ready;
   }
 
-  public removeLayer(layerId: string): EntityCache {
+  public removeLayer(layerId: string): PromiseLike<EntityCache> {
     // Remove all instances of the given id, not just the first one.
-    const parent = this.parent.removeLayer(layerId);
-
-    if (layerId === this.id) {
-      // Dirty every ID we're removing.
-      // TODO Some of these IDs could escape dirtying if value unchanged.
-      if (this.depend) {
-        Object.keys(this.data).forEach(dataId => this.depend.dirty(dataId));
+    return this.parent.removeLayer(layerId).then(parent => {
+      if (layerId === this.id) {
+        // Dirty every ID we're removing.
+        // TODO Some of these IDs could escape dirtying if value unchanged.
+        if (this.depend) {
+          Object.keys(this.data).forEach(dataId => this.depend.dirty(dataId));
+        }
+        return parent;
       }
-      return parent;
-    }
 
-    // No changes are necessary if the parent chain remains identical.
-    if (parent === this.parent) return this;
+      // No changes are necessary if the parent chain remains identical.
+      if (parent === this.parent) return this;
 
-    // Recreate this layer on top of the new parent.
-    return parent.addLayer(this.id, this.replay);
+      // Recreate this layer on top of the new parent.
+      return parent.addLayer(this.id, this.replay);
+    });
   }
 
   public toObject(): NormalizedCacheObject {

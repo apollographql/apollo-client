@@ -18,9 +18,9 @@ describe('OptimisticCacheLayer', () => {
 
     const underlyingCache = new EntityCache.Root({ seed: data });
 
-    let cache = makeLayer(underlyingCache);
-    beforeEach(() => {
-      cache = makeLayer(underlyingCache);
+    let cache: EntityCache;
+    beforeEach(async () => {
+      cache = await makeLayer(underlyingCache);
     });
 
     it('should passthrough values if not defined in recording', () => {
@@ -55,11 +55,11 @@ describe('OptimisticCacheLayer', () => {
     };
 
     const underlyingCache = new EntityCache.Root({ seed: data });
-    let cache = makeLayer(underlyingCache);
+    let cache: EntityCache;
     let recording: NormalizedCacheObject;
 
-    beforeEach(() => {
-      cache = makeLayer(underlyingCache);
+    beforeEach(async () => {
+      cache = await makeLayer(underlyingCache);
       cache.set('Human', dataToRecord.Human);
       cache.delete('Animal');
       recording = cache.toObject();

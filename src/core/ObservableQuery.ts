@@ -137,46 +137,44 @@ export class ObservableQuery<
     });
   }
 
-  /**
-   * Return the result of the query from the local cache as well as some fetching status
-   * `loading` and `networkStatus` allow to know if a request is in flight
-   * `partial` lets you know if the result from the local cache is complete or partial
-   * @return {data: Object, error: ApolloError, loading: boolean, networkStatus: number, partial: boolean}
-   */
   public getCurrentResult(): ApolloCurrentQueryResult<TData> {
-    if (this.isTornDown) {
-      const { lastResult } = this;
-      return {
-        data: !this.lastError && lastResult && lastResult.data || void 0,
-        error: this.lastError,
-        loading: false,
-        networkStatus: NetworkStatus.error,
-      };
-    }
-
-    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
-    const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
-    let result: ApolloQueryResult<TData>;
-
+    const { lastResult, lastError } = this;
     const { fetchPolicy } = this.options;
-
     const isNetworkFetchPolicy =
       fetchPolicy === 'network-only' ||
       fetchPolicy === 'no-cache';
 
+    const networkStatus =
+      lastError ? NetworkStatus.error :
+      lastResult ? lastResult.networkStatus :
+      isNetworkFetchPolicy ? NetworkStatus.loading :
+      NetworkStatus.ready;
+
+    const result: ApolloCurrentQueryResult<TData> = {
+      data: !lastError && lastResult && lastResult.data || void 0,
+      error: this.lastError,
+      loading: isNetworkRequestInFlight(networkStatus),
+      networkStatus,
+      partial: false,
+    };
+
+    if (this.isTornDown) {
+      return result;
+    }
+
+    const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
     if (queryStoreValue) {
       const { networkStatus } = queryStoreValue;
 
       if (hasError(queryStoreValue, this.options.errorPolicy)) {
-        return {
+        return Object.assign(result, {
           data: void 0,
-          loading: false,
           networkStatus,
           error: new ApolloError({
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
           }),
-        };
+        });
       }
 
       // Variables might have been added dynamically at query time, when
@@ -192,38 +190,19 @@ export class ObservableQuery<
         this.variables = this.options.variables;
       }
 
-      result = {
-        data,
+      Object.assign(result, {
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
-      } as ApolloQueryResult<TData>;
+      });
 
       if (queryStoreValue.graphQLErrors && this.options.errorPolicy === 'all') {
         result.errors = queryStoreValue.graphQLErrors;
       }
-
-    } else {
-      // We need to be careful about the loading state we show to the user, to try
-      // and be vaguely in line with what the user would have seen from .subscribe()
-      // but to still provide useful information synchronously when the query
-      // will not end up hitting the server.
-      // See more: https://github.com/apollostack/apollo-client/issues/707
-      // Basically: is there a query in flight right now (modolo the next tick)?
-      const loading = isNetworkFetchPolicy ||
-        (partial && fetchPolicy !== 'cache-only');
-
-      result = {
-        data,
-        loading,
-        networkStatus: loading ? NetworkStatus.loading : NetworkStatus.ready,
-      } as ApolloQueryResult<TData>;
     }
 
-    if (!partial) {
-      this.updateLastResult({ ...result, stale: false });
-    }
+    this.updateLastResult({ ...result, stale: false });
 
-    return { ...result, partial };
+    return result;
   }
 
   // Compares newResult to the snapshot we took of this.lastResult when it was

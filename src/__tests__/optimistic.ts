@@ -98,14 +98,11 @@ describe('optimistic mutation results', () => {
     },
   };
 
-  let client: ApolloClient;
-  let link: any;
-
   function setup(
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       {
         request: { query },
@@ -114,7 +111,7 @@ describe('optimistic mutation results', () => {
       ...mockedResponses,
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
@@ -126,11 +123,9 @@ describe('optimistic mutation results', () => {
       }),
     });
 
-    const obsHandle = client.watchQuery({
+    return client.watchQuery({
       query,
-    });
-
-    return obsHandle.result();
+    }).result().then(() => client);
   }
 
   describe('error handling', () => {
@@ -196,10 +191,12 @@ describe('optimistic mutation results', () => {
 
       itAsync('handles a single error for a single mutation', async (resolve, reject) => {
         expect.assertions(6);
-        await setup(reject, {
+
+        const client = await setup(reject, {
           request: { query: mutation },
           error: new Error('forbidden (test error)'),
         });
+
         try {
           const promise = client.mutate({
             mutation,
@@ -228,7 +225,8 @@ describe('optimistic mutation results', () => {
       itAsync('handles errors produced by one mutation in a series', async (resolve, reject) => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
-        await setup(
+
+        const client = await setup(
           reject,
           {
             request: { query: mutation },
@@ -315,8 +313,10 @@ describe('optimistic mutation results', () => {
           expect((dataInStore['Todo99'] as any).text).toBe(expectedText1);
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
         }
+
         let subscriptionHandle: Subscription;
-        await setup(
+
+        const client = await setup(
           reject,
           {
             request: { query: mutation },
@@ -329,6 +329,7 @@ describe('optimistic mutation results', () => {
             delay: 100,
           },
         );
+
         // we have to actually subscribe to the query to be able to update it
         await new Promise(resolve => {
           const handle = client.watchQuery({ query });
@@ -430,12 +431,13 @@ describe('optimistic mutation results', () => {
 
       itAsync('handles a single error for a single mutation', async (resolve, reject) => {
         expect.assertions(6);
-        try {
-          await setup(reject, {
-            request: { query: mutation },
-            error: new Error('forbidden (test error)'),
-          });
 
+        const client = await setup(reject, {
+          request: { query: mutation },
+          error: new Error('forbidden (test error)'),
+        });
+
+        try {
           const promise = client.mutate({
             mutation,
             optimisticResponse,
@@ -464,7 +466,8 @@ describe('optimistic mutation results', () => {
       itAsync('handles errors produced by one mutation in a series', async (resolve, reject) => {
         expect.assertions(10);
         let subscriptionHandle: Subscription;
-        await setup(
+
+        const client = await setup(
           reject,
           {
             request: { query: mutation },
@@ -550,8 +553,10 @@ describe('optimistic mutation results', () => {
           expect((dataInStore['Todo99'] as any).text).toBe(expectedText1);
           expect((dataInStore['Todo66'] as any).text).toBe(expectedText2);
         }
+
         let subscriptionHandle: Subscription;
-        await setup(
+
+        const client = await setup(
           reject,
           {
             request: { query: mutation },
@@ -563,15 +568,15 @@ describe('optimistic mutation results', () => {
             // make sure it always happens later
             delay: 100,
           },
-        ).then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
+        );
+
+        // we have to actually subscribe to the query to be able to update it
+        await new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
+            },
           });
         });
 
@@ -707,7 +712,7 @@ describe('optimistic mutation results', () => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
-        }).then(() => {
+        }).then(client => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
@@ -730,7 +735,7 @@ describe('optimistic mutation results', () => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
-        }).then(() => {
+        }).then(client => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
@@ -763,7 +768,7 @@ describe('optimistic mutation results', () => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
-        }).then(() => {
+        }).then(client => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
@@ -792,7 +797,7 @@ describe('optimistic mutation results', () => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
-        }).then(() => {
+        }).then(client => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
@@ -852,8 +857,10 @@ describe('optimistic mutation results', () => {
 
     itAsync('will use a passed variable in optimisticResponse', async (resolve, reject) => {
       expect.assertions(6);
+
       let subscriptionHandle: Subscription;
-      await setup(reject, {
+
+      const client = await setup(reject, {
         request: { query: mutation, variables },
         result: mutationResult,
       });
@@ -990,8 +997,10 @@ describe('optimistic mutation results', () => {
 
     itAsync('will insert a single itemAsync to the beginning', async (resolve, reject) => {
       expect.assertions(7);
+
       let subscriptionHandle: Subscription;
-      await setup(reject, {
+
+      const client = await setup(reject, {
         request: { query: mutation },
         result: mutationResult,
       });
@@ -1051,8 +1060,10 @@ describe('optimistic mutation results', () => {
 
     itAsync('two array insert like mutations', async (resolve, reject) => {
       expect.assertions(9);
+
       let subscriptionHandle: Subscription;
-      await setup(
+
+      const client = await setup(
         reject,
         {
           request: { query: mutation },
@@ -1144,8 +1155,10 @@ describe('optimistic mutation results', () => {
 
     itAsync('two mutations, one fails', async (resolve, reject) => {
       expect.assertions(10);
+
       let subscriptionHandle: Subscription;
-      await setup(
+
+      const client = await setup(
         reject,
         {
           request: { query: mutation },
@@ -1235,7 +1248,7 @@ describe('optimistic mutation results', () => {
     itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(2);
 
-      link = mockSingleLink(
+      const link = mockSingleLink(
         reject,
         {
           request: { query },
@@ -1287,7 +1300,7 @@ describe('optimistic mutation results', () => {
         },
       } as MutationQueryReducersMap<IMutationResult>;
 
-      client = new ApolloClient({
+      const client = new ApolloClient({
         link,
         cache: new InMemoryCache({
           dataIdFromObject: (obj: any) => {
@@ -1412,7 +1425,8 @@ describe('optimistic mutation results', () => {
     itAsync('will insert a single itemAsync to the beginning', async (resolve, reject) => {
       expect.assertions(6);
       let subscriptionHandle: Subscription;
-      await setup(reject, {
+
+      const client = await setup(reject, {
         request: { query: mutation },
         delay: 300,
         result: mutationResult,
@@ -1483,7 +1497,8 @@ describe('optimistic mutation results', () => {
     itAsync('two array insert like mutations', async (resolve, reject) => {
       expect.assertions(9);
       let subscriptionHandle: Subscription;
-      await setup(
+
+      const client = await setup(
         reject,
         {
           request: { query: mutation },
@@ -1594,7 +1609,8 @@ describe('optimistic mutation results', () => {
     itAsync('two mutations, one fails', async (resolve, reject) => {
       expect.assertions(10);
       let subscriptionHandle: Subscription;
-      await setup(
+
+      const client = await setup(
         reject,
         {
           request: { query: mutation },
@@ -1704,7 +1720,7 @@ describe('optimistic mutation results', () => {
     itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(2);
 
-      link = mockSingleLink(
+      const link = mockSingleLink(
         reject,
         {
           request: { query },
@@ -1773,7 +1789,7 @@ describe('optimistic mutation results', () => {
         });
       };
 
-      client = new ApolloClient({
+      const client = new ApolloClient({
         link,
         cache: new InMemoryCache({
           dataIdFromObject: (obj: any) => {
@@ -1896,14 +1912,11 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
 
-  let client: ApolloClient;
-  let link: any;
-
   function setup(
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       {
         request: {
@@ -1922,7 +1935,7 @@ describe('optimistic mutation - githunt comments', () => {
       ...mockedResponses,
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
@@ -1934,12 +1947,10 @@ describe('optimistic mutation - githunt comments', () => {
       }),
     });
 
-    const obsHandle = client.watchQuery({
+    return client.watchQuery({
       query,
       variables,
-    });
-
-    return obsHandle.result();
+    }).result().then(() => client);
   }
 
   const mutation = gql`
@@ -2004,7 +2015,8 @@ describe('optimistic mutation - githunt comments', () => {
     };
 
     let subscriptionHandle: Subscription;
-    await setup(reject, {
+
+    const client = await setup(reject, {
       request: {
         query: addTypenameToDocument(mutation),
         variables: mutationVariables,

@@ -381,42 +381,39 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache()
       });
 
-      const onErrorMock = jest.fn();
+      let onError;
+      const onErrorPromise = new Promise(resolve => onError = resolve);
 
       let renderCount = 0;
       const Component = () => {
         const { loading, error, refetch, data, networkStatus } = useQuery(
           query,
           {
-            onError: onErrorMock,
+            onError,
             notifyOnNetworkStatusChange: true
           }
         );
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             break;
-          case 1:
+          case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('Network error: Oh no!');
-            setTimeout(() => {
-              expect(onErrorMock.mock.calls.length).toBe(1);
-              refetch();
-            });
-            break;
-          case 2:
-            expect(loading).toBeTruthy();
+            onErrorPromise.then(() => refetch());
             break;
           case 3:
+            expect(loading).toBeTruthy();
+            break;
+          case 4:
             expect(loading).toBeFalsy();
             expect(data).toEqual(resultData);
             break;
           default: // Do nothing
         }
 
-        renderCount += 1;
         return null;
       };
 

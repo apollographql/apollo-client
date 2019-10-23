@@ -18,7 +18,7 @@
 /docs/react/recipes/meteor/ /docs/react/integrations/meteor/
 /docs/react/recipes/react-native/ /docs/react/integrations/react-native/
 /docs/react/recipes/webpack/ /docs/react/integrations/webpack/
-/docs/react/advanced/caching/ /docs/react/caching/caching-configuration/
+/docs/react/advanced/caching/ /docs/react/caching/cache-configuration/
 /docs/react/essentials/local-state/ /docs/react/data/local-state/
 /docs/react/advanced/boost-migration/ /docs/react/migrating/boost-migration/
 /docs/react/hooks-migration/ /docs/react/migrating/hooks-migration/
@@ -54,7 +54,7 @@
 /docs/react/recipes/server-side-rendering.html /docs/react/features/server-side-rendering.html
 /docs/react/recipes/fragment-matching.html /docs/react/advanced/fragments.html
 
-# Ported from old _config.yml
+# Ported from old _config.yml file
 /docs/react/essentials/get-started.html#api docs/react/api/react-apollo.html
 /docs/react/essentials/queries.html#api docs/react/api/react-apollo.html#graphql-query-options
 /docs/react/basics/mutations.html#api docs/react/api/react-apollo.html#graphql-mutation-options

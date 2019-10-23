@@ -10,7 +10,7 @@
     "gatsby": "2.16.5",
     "gatsby-theme-apollo-docs": "2.3.8",
     "react": "16.10.2",
-    "react-dom": "16.10.2"
+    "react-dom": "16.11.0"
   },
   "devDependencies": {
     "typedoc": "0.15.0",

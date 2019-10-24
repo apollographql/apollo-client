@@ -55,7 +55,7 @@
     "graphql": "^14.5.4"
   },
   "optionalDependencies": {
-    "react": "^16.10.2"
+    "react": "^16.8.0"
   },
   "dependencies": {
     "@types/zen-observable": "^0.8.0",

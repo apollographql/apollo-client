@@ -57,17 +57,12 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     ? (result as QueryTuple<TData, TVariables>)[1]
     : (result as QueryResult<TData, TVariables>);
 
-  useEffect(
-    () => queryData.afterExecute({ lazy }),
-    lazy
-      ? undefined
-      : [
-          queryResult.loading,
-          queryResult.networkStatus,
-          queryResult.error,
-          queryResult.data
-        ]
-  );
+  useEffect(() => queryData.afterExecute({ lazy }), [
+    queryResult.loading,
+    queryResult.networkStatus,
+    queryResult.error,
+    queryResult.data
+  ]);
 
   useEffect(() => {
     return () => queryData.cleanup();

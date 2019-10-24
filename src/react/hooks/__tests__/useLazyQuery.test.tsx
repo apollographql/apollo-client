@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { render, wait } from '@testing-library/react';
@@ -391,62 +391,4 @@ describe('useLazyQuery Hook', () => {
       });
     }
   );
-
-  it('should only call onCompleted once per query run', async () => {
-    let renderCount = 0;
-    let onCompletedCount = 0;
-    const Component = () => {
-      const [_, setCounter] = useState(0);
-      const [execute, { loading, data }] = useLazyQuery(CAR_QUERY, {
-        onCompleted() {
-          onCompletedCount += 1;
-        }
-      });
-
-      switch (renderCount) {
-        case 0:
-          expect(loading).toEqual(false);
-          setTimeout(() => {
-            execute();
-          });
-          break;
-        case 1:
-          expect(loading).toEqual(true);
-          break;
-        case 2:
-          expect(loading).toEqual(false);
-          expect(data).toEqual(CAR_RESULT_DATA);
-          setTimeout(() => {
-            execute({ variables: { someProp: 'someValue' } });
-          });
-          break;
-        case 3:
-          expect(loading).toEqual(false);
-          expect(data).toEqual(CAR_RESULT_DATA);
-          // Force a render to help make sure onCompleted isn't called again
-          // since the query isn't re-run.
-          setCounter(1);
-          break;
-        case 4:
-          expect(loading).toEqual(false);
-          expect(data).toEqual(CAR_RESULT_DATA);
-          break;
-        default: // Do nothing
-      }
-
-      renderCount += 1;
-      return null;
-    };
-
-    render(
-      <MockedProvider mocks={CAR_MOCKS}>
-        <Component />
-      </MockedProvider>
-    );
-
-    return wait(() => {
-      expect(onCompletedCount).toBe(2);
-      expect(renderCount).toBe(5);
-    });
-  });
 });

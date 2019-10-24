@@ -73,7 +73,6 @@ module.exports = {
           Networking: [
             'networking/basic-http-networking',
             'networking/advanced-http-networking',
-            'networking/non-http-networking',
             'networking/authentication',
           ],
           'API - Core': [

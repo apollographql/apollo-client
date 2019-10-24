@@ -340,7 +340,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     } else {
       // Fetch the current result (if any) from the store.
       const currentResult = this.currentObservable.query!.getCurrentResult();
-      const { loading, partial, networkStatus, errors } = currentResult;
+      const { loading, networkStatus, errors } = currentResult;
       let { error, data } = currentResult;
 
       // Until a set naming convention for networkError and graphQLErrors is
@@ -378,7 +378,6 @@ export class QueryData<TData, TVariables> extends OperationData {
         if (
           partialRefetch &&
           !data &&
-          partial &&
           fetchPolicy !== 'cache-only'
         ) {
           // When a `Query` component is mounted, and a mutation is executed

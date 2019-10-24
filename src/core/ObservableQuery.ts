@@ -25,7 +25,6 @@ export type ApolloCurrentQueryResult<T> = {
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
-  partial?: boolean;
   stale?: boolean;
 };
 
@@ -155,7 +154,6 @@ export class ObservableQuery<
       error: this.lastError,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-      partial: false,
     };
 
     if (this.isTornDown) {

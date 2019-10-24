@@ -52,10 +52,13 @@
     }
   ],
   "peerDependencies": {
-    "graphql": "^14.5.4"
+    "graphql": "^14.5.4",
+    "react": "^16.8.0"
   },
-  "optionalDependencies": {
-    "react": "^16.10.2"
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
@@ -84,7 +87,8 @@
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",
     "prop-types": "15.7.2",
-    "react-dom": "^16.10.2",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
     "rimraf": "^3.0.0",
     "rollup": "1.21.2",
     "rollup-plugin-commonjs": "^10.1.0",

@@ -89,7 +89,6 @@ module.exports = {
           ],
           'API - Link': [
             'api/link/introduction',
-            'api/link/concepts',
             'api/link/apollo-link-batch-http',
             'api/link/apollo-link-context',
             'api/link/apollo-link-error',

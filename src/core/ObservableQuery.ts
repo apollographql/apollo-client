@@ -549,6 +549,9 @@ export class ObservableQuery<
     this.lastResultSnapshot = this.queryManager.assumeImmutableResults
       ? newResult
       : cloneDeep(newResult);
+    if (!isNonEmptyArray(newResult.errors)) {
+      delete this.lastError;
+    }
     return previousResult;
   }
 

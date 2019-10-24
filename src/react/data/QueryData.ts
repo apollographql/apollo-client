@@ -86,11 +86,17 @@ export class QueryData<TData, TVariables> extends OperationData {
     return currentResult.loading ? obs.result() : false;
   }
 
-  public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
+  public afterExecute({
+    queryResult,
+    lazy = false,
+  }: {
+    queryResult: QueryResult<TData, TVariables>;
+    lazy?: boolean;
+  }) {
     this.isMounted = true;
 
     if (!lazy || this.runLazy) {
-      this.handleErrorOrCompleted();
+      this.handleErrorOrCompleted(queryResult);
 
       // When the component is done rendering stored query errors, we'll
       // remove those errors from the `ObservableQuery` query store, so they
@@ -397,18 +403,18 @@ export class QueryData<TData, TVariables> extends OperationData {
     }
 
     result.client = this.client;
+    // Store options as this.previousOptions.
+    this.setOptions(options, true);
     this.previousData.loading =
-      (this.previousData.result && this.previousData.result.loading) || false;
-    this.previousData.result = result;
-    return result;
+      this.previousData.result && this.previousData.result.loading || false;
+    return this.previousData.result = result;
   }
 
-  private handleErrorOrCompleted() {
-    const obsQuery = this.currentObservable.query;
-    if (!obsQuery) return;
-
-    const { data, loading, error } = obsQuery.getCurrentResult();
-
+  private handleErrorOrCompleted({
+    data,
+    loading,
+    error,
+  }: QueryResult<TData, TVariables>) {
     if (!loading) {
       const { query, variables, onCompleted, onError } = this.getOptions();
 

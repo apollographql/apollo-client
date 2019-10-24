@@ -1,0 +1,47 @@
+{
+  "name": "tree-shaking-rollup-ac3-no-react",
+  "version": "0.1.0",
+  "description": "Apollo Client 3 bundling example app (Rollup, tree shaking, no React).",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/apollographql/apollo-client.git"
+  },
+  "keywords": [
+    "apollo",
+    "graphql",
+    "react"
+  ],
+  "author": "opensource@apollographql.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-client/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-client#readme",
+  "main": "./public/js/index.js",
+  "module": "./src/index.js",
+  "scripts": {
+    "prebuild": "npm run clean",
+    "build": "npx rollup -c",
+    "clean": "npx rimraf ./public/js/*",
+    "start": "npm run build && npx serve public",
+    "start:no-compression": "npm run build && npx serve --no-compression public",
+    "analyze": "npm run build && source-map-explorer public/js/app-no-react.min.js"
+  },
+  "dependencies": {
+    "@apollo/client": "file:../../../../",
+    "graphql": "^14.5.8"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.6.3",
+    "rimraf": "^3.0.0",
+    "rollup": "^1.23.1",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-gzip": "^2.2.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-replace": "^2.2.0",
+    "rollup-plugin-terser": "^5.1.2",
+    "serve": "^11.2.0",
+    "source-map-explorer": "^2.1.0"
+  }
+}

@@ -1047,13 +1047,13 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  private getCurrentQueryResult<T>(
+  private async getCurrentQueryResult<T>(
     observableQuery: ObservableQuery<T>,
     optimistic: boolean = true,
-  ): {
+  ): Promise<{
     data: T | undefined;
     partial: boolean;
-  } {
+  }> {
     const { variables, query, fetchPolicy, returnPartialData } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
@@ -1066,7 +1066,7 @@ export class QueryManager<TStore> {
       return { data: undefined, partial: false };
     }
 
-    const { result, complete } = this.cache.diff<T>({
+    const { result, complete } = await this.cache.diff<T>({
       query,
       variables,
       previousResult: lastResult ? lastResult.data : undefined,
@@ -1082,11 +1082,11 @@ export class QueryManager<TStore> {
 
   public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(
     queryIdOrObservable: string | ObservableQuery<TData, TVariables>,
-  ): {
+  ): Promise<{
     previousResult: any;
     variables: TVariables | undefined;
     document: DocumentNode;
-  } {
+  }> {
     let observableQuery: ObservableQuery<TData, any>;
     if (typeof queryIdOrObservable === 'string') {
       const { observableQuery: foundObservableQuery } = this.getQuery(
@@ -1102,11 +1102,15 @@ export class QueryManager<TStore> {
     }
 
     const { variables, query } = observableQuery.options;
-    return {
-      previousResult: this.getCurrentQueryResult(observableQuery, false).data,
+
+    return this.getCurrentQueryResult(
+      observableQuery,
+      false,
+    ).then(result => ({
+      previousResult: result.data,
       variables,
       document: query,
-    };
+    }));
   }
 
   public broadcastQueries() {

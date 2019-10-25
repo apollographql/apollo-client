@@ -52,7 +52,7 @@ describe('updateQuery on a simple query', () => {
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
         expect(latestResult.data.entry.value).toBe(1);
-        watchedQuery.updateQuery((prevResult: any) => {
+        return watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
           res.entry.value = 2;
           return res;
@@ -119,7 +119,7 @@ describe('updateQuery on a query with required and optional variables', () => {
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
         expect(latestResult.data.entry.value).toBe(1);
-        watchedQuery.updateQuery((prevResult: any) => {
+        return watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
           res.entry.value = 2;
           return res;

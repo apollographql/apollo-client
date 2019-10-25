@@ -7,4 +7,3 @@ export {
 
 export { createMockClient } from '../../utilities/testing/mocks/mockClient';
 export { stripSymbols } from '../../utilities/testing/stripSymbols';
-export { wait } from './utils/wait';

@@ -5,7 +5,7 @@ import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { NormalizedCacheObject } from '../../../cache/inmemory/types';
 import { mockSingleLink } from '../../../utilities/testing/mocks/mockLink';
 
-export function createClient<TData>(
+export function createMockClient<TData>(
   data: TData,
   query: DocumentNode,
   variables = {},

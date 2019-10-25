@@ -1,12 +1,12 @@
 import gql from 'graphql-tag';
 
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../__tests__/utils/stripSymbols';
-import { itAsync } from '../../__tests__/utils/itAsync';
+import { stripSymbols } from '../../utilities/testing/stripSymbols';
+import { itAsync } from '../../utilities/testing/itAsync';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
-import { mockSingleLink } from '../../__tests__/utils/mocks/mockLink';
+import { mockSingleLink } from '../../utilities/testing/mocks/mockLink';
 import { NetworkStatus } from '../../core/networkStatus';
 
 import { ObservableQuery } from '../../core/ObservableQuery';

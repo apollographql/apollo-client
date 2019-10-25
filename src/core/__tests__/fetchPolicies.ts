@@ -2,11 +2,11 @@ import gql from 'graphql-tag';
 
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../__tests__/utils/stripSymbols';
-import { itAsync } from '../../__tests__/utils/itAsync';
+import { stripSymbols } from '../../utilities/testing/stripSymbols';
+import { itAsync } from '../../utilities/testing/itAsync';
 import { ApolloClient } from '../..';
-import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
-import { mockSingleLink } from '../../__tests__/utils/mocks/mockLink';
+import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
+import { mockSingleLink } from '../../utilities/testing/mocks/mockLink';
 import { NetworkStatus } from '../networkStatus';
 
 const query = gql`

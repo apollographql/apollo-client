@@ -3,11 +3,11 @@ import gql from 'graphql-tag';
 
 import { Observable, Subscription } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
-import { mockSingleLink } from './utils/mocks/mockLink';
+import { mockSingleLink } from '../utilities/testing/mocks/mockLink';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { withWarning } from './utils/wrap';
-import { itAsync } from './utils/itAsync';
+import { withWarning } from '../utilities/testing/wrap';
+import { itAsync } from '../utilities/testing/itAsync';
 
 describe('mutation results', () => {
   const query = gql`

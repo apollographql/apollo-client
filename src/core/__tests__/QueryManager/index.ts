@@ -15,9 +15,9 @@ import {
 } from '../../../cache/inmemory/types';
 
 // mocks
-import mockQueryManager from '../../../__tests__/utils/mocks/mockQueryManager';
-import mockWatchQuery from '../../../__tests__/utils/mocks/mockWatchQuery';
-import { mockSingleLink } from '../../../__tests__/utils/mocks/mockLink';
+import mockQueryManager from '../../../utilities/testing/mocks/mockQueryManager';
+import mockWatchQuery from '../../../utilities/testing/mocks/mockWatchQuery';
+import { mockSingleLink } from '../../../utilities/testing/mocks/mockLink';
 
 // core
 import { ApolloQueryResult } from '../../types';
@@ -29,12 +29,12 @@ import { QueryManager } from '../../QueryManager';
 import { ApolloError } from '../../../errors/ApolloError';
 
 // testing utils
-import wrap from '../../../__tests__/utils/wrap';
+import wrap from '../../../utilities/testing/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
-} from '../../../__tests__/utils/observableToPromise';
-import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
-import { itAsync } from '../../../__tests__/utils/itAsync';
+} from '../../../utilities/testing/observableToPromise';
+import { stripSymbols } from '../../../utilities/testing/stripSymbols';
+import { itAsync } from '../../../utilities/testing/itAsync';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.

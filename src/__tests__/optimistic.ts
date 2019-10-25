@@ -3,14 +3,14 @@ import { take, toArray, map } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { mockSingleLink } from './utils/mocks/mockLink';
+import { mockSingleLink } from '../utilities/testing/mocks/mockLink';
 import { MutationQueryReducersMap } from '../core/types';
 import { Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
 import { makeReference } from '../utilities/graphql/storeUtils';
-import { stripSymbols } from './utils/stripSymbols';
-import { itAsync } from './utils/itAsync';
+import { stripSymbols } from '../utilities/testing/stripSymbols';
+import { itAsync } from '../utilities/testing/itAsync';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 
 describe('optimistic mutation results', () => {

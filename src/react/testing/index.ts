@@ -1,10 +1,10 @@
 export { MockedProvider } from './mocks/MockedProvider';
-export { MockLink, mockSingleLink } from '../../__tests__/utils/mocks/mockLink';
+export { MockLink, mockSingleLink } from '../../utilities/testing/mocks/mockLink';
 export {
   MockSubscriptionLink,
   mockObservableLink
-} from '../../__tests__/utils/mocks/mockSubscriptionLink';
+} from '../../utilities/testing/mocks/mockSubscriptionLink';
 
 export { createClient } from './utils/createClient';
-export { stripSymbols } from '../../__tests__/utils/stripSymbols';
+export { stripSymbols } from '../../utilities/testing/stripSymbols';
 export { wait } from './utils/wait';

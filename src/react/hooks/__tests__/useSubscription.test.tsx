@@ -2,7 +2,7 @@ import React from 'react';
 import { render, cleanup, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { MockSubscriptionLink } from '../../../__tests__/utils/mocks/mockSubscriptionLink';
+import { MockSubscriptionLink } from '../../../utilities/testing/mocks/mockSubscriptionLink';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';

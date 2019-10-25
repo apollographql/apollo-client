@@ -3,12 +3,12 @@ import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { Operation } from '../link/core/types';
-import { mockSingleLink } from './utils/mocks/mockLink';
-import { mockObservableLink } from './utils/mocks/mockSubscriptionLink';
+import { mockSingleLink } from '../utilities/testing/mocks/mockLink';
+import { mockObservableLink } from '../utilities/testing/mocks/mockSubscriptionLink';
 import { ApolloClient } from '../';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from './utils/stripSymbols';
-import { itAsync } from './utils/itAsync';
+import { stripSymbols } from '../utilities/testing/stripSymbols';
+import { itAsync } from '../utilities/testing/itAsync';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions

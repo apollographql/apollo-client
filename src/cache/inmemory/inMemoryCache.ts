@@ -153,15 +153,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.broadcastWatches();
   }
 
-  public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
-    return this.storeReader.diffQueryAgainstStore({
+  public diff<T>(options: Cache.DiffOptions): PromiseLike<Cache.DiffResult<T>> {
+    return new Task(task => task.resolve(this.storeReader.diffQueryAgainstStore({
       store: options.optimistic ? this.optimisticData : this.data,
       query: options.query,
       variables: options.variables,
       returnPartialData: options.returnPartialData,
       previousResult: options.previousResult,
       config: this.config,
-    });
+    })));
   }
 
   public watch(watch: Cache.WatchOptions): () => void {
@@ -297,13 +297,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // This method is wrapped in the constructor so that it will be called only
   // if the data that would be broadcast has changed.
   private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    return new Task(task => task.resolve(
-      this.diff({
-        query: c.query,
-        variables: c.variables,
-        previousResult: c.previousResult && c.previousResult(),
-        optimistic: c.optimistic,
-      }),
-    )).then(c.callback);
+    return this.diff({
+      query: c.query,
+      variables: c.variables,
+      previousResult: c.previousResult && c.previousResult(),
+      optimistic: c.optimistic,
+    }).then(c.callback);
   }
 }

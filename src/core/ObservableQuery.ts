@@ -7,6 +7,7 @@ import { cloneDeep } from '../utilities/common/cloneDeep';
 import { getOperationDefinition } from '../utilities/graphql/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../utilities/observables/Observable';
+import { asyncMap } from '../utilities/observables/observables';
 import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, FetchType, OperationVariables } from './types';
@@ -32,7 +33,7 @@ export interface FetchMoreOptions<
   TData = any,
   TVariables = OperationVariables
 > {
-  updateQuery: (
+  updateQuery?: (
     previousQueryResult: TData,
     options: {
       fetchMoreResult?: TData;
@@ -292,12 +293,6 @@ export class ObservableQuery<
     fetchMoreOptions: FetchMoreQueryOptions<TVariables, K> &
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
-    // early return if no update Query
-    invariant(
-      fetchMoreOptions.updateQuery,
-      'updateQuery option is required. This function defines how to update the query data with the new results.',
-    );
-
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
@@ -321,14 +316,16 @@ export class ObservableQuery<
       )
       .then(
         fetchMoreResult => {
-          this.updateQuery((previousResult: any) =>
-            fetchMoreOptions.updateQuery(previousResult, {
+          return this.updateQuery((previousResult: any) => {
+            const { updateQuery } = fetchMoreOptions;
+            return updateQuery ? updateQuery(previousResult, {
               fetchMoreResult: fetchMoreResult.data as TData,
               variables: combinedOptions.variables as TVariables,
-            }),
-          );
-          this.queryManager.stopQuery(qid);
-          return fetchMoreResult as ApolloQueryResult<TData>;
+            }) : previousResult;
+          }).then(() => {
+            this.queryManager.stopQuery(qid);
+            return fetchMoreResult as ApolloQueryResult<TData>;
+          });
         },
         error => {
           this.queryManager.stopQuery(qid);
@@ -350,32 +347,29 @@ export class ObservableQuery<
       TSubscriptionData
     >,
   ) {
-    const subscription = this.queryManager
-      .startGraphQLSubscription({
+    const subscription = asyncMap(
+      this.queryManager.startGraphQLSubscription({
         query: options.document,
         variables: options.variables,
-      })
-      .subscribe({
-        next: (subscriptionData: { data: TSubscriptionData }) => {
-          const { updateQuery } = options;
-          if (updateQuery) {
-            this.updateQuery<TSubscriptionVariables>(
-              (previous, { variables }) =>
-                updateQuery(previous, {
-                  subscriptionData,
-                  variables,
-                }),
-            );
-          }
-        },
-        error: (err: any) => {
-          if (options.onError) {
-            options.onError(err);
-            return;
-          }
+      }),
+      (subscriptionData: { data: TSubscriptionData }) => {
+        const { updateQuery } = options;
+        return updateQuery && this.updateQuery<TSubscriptionVariables>(
+          (previous, { variables }) => updateQuery(previous, {
+            subscriptionData,
+            variables,
+          }),
+        );
+      },
+    ).subscribe({
+      error(err: any) {
+        if (options.onError) {
+          options.onError(err);
+        } else {
           invariant.error('Unhandled GraphQL subscription error', err);
-        },
-      });
+        }
+      },
+    });
 
     this.subscriptions.add(subscription);
 
@@ -483,30 +477,31 @@ export class ObservableQuery<
       previousQueryResult: TData,
       options: UpdateQueryOptions<TVars>,
     ) => TData,
-  ): void {
+  ): Promise<void> {
     const { queryManager } = this;
-    const {
+
+    return queryManager.getQueryWithPreviousResult<TData, TVars>(
+      this.queryId,
+    ).then(({
       previousResult,
       variables,
       document,
-    } = queryManager.getQueryWithPreviousResult<TData, TVars>(
-      this.queryId,
-    );
+    }) => {
+      const newResult = tryFunctionOrLogError(
+        () => mapFn(previousResult, { variables }),
+      );
 
-    const newResult = tryFunctionOrLogError(() =>
-      mapFn(previousResult, { variables }),
-    );
+      if (newResult) {
+        queryManager.cache.write({
+          query: document,
+          result: newResult,
+          dataId: 'ROOT_QUERY',
+          variables,
+        });
 
-    if (newResult) {
-      queryManager.cache.write({
-        query: document,
-        result: newResult,
-        dataId: 'ROOT_QUERY',
-        variables,
-      });
-
-      queryManager.broadcastQueries();
-    }
+        queryManager.broadcastQueries();
+      }
+    });
   }
 
   public stopPolling() {

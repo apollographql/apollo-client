@@ -2591,27 +2591,33 @@ describe('QueryManager', () => {
 
     return Promise.all([
       observableToPromise({ observable: observableA }, () => {
-        expect(
-          stripSymbols(queryManager.getCurrentQueryResult(observableA)),
-        ).toEqual({
-          data: dataA,
-          partial: false,
-        });
-        expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
-          data: undefined,
-          partial: true,
+        return Promise.all([
+          queryManager.getCurrentQueryResult(observableA),
+          queryManager.getCurrentQueryResult(observableB),
+        ]).then(([resultA, resultB]) => {
+          expect(resultA).toEqual({
+            data: dataA,
+            partial: false,
+          });
+          expect(resultB).toEqual({
+            data: undefined,
+            partial: true,
+          });
         });
       }),
       observableToPromise({ observable: observableB }, () => {
-        expect(
-          stripSymbols(queryManager.getCurrentQueryResult(observableA)),
-        ).toEqual({
-          data: dataA,
-          partial: false,
-        });
-        expect(queryManager.getCurrentQueryResult(observableB)).toEqual({
-          data: dataB,
-          partial: false,
+        return Promise.all([
+          queryManager.getCurrentQueryResult(observableA),
+          queryManager.getCurrentQueryResult(observableB),
+        ]).then(([resultA, resultB]) => {
+          expect(resultA).toEqual({
+            data: dataA,
+            partial: false,
+          });
+          expect(resultB).toEqual({
+            data: dataB,
+            partial: false,
+          });
         });
       }),
     ]).then(resolve, reject);
@@ -3238,13 +3244,15 @@ describe('QueryManager', () => {
         observable2.subscribe({ next: () => null });
 
         return queryManager.resetStore().then(() => {
-          const result = queryManager.getCurrentQueryResult(observable);
-          expect(result.partial).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(dataChanged);
-
-          const result2 = queryManager.getCurrentQueryResult(observable2);
-          expect(result2.partial).toBe(false);
-          expect(stripSymbols(result2.data)).toEqual(data2Changed);
+          return Promise.all([
+            queryManager.getCurrentQueryResult(observable),
+            queryManager.getCurrentQueryResult(observable2)
+          ]).then(([result, result2]) => {
+            expect(result.partial).toBe(false);
+            expect(stripSymbols(result.data)).toEqual(dataChanged);
+            expect(result2.partial).toBe(false);
+            expect(stripSymbols(result2.data)).toEqual(data2Changed);
+          });
         });
       }).then(resolve, reject);
     });
@@ -3728,13 +3736,15 @@ describe('QueryManager', () => {
         observable2.subscribe({ next: () => null });
 
         return queryManager.reFetchObservableQueries().then(() => {
-          const result = queryManager.getCurrentQueryResult(observable);
-          expect(result.partial).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(dataChanged);
-
-          const result2 = queryManager.getCurrentQueryResult(observable2);
-          expect(result2.partial).toBe(false);
-          expect(stripSymbols(result2.data)).toEqual(data2Changed);
+          return Promise.all([
+            queryManager.getCurrentQueryResult(observable),
+            queryManager.getCurrentQueryResult(observable2),
+          ]).then(([result, result2]) => {
+            expect(result.partial).toBe(false);
+            expect(stripSymbols(result.data)).toEqual(dataChanged);
+            expect(result2.partial).toBe(false);
+            expect(stripSymbols(result2.data)).toEqual(data2Changed);
+          });
         });
       }).then(resolve, reject);
     });
@@ -5149,9 +5159,11 @@ describe('QueryManager', () => {
         });
         observableToPromise({ observable }, result => {
           expect(stripSymbols(result.data)).toEqual(data);
-          const currentResult = queryManager.getCurrentQueryResult(observable);
-          expect(currentResult.data).toEqual(data);
-          resolve();
+          return queryManager.getCurrentQueryResult(observable)
+            .then(currentResult => {
+              expect(currentResult.data).toEqual(data);
+              resolve();
+            });
         });
       },
     );

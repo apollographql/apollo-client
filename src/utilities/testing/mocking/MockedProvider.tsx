@@ -3,11 +3,11 @@ import React from 'react';
 import { ApolloClient, DefaultOptions } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../../react/context/ApolloProvider';
-import { MockLink } from '../../../utilities/testing/mocks/mockLink';
+import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { Resolvers } from '../../../core/types';
 import { ApolloCache } from '../../../cache/core/cache';
-import { MockedResponse } from '../../../utilities/testing/mocks/mockLink';
+import { MockedResponse } from '../../../utilities/testing/mocking/mockLink';
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse>;

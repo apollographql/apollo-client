@@ -6,7 +6,7 @@ import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 // mocks
 import {
   MockSubscriptionLink
-} from '../../../utilities/testing/mocks/mockSubscriptionLink';
+} from '../../../utilities/testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';

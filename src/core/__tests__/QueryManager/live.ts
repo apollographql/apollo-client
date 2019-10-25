@@ -8,7 +8,7 @@
 import gql from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
-import { MockSubscriptionLink } from '../../../utilities/testing/mocks/mockSubscriptionLink';
+import { MockSubscriptionLink } from '../../../utilities/testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';

@@ -6,7 +6,7 @@ import { stripSymbols } from '../../utilities/testing/stripSymbols';
 import { itAsync } from '../../utilities/testing/itAsync';
 import { ApolloClient } from '../..';
 import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
-import { mockSingleLink } from '../../utilities/testing/mocks/mockLink';
+import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
 import { NetworkStatus } from '../networkStatus';
 
 const query = gql`

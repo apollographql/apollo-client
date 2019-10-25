@@ -5,7 +5,7 @@ import { assign } from 'lodash';
 import { Observable, Observer } from '../../utilities/observables/Observable';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { ApolloClient } from '../..';
-import mockQueryManager from '../../utilities/testing/mocks/mockQueryManager';
+import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
 import wrap from '../../utilities/testing/wrap';
 import { itAsync } from '../../utilities/testing/itAsync';
 import { ApolloQueryResult, Resolvers } from '../../core/types';

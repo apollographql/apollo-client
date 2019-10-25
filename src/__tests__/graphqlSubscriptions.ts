@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 import {
   mockObservableLink,
   MockedSubscription
-} from '../utilities/testing/mocks/mockSubscriptionLink';
+} from '../utilities/testing/mocking/mockSubscriptionLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient } from '../';
 import { QueryManager } from '../core/QueryManager';

@@ -1,7 +1,7 @@
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { mockSingleLink } from '../utilities/testing/mocks/mockLink';
+import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
 import { itAsync } from '../utilities/testing/itAsync';

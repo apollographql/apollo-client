@@ -60,7 +60,7 @@ describe('ApolloClient', () => {
   });
 
   describe('readQuery', () => {
-    it('will read some data from the store', () => {
+    it('will read some data from the store', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
@@ -74,7 +74,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               {
                 a
@@ -83,9 +83,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({ a: 1 });
+
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               {
                 b
@@ -95,9 +96,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({ b: 2, c: 3 });
+
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               {
                 a
@@ -110,7 +112,7 @@ describe('ApolloClient', () => {
       ).toEqual({ a: 1, b: 2, c: 3 });
     });
 
-    it('will read some deeply nested data from the store', () => {
+    it('will read some deeply nested data from the store', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
@@ -138,7 +140,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               {
                 a
@@ -150,9 +152,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({ a: 1, d: { e: 4, __typename: 'Foo' } });
+
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               {
                 a
@@ -170,9 +173,10 @@ describe('ApolloClient', () => {
         a: 1,
         d: { __typename: 'Foo', e: 4, h: { i: 7, __typename: 'Bar' } },
       });
+
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               {
                 a
@@ -206,7 +210,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will read some data from the store with variables', () => {
+    it('will read some data from the store with variables', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
@@ -219,7 +223,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               query($literal: Boolean, $value: Int) {
                 a: field(literal: true, value: 42)
@@ -236,7 +240,7 @@ describe('ApolloClient', () => {
     });
   });
 
-  it('will read some data from the store with default values', () => {
+  it('will read some data from the store with default values', async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache().restore({
@@ -249,7 +253,7 @@ describe('ApolloClient', () => {
 
     expect(
       stripSymbols(
-        client.readQuery({
+        await client.readQuery({
           query: gql`
             query($literal: Boolean, $value: Int = -1) {
               a: field(literal: $literal, value: $value)
@@ -265,7 +269,7 @@ describe('ApolloClient', () => {
 
     expect(
       stripSymbols(
-        client.readQuery({
+        await client.readQuery({
           query: gql`
             query($literal: Boolean, $value: Int = -1) {
               a: field(literal: $literal, value: $value)
@@ -280,14 +284,14 @@ describe('ApolloClient', () => {
   });
 
   describe('readFragment', () => {
-    it('will throw an error when there is no fragment', () => {
+    it('will throw an error when there is no fragment', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      expect(() => {
-        client.readFragment({
+      try {
+        await client.readFragment({
           id: 'x',
           fragment: gql`
             query {
@@ -297,11 +301,15 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
-      );
-      expect(() => {
-        client.readFragment({
+        throw new Error("should have thrown");
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        );
+      }
+
+      try {
+        await client.readFragment({
           id: 'x',
           fragment: gql`
             schema {
@@ -309,19 +317,22 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-      );
+        throw new Error("should have thrown");
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        );
+      }
     });
 
-    it('will throw an error when there is more than one fragment but no fragment name', () => {
+    it('will throw an error when there is more than one fragment but no fragment name', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      expect(() => {
-        client.readFragment({
+      try {
+        await client.readFragment({
           id: 'x',
           fragment: gql`
             fragment a on A {
@@ -333,11 +344,15 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-      );
-      expect(() => {
-        client.readFragment({
+        throw new Error("should have thrown");
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        );
+      }
+
+      try {
+        await client.readFragment({
           id: 'x',
           fragment: gql`
             fragment a on A {
@@ -353,12 +368,15 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-      );
+        throw new Error("should have thrown");
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        );
+      }
     });
 
-    it('will read some deeply nested data from the store at any id', () => {
+    it('will read some deeply nested data from the store at any id', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
@@ -387,7 +405,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment fragmentFoo on Foo {
@@ -400,9 +418,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({ __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } });
+
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment fragmentFoo on Foo {
@@ -425,9 +444,10 @@ describe('ApolloClient', () => {
         g: 6,
         h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
       });
+
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'bar',
             fragment: gql`
               fragment fragmentBar on Bar {
@@ -437,9 +457,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({ __typename: 'Bar', i: 7 });
+
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'bar',
             fragment: gql`
               fragment fragmentBar on Bar {
@@ -451,9 +472,10 @@ describe('ApolloClient', () => {
           }),
         ),
       ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
+
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment fragmentFoo on Foo {
@@ -483,9 +505,10 @@ describe('ApolloClient', () => {
         g: 6,
         h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
       });
+
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'bar',
             fragment: gql`
               fragment fragmentFoo on Foo {
@@ -511,7 +534,7 @@ describe('ApolloClient', () => {
       ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
     });
 
-    it('will read some data from the store with variables', () => {
+    it('will read some data from the store with variables', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache().restore({
@@ -525,7 +548,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment foo on Foo {
@@ -542,7 +565,7 @@ describe('ApolloClient', () => {
       ).toEqual({ __typename: 'Foo', a: 1, b: 2 });
     });
 
-    it('will return null when an id that can’t be found is provided', () => {
+    it('will return null when an id that can’t be found is provided', async () => {
       const client1 = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
@@ -561,7 +584,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        client1.readFragment({
+        await client1.readFragment({
           id: 'foo',
           fragment: gql`
             fragment fooFragment on Foo {
@@ -572,8 +595,9 @@ describe('ApolloClient', () => {
           `,
         }),
       ).toBe(null);
+
       expect(
-        client2.readFragment({
+        await client2.readFragment({
           id: 'foo',
           fragment: gql`
             fragment fooFragment on Foo {
@@ -584,9 +608,10 @@ describe('ApolloClient', () => {
           `,
         }),
       ).toBe(null);
+
       expect(
         stripSymbols(
-          client3.readFragment({
+          await client3.readFragment({
             id: 'foo',
             fragment: gql`
               fragment fooFragment on Foo {
@@ -1187,7 +1212,7 @@ describe('ApolloClient', () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           const subscription = observable.subscribe({
-            next(nextResult) {
+            async next(nextResult) {
               ++count;
               if (count === 1) {
                 expect(stripSymbols(nextResult.data)).toEqual(data);
@@ -1196,7 +1221,7 @@ describe('ApolloClient', () => {
                 );
 
                 const readData = stripSymbols(
-                  client.readQuery<Data>({ query }),
+                  await client.readQuery<Data>({ query }),
                 );
                 expect(stripSymbols(readData)).toEqual(data);
 
@@ -1224,7 +1249,9 @@ describe('ApolloClient', () => {
                   },
                 };
                 expect(stripSymbols(nextResult.data)).toEqual(expectation);
-                expect(stripSymbols(client.readQuery<Data>({ query }))).toEqual(
+                expect(stripSymbols(
+                  await client.readQuery<Data>({ query }),
+                )).toEqual(
                   expectation,
                 );
                 subscription.unsubscribe();
@@ -1239,7 +1266,7 @@ describe('ApolloClient', () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           observable.subscribe({
-            next: nextResult => {
+            async next(nextResult) {
               count++;
               if (count === 1) {
                 expect(stripSymbols(nextResult.data)).toEqual(data);
@@ -1248,7 +1275,7 @@ describe('ApolloClient', () => {
                 );
 
                 const readData = stripSymbols(
-                  client.readQuery<Data>({ query }),
+                  await client.readQuery<Data>({ query }),
                 );
                 expect(stripSymbols(readData)).toEqual(data);
 
@@ -1295,8 +1322,8 @@ describe('ApolloClient', () => {
                 expect(nextFriends[1]).toEqual(expectation1);
 
                 const readFriends = stripSymbols(
-                  client.readQuery<Data>({ query }).people.friends,
-                );
+                  await client.readQuery<Data>({ query }),
+                ).people.friends;
                 expect(readFriends[0]).toEqual(expectation0);
                 expect(readFriends[1]).toEqual(expectation1);
                 done();
@@ -1305,6 +1332,7 @@ describe('ApolloClient', () => {
           });
         });
       });
+
       describe('using writeFragment', () => {
         it('with a replacement of nested array (wf)', done => {
           let count = 0;
@@ -1586,7 +1614,7 @@ describe('ApolloClient', () => {
   });
 
   describe('write then read', () => {
-    it('will write data locally which will then be read back', () => {
+    it('will write data locally which will then be read back', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -1614,7 +1642,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment x on Foo {
@@ -1650,7 +1678,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment x on Foo {
@@ -1688,7 +1716,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment x on Foo {
@@ -1724,7 +1752,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readFragment({
+          await client.readFragment({
             id: 'foo',
             fragment: gql`
               fragment x on Foo {
@@ -1751,7 +1779,7 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will write data to a specific id', () => {
+    it('will write data to a specific id', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -1789,7 +1817,7 @@ describe('ApolloClient', () => {
 
       expect(
         stripSymbols(
-          client.readQuery({
+          await client.readQuery({
             query: gql`
               {
                 a

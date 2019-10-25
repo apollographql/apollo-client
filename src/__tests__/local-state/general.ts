@@ -517,15 +517,19 @@ describe('Sample apps', () => {
         _result: {},
         variables: { amount: number },
         { cache }: { cache: ApolloCache<any> },
-      ): null => {
-        const read = client.readQuery<{ count: number }>({ query, variables });
-        if (read) {
-          const data = updater(read, variables);
-          cache.writeQuery({ query, variables, data });
-        } else {
-          throw new Error('readQuery returned a falsy value');
-        }
-        return null;
+      ): Promise<null> => {
+        return client.readQuery<{ count: number }>({
+          query,
+          variables,
+        }).then(read => {
+          if (read) {
+            const data = updater(read, variables);
+            cache.writeQuery({ query, variables, data });
+          } else {
+            throw new Error('readQuery returned a falsy value');
+          }
+          return null;
+        });
       };
     };
 
@@ -618,10 +622,15 @@ describe('Sample apps', () => {
         _result: {},
         variables: Todo,
         { cache }: { cache: ApolloCache<any> },
-      ): null => {
-        const data = updater(client.readQuery({ query, variables }), variables);
-        cache.writeQuery({ query, variables, data });
-        return null;
+      ): Promise<null> => {
+        return client.readQuery({
+          query,
+          variables,
+        }).then(read => {
+          const data = updater(read, variables);
+          cache.writeQuery({ query, variables, data });
+          return null;
+        });
       };
     };
 
@@ -706,7 +715,7 @@ describe('Combining client and server state/operations', () => {
                 isSelected
               }
             `;
-            const previous = cache.readFragment({ fragment, id });
+            const previous = await cache.readFragment({ fragment, id });
             const data = {
               ...previous,
               isSelected: !previous.isSelected,
@@ -970,8 +979,8 @@ describe('Combining client and server state/operations', () => {
       link,
       resolvers: {
         Mutation: {
-          incrementCount: (_, __, { cache }) => {
-            const { count } = cache.readQuery({ query: counterQuery });
+          async incrementCount(_, __, { cache }) {
+            const { count } = await cache.readQuery({ query: counterQuery });
             const data = { count: count + 1 };
             cache.writeData({ data });
             return null;

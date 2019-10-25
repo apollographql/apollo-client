@@ -5,17 +5,7 @@ import { mockSingleLink } from '../__mocks__/mockLinks';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
 import { itAsync } from './utils/itAsync';
-
-const waitFor = <T>(condition: () => T) => new Promise<T>(resolve => {
-  function poll() {
-    try {
-      resolve(condition());
-    } catch {
-      setTimeout(poll, 10);
-    }
-  }
-  poll();
-});
+import { waitFor } from './utils/waitFor';
 
 function waitForComments(
   observable: ObservableQuery<any>,

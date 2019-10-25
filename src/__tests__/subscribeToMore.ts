@@ -8,6 +8,7 @@ import { ApolloClient } from '../';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { stripSymbols } from './utils/stripSymbols';
 import { itAsync } from './utils/itAsync';
+import { waitFor } from './utils/waitFor';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
@@ -93,8 +94,15 @@ describe('subscribeToMore', () => {
       },
     });
 
-    setTimeout(() => {
-      sub.unsubscribe();
+    const counterPromise = waitFor(() => {
+      if (counter < 3) throw "try again";
+    });
+
+    for (let i = 0; i < 2; i++) {
+      wSLink.simulateResult(results[i]);
+    }
+
+    return counterPromise.then(() => {
       expect(counter).toBe(3);
       expect(stripSymbols(latestResult)).toEqual({
         data: { entry: { value: 'Amanda Liu' } },
@@ -102,12 +110,8 @@ describe('subscribeToMore', () => {
         networkStatus: 7,
         stale: false,
       });
-      resolve();
-    }, 15);
-
-    for (let i = 0; i < 2; i++) {
-      wSLink.simulateResult(results[i]);
-    }
+      sub.unsubscribe();
+    }).then(resolve, reject);
   });
 
   itAsync('calls error callback on error', (resolve, reject) => {

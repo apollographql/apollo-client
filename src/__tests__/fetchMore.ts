@@ -384,7 +384,22 @@ describe('fetchMore on an observable query', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Entry: {
+            fields: {
+              comments: {
+                merge(existing: any[], incoming: any[]) {
+                  return [
+                    ...existing || [],
+                    ...incoming,
+                  ];
+                },
+              },
+            },
+          },
+        },
+      }),
     });
 
     const observable = client.watchQuery({
@@ -402,14 +417,6 @@ describe('fetchMore on an observable query', () => {
             expect((data as any).entry.comments.length).toBe(10);
             observable.fetchMore({
               variables: { start: 10 },
-              updateQuery: (prev, options) => {
-                const state = cloneDeep(prev) as any;
-                state.entry.comments = [
-                  ...state.entry.comments,
-                  ...(options.fetchMoreResult as any).entry.comments,
-                ];
-                return state;
-              },
             });
             break;
           case 1:

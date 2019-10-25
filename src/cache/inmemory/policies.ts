@@ -20,6 +20,7 @@ import {
   storeKeyNameFromField,
   StoreValue,
   argumentsObjectFromField,
+  makeReference,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -88,6 +89,7 @@ interface FieldFunctionOptions {
   parentObject: Readonly<StoreObject>;
   field: FieldNode;
   variables?: Record<string, any>;
+  toReference: Policies["toReference"];
 }
 
 interface FieldReadFunction<TExisting, TResult = TExisting> {
@@ -190,6 +192,17 @@ export class Policies {
     if (config.typePolicies) {
       this.addTypePolicies(config.typePolicies);
     }
+  }
+
+  // Bound function that returns a Reference using this.identify.
+  // Provided to read/merge functions as part of their options.
+  public toReference = (
+    object: StoreObject,
+    selectionSet?: SelectionSetNode,
+    fragmentMap?: FragmentMap,
+  ) => {
+    const id = this.identify(object, selectionSet, fragmentMap);
+    return id && makeReference(id);
   }
 
   public identify(
@@ -383,6 +396,7 @@ export class Policies {
         parentObject,
         field,
         variables,
+        toReference: this.toReference,
       });
     }
     return existing;
@@ -405,6 +419,7 @@ export class Policies {
         parentObject,
         field,
         variables,
+        toReference: this.toReference,
       });
     }
   }

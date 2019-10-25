@@ -15,7 +15,16 @@ import {
 } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { isEqual } from '../../../utilities/common/isEqual';
-import { MockedResponse, ResultFunction } from './types';
+
+export type ResultFunction<T> = () => T;
+
+export interface MockedResponse {
+  request: GraphQLRequest;
+  result?: FetchResult | ResultFunction<FetchResult>;
+  error?: Error;
+  delay?: number;
+  newData?: ResultFunction<FetchResult>;
+}
 
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
   const queryString =
@@ -26,6 +35,7 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 }
 
 export class MockLink extends ApolloLink {
+  public operation: Operation;
   public addTypename: Boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
@@ -62,6 +72,7 @@ export class MockLink extends ApolloLink {
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
+    this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
     let responseIndex;
     const response = (this.mockedResponsesByKey[key] || []).find(
@@ -146,13 +157,17 @@ export class MockLink extends ApolloLink {
   }
 }
 
+interface MockApolloLink extends ApolloLink {
+  operation?: Operation;
+}
+
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server.
 // NOTE: The last arg can optionally be an `addTypename` arg.
 export function mockSingleLink(
   reject: (reason: any) => any,
   ...mockedResponses: Array<any>
-): ApolloLink {
+): MockApolloLink {
   // To pull off the potential typename. If this isn't a boolean, we'll just
   // set it true later.
   let maybeTypename = mockedResponses[mockedResponses.length - 1];

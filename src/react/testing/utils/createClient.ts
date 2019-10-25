@@ -3,7 +3,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { NormalizedCacheObject } from '../../../cache/inmemory/types';
-import { mockSingleLink } from '../mocks/mockLink';
+import { mockSingleLink } from '../../../__tests__/utils/mocks/mockLink';
 
 export function createClient<TData>(
   data: TData,

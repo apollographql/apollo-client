@@ -6,7 +6,7 @@ import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 import mockQueryManager from '../../__tests__/utils/mocks/mockQueryManager';
 import mockWatchQuery from '../../__tests__/utils/mocks/mockWatchQuery';
-import { mockSingleLink } from '../../__tests__/utils/mocks/mockLinks';
+import { mockSingleLink } from '../../__tests__/utils/mocks/mockLink';
 
 import { ObservableQuery } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';

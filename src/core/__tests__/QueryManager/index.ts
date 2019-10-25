@@ -17,7 +17,7 @@ import {
 // mocks
 import mockQueryManager from '../../../__tests__/utils/mocks/mockQueryManager';
 import mockWatchQuery from '../../../__tests__/utils/mocks/mockWatchQuery';
-import { mockSingleLink } from '../../../__tests__/utils/mocks/mockLinks';
+import { mockSingleLink } from '../../../__tests__/utils/mocks/mockLink';
 
 // core
 import { ApolloQueryResult } from '../../types';
@@ -1879,7 +1879,7 @@ describe('QueryManager', () => {
         // don't use .catch() for this or it will catch the above error
         error => {
           const apolloError = error as ApolloError;
-          expect(apolloError.graphQLErrors).toBe(graphQLErrors);
+          expect(apolloError.graphQLErrors).toEqual(graphQLErrors);
           expect(!apolloError.networkError).toBeTruthy();
         },
       ).then(resolve, reject);

@@ -3,7 +3,7 @@ import { take, toArray, map } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { mockSingleLink } from './utils/mocks/mockLinks';
+import { mockSingleLink } from './utils/mocks/mockLink';
 import { MutationQueryReducersMap } from '../core/types';
 import { Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';

@@ -13,7 +13,7 @@ import { ApolloClient } from '..';
 import subscribeAndCount from './utils/subscribeAndCount';
 import { withWarning } from './utils/wrap';
 import { itAsync } from './utils/itAsync';
-import { mockSingleLink } from './utils/mocks/mockLinks';
+import { mockSingleLink } from './utils/mocks/mockLink';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -917,6 +917,7 @@ describe('client', () => {
         request: { query: transformedQuery },
         result: { data: transformedResult },
       },
+      false
     );
 
     const client = new ApolloClient({
@@ -970,6 +971,7 @@ describe('client', () => {
         request: { query: transformedQuery },
         result: { data: transformedResult },
       },
+      false
     );
 
     const client = new ApolloClient({

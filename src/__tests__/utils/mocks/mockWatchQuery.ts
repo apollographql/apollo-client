@@ -1,4 +1,4 @@
-import { MockedResponse } from './mockLinks';
+import { MockedResponse } from './mockLink';
 import mockQueryManager from './mockQueryManager';
 import { ObservableQuery } from '../../../core/ObservableQuery';
 

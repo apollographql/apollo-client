@@ -373,8 +373,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readQuery<T = any, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
-  ): T | null {
-    return this.cache.readQuery<T, TVariables>(options, optimistic);
+  ): Promise<T | null> {
+    return Promise.resolve(this.cache.readQuery<T, TVariables>(options, optimistic));
   }
 
   /**
@@ -394,8 +394,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readFragment<T = any, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
-  ): T | null {
-    return this.cache.readFragment<T, TVariables>(options, optimistic);
+  ): Promise<T | null> {
+    return Promise.resolve(this.cache.readFragment<T, TVariables>(options, optimistic));
   }
 
   /**

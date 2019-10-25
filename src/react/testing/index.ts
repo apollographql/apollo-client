@@ -1,4 +1,4 @@
-export { MockedProvider } from './mocks/MockedProvider';
+export { MockedProvider } from '../../utilities/testing/mocks/MockedProvider';
 export { MockLink, mockSingleLink } from '../../utilities/testing/mocks/mockLink';
 export {
   MockSubscriptionLink,

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ApolloClient, DefaultOptions } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../context/ApolloProvider';
+import { ApolloProvider } from '../../../react/context/ApolloProvider';
 import { MockLink } from '../../../utilities/testing/mocks/mockLink';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { Resolvers } from '../../../core/types';

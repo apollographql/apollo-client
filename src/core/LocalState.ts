@@ -212,7 +212,7 @@ export class LocalState<TCacheShape> {
     if (document) {
       return this.resolveDocument(
         document,
-        this.buildRootValueFromCache(document, variables) || {},
+        await this.buildRootValueFromCache(document, variables),
         this.prepareContext(context),
         variables,
       ).then(data => ({
@@ -253,12 +253,12 @@ export class LocalState<TCacheShape> {
     document: DocumentNode,
     variables?: Record<string, any>,
   ) {
-    return this.cache.diff({
+    return Promise.resolve(this.cache.diff({
       query: buildQueryFromSelectionSet(document),
       variables,
       returnPartialData: true,
       optimistic: false,
-    }).result;
+    })).then(diffResult => diffResult.result || {});
   }
 
   private async resolveDocument<TData>(

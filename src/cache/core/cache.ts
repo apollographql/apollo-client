@@ -12,11 +12,18 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // core API
   public abstract read<T, TVariables = any>(
     query: Cache.ReadOptions<TVariables>,
-  ): T | null;
+  ): T | null | PromiseLike<T | null>;
+
+  // Writing to the cache still finishes synchronously, unlike reading,
+  // which may be asynchronous.
   public abstract write<TResult = any, TVariables = any>(
     write: Cache.WriteOptions<TResult, TVariables>,
   ): void;
-  public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
+
+  public abstract diff<T>(
+    query: Cache.DiffOptions,
+  ): Cache.DiffResult<T> | Promise<Cache.DiffResult<T>>;
+
   public abstract watch(watch: Cache.WatchOptions): () => void;
   public abstract evict(dataId: string): boolean;
   public abstract reset(): Promise<void>;
@@ -69,7 +76,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readQuery<QueryType, TVariables = any>(
     options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
-  ): QueryType | null {
+  ): QueryType | null | PromiseLike<QueryType | null> {
     return this.read({
       query: options.query,
       variables: options.variables,
@@ -80,7 +87,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readFragment<FragmentType, TVariables = any>(
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
-  ): FragmentType | null {
+  ): FragmentType | null | PromiseLike<FragmentType | null> {
     return this.read({
       query: getFragmentQueryDocument(options.fragment, options.fragmentName),
       variables: options.variables,

@@ -27,7 +27,6 @@ describe('updateQuery on a simple query', () => {
   };
 
   itAsync('triggers new result from updateQuery', (resolve, reject) => {
-    let latestResult: any = null;
     const link = mockSingleLink(reject, {
       request: { query },
       result,
@@ -41,24 +40,25 @@ describe('updateQuery on a simple query', () => {
     const obsHandle = client.watchQuery({
       query,
     });
+
+    let lastResult: any = null;
     const sub = obsHandle.subscribe({
       next(queryResult) {
-        // do nothing
-        latestResult = queryResult;
+        lastResult = queryResult;
       },
     });
 
     return new Promise(resolve => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
-        expect(latestResult.data.entry.value).toBe(1);
+        expect(lastResult.data.entry.value).toBe(1);
         return watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
           res.entry.value = 2;
           return res;
         });
       })
-      .then(() => expect(latestResult.data.entry.value).toBe(2))
+      .then(() => expect(lastResult.data.entry.value).toBe(2))
       .then(() => sub.unsubscribe())
       .then(resolve, reject);
   });
@@ -90,7 +90,6 @@ describe('updateQuery on a query with required and optional variables', () => {
   };
 
   itAsync('triggers new result from updateQuery', (resolve, reject) => {
-    let latestResult: any = null;
     const link = mockSingleLink(reject, {
       request: {
         query,
@@ -108,24 +107,26 @@ describe('updateQuery on a query with required and optional variables', () => {
       query,
       variables,
     });
+
+    let lastResult: any = null;
     const sub = obsHandle.subscribe({
       next(queryResult) {
         // do nothing
-        latestResult = queryResult;
+        lastResult = queryResult;
       },
     });
 
     return new Promise(resolve => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
-        expect(latestResult.data.entry.value).toBe(1);
+        expect(lastResult.data.entry.value).toBe(1);
         return watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
           res.entry.value = 2;
           return res;
         });
       })
-      .then(() => expect(latestResult.data.entry.value).toBe(2))
+      .then(() => expect(lastResult.data.entry.value).toBe(2))
       .then(() => sub.unsubscribe())
       .then(resolve, reject);
   });
@@ -196,17 +197,11 @@ describe('fetchMore on an observable query', () => {
     });
   }
 
-  let latestResult: any = null;
-
-  let client: ApolloClient;
-  let link: any;
-  let sub: any;
-
   function setup(
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       {
         request: {
@@ -218,143 +213,134 @@ describe('fetchMore on an observable query', () => {
       ...mockedResponses,
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });
 
-    const obsHandle = client.watchQuery<any>({
+    const observable = client.watchQuery<any>({
       query,
       variables,
     });
-    sub = obsHandle.subscribe({
+
+    let lastResult: any;
+    const sub = observable.subscribe({
       next(queryResult) {
-        // do nothing
-        latestResult = queryResult;
+        lastResult = queryResult;
       },
     });
 
-    return Promise.resolve(obsHandle);
-  }
-
-  function unsetup() {
-    sub.unsubscribe();
-    sub = null;
+    return {
+      link,
+      client,
+      observable,
+      sub,
+      getLastResult() {
+        return lastResult;
+      },
+    };
   }
 
   itAsync('triggers new result withAsync new variables', (resolve, reject) => {
-    latestResult = null;
-    return setup(reject, {
+    const { observable, sub, getLastResult } = setup(reject, {
       request: {
         query,
         variables: variablesMore,
       },
       result: resultMore,
-    })
-      .then(watchedQuery =>
-        watchedQuery.fetchMore({
-          // Rely on the fact that the original variables had limit: 10
-          variables: { start: 10 },
-          updateQuery: (prev, options) => {
-            expect(options.variables).toEqual(variablesMore);
+    });
 
-            const state = cloneDeep(prev) as any;
-            state.entry.comments = [
-              ...state.entry.comments,
-              ...(options.fetchMoreResult as any).entry.comments,
-            ];
-            return state;
-          },
-        }),
-      )
-      .then(data => {
-        // This is the server result
-        expect(data.data.entry.comments).toHaveLength(10);
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toEqual(`comment ${i}`);
-        }
-        unsetup();
-      })
-      .then(resolve, reject);
+    return observable.fetchMore({
+      // Rely on the fact that the original variables had limit: 10
+      variables: { start: 10 },
+      updateQuery: (prev, options) => {
+        expect(options.variables).toEqual(variablesMore);
+        const state = cloneDeep(prev) as any;
+        state.entry.comments = [
+          ...state.entry.comments,
+          ...(options.fetchMoreResult as any).entry.comments,
+        ];
+        return state;
+      },
+    }).then(data => {
+      // This is the server result
+      expect(data.data.entry.comments).toHaveLength(10);
+      expect(data.loading).toBe(false);
+      const comments = getLastResult().data.entry.comments;
+      expect(comments).toHaveLength(20);
+      for (let i = 1; i <= 20; i++) {
+        expect(comments[i - 1].text).toEqual(`comment ${i}`);
+      }
+      sub.unsubscribe();
+    }).then(resolve, reject);
   });
 
   itAsync('basic fetchMore results merging', (resolve, reject) => {
-    latestResult = null;
-    return setup(reject, {
+    const { observable, sub, getLastResult } = setup(reject, {
       request: {
         query,
         variables: variablesMore,
       },
       result: resultMore,
-    })
-      .then(watchedQuery => {
-        return watchedQuery.fetchMore({
-          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-          updateQuery: (prev, options) => {
-            const state = cloneDeep(prev) as any;
-            state.entry.comments = [
-              ...state.entry.comments,
-              ...(options.fetchMoreResult as any).entry.comments,
-            ];
-            return state;
-          },
-        });
-      })
-      .then(data => {
-        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toEqual(`comment ${i}`);
-        }
-        unsetup();
-      })
-      .then(resolve, reject);
+    });
+
+    return observable.fetchMore({
+      variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+      updateQuery: (prev, options) => {
+        const state = cloneDeep(prev) as any;
+        state.entry.comments = [
+          ...state.entry.comments,
+          ...(options.fetchMoreResult as any).entry.comments,
+        ];
+        return state;
+      },
+    }).then(data => {
+      expect(data.data.entry.comments).toHaveLength(10); // this is the server result
+      expect(data.loading).toBe(false);
+      const comments = getLastResult().data.entry.comments;
+      expect(comments).toHaveLength(20);
+      for (let i = 1; i <= 20; i++) {
+        expect(comments[i - 1].text).toEqual(`comment ${i}`);
+      }
+      sub.unsubscribe();
+    }).then(resolve, reject);
   });
 
   itAsync('fetching more with a different query', (resolve, reject) => {
-    latestResult = null;
-    return setup(reject, {
+    const { observable, sub, getLastResult } = setup(reject, {
       request: {
         query: query2,
         variables: variables2,
       },
       result: result2,
-    })
-      .then(watchedQuery => {
-        return watchedQuery.fetchMore({
-          query: query2,
-          variables: variables2,
-          updateQuery: (prev, options) => {
-            const state = cloneDeep(prev) as any;
-            state.entry.comments = [
-              ...state.entry.comments,
-              ...(options.fetchMoreResult as any).comments,
-            ];
-            return state;
-          },
-        });
-      })
-      .then(() => {
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 10; i++) {
-          expect(comments[i - 1].text).toEqual(`comment ${i}`);
-        }
-        for (let i = 11; i <= 20; i++) {
-          expect(comments[i - 1].text).toEqual(`new comment ${i}`);
-        }
-        unsetup();
-      })
-      .then(resolve, reject);
+    });
+
+    return observable.fetchMore({
+      query: query2,
+      variables: variables2,
+      updateQuery: (prev, options) => {
+        const state = cloneDeep(prev) as any;
+        state.entry.comments = [
+          ...state.entry.comments,
+          ...(options.fetchMoreResult as any).comments,
+        ];
+        return state;
+      },
+    }).then(() => {
+      const comments = getLastResult().data.entry.comments;
+      expect(comments).toHaveLength(20);
+      for (let i = 1; i <= 10; i++) {
+        expect(comments[i - 1].text).toEqual(`comment ${i}`);
+      }
+      for (let i = 11; i <= 20; i++) {
+        expect(comments[i - 1].text).toEqual(`new comment ${i}`);
+      }
+      sub.unsubscribe();
+    }).then(resolve, reject);
   });
 
   itAsync('will set the `network` status to `fetchMore`', (resolve, reject) => {
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       { request: { query, variables }, result, delay: 5 },
       {
@@ -364,7 +350,7 @@ describe('fetchMore on an observable query', () => {
       },
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });
@@ -418,7 +404,7 @@ describe('fetchMore on an observable query', () => {
 
   itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       { request: { query, variables }, result, delay: 5 },
       {
@@ -428,7 +414,7 @@ describe('fetchMore on an observable query', () => {
       },
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });
@@ -485,39 +471,35 @@ describe('fetchMore on an observable query', () => {
   });
 
   itAsync('will not leak fetchMore query', (resolve, reject) => {
-    latestResult = null;
-    var beforeQueryCount;
-    return setup(reject, {
+    const { client, observable, sub } = setup(reject, {
       request: {
         query,
         variables: variablesMore,
       },
       result: resultMore,
-    })
-      .then(watchedQuery => {
-        beforeQueryCount = Object.keys(
-          client.queryManager.queryStore.getStore(),
-        ).length;
-        return watchedQuery.fetchMore({
-          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-          updateQuery: (prev, options) => {
-            const state = cloneDeep(prev) as any;
-            state.entry.comments = [
-              ...state.entry.comments,
-              ...(options.fetchMoreResult as any).entry.comments,
-            ];
-            return state;
-          },
-        });
-      })
-      .then(data => {
-        var afterQueryCount = Object.keys(
-          client.queryManager.queryStore.getStore(),
-        ).length;
-        expect(afterQueryCount).toBe(beforeQueryCount);
-        unsetup();
-      })
-      .then(resolve, reject);
+    });
+
+    const beforeQueryCount = Object.keys(
+      client.queryManager.queryStore.getStore(),
+    ).length;
+
+    return observable.fetchMore({
+      variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+      updateQuery: (prev, options) => {
+        const state = cloneDeep(prev) as any;
+        state.entry.comments = [
+          ...state.entry.comments,
+          ...(options.fetchMoreResult as any).entry.comments,
+        ];
+        return state;
+      },
+    }).then(data => {
+      var afterQueryCount = Object.keys(
+        client.queryManager.queryStore.getStore(),
+      ).length;
+      expect(afterQueryCount).toBe(beforeQueryCount);
+      sub.unsubscribe();
+    }).then(resolve, reject);
   });
 });
 
@@ -575,17 +557,11 @@ describe('fetchMore on an observable query with connection', () => {
     });
   }
 
-  let latestResult: any = null;
-
-  let client: ApolloClient;
-  let link: any;
-  let sub: any;
-
   function setup(
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       {
         request: {
@@ -597,67 +573,67 @@ describe('fetchMore on an observable query with connection', () => {
       ...mockedResponses,
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });
 
-    const obsHandle = client.watchQuery<any>({
+    const observable = client.watchQuery<any>({
       query,
       variables,
     });
-    sub = obsHandle.subscribe({
+
+    let lastResult: any;
+    const sub = observable.subscribe({
       next(queryResult) {
-        // do nothing
-        latestResult = queryResult;
+        lastResult = queryResult;
       },
     });
 
-    return Promise.resolve(obsHandle);
-  }
-
-  function unsetup() {
-    sub.unsubscribe();
-    sub = null;
+    return {
+      link,
+      client,
+      observable,
+      sub,
+      getLastResult() {
+        return lastResult;
+      },
+    };
   }
 
   itAsync('fetchMore with connection results merging', (resolve, reject) => {
-    latestResult = null;
-    return setup(reject, {
+    const { observable, sub, getLastResult } = setup(reject, {
       request: {
         query: transformedQuery,
         variables: variablesMore,
       },
       result: resultMore,
-    })
-      .then(watchedQuery => {
-        return watchedQuery.fetchMore({
-          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-          updateQuery: (prev, options) => {
-            const state = cloneDeep(prev) as any;
-            state.entry.comments = [
-              ...state.entry.comments,
-              ...(options.fetchMoreResult as any).entry.comments,
-            ];
-            return state;
-          },
-        });
-      })
-      .then(data => {
-        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toBe(`comment ${i}`);
-        }
-        unsetup();
-      })
-      .then(resolve, reject);
+    });
+
+    return observable.fetchMore({
+      variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+      updateQuery: (prev, options) => {
+        const state = cloneDeep(prev) as any;
+        state.entry.comments = [
+          ...state.entry.comments,
+          ...(options.fetchMoreResult as any).entry.comments,
+        ];
+        return state;
+      },
+    }).then(data => {
+      expect(data.data.entry.comments).toHaveLength(10); // this is the server result
+      expect(data.loading).toBe(false);
+      const comments = getLastResult().data.entry.comments;
+      expect(comments).toHaveLength(20);
+      for (let i = 1; i <= 20; i++) {
+        expect(comments[i - 1].text).toBe(`comment ${i}`);
+      }
+      sub.unsubscribe();
+    }).then(resolve, reject);
   });
 
   itAsync('will set the network status to `fetchMore`', (resolve, reject) => {
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
@@ -667,7 +643,7 @@ describe('fetchMore on an observable query with connection', () => {
       },
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });
@@ -721,7 +697,7 @@ describe('fetchMore on an observable query with connection', () => {
 
   itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
-    link = mockSingleLink(
+    const link = mockSingleLink(
       reject,
       { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
@@ -731,7 +707,7 @@ describe('fetchMore on an observable query with connection', () => {
       },
     );
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });

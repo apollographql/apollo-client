@@ -89,7 +89,7 @@ export interface DataProxy {
   readQuery<QueryType, TVariables = any>(
     options: DataProxy.Query<TVariables>,
     optimistic?: boolean,
-  ): QueryType | null;
+  ): QueryType | null | PromiseLike<QueryType | null>;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there is more than
@@ -99,7 +99,7 @@ export interface DataProxy {
   readFragment<FragmentType, TVariables = any>(
     options: DataProxy.Fragment<TVariables>,
     optimistic?: boolean,
-  ): FragmentType | null;
+  ): FragmentType | null | PromiseLike<FragmentType | null>;
 
   /**
    * Writes a GraphQL query to the root query id.

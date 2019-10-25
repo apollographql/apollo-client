@@ -12,14 +12,19 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // core API
   public abstract read<T, TVariables = any>(
     query: Cache.ReadOptions<TVariables>,
-  ): T | null;
+  ): T | null | PromiseLike<T | null>;
+
   public abstract write<TResult = any, TVariables = any>(
     write: Cache.WriteOptions<TResult, TVariables>,
-  ): void;
-  public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
+  ): void | PromiseLike<void>;
+
+  public abstract diff<T>(
+    query: Cache.DiffOptions,
+  ): Cache.DiffResult<T> | PromiseLike<Cache.DiffResult<T>>;
+
   public abstract watch(watch: Cache.WatchOptions): () => void;
   public abstract evict(dataId: string): boolean;
-  public abstract reset(): Promise<void>;
+  public abstract reset(): PromiseLike<void>;
 
   // intializer / offline / ssr API
   /**
@@ -69,7 +74,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readQuery<QueryType, TVariables = any>(
     options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
-  ): QueryType | null {
+  ): QueryType | null | PromiseLike<QueryType | null> {
     return this.read({
       query: options.query,
       variables: options.variables,
@@ -80,7 +85,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readFragment<FragmentType, TVariables = any>(
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
-  ): FragmentType | null {
+  ): FragmentType | null | PromiseLike<FragmentType | null> {
     return this.read({
       query: getFragmentQueryDocument(options.fragment, options.fragmentName),
       variables: options.variables,
@@ -91,8 +96,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public writeQuery<TData = any, TVariables = any>(
     options: Cache.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    this.write({
+  ): void | PromiseLike<void> {
+    return this.write({
       dataId: 'ROOT_QUERY',
       result: options.data,
       query: options.query,
@@ -102,8 +107,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public writeFragment<TData = any, TVariables = any>(
     options: Cache.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    this.write({
+  ): void | PromiseLike<void> {
+    return this.write({
       dataId: options.id,
       result: options.data,
       variables: options.variables,
@@ -114,19 +119,20 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public writeData<TData = any>({
     id,
     data,
-  }: Cache.WriteDataOptions<TData>): void {
+  }: Cache.WriteDataOptions<TData>): void | PromiseLike<void> {
     if (typeof id !== 'undefined') {
       const dataToWrite = {
         __typename: '__ClientData',
         ...data,
       };
-      this.writeFragment({
+
+      return this.writeFragment({
         id,
         fragment: fragmentFromPojo(dataToWrite),
         data: dataToWrite,
       });
-    } else {
-      this.writeQuery({ query: queryFromPojo(data), data });
     }
+
+    return this.writeQuery({ query: queryFromPojo(data), data });
   }
 }

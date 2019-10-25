@@ -110,12 +110,9 @@ describe('abstract cache', () => {
       expect(test.writeQuery).toBeCalled();
 
       test.writeData({ id: 1 });
-      expect(test.read).toBeCalled();
       expect(test.writeFragment).toBeCalled();
 
-      // Edge case for falsey id
       test.writeData({ id: 0 });
-      expect(test.read).toHaveBeenCalledTimes(2);
       expect(test.writeFragment).toHaveBeenCalledTimes(2);
     });
 
@@ -128,22 +125,6 @@ describe('abstract cache', () => {
 
       expect(() => test.writeData({ id: 1 })).not.toThrow();
       expect(test.writeFragment).toBeCalled();
-    });
-
-    it('reads __typename from typenameResult or defaults to __ClientData', () => {
-      const test = new TestCache();
-      test.read = () => ({ __typename: 'a' });
-      let res;
-      test.writeFragment = obj =>
-        (res = obj.fragment.definitions[0].typeCondition.name.value);
-
-      test.writeData({ id: 1 });
-      expect(res).toBe('a');
-
-      test.read = () => ({});
-
-      test.writeData({ id: 1 });
-      expect(res).toBe('__ClientData');
     });
   });
 });

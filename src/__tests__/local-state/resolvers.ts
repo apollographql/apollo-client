@@ -613,7 +613,7 @@ describe('Writing cache data from resolvers', () => {
       .mutate({ mutation })
       .then(() => client.query({ query }))
       .then(({ data }: any) => {
-        expect(data.obj.__typename).toEqual('Object');
+        expect(data.obj.__typename).toEqual('__ClientData');
         expect(data.obj.field.__typename).toEqual('Field');
       })
       .catch(e => console.log(e));

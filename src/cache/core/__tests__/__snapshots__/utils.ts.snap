@@ -1,8 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[
-  `writing data with no query converts a JavaScript object to a query correctly arrays 1`
-] = `
+exports[`writing data with no query converts a JavaScript object to a query correctly arrays 1`] = `
 "query GeneratedClientQuery {
   number
   bool
@@ -16,9 +14,7 @@ exports[
 "
 `;
 
-exports[
-  `writing data with no query converts a JavaScript object to a query correctly basic 1`
-] = `
+exports[`writing data with no query converts a JavaScript object to a query correctly basic 1`] = `
 "query GeneratedClientQuery {
   number
   bool
@@ -30,10 +26,8 @@ exports[
 "
 `;
 
-exports[
-  `writing data with no query converts a JavaScript object to a query correctly fragments 1`
-] = `
-"fragment GeneratedClientQuery on __FakeType {
+exports[`writing data with no query converts a JavaScript object to a query correctly fragments 1`] = `
+"fragment GeneratedClientQuery on __ClientData {
   number
   bool
   nested {
@@ -46,9 +40,7 @@ exports[
 "
 `;
 
-exports[
-  `writing data with no query converts a JavaScript object to a query correctly nested 1`
-] = `
+exports[`writing data with no query converts a JavaScript object to a query correctly nested 1`] = `
 "query GeneratedClientQuery {
   number
   bool

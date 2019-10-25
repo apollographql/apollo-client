@@ -1504,7 +1504,7 @@ describe('ApolloClient', () => {
       return client
         .query({ query })
         .then(({ data }: any) => {
-          expect(data.obj.__typename).toEqual('Object');
+          expect(data.obj.__typename).toEqual('__ClientData');
           expect(data.obj.field.__typename).toEqual('Field');
         })
         .catch(e => console.log(e));
@@ -1578,7 +1578,7 @@ describe('ApolloClient', () => {
         .query({ query })
         .then(({ data }: any) => {
           console.warn = originalWarn;
-          expect(data.obj.__typename).toEqual('Obj');
+          expect(data.obj.__typename).toEqual('__ClientData');
           expect(data.obj.field.__typename).toEqual('Field');
         })
         .catch(e => console.log(e));

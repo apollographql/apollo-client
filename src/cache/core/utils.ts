@@ -25,14 +25,14 @@ export function queryFromPojo(obj: any): DocumentNode {
   return out;
 }
 
-export function fragmentFromPojo(obj: any, typename?: string): DocumentNode {
+export function fragmentFromPojo(obj: any): DocumentNode {
   const frag: FragmentDefinitionNode = {
     kind: 'FragmentDefinition',
     typeCondition: {
       kind: 'NamedType',
       name: {
         kind: 'Name',
-        value: typename || '__FakeType',
+        value: '__ClientData',
       },
     },
     name: {
@@ -92,32 +92,3 @@ function selectionSetFromObj(obj: any): SelectionSetNode {
 
   return selectionSet;
 }
-
-export const justTypenameQuery: DocumentNode = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: null,
-      variableDefinitions: null,
-      directives: [],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            alias: null,
-            name: {
-              kind: 'Name',
-              value: '__typename',
-            },
-            arguments: [],
-            directives: [],
-            selectionSet: null,
-          },
-        ],
-      },
-    },
-  ],
-};

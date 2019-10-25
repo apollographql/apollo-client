@@ -1,12 +1,12 @@
 import { print } from 'graphql/language/printer';
 
-import { Observable } from '../utilities/observables/Observable';
-import { ApolloLink } from '../link/core/ApolloLink';
+import { Observable } from '../../../utilities/observables/Observable';
+import { ApolloLink } from '../../../link/core/ApolloLink';
 import {
   Operation,
   FetchResult,
   GraphQLRequest,
-} from '../link/core/types';
+} from '../../../link/core/types';
 
 interface MockApolloLink extends ApolloLink {
   operation?: Operation;

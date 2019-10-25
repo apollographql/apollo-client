@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { Observable, Subscription } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
-import { mockSingleLink } from '../__mocks__/mockLinks';
+import { mockSingleLink } from './utils/mocks/mockLinks';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { withWarning } from './utils/wrap';

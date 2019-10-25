@@ -4,7 +4,7 @@ import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
 
 // mocks
-import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
+import { MockSubscriptionLink } from '../../../__tests__/utils/mocks/mockLinks';
 
 // core
 import { QueryManager } from '../../QueryManager';

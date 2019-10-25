@@ -3,7 +3,7 @@ import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { Operation } from '../link/core/types';
-import { mockSingleLink, mockObservableLink } from '../__mocks__/mockLinks';
+import { mockSingleLink, mockObservableLink } from './utils/mocks/mockLinks';
 import { ApolloClient } from '../';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { stripSymbols } from './utils/stripSymbols';

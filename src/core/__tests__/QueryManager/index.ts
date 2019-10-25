@@ -15,11 +15,9 @@ import {
 } from '../../../cache/inmemory/types';
 
 // mocks
-import mockQueryManager from '../../../__mocks__/mockQueryManager';
-import mockWatchQuery from '../../../__mocks__/mockWatchQuery';
-import {
-  mockSingleLink,
-} from '../../../__mocks__/mockLinks';
+import mockQueryManager from '../../../__tests__/utils/mocks/mockQueryManager';
+import mockWatchQuery from '../../../__tests__/utils/mocks/mockWatchQuery';
+import { mockSingleLink } from '../../../__tests__/utils/mocks/mockLinks';
 
 // core
 import { ApolloQueryResult } from '../../types';

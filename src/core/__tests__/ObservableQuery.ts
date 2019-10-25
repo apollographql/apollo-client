@@ -4,9 +4,9 @@ import { GraphQLError } from 'graphql';
 import { Observable } from '../../utilities/observables/Observable';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import mockQueryManager from '../../__mocks__/mockQueryManager';
-import mockWatchQuery from '../../__mocks__/mockWatchQuery';
-import { mockSingleLink } from '../../__mocks__/mockLinks';
+import mockQueryManager from '../../__tests__/utils/mocks/mockQueryManager';
+import mockWatchQuery from '../../__tests__/utils/mocks/mockWatchQuery';
+import { mockSingleLink } from '../../__tests__/utils/mocks/mockLinks';
 
 import { ObservableQuery } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';

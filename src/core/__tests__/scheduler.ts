@@ -6,7 +6,7 @@ import { itAsync } from '../../__tests__/utils/itAsync';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
-import { mockSingleLink } from '../../__mocks__/mockLinks';
+import { mockSingleLink } from '../../__tests__/utils/mocks/mockLinks';
 import { NetworkStatus } from '../../core/networkStatus';
 
 import { ObservableQuery } from '../../core/ObservableQuery';

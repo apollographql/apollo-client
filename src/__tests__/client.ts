@@ -13,7 +13,7 @@ import { ApolloClient } from '..';
 import subscribeAndCount from './utils/subscribeAndCount';
 import { withWarning } from './utils/wrap';
 import { itAsync } from './utils/itAsync';
-import { mockSingleLink } from '../__mocks__/mockLinks';
+import { mockSingleLink } from './utils/mocks/mockLinks';
 
 describe('client', () => {
   it('can be loaded via require', () => {

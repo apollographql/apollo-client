@@ -246,7 +246,7 @@ describe('Cache manipulation', () => {
   it(
     'should be able to query @client fields and the cache without defining ' +
       'local resolvers',
-    () => {
+    async () => {
       const query = gql`
         {
           field @client
@@ -260,7 +260,7 @@ describe('Cache manipulation', () => {
         resolvers: {},
       });
 
-      cache.writeQuery({ query, data: { field: 'yo' } });
+      await cache.writeQuery({ query, data: { field: 'yo' } });
 
       client
         .query({ query })
@@ -283,8 +283,8 @@ describe('Cache manipulation', () => {
 
     const resolvers = {
       Mutation: {
-        start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
-          cache.writeQuery({ query, data: { field: 1 } });
+        async start(_1: any, _2: any, { cache }: { cache: InMemoryCache }) {
+          await cache.writeQuery({ query, data: { field: 1 } });
           return { start: true };
         },
       },
@@ -325,8 +325,8 @@ describe('Cache manipulation', () => {
           field: () => 0,
         },
         Mutation: {
-          start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
-            cache.writeQuery({ query, data: { field: 1 } });
+          async start(_1: any, _2: any, { cache }: { cache: InMemoryCache }) {
+            await cache.writeQuery({ query, data: { field: 1 } });
             return { start: true };
           },
         },
@@ -373,12 +373,12 @@ describe('Cache manipulation', () => {
 
     const resolvers = {
       Mutation: {
-        start: (
+        async start(
           _1: any,
           variables: { field: string },
           { cache }: { cache: ApolloCache<any> },
-        ) => {
-          cache.writeQuery({ query, data: { field: variables.field } });
+        ) {
+          await cache.writeQuery({ query, data: { field: variables.field } });
           return {
             __typename: 'Field',
             field: variables.field,
@@ -521,10 +521,10 @@ describe('Sample apps', () => {
         return client.readQuery<{ count: number }>({
           query,
           variables,
-        }).then(read => {
+        }).then(async read => {
           if (read) {
             const data = updater(read, variables);
-            cache.writeQuery({ query, variables, data });
+            await cache.writeQuery({ query, variables, data });
           } else {
             throw new Error('readQuery returned a falsy value');
           }
@@ -626,9 +626,9 @@ describe('Sample apps', () => {
         return client.readQuery({
           query,
           variables,
-        }).then(read => {
+        }).then(async read => {
           const data = updater(read, variables);
-          cache.writeQuery({ query, variables, data });
+          await cache.writeQuery({ query, variables, data });
           return null;
         });
       };
@@ -839,7 +839,7 @@ describe('Combining client and server state/operations', () => {
     resolve();
   });
 
-  itAsync('should handle a simple query with both server and client fields', (resolve, reject) => {
+  itAsync('should handle a simple query with both server and client fields', async (resolve, reject) => {
     const query = gql`
       query GetCount {
         count @client
@@ -859,7 +859,7 @@ describe('Combining client and server state/operations', () => {
       resolvers: {},
     });
 
-    cache.writeData({
+    await cache.writeData({
       data: {
         count: 0,
       },
@@ -873,7 +873,7 @@ describe('Combining client and server state/operations', () => {
     });
   });
 
-  itAsync('should support nested quering of both server and client fields', (resolve, reject) => {
+  itAsync('should support nested quering of both server and client fields', async (resolve, reject) => {
     const query = gql`
       query GetUser {
         user {
@@ -897,7 +897,7 @@ describe('Combining client and server state/operations', () => {
       resolvers: {},
     });
 
-    cache.writeData({
+    await cache.writeData({
       data: {
         user: {
           __typename: 'User',
@@ -923,7 +923,7 @@ describe('Combining client and server state/operations', () => {
     });
   });
 
-  itAsync('should combine both server and client mutations', (resolve, reject) => {
+  itAsync('should combine both server and client mutations', async (resolve, reject) => {
     const query = gql`
       query SampleQuery {
         count @client
@@ -982,14 +982,14 @@ describe('Combining client and server state/operations', () => {
           async incrementCount(_, __, { cache }) {
             const { count } = await cache.readQuery({ query: counterQuery });
             const data = { count: count + 1 };
-            cache.writeData({ data });
+            await cache.writeData({ data });
             return null;
           },
         },
       },
     });
 
-    cache.writeData({
+    await cache.writeData({
       data: {
         count: 0,
       },
@@ -1006,8 +1006,8 @@ describe('Combining client and server state/operations', () => {
           watchCount += 1;
           client.mutate({
             mutation,
-            update(proxy, { data: { updateUser } }: { data: any }) {
-              proxy.writeQuery({
+            async update(proxy, { data: { updateUser } }: { data: any }) {
+              await proxy.writeQuery({
                 query: userQuery,
                 data: {
                   user: { ...updateUser },

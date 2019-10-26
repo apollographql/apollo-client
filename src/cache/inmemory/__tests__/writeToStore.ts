@@ -2045,7 +2045,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should not deep-freeze scalar objects', () => {
+  it('should not deep-freeze scalar objects', async () => {
     const query = gql`
       query {
         scalarFieldWithObjectValue
@@ -2063,7 +2063,7 @@ describe('writing to the store', () => {
 
     const cache = new InMemoryCache();
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         scalarFieldWithObjectValue: scalarObject,
@@ -2074,7 +2074,7 @@ describe('writing to the store', () => {
     expect(Object.isFrozen(scalarObject.b)).toBe(false);
     expect(Object.isFrozen(scalarObject.c)).toBe(false);
 
-    const result = cache.readQuery<any>({ query });
+    const result = await cache.readQuery<any>({ query });
     expect(result.scalarFieldWithObjectValue).not.toBe(scalarObject);
     expect(Object.isFrozen(result.scalarFieldWithObjectValue)).toBe(true);
     expect(Object.isFrozen(result.scalarFieldWithObjectValue.b)).toBe(true);

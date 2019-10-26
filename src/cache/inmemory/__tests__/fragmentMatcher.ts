@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 import { InMemoryCache } from '../inMemoryCache';
 
 describe('fragment matching', () => {
-  it('can match exact types with or without possibleTypes', () => {
+  it('can match exact types with or without possibleTypes', async () => {
     const cacheWithoutPossibleTypes = new InMemoryCache({
       addTypename: true,
     });
@@ -46,14 +46,14 @@ describe('fragment matching', () => {
       ],
     };
 
-    cacheWithoutPossibleTypes.writeQuery({ query, data });
-    expect(cacheWithoutPossibleTypes.readQuery({ query })).toEqual(data);
+    await cacheWithoutPossibleTypes.writeQuery({ query, data });
+    expect(await cacheWithoutPossibleTypes.readQuery({ query })).toEqual(data);
 
-    cacheWithPossibleTypes.writeQuery({ query, data });
-    expect(cacheWithPossibleTypes.readQuery({ query })).toEqual(data);
+    await cacheWithPossibleTypes.writeQuery({ query, data });
+    expect(await cacheWithPossibleTypes.readQuery({ query })).toEqual(data);
   });
 
-  it('can match interface subtypes', () => {
+  it('can match interface subtypes', async () => {
     const cache = new InMemoryCache({
       addTypename: true,
       possibleTypes: {
@@ -81,11 +81,11 @@ describe('fragment matching', () => {
       },
     };
 
-    cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    await cache.writeQuery({ query, data });
+    expect(await cache.readQuery({ query })).toEqual(data);  
   });
 
-  it('can match union member types', () => {
+  it('can match union member types', async () => {
     const cache = new InMemoryCache({
       addTypename: true,
       possibleTypes: {
@@ -131,11 +131,11 @@ describe('fragment matching', () => {
       ],
     };
 
-    cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    await cache.writeQuery({ query, data });
+    expect(await cache.readQuery({ query })).toEqual(data);
   });
 
-  it('can match indirect subtypes while avoiding cycles', () => {
+  it('can match indirect subtypes while avoiding cycles', async () => {
     const cache = new InMemoryCache({
       addTypename: true,
       possibleTypes: {
@@ -179,11 +179,11 @@ describe('fragment matching', () => {
       ],
     };
 
-    cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    await cache.writeQuery({ query, data });
+    expect(await cache.readQuery({ query })).toEqual(data);
   });
 
-  it('can match against the root Query', () => {
+  it('can match against the root Query', async () => {
     const cache = new InMemoryCache({
       addTypename: true,
     });
@@ -219,7 +219,7 @@ describe('fragment matching', () => {
       },
     };
 
-    cache.writeQuery({ query, data });
-    expect(cache.readQuery({ query })).toEqual(data);
+    await cache.writeQuery({ query, data });
+    expect(await cache.readQuery({ query })).toEqual(data);
   });
 });

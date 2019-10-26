@@ -428,8 +428,9 @@ export class QueryManager<TStore> {
     });
 
     if (shouldFetch) {
-      const bqTask = this.broadcastQueries();
-      const networkResult = bqTask.then(() => this.fetchRequest<T>({
+      await this.broadcastQueries();
+
+      const networkResult = this.fetchRequest<T>({
         requestId,
         queryId,
         document: query,
@@ -441,18 +442,15 @@ export class QueryManager<TStore> {
         if (isApolloError(error)) {
           throw error;
         } else {
-          let task = Task.VOID;
           if (requestId >= this.getQuery(queryId).lastRequestId) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
             this.invalidate(queryId);
             this.invalidate(fetchMoreForQueryId);
-            task = task.then(() => this.broadcastQueries());
+            await this.broadcastQueries();
           }
-          return task.then(() => {
-            throw new ApolloError({ networkError: error });
-          });
+          throw new ApolloError({ networkError: error });
         }
-      }))
+      });
 
       // we don't return the promise for cache-and-network since it is already
       // returned below from the cache
@@ -489,11 +487,11 @@ export class QueryManager<TStore> {
       });
     }
 
-    return this.broadcastQueries().then(() => ({
-      // If we have no query to send to the server, we should return the
-      // result found within the store.
-      data: storeResult,
-    }));
+    await this.broadcastQueries();
+
+    // If we have no query to send to the server, we should return the result
+    // found within the store.
+    return { data: storeResult };
   }
 
   private markQueryResult(
@@ -948,9 +946,9 @@ export class QueryManager<TStore> {
       }
     });
 
-    return this.broadcastQueries().then(
-      () => Promise.all(observableQueryPromises),
-    );
+    await this.broadcastQueries();
+
+    return Promise.all(observableQueryPromises);
   }
 
   public observeQuery<T>(
@@ -979,32 +977,29 @@ export class QueryManager<TStore> {
         {},
         variables,
         false,
-      ), result => {
-        let task = Task.VOID;
-
+      ), async result => {
         if (!fetchPolicy || fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.
           // XXX I don't think we ever send in an object with errors, but we might in the future...
           if (!graphQLResultHasError(result)) {
-            task = task.then(() => this.cache.write({
+            await this.cache.write({
               query,
               result: result.data,
               dataId: 'ROOT_SUBSCRIPTION',
               variables: variables,
-            }));
-          }
-
-          task = task.then(() => this.broadcastQueries());
-        }
-
-        return task.then(() => {
-          if (graphQLResultHasError(result)) {
-            throw new ApolloError({
-              graphQLErrors: result.errors,
             });
           }
-          return result;
-        });
+
+          await this.broadcastQueries();
+        }
+
+        if (graphQLResultHasError(result)) {
+          throw new ApolloError({
+            graphQLErrors: result.errors,
+          });
+        }
+
+        return result;
       });
 
     if (this.transform(query).hasClientExports) {
@@ -1114,7 +1109,7 @@ export class QueryManager<TStore> {
     }));
   }
 
-  public broadcastQueries(): Task<void> {
+  public broadcastQueries(): PromiseLike<void> {
     this.onBroadcast();
     let task = Task.VOID;
     this.queries.forEach((info, id) => {

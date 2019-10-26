@@ -405,10 +405,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public writeQuery<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    const result = this.cache.writeQuery<TData, TVariables>(options);
-    this.queryManager.broadcastQueries();
-    return result;
+  ): Promise<void> {
+    return Promise.resolve(
+      this.cache.writeQuery<TData, TVariables>(options),
+    ).then(result => {
+      this.queryManager.broadcastQueries();
+      return result;
+    });
   }
 
   /**
@@ -424,10 +427,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public writeFragment<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    const result = this.cache.writeFragment<TData, TVariables>(options);
-    this.queryManager.broadcastQueries();
-    return result;
+  ): Promise<void> {
+    return Promise.resolve(
+      this.cache.writeFragment<TData, TVariables>(options),
+    ).then(result => {
+      this.queryManager.broadcastQueries();
+      return result;
+    });
   }
 
   /**
@@ -442,10 +448,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public writeData<TData = any>(
     options: DataProxy.WriteDataOptions<TData>,
-  ): void {
-    const result = this.cache.writeData<TData>(options);
-    this.queryManager.broadcastQueries();
-    return result;
+  ): Promise<void> {
+    return Promise.resolve(
+      this.cache.writeData<TData>(options),
+    ).then(result => {
+      this.queryManager.broadcastQueries();
+      return result;
+    });
   }
 
   public __actionHookForDevTools(cb: () => any) {

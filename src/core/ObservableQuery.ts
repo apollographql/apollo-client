@@ -492,14 +492,12 @@ export class ObservableQuery<
       );
 
       if (newResult) {
-        queryManager.cache.write({
+        return Promise.resolve(queryManager.cache.write({
           query: document,
           result: newResult,
           dataId: 'ROOT_QUERY',
           variables,
-        });
-
-        queryManager.broadcastQueries();
+        })).then(() => queryManager.broadcastQueries());
       }
     });
   }

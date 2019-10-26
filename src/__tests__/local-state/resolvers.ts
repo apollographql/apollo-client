@@ -334,7 +334,7 @@ describe('Basic resolver capabilities', () => {
     },
   );
 
-  itAsync('should handle resolvers that work with booleans properly', (resolve, reject) => {
+  itAsync('should handle resolvers that work with booleans properly', async (resolve, reject) => {
     const query = gql`
       query CartDetails {
         isInCart @client
@@ -342,7 +342,7 @@ describe('Basic resolver capabilities', () => {
     `;
 
     const cache = new InMemoryCache();
-    cache.writeQuery({ query, data: { isInCart: true } });
+    await cache.writeQuery({ query, data: { isInCart: true } });
 
     const client = new ApolloClient({
       cache,
@@ -507,8 +507,8 @@ describe('Writing cache data from resolvers', () => {
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start(_data, _args, { cache }) {
-            cache.writeData({ data: { field: 1 } });
+          async start(_data, _args, { cache }) {
+            await cache.writeData({ data: { field: 1 } });
             return { start: true };
           },
         },
@@ -543,14 +543,14 @@ describe('Writing cache data from resolvers', () => {
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start(_data, _args, { cache }) {
-            cache.writeQuery({
+          async start(_data, _args, { cache }) {
+            await cache.writeQuery({
               query,
               data: {
                 obj: { field: 1, id: 'uniqueId', __typename: 'Object' },
               },
             });
-            cache.writeData({ id: 'Object:uniqueId', data: { field: 2 } });
+            await cache.writeData({ id: 'Object:uniqueId', data: { field: 2 } });
             return { start: true };
           },
         },
@@ -588,8 +588,8 @@ describe('Writing cache data from resolvers', () => {
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start(_data, _args, { cache }) {
-            cache.writeQuery({
+          async start(_data, _args, { cache }) {
+            await cache.writeQuery({
               query,
               data: {
                 obj: {
@@ -599,7 +599,7 @@ describe('Writing cache data from resolvers', () => {
                 },
               },
             });
-            cache.writeData({
+            await cache.writeData({
               id: 'Object:uniqueId',
               data: { field: { field2: 2, __typename: 'Field' } },
             });
@@ -645,7 +645,7 @@ describe('Writing cache data from resolvers', () => {
         link: ApolloLink.empty(),
         resolvers: {
           Mutation: {
-            start(_data, _args, { cache }) {
+            async start(_data, _args, { cache }) {
               // This would cause a warning to be printed because we don't have
               // __typename on the obj field. But that's intentional because
               // that's exactly the situation we're trying to test...
@@ -668,7 +668,7 @@ describe('Writing cache data from resolvers', () => {
                 originalWarn.apply(console, args);
               };
               // Actually call the problematic query
-              cache.writeQuery({
+              await cache.writeQuery({
                 query,
                 data: {
                   obj: {
@@ -680,7 +680,7 @@ describe('Writing cache data from resolvers', () => {
               // Restore warning logger
               console.warn = originalWarn;
 
-              cache.writeData({
+              await cache.writeData({
                 id: '$ROOT_QUERY.obj',
                 data: { field: { field2: 2, __typename: 'Field' } },
               });
@@ -822,10 +822,10 @@ describe('Resolving field aliases', () => {
     }, reject);
   });
 
-  it(
+  itAsync(
     'should pull initialized values for aliased fields tagged with @client ' +
       'from the cache',
-    () => {
+    async (resolve, reject) => {
       const query = gql`
         {
           fie: foo @client {
@@ -841,7 +841,7 @@ describe('Resolving field aliases', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           foo: {
             bar: 'yo',
@@ -854,14 +854,14 @@ describe('Resolving field aliases', () => {
         expect({ ...data }).toMatchObject({
           fie: { bar: 'yo', __typename: 'Foo' },
         });
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should resolve @client fields using local resolvers and not have ' +
     'their value overridden when a fragment is loaded',
-    () => {
+    async (resolve, reject) => {
       const query = gql`
         fragment LaunchDetails on Launch {
           id
@@ -898,7 +898,7 @@ describe('Resolving field aliases', () => {
         },
       });
 
-      client.writeData({
+      await client.writeData({
         data: {
           launch: {
             isInCart: false,
@@ -917,16 +917,16 @@ describe('Resolving field aliases', () => {
           // the cache and have a value of `true`.
           expect(data.launch.isInCart).toBe(true);
         });
-      });
+      }).then(resolve, reject);
     }
   );
 });
 
 describe('Force local resolvers', () => {
-  it(
+  itAsync(
     'should force the running of local resolvers marked with ' +
     '`@client(always: true)` when using `ApolloClient.query`',
-    async () => {
+    async (resolve, reject) => {
       const query = gql`
         query Author {
           author {
@@ -943,7 +943,7 @@ describe('Force local resolvers', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           author: {
             name: 'John Smith',
@@ -971,6 +971,8 @@ describe('Force local resolvers', () => {
       // data.
       const { data: data2 } = await client.query({ query });
       expect(data2.author.isLoggedIn).toEqual(true);
+
+      resolve();
     },
   );
 

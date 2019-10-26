@@ -1074,7 +1074,7 @@ describe('useQuery Hook', () => {
           resolvers: {}
         });
 
-        cache.writeQuery({
+        await cache.writeQuery({
           query: CAR_QUERY,
           data: CAR_RESULT_DATA
         });
@@ -1113,7 +1113,7 @@ describe('useQuery Hook', () => {
         resolvers: {}
       });
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query: CAR_QUERY,
         data: CAR_RESULT_DATA
       });

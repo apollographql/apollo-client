@@ -3245,10 +3245,10 @@ describe('QueryManager', () => {
         observableToPromise({ observable: observable2 }, result =>
           expect(stripSymbols(result.data)).toEqual(data2),
         ),
-      ]).then(() => {
-        observable.subscribe({ next: () => null });
-        observable2.subscribe({ next: () => null });
-
+      ]).then(() => Promise.all([
+        new Promise(next => observable.subscribe({ next })),
+        new Promise(next => observable2.subscribe({ next })),
+      ])).then(() => {
         return queryManager.resetStore().then(() => {
           return Promise.all([
             queryManager.getCurrentQueryResult(observable),

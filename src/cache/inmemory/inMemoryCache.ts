@@ -141,7 +141,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }) || null;
   }
 
-  public write(options: Cache.WriteOptions): void {
+  public write(options: Cache.WriteOptions): PromiseLike<void> {
     this.storeWriter.writeQueryToStore({
       store: this.data,
       query: options.query,
@@ -150,7 +150,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       variables: options.variables,
     });
 
-    this.broadcastWatches();
+    return this.broadcastWatches();
   }
 
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
@@ -208,11 +208,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return false;
   }
 
-  public reset(): Promise<void> {
+  public reset(): PromiseLike<void> {
     this.data.clear();
     this.optimisticData = this.data;
-    this.broadcastWatches();
-    return Promise.resolve();
+    return this.broadcastWatches();
   }
 
   public removeOptimistic(idToRemove: string) {
@@ -220,7 +219,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       newOptimisticData => {
         if (newOptimisticData !== this.optimisticData) {
           this.optimisticData = newOptimisticData;
-          this.broadcastWatches();
+          return this.broadcastWatches();
         }
       },
     );
@@ -253,7 +252,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // will be removed, and the remaining layers will be reapplied.
       return this.optimisticData.addLayer(optimisticId, perform).then(layer => {
         this.optimisticData = layer;
-        this.broadcastWatches();
+        return this.broadcastWatches();
       });
     }
 
@@ -285,22 +284,26 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return document;
   }
 
-  protected broadcastWatches() {
+  protected broadcastWatches(): PromiseLike<void> {
+    let task = Task.VOID;
     if (!this.silenceBroadcast) {
-      this.watches.forEach(c => this.maybeBroadcastWatch(c));
+      this.watches.forEach(c => {
+        task = task.then(() => this.maybeBroadcastWatch(c));
+      });
     }
+    return task;
   }
 
   // This method is wrapped in the constructor so that it will be called only
   // if the data that would be broadcast has changed.
   private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    c.callback(
+    return new Task(task => task.resolve(
       this.diff({
         query: c.query,
         variables: c.variables,
         previousResult: c.previousResult && c.previousResult(),
         optimistic: c.optimistic,
       }),
-    );
+    )).then(c.callback);
   }
 }

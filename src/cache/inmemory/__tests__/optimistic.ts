@@ -35,7 +35,7 @@ describe('optimistic cache layers', () => {
       return cache.readQuery<{ book: any }>({ query }, false);
     }
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -50,7 +50,7 @@ describe('optimistic cache layers', () => {
       },
     });
 
-    const result1984 = readOptimistic(cache);
+    const result1984 = await readOptimistic(cache);
     expect(result1984).toEqual({
       book: {
         __typename: 'Book',
@@ -62,14 +62,14 @@ describe('optimistic cache layers', () => {
       },
     });
 
-    expect(result1984).toBe(readOptimistic(cache));
-    expect(result1984).toBe(readRealistic(cache));
+    expect(result1984).toBe(await readOptimistic(cache));
+    expect(result1984).toBe(await readRealistic(cache));
 
     let result2666InTransaction: ReturnType<typeof readOptimistic>;
-    await cache.performTransaction(proxy => {
-      expect(readOptimistic(cache)).toEqual(result1984);
+    await cache.performTransaction(async proxy => {
+      expect(await readOptimistic(cache)).toEqual(result1984);
 
-      proxy.writeQuery({
+      await proxy.writeQuery({
         query,
         data: {
           book: {
@@ -84,7 +84,7 @@ describe('optimistic cache layers', () => {
         },
       });
 
-      result2666InTransaction = readOptimistic(proxy);
+      result2666InTransaction = await readOptimistic(proxy);
       expect(result2666InTransaction).toEqual({
         book: {
           __typename: 'Book',
@@ -97,13 +97,13 @@ describe('optimistic cache layers', () => {
       });
     }, 'first');
 
-    expect(readOptimistic(cache)).toBe(result2666InTransaction);
+    expect(await readOptimistic(cache)).toBe(result2666InTransaction);
 
-    expect(result1984).toBe(readRealistic(cache));
+    expect(result1984).toBe(await readRealistic(cache));
 
     let resultCatch22: ReturnType<typeof readOptimistic>;
-    await cache.performTransaction(proxy => {
-      proxy.writeQuery({
+    await cache.performTransaction(async proxy => {
+      await proxy.writeQuery({
         query,
         data: {
           book: {
@@ -118,7 +118,7 @@ describe('optimistic cache layers', () => {
         },
       });
 
-      expect((resultCatch22 = readOptimistic(proxy))).toEqual({
+      expect((resultCatch22 = await readOptimistic(proxy))).toEqual({
         book: {
           __typename: 'Book',
           title: 'Catch-22',
@@ -130,17 +130,17 @@ describe('optimistic cache layers', () => {
       });
     }, 'second');
 
-    expect(readOptimistic(cache)).toBe(resultCatch22);
+    expect(await readOptimistic(cache)).toBe(resultCatch22);
 
-    expect(result1984).toBe(readRealistic(cache));
+    expect(result1984).toBe(await readRealistic(cache));
 
-    cache.removeOptimistic('first');
+    await cache.removeOptimistic('first');
 
-    expect(readOptimistic(cache)).toBe(resultCatch22);
+    expect(await readOptimistic(cache)).toBe(resultCatch22);
 
     // Write a new book to the root Query.book field, which should not affect
     // the 'second' optimistic layer that is still applied.
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -155,9 +155,9 @@ describe('optimistic cache layers', () => {
       },
     });
 
-    expect(readOptimistic(cache)).toBe(resultCatch22);
+    expect(await readOptimistic(cache)).toBe(resultCatch22);
 
-    const resultF451 = readRealistic(cache);
+    const resultF451 = await readRealistic(cache);
     expect(resultF451).toEqual({
       book: {
         __typename: 'Book',
@@ -169,10 +169,10 @@ describe('optimistic cache layers', () => {
       },
     });
 
-    cache.removeOptimistic('second');
+    await cache.removeOptimistic('second');
 
-    expect(resultF451).toBe(readRealistic(cache));
-    expect(resultF451).toBe(readOptimistic(cache));
+    expect(resultF451).toBe(await readRealistic(cache));
+    expect(resultF451).toBe(await readOptimistic(cache));
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
@@ -248,7 +248,7 @@ describe('optimistic cache layers', () => {
       },
     };
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         books: [eagerBookData, spinelessBookData],
@@ -276,7 +276,7 @@ describe('optimistic cache layers', () => {
       return cache.readQuery<Q>({ query }, true);
     }
 
-    const result = read();
+    const result = await read();
     expect(result).toEqual({
       books: [
         {
@@ -291,7 +291,7 @@ describe('optimistic cache layers', () => {
         },
       ],
     });
-    expect(read()).toBe(result);
+    expect(await read()).toBe(result);
 
     const bookAuthorNameFragment = gql`
       fragment BookAuthorName on Book {
@@ -301,7 +301,7 @@ describe('optimistic cache layers', () => {
       }
     `;
 
-    cache.writeFragment({
+    await cache.writeFragment({
       id: 'Book:0735211280',
       fragment: bookAuthorNameFragment,
       data: {
@@ -311,23 +311,24 @@ describe('optimistic cache layers', () => {
 
     // Adding an author doesn't change the structure of the original result,
     // because the original query did not ask for author information.
-    const resultWithSpinlessAuthor = read();
+    const resultWithSpinlessAuthor = await read();
     expect(resultWithSpinlessAuthor).toEqual(result);
     expect(resultWithSpinlessAuthor).not.toBe(result);
     expect(resultWithSpinlessAuthor.books[0]).toBe(result.books[0]);
     expect(resultWithSpinlessAuthor.books[1]).not.toBe(result.books[1]);
 
-    await cache.recordOptimisticTransaction(proxy => {
-      proxy.writeFragment({
+    await cache.recordOptimisticTransaction(
+      proxy => proxy.writeFragment({
         id: 'Book:1603589082',
         fragment: bookAuthorNameFragment,
         data: {
           author: eagerBookData.author,
         },
-      });
-    }, 'eager author');
+      }),
+      'eager author',
+    );
 
-    expect(read()).toEqual(result);
+    expect(await read()).toEqual(result);
 
     const queryWithAuthors = gql`
       {
@@ -357,7 +358,7 @@ describe('optimistic cache layers', () => {
       ));
     }
 
-    const resultWithTwoAuthors = readWithAuthors();
+    const resultWithTwoAuthors = await readWithAuthors();
     expect(resultWithTwoAuthors).toEqual({
       books: [
         withoutISBN(eagerBookData),
@@ -376,8 +377,8 @@ describe('optimistic cache layers', () => {
       },
     };
 
-    await cache.recordOptimisticTransaction(proxy => {
-      proxy.writeQuery({
+    await cache.recordOptimisticTransaction(
+      proxy => proxy.writeQuery({
         query: queryWithAuthors,
         data: {
           books: [
@@ -386,10 +387,11 @@ describe('optimistic cache layers', () => {
             buzzBookData,
           ],
         },
-      });
-    }, 'buzz book');
+      }),
+      'buzz book',
+    );
 
-    const resultWithBuzz = readWithAuthors();
+    const resultWithBuzz = await readWithAuthors();
 
     expect(resultWithBuzz).toEqual({
       books: [
@@ -403,14 +405,14 @@ describe('optimistic cache layers', () => {
 
     // Before removing the Buzz optimistic layer from the cache, write the same
     // data to the root layer of the cache.
-    cache.writeQuery({
+    await cache.writeQuery({
       query: queryWithAuthors,
       data: {
         books: [eagerBookData, spinelessBookData, buzzBookData],
       },
     });
 
-    expect(readWithAuthors()).toBe(resultWithBuzz);
+    expect(await readWithAuthors()).toBe(resultWithBuzz);
 
     function readSpinelessFragment() {
       return cache.readFragment<{ author: any }>(
@@ -422,16 +424,16 @@ describe('optimistic cache layers', () => {
       );
     }
 
-    const spinelessBeforeRemovingBuzz = readSpinelessFragment();
-    cache.removeOptimistic('buzz book');
-    const spinelessAfterRemovingBuzz = readSpinelessFragment();
+    const spinelessBeforeRemovingBuzz = await readSpinelessFragment();
+    await cache.removeOptimistic('buzz book');
+    const spinelessAfterRemovingBuzz = await readSpinelessFragment();
     expect(spinelessBeforeRemovingBuzz).toEqual(spinelessAfterRemovingBuzz);
     expect(spinelessBeforeRemovingBuzz).not.toBe(spinelessAfterRemovingBuzz);
     expect(spinelessBeforeRemovingBuzz.author).not.toBe(
       spinelessAfterRemovingBuzz.author,
     );
 
-    const resultAfterRemovingBuzzLayer = readWithAuthors();
+    const resultAfterRemovingBuzzLayer = await readWithAuthors();
     expect(resultAfterRemovingBuzzLayer).toEqual(resultWithBuzz);
     expect(resultAfterRemovingBuzzLayer).not.toBe(resultWithBuzz);
     resultWithTwoAuthors.books.forEach((book, i) => {
@@ -439,10 +441,10 @@ describe('optimistic cache layers', () => {
       expect(book).not.toBe(resultAfterRemovingBuzzLayer.books[i]);
     });
 
-    const nonOptimisticResult = readWithAuthors(false);
+    const nonOptimisticResult = await readWithAuthors(false);
     expect(nonOptimisticResult).toEqual(resultWithBuzz);
-    cache.removeOptimistic('eager author');
-    const resultWithoutOptimisticLayers = readWithAuthors();
+    await cache.removeOptimistic('eager author');
+    const resultWithoutOptimisticLayers = await readWithAuthors();
     expect(resultWithoutOptimisticLayers).toBe(nonOptimisticResult);
   });
 });

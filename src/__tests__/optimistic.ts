@@ -398,8 +398,8 @@ describe('optimistic mutation results', () => {
     });
 
     describe('with `update`', () => {
-      const update = async (proxy: any, mResult: any) => {
-        const data: any = await proxy.readFragment({
+      const update = (proxy: any, mResult: any) => {
+        const data: any = proxy.readFragment({
           id: 'TodoList5',
           fragment: gql`
             fragment todoList on TodoList {
@@ -413,7 +413,7 @@ describe('optimistic mutation results', () => {
           `,
         });
 
-        await proxy.writeFragment({
+        proxy.writeFragment({
           data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
           id: 'TodoList5',
           fragment: gql`
@@ -716,8 +716,8 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            async update(proxy, mResult: any) {
-              const data = await proxy.readQuery({ query: todoListQuery }, true);
+            update: (proxy, mResult: any) => {
+              const data = proxy.readQuery({ query: todoListQuery }, true);
               expect(data.todoList.todos[0].text).toEqual(
                 todoListOptimisticResponse.createTodo.todos[0].text,
               );
@@ -739,9 +739,9 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            async update(proxy, mResult: any) {
+            update: (proxy, mResult: any) => {
               const incomingText = mResult.data.createTodo.todos[0].text;
-              const data = await proxy.readQuery({ query: todoListQuery }, false);
+              const data = proxy.readQuery({ query: todoListQuery }, false);
               expect(data.todoList.todos[0].text).toEqual(incomingText);
             },
           });
@@ -772,8 +772,8 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            async update(proxy, mResult: any) {
-              const data: any = await proxy.readFragment(
+            update: (proxy, mResult: any) => {
+              const data: any = proxy.readFragment(
                 {
                   id: 'TodoList5',
                   fragment: todoListFragment,
@@ -801,9 +801,9 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            async update(proxy, mResult: any) {
+            update: (proxy, mResult: any) => {
               const incomingText = mResult.data.createTodo.todos[0].text;
-              const data: any = await proxy.readFragment(
+              const data: any = proxy.readFragment(
                 {
                   id: 'TodoList5',
                   fragment: todoListFragment,
@@ -879,7 +879,7 @@ describe('optimistic mutation results', () => {
         mutation,
         variables,
         optimisticResponse,
-        async update(proxy, mResult: any) {
+        update: (proxy, mResult: any) => {
           expect(mResult.data.createTodo.id).toBe('99');
 
           const id = 'TodoList5';
@@ -894,9 +894,9 @@ describe('optimistic mutation results', () => {
             }
           `;
 
-          const data: any = await proxy.readFragment({ id, fragment });
+          const data: any = proxy.readFragment({ id, fragment });
 
-          await proxy.writeFragment({
+          proxy.writeFragment({
             data: {
               ...data,
               todos: [mResult.data.createTodo, ...data.todos],
@@ -1447,7 +1447,7 @@ describe('optimistic mutation results', () => {
       const promise = client.mutate({
         mutation,
         optimisticResponse,
-        async update(proxy, mResult: any) {
+        update: (proxy, mResult: any) => {
           const after = Date.now();
           const duration = after - before;
           if (firstTime) {
@@ -1456,9 +1456,9 @@ describe('optimistic mutation results', () => {
           } else {
             expect(duration > 300).toBe(true);
           }
-          let data = await proxy.readQuery({ query });
+          let data = proxy.readQuery({ query });
 
-          await proxy.writeQuery({
+          proxy.writeQuery({
             query,
             data: {
               ...data,
@@ -1521,8 +1521,8 @@ describe('optimistic mutation results', () => {
         });
       });
 
-      const update = async (proxy: any, mResult: any) => {
-        const data: any = await proxy.readFragment({
+      const update = (proxy: any, mResult: any) => {
+        const data: any = proxy.readFragment({
           id: 'TodoList5',
           fragment: gql`
             fragment todoList on TodoList {
@@ -1536,7 +1536,7 @@ describe('optimistic mutation results', () => {
           `,
         });
 
-        await proxy.writeFragment({
+        proxy.writeFragment({
           data: {
             ...data,
             todos: [mResult.data.createTodo, ...data.todos],
@@ -1639,8 +1639,8 @@ describe('optimistic mutation results', () => {
         });
       });
 
-      const update = async (proxy: any, mResult: any) => {
-        const data: any = await proxy.readFragment({
+      const update = (proxy: any, mResult: any) => {
+        const data: any = proxy.readFragment({
           id: 'TodoList5',
           fragment: gql`
             fragment todoList on TodoList {
@@ -1654,7 +1654,7 @@ describe('optimistic mutation results', () => {
           `,
         });
 
-        await proxy.writeFragment({
+        proxy.writeFragment({
           data: {
             ...data,
             todos: [mResult.data.createTodo, ...data.todos],
@@ -1758,8 +1758,8 @@ describe('optimistic mutation results', () => {
         },
       };
 
-      const update = async (proxy: any, mResult: any) => {
-        const data: any = await proxy.readFragment({
+      const update = (proxy: any, mResult: any) => {
+        const data: any = proxy.readFragment({
           id: 'TodoList5',
           fragment: gql`
             fragment todoList on TodoList {
@@ -1773,7 +1773,7 @@ describe('optimistic mutation results', () => {
           `,
         });
 
-        await proxy.writeFragment({
+        proxy.writeFragment({
           data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
           id: 'TodoList5',
           fragment: gql`

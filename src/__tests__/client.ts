@@ -1669,7 +1669,7 @@ describe('client', () => {
       checkCacheAndNetworkError(() => client.query({ query }));
     });
 
-    itAsync('fetches from cache first, then network', (resolve, reject) => {
+    itAsync('fetches from cache first, then network', async (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
@@ -1680,7 +1680,7 @@ describe('client', () => {
         cache: new InMemoryCache({ addTypename: false }),
       });
 
-      client.writeQuery({ query, data: initialData });
+      await client.writeQuery({ query, data: initialData });
 
       const obs = client.watchQuery({
         query,
@@ -1751,7 +1751,7 @@ describe('client', () => {
       });
     });
 
-    itAsync('fetches from cache first, then network and does not have an unhandled error', (resolve, reject) => {
+    itAsync('fetches from cache first, then network and does not have an unhandled error', async (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { errors: [{ message: 'network failure' }] },
@@ -1762,7 +1762,7 @@ describe('client', () => {
         cache: new InMemoryCache({ addTypename: false }),
       });
 
-      client.writeQuery({ query, data: initialData });
+      await client.writeQuery({ query, data: initialData });
 
       const obs = client.watchQuery({
         query,
@@ -2366,13 +2366,13 @@ describe('client', () => {
       expect(count).toEqual(2);
 
       try {
-        client.readQuery({ query });
+        await client.readQuery({ query });
         fail('should not see any data');
       } catch (e) {
         expect(e.message).toMatch(/Can't find field/);
       }
 
-      client.cache.writeQuery({ query, data: data2 });
+      await client.cache.writeQuery({ query, data: data2 });
     });
 
     client.onResetStore(onResetStoreOne);
@@ -2986,7 +2986,7 @@ describe('@connection', () => {
       },
     };
 
-    itAsync('allows setting default options for watchQuery', (resolve, reject) => {
+    itAsync('allows setting default options for watchQuery', async (resolve, reject) => {
       const link = mockSingleLink(reject, {
         request: { query },
         result: { data: networkFetch },
@@ -3001,7 +3001,7 @@ describe('@connection', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query,
         data: initialData,
       });

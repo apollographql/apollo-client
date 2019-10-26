@@ -32,7 +32,7 @@ export function multiplex<T>(inner: Observable<T>): Observable<T> {
 // optionally return a Promise (or be async).
 export function asyncMap<V, R>(
   observable: Observable<V>,
-  mapFn: (value: V) => R | Promise<R>,
+  mapFn: (value: V) => R | PromiseLike<R>,
 ): Observable<R> {
   return new Observable<R>(observer => {
     const { next, error, complete } = observer;

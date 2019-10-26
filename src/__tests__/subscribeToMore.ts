@@ -291,13 +291,13 @@ describe('subscribeToMore', () => {
 
     for (let i = 0; i < 2; i++) {
       // init optimistic mutation
-      let data = client.cache.readQuery<typeof req4['result']['data']>(
+      let data = await client.cache.readQuery<typeof req4['result']['data']>(
         { query },
         false,
       );
-      client.cache.recordOptimisticTransaction(proxy => {
+      await client.cache.recordOptimisticTransaction(proxy => {
         nextMutation = { value: results[i].result.data.name };
-        proxy.writeQuery({
+        return proxy.writeQuery({
           data: { entry: [...((data && data.entry) || []), nextMutation] },
           query,
         });
@@ -306,7 +306,7 @@ describe('subscribeToMore', () => {
       wSLink.simulateResult(results[i]);
       await wait(results[i].delay + 1);
       // complete mutation
-      client.cache.removeOptimistic(i.toString());
+      await client.cache.removeOptimistic(i.toString());
       // note: we don't complete mutation with performTransaction because a real example would detect duplicates
     }
     sub.unsubscribe();

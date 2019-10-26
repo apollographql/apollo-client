@@ -227,8 +227,8 @@ export class QueryManager<TStore> {
         }, cache),
         mutationId,
       ));
-    }).then(() => new Task(finalTask => {
-      this.broadcastQueries();
+    }).then(() => this.broadcastQueries())
+      .then(() => new Task(finalTask => {
 
       const self = this;
       let storeResult: FetchResult<T> | null;
@@ -428,7 +428,7 @@ export class QueryManager<TStore> {
     });
 
     if (shouldFetch) {
-      this.broadcastQueries();
+      await this.broadcastQueries();
 
       const networkResult = this.fetchRequest<T>({
         requestId,
@@ -436,7 +436,7 @@ export class QueryManager<TStore> {
         document: query,
         options,
         fetchMoreForQueryId,
-      }).catch(error => {
+      }).catch(async error => {
         // This is for the benefit of `refetch` promises, which currently don't get their errors
         // through the store like watchQuery observers do
         if (isApolloError(error)) {
@@ -446,7 +446,7 @@ export class QueryManager<TStore> {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
             this.invalidate(queryId);
             this.invalidate(fetchMoreForQueryId);
-            this.broadcastQueries();
+            await this.broadcastQueries();
           }
           throw new ApolloError({ networkError: error });
         }
@@ -487,7 +487,7 @@ export class QueryManager<TStore> {
       });
     }
 
-    this.broadcastQueries();
+    await this.broadcastQueries();
 
     // If we have no query to send to the server, we should return the result
     // found within the store.
@@ -827,7 +827,7 @@ export class QueryManager<TStore> {
 
   public stopQueryInStore(queryId: string) {
     this.stopQueryInStoreNoBroadcast(queryId);
-    this.broadcastQueries();
+    return this.broadcastQueries();
   }
 
   private stopQueryInStoreNoBroadcast(queryId: string) {
@@ -924,7 +924,7 @@ export class QueryManager<TStore> {
     });
   }
 
-  public reFetchObservableQueries(
+  public async reFetchObservableQueries(
     includeStandby: boolean = false,
   ): Promise<ApolloQueryResult<any>[]> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
@@ -946,7 +946,7 @@ export class QueryManager<TStore> {
       }
     });
 
-    this.broadcastQueries();
+    await this.broadcastQueries();
 
     return Promise.all(observableQueryPromises);
   }
@@ -990,7 +990,7 @@ export class QueryManager<TStore> {
             });
           }
 
-          this.broadcastQueries();
+          await this.broadcastQueries();
         }
 
         if (graphQLResultHasError(result)) {
@@ -1023,7 +1023,7 @@ export class QueryManager<TStore> {
 
   public stopQuery(queryId: string) {
     this.stopQueryNoBroadcast(queryId);
-    this.broadcastQueries();
+    return this.broadcastQueries();
   }
 
   private stopQueryNoBroadcast(queryId: string) {
@@ -1109,19 +1109,24 @@ export class QueryManager<TStore> {
     }));
   }
 
-  public broadcastQueries() {
+  public broadcastQueries(): PromiseLike<void> {
     this.onBroadcast();
+    let task = Task.VOID;
     this.queries.forEach((info, id) => {
       if (info.invalidated) {
         info.listeners.forEach(listener => {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
           if (listener) {
-            listener(this.queryStore.get(id), info.newData);
+            task = task.then(() => listener(
+              this.queryStore.get(id),
+              info.newData,
+            ));
           }
         });
       }
     });
+    return task;
   }
 
   public getLocalState(): LocalState<TStore> {
@@ -1247,7 +1252,7 @@ export class QueryManager<TStore> {
 
       const subscription = asyncMap(observable, async (result: ExecutionResult) => {
         if (requestId >= this.getQuery(queryId).lastRequestId) {
-          this.markQueryResult(
+          await this.markQueryResult(
             queryId,
             result,
             options,
@@ -1263,7 +1268,7 @@ export class QueryManager<TStore> {
           this.invalidate(queryId);
           this.invalidate(fetchMoreForQueryId);
 
-          this.broadcastQueries();
+          await this.broadcastQueries();
         }
 
         if (errorPolicy === 'none' && isNonEmptyArray(result.errors)) {

@@ -63,10 +63,10 @@ describe('EntityCache', () => {
     };
   }
 
-  it('should reclaim no-longer-reachable, unretained entities', () => {
+  it('should reclaim no-longer-reachable, unretained entities', async () => {
     const { cache, query } = newBookAuthorCache();
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -101,7 +101,7 @@ describe('EntityCache', () => {
       },
     });
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -187,7 +187,7 @@ describe('EntityCache', () => {
         name
       }
     `;
-    const ray = cache.readFragment({
+    const ray = await cache.readFragment({
       id: 'Author:Ray Bradbury',
       fragment: authorNameFragment,
     });
@@ -242,7 +242,7 @@ describe('EntityCache', () => {
   it('should respect optimistic updates, when active', async () => {
     const { cache, query } = newBookAuthorCache();
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -260,7 +260,7 @@ describe('EntityCache', () => {
     expect(cache.gc()).toEqual([]);
 
     // Orphan the F451 / Ray Bradbury data, but avoid collecting garbage yet.
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -275,8 +275,8 @@ describe('EntityCache', () => {
       }
     });
 
-    await cache.recordOptimisticTransaction(proxy => {
-      proxy.writeFragment({
+    await cache.recordOptimisticTransaction(
+      proxy => proxy.writeFragment({
         id: 'Author:Ray Bradbury',
         fragment: gql`
           fragment AuthorBooks on Author {
@@ -293,8 +293,9 @@ describe('EntityCache', () => {
             },
           ],
         },
-      });
-    }, "ray books");
+      }),
+      "ray books",
+    );
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
@@ -336,7 +337,7 @@ describe('EntityCache', () => {
     // Fahrenheit 451.
     expect(cache.gc()).toEqual([]);
 
-    cache.removeOptimistic("ray books");
+    await cache.removeOptimistic("ray books");
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
@@ -423,7 +424,7 @@ describe('EntityCache', () => {
       },
     };
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: spinelessBookData,
@@ -450,7 +451,7 @@ describe('EntityCache', () => {
       },
     });
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: eagerBookData,
@@ -496,8 +497,8 @@ describe('EntityCache', () => {
 
     expect(cache.retain("Author:Juli Berwald")).toBe(1);
 
-    await cache.recordOptimisticTransaction(proxy => {
-      proxy.writeFragment({
+    await cache.recordOptimisticTransaction(
+      proxy => proxy.writeFragment({
         id: "Author:Juli Berwald",
         fragment: gql`
           fragment AuthorBooks on Author {
@@ -514,8 +515,9 @@ describe('EntityCache', () => {
             },
           ],
         },
-      });
-    }, "juli books");
+      }),
+      "juli books",
+    );
 
     // Retain the Spineless book on the optimistic layer (for the first time)
     // but release it on the root layer.
@@ -566,7 +568,7 @@ describe('EntityCache', () => {
     // A non-optimistic snapshot will not have the extra books field.
     expect(cache.extract(false)).toEqual(snapshotWithBothBooksAndAuthors);
 
-    cache.removeOptimistic("juli books");
+    await cache.removeOptimistic("juli books");
 
     // The optimistic books field is gone now that we've removed the optimistic
     // layer that added it.
@@ -592,7 +594,7 @@ describe('EntityCache', () => {
   it('allows cache eviction', async () => {
     const { cache, query } = newBookAuthorCache();
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -617,7 +619,7 @@ describe('EntityCache', () => {
       }
     `;
 
-    const fragmentResult = cache.readFragment({
+    const fragmentResult = await cache.readFragment({
       id: "Book:031648637X",
       fragment: bookAuthorFragment,
     });
@@ -630,8 +632,8 @@ describe('EntityCache', () => {
       },
     });
 
-    await cache.recordOptimisticTransaction(proxy => {
-      proxy.writeFragment({
+    await cache.recordOptimisticTransaction(
+      proxy => proxy.writeFragment({
         id: "Book:031648637X",
         fragment: bookAuthorFragment,
         data: {
@@ -641,8 +643,9 @@ describe('EntityCache', () => {
             name: "J.K. Rowling",
           },
         },
-      });
-    }, "real name");
+      }),
+      "real name",
+    );
 
     const snapshotWithBothNames = {
       ROOT_QUERY: {
@@ -680,7 +683,7 @@ describe('EntityCache', () => {
 
     expect(cache.gc()).toEqual([]);
 
-    cache.removeOptimistic("real name");
+    await cache.removeOptimistic("real name");
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
@@ -702,7 +705,7 @@ describe('EntityCache', () => {
       },
     });
 
-    cache.writeFragment({
+    await cache.writeFragment({
       id: "Book:031648637X",
       fragment: bookAuthorFragment,
       data: {

@@ -1117,7 +1117,7 @@ describe('mutation results', () => {
         .then(() => {
           return client.mutate({
             mutation,
-            update: (proxy, mResult: any) => {
+            async update(proxy, mResult: any) {
               expect(mResult.data.createTodo.id).toBe('99');
               expect(mResult.data.createTodo.text).toBe(
                 'This one was created with a mutation.',
@@ -1135,9 +1135,9 @@ describe('mutation results', () => {
                 }
               `;
 
-              const data: any = proxy.readFragment({ id, fragment });
+              const data: any = await proxy.readFragment({ id, fragment });
 
-              proxy.writeFragment({
+              await proxy.writeFragment({
                 data: {
                   ...data,
                   todos: [mResult.data.createTodo, ...data.todos],
@@ -1209,7 +1209,7 @@ describe('mutation results', () => {
           return client.mutate({
             mutation: mutationWithVars,
             variables,
-            update: (proxy, mResult: any) => {
+            async update(proxy, mResult: any) {
               expect(mResult.data.createTodo.id).toBe('99');
               expect(mResult.data.createTodo.text).toBe(
                 'This one was created with a mutation.',
@@ -1227,9 +1227,9 @@ describe('mutation results', () => {
                 }
               `;
 
-              const data: any = proxy.readFragment({ id, fragment });
+              const data: any = await proxy.readFragment({ id, fragment });
 
-              proxy.writeFragment({
+              await proxy.writeFragment({
                 data: {
                   ...data,
                   todos: [mResult.data.createTodo, ...data.todos],
@@ -1275,7 +1275,7 @@ describe('mutation results', () => {
           client
             .mutate({
               mutation,
-              update: (proxy, mResult: any) => {
+              async update(proxy, mResult: any) {
                 expect(mResult.data.createTodo.id).toBe('99');
                 expect(mResult.data.createTodo.text).toBe(
                   'This one was created with a mutation.',
@@ -1293,9 +1293,9 @@ describe('mutation results', () => {
                   }
                 `;
 
-                const data: any = proxy.readFragment({ id, fragment });
+                const data: any = await proxy.readFragment({ id, fragment });
 
-                proxy.writeFragment({
+                await proxy.writeFragment({
                   data: {
                     ...data,
                     todos: [mResult.data.createTodo, ...data.todos],
@@ -1310,7 +1310,7 @@ describe('mutation results', () => {
               () =>
                 client.mutate({
                   mutation,
-                  update: (proxy, mResult: any) => {
+                  async update(proxy, mResult: any) {
                     expect(mResult.data.createTodo.id).toBe('99');
                     expect(mResult.data.createTodo.text).toBe(
                       'This one was created with a mutation.',
@@ -1328,9 +1328,9 @@ describe('mutation results', () => {
                       }
                     `;
 
-                    const data: any = proxy.readFragment({ id, fragment });
+                    const data: any = await proxy.readFragment({ id, fragment });
 
-                    proxy.writeFragment({
+                    await proxy.writeFragment({
                       data: {
                         ...data,
                         todos: [mResult.data.createTodo, ...data.todos],

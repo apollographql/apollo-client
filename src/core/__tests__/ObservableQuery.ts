@@ -1255,15 +1255,6 @@ describe('ObservableQuery', () => {
           } else if (handleCount === 2) {
             expect(result).toEqual({
               data: {
-                counter: 1,
-              },
-              loading: true,
-              networkStatus: NetworkStatus.loading,
-              stale: false,
-            });
-          } else if (handleCount === 3) {
-            expect(result).toEqual({
-              data: {
                 counter: 2,
                 name: 'Ben',
               },
@@ -1288,7 +1279,7 @@ describe('ObservableQuery', () => {
                 expect(error).toBe(intentionalNetworkFailure);
               },
             );
-          } else if (handleCount === 4) {
+          } else if (handleCount === 3) {
             expect(result).toEqual({
               data: {
                 counter: 2,
@@ -1298,7 +1289,7 @@ describe('ObservableQuery', () => {
               networkStatus: NetworkStatus.refetch,
               stale: false,
             });
-          } else if (handleCount === 5) {
+          } else if (handleCount === 4) {
             expect(result).toEqual({
               data: {
                 counter: 3,
@@ -1310,7 +1301,7 @@ describe('ObservableQuery', () => {
             });
 
             resolve();
-          } else if (handleCount > 5) {
+          } else if (handleCount > 4) {
             reject(new Error('should not get here'));
           }
         },

@@ -477,14 +477,13 @@ export class QueryManager<TStore> {
         variables,
         onlyRunForcedResolvers: true,
       }).then((result: FetchResult<T>) => {
-        this.markQueryResult(
+        return this.markQueryResult(
           queryId,
           result,
           options,
           fetchMoreForQueryId,
-        );
-        this.broadcastQueries();
-        return result;
+        ).then(() => this.broadcastQueries())
+         .then(() => result);
       });
     }
 
@@ -504,7 +503,7 @@ export class QueryManager<TStore> {
       errorPolicy,
     }: WatchQueryOptions,
     fetchMoreForQueryId?: string,
-  ) {
+  ): Promise<void> {
     if (fetchPolicy === 'no-cache') {
       this.setQuery(queryId, () => ({
         newData: { result: result.data, complete: true },
@@ -519,14 +518,15 @@ export class QueryManager<TStore> {
       }
 
       if (!fetchMoreForQueryId && writeWithErrors) {
-        this.cache.write({
+        return Promise.resolve(this.cache.write({
           result: result.data,
           dataId: 'ROOT_QUERY',
           query: document,
           variables: variables,
-        });
+        }));
       }
     }
+    return Promise.resolve();
   }
 
   // Returns a query listener that will update the given observer based on the
@@ -1500,17 +1500,17 @@ function markMutationResult<TStore>(
     }
 
     return task.then(() => cache.performTransaction(c => {
-      // Cache writes are always synchronous, so we don't need to chain
-      // Task objects together here as we did above.
-      cacheWrites.forEach(write => c.write(write));
-
-      // If the mutation has some writes associated with it then we need to
-      // apply those writes to the store by running this reducer again with a
-      // write action.
-      const { update } = mutation;
-      if (update) {
-        tryFunctionOrLogError(() => update(c, mutation.result));
-      }
+      return Task.all(
+        cacheWrites.map(write => c.write(write)),
+      ).then(() => {
+        // If the mutation has some writes associated with it then we need to
+        // apply those writes to the store by running this reducer again with a
+        // write action.
+        const { update } = mutation;
+        if (update) {
+          return tryFunctionOrLogError(() => update(c, mutation.result));
+        }
+      });
     }));
   }
 

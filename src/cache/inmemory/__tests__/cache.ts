@@ -69,10 +69,10 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      async proxy => {
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 {
                   a
@@ -81,9 +81,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ a: 1 });
+
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 {
                   b
@@ -93,9 +94,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ b: 2, c: 3 });
+
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 {
                   a
@@ -132,10 +134,10 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      async proxy => {
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 {
                   a
@@ -147,9 +149,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ a: 1, d: { e: 4 } });
+
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 {
                   a
@@ -164,9 +167,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ a: 1, d: { e: 4, h: { i: 7 } } });
+
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 {
                   a
@@ -205,10 +209,10 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      async proxy => {
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 query($literal: Boolean, $value: Int) {
                   a: field(literal: true, value: 42)
@@ -234,10 +238,10 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      async proxy => {
         expect(
           stripSymbols(
-            proxy.readQuery({
+            await proxy.readQuery({
               query: gql`
                 query($literal: Boolean, $value: Int) {
                   a: field(literal: $literal, value: $value)
@@ -263,7 +267,7 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      async proxy => {
         const options = {
           query: gql`
             query($literal: Boolean, $value: Int) {
@@ -278,7 +282,9 @@ describe('Cache', () => {
         };
 
         const preQueryCopy = cloneDeep(options);
-        expect(stripSymbols(proxy.readQuery(options))).toEqual({ a: 1, b: 2 });
+        expect(stripSymbols(
+          await proxy.readQuery(options)
+        )).toEqual({ a: 1, b: 2 });
         expect(preQueryCopy).toEqual(options);
       },
     );
@@ -291,9 +297,9 @@ describe('Cache', () => {
         // Empty data, but still want to test with/without result caching.
         {},
       ],
-      proxy => {
-        expect(() => {
-          proxy.readFragment({
+      async proxy => {
+        try {
+          await proxy.readFragment({
             id: 'x',
             fragment: gql`
               query {
@@ -303,11 +309,14 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
-        );
-        expect(() => {
-          proxy.readFragment({
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+          );
+        }
+
+        try {
+          await proxy.readFragment({
             id: 'x',
             fragment: gql`
               schema {
@@ -315,18 +324,20 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-        );
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          );
+        }
       },
     );
 
     itWithInitialData(
       'will throw an error when there is more than one fragment but no fragment name',
       [{}],
-      proxy => {
-        expect(() => {
-          proxy.readFragment({
+      async proxy => {
+        try {
+          await proxy.readFragment({
             id: 'x',
             fragment: gql`
               fragment a on A {
@@ -338,11 +349,14 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-        );
-        expect(() => {
-          proxy.readFragment({
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          );
+        }
+
+        try {
+          await proxy.readFragment({
             id: 'x',
             fragment: gql`
               fragment a on A {
@@ -358,9 +372,11 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-        );
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          );
+        }
       },
     );
 
@@ -390,10 +406,10 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      async proxy => {
         expect(
           stripSymbols(
-            proxy.readFragment({
+            await proxy.readFragment({
               id: 'foo',
               fragment: gql`
                 fragment fragmentFoo on Foo {
@@ -406,9 +422,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ e: 4, h: { i: 7 } });
+
         expect(
           stripSymbols(
-            proxy.readFragment({
+            await proxy.readFragment({
               id: 'foo',
               fragment: gql`
                 fragment fragmentFoo on Foo {
@@ -425,9 +442,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
+
         expect(
           stripSymbols(
-            proxy.readFragment({
+            await proxy.readFragment({
               id: 'bar',
               fragment: gql`
                 fragment fragmentBar on Bar {
@@ -437,9 +455,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ i: 7 });
+
         expect(
           stripSymbols(
-            proxy.readFragment({
+            await proxy.readFragment({
               id: 'bar',
               fragment: gql`
                 fragment fragmentBar on Bar {
@@ -451,9 +470,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ i: 7, j: 8, k: 9 });
+
         expect(
           stripSymbols(
-            proxy.readFragment({
+            await proxy.readFragment({
               id: 'foo',
               fragment: gql`
                 fragment fragmentFoo on Foo {
@@ -477,9 +497,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
+
         expect(
           stripSymbols(
-            proxy.readFragment({
+            await proxy.readFragment({
               id: 'bar',
               fragment: gql`
                 fragment fragmentFoo on Foo {
@@ -517,10 +538,10 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      async proxy => {
         expect(
           stripSymbols(
-            proxy.readFragment({
+            await proxy.readFragment({
               id: 'foo',
               fragment: gql`
                 fragment foo on Foo {
@@ -552,10 +573,10 @@ describe('Cache', () => {
           foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
         },
       ],
-      (client1, client2, client3) => {
+      async (client1, client2, client3) => {
         expect(
           stripSymbols(
-            client1.readFragment({
+            await client1.readFragment({
               id: 'foo',
               fragment: gql`
                 fragment fooFragment on Foo {
@@ -567,9 +588,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual(null);
+
         expect(
           stripSymbols(
-            client2.readFragment({
+            await client2.readFragment({
               id: 'foo',
               fragment: gql`
                 fragment fooFragment on Foo {
@@ -581,9 +603,10 @@ describe('Cache', () => {
             }),
           ),
         ).toEqual(null);
+
         expect(
           stripSymbols(
-            client3.readFragment({
+            await client3.readFragment({
               id: 'foo',
               fragment: gql`
                 fragment fooFragment on Foo {
@@ -600,8 +623,8 @@ describe('Cache', () => {
   });
 
   describe('writeQuery', () => {
-    itWithInitialData('will write some data to the store', [{}], proxy => {
-      proxy.writeQuery({
+    itWithInitialData('will write some data to the store', [{}], async proxy => {
+      await proxy.writeQuery({
         data: { a: 1 },
         query: gql`
           {
@@ -617,7 +640,7 @@ describe('Cache', () => {
         },
       });
 
-      proxy.writeQuery({
+      await proxy.writeQuery({
         data: { b: 2, c: 3 },
         query: gql`
           {
@@ -636,7 +659,7 @@ describe('Cache', () => {
         },
       });
 
-      proxy.writeQuery({
+      await proxy.writeQuery({
         data: { a: 4, b: 5, c: 6 },
         query: gql`
           {
@@ -660,8 +683,8 @@ describe('Cache', () => {
     itWithInitialData(
       'will write some deeply nested data to the store',
       [{}],
-      proxy => {
-        proxy.writeQuery({
+      async proxy => {
+        await proxy.writeQuery({
           data: { a: 1, d: { e: 4 } },
           query: gql`
             {
@@ -683,7 +706,7 @@ describe('Cache', () => {
           },
         });
 
-        proxy.writeQuery({
+        await proxy.writeQuery({
           data: { a: 1, d: { h: { i: 7 } } },
           query: gql`
             {
@@ -710,7 +733,7 @@ describe('Cache', () => {
           },
         });
 
-        proxy.writeQuery({
+        await proxy.writeQuery({
           data: {
             a: 1,
             b: 2,
@@ -760,8 +783,8 @@ describe('Cache', () => {
     itWithInitialData(
       'will write some data to the store with variables',
       [{}],
-      proxy => {
-        proxy.writeQuery({
+      async proxy => {
+        await proxy.writeQuery({
           data: {
             a: 1,
             b: 2,
@@ -791,8 +814,8 @@ describe('Cache', () => {
     itWithInitialData(
       'will write some data to the store with variables where some are null',
       [{}],
-      proxy => {
-        proxy.writeQuery({
+      async proxy => {
+        await proxy.writeQuery({
           data: {
             a: 1,
             b: 2,
@@ -824,9 +847,9 @@ describe('Cache', () => {
     itWithInitialData(
       'will throw an error when there is no fragment',
       [{}],
-      proxy => {
-        expect(() => {
-          proxy.writeFragment({
+      async proxy => {
+        try {
+          await proxy.writeFragment({
             data: {},
             id: 'x',
             fragment: gql`
@@ -837,11 +860,14 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
-        );
-        expect(() => {
-          proxy.writeFragment({
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+          );
+        }
+
+        try {
+          await proxy.writeFragment({
             data: {},
             id: 'x',
             fragment: gql`
@@ -850,18 +876,20 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-        );
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          );
+        }
       },
     );
 
     itWithInitialData(
       'will throw an error when there is more than one fragment but no fragment name',
       [{}],
-      proxy => {
-        expect(() => {
-          proxy.writeFragment({
+      async proxy => {
+        try {
+          await proxy.writeFragment({
             data: {},
             id: 'x',
             fragment: gql`
@@ -874,11 +902,14 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-        );
-        expect(() => {
-          proxy.writeFragment({
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          );
+        }
+
+        try {
+          await proxy.writeFragment({
             data: {},
             id: 'x',
             fragment: gql`
@@ -895,9 +926,11 @@ describe('Cache', () => {
               }
             `,
           });
-        }).toThrowError(
-          'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-        );
+        } catch (e) {
+          expect(e.message).toBe(
+            'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          );
+        }
       },
     );
 
@@ -907,8 +940,8 @@ describe('Cache', () => {
         dataIdFromObject: (o: any) => o.id,
         addTypename: false,
       },
-      proxy => {
-        proxy.writeFragment({
+      async proxy => {
+        await proxy.writeFragment({
           data: { __typename: 'Foo', e: 4, h: { id: 'bar', i: 7 } },
           id: 'foo',
           fragment: gql`
@@ -922,7 +955,8 @@ describe('Cache', () => {
         });
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
-        proxy.writeFragment({
+
+        await proxy.writeFragment({
           data: { __typename: 'Foo', f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
           id: 'foo',
           fragment: gql`
@@ -939,7 +973,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
-        proxy.writeFragment({
+        await proxy.writeFragment({
           data: { i: 10, __typename: 'Bar' },
           id: 'bar',
           fragment: gql`
@@ -951,7 +985,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
-        proxy.writeFragment({
+        await proxy.writeFragment({
           data: { j: 11, k: 12, __typename: 'Bar' },
           id: 'bar',
           fragment: gql`
@@ -964,7 +998,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
-        proxy.writeFragment({
+        await proxy.writeFragment({
           data: {
             __typename: 'Foo',
             e: 4,
@@ -996,7 +1030,7 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
-        proxy.writeFragment({
+        await proxy.writeFragment({
           data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
           id: 'bar',
           fragment: gql`
@@ -1029,7 +1063,7 @@ describe('Cache', () => {
       {
         addTypename: true,
       },
-      proxy => {
+      async proxy => {
         const readWriteFragment = gql`
           fragment aFragment on query {
             getSomething {
@@ -1037,20 +1071,23 @@ describe('Cache', () => {
             }
           }
         `;
+
         const data = {
           __typename: 'query',
           getSomething: { id: '123', __typename: 'Something' },
         };
-        proxy.writeFragment({
+
+        await proxy.writeFragment({
           data,
           id: 'query',
           fragment: readWriteFragment,
         });
 
-        const result = proxy.readFragment({
+        const result = await proxy.readFragment({
           fragment: readWriteFragment,
           id: 'query',
         });
+
         expect(stripSymbols(result)).toEqual(data);
       },
     );
@@ -1060,8 +1097,8 @@ describe('Cache', () => {
       {
         addTypename: true,
       },
-      proxy => {
-        proxy.writeFragment({
+      async proxy => {
+        await proxy.writeFragment({
           data: {
             a: 1,
             b: 2,
@@ -1111,15 +1148,15 @@ describe('Cache', () => {
 
       expect(numBroadcasts).toEqual(0);
 
-      await cache.performTransaction(proxy => {
-        proxy.writeQuery({
+      await cache.performTransaction(async proxy => {
+        await proxy.writeQuery({
           data: { a: 1 },
           query,
         });
 
         expect(numBroadcasts).toEqual(0);
 
-        proxy.writeQuery({
+        await proxy.writeQuery({
           data: { a: 4, b: 5, c: 6 },
           query: gql`
             {
@@ -1158,15 +1195,15 @@ describe('Cache', () => {
       expect(numBroadcasts).toEqual(0);
 
       await cache.recordOptimisticTransaction(
-        proxy => {
-          proxy.writeQuery({
+        async proxy => {
+          await proxy.writeQuery({
             data: { a: 1 },
             query,
           });
 
           expect(numBroadcasts).toEqual(0);
 
-          proxy.writeQuery({
+          await proxy.writeQuery({
             data: { a: 4, b: 5, c: 6 },
             query: gql`
               {

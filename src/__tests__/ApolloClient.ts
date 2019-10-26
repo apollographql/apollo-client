@@ -627,13 +627,13 @@ describe('ApolloClient', () => {
   });
 
   describe('writeQuery', () => {
-    it('will write some data to the store', () => {
+    it('will write some data to the store', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         data: { a: 1 },
         query: gql`
           {
@@ -649,7 +649,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         data: { b: 2, c: 3 },
         query: gql`
           {
@@ -668,7 +668,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         data: { a: 4, b: 5, c: 6 },
         query: gql`
           {
@@ -689,13 +689,13 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will write some deeply nested data to the store', () => {
+    it('will write some deeply nested data to the store', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         data: { a: 1, d: { __typename: 'D', e: 4 } },
         query: gql`
           {
@@ -709,7 +709,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
 
-      client.writeQuery({
+      await client.writeQuery({
         data: { a: 1, d: { __typename: 'D', h: { __typename: 'H', i: 7 } } },
         query: gql`
           {
@@ -725,7 +725,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
 
-      client.writeQuery({
+      await client.writeQuery({
         data: {
           a: 1,
           b: 2,
@@ -765,13 +765,13 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will write some data to the store with variables', () => {
+    it('will write some data to the store with variables', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         data: {
           a: 1,
           b: 2,
@@ -797,13 +797,13 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will write some data to the store with default values for variables', () => {
+    it('will write some data to the store with default values for variables', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         data: {
           a: 2,
         },
@@ -818,7 +818,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         data: {
           a: 1,
         },
@@ -850,8 +850,8 @@ describe('ApolloClient', () => {
         }),
       });
 
-      return withWarning(() => {
-        client.writeQuery({
+      return withWarning(
+        () => client.writeQuery({
           data: {
             todos: [
               {
@@ -870,20 +870,21 @@ describe('ApolloClient', () => {
               }
             }
           `,
-        });
-      }, /Missing field description/);
+        }),
+        /Missing field description/,
+      );
     });
   });
 
   describe('writeFragment', () => {
-    it('will throw an error when there is no fragment', () => {
+    it('will throw an error when there is no fragment', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      expect(() => {
-        client.writeFragment({
+      try {
+        await client.writeFragment({
           data: {},
           id: 'x',
           fragment: gql`
@@ -894,11 +895,14 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
-      );
-      expect(() => {
-        client.writeFragment({
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        );
+      }
+
+      try {
+        await client.writeFragment({
           data: {},
           id: 'x',
           fragment: gql`
@@ -907,19 +911,21 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-      );
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        );
+      }
     });
 
-    it('will throw an error when there is more than one fragment but no fragment name', () => {
+    it('will throw an error when there is more than one fragment but no fragment name', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      expect(() => {
-        client.writeFragment({
+      try {
+        await client.writeFragment({
           data: {},
           id: 'x',
           fragment: gql`
@@ -932,11 +938,14 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-      );
-      expect(() => {
-        client.writeFragment({
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        );
+      }
+
+      try {
+        await client.writeFragment({
           data: {},
           id: 'x',
           fragment: gql`
@@ -953,18 +962,20 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(
-        'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
-      );
+      } catch (e) {
+        expect(e.message).toBe(
+          'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+        );
+      }
     });
 
-    it('will write some deeply nested data into the store at any id', () => {
+    it('will write some deeply nested data into the store at any id', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({ dataIdFromObject: (o: any) => o.id }),
       });
 
-      client.writeFragment({
+      await client.writeFragment({
         data: {
           __typename: 'Foo',
           e: 4,
@@ -983,7 +994,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
 
-      client.writeFragment({
+      await client.writeFragment({
         data: {
           __typename: 'Foo',
           f: 5,
@@ -1005,7 +1016,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
 
-      client.writeFragment({
+      await client.writeFragment({
         data: { __typename: 'Bar', i: 10 },
         id: 'bar',
         fragment: gql`
@@ -1017,7 +1028,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
 
-      client.writeFragment({
+      await client.writeFragment({
         data: { __typename: 'Bar', j: 11, k: 12 },
         id: 'bar',
         fragment: gql`
@@ -1030,7 +1041,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
 
-      client.writeFragment({
+      await client.writeFragment({
         data: {
           __typename: 'Foo',
           e: 4,
@@ -1062,7 +1073,7 @@ describe('ApolloClient', () => {
 
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
 
-      client.writeFragment({
+      await client.writeFragment({
         data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
         id: 'bar',
         fragment: gql`
@@ -1089,13 +1100,13 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will write some data to the store with variables', () => {
+    it('will write some data to the store with variables', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeFragment({
+      await client.writeFragment({
         data: {
           __typename: 'Foo',
           a: 1,
@@ -1132,8 +1143,8 @@ describe('ApolloClient', () => {
         }),
       });
 
-      return withWarning(() => {
-        client.writeFragment({
+      return withWarning(
+        () => client.writeFragment({
           data: { __typename: 'Bar', i: 10 },
           id: 'bar',
           fragment: gql`
@@ -1142,8 +1153,9 @@ describe('ApolloClient', () => {
               e
             }
           `,
-        });
-      }, /Missing field e/);
+        }),
+        /Missing field e/,
+      );
     });
 
     describe('change will call observable next', () => {
@@ -1230,7 +1242,7 @@ describe('ApolloClient', () => {
                   x => x.type === 'best',
                 );
                 // this should re call next
-                client.writeQuery<Data>({
+                await client.writeQuery<Data>({
                   query,
                   data: {
                     people: {
@@ -1285,7 +1297,7 @@ describe('ApolloClient', () => {
                 friends[1].type = 'okayest';
 
                 // this should re call next
-                client.writeQuery<Data>({
+                await client.writeQuery<Data>({
                   query,
                   data: {
                     people: {
@@ -1339,7 +1351,7 @@ describe('ApolloClient', () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           observable.subscribe({
-            next: result => {
+            async next(result) {
               count++;
               if (count === 1) {
                 expect(stripSymbols(result.data)).toEqual(data);
@@ -1350,7 +1362,7 @@ describe('ApolloClient', () => {
                   x => x.type === 'best',
                 );
                 // this should re call next
-                client.writeFragment({
+                await client.writeFragment({
                   id: `Person${result.data.people.id}`,
                   fragment: gql`
                     fragment bestFriends on Person {
@@ -1390,7 +1402,7 @@ describe('ApolloClient', () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           observable.subscribe({
-            next: result => {
+            async next(result) {
               count++;
               if (count === 1) {
                 expect(stripSymbols(result.data)).toEqual(data);
@@ -1400,7 +1412,7 @@ describe('ApolloClient', () => {
                 const friends = result.data.people.friends;
 
                 // this should re call next
-                client.writeFragment({
+                await client.writeFragment({
                   id: `Person${result.data.people.id}`,
                   fragment: gql`
                     fragment bestFriends on Person {
@@ -1449,7 +1461,7 @@ describe('ApolloClient', () => {
   });
 
   describe('writeData', () => {
-    it('lets you write to the cache by passing in data', () => {
+    it('lets you write to the cache by passing in data', async () => {
       const query = gql`
         {
           field
@@ -1461,14 +1473,14 @@ describe('ApolloClient', () => {
         link: ApolloLink.empty(),
       });
 
-      client.writeData({ data: { field: 1 } });
+      await client.writeData({ data: { field: 1 } });
 
       return client.query({ query }).then(({ data }) => {
         expect(stripSymbols({ ...data })).toEqual({ field: 1 });
       });
     });
 
-    it('lets you write to an existing object in the cache using an ID', () => {
+    it('lets you write to an existing object in the cache using an ID', async () => {
       const query = gql`
         {
           obj {
@@ -1482,21 +1494,21 @@ describe('ApolloClient', () => {
         link: ApolloLink.empty(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query,
         data: {
           obj: { field: 1, id: 'uniqueId', __typename: 'Object' },
         },
       });
 
-      client.writeData({ id: 'Object:uniqueId', data: { field: 2 } });
+      await client.writeData({ id: 'Object:uniqueId', data: { field: 2 } });
 
       return client.query({ query }).then(({ data }: any) => {
         expect(data.obj.field).toEqual(2);
       });
     });
 
-    it(`doesn't overwrite __typename when writing to the cache with an id`, () => {
+    it(`doesn't overwrite __typename when writing to the cache with an id`, async () => {
       const query = gql`
         {
           obj {
@@ -1513,7 +1525,7 @@ describe('ApolloClient', () => {
         link: ApolloLink.empty(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query,
         data: {
           obj: {
@@ -1524,7 +1536,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeData({
+      await client.writeData({
         id: 'Object:uniqueId',
         data: { field: { field2: 2, __typename: 'Field' } },
       });
@@ -1538,7 +1550,7 @@ describe('ApolloClient', () => {
         .catch(e => console.log(e));
     });
 
-    it(`adds a __typename for an object without one when writing to the cache with an id`, () => {
+    it(`adds a __typename for an object without one when writing to the cache with an id`, async () => {
       const query = gql`
         {
           obj {
@@ -1578,7 +1590,7 @@ describe('ApolloClient', () => {
         link: ApolloLink.empty(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query,
         data: {
           obj: {
@@ -1592,7 +1604,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeData({
+      await client.writeData({
         id: 'Obj:uniqueId',
         data: {
           field: {
@@ -1666,7 +1678,7 @@ describe('ApolloClient', () => {
         bar: { d: 4, e: 5, f: 6, __typename: 'Bar' },
       });
 
-      client.writeFragment({
+      await client.writeFragment({
         id: 'foo',
         fragment: gql`
           fragment x on Foo {
@@ -1702,7 +1714,7 @@ describe('ApolloClient', () => {
         bar: { __typename: 'Bar', d: 4, e: 5, f: 6 },
       });
 
-      client.writeFragment({
+      await client.writeFragment({
         id: 'foo',
         fragment: gql`
           fragment x on Foo {
@@ -1740,7 +1752,7 @@ describe('ApolloClient', () => {
         bar: { __typename: 'Bar', d: 8, e: 5, f: 6 },
       });
 
-      client.writeFragment({
+      await client.writeFragment({
         id: 'bar',
         fragment: gql`
           fragment y on Bar {
@@ -1787,7 +1799,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -1849,7 +1861,7 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will not use a default id getter if __typename is not present', () => {
+    it('will not use a default id getter if __typename is not present', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -1857,7 +1869,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -1880,7 +1892,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             g
@@ -1932,13 +1944,13 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will not use a default id getter if id and _id are not present', () => {
+    it('will not use a default id getter if id and _id are not present', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -1965,7 +1977,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             g
@@ -1995,13 +2007,13 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will use a default id getter if __typename and id are present', () => {
+    it('will use a default id getter if __typename and id are present', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -2032,13 +2044,13 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will use a default id getter if __typename and _id are present', () => {
+    it('will use a default id getter if __typename and _id are present', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -2069,7 +2081,7 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will not use a default id getter if id is present and __typename is not present', () => {
+    it('will not use a default id getter if id is present and __typename is not present', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -2077,7 +2089,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -2118,7 +2130,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will not use a default id getter if _id is present but __typename is not present', () => {
+    it('will not use a default id getter if _id is present but __typename is not present', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -2126,7 +2138,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -2167,7 +2179,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will not use a default id getter if either _id or id is present when __typename is not also present', () => {
+    it('will not use a default id getter if either _id or id is present when __typename is not also present', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -2175,7 +2187,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -2202,7 +2214,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             g
@@ -2228,13 +2240,13 @@ describe('ApolloClient', () => {
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     });
 
-    it('will use a default id getter if one is not specified and __typename is present along with either _id or id', () => {
+    it('will use a default id getter if one is not specified and __typename is present along with either _id or id', async () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             a
@@ -2262,7 +2274,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      client.writeQuery({
+      await client.writeQuery({
         query: gql`
           {
             g
@@ -2443,7 +2455,7 @@ describe('ApolloClient', () => {
       interface Data {
         a: number;
       }
-      client.writeQuery<Data>({
+      await client.writeQuery<Data>({
         data: { a: 1 },
         query: gql`
           {

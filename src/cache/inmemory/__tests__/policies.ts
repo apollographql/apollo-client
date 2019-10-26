@@ -26,8 +26,8 @@ describe("type policies", function () {
     },
   };
 
-  function checkAuthorName(cache: InMemoryCache) {
-    expect(cache.readQuery({
+  async function checkAuthorName(cache: InMemoryCache) {
+    expect(await cache.readQuery({
       query: gql`
         query {
           book {
@@ -47,7 +47,7 @@ describe("type policies", function () {
     });
   }
 
-  it("can specify basic keyFields", function () {
+  it("can specify basic keyFields", async () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -56,7 +56,7 @@ describe("type policies", function () {
       },
     });
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query: bookQuery,
       data: {
         book: theInformationBookData,
@@ -79,10 +79,10 @@ describe("type policies", function () {
       },
     });
 
-    checkAuthorName(cache);
+    await checkAuthorName(cache);
   });
 
-  it("can specify composite keyFields", function () {
+  it("can specify composite keyFields", async () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -91,7 +91,7 @@ describe("type policies", function () {
       },
     });
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query: bookQuery,
       data: {
         book: theInformationBookData,
@@ -114,10 +114,10 @@ describe("type policies", function () {
       },
     });
 
-    checkAuthorName(cache);
+    await checkAuthorName(cache);
   });
 
-  it("keeps keyFields in specified order", function () {
+  it("keeps keyFields in specified order", async () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -126,7 +126,7 @@ describe("type policies", function () {
       },
     });
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query: bookQuery,
       data: {
         book: theInformationBookData,
@@ -149,10 +149,10 @@ describe("type policies", function () {
       },
     });
 
-    checkAuthorName(cache);
+    await checkAuthorName(cache);
   });
 
-  it("accepts keyFields functions", function () {
+  it("accepts keyFields functions", async () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -165,7 +165,7 @@ describe("type policies", function () {
       },
     });
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query: bookQuery,
       data: {
         book: theInformationBookData,
@@ -188,10 +188,10 @@ describe("type policies", function () {
       },
     });
 
-    checkAuthorName(cache);
+    await checkAuthorName(cache);
   });
 
-  it("works with fragments that contain aliased key fields", function () {
+  it("works with fragments that contain aliased key fields", async () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -200,7 +200,7 @@ describe("type policies", function () {
       },
     });
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query: gql`
         query {
           book {
@@ -237,10 +237,10 @@ describe("type policies", function () {
       },
     });
 
-    checkAuthorName(cache);
+    await checkAuthorName(cache);
   });
 
-  it("complains about missing key fields", function () {
+  it("complains about missing key fields", async () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -258,7 +258,7 @@ describe("type policies", function () {
       }
     `;
 
-    cache.writeQuery({
+    await cache.writeQuery({
       query,
       data: {
         book: {
@@ -268,18 +268,22 @@ describe("type policies", function () {
       },
     });
 
-    expect(() => {
-      cache.writeQuery({
+    try {
+      await cache.writeQuery({
         query,
         data: {
           book: theInformationBookData,
         },
       });
-    }).toThrow("Missing field year while computing key fields");
+    } catch (e) {
+      expect(e.message).toBe(
+        "Missing field year while computing key fields",
+      );
+    }
   });
 
   describe("field policies", function () {
-    it("can filter key arguments", function () {
+    it("can filter key arguments", async () => {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {
@@ -292,7 +296,7 @@ describe("type policies", function () {
         },
       });
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query: gql`
           query {
             book(junk: "ignored", isbn: "0465030793") {
@@ -320,7 +324,7 @@ describe("type policies", function () {
       });
     });
 
-    it("can filter key arguments in non-Query fields", function () {
+    it("can filter key arguments in non-Query fields", async () => {
       const cache = new InMemoryCache({
         typePolicies: {
           Book: {
@@ -365,7 +369,7 @@ describe("type policies", function () {
         },
       };
 
-      cache.writeQuery({ query, data });
+      await cache.writeQuery({ query, data });
 
       expect(cache.extract(true)).toEqual({
         ROOT_QUERY: {
@@ -388,11 +392,11 @@ describe("type policies", function () {
         },
       });
 
-      const result = cache.readQuery({ query });
+      const result = await cache.readQuery({ query });
       expect(result).toEqual(data);
     });
 
-    it("can use read function to implement synthetic/computed keys", function () {
+    it("can use read function to implement synthetic/computed keys", async () => {
       const cache = new InMemoryCache({
         typePolicies: {
           Person: {
@@ -406,7 +410,7 @@ describe("type policies", function () {
         },
       });
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query: gql`
           query {
             me {
@@ -447,7 +451,7 @@ describe("type policies", function () {
         },
       };
 
-      expect(cache.readQuery({
+      expect(await cache.readQuery({
         query: gql`
           query {
             me {
@@ -457,7 +461,7 @@ describe("type policies", function () {
         `,
       })).toEqual(expectedResult);
 
-      expect(cache.readQuery({
+      expect(await cache.readQuery({
         query: gql`
           query {
             me {
@@ -470,7 +474,7 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
-    it("can return void to indicate missing field", function () {
+    it("can return void to indicate missing field", async () => {
       let secretReadAttempted = false;
 
       const cache = new InMemoryCache({
@@ -494,7 +498,7 @@ describe("type policies", function () {
         }
       `;
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query,
         data: {
           me: {
@@ -506,8 +510,8 @@ describe("type policies", function () {
 
       expect(secretReadAttempted).toBe(false);
 
-      expect(() => {
-        cache.readQuery({
+      try {
+        await cache.readQuery({
           query: gql`
             query {
               me {
@@ -516,12 +520,16 @@ describe("type policies", function () {
             }
           `
         });
-      }).toThrow("Can't find field secret");
+      } catch (e) {
+        expect(e.message.startsWith(
+          "Can't find field secret",
+        )).toBe(true);
+      }
 
       expect(secretReadAttempted).toBe(true);
     });
 
-    it("can define custom merge functions", function () {
+    it("can define custom merge functions", async () => {
       const cache = new InMemoryCache({
         typePolicies: {
           Person: {
@@ -576,7 +584,7 @@ describe("type policies", function () {
         }
       `;
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query,
         data: {
           me: {
@@ -615,7 +623,7 @@ describe("type policies", function () {
         },
       });
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query,
         data: {
           me: {
@@ -665,7 +673,7 @@ describe("type policies", function () {
         },
       });
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query,
         data: {
           me: {
@@ -727,7 +735,7 @@ describe("type policies", function () {
 
       // The moment of truth!
       expect(
-        cache.readQuery({
+        await cache.readQuery({
           query,
           variables: {
             offset: 1,
@@ -747,7 +755,7 @@ describe("type policies", function () {
       });
     });
 
-    it("runs nested merge functions as well as ancestors", function () {
+    it("runs nested merge functions as well as ancestors", async () => {
       let eventMergeCount = 0;
       let attendeeMergeCount = 0;
 
@@ -779,7 +787,7 @@ describe("type policies", function () {
         },
       });
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query: gql`
           query {
             eventsToday {
@@ -837,7 +845,7 @@ describe("type policies", function () {
         },
       });
 
-      cache.writeQuery({
+      await cache.writeQuery({
         query: gql`
           query {
             people {

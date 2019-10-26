@@ -972,17 +972,17 @@ export class QueryManager<TStore> {
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<T>(
+      asyncMap(this.getObservableFromLink<T>(
         query,
         {},
         variables,
         false,
-      ).map(result => {
+      ), async result => {
         if (!fetchPolicy || fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.
           // XXX I don't think we ever send in an object with errors, but we might in the future...
           if (!graphQLResultHasError(result)) {
-            this.cache.write({
+            await this.cache.write({
               query,
               result: result.data,
               dataId: 'ROOT_SUBSCRIPTION',

@@ -5,12 +5,13 @@ import { Observable } from '../../utilities/observables/Observable';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { ApolloClient } from '../..';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
+import { itAsync } from '../utils/itAsync';
 
 describe('@client @export tests', () => {
-  it(
+  itAsync(
     'should not break @client only queries when the @export directive is ' +
       'used',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         {
           field @client @export(as: "someVar")
@@ -23,19 +24,19 @@ describe('@client @export tests', () => {
         link: ApolloLink.empty(),
         resolvers: {},
       });
-      cache.writeData({ data: { field: 1 } });
+
+      await cache.writeData({ data: { field: 1 } });
 
       return client.query({ query }).then(({ data }: any) => {
         expect({ ...data }).toMatchObject({ field: 1 });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should not break @client only queries when the @export directive is ' +
       'used on nested fields',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         {
           car @client {
@@ -53,7 +54,7 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           car: {
             engine: {
@@ -74,15 +75,14 @@ describe('@client @export tests', () => {
             },
           },
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should store the @client field value in the specified @export ' +
       'variable, and make it avilable to a subsequent resolver',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           currentAuthorId @client @export(as: "authorId")
@@ -105,7 +105,7 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           currentAuthorId: testAuthorId,
         },
@@ -116,15 +116,14 @@ describe('@client @export tests', () => {
           currentAuthorId: testAuthorId,
           postCount: testPostCount,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should store the @client nested field value in the specified @export ' +
       'variable, and make it avilable to a subsequent resolver',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           currentAuthor @client {
@@ -155,7 +154,7 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           currentAuthor: testAuthor,
         },
@@ -166,12 +165,11 @@ describe('@client @export tests', () => {
           currentAuthor: testAuthor,
           postCount: testPostCount,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it('should allow @client @export variables to be used with remote queries', done => {
+  itAsync('should allow @client @export variables to be used with remote queries', async (resolve, reject) => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor @client {
@@ -205,7 +203,7 @@ describe('@client @export tests', () => {
       resolvers: {},
     });
 
-    cache.writeData({
+    await cache.writeData({
       data: {
         currentAuthor: testAuthor,
       },
@@ -216,14 +214,13 @@ describe('@client @export tests', () => {
         currentAuthor: testAuthor,
         postCount: testPostCount,
       });
-      done();
-    });
+    }).then(resolve, reject);
   });
 
-  it(
+  itAsync(
     'should support @client @export variables that are nested multiple ' +
       'levels deep',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           appContainer @client {
@@ -267,7 +264,7 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           appContainer,
         },
@@ -278,12 +275,11 @@ describe('@client @export tests', () => {
           appContainer,
           postCount: testPostCount,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it('should ignore @export directives if not used with @client', done => {
+  itAsync('should ignore @export directives if not used with @client', (resolve, reject) => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor {
@@ -321,14 +317,13 @@ describe('@client @export tests', () => {
         currentAuthor: testAuthor,
         postCount: testPostCount,
       });
-      done();
-    });
+    }).then(resolve, reject);
   });
 
-  it(
+  itAsync(
     'should support setting an @client @export variable, loaded from the ' +
       'cache, on a virtual field that is combined into a remote query.',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query postRequiringReview($reviewerId: Int!) {
           postRequiringReview {
@@ -370,7 +365,7 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           postRequiringReview: {
             loggedInReviewerId,
@@ -388,15 +383,14 @@ describe('@client @export tests', () => {
           },
           reviewerDetails,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should support setting a @client @export variable, loaded via a ' +
       'local resolver, on a virtual field that is combined into a remote query.',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query postRequiringReview($reviewerId: Int!) {
           postRequiringReview {
@@ -449,7 +443,7 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           postRequiringReview: {
             __typename: 'Post',
@@ -466,15 +460,14 @@ describe('@client @export tests', () => {
           },
           reviewerDetails,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should support combining @client @export variables, calculated by a ' +
       'local resolver, with remote mutations',
-    done => {
+    (resolve, reject) => {
       const mutation = gql`
         mutation upvotePost($postId: Int!) {
           topPost @client @export(as: "postId")
@@ -517,15 +510,14 @@ describe('@client @export tests', () => {
         expect({ ...data }).toMatchObject({
           upvotePost: testPost,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should support combining @client @export variables, calculated by ' +
       'reading from the cache, with remote mutations',
-    done => {
+    async (resolve, reject) => {
       const mutation = gql`
         mutation upvotePost($postId: Int!) {
           topPost @client @export(as: "postId")
@@ -559,7 +551,7 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           topPost: testPostId,
         },
@@ -569,8 +561,7 @@ describe('@client @export tests', () => {
         expect({ ...data }).toMatchObject({
           upvotePost: testPost,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
@@ -647,10 +638,10 @@ describe('@client @export tests', () => {
     });
   });
 
-  it(
+  itAsync(
     'should use the value of the last @export variable defined, if multiple ' +
       'variables are defined with the same name',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query reviewerPost($reviewerId: Int!) {
           primaryReviewerId @client @export(as: "reviewerId")
@@ -684,7 +675,7 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      await cache.writeData({
         data: {
           primaryReviewerId,
           secondaryReviewerId,
@@ -695,16 +686,15 @@ describe('@client @export tests', () => {
         expect({ ...data }).toMatchObject({
           post,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 
-  it(
+  itAsync(
     'should refetch if an @export variable changes, the current fetch ' +
     'policy is not cache-only, and the query includes fields that need to ' +
     'be resolved remotely',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           currentAuthorId @client @export(as: "authorId")
@@ -735,7 +725,7 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+      await client.writeData({ data: { currentAuthorId: testAuthorId1 } });
 
       const obs = client.watchQuery({ query });
       obs.subscribe({
@@ -751,20 +741,19 @@ describe('@client @export tests', () => {
               currentAuthorId: testAuthorId2,
               postCount: testPostCount2,
             });
-            done();
+            resolve();
           }
-
           resultCount +=1;
         }
       });
     }
   );
 
-  it(
+  itAsync(
     'should NOT refetch if an @export variable has not changed, the ' +
     'current fetch policy is not cache-only, and the query includes fields ' +
     'that need to be resolved remotely',
-    done => {
+    async (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           currentAuthorId @client @export(as: "authorId")
@@ -796,7 +785,7 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+      await client.writeData({ data: { currentAuthorId: testAuthorId1 } });
 
       const obs = client.watchQuery({ query });
       obs.subscribe({
@@ -816,7 +805,7 @@ describe('@client @export tests', () => {
           } else if (resultCount === 1) {
             // Should not have refetched
             expect(fetchCount).toBe(1);
-            done();
+            resolve();
           }
 
           resultCount +=1;

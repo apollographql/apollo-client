@@ -5,9 +5,9 @@ title: Interacting with cached data
 The `ApolloClient` object provides the following methods for interacting
 with cached data:
 
-* `readQuery` and `readFragment`
-* `writeQuery` and `writeFragment`
-* Methods for garbage collection and cache eviction
+* [`readQuery`](#readquery) and [`readFragment`](#readfragment)
+* [`writeQuery` and `writeFragment`](#writequery-and-writefragment)
+* Methods for [garbage collection and cache eviction](#garbage-collection-and-cache-eviction)
 
 
 These methods are described in detail below.

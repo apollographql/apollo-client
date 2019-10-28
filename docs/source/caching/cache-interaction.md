@@ -5,10 +5,10 @@ title: Interacting with cached data
 The `ApolloClient` object provides the following methods for interacting
 with cached data:
 
-* `readQuery`
-* `readFragment`
-* `writeQuery`
-* `writeFragment`
+* `readQuery` and `readFragment`
+* `writeQuery` and `writeFragment`
+* Methods for garbage collection and cache eviction
+
 
 These methods are described in detail below.
 
@@ -194,6 +194,48 @@ client.writeQuery({
   },
 });
 ```
+
+## Garbage collection and cache eviction
+
+Apollo Client 3 enables you to selectively remove cached data that is no longer useful. The default garbage collection strategy of the `gc` method is suitable for most applications, but the `evict` method provides more fine-grained control for applications that require it.
+
+> You call these methods directly on the `InMemoryCache` object, not on the `ApolloClient` object.
+
+### `gc`
+
+The `gc` method removes all objects from the normalized cache that are not **reachable**:
+
+```js
+cache.gc();
+```
+
+ To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
+
+#### Configuring garbage collection
+
+You can use the `retain` method to prevent an object (and its children) from being garbage collected, even if the object isn't reachable:
+
+```js
+cache.retain('my-object-id');
+```
+
+If you later want a `retain`ed object to be garbage collected, use the `release` method:
+
+```js
+cache.release('my-object-id');
+```
+
+If the object is unreachable, it will be garbage collected during next call to `gc`.
+
+### `evict`
+
+You can remove any normalized object from the cache with the `evict` method:
+
+```js
+cache.evict('my-object-id');
+```
+
+Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
 
 ## Recipes
 

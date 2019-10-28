@@ -338,12 +338,3 @@ const cache = new InMemoryCache({
 That said, you might be able to assume the `token` is always the same, or you might not be worried about duplicating field values in the cache, so neglecting to specify `keyArgs: ["key"]` probably will not cause any major problems. Use `keyArgs` when it helps.
 
 On the other hand, perhaps you've requested the secret from the server using the access `token`, but you want various components on your page to be able to access the secret using only they `key`, without having to know the `token`. Storing the value in the cache using only the `key` makes this retrieval possible.
-
-### Custom field `read` functions
-
-TODO Example of { book, books }
-TODO Example of textual search
-
-### Custom field `merge` functions
-
-### Pagination example

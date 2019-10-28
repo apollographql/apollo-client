@@ -4,7 +4,7 @@ title: Configuring the cache
 
 Apollo Client stores the results of its GraphQL queries in a normalized, in-memory cache. This enables your client to respond to future queries for the same data without sending unnecessary network requests.
 
->This article describes cache setup and configuration. To learn how to interact with cached data, see [Interacting with cached data](/caching/cache-interaction/).
+>This article describes cache setup and configuration. To learn how to interact with cached data, see [Interacting with cached data](cache-interaction/).
 
 ## Installation
 

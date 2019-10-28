@@ -11,7 +11,7 @@ The most common need when using type systems with GraphQL is to type the results
 
 ## Typing hooks
 
-Apollo Client's `useQuery`, `useMutation` and `useSubscription` React hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. React Hook options and result types are listed in the [Hooks API](/api/react-hooks/) section of the docs. You can find a typed example of each Hook below.
+Apollo Client's `useQuery`, `useMutation` and `useSubscription` React hooks are fully typed, and Generics can be used to type both incoming operation variables and GraphQL result data. React Hook options and result types are listed in the [Hooks API](../api/react-hooks/) section of the docs. You can find a typed example of each Hook below.
 
 ### `useQuery`
 

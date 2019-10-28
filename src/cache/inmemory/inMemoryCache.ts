@@ -12,33 +12,29 @@ import { canUseWeakMap } from '../../utilities/common/canUse';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
-  PossibleTypesMap,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityCache, supportsResultCaching } from './entityCache';
+import {
+  defaultDataIdFromObject,
+  PossibleTypesMap,
+  Policies,
+  TypePolicies,
+} from './policies';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
+  possibleTypes?: PossibleTypesMap;
+  typePolicies?: TypePolicies;
 }
 
 const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
+  typePolicies: {},
 };
-
-export function defaultDataIdFromObject(result: any): string | null {
-  if (result.__typename) {
-    if (result.id !== undefined) {
-      return `${result.__typename}:${result.id}`;
-    }
-    if (result._id !== undefined) {
-      return `${result.__typename}:${result._id}`;
-    }
-  }
-  return null;
-}
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private data: EntityCache;
@@ -47,11 +43,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
-  private possibleTypes?: {
-    [supertype: string]: {
-      [subtype: string]: true;
-    };
-  };
+  private policies: Policies;
+
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
@@ -66,9 +59,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.config = { ...defaultConfig, ...config };
     this.addTypename = !!this.config.addTypename;
 
-    if (this.config.possibleTypes) {
-      this.addPossibleTypes(this.config.possibleTypes);
-    }
+    this.policies = new Policies({
+      dataIdFromObject: this.config.dataIdFromObject,
+      possibleTypes: this.config.possibleTypes,
+      typePolicies: this.config.typePolicies,
+    });
 
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
@@ -85,13 +80,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.optimisticData = this.data;
 
     this.storeWriter = new StoreWriter({
-      possibleTypes: this.possibleTypes,
+      policies: this.policies,
     });
 
     this.storeReader = new StoreReader({
       addTypename: this.addTypename,
       cacheKeyRoot: this.cacheKeyRoot,
-      possibleTypes: this.possibleTypes,
+      policies: this.policies,
     });
 
     const cache = this;
@@ -152,7 +147,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       result: options.result,
       dataId: options.dataId,
       variables: options.variables,
-      dataIdFromObject: this.config.dataIdFromObject,
     });
 
     this.broadcastWatches();
@@ -229,29 +223,24 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public performTransaction(
-    transaction: Transaction<NormalizedCacheObject>,
+    transaction: (proxy: InMemoryCache) => any,
     // This parameter is not part of the performTransaction signature inherited
     // from the ApolloCache abstract class, but it's useful because it saves us
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
     const perform = (layer?: EntityCache) => {
-      const { data, optimisticData, silenceBroadcast } = this;
-      this.silenceBroadcast = true;
-      // Temporarily make this.data refer to the new layer for the duration of
-      // the transaction.
+      const proxy: InMemoryCache = Object.create(this);
+      proxy.silenceBroadcast = true;
       if (layer) {
-        this.data = this.optimisticData = layer;
+        // The proxy object is just like this except that silenceBroadcast
+        // is set to true, and proxy.data and proxy.optimisticData both
+        // point to the same layer.
+        proxy.data = proxy.optimisticData = layer;
       }
-      try {
-        return transaction(this);
-      } finally {
-        this.silenceBroadcast = silenceBroadcast;
-        if (layer) {
-          this.data = data;
-          this.optimisticData = optimisticData;
-        }
-      }
+      // Because the proxy object can simply be forgotten, we do not need
+      // to wrap this call with a try-finally block.
+      return transaction(proxy);
     };
 
     if (typeof optimisticId === 'string') {
@@ -290,19 +279,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
-  }
-
-  public addPossibleTypes(possibleTypes: PossibleTypesMap) {
-    if (!this.possibleTypes) this.possibleTypes = Object.create(null);
-    Object.keys(possibleTypes).forEach(supertype => {
-      let subtypeSet = this.possibleTypes[supertype];
-      if (!subtypeSet) {
-        subtypeSet = this.possibleTypes[supertype] = Object.create(null);
-      }
-      possibleTypes[supertype].forEach(subtype => {
-        subtypeSet[subtype] = true;
-      });
-    });
   }
 
   protected broadcastWatches() {

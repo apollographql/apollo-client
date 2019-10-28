@@ -1,11 +1,12 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { makeReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
 import { defaultNormalizedCacheFactory } from '../entityCache';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
-import { defaultDataIdFromObject } from '../inMemoryCache';
+import { defaultDataIdFromObject } from '../policies';
 import { NormalizedCache } from '../types';
+import { Policies } from '../policies';
 
 disableFragmentWarnings();
 
@@ -28,8 +29,11 @@ export function withError(func: Function, regex?: RegExp) {
 }
 
 describe('diffing queries against the store', () => {
-  const reader = new StoreReader();
-  const writer = new StoreWriter();
+  const policies = new Policies({
+    dataIdFromObject: defaultDataIdFromObject,
+  })
+  const reader = new StoreReader({ policies });
+  const writer = new StoreWriter({ policies });
 
   it(
     'expects named fragments to return complete as true when diffd against ' +
@@ -53,9 +57,6 @@ describe('diffing queries against the store', () => {
             }
           }
         `,
-        config: {
-          dataIdFromObject: defaultDataIdFromObject,
-        },
       });
 
       expect(queryResult.complete).toEqual(false);
@@ -98,9 +99,6 @@ describe('diffing queries against the store', () => {
             }
           }
         `,
-        config: {
-          dataIdFromObject: defaultDataIdFromObject,
-        },
       });
 
       expect(queryResult.complete).toEqual(false);
@@ -136,30 +134,33 @@ describe('diffing queries against the store', () => {
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
-    const firstQuery = gql`
-      {
-        people_one(id: "1") {
-          __typename
-          id
-          name
-        }
-      }
-    `;
-
-    const result = {
-      people_one: {
-        __typename: 'Person',
-        id: '1',
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const getIdField = ({ id }: { id: string }) => id;
+    const writer = new StoreWriter({
+      policies: new Policies({
+        typePolicies: {
+          Person: {
+            keyFields: ["id"],
+          },
+        },
+      }),
+    });
 
     const store = writer.writeQueryToStore({
-      result,
-      query: firstQuery,
-      dataIdFromObject: getIdField,
+      query: gql`
+        {
+          people_one(id: "1") {
+            __typename
+            idAlias: id
+            name
+          }
+        }
+      `,
+      result: {
+        people_one: {
+          __typename: 'Person',
+          idAlias: '1',
+          name: 'Luke Skywalker',
+        },
+      },
     });
 
     const secondQuery = gql`
@@ -178,7 +179,11 @@ describe('diffing queries against the store', () => {
     });
 
     expect(complete).toBeTruthy();
-    expect(store.get('1')).toEqual(result.people_one);
+    expect(store.get('Person:{"id":"1"}')).toEqual({
+      __typename: 'Person',
+      id: '1',
+      name: 'Luke Skywalker',
+    });
   });
 
   it('does not swallow errors other than field errors', () => {
@@ -491,14 +496,17 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    function dataIdFromObject({ id }: { id: string }) {
-      return id;
-    }
+    const policies = new Policies({
+      dataIdFromObject({ id }: { id: string }) {
+        return id;
+      },
+    });
+
+    const writer = new StoreWriter({ policies });
 
     const store = writer.writeQueryToStore({
       query,
       result: queryResult,
-      dataIdFromObject,
     });
 
     const { result } = reader.diffQueryAgainstStore({
@@ -507,14 +515,14 @@ describe('diffing queries against the store', () => {
     });
 
     expect(result).toEqual(queryResult);
-    expect(dataIdFromObject(result.a[0])).toBe('a:1');
-    expect(dataIdFromObject(result.a[1])).toBe('a:2');
-    expect(dataIdFromObject(result.a[2])).toBe('a:3');
-    expect(dataIdFromObject(result.c.e[0])).toBe('e:1');
-    expect(dataIdFromObject(result.c.e[1])).toBe('e:2');
-    expect(dataIdFromObject(result.c.e[2])).toBe('e:3');
-    expect(dataIdFromObject(result.c.e[3])).toBe('e:4');
-    expect(dataIdFromObject(result.c.e[4])).toBe('e:5');
+    expect(policies.identify(result.a[0])).toBe('a:1');
+    expect(policies.identify(result.a[1])).toBe('a:2');
+    expect(policies.identify(result.a[2])).toBe('a:3');
+    expect(policies.identify(result.c.e[0])).toBe('e:1');
+    expect(policies.identify(result.c.e[1])).toBe('e:2');
+    expect(policies.identify(result.c.e[2])).toBe('e:3');
+    expect(policies.identify(result.c.e[3])).toBe('e:4');
+    expect(policies.identify(result.c.e[4])).toBe('e:5');
   });
 
   describe('referential equality preservation', () => {
@@ -822,10 +830,15 @@ describe('diffing queries against the store', () => {
         },
       };
 
+      const writer = new StoreWriter({
+        policies: new Policies({
+          dataIdFromObject: ({ id }: { id: string }) => id,
+        }),
+      });
+
       const store = writer.writeQueryToStore({
         query,
         result: queryResult,
-        dataIdFromObject: ({ id }: { id: string }) => id,
       });
 
       const previousResult = {
@@ -910,6 +923,7 @@ describe('diffing queries against the store', () => {
       expect(result.d).not.toEqual(previousResult.d);
       expect(result.d.f).toEqual(previousResult.d.f);
     });
+
     it('will preserve equality with custom resolvers', () => {
       const listQuery = gql`
         {
@@ -924,7 +938,7 @@ describe('diffing queries against the store', () => {
       const listResult = {
         people: [
           {
-            id: '4',
+            id: 4,
             name: 'Luke Skywalker',
             __typename: 'Person',
           },
@@ -941,29 +955,46 @@ describe('diffing queries against the store', () => {
         }
       `;
 
-      const dataIdFromObject = (obj: any) => obj.id;
+      const policies = new Policies({
+        typePolicies: {
+          Query: {
+            fields: {
+              person(_, { args, parentObject: rootQuery, toReference }) {
+                expect(typeof args.id).toBe('number');
+                const ref = toReference({ __typename: 'Person', id: args.id });
+                expect(isReference(ref)).toBe(true);
+                expect(ref).toEqual({
+                  __ref: `Person:${JSON.stringify({ id: args.id })}`,
+                });
+                const found = (rootQuery.people as Reference[]).find(
+                  person => person.__ref === ref.__ref);
+                expect(found).toBeTruthy();
+                return found;
+              },
+            },
+          },
+          Person: {
+            keyFields: ["id"],
+          },
+        },
+      });
+
+      const writer = new StoreWriter({ policies });
+      const reader = new StoreReader({ policies });
 
       const store = writer.writeQueryToStore({
         query: listQuery,
         result: listResult,
-        dataIdFromObject,
       });
 
       const previousResult = {
         person: listResult.people[0],
       };
 
-      const cacheRedirects = {
-        Query: {
-          person: (_: any, args: any) => makeReference(args['id'])
-        },
-      };
-
       const { result } = reader.diffQueryAgainstStore({
         store,
         query: itemQuery,
         previousResult,
-        config: { dataIdFromObject, cacheRedirects },
       });
 
       expect(result).toEqual(previousResult);
@@ -1124,7 +1155,11 @@ describe('diffing queries against the store', () => {
 
       // Check first using generated IDs.
       check(
-        writer.writeQueryToStore({
+        new StoreWriter({
+          policies: new Policies({
+            dataIdFromObject: void 0,
+          })
+        }).writeQueryToStore({
           query,
           result: {
             user: company.users[0],
@@ -1134,8 +1169,11 @@ describe('diffing queries against the store', () => {
 
       // Now check with __typename-specific IDs.
       check(
-        writer.writeQueryToStore({
-          dataIdFromObject: defaultDataIdFromObject,
+        new StoreWriter({
+          policies: new Policies({
+            dataIdFromObject: defaultDataIdFromObject,
+          }),
+        }).writeQueryToStore({
           query,
           result: {
             user: company.users[0],

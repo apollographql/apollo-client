@@ -83,7 +83,8 @@ describe('EntityCache', () => {
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
-        'book': {
+        __typename: "Query",
+        book: {
           __ref: "Book:9781451673319",
         },
       },
@@ -119,7 +120,8 @@ describe('EntityCache', () => {
 
     expect(snapshot).toEqual({
       ROOT_QUERY: {
-        'book': {
+        __typename: "Query",
+        book: {
           __ref: "Book:0312429215",
         },
       },
@@ -154,7 +156,8 @@ describe('EntityCache', () => {
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
-        'book': {
+        __typename: "Query",
+        book: {
           __ref: "Book:0312429215",
         },
       },
@@ -203,7 +206,8 @@ describe('EntityCache', () => {
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
-        'book': {
+        __typename: "Query",
+        book: {
           __ref: "Book:0312429215",
         },
       },
@@ -294,6 +298,7 @@ describe('EntityCache', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:1980719802",
         },
@@ -335,6 +340,7 @@ describe('EntityCache', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:1980719802",
         },
@@ -371,6 +377,7 @@ describe('EntityCache', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:1980719802",
         },
@@ -425,6 +432,7 @@ describe('EntityCache', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:0735211280",
         },
@@ -451,6 +459,7 @@ describe('EntityCache', () => {
 
     const snapshotWithBothBooksAndAuthors = {
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:1603589082",
         },
@@ -519,6 +528,7 @@ describe('EntityCache', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:1603589082",
         },
@@ -636,6 +646,7 @@ describe('EntityCache', () => {
 
     const snapshotWithBothNames = {
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:031648637X",
         },
@@ -673,6 +684,7 @@ describe('EntityCache', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: {
           __ref: "Book:031648637X",
         },

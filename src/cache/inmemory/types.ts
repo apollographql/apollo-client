@@ -6,7 +6,9 @@ import { StoreValue } from '../../utilities/graphql/storeUtils';
 export interface IdGetterObj extends Object {
   __typename?: string;
   id?: string;
+  _id?: string;
 }
+
 export declare type IdGetter = (
   value: IdGetterObj,
 ) => string | null | undefined;
@@ -79,17 +81,7 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   addTypename?: boolean;
-  cacheRedirects?: CacheResolverMap;
-  possibleTypes?: PossibleTypesMap;
 };
-
-export type ReadStoreContext = {
-  readonly store: NormalizedCache;
-  readonly cacheRedirects: CacheResolverMap;
-  readonly dataIdFromObject?: IdGetter;
-};
-
-export type PossibleTypesMap = { [key: string]: string[] };
 
 export type CacheResolver = (
   rootValue: any,

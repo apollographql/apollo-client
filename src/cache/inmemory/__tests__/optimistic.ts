@@ -84,7 +84,7 @@ describe('optimistic cache layers', () => {
         },
       });
 
-      result2666InTransaction = readOptimistic(cache);
+      result2666InTransaction = readOptimistic(proxy);
       expect(result2666InTransaction).toEqual({
         book: {
           __typename: 'Book',
@@ -118,7 +118,7 @@ describe('optimistic cache layers', () => {
         },
       });
 
-      expect((resultCatch22 = readOptimistic(cache))).toEqual({
+      expect((resultCatch22 = readOptimistic(proxy))).toEqual({
         book: {
           __typename: 'Book',
           title: 'Catch-22',
@@ -176,6 +176,7 @@ describe('optimistic cache layers', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         book: { __ref: 'Book:9781451673319' },
       },
       'Book:1980719802': {
@@ -256,6 +257,7 @@ describe('optimistic cache layers', () => {
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
+        __typename: "Query",
         books: [{ __ref: 'Book:1603589082' }, { __ref: 'Book:0735211280' }],
       },
       'Book:1603589082': {

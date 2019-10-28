@@ -11,6 +11,7 @@ import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 
 // core
 import { QueryManager } from '../../QueryManager';
+import { Reference } from '../../../utilities/graphql/storeUtils';
 
 describe('Link interactions', () => {
   it('includes the cache on the context for eviction links', done => {
@@ -326,16 +327,17 @@ describe('Link interactions', () => {
     const queryManager = new QueryManager({
       link,
       cache: new InMemoryCache({
-        cacheRedirects: {
+        typePolicies: {
           Query: {
-            book(_, { id }, context) {
-              expect(context.getCacheKey).toBeDefined();
-              const cacheKey = context.getCacheKey({
-                id,
-                __typename: 'Book',
-              });
-              expect(cacheKey.__ref).toEqual(`Book:${id}`);
-              return cacheKey;
+            fields: {
+              book(_, { parentObject: rootQuery, args, toReference }) {
+                const ref = toReference({ __typename: "Book", id: args.id });
+                expect(ref).toEqual({ __ref: `Book:${args.id}` });
+                const found = (rootQuery.books as Reference[]).find(
+                  book => book.__ref === ref.__ref);
+                expect(found).toBeTruthy();
+                return found;
+              },
             },
           },
         },

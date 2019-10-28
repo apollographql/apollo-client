@@ -15,9 +15,9 @@ Fetching data in a simple, predictable way is one of the core features of Apollo
 
 ## Prerequisites
 
-This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend that you [read this guide](http://graphql.org/learn/queries/) and [practice running queries in GraphiQL](/development-testing/developer-tooling/#features). Apollo Client queries are standard GraphQL, so any query that runs in GraphiQL will also run when provided to `useQuery`.
+This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend that you [read this guide](http://graphql.org/learn/queries/) and [practice running queries in GraphiQL](../development-testing/developer-tooling/#features). Apollo Client queries are standard GraphQL, so any query that runs in GraphiQL will also run when provided to `useQuery`.
 
-This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](/get-started/) if you need help with either of those steps.
+This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](../get-started/) if you need help with either of those steps.
 
 > To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/j2ly83749w) and [sample GraphQL server](https://codesandbox.io/s/32ypr38l61) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
 
@@ -432,7 +432,7 @@ function DelayedQuery() {
 
 Supported options and result fields for the `useQuery` hook are listed below.
 
-Most calls to `useQuery` can omit the majority of these options, but it's useful to know they exist. To learn about the `useQuery` hook API in more detail with usage examples, see the [API reference](/api/react-hooks/#usequery).
+Most calls to `useQuery` can omit the majority of these options, but it's useful to know they exist. To learn about the `useQuery` hook API in more detail with usage examples, see the [API reference](../api/react-hooks/#usequery).
 
 ### Options
 
@@ -448,9 +448,9 @@ After being called, the `useQuery` hook returns a result object with the followi
 
 ## Next steps
 
-Now that you understand how to fetch data with the `useQuery` hook, [learn how to _update_ your data with the `useMutation` hook!](/data/mutations/)
+Now that you understand how to fetch data with the `useQuery` hook, [learn how to _update_ your data with the `useMutation` hook!](mutations/)
 
 After that, learn about some other handy Apollo Client features:
 
-- [Local state management](/data/local-state/): Learn how to query local data.
-- [Pagination](/data/pagination/): Building lists has never been easier thanks to Apollo Client's `fetchMore` function. Learn more in our pagination tutorial.
+- [Local state management](local-state/): Learn how to query local data.
+- [Pagination](pagination/): Building lists has never been easier thanks to Apollo Client's `fetchMore` function. Learn more in our pagination tutorial.

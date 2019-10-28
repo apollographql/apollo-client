@@ -4,7 +4,7 @@ title: Integrating with React Native
 
 You can use Apollo with React Native exactly as you would with React Web.
 
-To introduce Apollo to your app, install Apollo Client from npm and use it in your app as outlined in the [setup](/get-started/) article:
+To introduce Apollo to your app, install Apollo Client from npm and use it in your app as outlined in the [setup](../get-started/) article:
 
 ```bash
 npm install @apollo/client --save
@@ -27,7 +27,7 @@ const App = () => (
 AppRegistry.registerComponent('MyApplication', () => App);
 ```
 
-If you are new to using Apollo with React, you should probably read the [React guide](/).
+If you are new to using Apollo with React, you should probably read the [React guide](../).
 
 ## Examples
 

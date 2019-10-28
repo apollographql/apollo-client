@@ -18,18 +18,18 @@ module.exports = {
           2.4: 'version-2.4',
         },
         checkLinksOptions: {
-          exceptions: ['/api/apollo-client/', '/v2.5/api/apollo-client/', '/v2.4/api/apollo-client/'],
+          exceptions: [
+            '/api/apollo-client/',
+            '/v2.5/api/apollo-client/',
+            '/v2.4/api/apollo-client/',
+          ],
         },
         typescriptApiBox: {
           data: require('./docs.json'),
           filepathPrefix: 'packages/apollo-client/src/',
         },
         sidebarCategories: {
-          null: [
-            'index',
-            'why-apollo',
-            'get-started',
-          ],
+          null: ['index', 'why-apollo', 'get-started'],
           'Fetching data': [
             'data/queries',
             'data/mutations',
@@ -39,10 +39,7 @@ module.exports = {
             'data/fragments',
             'data/error-handling',
           ],
-          'Caching': [
-            'caching/cache-configuration',
-            'caching/cache-interaction',
-          ],
+          Caching: ['caching/cache-configuration', 'caching/cache-interaction'],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',
@@ -62,10 +59,7 @@ module.exports = {
             'integrations/meteor',
             'integrations/webpack',
           ],
-          Networking: [
-            'networking/network-layer',
-            'networking/authentication',
-          ],
+          Networking: ['networking/network-layer', 'networking/authentication'],
           'API Reference': [
             'api/apollo-client',
             'api/react-hooks',
@@ -75,10 +69,7 @@ module.exports = {
             'api/react-hoc',
             'api/react-common',
           ],
-          Migrating: [
-            'migrating/hooks-migration',
-            'migrating/boost-migration',
-          ]
+          Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
         },
       },
     },

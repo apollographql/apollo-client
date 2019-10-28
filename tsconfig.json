@@ -19,7 +19,6 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": [
-    "src/**/__tests__/**/*",
-    "src/utilities/testing/**/*"
+    "src/**/__tests__/**/*"
   ]
 }

@@ -5,7 +5,7 @@ import { render, cleanup, wait } from '@testing-library/react';
 
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
-import { MockedProvider } from '../../testing';
+import { MockedProvider } from '../../../utilities/testing';
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { ApolloClient } from '../../../ApolloClient';

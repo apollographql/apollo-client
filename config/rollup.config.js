@@ -124,11 +124,11 @@ function prepareCJSMinified() {
 // context.
 function prepareTesting() {
   const bundleName = 'testing';
-  const apolloProviderPath = 'context/ApolloProvider';
+  const apolloProviderPath = 'react/context/ApolloProvider';
 
   const testingGlobals = {
     ...globals,
-    [`../../${apolloProviderPath}`]: 'ApolloProvider'
+    [`../../../${apolloProviderPath}`]: 'ApolloProvider'
   };
 
   const output = {
@@ -140,11 +140,11 @@ function prepareTesting() {
   // `react/testing` type definitions.
   fs.writeFileSync(
     `${distDir}/${bundleName}.d.ts`,
-    "export * from './react/testing';"
+    "export * from './utilities/testing';"
   );
 
   return {
-    input: `${distDir}/react/testing/index.js`,
+    input: `${distDir}/utilities/testing/index.js`,
     external: (id) => hasOwn.call(testingGlobals, id),
     output,
     plugins: [
@@ -162,7 +162,7 @@ function prepareTesting() {
           generateBundle(_option, bundle) {
             bundle[bundleJs].code =
               bundle[bundleJs].code.replace(
-                `../${apolloProviderPath}`,
+                `../../${apolloProviderPath}`,
                 packageJson.main.replace(distDir, '.')
               );
           }

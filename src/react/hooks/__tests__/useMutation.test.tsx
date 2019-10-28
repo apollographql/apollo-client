@@ -3,7 +3,7 @@ import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { MockedProvider, mockSingleLink } from '../../testing';
+import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';

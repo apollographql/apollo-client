@@ -5,10 +5,10 @@ title: Interacting with cached data
 The `ApolloClient` object provides the following methods for interacting
 with cached data:
 
-* `readQuery`
-* `readFragment`
-* `writeQuery`
-* `writeFragment`
+* [`readQuery`](#readquery) and [`readFragment`](#readfragment)
+* [`writeQuery` and `writeFragment`](#writequery-and-writefragment)
+* Methods for [garbage collection and cache eviction](#garbage-collection-and-cache-eviction)
+
 
 These methods are described in detail below.
 
@@ -92,7 +92,7 @@ const todo = client.readFragment({
 });
 ```
 
-The first argument, `id`, is the [unique identifier](/caching/cache-configuration/#generating-unique-identifiers)
+The first argument, `id`, is the [unique identifier](cache-configuration/#generating-unique-identifiers)
 that was assigned to the object you want to read from the cache. This should match
 the value that your `dataIdFromObject` function assigned to the object when it was
 stored.
@@ -195,6 +195,48 @@ client.writeQuery({
 });
 ```
 
+## Garbage collection and cache eviction
+
+Apollo Client 3 enables you to selectively remove cached data that is no longer useful. The default garbage collection strategy of the `gc` method is suitable for most applications, but the `evict` method provides more fine-grained control for applications that require it.
+
+> You call these methods directly on the `InMemoryCache` object, not on the `ApolloClient` object.
+
+### `gc`
+
+The `gc` method removes all objects from the normalized cache that are not **reachable**:
+
+```js
+cache.gc();
+```
+
+ To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
+
+#### Configuring garbage collection
+
+You can use the `retain` method to prevent an object (and its children) from being garbage collected, even if the object isn't reachable:
+
+```js
+cache.retain('my-object-id');
+```
+
+If you later want a `retain`ed object to be garbage collected, use the `release` method:
+
+```js
+cache.release('my-object-id');
+```
+
+If the object is unreachable, it will be garbage collected during next call to `gc`.
+
+### `evict`
+
+You can remove any normalized object from the cache with the `evict` method:
+
+```js
+cache.evict('my-object-id');
+```
+
+Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
+
 ## Recipes
 
 Here are some common situations where you would need to access the cache directly. If you're manipulating the cache in an interesting way and would like your example to be featured, please send in a pull request!
@@ -249,7 +291,7 @@ mutate({
 })
 ```
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-hooks/#usemutation).
 
 ```jsx
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -480,7 +522,7 @@ cacheRedirects: {
 
 ### Resetting the store
 
-Sometimes, you may want to reset the store entirely, such as [when a user logs out](/networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
+Sometimes, you may want to reset the store entirely, such as [when a user logs out](../networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {
@@ -558,7 +600,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check out our more in depth guide [here](/performance/server-side-rendering/).
+If you would like to learn more about server side rendering, please check out our more in depth guide [here](../performance/server-side-rendering/).
 
 ### Cache persistence
 

@@ -33,7 +33,7 @@ export interface FetchMoreOptions<
   TData = any,
   TVariables = OperationVariables
 > {
-  updateQuery: (
+  updateQuery?: (
     previousQueryResult: TData,
     options: {
       fetchMoreResult?: TData;
@@ -315,12 +315,6 @@ export class ObservableQuery<
     fetchMoreOptions: FetchMoreQueryOptions<TVariables, K> &
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
-    // early return if no update Query
-    invariant(
-      fetchMoreOptions.updateQuery,
-      'updateQuery option is required. This function defines how to update the query data with the new results.',
-    );
-
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
@@ -344,12 +338,14 @@ export class ObservableQuery<
       )
       .then(
         fetchMoreResult => {
-          this.updateQuery((previousResult: any) =>
-            fetchMoreOptions.updateQuery(previousResult, {
-              fetchMoreResult: fetchMoreResult.data as TData,
+          this.updateQuery((previousResult: any) => {
+            const data = fetchMoreResult.data as TData;
+            const { updateQuery } = fetchMoreOptions;
+            return updateQuery ? updateQuery(previousResult, {
+              fetchMoreResult: data,
               variables: combinedOptions.variables as TVariables,
-            }),
-          );
+            }) : data;
+          });
           this.queryManager.stopQuery(qid);
           return fetchMoreResult as ApolloQueryResult<TData>;
         },

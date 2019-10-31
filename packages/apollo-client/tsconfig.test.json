@@ -4,7 +4,6 @@
     "module": "commonjs",
   },
   "exclude": [
-    "src/__tests__/ApolloClient.ts",
     "src/__tests__/client.ts",
     "src/__tests__/fetchMore.ts",
     "src/__tests__/graphqlSubscriptions.ts",

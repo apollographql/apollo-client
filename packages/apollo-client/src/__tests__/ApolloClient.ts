@@ -6,7 +6,6 @@ import { withWarning } from '../util/wrap';
 import ApolloClient from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
-import { DataProxy } from 'apollo-cache';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -86,6 +85,7 @@ describe('ApolloClient', () => {
               type: 'id',
               id: 'foo',
               generated: false,
+              typename: "foo"
             },
           },
           foo: {
@@ -97,6 +97,7 @@ describe('ApolloClient', () => {
               type: 'id',
               id: 'bar',
               generated: false,
+              typename: "foo"
             },
           },
           bar: {
@@ -343,6 +344,7 @@ describe('ApolloClient', () => {
               type: 'id',
               id: 'foo',
               generated: false,
+              typename: 'foo'
             },
           },
           foo: {
@@ -354,6 +356,7 @@ describe('ApolloClient', () => {
               type: 'id',
               id: 'bar',
               generated: false,
+              typename: 'foo'
             },
           },
           bar: {
@@ -1565,6 +1568,7 @@ describe('ApolloClient', () => {
               type: 'id',
               id: '$foo.bar',
               generated: true,
+              typename: 'bar'
             },
           },
           '$foo.bar': {

@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  app: &app
+    build:
+      context: .
+    environment:
+      SHELL: /bin/zsh
+    command: |
+      sh -c 'while sleep 3600; do :; done'
+    volumes:
+      - app:/app
+      - home:/root
+      - ..:/original:cached
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.zshrc:/root/.zshrc:ro
+      - ~/.netrc:/root/.netrc:ro
+volumes:
+  ? app
+  ? home

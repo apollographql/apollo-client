@@ -1,0 +1,6 @@
+{
+  "dockerComposeFile": ["./docker-compose.yml"],
+  "postCreateCommand": "test -e /app/.git || cp -Tr /original /app",
+  "service": "app",
+  "workspaceFolder": "/app"
+}

@@ -5,11 +5,13 @@ import cjs from 'rollup-plugin-commonjs';
 import fs from 'fs';
 
 import packageJson from '../package.json';
+import commonPackageJson from '../common/package.json';
 
 const distDir = './dist';
+const distCommonDir = `${distDir}/common`;
 
 const globals = {
-  'tslib': 'tslib',
+  tslib: 'tslib',
   'ts-invariant': 'invariant',
   'symbol-observable': '$$observable',
   'graphql/language/printer': 'print',
@@ -21,7 +23,7 @@ const globals = {
   '@wry/equality': 'wryEquality',
   graphql: 'graphql',
   react: 'React',
-  'zen-observable': 'Observable'
+  'zen-observable': 'Observable',
 };
 
 const hasOwn = Object.prototype.hasOwnProperty;
@@ -30,12 +32,17 @@ function external(id) {
   return hasOwn.call(globals, id);
 }
 
-function prepareESM() {
+/**
+ *
+ * @param {string} input
+ * @param {string} outputDir
+ */
+function prepareESM(input, outputDir) {
   return {
-    input: packageJson.module,
+    input, // packageJson.module,
     external,
     output: {
-      dir: distDir,
+      dir: outputDir, // distDir,
       format: 'esm',
       sourcemap: true,
     },
@@ -58,39 +65,49 @@ function prepareESM() {
       }),
       cjs({
         namedExports: {
-          'graphql-tag': ['gql']
-        }
+          'graphql-tag': ['gql'],
+        },
       }),
-    ]
+    ],
   };
 }
 
-function prepareCJS() {
+/**
+ *
+ * @param {string} input
+ * @param {string} outputDir
+ */
+function prepareCJS(input, output) {
   return {
-    input: packageJson.module,
+    input, // packageJson.module,
     external,
     output: {
-      file: packageJson.main,
+      file: output, // packageJson.main,
       format: 'cjs',
       sourcemap: true,
-      exports: 'named'
+      exports: 'named',
     },
     plugins: [
       nodeResolve(),
       cjs({
         namedExports: {
-          'graphql-tag': ['gql']
-        }
+          'graphql-tag': ['gql'],
+        },
       }),
-    ]
-  }
+    ],
+  };
 }
 
-function prepareCJSMinified() {
+/**
+ *
+ * @param {string} input
+ * @param {string} outputDir
+ */
+function prepareCJSMinified(input) {
   return {
-    input: packageJson.main,
+    input, // packageJson.main,
     output: {
-      file: packageJson.main.replace('.js', '.min.js'),
+      file: input.replace('.js', '.min.js'), // packageJson.main.replace('.js', '.min.js'),
       format: 'cjs',
     },
     plugins: [
@@ -141,10 +158,17 @@ function prepareTesting() {
 
 function rollup() {
   return [
-    prepareESM(),
-    prepareCJS(),
-    prepareCJSMinified(),
-    prepareTesting()
+    // @apollo/client
+    prepareESM(packageJson.module, distDir),
+    prepareCJS(packageJson.module, packageJson.main),
+    prepareCJSMinified(packageJson.main),
+    prepareTesting(),
+    // @apollo/client/common
+    prepareCJS(
+      commonPackageJson.module,
+      commonPackageJson.main,
+    ),
+    prepareCJSMinified(commonPackageJson.main),
   ];
 }
 

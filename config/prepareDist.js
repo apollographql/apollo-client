@@ -10,6 +10,7 @@
 //   `LICENSE`, etc.)
 
 const packageJson = require('../package.json');
+const commonPackageJson = require('../common/package.json');
 const fs = require('fs');
 
 // The root package.json is marked as private to prevent publishing
@@ -33,8 +34,17 @@ const distPackageJson = JSON.stringify(
   2
 );
 
+const distCommonPackageJson = JSON.stringify(
+  commonPackageJson,
+  (_key, value) => (
+    typeof value === 'string' ? value.replace(/\.\/dist\/common\//, './').replace(/\.\/dist\//, '../') : value
+  ),
+  2
+);
+
 // Save the modified package.json to "dist"
 fs.writeFileSync(`${__dirname}/../dist/package.json`, distPackageJson);
+fs.writeFileSync(`${__dirname}/../dist/common/package.json`, distCommonPackageJson);
 
 // Copy supporting files into "dist"
 const srcDir = `${__dirname}/..`;

@@ -1,0 +1,12 @@
+{
+  "name": "@apollo/client/common",
+  "description": "@apollo/client without React",
+  "author": "opensource@apollographql.com",
+  "license": "MIT",
+  "main": "./dist/common/apollo-client.cjs.js",
+  "module": "./dist/common/index.js",
+  "types": "./dist/common/index.d.ts",
+  "sideEffects": [
+    "./dist/cache/inmemory/fixPolyfills.js"
+  ]
+}

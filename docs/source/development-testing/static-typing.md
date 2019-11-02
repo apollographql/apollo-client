@@ -447,7 +447,7 @@ export default withCharacter(({ loading, hero, error }) => {
 });
 ```
 
-Since we have typed the response shape, the props shape, and the shape of what will be passed to the client, we can prevent errors in multiple places. Our options and props function within the `graphql` wrapper are now type safe, our rendered component is protected, and our tree of components have their required props enforced.
+Since we have typed the response shape, the props shape, and the shape of what will be passed to the client, we can prevent errors in multiple places. Our options and props functions within the `graphql` wrapper are now type safe, our rendered component is protected, and our tree of components have their required props enforced.
 
 ```ts
 export const withCharacter = graphql<InputProps, Response, Variables, Props>(HERO_QUERY, {

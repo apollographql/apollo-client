@@ -94,7 +94,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
           'queries contain union or interface types. Apollo Client will not be ' +
           'able to accurately map fragments. To make this error go away, use ' +
           'the `IntrospectionFragmentMatcher` as described in the docs: ' +
-          'https://www.apollographql.com/docs/react/advanced/fragments.html#fragment-matcher',
+          'https://www.apollographql.com/docs/react/data/fragments/#fragments-on-unions-and-interfaces'
       );
     }
 

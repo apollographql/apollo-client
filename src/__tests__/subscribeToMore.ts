@@ -62,7 +62,7 @@ describe('subscribeToMore', () => {
   itAsync('triggers new result from subscription data', (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req1);
+    const httpLink = mockSingleLink(req1).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -114,7 +114,7 @@ describe('subscribeToMore', () => {
   itAsync('calls error callback on error', (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req1);
+    const httpLink = mockSingleLink(req1).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -173,7 +173,7 @@ describe('subscribeToMore', () => {
     let latestResult: any = null;
 
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req1);
+    const httpLink = mockSingleLink(req1).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -233,7 +233,7 @@ describe('subscribeToMore', () => {
   itAsync('should not corrupt the cache (#3062)', async (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req4);
+    const httpLink = mockSingleLink(req4).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -345,7 +345,7 @@ describe('subscribeToMore', () => {
 
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, typedReq);
+    const httpLink = mockSingleLink(typedReq).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;

@@ -28,10 +28,10 @@ describe('updateQuery on a simple query', () => {
 
   itAsync('triggers new result from updateQuery', (resolve, reject) => {
     let latestResult: any = null;
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result,
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -91,13 +91,13 @@ describe('updateQuery on a query with required and optional variables', () => {
 
   itAsync('triggers new result from updateQuery', (resolve, reject) => {
     let latestResult: any = null;
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: {
         query,
         variables,
       },
       result,
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -206,17 +206,13 @@ describe('fetchMore on an observable query', () => {
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: {
-          query,
-          variables,
-        },
-        result,
+    link = mockSingleLink({
+      request: {
+        query,
+        variables,
       },
-      ...mockedResponses,
-    );
+      result,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -354,15 +350,11 @@ describe('fetchMore on an observable query', () => {
   });
 
   itAsync('will set the `network` status to `fetchMore`', (resolve, reject) => {
-    link = mockSingleLink(
-      reject,
-      { request: { query, variables }, result, delay: 5 },
-      {
-        request: { query, variables: variablesMore },
-        result: resultMore,
-        delay: 5,
-      },
-    );
+    link = mockSingleLink({ request: { query, variables }, result, delay: 5 }, {
+      request: { query, variables: variablesMore },
+      result: resultMore,
+      delay: 5,
+    }).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -418,15 +410,11 @@ describe('fetchMore on an observable query', () => {
 
   itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
-    link = mockSingleLink(
-      reject,
-      { request: { query, variables }, result, delay: 5 },
-      {
-        request: { query, variables: variablesMore },
-        error: fetchMoreError,
-        delay: 5,
-      },
-    );
+    link = mockSingleLink({ request: { query, variables }, result, delay: 5 }, {
+      request: { query, variables: variablesMore },
+      error: fetchMoreError,
+      delay: 5,
+    }).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -585,17 +573,13 @@ describe('fetchMore on an observable query with connection', () => {
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: {
-          query: transformedQuery,
-          variables,
-        },
-        result,
+    link = mockSingleLink({
+      request: {
+        query: transformedQuery,
+        variables,
       },
-      ...mockedResponses,
-    );
+      result,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -657,15 +641,11 @@ describe('fetchMore on an observable query with connection', () => {
   });
 
   itAsync('will set the network status to `fetchMore`', (resolve, reject) => {
-    link = mockSingleLink(
-      reject,
-      { request: { query: transformedQuery, variables }, result, delay: 5 },
-      {
-        request: { query: transformedQuery, variables: variablesMore },
-        result: resultMore,
-        delay: 5,
-      },
-    );
+    link = mockSingleLink({ request: { query: transformedQuery, variables }, result, delay: 5 }, {
+      request: { query: transformedQuery, variables: variablesMore },
+      result: resultMore,
+      delay: 5,
+    }).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -721,15 +701,11 @@ describe('fetchMore on an observable query with connection', () => {
 
   itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
-    link = mockSingleLink(
-      reject,
-      { request: { query: transformedQuery, variables }, result, delay: 5 },
-      {
-        request: { query: transformedQuery, variables: variablesMore },
-        error: fetchMoreError,
-        delay: 5,
-      },
-    );
+    link = mockSingleLink({ request: { query: transformedQuery, variables }, result, delay: 5 }, {
+      request: { query: transformedQuery, variables: variablesMore },
+      error: fetchMoreError,
+      delay: 5,
+    }).setOnError(reject);
 
     client = new ApolloClient({
       link,

@@ -1392,17 +1392,13 @@ describe('ObservableQuery', () => {
         pets: petData.slice(0, 3),
       };
 
-      const ni = mockSingleLink(
-        reject,
-        {
-          request: { query: queryWithFragment, variables },
-          result: { data: dataOneWithTypename },
-        },
-        {
-          request: { query: queryWithFragment, variables },
-          result: { data: dataTwoWithTypename },
-        },
-      );
+      const ni = mockSingleLink({
+        request: { query: queryWithFragment, variables },
+        result: { data: dataOneWithTypename },
+      }, {
+        request: { query: queryWithFragment, variables },
+        result: { data: dataTwoWithTypename },
+      }).setOnError(reject);
 
       const client = new ApolloClient({
         link: ni,
@@ -1870,11 +1866,10 @@ describe('ObservableQuery', () => {
       }) {
         const client = new ApolloClient({
           link: mockSingleLink(
-            error => { throw error },
             { request: queryOptions, result: { data: { value: 1 } } },
             { request: queryOptions, result: { data: { value: 2 } } },
-            { request: queryOptions, result: { data: { value: 3 } } },
-          ),
+            { request: queryOptions, result: { data: { value: 3 } } }
+          ).setOnError(error => { throw error }),
           assumeImmutableResults,
           cache: new InMemoryCache(),
         });

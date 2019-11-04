@@ -177,10 +177,10 @@ describe('client', () => {
       test: { key1: ['value', 'value2'], key2: { key3: 4 } },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query, variables },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -238,17 +238,13 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(
-      reject,
-      {
-        request: { query, variables },
-        result: { data: result },
-      },
-      {
-        request: { query, variables: override },
-        result: { data: overriddenResult },
-      },
-    );
+    const link = mockSingleLink({
+      request: { query, variables },
+      result: { data: result },
+    }, {
+      request: { query, variables: override },
+      result: { data: overriddenResult },
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -390,10 +386,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data },
-    });
+    }).setOnError(reject);
 
     const initialState: any = {
       data: {
@@ -448,10 +444,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data },
-    });
+    }).setOnError(reject);
 
     const initialState: any = {
       data: {
@@ -504,10 +500,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data },
-    });
+    }).setOnError(reject);
 
     const initialState: any = {
       data: {
@@ -566,10 +562,10 @@ describe('client', () => {
       },
     ];
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { errors },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -767,10 +763,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -812,10 +808,10 @@ describe('client', () => {
       }
     `;
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: {},
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -854,10 +850,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -907,18 +903,13 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(
-      reject,
-      {
-        request: { query },
-        result: { data: result },
-      },
-      {
-        request: { query: transformedQuery },
-        result: { data: transformedResult },
-      },
-      false
-    );
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: result },
+    }, {
+      request: { query: transformedQuery },
+      result: { data: transformedResult },
+    }, false).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -961,18 +952,13 @@ describe('client', () => {
         __typename: 'Author',
       },
     };
-    const link = mockSingleLink(
-      reject,
-      {
-        request: { query },
-        result: { data: result },
-      },
-      {
-        request: { query: transformedQuery },
-        result: { data: transformedResult },
-      },
-      false
-    );
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: result },
+    }, {
+      request: { query: transformedQuery },
+      result: { data: transformedResult },
+    }, false).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -1012,10 +998,10 @@ describe('client', () => {
         },
       },
     };
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: mutation },
       result: { data: result },
-    });
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -1048,10 +1034,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -1094,10 +1080,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
-    });
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -1130,10 +1116,10 @@ describe('client', () => {
       },
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
-    });
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -1176,10 +1162,10 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
-    });
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
@@ -1225,10 +1211,10 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -1285,17 +1271,13 @@ describe('client', () => {
       fortuneCookie: 'The waiter spit in your food',
     };
 
-    const link = mockSingleLink(
-      reject,
-      {
-        request: { query },
-        result: { data: result },
-      },
-      {
-        request: { query: mutation },
-        result: { data: mutationResult },
-      },
-    );
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: result },
+    }, {
+      request: { query: mutation },
+      result: { data: mutationResult },
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -1410,18 +1392,14 @@ describe('client', () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const link = mockSingleLink(
-      reject,
-      {
-        request: { query: queryDoc },
-        result: { data },
-        delay: 10,
-      },
-      {
-        request: { query: queryDoc },
-        result: { data: data2 },
-      },
-    );
+    const link = mockSingleLink({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    }, {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -1460,18 +1438,14 @@ describe('client', () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const link = mockSingleLink(
-      reject,
-      {
-        request: { query: queryDoc },
-        result: { data },
-        delay: 10,
-      },
-      {
-        request: { query: queryDoc },
-        result: { data: data2 },
-      },
-    );
+    const link = mockSingleLink({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    }, {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -1583,10 +1557,10 @@ describe('client', () => {
     };
 
     itAsync('for internal store', (resolve, reject) => {
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { data },
-      });
+      }).setOnError(reject);
 
       const client = new ApolloClient({
         link,
@@ -1672,10 +1646,10 @@ describe('client', () => {
     });
 
     itAsync('fetches from cache first, then network', (resolve, reject) => {
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { data: networkFetch },
-      });
+      }).setOnError(reject);
 
       const client = new ApolloClient({
         link,
@@ -1700,10 +1674,10 @@ describe('client', () => {
     });
 
     itAsync('does not fail if cache entry is not present', (resolve, reject) => {
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { data: networkFetch },
-      });
+      }).setOnError(reject);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -1727,7 +1701,7 @@ describe('client', () => {
     });
 
     itAsync('fails if network request fails', (resolve, reject) => {
-      const link = mockSingleLink(error => { throw error }); // no queries = no replies.
+      const link = mockSingleLink().setOnError(error => { throw error }); // no queries = no replies.
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -1754,10 +1728,10 @@ describe('client', () => {
     });
 
     itAsync('fetches from cache first, then network and does not have an unhandled error', (resolve, reject) => {
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { errors: [{ message: 'network failure' }] },
-      });
+      }).setOnError(reject);
 
       const client = new ApolloClient({
         link,
@@ -1825,10 +1799,10 @@ describe('client', () => {
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { data },
-      });
+      }).setOnError(reject);
 
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
@@ -1866,10 +1840,10 @@ describe('client', () => {
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { data },
-      });
+      }).setOnError(reject);
 
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
@@ -1917,17 +1891,13 @@ describe('client', () => {
     };
 
     function makeLink(reject: (reason: any) => any) {
-      return mockSingleLink(
-        reject,
-        {
-          request: { query },
-          result: { data: firstFetch },
-        },
-        {
-          request: { query },
-          result: { data: secondFetch },
-        },
-      );
+      return mockSingleLink({
+        request: { query },
+        result: { data: firstFetch },
+      }, {
+        request: { query },
+        result: { data: secondFetch },
+      }).setOnError(reject);
     }
 
     itAsync('forces the query to rerun', (resolve, reject) => {
@@ -2015,11 +1985,11 @@ describe('client', () => {
     };
     const networkError = new Error('Some kind of network error.');
     const client = new ApolloClient({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data },
         error: networkError,
-      }),
+      }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -2054,10 +2024,10 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data, errors },
-      }),
+      }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
     client
@@ -2091,10 +2061,10 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data, errors },
-      }),
+      }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
     client
@@ -2130,10 +2100,10 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data, errors },
-      }),
+      }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
     client
@@ -2169,10 +2139,10 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data, errors },
-      }),
+      }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
     const mutatePromise = client.mutate({
@@ -2510,11 +2480,10 @@ describe('client', () => {
     const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
     const dataTwo = { allPeople: { people: [{ name: 'Princess Leia' }] } };
     const link = mockSingleLink(
-      reject,
       { request: { query }, result: { data } },
       { request: { query }, error: new Error('This is an error!') },
-      { request: { query }, result: { data: dataTwo } },
-    );
+      { request: { query }, result: { data: dataTwo } }
+    ).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -2628,10 +2597,10 @@ describe('client', () => {
         message: 'Cannot query field "foo" on type "Post".',
       },
     ];
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result: { errors },
-    });
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -2667,10 +2636,10 @@ describe('client', () => {
         ],
       },
     };
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query },
       result,
-    });
+    }).setOnError(reject);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
@@ -2712,10 +2681,10 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: transformedQuery },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -2754,10 +2723,10 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: transformedQuery },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -2806,10 +2775,10 @@ describe('client', () => {
       ],
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: transformedQuery },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -2850,10 +2819,10 @@ describe('@connection', () => {
       ],
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: transformedQuery },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -2895,10 +2864,10 @@ describe('@connection', () => {
 
     const variables = { order: 'popularity' };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: transformedQuery, variables },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -2939,10 +2908,10 @@ describe('@connection', () => {
 
     const variables = { order: 'popularity' };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: transformedQuery, variables },
       result: { data: result },
-    });
+    }).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -2986,10 +2955,10 @@ describe('@connection', () => {
     };
 
     itAsync('allows setting default options for watchQuery', (resolve, reject) => {
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { data: networkFetch },
-      });
+      }).setOnError(reject);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -3020,10 +2989,10 @@ describe('@connection', () => {
 
     itAsync('allows setting default options for query', (resolve, reject) => {
       const errors = [{ message: 'failure', name: 'failure' }];
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { errors },
-      });
+      }).setOnError(reject);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -3050,10 +3019,10 @@ describe('@connection', () => {
         upvote: { success: true },
       };
 
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query: mutation, variables: { id: 1 } },
         result: { data },
-      });
+      }).setOnError(reject);
 
       const client = new ApolloClient({
         link,
@@ -3078,10 +3047,10 @@ function clientRoundtrip(
   variables?: any,
   possibleTypes?: PossibleTypesMap,
 ) {
-  const link = mockSingleLink(reject, {
+  const link = mockSingleLink({
     request: { query: cloneDeep(query) },
     result: data,
-  });
+  }).setOnError(reject);
 
   const client = new ApolloClient({
     link,

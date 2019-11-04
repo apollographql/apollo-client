@@ -104,14 +104,10 @@ describe('optimistic mutation results', () => {
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: { query },
-        result,
-      },
-      ...mockedResponses,
-    );
+    link = mockSingleLink({
+      request: { query },
+      result,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -1236,23 +1232,18 @@ describe('optimistic mutation results', () => {
 
     itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
-      link = mockSingleLink(
-        reject,
-        {
-          request: { query },
-          result,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult,
-          delay: 10,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult2,
-          delay: 20,
-        },
-      );
+      link = mockSingleLink({
+        request: { query },
+        result,
+      }, {
+        request: { query: mutation },
+        result: mutationResult,
+        delay: 10,
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+        delay: 20,
+      }).setOnError(reject);
 
       const customOptimisticResponse1 = {
         __typename: 'Mutation',
@@ -1702,23 +1693,18 @@ describe('optimistic mutation results', () => {
 
     itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
-      link = mockSingleLink(
-        reject,
-        {
-          request: { query },
-          result,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult,
-          delay: 10,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult2,
-          delay: 20,
-        },
-      );
+      link = mockSingleLink({
+        request: { query },
+        result,
+      }, {
+        request: { query: mutation },
+        result: mutationResult,
+        delay: 10,
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+        delay: 20,
+      }).setOnError(reject);
 
       const customOptimisticResponse1 = {
         __typename: 'Mutation',
@@ -1894,24 +1880,19 @@ describe('optimistic mutation - githunt comments', () => {
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: {
-          query: addTypenameToDocument(query),
-          variables,
-        },
-        result,
+    link = mockSingleLink({
+      request: {
+        query: addTypenameToDocument(query),
+        variables,
       },
-      {
-        request: {
-          query: addTypenameToDocument(queryWithFragment),
-          variables,
-        },
-        result,
+      result,
+    }, {
+      request: {
+        query: addTypenameToDocument(queryWithFragment),
+        variables,
       },
-      ...mockedResponses,
-    );
+      result,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,

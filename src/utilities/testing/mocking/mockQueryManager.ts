@@ -9,7 +9,7 @@ export default (
   ...mockedResponses: MockedResponse[]
 ) => {
   return new QueryManager({
-    link: mockSingleLink(reject, ...mockedResponses),
+    link: mockSingleLink(...mockedResponses).setOnError(reject),
     cache: new InMemoryCache({ addTypename: false }),
   });
 };

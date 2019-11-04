@@ -116,10 +116,10 @@ describe('QueryManager', () => {
     variables?: Object;
     config?: ApolloReducerConfig;
   }) => {
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: { query: mutation, variables },
       result: { data, errors },
-    });
+    }).setOnError(reject);
     const queryManager = createQueryManager({
       link,
       config,
@@ -1575,10 +1575,10 @@ describe('QueryManager', () => {
     };
 
     const queryManager = createQueryManager({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data },
-      }),
+      }).setOnError(reject),
       config: { dataIdFromObject: getIdField },
     });
 
@@ -1774,10 +1774,10 @@ describe('QueryManager', () => {
     //make sure that the query is transformed within the query
     //manager
     createQueryManager({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: transformedQuery },
         result: { data: transformedQueryResult },
-      }),
+      }).setOnError(reject),
       config: { addTypename: true },
     })
       .query({ query: query })
@@ -1815,10 +1815,10 @@ describe('QueryManager', () => {
     };
 
     createQueryManager({
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query: transformedMutation },
         result: { data: transformedMutationResult },
-      }),
+      }).setOnError(reject),
       config: { addTypename: true },
     })
       .mutate({ mutation: mutation })
@@ -2146,17 +2146,13 @@ describe('QueryManager', () => {
     };
     const reducerConfig = { dataIdFromObject };
     const queryManager = createQueryManager({
-      link: mockSingleLink(
-        reject,
-        {
-          request: { query: query1 },
-          result: { data: data1 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data2 },
-        },
-      ),
+      link: mockSingleLink({
+        request: { query: query1 },
+        result: { data: data1 },
+      }, {
+        request: { query: query2 },
+        result: { data: data2 },
+      }).setOnError(reject),
       config: reducerConfig,
     });
 
@@ -2251,17 +2247,13 @@ describe('QueryManager', () => {
     };
 
     const queryManager = createQueryManager({
-      link: mockSingleLink(
-        reject,
-        {
-          request: { query: query1 },
-          result: { data: data1 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data2 },
-        },
-      ),
+      link: mockSingleLink({
+        request: { query: query1 },
+        result: { data: data1 },
+      }, {
+        request: { query: query2 },
+        result: { data: data2 },
+      }).setOnError(reject),
     });
 
     const observable1 = queryManager.watchQuery<any>({
@@ -2352,17 +2344,13 @@ describe('QueryManager', () => {
     };
     const reducerConfig = { dataIdFromObject };
     const queryManager = createQueryManager({
-      link: mockSingleLink(
-        reject,
-        {
-          request: { query: queryWithId },
-          result: { data: dataWithId },
-        },
-        {
-          request: { query: queryWithoutId },
-          result: { data: dataWithoutId },
-        },
-      ),
+      link: mockSingleLink({
+        request: { query: queryWithId },
+        result: { data: dataWithId },
+      }, {
+        request: { query: queryWithoutId },
+        result: { data: dataWithoutId },
+      }).setOnError(reject),
       config: reducerConfig,
     });
 
@@ -2440,17 +2428,13 @@ describe('QueryManager', () => {
       },
     };
     const queryManager = createQueryManager({
-      link: mockSingleLink(
-        reject,
-        {
-          request: { query: queryWithoutId },
-          result: { data: dataWithoutId },
-        },
-        {
-          request: { query: queryWithId },
-          result: { data: dataWithId },
-        },
-      ),
+      link: mockSingleLink({
+        request: { query: queryWithoutId },
+        result: { data: dataWithoutId },
+      }, {
+        request: { query: queryWithId },
+        result: { data: dataWithId },
+      }).setOnError(reject),
     });
 
     const observableWithId = queryManager.watchQuery<any>({
@@ -2572,10 +2556,9 @@ describe('QueryManager', () => {
     };
     const queryManager = new QueryManager<NormalizedCacheObject>({
       link: mockSingleLink(
-        reject,
         { request: { query: queryA }, result: { data: dataA } },
-        { request: { query: queryB }, result: { data: dataB }, delay: 20 },
-      ),
+        { request: { query: queryB }, result: { data: dataB }, delay: 20 }
+      ).setOnError(reject),
       cache: new InMemoryCache({}),
       ssrMode: true,
     });
@@ -2692,21 +2675,16 @@ describe('QueryManager', () => {
       };
 
       const queryManager = new QueryManager<NormalizedCacheObject>({
-        link: mockSingleLink(
-          reject,
-          {
-            request: { query, variables },
-            result: { data: data1 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          },
-        ),
+        link: mockSingleLink({
+          request: { query, variables },
+          result: { data: data1 },
+        }, {
+          request: { query, variables },
+          result: { data: data2 },
+        }, {
+          request: { query, variables },
+          result: { data: data2 },
+        }).setOnError(reject),
         cache: new InMemoryCache({ addTypename: false }),
         ssrMode: true,
       });
@@ -3200,25 +3178,19 @@ describe('QueryManager', () => {
       };
 
       const queryManager = createQueryManager({
-        link: mockSingleLink(
-          reject,
-          {
-            request: { query },
-            result: { data },
-          },
-          {
-            request: { query: query2 },
-            result: { data: data2 },
-          },
-          {
-            request: { query },
-            result: { data: dataChanged },
-          },
-          {
-            request: { query: query2 },
-            result: { data: data2Changed },
-          },
-        ),
+        link: mockSingleLink({
+          request: { query },
+          result: { data },
+        }, {
+          request: { query: query2 },
+          result: { data: data2 },
+        }, {
+          request: { query },
+          result: { data: dataChanged },
+        }, {
+          request: { query: query2 },
+          result: { data: data2Changed },
+        }).setOnError(reject),
       });
 
       const observable = queryManager.watchQuery<any>({ query });
@@ -3249,7 +3221,7 @@ describe('QueryManager', () => {
 
     itAsync('should change the store state to an empty state', (resolve, reject) => {
       const queryManager = createQueryManager({
-        link: mockSingleLink(reject),
+        link: mockSingleLink().setOnError(reject),
       });
 
       queryManager.resetStore();
@@ -3541,7 +3513,7 @@ describe('QueryManager', () => {
         }
       `;
       const queryManager = createQueryManager({
-        link: mockSingleLink(reject),
+        link: mockSingleLink().setOnError(reject),
       });
       const options = assign({}) as WatchQueryOptions;
       options.fetchPolicy = 'cache-only';
@@ -3577,7 +3549,7 @@ describe('QueryManager', () => {
         }
       `;
       const queryManager = createQueryManager({
-        link: mockSingleLink(reject),
+        link: mockSingleLink().setOnError(reject),
       });
       const options = assign({}) as WatchQueryOptions;
       options.fetchPolicy = 'standby';
@@ -3690,25 +3662,19 @@ describe('QueryManager', () => {
       };
 
       const queryManager = createQueryManager({
-        link: mockSingleLink(
-          reject,
-          {
-            request: { query },
-            result: { data },
-          },
-          {
-            request: { query: query2 },
-            result: { data: data2 },
-          },
-          {
-            request: { query },
-            result: { data: dataChanged },
-          },
-          {
-            request: { query: query2 },
-            result: { data: data2Changed },
-          },
-        ),
+        link: mockSingleLink({
+          request: { query },
+          result: { data },
+        }, {
+          request: { query: query2 },
+          result: { data: data2 },
+        }, {
+          request: { query },
+          result: { data: dataChanged },
+        }, {
+          request: { query: query2 },
+          result: { data: data2Changed },
+        }).setOnError(reject),
       });
 
       const observable = queryManager.watchQuery<any>({ query });
@@ -3963,7 +3929,7 @@ describe('QueryManager', () => {
         }
       `;
       const queryManager = createQueryManager({
-        link: mockSingleLink(reject),
+        link: mockSingleLink().setOnError(reject),
       });
       const options = assign({}) as WatchQueryOptions;
       options.fetchPolicy = 'cache-only';
@@ -3999,7 +3965,7 @@ describe('QueryManager', () => {
         }
       `;
       const queryManager = createQueryManager({
-        link: mockSingleLink(reject),
+        link: mockSingleLink().setOnError(reject),
       });
       const options = assign({}) as WatchQueryOptions;
       options.fetchPolicy = 'standby';
@@ -4035,7 +4001,7 @@ describe('QueryManager', () => {
         }
       `;
       const queryManager = createQueryManager({
-        link: mockSingleLink(reject),
+        link: mockSingleLink().setOnError(reject),
       });
       const options = assign({}) as WatchQueryOptions;
       options.fetchPolicy = 'standby';
@@ -5078,12 +5044,11 @@ describe('QueryManager', () => {
       `;
 
       const link = mockSingleLink(
-        reject,
         { request: { query: query1 }, result: { data: { one: 1 } } },
         { request: { query: query2 }, result: { data: { two: 2 } } },
         { request: { query: query3 }, result: { data: { three: 3 } } },
-        { request: { query: query4 }, result: { data: { four: 4 } } },
-      );
+        { request: { query: query4 }, result: { data: { four: 4 } } }
+      ).setOnError(reject);
       const cache = new InMemoryCache();
 
       const queryManager = new QueryManager<NormalizedCacheObject>({
@@ -5135,10 +5100,10 @@ describe('QueryManager', () => {
         };
 
         const queryManager = createQueryManager({
-          link: mockSingleLink(reject, {
+          link: mockSingleLink({
             request: { query },
             result: { data },
-          }),
+          }).setOnError(reject),
         });
 
         const observable = queryManager.watchQuery<any>({
@@ -5173,10 +5138,10 @@ describe('QueryManager', () => {
         },
       };
 
-      const link = mockSingleLink(reject, {
+      const link = mockSingleLink({
         request: { query },
         result: { data },
-      });
+      }).setOnError(reject);
 
       const clientAwareness = {
         name: 'Test',

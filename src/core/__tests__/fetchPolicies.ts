@@ -55,50 +55,37 @@ const mutationResult = {
 const merged = { author: { ...result.author, firstName: 'James' } };
 
 const createLink = (reject: (reason: any) => any) =>
-  mockSingleLink(
-    reject,
-    {
-      request: { query },
-      result: { data: result },
-    },
-    {
-      request: { query },
-      result: { data: result },
-    },
-  );
+  mockSingleLink({
+    request: { query },
+    result: { data: result },
+  }, {
+    request: { query },
+    result: { data: result },
+  }).setOnError(reject);
 
 const createFailureLink = (reject: (reason: any) => any) =>
-  mockSingleLink(
-    reject,
-    {
-      request: { query },
-      error: new Error('query failed'),
-    },
-    {
-      request: { query },
-      result: { data: result },
-    },
-  );
+  mockSingleLink({
+    request: { query },
+    error: new Error('query failed'),
+  }, {
+    request: { query },
+    result: { data: result },
+  }).setOnError(reject);
 
 const createMutationLink = (reject: (reason: any) => any) =>
   // fetch the data
-  mockSingleLink(
-    reject,
-    {
-      request: { query },
-      result: { data: result },
-    },
-    // update the data
-    {
-      request: { query: mutation, variables },
-      result: { data: mutationResult },
-    },
-    // get the new results
-    {
-      request: { query },
-      result: { data: merged },
-    },
-  );
+  mockSingleLink({
+    request: { query },
+    result: { data: result },
+  }, // update the data
+  {
+    request: { query: mutation, variables },
+    result: { data: mutationResult },
+  }, // get the new results
+  {
+    request: { query },
+    result: { data: merged },
+  }).setOnError(reject);
 
 describe('network-only', () => {
   itAsync('requests from the network even if already in cache', (resolve, reject) => {

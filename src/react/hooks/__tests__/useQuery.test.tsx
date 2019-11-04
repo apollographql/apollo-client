@@ -217,7 +217,7 @@ describe('useQuery Hook', () => {
     });
 
     itAsync('should stop polling when the component is unmounted', async (resolve, reject) => {
-      const mockLink = new MockLink(error => { throw error }, CAR_MOCKS);
+      const mockLink = new MockLink(CAR_MOCKS);
       const linkRequestSpy = jest.spyOn(mockLink, 'request');
       let renderCount = 0;
       const QueryComponent = ({ unmount }: { unmount: () => void }) => {

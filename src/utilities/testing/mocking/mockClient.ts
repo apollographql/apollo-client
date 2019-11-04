@@ -11,10 +11,10 @@ export function createMockClient<TData>(
   variables = {},
 ): ApolloClient<NormalizedCacheObject> {
   return new ApolloClient({
-    link: mockSingleLink(error => { throw error }, {
+    link: mockSingleLink({
       request: { query, variables },
       result: { data },
-    }),
+    }).setOnError(error => { throw error }),
     cache: new InMemoryCache({ addTypename: false }),
   });
 }

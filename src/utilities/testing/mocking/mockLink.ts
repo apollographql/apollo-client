@@ -40,19 +40,16 @@ export class MockLink extends ApolloLink {
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
-    private reject: (reason: any) => any,
     mockedResponses: ReadonlyArray<MockedResponse>,
     addTypename: Boolean = true
   ) {
     super();
-    if (typeof this.reject !== "function") {
-      throw new Error("Must pass a failure callback when creating MockLink");
-    }
     this.addTypename = addTypename;
-    if (mockedResponses)
+    if (mockedResponses) {
       mockedResponses.forEach(mockedResponse => {
         this.addMockedResponse(mockedResponse);
       });
+    }
   }
 
   public addMockedResponse(mockedResponse: MockedResponse) {
@@ -93,7 +90,7 @@ export class MockLink extends ApolloLink {
     );
 
     if (!response || typeof responseIndex === 'undefined') {
-      this.reject(new Error(
+      this.onError(new Error(
         `No more mocked responses for the query: ${print(
           operation.query
         )}, variables: ${JSON.stringify(operation.variables)}`
@@ -112,7 +109,7 @@ export class MockLink extends ApolloLink {
     const { result, error, delay } = response;
 
     if (!result && !error) {
-      this.reject(new Error(
+      this.onError(new Error(
         `Mocked response should contain either result or error: ${key}`
       ));
     }
@@ -165,7 +162,6 @@ interface MockApolloLink extends ApolloLink {
 // making multiple queries to the server.
 // NOTE: The last arg can optionally be an `addTypename` arg.
 export function mockSingleLink(
-  reject: (reason: any) => any,
   ...mockedResponses: Array<any>
 ): MockApolloLink {
   // To pull off the potential typename. If this isn't a boolean, we'll just
@@ -178,5 +174,5 @@ export function mockSingleLink(
     maybeTypename = true;
   }
 
-  return new MockLink(reject, mocks, maybeTypename);
+  return new MockLink(mocks, maybeTypename);
 }

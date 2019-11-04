@@ -294,7 +294,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const link = mockSingleLink(reject, ...mocks);
+      const link = mockSingleLink(...mocks).setOnError(reject);
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,

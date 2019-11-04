@@ -12,8 +12,7 @@ module.exports = {
   testURL: 'http://localhost',
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/dist/',
-    'src/__tests__/utils'
+    '/dist/'
   ],
   modulePathIgnorePatterns: ['/dist/'],
   setupFiles: ['<rootDir>/src/config/jest/setup.ts'],

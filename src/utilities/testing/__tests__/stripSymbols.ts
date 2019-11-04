@@ -1,4 +1,4 @@
-import { stripSymbols } from './utils/stripSymbols';
+import { stripSymbols } from '../stripSymbols';
 
 interface SymbolConstructor {
   (description?: string | number): symbol;

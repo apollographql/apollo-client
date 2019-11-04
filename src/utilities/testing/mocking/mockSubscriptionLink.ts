@@ -1,7 +1,16 @@
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
-import { FetchResult } from '../../../link/core/types';
-import { MockedSubscriptionResult } from './types';
+import { FetchResult, Operation } from '../../../link/core/types';
+
+export interface MockedSubscription {
+  request: Operation;
+}
+
+export interface MockedSubscriptionResult {
+  result?: FetchResult;
+  error?: Error;
+  delay?: number;
+}
 
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
@@ -31,6 +40,12 @@ export class MockSubscriptionLink extends ApolloLink {
       if (result.result && observer.next) observer.next(result.result);
       if (result.error && observer.error) observer.error(result.error);
     }, result.delay || 0);
+  }
+
+  public simulateComplete() {
+    const { observer } = this;
+    if (!observer) throw new Error('subscription torn down');
+    if (observer.complete) observer.complete();
   }
 
   public onSetup(listener: any): void {

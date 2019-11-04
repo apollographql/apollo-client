@@ -280,18 +280,19 @@ describe('optimistic mutation results', () => {
         await Promise.all([promise, promise2]);
 
         subscriptionHandle.unsubscribe();
-        const dataInStore = (client.cache as InMemoryCache).extract(true);
-        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-        expect(dataInStore).toHaveProperty('Todo66');
-        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-          makeReference('Todo66'),
-        );
-        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-          makeReference('Todo99'),
-        );
-
-        resolve();
+        {
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).toHaveProperty('Todo66');
+          expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+            makeReference('Todo66'),
+          );
+          expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+            makeReference('Todo99'),
+          );
+          resolve();
+        }
       });
 
       itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
@@ -516,18 +517,19 @@ describe('optimistic mutation results', () => {
         await Promise.all([promise, promise2]);
 
         subscriptionHandle.unsubscribe();
-        const dataInStore = (client.cache as InMemoryCache).extract(true);
-        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-        expect(dataInStore).toHaveProperty('Todo66');
-        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-          makeReference('Todo66'),
-        );
-        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-          makeReference('Todo99'),
-        );
-
-        resolve();
+        {
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).toHaveProperty('Todo66');
+          expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+            makeReference('Todo66'),
+          );
+          expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+            makeReference('Todo99'),
+          );
+          resolve();
+        }
       });
 
       itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
@@ -1217,18 +1219,19 @@ describe('optimistic mutation results', () => {
       await Promise.all([promise, promise2]);
 
       subscriptionHandle.unsubscribe();
-      const dataInStore = (client.cache as InMemoryCache).extract(true);
-      expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
-      expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-      expect(dataInStore).toHaveProperty('Todo66');
-      expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-        makeReference('Todo66'),
-      );
-      expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-        makeReference('Todo99'),
-      );
-
-      resolve();
+      {
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
+        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).toHaveProperty('Todo66');
+        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+          makeReference('Todo66'),
+        );
+        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+          makeReference('Todo99'),
+        );
+        resolve();
+      }
     });
 
     itAsync('will handle dependent updates', async (resolve, reject) => {
@@ -1682,18 +1685,19 @@ describe('optimistic mutation results', () => {
       await Promise.all([promise, promise2]);
 
       subscriptionHandle.unsubscribe();
-      const dataInStore = (client.cache as InMemoryCache).extract(true);
-      expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-      expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-      expect(dataInStore).toHaveProperty('Todo66');
-      expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-        makeReference('Todo66'),
-      );
-      expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-        makeReference('Todo99'),
-      );
-
-      resolve();
+      {
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).toHaveProperty('Todo66');
+        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+          makeReference('Todo66'),
+        );
+        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+          makeReference('Todo99'),
+        );
+        resolve();
+      }
     });
 
     itAsync('will handle dependent updates', async (resolve, reject) => {

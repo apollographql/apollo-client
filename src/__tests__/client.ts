@@ -2187,9 +2187,11 @@ describe('client', () => {
       },
     });
 
-    const { data, optimisticData } = client.cache as any;
-    expect(optimisticData).not.toBe(data);
-    expect(optimisticData.parent).toBe(data);
+    {
+      const { data, optimisticData } = client.cache as any;
+      expect(optimisticData).not.toBe(data);
+      expect(optimisticData.parent).toBe(data);
+    }
 
     mutatePromise
       .then(_ => {

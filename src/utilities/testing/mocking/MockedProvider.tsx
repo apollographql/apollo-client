@@ -49,7 +49,7 @@ export class MockedProvider extends React.Component<
       link: link || new MockLink(
         mocks || [],
         addTypename,
-      ).setOnError(() => {}),
+      ),
       resolvers,
     });
 

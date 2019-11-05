@@ -1,5 +1,5 @@
 export { MockedProvider } from './mocking/MockedProvider';
-export { MockLink, mockSingleLink } from './mocking/mockLink';
+export { MockLink, mockSingleLink, MockedResponse } from './mocking/mockLink';
 export {
   MockSubscriptionLink,
   mockObservableLink

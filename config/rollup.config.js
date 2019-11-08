@@ -115,13 +115,11 @@ function prepareCJSMinified() {
 //
 // import { MockedProvider } from '@apollo/client/testing';
 //
-// Note: The `ApolloProvider` reference is marked as being global so it can
-// then be replaced with a hard coded path to the `apollo-client.cjs.js`
-// bundle. This is done to ensure that when using this bundle `MockedProvider`
-// always uses the same `ApolloProvider` instance as the rest of the
-// application under test. This means they'll share the exact same React
-// context, and be able to share the same Apollo Client instance stored in that
-// context.
+// Note: The `ApolloProvider` reference is marked as being global, and its
+// import is updated to point to the ESM based `react/context/ApolloProvider`
+// file, to make sure only one React context is used. This is important for
+// things like being able to share the same Apollo Client instance stored in
+// that context between running tests and the application under test.
 function prepareTesting() {
   const bundleName = 'testing';
   const apolloProviderPath = 'react/context/ApolloProvider';
@@ -152,10 +150,10 @@ function prepareTesting() {
         extensions: ['.js', '.jsx'],
       }),
       // Update the external ApolloProvider require in the testing bundle
-      // to point to the main Apollo Client CJS bundle, to make sure the
-      // testing bundle uses the exact same ApolloProvider as the main
-      // AC CJS bundle. This helps ensure the same React Context is used
-      // by both React testing utilities and the application under test.
+      // to point to the ESM context file, to make sure we're only ever
+      // creating/using one context. This helps ensure the same React Context
+      // is used by both React testing utilities and the application under
+      // test.
       (() => {
         const bundleJs = `${bundleName}.js`;
         return {
@@ -163,7 +161,7 @@ function prepareTesting() {
             bundle[bundleJs].code =
               bundle[bundleJs].code.replace(
                 `../../${apolloProviderPath}`,
-                packageJson.main.replace(distDir, '.')
+                `./${apolloProviderPath}`,
               );
           }
         }

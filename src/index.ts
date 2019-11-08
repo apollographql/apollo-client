@@ -57,6 +57,9 @@ export { RenderPromises } from './react/ssr/RenderPromises';
 export * from './react/types/types';
 export * from './react/parser/parser';
 
+const { getApolloContext } = require('./react/context/ApolloContext');
+export { getApolloContext };
+
 /* Link */
 
 export { empty } from './link/core/empty';

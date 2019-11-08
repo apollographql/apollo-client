@@ -48,11 +48,6 @@ export * from './cache/inmemory/types';
 
 export { ApolloProvider } from './react/context/ApolloProvider';
 export { ApolloConsumer } from './react/context/ApolloConsumer';
-export {
-  getApolloContext,
-  resetApolloContext,
-  ApolloContextValue
-} from './react/context/ApolloContext';
 export { useQuery } from './react/hooks/useQuery';
 export { useLazyQuery } from './react/hooks/useLazyQuery';
 export { useMutation } from './react/hooks/useMutation';

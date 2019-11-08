@@ -2,7 +2,8 @@ import React from 'react';
 import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../ApolloClient';
-import { getApolloContext } from './ApolloContext';
+
+const { getApolloContext } = require('./ApolloContext');
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;
@@ -16,7 +17,7 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   const ApolloContext = getApolloContext();
   return (
     <ApolloContext.Consumer>
-      {(context = {}) => {
+      {(context: any = {}) => {
         if (client && context.client !== client) {
           context = Object.assign({}, context, { client });
         }

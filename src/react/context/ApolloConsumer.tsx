@@ -2,7 +2,8 @@ import React from 'react';
 import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../ApolloClient';
-import { getApolloContext } from './ApolloContext';
+
+const { getApolloContext } = require('./ApolloContext');
 
 export interface ApolloConsumerProps {
   children: (client: ApolloClient<object>) => React.ReactChild | null;

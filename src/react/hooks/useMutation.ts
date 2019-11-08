@@ -1,10 +1,11 @@
 import { useContext, useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 
-import { getApolloContext } from '../context/ApolloContext';
 import { MutationHookOptions, MutationTuple } from '../types/types';
 import { MutationData } from '../data/MutationData';
 import { OperationVariables } from '../../core/types';
+
+const { getApolloContext } = require('../context/ApolloContext');
 
 export function useMutation<TData = any, TVariables = OperationVariables>(
   mutation: DocumentNode,

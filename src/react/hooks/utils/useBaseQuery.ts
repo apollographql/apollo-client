@@ -1,7 +1,6 @@
 import { useContext, useEffect, useReducer, useRef } from 'react';
 import { DocumentNode } from 'graphql';
 
-import { getApolloContext } from '../../context/ApolloContext';
 import {
   QueryHookOptions,
   QueryOptions,
@@ -11,6 +10,8 @@ import {
 import { QueryData } from '../../data/QueryData';
 import { useDeepMemo } from './useDeepMemo';
 import { OperationVariables } from '../../../core/types';
+
+const { getApolloContext } = require('../../context/ApolloContext');
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,

@@ -11,7 +11,6 @@ import {
   FetchMoreOptions,
   UpdateQueryOptions
 } from '../../core/ObservableQuery';
-import { ApolloContextValue } from '../context/ApolloContext';
 import { DocumentType } from '../parser/parser';
 import {
   QueryResult,
@@ -38,7 +37,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     forceUpdate
   }: {
     options: QueryOptions<TData, TVariables>;
-    context: ApolloContextValue;
+    context: any;
     forceUpdate: any;
   }) {
     super(options, context);

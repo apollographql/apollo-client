@@ -1,6 +1,5 @@
 import { equal as isEqual } from '@wry/equality';
 
-import { ApolloContextValue } from '../context/ApolloContext';
 import { OperationData } from './OperationData';
 import {
   SubscriptionCurrentObservable,
@@ -21,7 +20,7 @@ export class SubscriptionData<
     setResult
   }: {
     options: SubscriptionOptions<TData, TVariables>;
-    context: ApolloContextValue;
+    context: any;
     setResult: any;
   }) {
     super(options, context);

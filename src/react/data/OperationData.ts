@@ -4,7 +4,6 @@ import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../ApolloClient';
 import { DocumentType, parser, operationName } from '../parser/parser';
-import { ApolloContextValue } from '../context/ApolloContext';
 import { CommonOptions } from '../types/types';
 
 export abstract class OperationData<TOptions = any> {
@@ -12,12 +11,12 @@ export abstract class OperationData<TOptions = any> {
   public previousOptions: CommonOptions<TOptions> = {} as CommonOptions<
     TOptions
   >;
-  public context: ApolloContextValue = {};
+  public context: any = {};
   public client: ApolloClient<object> | undefined;
 
   private options: CommonOptions<TOptions> = {} as CommonOptions<TOptions>;
 
-  constructor(options?: CommonOptions<TOptions>, context?: ApolloContextValue) {
+  constructor(options?: CommonOptions<TOptions>, context?: any) {
     this.options = options || ({} as CommonOptions<TOptions>);
     this.context = context || {};
   }

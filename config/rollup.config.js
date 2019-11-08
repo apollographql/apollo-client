@@ -30,6 +30,21 @@ function external(id) {
   return hasOwn.call(globals, id);
 }
 
+// This function helps update `ApolloContext` require paths so that they're
+// relative from the root of the dist dir. This makes sure the Apollo Client
+// CJS and `testing` bundles can reference `ApolloContext` properly.
+function fixContextReferences(bundleJs) {
+  return {
+    generateBundle(_option, bundle) {
+      bundle[bundleJs].code =
+        bundle[bundleJs].code.replace(
+          /\'(.*)\/ApolloContext\'/g,
+          "'./react/context/ApolloContext'"
+        )
+    }
+  }
+}
+
 function prepareESM() {
   return {
     input: packageJson.module,
@@ -82,6 +97,7 @@ function prepareCJS() {
           'graphql-tag': ['gql']
         }
       }),
+      fixContextReferences(packageJson.main.replace(`${distDir}/`, ''))
     ]
   }
 }
@@ -114,25 +130,8 @@ function prepareCJSMinified() {
 // like:
 //
 // import { MockedProvider } from '@apollo/client/testing';
-//
-// Note: The `ApolloProvider` reference is marked as being global, and its
-// import is updated to point to the ESM based `react/context/ApolloProvider`
-// file, to make sure only one React context is used. This is important for
-// things like being able to share the same Apollo Client instance stored in
-// that context between running tests and the application under test.
 function prepareTesting() {
   const bundleName = 'testing';
-  const apolloProviderPath = 'react/context/ApolloProvider';
-
-  const testingGlobals = {
-    ...globals,
-    [`../../../${apolloProviderPath}`]: 'ApolloProvider'
-  };
-
-  const output = {
-    file: `${distDir}/${bundleName}.js`,
-    format: 'cjs',
-  };
 
   // Create a type file for the new testing bundle that points to the existing
   // `react/testing` type definitions.
@@ -143,29 +142,16 @@ function prepareTesting() {
 
   return {
     input: `${distDir}/utilities/testing/index.js`,
-    external: (id) => hasOwn.call(testingGlobals, id),
-    output,
+    external,
+    output: {
+      file: `${distDir}/${bundleName}.js`,
+      format: 'cjs',
+    },
     plugins: [
       nodeResolve({
         extensions: ['.js', '.jsx'],
       }),
-      // Update the external ApolloProvider require in the testing bundle
-      // to point to the ESM context file, to make sure we're only ever
-      // creating/using one context. This helps ensure the same React Context
-      // is used by both React testing utilities and the application under
-      // test.
-      (() => {
-        const bundleJs = `${bundleName}.js`;
-        return {
-          generateBundle(_option, bundle) {
-            bundle[bundleJs].code =
-              bundle[bundleJs].code.replace(
-                `../../${apolloProviderPath}`,
-                `./${apolloProviderPath}`,
-              );
-          }
-        }
-      })()
+      fixContextReferences(`${bundleName}.js`)
     ],
   };
 }

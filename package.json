@@ -60,7 +60,7 @@
     "graphql-anywhere": "file:packages/graphql-anywhere"
   },
   "devDependencies": {
-    "@babel/core": "7.6.4",
+    "@babel/core": "7.7.2",
     "@babel/plugin-transform-modules-commonjs": "7.6.0",
     "@babel/plugin-transform-modules-umd": "7.2.0",
     "@condenast/bundlesize": "0.18.1",

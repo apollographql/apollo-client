@@ -18,7 +18,8 @@
     "coverage:upload": "codecov",
     "danger": "danger run --verbose --dangerfile=./config/dangerfile.ts",
     "deploy": "lerna publish -m \"chore: Publish\" && cd packages/apollo-client && npm run deploy",
-    "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"lib\" -exec rm -rf '{}' +"
+    "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"lib\" -exec rm -rf '{}' +",
+    "clean:deps": "lerna run clean:deps && rimraf node_modules/*"
   },
   "bundlesize": [
     {
@@ -92,6 +93,7 @@
     "prop-types": "15.7.2",
     "react": "16.10.2",
     "react-dom": "16.10.2",
+    "rimraf": "2.6.3",
     "rollup": "1.17.0",
     "rollup-plugin-invariant": "0.5.6",
     "rollup-plugin-local-resolve": "1.0.7",

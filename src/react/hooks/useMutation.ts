@@ -4,8 +4,7 @@ import { DocumentNode } from 'graphql';
 import { MutationHookOptions, MutationTuple } from '../types/types';
 import { MutationData } from '../data/MutationData';
 import { OperationVariables } from '../../core/types';
-
-const { getApolloContext } = require('../context/ApolloContext');
+import { getApolloContext } from '../context/ApolloContext';
 
 export function useMutation<TData = any, TVariables = OperationVariables>(
   mutation: DocumentNode,

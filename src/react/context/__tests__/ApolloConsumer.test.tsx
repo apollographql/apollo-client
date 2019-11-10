@@ -6,8 +6,7 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../ApolloProvider';
 import { ApolloConsumer } from '../ApolloConsumer';
-
-const { getApolloContext } = require('../ApolloContext');
+import { getApolloContext } from '../ApolloContext';
 
 const client = new ApolloClient({
   cache: new Cache(),

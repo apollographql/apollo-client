@@ -5,8 +5,7 @@ import { ApolloLink } from '../../../link/core/ApolloLink';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../ApolloProvider';
-
-const { getApolloContext } = require('../ApolloContext');
+import { getApolloContext } from '../ApolloContext';
 
 describe('<ApolloProvider /> Component', () => {
   afterEach(cleanup);

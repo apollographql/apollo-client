@@ -2,8 +2,7 @@ import React from 'react';
 import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../ApolloClient';
-
-const { getApolloContext } = require('./ApolloContext');
+import { getApolloContext } from './ApolloContext';
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;

@@ -4,8 +4,7 @@ import { DocumentNode } from 'graphql';
 import { SubscriptionHookOptions } from '../types/types';
 import { SubscriptionData } from '../data/SubscriptionData';
 import { OperationVariables } from '../../core/types';
-
-const { getApolloContext } = require('../context/ApolloContext');
+import { getApolloContext } from '../context/ApolloContext';
 
 export function useSubscription<TData = any, TVariables = OperationVariables>(
   subscription: DocumentNode,

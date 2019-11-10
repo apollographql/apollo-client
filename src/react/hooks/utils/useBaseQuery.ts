@@ -10,8 +10,7 @@ import {
 import { QueryData } from '../../data/QueryData';
 import { useDeepMemo } from './useDeepMemo';
 import { OperationVariables } from '../../../core/types';
-
-const { getApolloContext } = require('../../context/ApolloContext');
+import { getApolloContext } from '../../context/ApolloContext';
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,

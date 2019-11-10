@@ -7,8 +7,7 @@ import { ApolloProvider } from '../../context/ApolloProvider';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { useApolloClient } from '../useApolloClient';
-
-const { resetApolloContext } = require('../../context/ApolloContext');
+import { resetApolloContext } from '../../context/ApolloContext';
 
 describe('useApolloClient Hook', () => {
   afterEach(() => {

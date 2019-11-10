@@ -30,21 +30,6 @@ function external(id) {
   return hasOwn.call(globals, id);
 }
 
-// This function helps update `ApolloContext` require paths so that they're
-// relative from the root of the dist dir. This makes sure the Apollo Client
-// CJS and `testing` bundles can reference `ApolloContext` properly.
-function fixContextReferences(bundleJs) {
-  return {
-    generateBundle(_option, bundle) {
-      bundle[bundleJs].code =
-        bundle[bundleJs].code.replace(
-          /\'(.*)\/ApolloContext\'/g,
-          "'./react/context/ApolloContext'"
-        )
-    }
-  }
-}
-
 function prepareESM() {
   return {
     input: packageJson.module,
@@ -97,7 +82,6 @@ function prepareCJS() {
           'graphql-tag': ['gql']
         }
       }),
-      fixContextReferences(packageJson.main.replace(`${distDir}/`, ''))
     ]
   }
 }
@@ -151,7 +135,6 @@ function prepareTesting() {
       nodeResolve({
         extensions: ['.js', '.jsx'],
       }),
-      fixContextReferences(`${bundleName}.js`)
     ],
   };
 }

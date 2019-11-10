@@ -1,33 +1,33 @@
-const React = require('react');
+import React from 'react';
 
-// IMPORTANT NOTE:
-//
-// This file is intentionally using CommonJS. It's very important to
-// create a React context for use with Apollo Client's React integration in
-// one place only. Otherwise we can end up with a situation like:
-//
-// 1. `MockedProvider` in the `testing` bundle creates its own context.
-// 2. An `ApolloClient` instance is stored in that context.
-// 3. If the application under test is being bundled by something like webpack,
-//    it can create its own separate context (since it's following the ESM
-//    source).
-// 4. This leads to the Apollo Client instance not being found in the
-//    separate application context.
-//
-// By using CJS to refer to this file across the entire codebase,
-// we ensure that we're only ever pointing to one copy of the source. We're
-// not pointing to a copy that has been converted to CJS when bundling
-// `apollo-client.cjs.js` or the `testing` bundle.
+import { ApolloClient } from '../../ApolloClient';
 
-let apolloContext: any;
-
-exports.getApolloContext = function getApolloContext() {
-  if (!apolloContext) {
-    apolloContext = React.createContext({});
-  }
-  return apolloContext;
+export interface ApolloContextValue {
+  client?: ApolloClient<object>;
+  renderPromises?: Record<any, any>;
 }
 
-exports.resetApolloContext = function resetApolloContext() {
-  apolloContext = React.createContext({});
+// To make sure Apollo Client doesn't create more than one React context
+// (which can lead to problems like having an Apollo Client instance added
+// in one context, then attempting to retrieve it from another different
+// context), a single Apollo context is created and tracked in global state.
+// Since the created context is React specific, we've decided to attach it to
+// the `React` object for sharing.
+
+const contextSymbol = Symbol.for('__APOLLO_CONTEXT__');
+
+export function resetApolloContext() {
+  Object.defineProperty(React, contextSymbol, {
+    value: React.createContext<ApolloContextValue>({}),
+    enumerable: false,
+    configurable: true,
+    writable: false,
+  });
+}
+
+export function getApolloContext() {
+  if (!(React as any)[contextSymbol]) {
+    resetApolloContext();
+  }
+  return (React as any)[contextSymbol] as React.Context<ApolloContextValue>;
 }

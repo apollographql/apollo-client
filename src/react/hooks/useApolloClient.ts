@@ -2,8 +2,7 @@ import React from 'react';
 import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../ApolloClient';
-
-const { getApolloContext } = require('../context/ApolloContext');
+import { getApolloContext } from '../context/ApolloContext';
 
 export function useApolloClient(): ApolloClient<object> {
   const { client } = React.useContext(getApolloContext());

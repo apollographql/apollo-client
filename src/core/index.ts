@@ -78,6 +78,7 @@ export { ServerError, throwServerError } from '../link/utils/throwServerError';
 /* Utilities */
 
 export { Observable } from '../utilities/observables/Observable';
+export { getMainDefinition } from '../utilities/graphql/getFromAST';
 
 /* Supporting */
 

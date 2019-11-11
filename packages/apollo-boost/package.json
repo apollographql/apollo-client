@@ -31,7 +31,7 @@
     "postbuild": "npm run bundle",
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* lib/*",
-    "clean:deps": "npm run clean && rimraf node_modules/*",
+    "clean:deps": "npm run clean && rimraf node_modules",
     "prepublishOnly": "npm run build",
     "bundle": "rollup -c rollup.config.js"
   },

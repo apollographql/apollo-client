@@ -30,10 +30,10 @@ function external(id) {
 
 function prepareESM(input, outputDir) {
   return {
-    input, // packageJson.module,
+    input,
     external,
     output: {
-      dir: outputDir, // distDir,
+      dir: outputDir,
       format: 'esm',
       sourcemap: true,
     },
@@ -65,10 +65,10 @@ function prepareESM(input, outputDir) {
 
 function prepareCJS(input, output) {
   return {
-    input, // packageJson.module,
+    input,
     external,
     output: {
-      file: output, // packageJson.main,
+      file: output,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
@@ -86,9 +86,9 @@ function prepareCJS(input, output) {
 
 function prepareCJSMinified(input) {
   return {
-    input, // packageJson.main,
+    input,
     output: {
-      file: input.replace('.js', '.min.js'), // packageJson.main.replace('.js', '.min.js'),
+      file: input.replace('.js', '.min.js'),
       format: 'cjs',
     },
     plugins: [

@@ -15,7 +15,7 @@ import { DocumentType } from '../parser/parser';
 import {
   QueryResult,
   QueryPreviousData,
-  QueryOptions,
+  QueryDataOptions,
   QueryCurrentObservable,
   QueryTuple,
   QueryLazyOptions,
@@ -36,7 +36,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     context,
     forceUpdate
   }: {
-    options: QueryOptions<TData, TVariables>;
+    options: QueryDataOptions<TData, TVariables>;
     context: any;
     forceUpdate: any;
   }) {

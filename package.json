@@ -42,7 +42,7 @@
     "bundlesize": "npm run build && bundlesize",
     "prepdist": "node ./config/prepareDist.js",
     "predeploy": "npm run build",
-    "deploy": "cd dist && npm publish --tag beta --registry http://localhost:4873"
+    "deploy": "cd dist && npm publish --tag beta"
   },
   "bundlesize": [
     {

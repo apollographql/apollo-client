@@ -4,11 +4,7 @@ import { terser as minify } from 'rollup-plugin-terser';
 import cjs from 'rollup-plugin-commonjs';
 import fs from 'fs';
 
-import packageJson from '../package.json';
-import commonPackageJson from '../common/package.json';
-
 const distDir = './dist';
-const distCommonDir = `${distDir}/common`;
 
 const globals = {
   tslib: 'tslib',
@@ -32,11 +28,6 @@ function external(id) {
   return hasOwn.call(globals, id);
 }
 
-/**
- *
- * @param {string} input
- * @param {string} outputDir
- */
 function prepareESM(input, outputDir) {
   return {
     input, // packageJson.module,
@@ -72,11 +63,6 @@ function prepareESM(input, outputDir) {
   };
 }
 
-/**
- *
- * @param {string} input
- * @param {string} outputDir
- */
 function prepareCJS(input, output) {
   return {
     input, // packageJson.module,
@@ -98,11 +84,6 @@ function prepareCJS(input, output) {
   };
 }
 
-/**
- *
- * @param {string} input
- * @param {string} outputDir
- */
 function prepareCJSMinified(input) {
   return {
     input, // packageJson.main,
@@ -156,6 +137,10 @@ function prepareTesting() {
   };
 }
 
+import packageJson from '../package.json';
+const corePackageJson = require(`../${distDir}/core/package.json`);
+const coreDir = `${distDir}/core`;
+
 function rollup() {
   return [
     // @apollo/client
@@ -163,12 +148,13 @@ function rollup() {
     prepareCJS(packageJson.module, packageJson.main),
     prepareCJSMinified(packageJson.main),
     prepareTesting(),
-    // @apollo/client/common
+
+    // @apollo/client/core
     prepareCJS(
-      commonPackageJson.module,
-      commonPackageJson.main,
+      `${coreDir}/${corePackageJson.module}`,
+      `${coreDir}/${corePackageJson.main}`
     ),
-    prepareCJSMinified(commonPackageJson.main),
+    prepareCJSMinified(`${coreDir}/${corePackageJson.main}`),
   ];
 }
 

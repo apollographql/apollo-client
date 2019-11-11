@@ -1,16 +1,17 @@
 // The Apollo Client source that is published to npm is located in the
-// "dist" directory. This utility script is called just before deploying
-// Apollo Client, to make sure the "dist" directory is prepared for publishing.
+// "dist" directory. This utility script is called when building Apollo Client,
+// to make sure the "dist" directory is prepared for publishing.
 //
 // This script will:
 //
 // - Copy the current root package.json into "dist" after adjusting it for
 //   publishing.
 // - Copy the supporting files from the root into "dist" (e.g. `README.MD`,
-//   `LICENSE`, etc.)
+//   `LICENSE`, etc.).
+// - Create a new `package.json` for each sub-set bundle we support, and
+//   store it in the appropriate dist sub-directory.
 
 const packageJson = require('../package.json');
-const commonPackageJson = require('../common/package.json');
 const fs = require('fs');
 
 // The root package.json is marked as private to prevent publishing
@@ -34,20 +35,28 @@ const distPackageJson = JSON.stringify(
   2
 );
 
-const distCommonPackageJson = JSON.stringify(
-  commonPackageJson,
-  (_key, value) => (
-    typeof value === 'string' ? value.replace(/\.\/dist\/common\//, './').replace(/\.\/dist\//, '../') : value
-  ),
-  2
-);
-
 // Save the modified package.json to "dist"
 fs.writeFileSync(`${__dirname}/../dist/package.json`, distPackageJson);
-fs.writeFileSync(`${__dirname}/../dist/common/package.json`, distCommonPackageJson);
 
 // Copy supporting files into "dist"
 const srcDir = `${__dirname}/..`;
 const destDir = `${srcDir}/dist`;
 fs.copyFileSync(`${srcDir}/README.md`,  `${destDir}/README.md`);
 fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);
+
+function buildPackageJson(bundleName) {
+  return JSON.stringify({
+    name: `@apollo/client/${bundleName}`,
+    main: `${bundleName}.cjs.js`,
+    module: 'index.js',
+    types: 'index.d.ts',
+  }, null, 2);
+}
+
+// Create a `core` bundle package.json, storing it in the dist core
+// directory. This helps provide a way for Apollo Client to be used without
+// React, via `@apollo/client/core`.
+fs.writeFileSync(
+  `${__dirname}/../dist/core/package.json`,
+  buildPackageJson('core')
+);

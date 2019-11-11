@@ -17,7 +17,7 @@
     "prepublishOnly": "npm run build",
     "lint": "tslint -c \"../../config/tslint.json\" -p tsconfig.json src/*.ts",
     "clean": "rimraf coverage/* lib/*",
-    "clean:deps": "npm run clean && rimraf node_modules/*"
+    "clean:deps": "npm run clean && rimraf node_modules"
   },
   "repository": {
     "type": "git",

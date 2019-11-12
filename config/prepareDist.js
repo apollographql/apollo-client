@@ -11,8 +11,13 @@
 // - Create a new `package.json` for each sub-set bundle we support, and
 //   store it in the appropriate dist sub-directory.
 
-const packageJson = require('../package.json');
 const fs = require('fs');
+const recast = require('recast');
+
+
+/* @apollo/client */
+
+const packageJson = require('../package.json');
 
 // The root package.json is marked as private to prevent publishing
 // from happening in the root of the project. This sets the package back to
@@ -44,6 +49,9 @@ const destDir = `${srcDir}/dist`;
 fs.copyFileSync(`${srcDir}/README.md`,  `${destDir}/README.md`);
 fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);
 
+
+/* @apollo/client/core */
+
 function buildPackageJson(bundleName) {
   return JSON.stringify({
     name: `@apollo/client/${bundleName}`,
@@ -59,4 +67,36 @@ function buildPackageJson(bundleName) {
 fs.writeFileSync(
   `${__dirname}/../dist/core/package.json`,
   buildPackageJson('core')
+);
+
+// Build a new `core.cjs.js` entry point file, that includes everything
+// except the exports listed in `src/react/index.ts`. Copy this file into
+// the `dist/core` directory, to allow Apollo Client core only imports
+// using `@apollo/client/core`.
+
+const reactIndexSrc = fs.readFileSync(`${__dirname}/../dist/react/index.js`);
+const reactExports = [];
+const ast = recast.parse(reactIndexSrc);
+recast.visit(ast, {
+  visitExportSpecifier(path) {
+    reactExports.push(path.value.exported.name);
+    return false;
+  }
+});
+
+const coreCjs = [
+  "const allExports = require('../apollo-client.cjs');",
+  `const filteredExports =
+    Object.keys(allExports)
+      .filter(key => !['${reactExports.join("', '")}'].includes(key))
+      .reduce((acc, key) => {
+        acc[key] = allExports[key];
+        return acc;
+      }, {});`,
+  "module.exports = filteredExports;"
+].join('\n');
+
+fs.writeFileSync(
+  `${__dirname}/../dist/core/core.cjs.js`,
+  coreCjs
 );

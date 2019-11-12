@@ -4,6 +4,8 @@ import { terser as minify } from 'rollup-plugin-terser';
 import cjs from 'rollup-plugin-commonjs';
 import fs from 'fs';
 
+import packageJson from '../package.json';
+
 const distDir = './dist';
 
 const globals = {
@@ -137,24 +139,12 @@ function prepareTesting() {
   };
 }
 
-import packageJson from '../package.json';
-const corePackageJson = require(`../${distDir}/core/package.json`);
-const coreDir = `${distDir}/core`;
-
 function rollup() {
   return [
-    // @apollo/client
     prepareESM(packageJson.module, distDir),
     prepareCJS(packageJson.module, packageJson.main),
     prepareCJSMinified(packageJson.main),
     prepareTesting(),
-
-    // @apollo/client/core
-    prepareCJS(
-      `${coreDir}/${corePackageJson.module}`,
-      `${coreDir}/${corePackageJson.main}`
-    ),
-    prepareCJSMinified(`${coreDir}/${corePackageJson.main}`),
   ];
 }
 

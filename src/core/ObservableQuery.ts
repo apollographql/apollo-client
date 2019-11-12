@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
 import { isEqual } from '../utilities/common/isEqual';
@@ -19,13 +18,8 @@ import {
 import { QueryStoreValue } from '../data/queries';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 
-export type ApolloCurrentQueryResult<T> = {
-  data: T | undefined;
-  errors?: ReadonlyArray<GraphQLError>;
-  loading: boolean;
-  networkStatus: NetworkStatus;
+export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
   error?: ApolloError;
-  stale?: boolean;
 };
 
 export interface FetchMoreOptions<
@@ -154,6 +148,7 @@ export class ObservableQuery<
       error: this.lastError,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
+      stale: lastResult ? lastResult.stale : false,
     };
 
     if (this.isTornDown) {
@@ -198,7 +193,7 @@ export class ObservableQuery<
       }
     }
 
-    this.updateLastResult({ ...result, stale: false });
+    this.updateLastResult(result);
 
     return result;
   }

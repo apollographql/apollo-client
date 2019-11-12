@@ -1449,6 +1449,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
+          stale: false,
         });
         resolve();
       });
@@ -1457,6 +1458,7 @@ describe('ObservableQuery', () => {
         loading: true,
         data: undefined,
         networkStatus: 1,
+        stale: false,
       });
 
       setTimeout(
@@ -1465,6 +1467,7 @@ describe('ObservableQuery', () => {
             loading: true,
             data: undefined,
             networkStatus: 1,
+            stale: false,
           });
         }),
         0,
@@ -1600,6 +1603,7 @@ describe('ObservableQuery', () => {
           data: void 0,
           loading: true,
           networkStatus: 1,
+          stale: false,
         });
 
         // we can use this to trigger the query
@@ -1665,6 +1669,7 @@ describe('ObservableQuery', () => {
           data: undefined,
           loading: true,
           networkStatus: 1,
+          stale: false,
         });
 
         subscribeAndCount(reject, observable, (handleCount, subResult) => {
@@ -1727,6 +1732,7 @@ describe('ObservableQuery', () => {
           data: undefined,
           loading: true,
           networkStatus: 1,
+          stale: false,
         });
 
         subscribeAndCount(reject, observable, (handleCount, subResult) => {

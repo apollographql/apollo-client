@@ -3,7 +3,7 @@ import { DocumentNode } from 'graphql';
 
 import {
   QueryHookOptions,
-  QueryOptions,
+  QueryDataOptions,
   QueryTuple,
   QueryResult,
 } from '../../types/types';
@@ -25,7 +25,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
 
   if (!queryDataRef.current) {
     queryDataRef.current = new QueryData<TData, TVariables>({
-      options: updatedOptions as QueryOptions<TData, TVariables>,
+      options: updatedOptions as QueryDataOptions<TData, TVariables>,
       context,
       forceUpdate
     });

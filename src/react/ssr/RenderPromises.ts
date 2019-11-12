@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql';
 
 import { ObservableQuery } from '../../core/ObservableQuery';
-import { QueryOptions } from '../types/types';
+import { QueryDataOptions } from '../types/types';
 import { QueryData } from '../data/QueryData';
 
 type QueryInfo = {
@@ -18,7 +18,7 @@ function makeDefaultQueryInfo(): QueryInfo {
 
 export class RenderPromises {
   // Map from Query component instances to pending fetchData promises.
-  private queryPromises = new Map<QueryOptions<any, any>, Promise<any>>();
+  private queryPromises = new Map<QueryDataOptions<any, any>, Promise<any>>();
 
   // Two-layered map from (query document, stringified variables) to QueryInfo
   // objects. These QueryInfo objects are intended to survive through the whole
@@ -29,14 +29,14 @@ export class RenderPromises {
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables>(
     observable: ObservableQuery<any, TVariables>,
-    props: QueryOptions<TData, TVariables>
+    props: QueryDataOptions<TData, TVariables>
   ) {
     this.lookupQueryInfo(props).observable = observable;
   }
 
   // Get's the cached observable that matches the SSR Query instances query and variables.
   public getSSRObservable<TData, TVariables>(
-    props: QueryOptions<TData, TVariables>
+    props: QueryDataOptions<TData, TVariables>
   ) {
     return this.lookupQueryInfo(props).observable;
   }
@@ -84,7 +84,7 @@ export class RenderPromises {
   }
 
   private lookupQueryInfo<TData, TVariables>(
-    props: QueryOptions<TData, TVariables>
+    props: QueryDataOptions<TData, TVariables>
   ): QueryInfo {
     const { queryInfoTrie } = this;
     const { query, variables } = props;

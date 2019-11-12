@@ -3,14 +3,14 @@ import { equal as isEqual } from '@wry/equality';
 import { OperationData } from './OperationData';
 import {
   SubscriptionCurrentObservable,
-  SubscriptionOptions,
+  SubscriptionDataOptions,
   SubscriptionResult
 } from '../types/types';
 
 export class SubscriptionData<
   TData = any,
   TVariables = any
-> extends OperationData<SubscriptionOptions<TData, TVariables>> {
+> extends OperationData<SubscriptionDataOptions<TData, TVariables>> {
   private setResult: any;
   private currentObservable: SubscriptionCurrentObservable = {};
 
@@ -19,7 +19,7 @@ export class SubscriptionData<
     context,
     setResult
   }: {
-    options: SubscriptionOptions<TData, TVariables>;
+    options: SubscriptionDataOptions<TData, TVariables>;
     context: any;
     setResult: any;
   }) {
@@ -77,7 +77,7 @@ export class SubscriptionData<
     delete this.currentObservable.query;
   }
 
-  private initialize(options: SubscriptionOptions<TData, TVariables>) {
+  private initialize(options: SubscriptionDataOptions<TData, TVariables>) {
     if (this.currentObservable.query || this.getOptions().skip === true) return;
     this.currentObservable.query = this.refreshClient().client.subscribe({
       query: options.subscription,

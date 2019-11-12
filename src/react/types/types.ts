@@ -85,7 +85,7 @@ export interface QueryResult<TData = any, TVariables = OperationVariables>
   called: boolean;
 }
 
-export interface QueryOptions<TData = any, TVariables = OperationVariables>
+export interface QueryDataOptions<TData = any, TVariables = OperationVariables>
   extends QueryFunctionOptions<TData, TVariables> {
   children?: (result: QueryResult<TData, TVariables>) => ReactNode;
   query: DocumentNode;
@@ -109,7 +109,7 @@ export interface QueryPreviousData<TData, TVariables> {
   observableQueryOptions?: {};
   result?: ApolloQueryResult<TData> | null;
   loading?: boolean;
-  options?: QueryOptions<TData, TVariables>;
+  options?: QueryDataOptions<TData, TVariables>;
   error?: ApolloError;
 }
 
@@ -188,7 +188,7 @@ export interface MutationHookOptions<
   mutation?: DocumentNode;
 }
 
-export interface MutationOptions<TData = any, TVariables = OperationVariables>
+export interface MutationDataOptions<TData = any, TVariables = OperationVariables>
   extends BaseMutationOptions<TData, TVariables> {
   mutation: DocumentNode;
 }
@@ -235,7 +235,7 @@ export interface SubscriptionHookOptions<
   subscription?: DocumentNode;
 }
 
-export interface SubscriptionOptions<
+export interface SubscriptionDataOptions<
   TData = any,
   TVariables = OperationVariables
 > extends BaseSubscriptionOptions<TData, TVariables> {

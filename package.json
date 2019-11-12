@@ -30,7 +30,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "npx tsc",
-    "postbuild": "npm run bundle",
+    "postbuild": "npm run bundle && npm run prepdist",
     "watch": "npx tsc-watch --onSuccess \"npm run postbuild\"",
     "clean": "npx rimraf -r dist coverage lib",
     "test": "jest --config ./config/jest.config.js",
@@ -41,7 +41,7 @@
     "coverage:upload": "npx codecov",
     "bundlesize": "npm run build && bundlesize",
     "prepdist": "node ./config/prepareDist.js",
-    "predeploy": "npm run build && npm run prepdist",
+    "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag beta"
   },
   "bundlesize": [
@@ -89,6 +89,7 @@
     "prop-types": "15.7.2",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
+    "recast": "^0.18.5",
     "rimraf": "^3.0.0",
     "rollup": "1.21.2",
     "rollup-plugin-commonjs": "^10.1.0",

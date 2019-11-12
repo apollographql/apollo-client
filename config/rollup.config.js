@@ -9,7 +9,7 @@ import packageJson from '../package.json';
 const distDir = './dist';
 
 const globals = {
-  'tslib': 'tslib',
+  tslib: 'tslib',
   'ts-invariant': 'invariant',
   'symbol-observable': '$$observable',
   'graphql/language/printer': 'print',
@@ -21,7 +21,7 @@ const globals = {
   '@wry/equality': 'wryEquality',
   graphql: 'graphql',
   react: 'React',
-  'zen-observable': 'Observable'
+  'zen-observable': 'Observable',
 };
 
 const hasOwn = Object.prototype.hasOwnProperty;
@@ -30,12 +30,12 @@ function external(id) {
   return hasOwn.call(globals, id);
 }
 
-function prepareESM() {
+function prepareESM(input, outputDir) {
   return {
-    input: packageJson.module,
+    input,
     external,
     output: {
-      dir: distDir,
+      dir: outputDir,
       format: 'esm',
       sourcemap: true,
     },
@@ -58,39 +58,39 @@ function prepareESM() {
       }),
       cjs({
         namedExports: {
-          'graphql-tag': ['gql']
-        }
+          'graphql-tag': ['gql'],
+        },
       }),
-    ]
+    ],
   };
 }
 
-function prepareCJS() {
+function prepareCJS(input, output) {
   return {
-    input: packageJson.module,
+    input,
     external,
     output: {
-      file: packageJson.main,
+      file: output,
       format: 'cjs',
       sourcemap: true,
-      exports: 'named'
+      exports: 'named',
     },
     plugins: [
       nodeResolve(),
       cjs({
         namedExports: {
-          'graphql-tag': ['gql']
-        }
+          'graphql-tag': ['gql'],
+        },
       }),
-    ]
-  }
+    ],
+  };
 }
 
-function prepareCJSMinified() {
+function prepareCJSMinified(input) {
   return {
-    input: packageJson.main,
+    input,
     output: {
-      file: packageJson.main.replace('.js', '.min.js'),
+      file: input.replace('.js', '.min.js'),
       format: 'cjs',
     },
     plugins: [
@@ -141,10 +141,10 @@ function prepareTesting() {
 
 function rollup() {
   return [
-    prepareESM(),
-    prepareCJS(),
-    prepareCJSMinified(),
-    prepareTesting()
+    prepareESM(packageJson.module, distDir),
+    prepareCJS(packageJson.module, packageJson.main),
+    prepareCJSMinified(packageJson.main),
+    prepareTesting(),
   ];
 }
 

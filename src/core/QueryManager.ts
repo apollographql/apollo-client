@@ -431,9 +431,9 @@ export class QueryManager<TStore> {
       fetchMoreForQueryId,
     });
 
-    this.broadcastQueries();
-
     if (shouldFetch) {
+      this.broadcastQueries();
+
       const networkResult = this.fetchRequest<T>({
         requestId,
         queryId,
@@ -765,11 +765,24 @@ export class QueryManager<TStore> {
 
     let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
 
-    return new ObservableQuery<T, TVariables>({
+    const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
     });
+
+    this.queryStore.initQuery({
+      queryId: observable.queryId,
+      document: this.transform(options.query).document,
+      variables: options.variables,
+      storePreviousVariables: false,
+      isPoll: typeof options.pollInterval === 'number',
+      isRefetch: false,
+      metadata: options.metadata,
+      fetchMoreForQueryId: void 0,
+    });
+
+    return observable;
   }
 
   public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {
@@ -1034,7 +1047,7 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  public getCurrentQueryResult<T>(
+  private getCurrentQueryResult<T>(
     observableQuery: ObservableQuery<T>,
     optimistic: boolean = true,
   ): {

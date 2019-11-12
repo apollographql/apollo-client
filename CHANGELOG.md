@@ -31,6 +31,9 @@
 - The `gql` template tag should now be imported from the `@apollo/client` package, rather than the `graphql-tag` package. Although the `graphql-tag` package still works for now, future versions of `@apollo/client` may change the implementation details of `gql` without a major version bump. <br/>
   [@hwillson](https://github.com/hwillson) in [#5451](https://github.com/apollographql/apollo-client/pull/5451)
 
+- `@apollo/client/core` can be used to import the Apollo Client core, which includes everything the main `@apollo/client` package does, except for all React related functionality.  <br/>
+  [@kamilkisiela](https://github.com/kamilkisiela) in [#5541](https://github.com/apollographql/apollo-client/pull/5541)
+
 ### Breaking Changes
 
 - Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>

@@ -32,13 +32,14 @@ delete packageJson.bundlesize;
 // on-going package development (e.g. running tests, supporting npm link, etc.).
 // When publishing from "dist" however, we need to update the package.json
 // to point to the files within the same directory.
-const distPackageJson = JSON.stringify(
-  packageJson,
-  (_key, value) => (
-    typeof value === 'string' ? value.replace(/\.\/dist\//, '') : value
-  ),
-  2
-);
+const distPackageJson = JSON.stringify(packageJson, (_key, value) => {
+  if (typeof value === 'string' && value.startsWith('./dist/')) {
+    const parts = value.split('/');
+    parts.splice(1, 1); // remove dist
+    return parts.join('/');
+  }
+  return value;
+}, 2) + "\n";
 
 // Save the modified package.json to "dist"
 fs.writeFileSync(`${__dirname}/../dist/package.json`, distPackageJson);
@@ -58,7 +59,7 @@ function buildPackageJson(bundleName) {
     main: `${bundleName}.cjs.js`,
     module: 'index.js',
     types: 'index.d.ts',
-  }, null, 2);
+  }, null, 2) + "\n";
 }
 
 // Create a `core` bundle package.json, storing it in the dist core
@@ -76,27 +77,18 @@ fs.writeFileSync(
 
 const reactIndexSrc = fs.readFileSync(`${__dirname}/../dist/react/index.js`);
 const reactExports = [];
-const ast = recast.parse(reactIndexSrc);
-recast.visit(ast, {
+recast.visit(recast.parse(reactIndexSrc), {
   visitExportSpecifier(path) {
     reactExports.push(path.value.exported.name);
     return false;
-  }
+  },
 });
 
-const coreCjs = [
+fs.writeFileSync(`${__dirname}/../dist/core/core.cjs.js`, [
   "const allExports = require('../apollo-client.cjs');",
-  `const filteredExports =
-    Object.keys(allExports)
-      .filter(key => !['${reactExports.join("', '")}'].includes(key))
-      .reduce((acc, key) => {
-        acc[key] = allExports[key];
-        return acc;
-      }, {});`,
-  "module.exports = filteredExports;"
-].join('\n');
-
-fs.writeFileSync(
-  `${__dirname}/../dist/core/core.cjs.js`,
-  coreCjs
-);
+  `const reactExportNames = new Set(${JSON.stringify(reactExports)});`,
+  "Object.keys(allExports).forEach(name => {",
+  "  if (!reactExportNames.has(name)) exports[name] = allExports[name];",
+  "});",
+  "",
+].join('\n'));

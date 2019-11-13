@@ -34,15 +34,7 @@ export { isApolloError, ApolloError } from '../errors/ApolloError';
 
 /* Cache */
 
-export { Transaction, ApolloCache } from '../cache/core/cache';
-export { Cache } from '../cache/core/types/Cache';
-export { DataProxy } from '../cache/core/types/DataProxy';
-export {
-  InMemoryCache,
-  InMemoryCacheConfig,
-} from '../cache/inmemory/inMemoryCache';
-export { defaultDataIdFromObject } from '../cache/inmemory/policies';
-export * from '../cache/inmemory/types';
+export * from '../cache';
 
 /* Link */
 

@@ -34,6 +34,9 @@
 - `@apollo/client/core` can be used to import the Apollo Client core, which includes everything the main `@apollo/client` package does, except for all React related functionality.  <br/>
   [@kamilkisiela](https://github.com/kamilkisiela) in [#5541](https://github.com/apollographql/apollo-client/pull/5541)
 
+- `@apollo/client/cache` can be used to import the Apollo Client cache without importing other parts of the Apollo Client codebase. <br/>
+  [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
+
 ### Breaking Changes
 
 - Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>

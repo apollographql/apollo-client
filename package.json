@@ -84,7 +84,7 @@
     "isomorphic-fetch": "2.2.1",
     "jest": "24.9.0",
     "jest-junit": "8.0.0",
-    "lerna": "3.18.1",
+    "lerna": "3.18.4",
     "lint-staged": "8.2.1",
     "lodash": "4.17.15",
     "pre-commit": "1.2.2",

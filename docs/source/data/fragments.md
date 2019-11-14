@@ -170,11 +170,11 @@ When loading `.graphql` files with [graphql-tag/loader](https://github.com/apoll
 #import "./someFragment.graphql"
 ```
 
-Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](/recipes/webpack/#fragments) section for additional details.
+Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](/integrations/webpack/#fragments) section for additional details.
 
 ## Fragments on unions and interfaces
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/advanced/boost-migration/).
+> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/migrating/boost-migration/).
 
 By default, Apollo Client doesn't require any knowledge of the GraphQL schema, which means it's very easy to set up and works with any server and supports even the largest schemas. However, as your usage of Apollo and GraphQL becomes more sophisticated, you may start using fragments on interfaces or unions. Here's an example of a query that uses fragments on an interface:
 

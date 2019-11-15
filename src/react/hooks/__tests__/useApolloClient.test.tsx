@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 import { InvariantError } from 'ts-invariant';
 
@@ -8,6 +7,9 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { useApolloClient } from '../useApolloClient';
 import { resetApolloContext } from '../../context/ApolloContext';
+import { requireReactLazily } from '../../react';
+
+const React = requireReactLazily();
 
 describe('useApolloClient Hook', () => {
   afterEach(() => {

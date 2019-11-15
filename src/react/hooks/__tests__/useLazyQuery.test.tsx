@@ -1,4 +1,3 @@
-import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { render, wait } from '@testing-library/react';
@@ -8,6 +7,9 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useLazyQuery } from '../useLazyQuery';
+import { requireReactLazily } from '../../react';
+
+const React = requireReactLazily();
 
 describe('useLazyQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`

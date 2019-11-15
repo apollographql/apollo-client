@@ -1,4 +1,3 @@
-import React, { useContext } from 'react';
 import { render, cleanup } from '@testing-library/react';
 
 import { ApolloLink } from '../../../link/core/ApolloLink';
@@ -6,6 +5,10 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../ApolloProvider';
 import { getApolloContext } from '../ApolloContext';
+import { requireReactLazily } from '../../react';
+
+const React = requireReactLazily();
+const { useContext } = React;
 
 describe('<ApolloProvider /> Component', () => {
   afterEach(cleanup);

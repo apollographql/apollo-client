@@ -1,6 +1,5 @@
-import React from 'react';
-
 import { ApolloClient } from '../../ApolloClient';
+import { requireReactLazily } from '../react';
 
 export interface ApolloContextValue {
   client?: ApolloClient<object>;
@@ -17,6 +16,7 @@ export interface ApolloContextValue {
 const contextSymbol = Symbol.for('__APOLLO_CONTEXT__');
 
 export function resetApolloContext() {
+  const React = requireReactLazily();
   Object.defineProperty(React, contextSymbol, {
     value: React.createContext<ApolloContextValue>({}),
     enumerable: false,
@@ -26,6 +26,7 @@ export function resetApolloContext() {
 }
 
 export function getApolloContext() {
+  const React = requireReactLazily();
   if (!(React as any)[contextSymbol]) {
     resetApolloContext();
   }

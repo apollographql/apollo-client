@@ -6,8 +6,14 @@
 
 - Update the `fetchMore` type signature to accept `context`.  <br/>
   [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
+
 - Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
   [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
+
+- Local state resolver functions now receive a `fragmentMap: FragmentMap`
+  object, in addition to the `field: FieldNode` object, via the `info`
+  parameter. <br/>
+  [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
 
 ### GraphQL Anywhere vNext
 

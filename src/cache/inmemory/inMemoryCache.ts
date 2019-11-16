@@ -202,6 +202,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // is convenient in cases where you want to evict multiple entities before
       // performing a single garbage collection.
       this.optimisticData.delete(dataId);
+      this.broadcastWatches();
       return !this.optimisticData.has(dataId);
     }
     return false;

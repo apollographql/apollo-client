@@ -51,6 +51,10 @@ export abstract class EntityCache implements NormalizedCache {
   public delete(dataId: string): void {
     delete this.data[dataId];
     delete this.refs[dataId];
+    // Note that we do not delete the this.rootIds[dataId] retainment
+    // count for this ID, since an object with the same ID could appear in
+    // the cache again, and should not have to be retained again.
+    // delete this.rootIds[dataId];
     if (this.depend) this.depend.dirty(dataId);
   }
 

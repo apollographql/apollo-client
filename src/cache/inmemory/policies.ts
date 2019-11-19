@@ -79,7 +79,7 @@ type KeyArgsFunction = (
 ) => ReturnType<IdGetter>;
 
 export type FieldPolicy<TValue> = {
-  keyArgs?: KeySpecifier | KeyArgsFunction;
+  keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TValue>;
   merge?: FieldMergeFunction<TValue>;
 };
@@ -145,7 +145,8 @@ export function defaultDataIdFromObject(object: StoreObject) {
   return null;
 }
 
-const nullKeyFn: KeyFieldsFunction = () => null;
+const nullKeyFieldsFn: KeyFieldsFunction = () => null;
+const simpleKeyArgsFn: KeyArgsFunction = field => field.name.value;
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -248,7 +249,7 @@ export class Policies {
 
       existing.keyFn =
         // Pass false to disable normalization for this typename.
-        keyFields === false ? nullKeyFn :
+        keyFields === false ? nullKeyFieldsFn :
         // Pass an array of strings to use those fields to compute a
         // composite ID for objects of this typename.
         Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
@@ -259,13 +260,22 @@ export class Policies {
         Object.keys(fields).forEach(fieldName => {
           const existing = this.getFieldPolicy(typename, fieldName, true);
           const incoming = fields[fieldName];
+
           if (typeof incoming === "function") {
             existing.read = incoming;
           } else {
             const { keyArgs, read, merge } = incoming;
-            existing.keyFn = Array.isArray(keyArgs)
-              ? keyArgsFnFromSpecifier(keyArgs)
-              : typeof keyArgs === "function" ? keyArgs : void 0;
+
+            existing.keyFn =
+              // Pass false to disable argument-based differentiation of
+              // field identities.
+              keyArgs === false ? simpleKeyArgsFn :
+              // Pass an array of strings to use named arguments to
+              // compute a composite identity for the field.
+              Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
+              // Pass a function to take full control over field identity.
+              typeof keyArgs === "function" ? keyArgs : void 0;
+
             if (typeof read === "function") existing.read = read;
             if (typeof merge === "function") existing.merge = merge;
           }
@@ -433,7 +443,7 @@ export type StoreValueMergeFunction = (
 
 function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,
-): Policies["typePolicies"][string]["fields"][string]["keyFn"] {
+): KeyArgsFunction {
   const topLevelArgNames: Record<string, true> = Object.create(null);
 
   specifier.forEach(name => {
@@ -444,6 +454,7 @@ function keyArgsFnFromSpecifier(
 
   return (field, context) => {
     const fieldName = field.name.value;
+
     if (field.arguments && field.arguments.length > 0) {
       const args = Object.create(null);
 
@@ -465,7 +476,7 @@ function keyArgsFnFromSpecifier(
 
 function keyFieldsFnFromSpecifier(
   specifier: KeySpecifier,
-): Policies["typePolicies"][string]["keyFn"] {
+): KeyFieldsFunction {
   const trie = new KeyTrie<{
     aliasMap?: AliasMap;
   }>(canUseWeakMap);

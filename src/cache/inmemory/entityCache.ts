@@ -1,13 +1,14 @@
-import { dep, OptimisticDependencyFunction } from 'optimism';
-import { isReference } from '../../utilities/graphql/storeUtils';
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
+import { dep, OptimisticDependencyFunction } from "optimism";
+import { isReference } from "../../utilities/graphql/storeUtils";
+import { NormalizedCache, NormalizedCacheObject, StoreObject } from "./types";
+import { ObjectCache } from "./objectCache";
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
 type DependType = OptimisticDependencyFunction<string> | null;
 
 export abstract class EntityCache implements NormalizedCache {
-  protected data: NormalizedCacheObject = Object.create(null);
+  constructor(protected cache: ObjectCache = new ObjectCache()) {}
 
   // It seems like this property ought to be protected rather than public,
   // but TypeScript doesn't realize it's inherited from a shared base
@@ -18,7 +19,7 @@ export abstract class EntityCache implements NormalizedCache {
 
   public abstract addLayer(
     layerId: string,
-    replay: (layer: EntityCache) => any,
+    replay: (layer: EntityCache) => any
   ): EntityCache;
 
   public abstract removeLayer(layerId: string): EntityCache;
@@ -28,28 +29,28 @@ export abstract class EntityCache implements NormalizedCache {
   // are inherited by the Root and Layer subclasses.
 
   public toObject(): NormalizedCacheObject {
-    return { ...this.data };
+    return { ...this.cache.toObject() };
   }
 
   public has(dataId: string): boolean {
-    return hasOwn.call(this.data, dataId);
+    return this.cache.has(dataId);
   }
 
   public get(dataId: string): StoreObject {
     if (this.depend) this.depend(dataId);
-    return this.data[dataId]!;
+    return this.cache.get(dataId);
   }
 
   public set(dataId: string, value: StoreObject): void {
-    if (!hasOwn.call(this.data, dataId) || value !== this.data[dataId]) {
-      this.data[dataId] = value;
+    if (!this.cache.has(dataId) || value !== this.cache.get(dataId)) {
+      this.cache.set(dataId, value);
       delete this.refs[dataId];
       if (this.depend) this.depend.dirty(dataId);
     }
   }
 
   public delete(dataId: string): void {
-    delete this.data[dataId];
+    this.cache.delete(dataId);
     delete this.refs[dataId];
     if (this.depend) this.depend.dirty(dataId);
   }
@@ -59,7 +60,7 @@ export abstract class EntityCache implements NormalizedCache {
   }
 
   public replace(newData: NormalizedCacheObject | null): void {
-    Object.keys(this.data).forEach(dataId => {
+    this.cache.getAllKeys().forEach(dataId => {
       if (!(newData && hasOwn.call(newData, dataId))) {
         this.delete(dataId);
       }
@@ -79,7 +80,7 @@ export abstract class EntityCache implements NormalizedCache {
   } = Object.create(null);
 
   public retain(rootId: string): number {
-    return this.rootIds[rootId] = (this.rootIds[rootId] || 0) + 1;
+    return (this.rootIds[rootId] = (this.rootIds[rootId] || 0) + 1);
   }
 
   public release(rootId: string): number {
@@ -131,11 +132,11 @@ export abstract class EntityCache implements NormalizedCache {
 
   public findChildRefIds(dataId: string): Record<string, true> {
     if (!hasOwn.call(this.refs, dataId)) {
-      const found = this.refs[dataId] = Object.create(null);
-      const workSet = new Set([this.data[dataId]]);
+      const found = (this.refs[dataId] = Object.create(null));
+      const workSet = new Set([this.cache.get(dataId)]);
       // Within the cache, only arrays and objects can contain child entity
       // references, so we can prune the traversal using this predicate:
-      const canTraverse = (obj: any) => obj !== null && typeof obj === 'object';
+      const canTraverse = (obj: any) => obj !== null && typeof obj === "object";
       workSet.forEach(obj => {
         if (isReference(obj)) {
           found[obj.__ref] = true;
@@ -165,11 +166,13 @@ export namespace EntityCache {
     constructor({
       resultCaching = true,
       seed,
+      objectCache
     }: {
       resultCaching?: boolean;
       seed?: NormalizedCacheObject;
+      objectCache?: ObjectCache;
     }) {
-      super();
+      super(objectCache);
       if (resultCaching) {
         // Regard this.depend as publicly readonly but privately mutable.
         (this as any).depend = dep<string>();
@@ -180,7 +183,7 @@ export namespace EntityCache {
 
     public addLayer(
       layerId: string,
-      replay: (layer: EntityCache) => any,
+      replay: (layer: EntityCache) => any
     ): EntityCache {
       // The replay function will be called in the Layer constructor.
       return new Layer(layerId, this, replay, this.sharedLayerDepend);
@@ -200,7 +203,7 @@ class Layer extends EntityCache {
     public readonly id: string,
     public readonly parent: Layer | EntityCache.Root,
     public readonly replay: (layer: EntityCache) => any,
-    public readonly depend: DependType,
+    public readonly depend: DependType
   ) {
     super();
     replay(this);
@@ -208,7 +211,7 @@ class Layer extends EntityCache {
 
   public addLayer(
     layerId: string,
-    replay: (layer: EntityCache) => any,
+    replay: (layer: EntityCache) => any
   ): EntityCache {
     return new Layer(layerId, this, replay, this.depend);
   }
@@ -221,7 +224,7 @@ class Layer extends EntityCache {
       // Dirty every ID we're removing.
       // TODO Some of these IDs could escape dirtying if value unchanged.
       if (this.depend) {
-        Object.keys(this.data).forEach(dataId => this.depend.dirty(dataId));
+        this.cache.getAllKeys().forEach(dataId => this.depend.dirty(dataId));
       }
       return parent;
     }
@@ -236,7 +239,7 @@ class Layer extends EntityCache {
   public toObject(): NormalizedCacheObject {
     return {
       ...this.parent.toObject(),
-      ...this.data,
+      ...this.cache.toObject()
     };
   }
 
@@ -244,7 +247,7 @@ class Layer extends EntityCache {
     // Because the Layer implementation of the delete method uses void 0 to
     // indicate absence, that's what we need to check for here, rather than
     // calling super.has(dataId).
-    if (hasOwn.call(this.data, dataId) && this.data[dataId] === void 0) {
+    if (this.cache.has(dataId) && this.cache.get(dataId) === void 0) {
       return false;
     }
     return this.parent.has(dataId);
@@ -255,13 +258,13 @@ class Layer extends EntityCache {
     // In case this.parent (or one of its ancestors) has an entry for this ID,
     // we need to shadow it with an undefined value, or it might be inherited
     // by the Layer#get method.
-    this.data[dataId] = void 0;
+    this.cache.set(dataId, void 0);
   }
 
   // All the other inherited accessor methods work as-is, but the get method
   // needs to fall back to this.parent.get when accessing a missing dataId.
   public get(dataId: string): StoreObject {
-    if (hasOwn.call(this.data, dataId)) {
+    if (this.cache.has(dataId)) {
       return super.get(dataId);
     }
     // If this layer has a this.depend function and it's not the one
@@ -286,10 +289,12 @@ class Layer extends EntityCache {
 
   public findChildRefIds(dataId: string): Record<string, true> {
     const fromParent = this.parent.findChildRefIds(dataId);
-    return hasOwn.call(this.data, dataId) ? {
-      ...fromParent,
-      ...super.findChildRefIds(dataId),
-    } : fromParent;
+    return this.cache.has(dataId)
+      ? {
+          ...fromParent,
+          ...super.findChildRefIds(dataId)
+        }
+      : fromParent;
   }
 }
 
@@ -300,6 +305,7 @@ export function supportsResultCaching(store: any): store is EntityCache {
 
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
+  objectCache?: ObjectCache
 ): NormalizedCache {
-  return new EntityCache.Root({ resultCaching: true, seed });
+  return new EntityCache.Root({ resultCaching: true, seed, objectCache });
 }

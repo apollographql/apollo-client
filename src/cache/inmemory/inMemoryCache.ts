@@ -1,39 +1,38 @@
 // Make builtins like Map and Set safe to use with non-extensible objects.
-import './fixPolyfills';
+import "./fixPolyfills";
 
-import { DocumentNode } from 'graphql';
-import { wrap } from 'optimism';
-import { KeyTrie } from 'optimism';
+import { DocumentNode } from "graphql";
+import { wrap } from "optimism";
+import { KeyTrie } from "optimism";
 
-import { ApolloCache, Transaction } from '../core/cache';
-import { Cache } from '../core/types/Cache';
-import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { canUseWeakMap } from '../../utilities/common/canUse';
-import {
-  ApolloReducerConfig,
-  NormalizedCacheObject,
-} from './types';
-import { StoreReader } from './readFromStore';
-import { StoreWriter } from './writeToStore';
-import { EntityCache, supportsResultCaching } from './entityCache';
+import { ApolloCache, Transaction } from "../core/cache";
+import { Cache } from "../core/types/Cache";
+import { addTypenameToDocument } from "../../utilities/graphql/transform";
+import { canUseWeakMap } from "../../utilities/common/canUse";
+import { ApolloReducerConfig, NormalizedCacheObject } from "./types";
+import { StoreReader } from "./readFromStore";
+import { StoreWriter } from "./writeToStore";
+import { EntityCache, supportsResultCaching } from "./entityCache";
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
   Policies,
-  TypePolicies,
-} from './policies';
+  TypePolicies
+} from "./policies";
+import { ObjectCache } from "./objectCache";
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
+  objectCache?: ObjectCache;
 }
 
 const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
-  typePolicies: {},
+  typePolicies: {}
 };
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
@@ -62,7 +61,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.policies = new Policies({
       dataIdFromObject: this.config.dataIdFromObject,
       possibleTypes: this.config.possibleTypes,
-      typePolicies: this.config.typePolicies,
+      typePolicies: this.config.typePolicies
     });
 
     // Passing { resultCaching: false } in the InMemoryCache constructor options
@@ -70,6 +69,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // usage but worsen the performance of repeated reads.
     this.data = new EntityCache.Root({
       resultCaching: this.config.resultCaching,
+      objectCache: this.config.objectCache
     });
 
     // When no optimistic writes are currently active, cache.optimisticData ===
@@ -80,39 +80,42 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.optimisticData = this.data;
 
     this.storeWriter = new StoreWriter({
-      policies: this.policies,
+      policies: this.policies
     });
 
     this.storeReader = new StoreReader({
       addTypename: this.addTypename,
       cacheKeyRoot: this.cacheKeyRoot,
-      policies: this.policies,
+      policies: this.policies
     });
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
-    this.maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
-      return maybeBroadcastWatch.call(this, c);
-    }, {
-      makeCacheKey(c: Cache.WatchOptions) {
-        if (c.previousResult) {
-          // If a previousResult was provided, assume the caller would prefer
-          // to compare the previous data to the new data to determine whether
-          // to broadcast, so we should disable caching by returning here, to
-          // give maybeBroadcastWatch a chance to do that comparison.
-          return;
-        }
+    this.maybeBroadcastWatch = wrap(
+      (c: Cache.WatchOptions) => {
+        return maybeBroadcastWatch.call(this, c);
+      },
+      {
+        makeCacheKey(c: Cache.WatchOptions) {
+          if (c.previousResult) {
+            // If a previousResult was provided, assume the caller would prefer
+            // to compare the previous data to the new data to determine whether
+            // to broadcast, so we should disable caching by returning here, to
+            // give maybeBroadcastWatch a chance to do that comparison.
+            return;
+          }
 
-        if (supportsResultCaching(cache.data)) {
-          // Return a cache key (thus enabling caching) only if we're currently
-          // using a data store that can track cache dependencies.
-          return cache.cacheKeyRoot.lookup(
-            c.query,
-            JSON.stringify(c.variables),
-          );
+          if (supportsResultCaching(cache.data)) {
+            // Return a cache key (thus enabling caching) only if we're currently
+            // using a data store that can track cache dependencies.
+            return cache.cacheKeyRoot.lookup(
+              c.query,
+              JSON.stringify(c.variables)
+            );
+          }
         }
       }
-    });
+    );
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -125,19 +128,23 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    if (typeof options.rootId === 'string' &&
-        typeof this.data.get(options.rootId) === 'undefined') {
+    if (
+      typeof options.rootId === "string" &&
+      typeof this.data.get(options.rootId) === "undefined"
+    ) {
       return null;
     }
 
-    return this.storeReader.readQueryFromStore({
-      store: options.optimistic ? this.optimisticData : this.data,
-      query: options.query,
-      variables: options.variables,
-      rootId: options.rootId,
-      previousResult: options.previousResult,
-      config: this.config,
-    }) || null;
+    return (
+      this.storeReader.readQueryFromStore({
+        store: options.optimistic ? this.optimisticData : this.data,
+        query: options.query,
+        variables: options.variables,
+        rootId: options.rootId,
+        previousResult: options.previousResult,
+        config: this.config
+      }) || null
+    );
   }
 
   public write(options: Cache.WriteOptions): void {
@@ -146,7 +153,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       query: options.query,
       result: options.result,
       dataId: options.dataId,
-      variables: options.variables,
+      variables: options.variables
     });
 
     this.broadcastWatches();
@@ -159,7 +166,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       variables: options.variables,
       returnPartialData: options.returnPartialData,
       previousResult: options.previousResult,
-      config: this.config,
+      config: this.config
     });
   }
 
@@ -227,7 +234,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // This parameter is not part of the performTransaction signature inherited
     // from the ApolloCache abstract class, but it's useful because it saves us
     // from duplicating this implementation in recordOptimisticTransaction.
-    optimisticId?: string,
+    optimisticId?: string
   ) {
     const perform = (layer?: EntityCache) => {
       const proxy: InMemoryCache = Object.create(this);
@@ -243,7 +250,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return transaction(proxy);
     };
 
-    if (typeof optimisticId === 'string') {
+    if (typeof optimisticId === "string") {
       // Note that there can be multiple layers with the same optimisticId.
       // When removeOptimistic(id) is called for that id, all matching layers
       // will be removed, and the remaining layers will be reapplied.
@@ -260,7 +267,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public recordOptimisticTransaction(
     transaction: Transaction<NormalizedCacheObject>,
-    id: string,
+    id: string
   ) {
     return this.performTransaction(transaction, id);
   }
@@ -295,8 +302,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         query: c.query,
         variables: c.variables,
         previousResult: c.previousResult && c.previousResult(),
-        optimistic: c.optimistic,
-      }),
+        optimistic: c.optimistic
+      })
     );
   }
 }

@@ -52,7 +52,7 @@ type StoreObjectMergeFunction = (
   overrides?: MergeOverrides,
 ) => StoreObject;
 
-type MergeOverrides = Record<string, {
+type MergeOverrides = Record<string | number, {
   merge?: StoreValueMergeFunction;
   child?: MergeOverrides;
 }>;
@@ -316,13 +316,13 @@ export class StoreWriter {
     }
 
     if (Array.isArray(value)) {
-      let overrides: Record<number, MergeOverrides>;
+      let overrides: Record<number, { child: MergeOverrides }>;
       const result = value.map((item, i) => {
         const { result, mergeOverrides } =
           this.processFieldValue(item, field, context);
         if (mergeOverrides) {
           overrides = overrides || [];
-          overrides[i] = mergeOverrides;
+          overrides[i] = { child: mergeOverrides };
         }
         return result;
       });

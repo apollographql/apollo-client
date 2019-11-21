@@ -864,7 +864,7 @@ describe('Combining client and server state/operations', () => {
     });
   });
 
-  itAsync('should support nested quering of both server and client fields', (resolve, reject) => {
+  itAsync('should support nested querying of both server and client fields', (resolve, reject) => {
     const query = gql`
       query GetUser {
         user {
@@ -878,7 +878,17 @@ describe('Combining client and server state/operations', () => {
     const link = new ApolloLink(operation => {
       expect(operation.operationName).toBe('GetUser');
       return Observable.of({
-        data: { user: { lastName: 'Doe', __typename: 'User' } },
+        data: {
+          user: {
+            __typename: 'User',
+            // We need an id (or a keyFields policy) because, if the User
+            // object is not identifiable, the call to cache.writeData
+            // below will simply replace the existing data rather than
+            // merging the new data with the existing data.
+            id: 123,
+            lastName: 'Doe',
+          },
+        },
       });
     });
 
@@ -892,13 +902,14 @@ describe('Combining client and server state/operations', () => {
       data: {
         user: {
           __typename: 'User',
+          id: 123,
           firstName: 'John',
         },
       },
     });
 
     client.watchQuery({ query }).subscribe({
-      next: ({ data }: any) => {
+      next({ data }: any) {
         const { user } = data;
         try {
           expect(user).toMatchObject({

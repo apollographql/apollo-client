@@ -1,5 +1,5 @@
 import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import {
   createFragmentMap,
@@ -29,6 +29,7 @@ import {
 
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
+import { isEqual } from '../../utilities/common/isEqual';
 
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { NormalizedCache, StoreObject } from './types';
@@ -49,7 +50,6 @@ export type WriteContext = {
 type StoreObjectMergeFunction = (
   existing: StoreObject,
   incoming: StoreObject,
-  overrides?: MergeOverrides,
 ) => StoreObject;
 
 type MergeOverrides = Record<string | number, {
@@ -105,9 +105,12 @@ export class StoreWriter {
     // fields when processing a single selection set.
     const simpleFieldsMerger = new DeepMerger;
 
-    // A DeepMerger used for updating normalized StoreObjects in the store,
-    // with special awareness of { __ref } objects, arrays, and custom logic
-    // for reading and writing field values.
+    // A DeepMerger used for merging the top-level fields of entity
+    // objects written by writeSelectionSetToStore. Slightly fancier than
+    // { ...existing, ...incoming }, in that (1) the resulting object will
+    // be === existing if the incoming data does not alter any of the
+    // existing values, and (2) a helpful error will be thrown if
+    // unidentified data replaces a normalized ID reference.
     const storeObjectMerger = new DeepMerger(storeObjectReconciler);
 
     return this.writeSelectionSetToStore({
@@ -120,8 +123,8 @@ export class StoreWriter {
         mergeFields(existing, incoming) {
           return simpleFieldsMerger.merge(existing, incoming);
         },
-        mergeStoreObjects(existing, incoming, overrides) {
-          return storeObjectMerger.merge(existing, incoming, store, overrides);
+        mergeStoreObjects(existing, incoming) {
+          return storeObjectMerger.merge(existing, incoming, store);
         },
         variables: {
           ...getDefaultValues(operationDefinition),
@@ -181,10 +184,6 @@ export class StoreWriter {
       context.mergeStoreObjects(
         existing,
         processed.result,
-        // To avoid re-merging values that have already been merged by
-        // custom merge functions, give context.mergeStoreObjects access
-        // to the mergeOverrides information that was used above.
-        processed.mergeOverrides,
       ),
     );
 
@@ -377,30 +376,18 @@ function walkWithMergeOverrides(
   });
 }
 
-const storeObjectReconciler: ReconcilerFunction<[
-  NormalizedCache,
-  MergeOverrides | undefined,
-]> = function (
+const storeObjectReconciler: ReconcilerFunction<[NormalizedCache]> = function (
   existingObject,
   incomingObject,
   property,
   // This parameter comes from the additional argument we pass to the
   // merge method in context.mergeStoreObjects (see writeQueryToStore).
   store,
-  mergeOverrides,
 ) {
   // In the future, reconciliation logic may depend on the type of the parent
   // StoreObject, not just the values of the given property.
   const existing = existingObject[property];
   const incoming = incomingObject[property];
-
-  const mergeChildObj = mergeOverrides && mergeOverrides[property];
-  if (mergeChildObj && typeof mergeChildObj.merge === "function") {
-    // If this property was overridden by a custom merge function, then
-    // its merged value has already been determined, so we should return
-    // incoming without recursively merging it into existing.
-    return incoming;
-  }
 
   if (
     existing !== incoming &&
@@ -422,48 +409,22 @@ const storeObjectReconciler: ReconcilerFunction<[
       return incoming;
     }
 
-    const childMergeOverrides = mergeChildObj && mergeChildObj.child;
+    invariant(
+      !isReference(existing) || isReference(incoming),
+      `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
+    );
 
-    if (isReference(incoming)) {
-      if (isReference(existing)) {
-        // Incoming references always replace existing references, but we can
-        // avoid changing the object identity when the __ref is the same.
-        return incoming.__ref === existing.__ref ? existing : incoming;
-      }
-      // Incoming references can be merged with existing non-reference data
-      // if the existing data appears to be of a compatible type.
-      store.set(
-        incoming.__ref,
-        this.merge(
-          existing,
-          store.get(incoming.__ref),
-          store,
-          childMergeOverrides,
-        ),
-      );
-      return incoming;
-    } else if (isReference(existing)) {
-      throw new InvariantError(
-        `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
-      );
+    // It's worth checking deep equality here (even though blindly
+    // returning incoming would be logically correct) because preserving
+    // the referential identity of existing data can prevent needless
+    // rereading and rerendering.
+    if (isEqual(existing, incoming)) {
+      return existing;
     }
-
-    if (Array.isArray(incoming)) {
-      if (!Array.isArray(existing)) return incoming;
-      if (existing.length > incoming.length) {
-        // Allow the incoming array to truncate the existing array, if the
-        // incoming array is shorter.
-        return this.merge(
-          existing.slice(0, incoming.length),
-          incoming,
-          store,
-          childMergeOverrides,
-        );
-      }
-    }
-
-    return this.merge(existing, incoming, store, childMergeOverrides);
   }
 
+  // In all other cases, incoming replaces existing without any effort to
+  // merge them deeply, since custom merge functions have already been
+  // applied to the incoming data by walkWithMergeOverrides.
   return incoming;
 }

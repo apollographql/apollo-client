@@ -1307,7 +1307,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should merge objects when overwriting a generated id with a real id', () => {
+  it('should not merge unidentified data when replacing with ID reference', () => {
     const dataWithoutId = {
       author: {
         firstName: 'John',
@@ -1342,7 +1342,7 @@ describe('writing to the store', () => {
         }
       }
     `;
-    const expStoreWithoutId = defaultNormalizedCacheFactory({
+    const expectedStoreWithoutId = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         __typename: 'Query',
         author: {
@@ -1352,10 +1352,9 @@ describe('writing to the store', () => {
         },
       },
     });
-    const expStoreWithId = defaultNormalizedCacheFactory({
+    const expectedStoreWithId = defaultNormalizedCacheFactory({
       Author__129: {
         firstName: 'John',
-        lastName: 'Smith',
         id: '129',
         __typename: 'Author',
       },
@@ -1364,17 +1363,19 @@ describe('writing to the store', () => {
         author: makeReference('Author__129'),
       },
     });
+
     const storeWithoutId = writer.writeQueryToStore({
       result: dataWithoutId,
       query: queryWithoutId,
     });
-    expect(storeWithoutId.toObject()).toEqual(expStoreWithoutId.toObject());
+    expect(storeWithoutId.toObject()).toEqual(expectedStoreWithoutId.toObject());
+
     const storeWithId = writer.writeQueryToStore({
       result: dataWithId,
       query: queryWithId,
       store: storeWithoutId,
     });
-    expect(storeWithId.toObject()).toEqual(expStoreWithId.toObject());
+    expect(storeWithId.toObject()).toEqual(expectedStoreWithId.toObject());
   });
 
   it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {

@@ -33,6 +33,7 @@ import wrap from '../../../utilities/testing/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../utilities/testing/observableToPromise';
+import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
 
@@ -1654,7 +1655,7 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync(`updates result of previous query if the result of a new query overlaps`, (resolve, reject) => {
+  itAsync('updates result of previous query if the result of a new query overlaps', (resolve, reject) => {
     const query1 = gql`
       {
         people_one(id: 1) {
@@ -1701,21 +1702,21 @@ describe('QueryManager', () => {
     );
 
     const observable = queryManager.watchQuery<any>({ query: query1 });
-    return observableToPromise(
-      { observable },
-      result => {
-        expect(stripSymbols(result.data)).toEqual(data1);
+
+    subscribeAndCount(reject, observable, (handleCount, result) => {
+      if (handleCount === 1) {
+        expect(result.data).toEqual(data1);
         queryManager.query<any>({ query: query2 });
-      },
-      // 3 because the query init action for the second query causes a callback
-      result =>
-        expect(stripSymbols(result.data)).toEqual({
+      } else if (handleCount === 2) {
+        expect(result.data).toEqual({
           people_one: {
-            name: 'Luke Skywalker has a new name',
+            name: 'Luke Skywalker',
             age: 50,
           },
-        }),
-    ).then(resolve, reject);
+        });
+        resolve();
+      }
+    });
   });
 
   itAsync('warns if you forget the template literal tag', async (resolve, reject) => {
@@ -2374,7 +2375,7 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync('should not error when merging a generated id store node  with a real id node', (resolve, reject) => {
+  itAsync('should not error when replacing unidentified data with a normalized ID', (resolve, reject) => {
     const queryWithoutId = gql`
       query {
         author {
@@ -2387,6 +2388,7 @@ describe('QueryManager', () => {
         }
       }
     `;
+
     const queryWithId = gql`
       query {
         author {
@@ -2398,6 +2400,7 @@ describe('QueryManager', () => {
         }
       }
     `;
+
     const dataWithoutId = {
       author: {
         name: {
@@ -2408,6 +2411,7 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
+
     const dataWithId = {
       author: {
         name: {
@@ -2417,16 +2421,7 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
-    const mergedDataWithoutId = {
-      author: {
-        name: {
-          firstName: 'Jane',
-          lastName: 'Smith',
-        },
-        age: '124',
-        __typename: 'Author',
-      },
-    };
+
     const queryManager = createQueryManager({
       link: mockSingleLink({
         request: { query: queryWithoutId },
@@ -2440,20 +2435,20 @@ describe('QueryManager', () => {
     const observableWithId = queryManager.watchQuery<any>({
       query: queryWithId,
     });
+
     const observableWithoutId = queryManager.watchQuery<any>({
       query: queryWithoutId,
     });
 
-    // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
       observableToPromise(
-        { observable: observableWithoutId, wait: 120 },
+        { observable: observableWithoutId },
         result => expect(stripSymbols(result.data)).toEqual(dataWithoutId),
-        result =>
-          expect(stripSymbols(result.data)).toEqual(mergedDataWithoutId),
+        result => expect(stripSymbols(result.data)).toEqual(dataWithoutId),
       ),
-      observableToPromise({ observable: observableWithId, wait: 120 }, result =>
-        expect(stripSymbols(result.data)).toEqual(dataWithId),
+      observableToPromise(
+        { observable: observableWithId },
+        result => expect(stripSymbols(result.data)).toEqual(dataWithId),
       ),
     ]).then(resolve, reject);
   });

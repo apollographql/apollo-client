@@ -589,11 +589,9 @@ function readStoreResolver(
 
   let fieldValue: StoreValue | void = void 0;
 
-  if (object) {
-    fieldValue = object[storeKeyName];
+  if (object) fieldValue = object[storeKeyName];
 
-    if (
-      typeof fieldValue === 'undefined' &&
+  if ((typeof object === 'undefined' || typeof fieldValue === 'undefined') &&
       context.cacheRedirects &&
       typeof typename === 'string'
     ) {
@@ -615,7 +613,6 @@ function readStoreResolver(
         }
       }
     }
-  }
 
   if (typeof fieldValue === 'undefined') {
     return {

@@ -776,7 +776,11 @@ export class QueryManager<TStore> {
       document: this.transform(options.query).document,
       variables: options.variables,
       storePreviousVariables: false,
-      isPoll: typeof options.pollInterval === 'number',
+      // Even if options.pollInterval is a number, we have not started
+      // polling this query yet (and we have not yet performed the first
+      // fetch), so NetworkStatus.loading (not NetworkStatus.poll or
+      // NetworkStatus.refetch) is the appropriate status for now.
+      isPoll: false,
       isRefetch: false,
       metadata: options.metadata,
       fetchMoreForQueryId: void 0,

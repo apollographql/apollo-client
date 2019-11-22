@@ -13,7 +13,7 @@ module.exports = {
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: 2.6,
         versions: {
-          '3.0 beta': 'version-3.0-beta',
+          '3.0 beta': 'release-3.0',
           2.5: 'version-2.5',
           2.4: 'version-2.4',
         },

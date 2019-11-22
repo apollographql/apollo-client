@@ -16,24 +16,17 @@ import {
 import {
   getTypenameFromResult,
   makeReference,
-  isReference,
   isField,
   resultKeyNameFromField,
   StoreValue,
 } from '../../utilities/graphql/storeUtils';
 
-import {
-  DeepMerger,
-  ReconcilerFunction,
-} from '../../utilities/common/mergeDeep';
-
+import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
-import { isEqual } from '../../utilities/common/isEqual';
 
 import { defaultNormalizedCacheFactory } from './entityCache';
 import { NormalizedCache, StoreObject } from './types';
-import { getTypenameFromStoreObject } from './helpers';
 import { Policies, StoreValueMergeFunction } from './policies';
 
 export type WriteContext = {
@@ -42,7 +35,6 @@ export type WriteContext = {
     [dataId: string]: SelectionSetNode[];
   };
   readonly mergeFields: StoreObjectMergeFunction;
-  readonly mergeStoreObjects: StoreObjectMergeFunction;
   readonly variables?: any;
   readonly fragmentMap?: FragmentMap;
 };
@@ -105,14 +97,6 @@ export class StoreWriter {
     // fields when processing a single selection set.
     const simpleFieldsMerger = new DeepMerger;
 
-    // A DeepMerger used for merging the top-level fields of entity
-    // objects written by writeSelectionSetToStore. Slightly fancier than
-    // { ...existing, ...incoming }, in that (1) the resulting object will
-    // be === existing if the incoming data does not alter any of the
-    // existing values, and (2) a helpful error will be thrown if
-    // unidentified data replaces a normalized ID reference.
-    const storeObjectMerger = new DeepMerger(storeObjectReconciler);
-
     return this.writeSelectionSetToStore({
       result: result || Object.create(null),
       dataId,
@@ -122,9 +106,6 @@ export class StoreWriter {
         written: Object.create(null),
         mergeFields(existing, incoming) {
           return simpleFieldsMerger.merge(existing, incoming);
-        },
-        mergeStoreObjects(existing, incoming) {
-          return storeObjectMerger.merge(existing, incoming, store);
         },
         variables: {
           ...getDefaultValues(operationDefinition),
@@ -164,8 +145,6 @@ export class StoreWriter {
       typename: this.policies.rootTypenamesById[dataId],
     });
 
-    const existing: StoreObject = store.get(dataId) || Object.create(null);
-
     if (processed.mergeOverrides) {
       // If processSelectionSet reported any custom merge functions, walk
       // the processed.mergeOverrides structure and preemptively merge
@@ -173,19 +152,13 @@ export class StoreWriter {
       // using the custom function. This function updates processed.result
       // in place with the custom-merged values.
       walkWithMergeOverrides(
-        existing,
+        store.get(dataId),
         processed.result,
         processed.mergeOverrides,
       );
     }
 
-    store.set(
-      dataId,
-      context.mergeStoreObjects(
-        existing,
-        processed.result,
-      ),
-    );
+    store.merge(dataId, processed.result);
 
     return store;
   }
@@ -374,57 +347,4 @@ function walkWithMergeOverrides(
       incomingObject[name] = merge(existingValue, incomingValue);
     }
   });
-}
-
-const storeObjectReconciler: ReconcilerFunction<[NormalizedCache]> = function (
-  existingObject,
-  incomingObject,
-  property,
-  // This parameter comes from the additional argument we pass to the
-  // merge method in context.mergeStoreObjects (see writeQueryToStore).
-  store,
-) {
-  // In the future, reconciliation logic may depend on the type of the parent
-  // StoreObject, not just the values of the given property.
-  const existing = existingObject[property];
-  const incoming = incomingObject[property];
-
-  if (
-    existing !== incoming &&
-    // The DeepMerger class has various helpful utilities that we might as
-    // well reuse here.
-    this.isObject(existing) &&
-    this.isObject(incoming)
-  ) {
-    const eType = getTypenameFromStoreObject(store, existing);
-    const iType = getTypenameFromStoreObject(store, incoming);
-    // If both objects have a typename and the typename is different, let the
-    // incoming object win. The typename can change when a different subtype
-    // of a union or interface is written to the cache.
-    if (
-      typeof eType === 'string' &&
-      typeof iType === 'string' &&
-      eType !== iType
-    ) {
-      return incoming;
-    }
-
-    invariant(
-      !isReference(existing) || isReference(incoming),
-      `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
-    );
-
-    // It's worth checking deep equality here (even though blindly
-    // returning incoming would be logically correct) because preserving
-    // the referential identity of existing data can prevent needless
-    // rereading and rerendering.
-    if (isEqual(existing, incoming)) {
-      return existing;
-    }
-  }
-
-  // In all other cases, incoming replaces existing without any effort to
-  // merge them deeply, since custom merge functions have already been
-  // applied to the incoming data by walkWithMergeOverrides.
-  return incoming;
 }

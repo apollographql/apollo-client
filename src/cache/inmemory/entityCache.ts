@@ -1,10 +1,40 @@
 import { dep, OptimisticDependencyFunction } from 'optimism';
-import { isReference } from '../../utilities/graphql/storeUtils';
+import { invariant } from 'ts-invariant';
+import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
+import {
+  DeepMerger,
+  ReconcilerFunction,
+} from '../../utilities/common/mergeDeep';
+import { isEqual } from '../../utilities/common/isEqual';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
+import { getTypenameFromStoreObject } from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
 type DependType = OptimisticDependencyFunction<string> | null;
+
+function makeDepKey(dataId: string, fieldName?: string) {
+  const parts = [dataId];
+  if (typeof fieldName === "string") {
+    parts.push(fieldName);
+  }
+  return JSON.stringify(parts);
+}
+
+function depend(store: EntityCache, dataId: string, fieldName?: string) {
+  if (store.depend) {
+    store.depend(makeDepKey(dataId, fieldName));
+  }
+}
+
+function dirty(store: EntityCache, dataId: string, fieldName?: string) {
+  if (store.depend) {
+    store.depend.dirty(makeDepKey(dataId));
+    if (typeof fieldName === "string") {
+      store.depend.dirty(makeDepKey(dataId, fieldName));
+    }
+  }
+}
 
 export abstract class EntityCache implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
@@ -32,30 +62,60 @@ export abstract class EntityCache implements NormalizedCache {
   }
 
   public has(dataId: string): boolean {
-    return hasOwn.call(this.data, dataId);
+    return this.get(dataId) !== void 0;
   }
 
   public get(dataId: string): StoreObject {
-    if (this.depend) this.depend(dataId);
-    return this.data[dataId]!;
+    depend(this, dataId);
+    return this.data[dataId];
   }
 
-  public set(dataId: string, value: StoreObject): void {
-    if (!hasOwn.call(this.data, dataId) || value !== this.data[dataId]) {
-      this.data[dataId] = value;
+  public getFieldValue(dataId: string, fieldName: string): StoreValue {
+    depend(this, dataId, fieldName);
+    const storeObject = this.data[dataId];
+    return storeObject && storeObject[fieldName];
+  }
+
+  public merge(dataId: string, incoming: StoreObject): void {
+    const existing = this.get(dataId);
+    const merged = new DeepMerger(storeObjectReconciler)
+      .merge(existing, incoming, this);
+    if (merged !== existing) {
+      this.data[dataId] = merged;
       delete this.refs[dataId];
-      if (this.depend) this.depend.dirty(dataId);
+      if (this.depend) {
+        // First, invalidate any dependents that called get rather than
+        // getFieldValue.
+        dirty(this, dataId);
+        // Now invalidate dependents who called getFieldValue for any
+        // fields that are changing as a result of this merge.
+        Object.keys(incoming).forEach(fieldName => {
+          if (!existing || incoming[fieldName] !== existing[fieldName]) {
+            dirty(this, dataId, fieldName);
+          }
+        });
+      }
     }
   }
 
+  // TODO Allow deleting fields of this.data[dataId] according to their
+  // original field.name.value.
   public delete(dataId: string): void {
+    const storeObject = this.data[dataId];
+
     delete this.data[dataId];
     delete this.refs[dataId];
     // Note that we do not delete the this.rootIds[dataId] retainment
     // count for this ID, since an object with the same ID could appear in
     // the cache again, and should not have to be retained again.
     // delete this.rootIds[dataId];
-    if (this.depend) this.depend.dirty(dataId);
+
+    if (this.depend && storeObject) {
+      dirty(this, dataId);
+      Object.keys(storeObject).forEach(fieldName => {
+        dirty(this, dataId, fieldName);
+      });
+    }
   }
 
   public clear(): void {
@@ -70,7 +130,7 @@ export abstract class EntityCache implements NormalizedCache {
     });
     if (newData) {
       Object.keys(newData).forEach(dataId => {
-        this.set(dataId, newData[dataId]);
+        this.merge(dataId, newData[dataId]);
       });
     }
   }
@@ -225,7 +285,7 @@ class Layer extends EntityCache {
       // Dirty every ID we're removing.
       // TODO Some of these IDs could escape dirtying if value unchanged.
       if (this.depend) {
-        Object.keys(this.data).forEach(dataId => this.depend.dirty(dataId));
+        Object.keys(this.data).forEach(dataId => this.delete(dataId));
       }
       return parent;
     }
@@ -244,14 +304,37 @@ class Layer extends EntityCache {
     };
   }
 
-  public has(dataId: string): boolean {
-    // Because the Layer implementation of the delete method uses void 0 to
-    // indicate absence, that's what we need to check for here, rather than
-    // calling super.has(dataId).
-    if (hasOwn.call(this.data, dataId) && this.data[dataId] === void 0) {
-      return false;
+  public get(dataId: string): StoreObject {
+    if (hasOwn.call(this.data, dataId)) {
+      return super.get(dataId);
     }
-    return this.parent.has(dataId);
+
+    // If this layer has a this.depend function and it's not the one
+    // this.parent is using, we need to depend on the given dataId using
+    // this.depend before delegating to the parent. This check saves us
+    // from calling this.depend for every optimistic layer we examine, but
+    // ensures we call this.depend in the last optimistic layer before we
+    // reach the root layer.
+    if (this.depend && this.depend !== this.parent.depend) {
+      depend(this, dataId);
+    }
+
+    return this.parent.get(dataId);
+  }
+
+  public getFieldValue(dataId: string, fieldName: string): StoreValue {
+    if (hasOwn.call(this.data, dataId)) {
+      const storeObject = this.data[dataId];
+      if (storeObject && hasOwn.call(storeObject, fieldName)) {
+        return super.getFieldValue(dataId, fieldName);
+      }
+    }
+
+    if (this.depend && this.depend !== this.parent.depend) {
+      depend(this, dataId, fieldName);
+    }
+
+    return this.parent.getFieldValue(dataId, fieldName);
   }
 
   public delete(dataId: string): void {
@@ -260,24 +343,6 @@ class Layer extends EntityCache {
     // we need to shadow it with an undefined value, or it might be inherited
     // by the Layer#get method.
     this.data[dataId] = void 0;
-  }
-
-  // All the other inherited accessor methods work as-is, but the get method
-  // needs to fall back to this.parent.get when accessing a missing dataId.
-  public get(dataId: string): StoreObject {
-    if (hasOwn.call(this.data, dataId)) {
-      return super.get(dataId);
-    }
-    // If this layer has a this.depend function and it's not the one
-    // this.parent is using, we need to depend on the given dataId before
-    // delegating to the parent. This check saves us from calling
-    // this.depend(dataId) for every optimistic layer we examine, but
-    // ensures we call this.depend(dataId) in the last optimistic layer
-    // before we reach the root layer.
-    if (this.depend && this.depend !== this.parent.depend) {
-      this.depend(dataId);
-    }
-    return this.parent.get(dataId);
   }
 
   // Return a Set<string> of all the ID strings that have been retained by this
@@ -295,6 +360,59 @@ class Layer extends EntityCache {
       ...super.findChildRefIds(dataId),
     } : fromParent;
   }
+}
+
+const storeObjectReconciler: ReconcilerFunction<[EntityCache]> = function (
+  existingObject,
+  incomingObject,
+  property,
+  // This parameter comes from the additional argument we pass to the
+  // merge method in context.mergeStoreObjects (see writeQueryToStore).
+  store,
+) {
+  // In the future, reconciliation logic may depend on the type of the parent
+  // StoreObject, not just the values of the given property.
+  const existing = existingObject[property];
+  const incoming = incomingObject[property];
+
+  if (
+    existing !== incoming &&
+    // The DeepMerger class has various helpful utilities that we might as
+    // well reuse here.
+    this.isObject(existing) &&
+    this.isObject(incoming)
+  ) {
+    const eType = getTypenameFromStoreObject(store, existing);
+    const iType = getTypenameFromStoreObject(store, incoming);
+    // If both objects have a typename and the typename is different, let the
+    // incoming object win. The typename can change when a different subtype
+    // of a union or interface is written to the cache.
+    if (
+      typeof eType === 'string' &&
+      typeof iType === 'string' &&
+      eType !== iType
+    ) {
+      return incoming;
+    }
+
+    invariant(
+      !isReference(existing) || isReference(incoming),
+      `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
+    );
+
+    // It's worth checking deep equality here (even though blindly
+    // returning incoming would be logically correct) because preserving
+    // the referential identity of existing data can prevent needless
+    // rereading and rerendering.
+    if (isEqual(existing, incoming)) {
+      return existing;
+    }
+  }
+
+  // In all other cases, incoming replaces existing without any effort to
+  // merge them deeply, since custom merge functions have already been
+  // applied to the incoming data by walkWithMergeOverrides.
+  return incoming;
 }
 
 export function supportsResultCaching(store: any): store is EntityCache {

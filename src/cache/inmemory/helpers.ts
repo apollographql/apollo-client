@@ -3,9 +3,9 @@ import { Reference, isReference } from '../../utilities/graphql/storeUtils';
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,
-  storeObject: StoreObject | Reference,
+  objectOrReference: StoreObject | Reference,
 ): string | undefined {
-  return isReference(storeObject)
-    ? getTypenameFromStoreObject(store, store.get(storeObject.__ref))
-    : storeObject && storeObject.__typename;
+  return isReference(objectOrReference)
+    ? store.getFieldValue(objectOrReference.__ref, "__typename") as string
+    : objectOrReference && objectOrReference.__typename;
 }

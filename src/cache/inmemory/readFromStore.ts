@@ -223,36 +223,37 @@ export class StoreReader {
     context,
   }: ExecSelectionSetOptions): ExecResult {
     const { store, fragmentMap, variables, policies } = context;
-    const finalResult: ExecResult = { result: null };
     const objectsToMerge: { [key: string]: any }[] = [];
+    const finalResult: ExecResult = { result: null };
 
-    let object: StoreObject;
-    let typename: string;
-    if (isReference(objectOrReference)) {
-      object = store.get(objectOrReference.__ref);
-      typename =
-        (object && object.__typename) ||
-        policies.rootTypenamesById[objectOrReference.__ref];
-    } else {
-      object = objectOrReference;
-      typename = object && object.__typename;
-    }
-
+    // Provides a uniform interface from reading field values, whether or
+    // not the parent object is a normalized entity object.
     function getFieldValue(fieldName: string): StoreValue {
-      return object && object[fieldName];
+      if (isReference(objectOrReference)) {
+        const dataId = objectOrReference.__ref;
+        const fieldValue = store.getFieldValue(dataId, fieldName);
+        if (fieldValue === void 0 && fieldName === "__typename") {
+          // We can infer the __typename of singleton root objects like
+          // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
+          // we have never written that information into the cache.
+          return policies.rootTypenamesById[dataId];
+        }
+        return fieldValue;
+      }
+      return objectOrReference && objectOrReference[fieldName];
     }
 
-    if (this.config.addTypename) {
-      const typenameFromStore = getFieldValue("__typename");
-      if (typeof typenameFromStore === "string" &&
-          Object.values(
-            policies.rootTypenamesById
-          ).indexOf(typenameFromStore) < 0) {
-        // Ensure we always include a default value for the __typename field,
-        // if we have one, and this.config.addTypename is true. Note that this
-        // field can be overridden by other merged objects.
-        objectsToMerge.push({ __typename: typenameFromStore });
-      }
+    const typename = getFieldValue("__typename") as string;
+
+    if (this.config.addTypename &&
+        typeof typename === "string" &&
+        Object.values(
+          policies.rootTypenamesById
+        ).indexOf(typename) < 0) {
+      // Ensure we always include a default value for the __typename
+      // field, if we have one, and this.config.addTypename is true. Note
+      // that this field can be overridden by other merged objects.
+      objectsToMerge.push({ __typename: typename });
     }
 
     function getMissing() {
@@ -279,7 +280,7 @@ export class StoreReader {
 
         if (fieldValue === void 0) {
           getMissing().push({
-            object,
+            object: objectOrReference as StoreObject,
             fieldName: selection.name.value,
             tolerable: false,
           });

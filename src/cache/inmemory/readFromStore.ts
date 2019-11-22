@@ -250,28 +250,66 @@ export class StoreReader {
       }
     }
 
+    function getMissing() {
+      return finalResult.missing || (finalResult.missing = []);
+    }
+
     function handleMissing<T>(result: ExecResult<T>): T {
-      if (result.missing) {
-        finalResult.missing = finalResult.missing || [];
-        finalResult.missing.push(...result.missing);
-      }
+      if (result.missing) getMissing().push(...result.missing);
       return result.result;
     }
 
     selectionSet.selections.forEach(selection => {
-      if (!shouldInclude(selection, variables)) {
-        // Skip this entirely
-        return;
-      }
+      // Omit fields with directives @skip(if: <truthy value>) or
+      // @include(if: <falsy value>).
+      if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        const fieldResult = handleMissing(
-          this.executeField(object, typename, selection, context),
-        );
+        let fieldValue = object &&
+          policies.readFieldFromStoreObject(object, selection, typename, variables);
 
-        if (typeof fieldResult !== 'undefined') {
+        if (fieldValue === void 0) {
+          getMissing().push({
+            object,
+            fieldName: selection.name.value,
+            tolerable: false,
+          });
+
+        } else if (Array.isArray(fieldValue)) {
+          fieldValue = handleMissing(this.executeSubSelectedArray({
+            field: selection,
+            array: fieldValue,
+            context,
+          }));
+
+        } else if (!selection.selectionSet) {
+          // If the field does not have a selection set, then we handle it
+          // as a scalar value. However, that value should not contain any
+          // Reference objects, and should be frozen in development, if it
+          // happens to be an object that is mutable.
+          if (process.env.NODE_ENV !== 'production') {
+            assertSelectionSetForIdValue(
+              context.store,
+              selection,
+              fieldValue,
+            );
+            maybeDeepFreeze(fieldValue);
+          }
+
+        } else if (fieldValue != null) {
+          // In this case, because we know the field has a selection set,
+          // it must be trying to query a GraphQLObjectType, which is why
+          // fieldValue must be != null.
+          fieldValue = handleMissing(this.executeSelectionSet({
+            selectionSet: selection.selectionSet,
+            objectOrReference: fieldValue as StoreObject | Reference,
+            context,
+          }));
+        }
+
+        if (fieldValue !== void 0) {
           objectsToMerge.push({
-            [resultKeyNameFromField(selection)]: fieldResult,
+            [resultKeyNameFromField(selection)]: fieldValue,
           });
         }
 
@@ -321,86 +359,6 @@ export class StoreReader {
     }
 
     return finalResult;
-  }
-
-  private executeField(
-    object: StoreObject,
-    typename: string,
-    field: FieldNode,
-    context: ExecContext,
-  ): ExecResult {
-    const {
-      variables: variables,
-      store,
-      policies,
-    } = context;
-
-    const fieldValue = object &&
-      policies.readFieldFromStoreObject(object, field, typename, variables);
-
-    const readStoreResult = typeof fieldValue === "undefined" ? {
-      result: fieldValue,
-      missing: [{
-        object,
-        fieldName: field.name.value,
-        tolerable: false,
-      }],
-    } : {
-      result: fieldValue,
-    };
-
-    if (Array.isArray(readStoreResult.result)) {
-      return this.combineExecResults(
-        readStoreResult,
-        this.executeSubSelectedArray({
-          field,
-          array: readStoreResult.result,
-          context,
-        }),
-      );
-    }
-
-    // Handle all scalar types here
-    if (!field.selectionSet) {
-      if (process.env.NODE_ENV !== 'production') {
-        assertSelectionSetForIdValue(store, field, readStoreResult.result);
-        maybeDeepFreeze(readStoreResult);
-      }
-      return readStoreResult;
-    }
-
-    // From here down, the field has a selection set, which means it's trying to
-    // query a GraphQLObjectType
-    if (readStoreResult.result == null) {
-      // Basically any field in a GraphQL response can be null, or missing
-      return readStoreResult;
-    }
-
-    // Returned value is an object, and the query has a sub-selection. Recurse.
-    return this.combineExecResults(
-      readStoreResult,
-      this.executeSelectionSet({
-        selectionSet: field.selectionSet,
-        objectOrReference: readStoreResult.result as StoreObject | Reference,
-        context,
-      }),
-    );
-  }
-
-  private combineExecResults<T>(
-    ...execResults: ExecResult<T>[]
-  ): ExecResult<T> {
-    let missing: ExecResultMissingField[] | undefined;
-    execResults.forEach(execResult => {
-      if (execResult.missing) {
-        missing = missing || [];
-        missing.push(...execResult.missing);
-      }
-    });
-    return {
-      result: execResults.pop()!.result,
-      missing,
-    };
   }
 
   private executeSubSelectedArray({

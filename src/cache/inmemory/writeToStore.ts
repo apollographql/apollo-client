@@ -371,7 +371,7 @@ function walkWithMergeOverrides(
       walkWithMergeOverrides(existingValue, incomingValue, child);
     }
     if (merge) {
-      incomingObject[name] = merge(existingValue, incomingValue, existingObject);
+      incomingObject[name] = merge(existingValue, incomingValue);
     }
   });
 }

@@ -15,6 +15,7 @@ import {
   Reference,
   isReference,
   makeReference,
+  StoreValue,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
@@ -237,8 +238,12 @@ export class StoreReader {
       typename = object && object.__typename;
     }
 
+    function getFieldValue(fieldName: string): StoreValue {
+      return object && object[fieldName];
+    }
+
     if (this.config.addTypename) {
-      const typenameFromStore = object && object.__typename;
+      const typenameFromStore = getFieldValue("__typename");
       if (typeof typenameFromStore === "string" &&
           Object.values(
             policies.rootTypenamesById
@@ -265,8 +270,12 @@ export class StoreReader {
       if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        let fieldValue = object &&
-          policies.readFieldFromStoreObject(object, selection, typename, variables);
+        let fieldValue = policies.readFieldFromStoreObject(
+          selection,
+          getFieldValue,
+          typename,
+          variables,
+        );
 
         if (fieldValue === void 0) {
           getMissing().push({

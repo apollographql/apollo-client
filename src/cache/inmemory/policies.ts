@@ -86,10 +86,15 @@ export type FieldPolicy<TValue> = {
 
 interface FieldFunctionOptions {
   args: Record<string, any>;
-  parentObject: Readonly<StoreObject>;
   field: FieldNode;
   variables?: Record<string, any>;
   toReference: Policies["toReference"];
+
+  // Gets the existing StoreValue for a given field within the current
+  // object, without calling any read functions, so it works even with the
+  // current field. If the provided FieldNode has arguments, the same
+  // options.variables will be used.
+  getFieldValue(field: string | FieldNode): Readonly<StoreValue>;
 }
 
 interface FieldReadFunction<TExisting, TResult = TExisting> {
@@ -391,22 +396,27 @@ export class Policies {
   }
 
   public readFieldFromStoreObject(
-    parentObject: Readonly<StoreObject>,
     field: FieldNode,
-    typename = parentObject.__typename,
+    getFieldValue: (field: string) => StoreValue,
+    typename = getFieldValue("__typename") as string,
     variables?: Record<string, any>,
   ): StoreValue {
-    const storeFieldName = this.getStoreFieldName(typename, field, variables);
-    const existing = parentObject[storeFieldName];
-    const policy = this.getFieldPolicy(typename, field.name.value, false);
+    const policies = this;
+    const storeFieldName = policies.getStoreFieldName(typename, field, variables);
+    const existing = getFieldValue(storeFieldName);
+    const policy = policies.getFieldPolicy(typename, field.name.value, false);
     if (policy && policy.read) {
-      return policy.read.call(this, existing, {
-        // TODO Avoid recomputing this.
+      return policy.read.call(policies, existing, {
         args: argumentsObjectFromField(field, variables),
-        parentObject,
         field,
         variables,
-        toReference: this.toReference,
+        toReference: policies.toReference,
+        getFieldValue(nameOrField) {
+          return getFieldValue(
+            typeof nameOrField === "string" ? nameOrField :
+              policies.getStoreFieldName(typename, nameOrField, variables),
+          );
+        },
       });
     }
     return existing;
@@ -417,28 +427,31 @@ export class Policies {
     field: FieldNode,
     variables?: Record<string, any>,
   ): StoreValueMergeFunction {
-    const policy = this.getFieldPolicy(typename, field.name.value, false);
+    const policies = this;
+    const policy = policies.getFieldPolicy(typename, field.name.value, false);
     if (policy && policy.merge) {
+      const args = argumentsObjectFromField(field, variables);
       return (
         existing: StoreValue,
         incoming: StoreValue,
-        parentObject: Readonly<StoreObject>,
-      ) => policy.merge.call(this, existing, incoming, {
-        // TODO Avoid recomputing this.
-        args: argumentsObjectFromField(field, variables),
-        parentObject,
+      ) => policy.merge.call(policies, existing, incoming, {
+        args,
         field,
         variables,
-        toReference: this.toReference,
+        toReference: policies.toReference,
+        getFieldValue: emptyGetFieldValueForMerge,
       });
     }
   }
 }
 
+function emptyGetFieldValueForMerge() {
+  invariant.warn("getFieldValue unavailable in merge functions");
+}
+
 export type StoreValueMergeFunction = (
   existing: StoreValue,
   incoming: StoreValue,
-  parentObject: Readonly<StoreObject>,
 ) => StoreValue;
 
 function keyArgsFnFromSpecifier(

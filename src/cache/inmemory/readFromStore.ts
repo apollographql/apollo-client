@@ -36,7 +36,7 @@ import {
   StoreObject,
   NormalizedCache,
 } from './types';
-import { supportsResultCaching } from './entityCache';
+import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 

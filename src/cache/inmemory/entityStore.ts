@@ -21,13 +21,13 @@ function makeDepKey(dataId: string, fieldName?: string) {
   return JSON.stringify(parts);
 }
 
-function depend(store: EntityCache, dataId: string, fieldName?: string) {
+function depend(store: EntityStore, dataId: string, fieldName?: string) {
   if (store.depend) {
     store.depend(makeDepKey(dataId, fieldName));
   }
 }
 
-function dirty(store: EntityCache, dataId: string, fieldName?: string) {
+function dirty(store: EntityStore, dataId: string, fieldName?: string) {
   if (store.depend) {
     store.depend.dirty(makeDepKey(dataId));
     if (typeof fieldName === "string") {
@@ -36,24 +36,24 @@ function dirty(store: EntityCache, dataId: string, fieldName?: string) {
   }
 }
 
-export abstract class EntityCache implements NormalizedCache {
+export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
 
   // It seems like this property ought to be protected rather than public,
   // but TypeScript doesn't realize it's inherited from a shared base
   // class by both Root and Layer classes, so Layer methods are forbidden
-  // from accessing the .depend property of an arbitrary EntityCache
+  // from accessing the .depend property of an arbitrary EntityStore
   // instance, because it might be a Root instance (and vice-versa).
   public readonly depend: DependType = null;
 
   public abstract addLayer(
     layerId: string,
-    replay: (layer: EntityCache) => any,
-  ): EntityCache;
+    replay: (layer: EntityStore) => any,
+  ): EntityStore;
 
-  public abstract removeLayer(layerId: string): EntityCache;
+  public abstract removeLayer(layerId: string): EntityStore;
 
-  // Although the EntityCache class is abstract, it contains concrete
+  // Although the EntityStore class is abstract, it contains concrete
   // implementations of the various NormalizedCache interface methods that
   // are inherited by the Root and Layer subclasses.
 
@@ -107,7 +107,7 @@ export abstract class EntityCache implements NormalizedCache {
     delete this.refs[dataId];
     // Note that we do not delete the this.rootIds[dataId] retainment
     // count for this ID, since an object with the same ID could appear in
-    // the cache again, and should not have to be retained again.
+    // the store again, and should not have to be retained again.
     // delete this.rootIds[dataId];
 
     if (this.depend && storeObject) {
@@ -162,9 +162,9 @@ export abstract class EntityCache implements NormalizedCache {
   }
 
   // The goal of garbage collection is to remove IDs from the Root layer of the
-  // cache that are no longer reachable starting from any IDs that have been
+  // store that are no longer reachable starting from any IDs that have been
   // explicitly retained (see retain and release, above). Returns an array of
-  // dataId strings that were removed from the cache.
+  // dataId strings that were removed from the store.
   public gc() {
     const ids = this.getRootIdSet();
     const snapshot = this.toObject();
@@ -175,13 +175,13 @@ export abstract class EntityCache implements NormalizedCache {
         // were not previously contained by the Set.
         Object.keys(this.findChildRefIds(id)).forEach(ids.add, ids);
         // By removing IDs from the snapshot object here, we protect them from
-        // getting removed from the root cache layer below.
+        // getting removed from the root store layer below.
         delete snapshot[id];
       }
     });
     const idsToRemove = Object.keys(snapshot);
     if (idsToRemove.length) {
-      let root: EntityCache = this;
+      let root: EntityStore = this;
       while (root instanceof Layer) root = root.parent;
       idsToRemove.forEach(root.delete, root);
     }
@@ -197,7 +197,7 @@ export abstract class EntityCache implements NormalizedCache {
     if (!hasOwn.call(this.refs, dataId)) {
       const found = this.refs[dataId] = Object.create(null);
       const workSet = new Set([this.data[dataId]]);
-      // Within the cache, only arrays and objects can contain child entity
+      // Within the store, only arrays and objects can contain child entity
       // references, so we can prune the traversal using this predicate:
       const canTraverse = (obj: any) => obj !== null && typeof obj === 'object';
       workSet.forEach(obj => {
@@ -216,9 +216,9 @@ export abstract class EntityCache implements NormalizedCache {
   }
 }
 
-export namespace EntityCache {
-  // Refer to this class as EntityCache.Root outside this namespace.
-  export class Root extends EntityCache {
+export namespace EntityStore {
+  // Refer to this class as EntityStore.Root outside this namespace.
+  export class Root extends EntityStore {
     // Although each Root instance gets its own unique this.depend
     // function, any Layer instances created by calling addLayer need to
     // share a single distinct dependency function. Since this shared
@@ -244,8 +244,8 @@ export namespace EntityCache {
 
     public addLayer(
       layerId: string,
-      replay: (layer: EntityCache) => any,
-    ): EntityCache {
+      replay: (layer: EntityStore) => any,
+    ): EntityStore {
       // The replay function will be called in the Layer constructor.
       return new Layer(layerId, this, replay, this.sharedLayerDepend);
     }
@@ -258,12 +258,12 @@ export namespace EntityCache {
 }
 
 // Not exported, since all Layer instances are created by the addLayer method
-// of the EntityCache.Root class.
-class Layer extends EntityCache {
+// of the EntityStore.Root class.
+class Layer extends EntityStore {
   constructor(
     public readonly id: string,
-    public readonly parent: Layer | EntityCache.Root,
-    public readonly replay: (layer: EntityCache) => any,
+    public readonly parent: Layer | EntityStore.Root,
+    public readonly replay: (layer: EntityStore) => any,
     public readonly depend: DependType,
   ) {
     super();
@@ -272,12 +272,12 @@ class Layer extends EntityCache {
 
   public addLayer(
     layerId: string,
-    replay: (layer: EntityCache) => any,
-  ): EntityCache {
+    replay: (layer: EntityStore) => any,
+  ): EntityStore {
     return new Layer(layerId, this, replay, this.depend);
   }
 
-  public removeLayer(layerId: string): EntityCache {
+  public removeLayer(layerId: string): EntityStore {
     // Remove all instances of the given id, not just the first one.
     const parent = this.parent.removeLayer(layerId);
 
@@ -362,7 +362,7 @@ class Layer extends EntityCache {
   }
 }
 
-const storeObjectReconciler: ReconcilerFunction<[EntityCache]> = function (
+const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
   existingObject,
   incomingObject,
   property,
@@ -386,7 +386,7 @@ const storeObjectReconciler: ReconcilerFunction<[EntityCache]> = function (
     const iType = getTypenameFromStoreObject(store, incoming);
     // If both objects have a typename and the typename is different, let the
     // incoming object win. The typename can change when a different subtype
-    // of a union or interface is written to the cache.
+    // of a union or interface is written to the store.
     if (
       typeof eType === 'string' &&
       typeof iType === 'string' &&
@@ -415,13 +415,13 @@ const storeObjectReconciler: ReconcilerFunction<[EntityCache]> = function (
   return incoming;
 }
 
-export function supportsResultCaching(store: any): store is EntityCache {
+export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
-  return !!(store instanceof EntityCache && store.depend);
+  return !!(store instanceof EntityStore && store.depend);
 }
 
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {
-  return new EntityCache.Root({ resultCaching: true, seed });
+  return new EntityStore.Root({ resultCaching: true, seed });
 }

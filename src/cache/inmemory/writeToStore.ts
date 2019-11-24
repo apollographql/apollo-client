@@ -25,7 +25,7 @@ import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
-import { defaultNormalizedCacheFactory } from './entityCache';
+import { defaultNormalizedCacheFactory } from './entityStore';
 import { NormalizedCache, StoreObject } from './types';
 import { Policies, StoreValueMergeFunction } from './policies';
 

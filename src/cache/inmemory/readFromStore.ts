@@ -6,7 +6,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import { wrap, KeyTrie } from 'optimism';
-import { InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import {
   isField,
@@ -193,8 +193,8 @@ export class StoreReader {
 
     if (hasMissingFields && ! returnPartialData) {
       execResult.missing!.forEach(info => {
-        if (info.tolerable) return;
-        throw new InvariantError(
+        invariant(
+          info.tolerable,
           `Can't find field ${info.fieldName} on object ${JSON.stringify(
             info.object,
             null,
@@ -320,11 +320,10 @@ export class StoreReader {
           fragment = selection;
         } else {
           // This is a named fragment
-          fragment = fragmentMap[selection.name.value];
-
-          if (!fragment) {
-            throw new InvariantError(`No fragment named ${selection.name.value}`);
-          }
+          invariant(
+            fragment = fragmentMap[selection.name.value],
+            `No fragment named ${selection.name.value}`,
+          );
         }
 
         const match = policies.fragmentMatches(fragment, typename);
@@ -425,13 +424,12 @@ function assertSelectionSetForIdValue(
     const workSet = new Set([fieldValue]);
     workSet.forEach(value => {
       if (value && typeof value === "object") {
-        if (isReference(value)) {
-          throw new InvariantError(
-            `Missing selection set for object of type ${
-              getTypenameFromStoreObject(store, value)
-            } returned for query field ${field.name.value}`,
-          )
-        }
+        invariant(
+          !isReference(value),
+          `Missing selection set for object of type ${
+            getTypenameFromStoreObject(store, value)
+          } returned for query field ${field.name.value}`,
+        );
         Object.values(value).forEach(workSet.add, workSet);
       }
     });

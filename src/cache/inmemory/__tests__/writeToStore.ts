@@ -16,7 +16,7 @@ import {
 import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { StoreWriter } from '../writeToStore';
-import { defaultNormalizedCacheFactory } from '../entityCache';
+import { defaultNormalizedCacheFactory } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
 import { Policies } from '../policies';
 

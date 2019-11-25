@@ -1,22 +1,22 @@
 import gql from 'graphql-tag';
-import { EntityCache, supportsResultCaching } from '../entityCache';
+import { EntityStore, supportsResultCaching } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
 
-describe('EntityCache', () => {
+describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
-    const cacheWithResultCaching = new EntityCache.Root({
+    const storeWithResultCaching = new EntityStore.Root({
       resultCaching: true,
     });
 
-    const cacheWithoutResultCaching = new EntityCache.Root({
+    const storeWithoutResultCaching = new EntityStore.Root({
       resultCaching: false,
     });
 
     expect(supportsResultCaching({ some: "arbitrary object " })).toBe(false);
-    expect(supportsResultCaching(cacheWithResultCaching)).toBe(true);
-    expect(supportsResultCaching(cacheWithoutResultCaching)).toBe(false);
+    expect(supportsResultCaching(storeWithResultCaching)).toBe(true);
+    expect(supportsResultCaching(storeWithoutResultCaching)).toBe(false);
 
-    const layerWithCaching = cacheWithResultCaching.addLayer("with caching", () => {});
+    const layerWithCaching = storeWithResultCaching.addLayer("with caching", () => {});
     expect(supportsResultCaching(layerWithCaching)).toBe(true);
     const anotherLayer = layerWithCaching.addLayer("another layer", () => {});
     expect(supportsResultCaching(anotherLayer)).toBe(true);
@@ -24,13 +24,13 @@ describe('EntityCache', () => {
       anotherLayer
         .removeLayer("with caching")
         .removeLayer("another layer")
-    ).toBe(cacheWithResultCaching);
-    expect(supportsResultCaching(cacheWithResultCaching)).toBe(true);
+    ).toBe(storeWithResultCaching);
+    expect(supportsResultCaching(storeWithResultCaching)).toBe(true);
 
-    const layerWithoutCaching = cacheWithoutResultCaching.addLayer("with caching", () => {});
+    const layerWithoutCaching = storeWithoutResultCaching.addLayer("with caching", () => {});
     expect(supportsResultCaching(layerWithoutCaching)).toBe(false);
-    expect(layerWithoutCaching.removeLayer("with caching")).toBe(cacheWithoutResultCaching);
-    expect(supportsResultCaching(cacheWithoutResultCaching)).toBe(false);
+    expect(layerWithoutCaching.removeLayer("with caching")).toBe(storeWithoutResultCaching);
+    expect(supportsResultCaching(storeWithoutResultCaching)).toBe(false);
   });
 
   function newBookAuthorCache() {

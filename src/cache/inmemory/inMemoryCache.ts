@@ -15,7 +15,7 @@ import {
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
-import { EntityCache, supportsResultCaching } from './entityCache';
+import { EntityStore, supportsResultCaching } from './entityStore';
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
@@ -37,8 +37,8 @@ const defaultConfig: InMemoryCacheConfig = {
 };
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: EntityCache;
-  private optimisticData: EntityCache;
+  private data: EntityStore;
+  private optimisticData: EntityStore;
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
@@ -68,7 +68,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
-    this.data = new EntityCache.Root({
+    this.data = new EntityStore.Root({
       resultCaching: this.config.resultCaching,
     });
 
@@ -230,7 +230,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
-    const perform = (layer?: EntityCache) => {
+    const perform = (layer?: EntityStore) => {
       const proxy: InMemoryCache = Object.create(this);
       proxy.silenceBroadcast = true;
       if (layer) {

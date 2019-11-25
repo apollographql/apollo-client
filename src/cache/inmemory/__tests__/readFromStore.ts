@@ -5,7 +5,7 @@ import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
 import { makeReference } from '../../../utilities/graphql/storeUtils';
-import { defaultNormalizedCacheFactory } from '../entityCache';
+import { defaultNormalizedCacheFactory } from '../entityStore';
 import { withError } from './diffAgainstStore';
 import { Policies } from '../policies';
 

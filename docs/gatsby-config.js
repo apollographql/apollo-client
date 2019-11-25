@@ -14,9 +14,10 @@ module.exports = {
         defaultVersion: 3.0,
         /*
         versions: {
-          2.6: 'version-2.6',
-          2.5: 'version-2.5',
-          2.4: 'version-2.4',
+          '3.0 beta': 'release-3.0',
+          '2.6': 'version-2.6',
+          '2.5': 'version-2.5',
+          '2.4': 'version-2.4',
         },
         */
         checkLinksOptions: {
@@ -33,11 +34,7 @@ module.exports = {
           filepathPrefix: 'src/',
         },
         sidebarCategories: {
-          null: [
-            'index',
-            'why-apollo',
-            'get-started',
-          ],
+          null: ['index', 'why-apollo', 'get-started'],
           'Fetching data': [
             'data/queries',
             'data/mutations',
@@ -47,10 +44,7 @@ module.exports = {
             'data/fragments',
             'data/error-handling',
           ],
-          'Caching': [
-            'caching/cache-configuration',
-            'caching/cache-interaction',
-          ],
+          Caching: ['caching/cache-configuration', 'caching/cache-interaction'],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',
@@ -82,10 +76,7 @@ module.exports = {
             'api/react-components',
             'api/react-hoc'
           ],
-          Migrating: [
-            'migrating/hooks-migration',
-            'migrating/boost-migration',
-          ]
+          Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
         },
       },
     },

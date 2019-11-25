@@ -121,7 +121,7 @@ export function NewRocketForm() {
     <div>
       <h3>Add a Rocket</h3>
       {error ? <p>Oh no! {error.message}</p> : null}
-      {data && data.saveRocket ? <p>Saved!<p> : null}
+      {data && data.saveRocket ? <p>Saved!</p> : null}
       <form>
         <p>
           <label>Model</label>

@@ -6,7 +6,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import { wrap, KeyTrie } from 'optimism';
-import { InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import {
   isField,
@@ -15,6 +15,7 @@ import {
   Reference,
   isReference,
   makeReference,
+  StoreValue,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
@@ -193,8 +194,8 @@ export class StoreReader {
 
     if (hasMissingFields && ! returnPartialData) {
       execResult.missing!.forEach(info => {
-        if (info.tolerable) return;
-        throw new InvariantError(
+        invariant(
+          info.tolerable,
           `Can't find field ${info.fieldName} on object ${JSON.stringify(
             info.object,
             null,
@@ -222,56 +223,103 @@ export class StoreReader {
     context,
   }: ExecSelectionSetOptions): ExecResult {
     const { store, fragmentMap, variables, policies } = context;
-    const finalResult: ExecResult = { result: null };
     const objectsToMerge: { [key: string]: any }[] = [];
+    const finalResult: ExecResult = { result: null };
 
-    let object: StoreObject;
-    let typename: string;
-    if (isReference(objectOrReference)) {
-      object = store.get(objectOrReference.__ref);
-      typename =
-        (object && object.__typename) ||
-        policies.rootTypenamesById[objectOrReference.__ref];
-    } else {
-      object = objectOrReference;
-      typename = object && object.__typename;
+    // Provides a uniform interface from reading field values, whether or
+    // not the parent object is a normalized entity object.
+    function getFieldValue(fieldName: string): StoreValue {
+      if (isReference(objectOrReference)) {
+        const dataId = objectOrReference.__ref;
+        const fieldValue = store.getFieldValue(dataId, fieldName);
+        if (fieldValue === void 0 && fieldName === "__typename") {
+          // We can infer the __typename of singleton root objects like
+          // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
+          // we have never written that information into the cache.
+          return policies.rootTypenamesById[dataId];
+        }
+        return fieldValue;
+      }
+      return objectOrReference && objectOrReference[fieldName];
     }
 
-    if (this.config.addTypename) {
-      const typenameFromStore = object && object.__typename;
-      if (typeof typenameFromStore === "string" &&
-          Object.values(
-            policies.rootTypenamesById
-          ).indexOf(typenameFromStore) < 0) {
-        // Ensure we always include a default value for the __typename field,
-        // if we have one, and this.config.addTypename is true. Note that this
-        // field can be overridden by other merged objects.
-        objectsToMerge.push({ __typename: typenameFromStore });
-      }
+    const typename = getFieldValue("__typename") as string;
+
+    if (this.config.addTypename &&
+        typeof typename === "string" &&
+        Object.values(
+          policies.rootTypenamesById
+        ).indexOf(typename) < 0) {
+      // Ensure we always include a default value for the __typename
+      // field, if we have one, and this.config.addTypename is true. Note
+      // that this field can be overridden by other merged objects.
+      objectsToMerge.push({ __typename: typename });
+    }
+
+    function getMissing() {
+      return finalResult.missing || (finalResult.missing = []);
     }
 
     function handleMissing<T>(result: ExecResult<T>): T {
-      if (result.missing) {
-        finalResult.missing = finalResult.missing || [];
-        finalResult.missing.push(...result.missing);
-      }
+      if (result.missing) getMissing().push(...result.missing);
       return result.result;
     }
 
     selectionSet.selections.forEach(selection => {
-      if (!shouldInclude(selection, variables)) {
-        // Skip this entirely
-        return;
-      }
+      // Omit fields with directives @skip(if: <truthy value>) or
+      // @include(if: <falsy value>).
+      if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        const fieldResult = handleMissing(
-          this.executeField(object, typename, selection, context),
+        let fieldValue = policies.readFieldFromStoreObject(
+          selection,
+          getFieldValue,
+          typename,
+          variables,
         );
 
-        if (typeof fieldResult !== 'undefined') {
+        if (fieldValue === void 0) {
+          getMissing().push({
+            object: objectOrReference as StoreObject,
+            fieldName: selection.name.value,
+            tolerable: false,
+          });
+
+        } else if (Array.isArray(fieldValue)) {
+          fieldValue = handleMissing(this.executeSubSelectedArray({
+            field: selection,
+            array: fieldValue,
+            context,
+          }));
+
+        } else if (!selection.selectionSet) {
+          // If the field does not have a selection set, then we handle it
+          // as a scalar value. However, that value should not contain any
+          // Reference objects, and should be frozen in development, if it
+          // happens to be an object that is mutable.
+          if (process.env.NODE_ENV !== 'production') {
+            assertSelectionSetForIdValue(
+              context.store,
+              selection,
+              fieldValue,
+            );
+            maybeDeepFreeze(fieldValue);
+          }
+
+        } else if (fieldValue != null) {
+          // In this case, because we know the field has a selection set,
+          // it must be trying to query a GraphQLObjectType, which is why
+          // fieldValue must be != null.
+          fieldValue = handleMissing(this.executeSelectionSet({
+            selectionSet: selection.selectionSet,
+            objectOrReference: fieldValue as StoreObject | Reference,
+            context,
+          }));
+        }
+
+        if (fieldValue !== void 0) {
           objectsToMerge.push({
-            [resultKeyNameFromField(selection)]: fieldResult,
+            [resultKeyNameFromField(selection)]: fieldValue,
           });
         }
 
@@ -282,11 +330,10 @@ export class StoreReader {
           fragment = selection;
         } else {
           // This is a named fragment
-          fragment = fragmentMap[selection.name.value];
-
-          if (!fragment) {
-            throw new InvariantError(`No fragment named ${selection.name.value}`);
-          }
+          invariant(
+            fragment = fragmentMap[selection.name.value],
+            `No fragment named ${selection.name.value}`,
+          );
         }
 
         const match = policies.fragmentMatches(fragment, typename);
@@ -321,86 +368,6 @@ export class StoreReader {
     }
 
     return finalResult;
-  }
-
-  private executeField(
-    object: StoreObject,
-    typename: string,
-    field: FieldNode,
-    context: ExecContext,
-  ): ExecResult {
-    const {
-      variables: variables,
-      store,
-      policies,
-    } = context;
-
-    const fieldValue = object &&
-      policies.readFieldFromStoreObject(object, field, typename, variables);
-
-    const readStoreResult = typeof fieldValue === "undefined" ? {
-      result: fieldValue,
-      missing: [{
-        object,
-        fieldName: field.name.value,
-        tolerable: false,
-      }],
-    } : {
-      result: fieldValue,
-    };
-
-    if (Array.isArray(readStoreResult.result)) {
-      return this.combineExecResults(
-        readStoreResult,
-        this.executeSubSelectedArray({
-          field,
-          array: readStoreResult.result,
-          context,
-        }),
-      );
-    }
-
-    // Handle all scalar types here
-    if (!field.selectionSet) {
-      if (process.env.NODE_ENV !== 'production') {
-        assertSelectionSetForIdValue(store, field, readStoreResult.result);
-        maybeDeepFreeze(readStoreResult);
-      }
-      return readStoreResult;
-    }
-
-    // From here down, the field has a selection set, which means it's trying to
-    // query a GraphQLObjectType
-    if (readStoreResult.result == null) {
-      // Basically any field in a GraphQL response can be null, or missing
-      return readStoreResult;
-    }
-
-    // Returned value is an object, and the query has a sub-selection. Recurse.
-    return this.combineExecResults(
-      readStoreResult,
-      this.executeSelectionSet({
-        selectionSet: field.selectionSet,
-        objectOrReference: readStoreResult.result as StoreObject | Reference,
-        context,
-      }),
-    );
-  }
-
-  private combineExecResults<T>(
-    ...execResults: ExecResult<T>[]
-  ): ExecResult<T> {
-    let missing: ExecResultMissingField[] | undefined;
-    execResults.forEach(execResult => {
-      if (execResult.missing) {
-        missing = missing || [];
-        missing.push(...execResult.missing);
-      }
-    });
-    return {
-      result: execResults.pop()!.result,
-      missing,
-    };
   }
 
   private executeSubSelectedArray({
@@ -467,13 +434,12 @@ function assertSelectionSetForIdValue(
     const workSet = new Set([fieldValue]);
     workSet.forEach(value => {
       if (value && typeof value === "object") {
-        if (isReference(value)) {
-          throw new InvariantError(
-            `Missing selection set for object of type ${
-              getTypenameFromStoreObject(store, value)
-            } returned for query field ${field.name.value}`,
-          )
-        }
+        invariant(
+          !isReference(value),
+          `Missing selection set for object of type ${
+            getTypenameFromStoreObject(store, value)
+          } returned for query field ${field.name.value}`,
+        );
         Object.values(value).forEach(workSet.add, workSet);
       }
     });

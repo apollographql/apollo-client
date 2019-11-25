@@ -29,8 +29,8 @@ describe('OptimisticCacheLayer', () => {
     });
 
     it('should return values defined during recording', () => {
-      cache.set('Human', dataToRecord.Human);
-      expect(cache.get('Human')).toBe(dataToRecord.Human);
+      cache.merge('Human', dataToRecord.Human);
+      expect(cache.get('Human')).toEqual(dataToRecord.Human);
       expect(underlyingCache.get('Human')).toBe(data.Human);
     });
 
@@ -60,7 +60,7 @@ describe('OptimisticCacheLayer', () => {
 
     beforeEach(() => {
       cache = makeLayer(underlyingCache);
-      cache.set('Human', dataToRecord.Human);
+      cache.merge('Human', dataToRecord.Human);
       cache.delete('Animal');
       recording = cache.toObject();
     });

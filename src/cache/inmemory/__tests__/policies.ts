@@ -398,8 +398,10 @@ describe("type policies", function () {
           Person: {
             keyFields: ["firstName", "lastName"],
             fields: {
-              fullName(_, { parentObject: person }) {
-                return `${person.firstName} ${person.lastName}`;
+              fullName(_, { getFieldValue }) {
+                const firstName = getFieldValue("firstName");
+                const lastName = getFieldValue("lastName");
+                return `${firstName} ${lastName}`;
               },
             },
           },

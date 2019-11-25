@@ -20,7 +20,8 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string): StoreObject;
-  set(dataId: string, value: StoreObject): void;
+  getFieldValue(dataId: string, fieldName: string): StoreValue;
+  merge(dataId: string, incoming: StoreObject): void;
   delete(dataId: string): void;
   clear(): void;
 

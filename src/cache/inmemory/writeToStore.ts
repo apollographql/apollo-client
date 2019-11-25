@@ -24,6 +24,7 @@ import {
 import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 
 import { defaultNormalizedCacheFactory } from './entityStore';
 import { NormalizedCache, StoreObject } from './types';
@@ -344,6 +345,13 @@ function walkWithMergeOverrides(
       walkWithMergeOverrides(existingValue, incomingValue, child);
     }
     if (merge) {
+      if (process.env.NODE_ENV !== "production") {
+        // It may be tempting to modify existing data directly, for
+        // example by pushing more elements onto an existing array, but
+        // merge functions are expected to be pure, so it's important that
+        // we enforce immutability in development.
+        maybeDeepFreeze(existingValue);
+      }
       incomingObject[name] = merge(existingValue, incomingValue);
     }
   });

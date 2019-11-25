@@ -539,6 +539,7 @@ describe("type policies", function () {
                 keyArgs: [],
 
                 read(existing: any[], { args, toReference }) {
+                  expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const slice = existing.slice(
                     args.offset,
@@ -549,6 +550,7 @@ describe("type policies", function () {
                 },
 
                 merge(existing: any[], incoming: any[], { args, toReference }) {
+                  expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const copy = existing ? existing.slice(0) : [];
                   const limit = args.offset + args.limit;

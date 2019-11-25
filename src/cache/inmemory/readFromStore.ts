@@ -229,18 +229,23 @@ export class StoreReader {
     // Provides a uniform interface from reading field values, whether or
     // not the parent object is a normalized entity object.
     function getFieldValue(fieldName: string): StoreValue {
+      let fieldValue: StoreValue;
       if (isReference(objectOrReference)) {
         const dataId = objectOrReference.__ref;
-        const fieldValue = store.getFieldValue(dataId, fieldName);
+        fieldValue = store.getFieldValue(dataId, fieldName);
         if (fieldValue === void 0 && fieldName === "__typename") {
           // We can infer the __typename of singleton root objects like
           // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
           // we have never written that information into the cache.
           return policies.rootTypenamesById[dataId];
         }
-        return fieldValue;
+      } else {
+        fieldValue = objectOrReference && objectOrReference[fieldName];
       }
-      return objectOrReference && objectOrReference[fieldName];
+      if (process.env.NODE_ENV !== "production") {
+        maybeDeepFreeze(fieldValue);
+      }
+      return fieldValue;
     }
 
     const typename = getFieldValue("__typename") as string;

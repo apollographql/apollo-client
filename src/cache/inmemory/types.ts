@@ -22,7 +22,7 @@ export interface NormalizedCache {
   get(dataId: string): StoreObject;
   getFieldValue(dataId: string, storeFieldName: string): StoreValue;
   merge(dataId: string, incoming: StoreObject): void;
-  delete(dataId: string): void;
+  delete(dataId: string, fieldName?: string): void;
   clear(): void;
 
   // non-Map elements:

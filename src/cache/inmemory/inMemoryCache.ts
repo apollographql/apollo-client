@@ -206,12 +206,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.policies.identify(object);
   }
 
-  public evict(dataId: string): boolean {
+  public evict(dataId: string, fieldName?: string): boolean {
     if (this.optimisticData.has(dataId)) {
       // Note that this deletion does not trigger a garbage collection, which
       // is convenient in cases where you want to evict multiple entities before
       // performing a single garbage collection.
-      this.optimisticData.delete(dataId);
+      this.optimisticData.delete(dataId, fieldName);
       this.broadcastWatches();
       return !this.optimisticData.has(dataId);
     }

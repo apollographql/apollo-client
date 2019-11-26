@@ -57,7 +57,7 @@ export interface NormalizedCacheObject {
 
 export interface StoreObject {
   __typename?: string;
-  [storeFieldKey: string]: StoreValue;
+  [storeFieldName: string]: StoreValue;
 }
 
 export type OptimisticStoreItem = {

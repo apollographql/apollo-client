@@ -1806,7 +1806,7 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        abc: [
+        'books:abc': [
           {
             name: 'efgh',
           },
@@ -1852,7 +1852,7 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        abc: [
+        "books:abc": [
           {
             name: 'abcd',
           },
@@ -1881,7 +1881,7 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        abc: [
+        "books:abc": [
           {
             name: 'efgh',
           },

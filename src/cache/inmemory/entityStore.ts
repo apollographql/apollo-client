@@ -7,32 +7,36 @@ import {
 } from '../../utilities/common/mergeDeep';
 import { isEqual } from '../../utilities/common/isEqual';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
-import { getTypenameFromStoreObject } from './helpers';
+import {
+  getTypenameFromStoreObject,
+  fieldNameFromStoreName,
+} from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
 type DependType = OptimisticDependencyFunction<string> | null;
 
-function makeDepKey(dataId: string, fieldName?: string) {
+function makeDepKey(dataId: string, storeFieldName?: string) {
   const parts = [dataId];
-  if (typeof fieldName === "string") {
-    parts.push(fieldName);
+  if (typeof storeFieldName === "string") {
+    parts.push(fieldNameFromStoreName(storeFieldName));
   }
   return JSON.stringify(parts);
 }
 
-function depend(store: EntityStore, dataId: string, fieldName?: string) {
+function depend(store: EntityStore, dataId: string, storeFieldName?: string) {
   if (store.depend) {
-    store.depend(makeDepKey(dataId, fieldName));
+    store.depend(makeDepKey(dataId, storeFieldName));
   }
 }
 
-function dirty(store: EntityStore, dataId: string, fieldName?: string) {
+function dirty(store: EntityStore, dataId: string, storeFieldName?: string) {
   if (store.depend) {
-    store.depend.dirty(makeDepKey(dataId));
-    if (typeof fieldName === "string") {
-      store.depend.dirty(makeDepKey(dataId, fieldName));
-    }
+    store.depend.dirty(
+      typeof storeFieldName === "string"
+        ? makeDepKey(dataId, storeFieldName)
+        : makeDepKey(dataId),
+    );
   }
 }
 
@@ -70,10 +74,10 @@ export abstract class EntityStore implements NormalizedCache {
     return this.data[dataId];
   }
 
-  public getFieldValue(dataId: string, fieldName: string): StoreValue {
-    depend(this, dataId, fieldName);
+  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
+    depend(this, dataId, storeFieldName);
     const storeObject = this.data[dataId];
-    return storeObject && storeObject[fieldName];
+    return storeObject && storeObject[storeFieldName];
   }
 
   public merge(dataId: string, incoming: StoreObject): void {
@@ -89,9 +93,9 @@ export abstract class EntityStore implements NormalizedCache {
         dirty(this, dataId);
         // Now invalidate dependents who called getFieldValue for any
         // fields that are changing as a result of this merge.
-        Object.keys(incoming).forEach(fieldName => {
-          if (!existing || incoming[fieldName] !== existing[fieldName]) {
-            dirty(this, dataId, fieldName);
+        Object.keys(incoming).forEach(storeFieldName => {
+          if (!existing || incoming[storeFieldName] !== existing[storeFieldName]) {
+            dirty(this, dataId, storeFieldName);
           }
         });
       }
@@ -322,27 +326,19 @@ class Layer extends EntityStore {
     return this.parent.get(dataId);
   }
 
-  public getFieldValue(dataId: string, fieldName: string): StoreValue {
+  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
     if (hasOwn.call(this.data, dataId)) {
       const storeObject = this.data[dataId];
-      if (storeObject && hasOwn.call(storeObject, fieldName)) {
-        return super.getFieldValue(dataId, fieldName);
+      if (storeObject && hasOwn.call(storeObject, storeFieldName)) {
+        return super.getFieldValue(dataId, storeFieldName);
       }
     }
 
     if (this.depend && this.depend !== this.parent.depend) {
-      depend(this, dataId, fieldName);
+      depend(this, dataId, storeFieldName);
     }
 
-    return this.parent.getFieldValue(dataId, fieldName);
-  }
-
-  public delete(dataId: string): void {
-    super.delete(dataId);
-    // In case this.parent (or one of its ancestors) has an entry for this ID,
-    // we need to shadow it with an undefined value, or it might be inherited
-    // by the Layer#get method.
-    this.data[dataId] = void 0;
+    return this.parent.getFieldValue(dataId, storeFieldName);
   }
 
   // Return a Set<string> of all the ID strings that have been retained by this

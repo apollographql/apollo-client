@@ -96,20 +96,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return maybeBroadcastWatch.call(this, c);
     }, {
       makeCacheKey(c: Cache.WatchOptions) {
-        if (c.previousResult) {
-          // If a previousResult was provided, assume the caller would prefer
-          // to compare the previous data to the new data to determine whether
-          // to broadcast, so we should disable caching by returning here, to
-          // give maybeBroadcastWatch a chance to do that comparison.
-          return;
-        }
-
-        if (supportsResultCaching(cache.data)) {
-          // Return a cache key (thus enabling caching) only if we're currently
-          // using a data store that can track cache dependencies.
+        // Return a cache key (thus enabling result caching) only if we're
+        // currently using a data store that can track cache dependencies.
+        const store = c.optimistic ? cache.optimisticData : cache.data;
+        if (supportsResultCaching(store)) {
+          const { optimistic, rootId, variables } = c;
           return cache.cacheKeyRoot.lookup(
             c.query,
-            JSON.stringify(c.variables),
+            store,
+            JSON.stringify({ optimistic, rootId, variables }),
           );
         }
       }
@@ -136,7 +131,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       query: options.query,
       variables: options.variables,
       rootId: options.rootId,
-      previousResult: options.previousResult,
       config: this.config,
     }) || null;
   }
@@ -159,7 +153,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       query: options.query,
       variables: options.variables,
       returnPartialData: options.returnPartialData,
-      previousResult: options.previousResult,
       config: this.config,
     });
   }
@@ -305,7 +298,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.diff({
         query: c.query,
         variables: c.variables,
-        previousResult: c.previousResult && c.previousResult(),
         optimistic: c.optimistic,
       }),
     );

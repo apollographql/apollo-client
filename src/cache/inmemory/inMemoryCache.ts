@@ -1,17 +1,19 @@
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
-import { DocumentNode } from 'graphql';
+import { DocumentNode, SelectionSetNode } from 'graphql';
 import { wrap } from 'optimism';
 import { KeyTrie } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
+import { FragmentMap } from '../../utilities/graphql/fragments';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
+  StoreObject,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
@@ -194,6 +196,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // count, in case that's useful.
   public release(rootId: string, optimistic?: boolean): number {
     return (optimistic ? this.optimisticData : this.data).release(rootId);
+  }
+
+  public identify(
+    object: StoreObject,
+    selectionSet?: SelectionSetNode,
+    fragmentMap?: FragmentMap,
+  ) {
+    return this.policies.identify(object, selectionSet, fragmentMap);
   }
 
   public evict(dataId: string): boolean {

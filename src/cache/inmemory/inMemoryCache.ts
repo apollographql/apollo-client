@@ -102,8 +102,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         if (supportsResultCaching(store)) {
           const { optimistic, rootId, variables } = c;
           return cache.cacheKeyRoot.lookup(
+            store.group,
             c.query,
-            store,
             JSON.stringify({ optimistic, rootId, variables }),
           );
         }

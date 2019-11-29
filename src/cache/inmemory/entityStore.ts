@@ -14,41 +14,10 @@ import {
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
-type DependType = OptimisticDependencyFunction<string> | null;
-
-function makeDepKey(dataId: string, storeFieldName?: string) {
-  const parts = [dataId];
-  if (typeof storeFieldName === "string") {
-    parts.push(fieldNameFromStoreName(storeFieldName));
-  }
-  return JSON.stringify(parts);
-}
-
-function depend(store: EntityStore, dataId: string, storeFieldName?: string) {
-  if (store.depend) {
-    store.depend(makeDepKey(dataId, storeFieldName));
-  }
-}
-
-function dirty(store: EntityStore, dataId: string, storeFieldName?: string) {
-  if (store.depend) {
-    store.depend.dirty(
-      typeof storeFieldName === "string"
-        ? makeDepKey(dataId, storeFieldName)
-        : makeDepKey(dataId),
-    );
-  }
-}
-
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
 
-  // It seems like this property ought to be protected rather than public,
-  // but TypeScript doesn't realize it's inherited from a shared base
-  // class by both Root and Layer classes, so Layer methods are forbidden
-  // from accessing the .depend property of an arbitrary EntityStore
-  // instance, because it might be a Root instance (and vice-versa).
-  public readonly depend: DependType = null;
+  public readonly group: CacheGroup;
 
   public abstract addLayer(
     layerId: string,
@@ -70,12 +39,12 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public get(dataId: string): StoreObject {
-    depend(this, dataId);
+    this.group.depend(dataId);
     return this.data[dataId];
   }
 
   public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
-    depend(this, dataId, storeFieldName);
+    this.group.depend(dataId, storeFieldName);
     const storeObject = this.data[dataId];
     return storeObject && storeObject[storeFieldName];
   }
@@ -87,15 +56,15 @@ export abstract class EntityStore implements NormalizedCache {
     if (merged !== existing) {
       this.data[dataId] = merged;
       delete this.refs[dataId];
-      if (this.depend) {
+      if (this.group.caching) {
         // First, invalidate any dependents that called get rather than
         // getFieldValue.
-        dirty(this, dataId);
+        this.group.dirty(dataId);
         // Now invalidate dependents who called getFieldValue for any
         // fields that are changing as a result of this merge.
         Object.keys(incoming).forEach(storeFieldName => {
           if (!existing || incoming[storeFieldName] !== existing[storeFieldName]) {
-            dirty(this, dataId, storeFieldName);
+            this.group.dirty(dataId, storeFieldName);
           }
         });
       }
@@ -172,10 +141,10 @@ export abstract class EntityStore implements NormalizedCache {
           });
         }
 
-        if (this.depend) {
-          dirty(this, dataId);
+        if (this.group.caching) {
+          this.group.dirty(dataId);
           Object.keys(fieldsToDirty).forEach(fieldName => {
-            dirty(this, dataId, fieldName);
+            this.group.dirty(dataId, fieldName);
           });
         }
       }
@@ -280,15 +249,62 @@ export abstract class EntityStore implements NormalizedCache {
   }
 }
 
+// A single CacheGroup represents a set of one or more EntityStore objects,
+// typically the Root store in a CacheGroup by itself, and all active Layer
+// stores in a group together. A single EntityStore object belongs to one
+// and only one CacheGroup, store.group. The CacheGroup is responsible for
+// tracking dependencies, so store.group serves as a convenient key for
+// storing cached results that should be invalidated when/if those
+// dependencies change (see the various makeCachekey functions in
+// inMemoryCache.ts and readFromStore.ts). If we used the EntityStore
+// objects themselves as cache keys (that is, store rather than
+// store.group), the cache would become unnecessarily fragmented by all the
+// different Layer objects. Instead, the CacheGroup approach allows all
+// optimistic Layer objects in the same linked list to belong to one
+// CacheGroup, with the non-optimistic Root object belonging to another
+// CacheGroup, allowing resultCaching dependencies to be tracked separately
+// for optimistic and non-optimistic entity data.
+class CacheGroup {
+  private d: OptimisticDependencyFunction<string> | null = null;
+
+  constructor(public readonly caching: boolean) {
+    this.d = caching ? dep<string>() : null;
+  }
+
+  public depend(dataId: string, storeFieldName?: string) {
+    if (this.d) {
+      this.d(makeDepKey(dataId, storeFieldName));
+    }
+  }
+
+  public dirty(dataId: string, storeFieldName?: string) {
+    if (this.d) {
+      this.d.dirty(
+        typeof storeFieldName === "string"
+          ? makeDepKey(dataId, storeFieldName)
+          : makeDepKey(dataId),
+      );
+    }
+  }
+}
+
+function makeDepKey(dataId: string, storeFieldName?: string) {
+  const parts = [dataId];
+  if (typeof storeFieldName === "string") {
+    parts.push(fieldNameFromStoreName(storeFieldName));
+  }
+  return JSON.stringify(parts);
+}
+
 export namespace EntityStore {
   // Refer to this class as EntityStore.Root outside this namespace.
   export class Root extends EntityStore {
-    // Although each Root instance gets its own unique this.depend
-    // function, any Layer instances created by calling addLayer need to
-    // share a single distinct dependency function. Since this shared
-    // function must outlast the Layer instances themselves, it needs to
-    // be created and owned by the Root instance.
-    private sharedLayerDepend: DependType = null;
+    // Although each Root instance gets its own unique CacheGroup object,
+    // any Layer instances created by calling addLayer need to share a
+    // single distinct CacheGroup object. Since this shared object must
+    // outlast the Layer instances themselves, it needs to be created and
+    // owned by the Root instance.
+    private sharedLayerGroup: CacheGroup = null;
 
     constructor({
       resultCaching = true,
@@ -298,11 +314,8 @@ export namespace EntityStore {
       seed?: NormalizedCacheObject;
     }) {
       super();
-      if (resultCaching) {
-        // Regard this.depend as publicly readonly but privately mutable.
-        (this as any).depend = dep<string>();
-        this.sharedLayerDepend = dep<string>();
-      }
+      (this.group as any) = new CacheGroup(resultCaching);
+      this.sharedLayerGroup = new CacheGroup(resultCaching);
       if (seed) this.replace(seed);
     }
 
@@ -311,7 +324,7 @@ export namespace EntityStore {
       replay: (layer: EntityStore) => any,
     ): EntityStore {
       // The replay function will be called in the Layer constructor.
-      return new Layer(layerId, this, replay, this.sharedLayerDepend);
+      return new Layer(layerId, this, replay, this.sharedLayerGroup);
     }
 
     public removeLayer(layerId: string): Root {
@@ -328,7 +341,7 @@ class Layer extends EntityStore {
     public readonly id: string,
     public readonly parent: Layer | EntityStore.Root,
     public readonly replay: (layer: EntityStore) => any,
-    public readonly depend: DependType,
+    public readonly group: CacheGroup,
   ) {
     super();
     replay(this);
@@ -338,7 +351,7 @@ class Layer extends EntityStore {
     layerId: string,
     replay: (layer: EntityStore) => any,
   ): EntityStore {
-    return new Layer(layerId, this, replay, this.depend);
+    return new Layer(layerId, this, replay, this.group);
   }
 
   public removeLayer(layerId: string): EntityStore {
@@ -348,7 +361,7 @@ class Layer extends EntityStore {
     if (layerId === this.id) {
       // Dirty every ID we're removing.
       // TODO Some of these IDs could escape dirtying if value unchanged.
-      if (this.depend) {
+      if (this.group.caching) {
         Object.keys(this.data).forEach(dataId => this.delete(dataId));
       }
       return parent;
@@ -379,8 +392,9 @@ class Layer extends EntityStore {
     // from calling this.depend for every optimistic layer we examine, but
     // ensures we call this.depend in the last optimistic layer before we
     // reach the root layer.
-    if (this.depend && this.depend !== this.parent.depend) {
-      depend(this, dataId);
+
+    if (this.group.caching && this.group !== this.parent.group) {
+      this.group.depend(dataId);
     }
 
     return this.parent.get(dataId);
@@ -394,8 +408,8 @@ class Layer extends EntityStore {
       }
     }
 
-    if (this.depend && this.depend !== this.parent.depend) {
-      depend(this, dataId, storeFieldName);
+    if (this.group.caching && this.group !== this.parent.group) {
+      this.group.depend(dataId, storeFieldName);
     }
 
     return this.parent.getFieldValue(dataId, storeFieldName);
@@ -473,7 +487,7 @@ const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
 
 export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
-  return !!(store instanceof EntityStore && store.depend);
+  return !!(store instanceof EntityStore && store.group.caching);
 }
 
 export function defaultNormalizedCacheFactory(

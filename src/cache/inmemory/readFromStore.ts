@@ -105,7 +105,13 @@ export class StoreReader {
       }: ExecSelectionSetOptions) {
         if (supportsResultCaching(context.store)) {
           return cacheKeyRoot.lookup(
-            context.store,
+            // EntityStore objects share the same store.group if their
+            // dependencies are tracked together (for example, optimistic
+            // versus non-optimistic data), so we can reduce cache key
+            // diversity by using context.store.group here instead of just
+            // context.store, which promotes reusability of cached
+            // optimistic results.
+            context.store.group,
             selectionSet,
             JSON.stringify(context.variables),
             isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
@@ -120,7 +126,9 @@ export class StoreReader {
       makeCacheKey({ field, array, context }) {
         if (supportsResultCaching(context.store)) {
           return cacheKeyRoot.lookup(
-            context.store,
+            // See comment above about why context.store.group is used
+            // here, instead of context.store.
+            context.store.group,
             field,
             array,
             JSON.stringify(context.variables),

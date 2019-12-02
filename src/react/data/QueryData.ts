@@ -1,6 +1,5 @@
 import { equal as isEqual } from '@wry/equality';
 
-import { ApolloQueryResult } from '../../core/types';
 import { ApolloError } from '../../errors/ApolloError';
 import { NetworkStatus } from '../../core/networkStatus';
 import {
@@ -75,14 +74,10 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   // For server-side rendering
-  public fetchData(): Promise<ApolloQueryResult<any>> | boolean {
+  public fetchData(): Promise<void> | boolean {
     const options = this.getOptions();
     if (options.skip || options.ssr === false) return false;
-
-    // currentObservable.query is already assigned the registered SSR observable in initializeObservableQuery.
-    const obs = this.currentObservable.query!;
-    const currentResult = obs.getCurrentResult();
-    return currentResult.loading ? obs.result() : false;
+    return new Promise(resolve => this.startQuerySubscription(resolve));
   }
 
   public afterExecute({
@@ -147,7 +142,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.forceUpdate();
   };
 
-  private getExecuteResult = (): QueryResult<TData, TVariables> => {
+  private getExecuteResult(): QueryResult<TData, TVariables> {
     const result = this.getQueryResult();
     this.startQuerySubscription();
     return result;
@@ -176,7 +171,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       result =
         this.context.renderPromises!.addQueryPromise(
           this,
-          this.getExecuteResult
+          this.getQueryResult
         ) || ssrLoading;
     }
 
@@ -266,7 +261,13 @@ export class QueryData<TData, TVariables> extends OperationData {
     }
   }
 
-  private startQuerySubscription() {
+  // Setup a subscription to watch for Apollo Client `ObservableQuery` changes.
+  // When new data is received, and it doesn't match the data that was used
+  // during the last `QueryData.execute` call (and ultimately the last query
+  // component render), trigger the `onNewData` callback. If not specified,
+  // `onNewData` will trigger the `forceUpdate` function, which leads to a
+  // query component re-render.
+  private startQuerySubscription(onNewData: () => void = this.forceUpdate) {
     if (this.currentObservable.subscription || this.getOptions().skip) return;
 
     const obsQuery = this.currentObservable.query!;
@@ -284,7 +285,19 @@ export class QueryData<TData, TVariables> extends OperationData {
           return;
         }
 
-        this.forceUpdate();
+        // If we skipped previously, `previousResult.data` is set to undefined.
+        // When this subscription is run after skipping, Apollo Client sends
+        // the last query result data alongside the `loading` true state. This
+        // means the previous skipped `data` of undefined and the incoming
+        // data won't match, which would normally mean we want to trigger a
+        // render to show the new data. In this case however we're already
+        // showing the loading state, and want to avoid triggering an
+        // additional and unnecessary render showing the same loading state.
+        if (this.previousOptions.skip) {
+          return;
+        }
+
+        onNewData();
       },
       error: error => {
         this.resubscribeToQuery();
@@ -296,7 +309,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           !isEqual(error, this.previousData.error)
         ) {
           this.previousData.error = error;
-          this.forceUpdate();
+          onNewData();
         }
       }
     });
@@ -322,7 +335,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     });
   }
 
-  private getQueryResult(): QueryResult<TData, TVariables> {
+  private getQueryResult = (): QueryResult<TData, TVariables> => {
     let result: any = this.observableQueryFields();
     const options = this.getOptions();
 

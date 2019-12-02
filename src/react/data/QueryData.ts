@@ -1,6 +1,5 @@
 import { equal as isEqual } from '@wry/equality';
 
-import { ApolloQueryResult } from '../../core/types';
 import { ApolloError } from '../../errors/ApolloError';
 import { NetworkStatus } from '../../core/networkStatus';
 import {
@@ -75,13 +74,10 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   // For server-side rendering
-  public fetchData(): Promise<ApolloQueryResult<any>> | boolean {
+  public fetchData(): Promise<void> | boolean {
     const options = this.getOptions();
     if (options.skip || options.ssr === false) return false;
-
-    return new Promise<ApolloQueryResult<any>>(resolve => {
-      this.startQuerySubscription(resolve);
-    });
+    return new Promise(resolve => this.startQuerySubscription(resolve));
   }
 
   public afterExecute({

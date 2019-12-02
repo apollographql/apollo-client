@@ -1,4 +1,4 @@
-import { dep, OptimisticDependencyFunction } from 'optimism';
+import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
 import { invariant } from 'ts-invariant';
 import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
 import {
@@ -6,6 +6,7 @@ import {
   ReconcilerFunction,
 } from '../../utilities/common/mergeDeep';
 import { isEqual } from '../../utilities/common/isEqual';
+import { canUseWeakMap } from '../../utilities/common/canUse';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 import {
   getTypenameFromStoreObject,
@@ -247,23 +248,26 @@ export abstract class EntityStore implements NormalizedCache {
     }
     return this.refs[dataId];
   }
+
+  // Used to compute cache keys specific to this.group.
+  public makeCacheKey(...args: any[]) {
+    return this.group.keyMaker.lookupArray(args);
+  }
 }
 
 // A single CacheGroup represents a set of one or more EntityStore objects,
 // typically the Root store in a CacheGroup by itself, and all active Layer
-// stores in a group together. A single EntityStore object belongs to one
-// and only one CacheGroup, store.group. The CacheGroup is responsible for
-// tracking dependencies, so store.group serves as a convenient key for
-// storing cached results that should be invalidated when/if those
-// dependencies change (see the various makeCachekey functions in
-// inMemoryCache.ts and readFromStore.ts). If we used the EntityStore
-// objects themselves as cache keys (that is, store rather than
-// store.group), the cache would become unnecessarily fragmented by all the
-// different Layer objects. Instead, the CacheGroup approach allows all
-// optimistic Layer objects in the same linked list to belong to one
-// CacheGroup, with the non-optimistic Root object belonging to another
-// CacheGroup, allowing resultCaching dependencies to be tracked separately
-// for optimistic and non-optimistic entity data.
+// stores in a group together. A single EntityStore object belongs to only
+// one CacheGroup, store.group. The CacheGroup is responsible for tracking
+// dependencies, so store.group is helpful for generating unique keys for
+// cached results that need to be invalidated when/if those dependencies
+// change. If we used the EntityStore objects themselves as cache keys (that
+// is, store rather than store.group), the cache would become unnecessarily
+// fragmented by all the different Layer objects. Instead, the CacheGroup
+// approach allows all optimistic Layer objects in the same linked list to
+// belong to one CacheGroup, with the non-optimistic Root object belonging
+// to another CacheGroup, allowing resultCaching dependencies to be tracked
+// separately for optimistic and non-optimistic entity data.
 class CacheGroup {
   private d: OptimisticDependencyFunction<string> | null = null;
 
@@ -286,6 +290,10 @@ class CacheGroup {
       );
     }
   }
+
+  // Used by the EntityStore#makeCacheKey method to compute cache keys
+  // specific to this CacheGroup.
+  public readonly keyMaker = new KeyTrie<object>(canUseWeakMap);
 }
 
 function makeDepKey(dataId: string, storeFieldName?: string) {

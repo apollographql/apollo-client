@@ -26,7 +26,6 @@ import {
   getMainDefinition,
   getQueryDefinition,
 } from '../../utilities/graphql/getFromAST';
-import { isEqual } from '../../utilities/common/isEqual';
 import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { mergeDeepArray } from '../../utilities/common/mergeDeep';
 import { Cache } from '../core/types/Cache';
@@ -141,10 +140,6 @@ export class StoreReader {
    *
    * @param {Object} [variables] A map from the name of a variable to its value. These variables can
    * be referenced by the query document.
-   *
-   * @param {any} previousResult The previous result returned by this function for the same query.
-   * If nothing in the store changed since that previous result then values from the previous result
-   * will be returned to preserve referential equality.
    */
   public readQueryFromStore<QueryType>(
     options: ReadQueryOptions,
@@ -160,14 +155,12 @@ export class StoreReader {
    * identify if any data was missing from the store.
    * @param  {DocumentNode} query A parsed GraphQL query document
    * @param  {Store} store The Apollo Client store object
-   * @param  {any} previousResult The previous result returned by this function for the same query
    * @return {result: Object, complete: [boolean]}
    */
   public diffQueryAgainstStore<T>({
     store,
     query,
     variables,
-    previousResult,
     returnPartialData = true,
     rootId = 'ROOT_QUERY',
     config,
@@ -203,12 +196,6 @@ export class StoreReader {
           )}.`,
         );
       });
-    }
-
-    if (previousResult) {
-      if (isEqual(previousResult, execResult.result)) {
-        execResult.result = previousResult;
-      }
     }
 
     return {

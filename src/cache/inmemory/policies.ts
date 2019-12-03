@@ -22,6 +22,7 @@ import {
   argumentsObjectFromField,
   makeReference,
   isReference,
+  Reference,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -99,8 +100,14 @@ interface FieldFunctionOptions {
   // Gets the existing StoreValue for a given field within the current
   // object, without calling any read functions, so it works even with the
   // current field. If the provided FieldNode has arguments, the same
-  // options.variables will be used.
-  getFieldValue(field: string | FieldNode): Readonly<StoreValue>;
+  // options.variables will be used. If a foreignRef is provided, the
+  // value will be read from that object instead of the current object, so
+  // this function can be used (together with isReference) to examine the
+  // cache outside the current entity.
+  getFieldValue<T = StoreValue>(
+    field: string | FieldNode,
+    foreignRef?: Reference,
+  ): Readonly<T>;
 }
 
 interface FieldReadFunction<TExisting, TResult = TExisting> {
@@ -418,7 +425,10 @@ export class Policies {
 
   public readFieldFromStoreObject(
     field: FieldNode,
-    getFieldValue: (field: string) => StoreValue,
+    getFieldValue: (
+      field: string,
+      foreignRef?: Reference,
+    ) => any,
     typename = getFieldValue("__typename") as string,
     variables?: Record<string, any>,
   ): StoreValue {
@@ -433,10 +443,11 @@ export class Policies {
         variables,
         isReference,
         toReference: policies.toReference,
-        getFieldValue(nameOrField) {
+        getFieldValue(nameOrField, foreignRef) {
           return getFieldValue(
             typeof nameOrField === "string" ? nameOrField :
               policies.getStoreFieldName(typename, nameOrField, variables),
+            foreignRef,
           );
         },
       });
@@ -468,7 +479,7 @@ export class Policies {
   }
 }
 
-function emptyGetFieldValueForMerge() {
+function emptyGetFieldValueForMerge(): any {
   invariant.warn("getFieldValue unavailable in merge functions");
 }
 

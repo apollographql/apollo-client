@@ -206,8 +206,12 @@ export class StoreReader {
 
     // Provides a uniform interface from reading field values, whether or
     // not the parent object is a normalized entity object.
-    function getFieldValue(fieldName: string): StoreValue {
+    function getFieldValue(
+      fieldName: string,
+      foreignRef?: Reference,
+    ): StoreValue {
       let fieldValue: StoreValue;
+      if (foreignRef) objectOrReference = foreignRef;
       if (isReference(objectOrReference)) {
         const dataId = objectOrReference.__ref;
         fieldValue = store.getFieldValue(dataId, fieldName);

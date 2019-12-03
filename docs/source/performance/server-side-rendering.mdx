@@ -185,13 +185,13 @@ const client = new ApolloClient(....);
 // during request (see above)
 getDataFromTree(App).then(() => {
   // We are ready to render for real
-  const content = ReactDOM.renderToString(App);
+  const content = ReactDOMServer.renderToString(App);
   const initialState = client.extract();
 
   const html = <Html content={content} state={initialState} />;
 
   res.status(200);
-  res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);
+  res.send(`<!doctype html>\n${ReactDOMServer.renderToStaticMarkup(html)}`);
   res.end();
 });
 ```
@@ -277,7 +277,7 @@ renderToStringWithData(App).then((content) => {
   const html = <Html content={content} state={initialState} />;
 
   res.status(200);
-  res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);
+  res.send(`<!doctype html>\n${ReactDOMServer.renderToStaticMarkup(html)}`);
   res.end();
 });
 ```

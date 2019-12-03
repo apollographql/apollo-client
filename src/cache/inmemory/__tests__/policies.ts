@@ -2,7 +2,6 @@ import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
 import { FieldPolicy } from "../policies";
-import { isReference } from "../../../utilities/graphql/storeUtils";
 
 describe("type policies", function () {
   const bookQuery = gql`
@@ -538,7 +537,7 @@ describe("type policies", function () {
               todos: {
                 keyArgs: [],
 
-                read(existing: any[], { args, toReference }) {
+                read(existing: any[], { args, toReference, isReference }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const slice = existing.slice(
@@ -549,7 +548,11 @@ describe("type policies", function () {
                   return slice;
                 },
 
-                merge(existing: any[], incoming: any[], { args, toReference }) {
+                merge(existing: any[], incoming: any[], {
+                  args,
+                  toReference,
+                  isReference,
+                }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const copy = existing ? existing.slice(0) : [];

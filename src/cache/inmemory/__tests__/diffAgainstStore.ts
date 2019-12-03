@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference } from '../../../utilities/graphql/storeUtils';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
@@ -959,7 +959,7 @@ describe('diffing queries against the store', () => {
         typePolicies: {
           Query: {
             fields: {
-              person(_, { args, toReference, getFieldValue }) {
+              person(_, { args, toReference, getFieldValue, isReference }) {
                 expect(typeof args.id).toBe('number');
                 const ref = toReference({ __typename: 'Person', id: args.id });
                 expect(isReference(ref)).toBe(true);

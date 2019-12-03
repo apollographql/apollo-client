@@ -21,6 +21,7 @@ import {
   StoreValue,
   argumentsObjectFromField,
   makeReference,
+  isReference,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -90,6 +91,9 @@ interface FieldFunctionOptions {
   args: Record<string, any>;
   field: FieldNode;
   variables?: Record<string, any>;
+
+  // Utilities for dealing with { __ref } objects.
+  isReference: typeof isReference;
   toReference: Policies["toReference"];
 
   // Gets the existing StoreValue for a given field within the current
@@ -427,6 +431,7 @@ export class Policies {
         args: argumentsObjectFromField(field, variables),
         field,
         variables,
+        isReference,
         toReference: policies.toReference,
         getFieldValue(nameOrField) {
           return getFieldValue(
@@ -455,6 +460,7 @@ export class Policies {
         args,
         field,
         variables,
+        isReference,
         toReference: policies.toReference,
         getFieldValue: emptyGetFieldValueForMerge,
       });

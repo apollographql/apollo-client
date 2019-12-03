@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
@@ -9,6 +8,10 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useMutation } from '../useMutation';
+import { requireReactLazily } from '../../react';
+
+const React = requireReactLazily();
+const { useEffect } = React;
 
 describe('useMutation Hook', () => {
   interface Todo {

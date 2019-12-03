@@ -1,5 +1,5 @@
 import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 
 import {
   createFragmentMap,
@@ -16,23 +16,18 @@ import {
 import {
   getTypenameFromResult,
   makeReference,
-  isReference,
   isField,
   resultKeyNameFromField,
   StoreValue,
 } from '../../utilities/graphql/storeUtils';
 
-import {
-  DeepMerger,
-  ReconcilerFunction,
-} from '../../utilities/common/mergeDeep';
-
+import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 
-import { defaultNormalizedCacheFactory } from './entityCache';
+import { defaultNormalizedCacheFactory } from './entityStore';
 import { NormalizedCache, StoreObject } from './types';
-import { getTypenameFromStoreObject } from './helpers';
 import { Policies, StoreValueMergeFunction } from './policies';
 
 export type WriteContext = {
@@ -41,7 +36,6 @@ export type WriteContext = {
     [dataId: string]: SelectionSetNode[];
   };
   readonly mergeFields: StoreObjectMergeFunction;
-  readonly mergeStoreObjects: StoreObjectMergeFunction;
   readonly variables?: any;
   readonly fragmentMap?: FragmentMap;
 };
@@ -49,10 +43,9 @@ export type WriteContext = {
 type StoreObjectMergeFunction = (
   existing: StoreObject,
   incoming: StoreObject,
-  overrides?: MergeOverrides,
 ) => StoreObject;
 
-type MergeOverrides = Record<string, {
+type MergeOverrides = Record<string | number, {
   merge?: StoreValueMergeFunction;
   child?: MergeOverrides;
 }>;
@@ -105,11 +98,6 @@ export class StoreWriter {
     // fields when processing a single selection set.
     const simpleFieldsMerger = new DeepMerger;
 
-    // A DeepMerger used for updating normalized StoreObjects in the store,
-    // with special awareness of { __ref } objects, arrays, and custom logic
-    // for reading and writing field values.
-    const storeObjectMerger = new DeepMerger(storeObjectReconciler);
-
     return this.writeSelectionSetToStore({
       result: result || Object.create(null),
       dataId,
@@ -119,9 +107,6 @@ export class StoreWriter {
         written: Object.create(null),
         mergeFields(existing, incoming) {
           return simpleFieldsMerger.merge(existing, incoming);
-        },
-        mergeStoreObjects(existing, incoming, overrides) {
-          return storeObjectMerger.merge(existing, incoming, store, overrides);
         },
         variables: {
           ...getDefaultValues(operationDefinition),
@@ -161,8 +146,6 @@ export class StoreWriter {
       typename: this.policies.rootTypenamesById[dataId],
     });
 
-    const existing: StoreObject = store.get(dataId) || Object.create(null);
-
     if (processed.mergeOverrides) {
       // If processSelectionSet reported any custom merge functions, walk
       // the processed.mergeOverrides structure and preemptively merge
@@ -170,23 +153,13 @@ export class StoreWriter {
       // using the custom function. This function updates processed.result
       // in place with the custom-merged values.
       walkWithMergeOverrides(
-        existing,
+        store.get(dataId),
         processed.result,
         processed.mergeOverrides,
       );
     }
 
-    store.set(
-      dataId,
-      context.mergeStoreObjects(
-        existing,
-        processed.result,
-        // To avoid re-merging values that have already been merged by
-        // custom merge functions, give context.mergeStoreObjects access
-        // to the mergeOverrides information that was used above.
-        processed.mergeOverrides,
-      ),
-    );
+    store.merge(dataId, processed.result);
 
     return store;
   }
@@ -316,13 +289,13 @@ export class StoreWriter {
     }
 
     if (Array.isArray(value)) {
-      let overrides: Record<number, MergeOverrides>;
+      let overrides: Record<number, { child: MergeOverrides }>;
       const result = value.map((item, i) => {
         const { result, mergeOverrides } =
           this.processFieldValue(item, field, context);
         if (mergeOverrides) {
           overrides = overrides || [];
-          overrides[i] = mergeOverrides;
+          overrides[i] = { child: mergeOverrides };
         }
         return result;
       });
@@ -372,98 +345,14 @@ function walkWithMergeOverrides(
       walkWithMergeOverrides(existingValue, incomingValue, child);
     }
     if (merge) {
-      incomingObject[name] = merge(existingValue, incomingValue, existingObject);
+      if (process.env.NODE_ENV !== "production") {
+        // It may be tempting to modify existing data directly, for
+        // example by pushing more elements onto an existing array, but
+        // merge functions are expected to be pure, so it's important that
+        // we enforce immutability in development.
+        maybeDeepFreeze(existingValue);
+      }
+      incomingObject[name] = merge(existingValue, incomingValue);
     }
   });
-}
-
-const storeObjectReconciler: ReconcilerFunction<[
-  NormalizedCache,
-  MergeOverrides | undefined,
-]> = function (
-  existingObject,
-  incomingObject,
-  property,
-  // This parameter comes from the additional argument we pass to the
-  // merge method in context.mergeStoreObjects (see writeQueryToStore).
-  store,
-  mergeOverrides,
-) {
-  // In the future, reconciliation logic may depend on the type of the parent
-  // StoreObject, not just the values of the given property.
-  const existing = existingObject[property];
-  const incoming = incomingObject[property];
-
-  const mergeChildObj = mergeOverrides && mergeOverrides[property];
-  if (mergeChildObj && typeof mergeChildObj.merge === "function") {
-    // If this property was overridden by a custom merge function, then
-    // its merged value has already been determined, so we should return
-    // incoming without recursively merging it into existing.
-    return incoming;
-  }
-
-  if (
-    existing !== incoming &&
-    // The DeepMerger class has various helpful utilities that we might as
-    // well reuse here.
-    this.isObject(existing) &&
-    this.isObject(incoming)
-  ) {
-    const eType = getTypenameFromStoreObject(store, existing);
-    const iType = getTypenameFromStoreObject(store, incoming);
-    // If both objects have a typename and the typename is different, let the
-    // incoming object win. The typename can change when a different subtype
-    // of a union or interface is written to the cache.
-    if (
-      typeof eType === 'string' &&
-      typeof iType === 'string' &&
-      eType !== iType
-    ) {
-      return incoming;
-    }
-
-    const childMergeOverrides = mergeChildObj && mergeChildObj.child;
-
-    if (isReference(incoming)) {
-      if (isReference(existing)) {
-        // Incoming references always replace existing references, but we can
-        // avoid changing the object identity when the __ref is the same.
-        return incoming.__ref === existing.__ref ? existing : incoming;
-      }
-      // Incoming references can be merged with existing non-reference data
-      // if the existing data appears to be of a compatible type.
-      store.set(
-        incoming.__ref,
-        this.merge(
-          existing,
-          store.get(incoming.__ref),
-          store,
-          childMergeOverrides,
-        ),
-      );
-      return incoming;
-    } else if (isReference(existing)) {
-      throw new InvariantError(
-        `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
-      );
-    }
-
-    if (Array.isArray(incoming)) {
-      if (!Array.isArray(existing)) return incoming;
-      if (existing.length > incoming.length) {
-        // Allow the incoming array to truncate the existing array, if the
-        // incoming array is shorter.
-        return this.merge(
-          existing.slice(0, incoming.length),
-          incoming,
-          store,
-          childMergeOverrides,
-        );
-      }
-    }
-
-    return this.merge(existing, incoming, store, childMergeOverrides);
-  }
-
-  return incoming;
 }

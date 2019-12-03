@@ -398,8 +398,10 @@ describe("type policies", function () {
           Person: {
             keyFields: ["firstName", "lastName"],
             fields: {
-              fullName(_, { parentObject: person }) {
-                return `${person.firstName} ${person.lastName}`;
+              fullName(_, { getFieldValue }) {
+                const firstName = getFieldValue("firstName");
+                const lastName = getFieldValue("lastName");
+                return `${firstName} ${lastName}`;
               },
             },
           },
@@ -537,6 +539,7 @@ describe("type policies", function () {
                 keyArgs: [],
 
                 read(existing: any[], { args, toReference }) {
+                  expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const slice = existing.slice(
                     args.offset,
@@ -547,6 +550,7 @@ describe("type policies", function () {
                 },
 
                 merge(existing: any[], incoming: any[], { args, toReference }) {
+                  expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const copy = existing ? existing.slice(0) : [];
                   const limit = args.offset + args.limit;
@@ -915,6 +919,133 @@ describe("type policies", function () {
       });
 
       expect(cache.gc()).toEqual([]);
+    });
+  });
+
+  it("runs read and merge functions for unidentified data", function () {
+    function reverse(s: string) {
+      return s.split("").reverse().join("");
+    }
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          keyFields: ["isbn"],
+        },
+
+        Author: {
+          // Passing false for keyFields disables normalization of Author
+          // objects, which should not interfere with the operation of
+          // their read and/or merge functions. However, disabling
+          // normalization means the merge function for the name field
+          // will be called only once, because we never merge fields when
+          // the IDs of the enclosing objects are unknown or unequal.
+          keyFields: false,
+
+          fields: {
+            name: {
+              read(name: string) {
+                return reverse(name).toUpperCase();
+              },
+              merge(oldName, newName: string) {
+                expect(oldName).toBe(void 0);
+                expect(typeof newName).toBe("string");
+                return reverse(newName);
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        currentlyReading {
+          title
+          authors {
+            name
+          }
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        currentlyReading: [{
+          __typename: "Book",
+          isbn: "0525558616",
+          title: "Human Compatible: Artificial Intelligence and the Problem of Control",
+          authors: [{
+            __typename: "Author",
+            name: "Stuart Russell",
+          }],
+        }, {
+          __typename: "Book",
+          isbn: "1541698967",
+          title: "The Book of Why: The New Science of Cause and Effect",
+          authors: [{
+            __typename: "Author",
+            name: "Judea Pearl",
+          }, {
+            __typename: "Author",
+            name: "Dana Mackenzie",
+          }],
+        }],
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        currentlyReading: [
+          { __ref: 'Book:{"isbn":"0525558616"}' },
+          { __ref: 'Book:{"isbn":"1541698967"}' },
+        ],
+      },
+      'Book:{"isbn":"0525558616"}': {
+        __typename: "Book",
+        authors: [{
+          __typename: "Author",
+          // Note the successful reversal of the Author names.
+          name: "llessuR trautS",
+        }],
+        title: "Human Compatible: Artificial Intelligence and the Problem of Control",
+      },
+      'Book:{"isbn":"1541698967"}': {
+        __typename: "Book",
+        authors: [{
+          __typename: "Author",
+          name: "lraeP aeduJ",
+        }, {
+          __typename: "Author",
+          name: "eiznekcaM anaD",
+        }],
+        title: "The Book of Why: The New Science of Cause and Effect",
+      },
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      currentlyReading: [{
+        __typename: "Book",
+        title: "Human Compatible: Artificial Intelligence and the Problem of Control",
+        authors: [{
+          __typename: "Author",
+          name: "STUART RUSSELL",
+        }],
+      }, {
+        __typename: "Book",
+        title: "The Book of Why: The New Science of Cause and Effect",
+        authors: [{
+          __typename: "Author",
+          // Note the successful re-reversal and uppercasing, thanks to
+          // the custom read function.
+          name: "JUDEA PEARL",
+        }, {
+          __typename: "Author",
+          name: "DANA MACKENZIE",
+        }],
+      }],
     });
   });
 });

@@ -79,17 +79,22 @@ type KeyArgsFunction = (
 ) => ReturnType<IdGetter>;
 
 export type FieldPolicy<TValue> = {
-  keyArgs?: KeySpecifier | KeyArgsFunction;
+  keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TValue>;
   merge?: FieldMergeFunction<TValue>;
 };
 
 interface FieldFunctionOptions {
   args: Record<string, any>;
-  parentObject: Readonly<StoreObject>;
   field: FieldNode;
   variables?: Record<string, any>;
   toReference: Policies["toReference"];
+
+  // Gets the existing StoreValue for a given field within the current
+  // object, without calling any read functions, so it works even with the
+  // current field. If the provided FieldNode has arguments, the same
+  // options.variables will be used.
+  getFieldValue(field: string | FieldNode): Readonly<StoreValue>;
 }
 
 interface FieldReadFunction<TExisting, TResult = TExisting> {
@@ -145,7 +150,8 @@ export function defaultDataIdFromObject(object: StoreObject) {
   return null;
 }
 
-const nullKeyFn: KeyFieldsFunction = () => null;
+const nullKeyFieldsFn: KeyFieldsFunction = () => null;
+const simpleKeyArgsFn: KeyArgsFunction = field => field.name.value;
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -248,7 +254,7 @@ export class Policies {
 
       existing.keyFn =
         // Pass false to disable normalization for this typename.
-        keyFields === false ? nullKeyFn :
+        keyFields === false ? nullKeyFieldsFn :
         // Pass an array of strings to use those fields to compute a
         // composite ID for objects of this typename.
         Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
@@ -259,13 +265,22 @@ export class Policies {
         Object.keys(fields).forEach(fieldName => {
           const existing = this.getFieldPolicy(typename, fieldName, true);
           const incoming = fields[fieldName];
+
           if (typeof incoming === "function") {
             existing.read = incoming;
           } else {
             const { keyArgs, read, merge } = incoming;
-            existing.keyFn = Array.isArray(keyArgs)
-              ? keyArgsFnFromSpecifier(keyArgs)
-              : typeof keyArgs === "function" ? keyArgs : void 0;
+
+            existing.keyFn =
+              // Pass false to disable argument-based differentiation of
+              // field identities.
+              keyArgs === false ? simpleKeyArgsFn :
+              // Pass an array of strings to use named arguments to
+              // compute a composite identity for the field.
+              Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
+              // Pass a function to take full control over field identity.
+              typeof keyArgs === "function" ? keyArgs : void 0;
+
             if (typeof read === "function") existing.read = read;
             if (typeof merge === "function") existing.merge = merge;
           }
@@ -381,22 +396,27 @@ export class Policies {
   }
 
   public readFieldFromStoreObject(
-    parentObject: Readonly<StoreObject>,
     field: FieldNode,
-    typename = parentObject.__typename,
+    getFieldValue: (field: string) => StoreValue,
+    typename = getFieldValue("__typename") as string,
     variables?: Record<string, any>,
   ): StoreValue {
-    const storeFieldName = this.getStoreFieldName(typename, field, variables);
-    const existing = parentObject[storeFieldName];
-    const policy = this.getFieldPolicy(typename, field.name.value, false);
+    const policies = this;
+    const storeFieldName = policies.getStoreFieldName(typename, field, variables);
+    const existing = getFieldValue(storeFieldName);
+    const policy = policies.getFieldPolicy(typename, field.name.value, false);
     if (policy && policy.read) {
-      return policy.read.call(this, existing, {
-        // TODO Avoid recomputing this.
+      return policy.read.call(policies, existing, {
         args: argumentsObjectFromField(field, variables),
-        parentObject,
         field,
         variables,
-        toReference: this.toReference,
+        toReference: policies.toReference,
+        getFieldValue(nameOrField) {
+          return getFieldValue(
+            typeof nameOrField === "string" ? nameOrField :
+              policies.getStoreFieldName(typename, nameOrField, variables),
+          );
+        },
       });
     }
     return existing;
@@ -407,33 +427,36 @@ export class Policies {
     field: FieldNode,
     variables?: Record<string, any>,
   ): StoreValueMergeFunction {
-    const policy = this.getFieldPolicy(typename, field.name.value, false);
+    const policies = this;
+    const policy = policies.getFieldPolicy(typename, field.name.value, false);
     if (policy && policy.merge) {
+      const args = argumentsObjectFromField(field, variables);
       return (
         existing: StoreValue,
         incoming: StoreValue,
-        parentObject: Readonly<StoreObject>,
-      ) => policy.merge.call(this, existing, incoming, {
-        // TODO Avoid recomputing this.
-        args: argumentsObjectFromField(field, variables),
-        parentObject,
+      ) => policy.merge.call(policies, existing, incoming, {
+        args,
         field,
         variables,
-        toReference: this.toReference,
+        toReference: policies.toReference,
+        getFieldValue: emptyGetFieldValueForMerge,
       });
     }
   }
 }
 
+function emptyGetFieldValueForMerge() {
+  invariant.warn("getFieldValue unavailable in merge functions");
+}
+
 export type StoreValueMergeFunction = (
   existing: StoreValue,
   incoming: StoreValue,
-  parentObject: Readonly<StoreObject>,
 ) => StoreValue;
 
 function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,
-): Policies["typePolicies"][string]["fields"][string]["keyFn"] {
+): KeyArgsFunction {
   const topLevelArgNames: Record<string, true> = Object.create(null);
 
   specifier.forEach(name => {
@@ -444,6 +467,7 @@ function keyArgsFnFromSpecifier(
 
   return (field, context) => {
     const fieldName = field.name.value;
+
     if (field.arguments && field.arguments.length > 0) {
       const args = Object.create(null);
 
@@ -465,7 +489,7 @@ function keyArgsFnFromSpecifier(
 
 function keyFieldsFnFromSpecifier(
   specifier: KeySpecifier,
-): Policies["typePolicies"][string]["keyFn"] {
+): KeyFieldsFunction {
   const trie = new KeyTrie<{
     aliasMap?: AliasMap;
   }>(canUseWeakMap);

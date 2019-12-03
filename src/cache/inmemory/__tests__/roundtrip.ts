@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { withError } from './diffAgainstStore';
 import { withWarning } from './writeToStore';
-import { EntityCache } from '../entityCache';
+import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { Policies } from '../policies';
@@ -42,7 +42,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
 
   // Make sure the result is identical if we haven't written anything new
   // to the store. https://github.com/apollographql/apollo-client/pull/3394
-  expect(store).toBeInstanceOf(EntityCache);
+  expect(store).toBeInstanceOf(EntityStore);
   expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
 
   const immutableResult = reader.readQueryFromStore(readOptions);

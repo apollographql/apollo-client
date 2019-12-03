@@ -344,7 +344,6 @@ Object {
     "a": 1,
     "d": Object {
       "__typename": "D",
-      "e": 4,
       "h": Object {
         "__typename": "H",
         "i": 7,

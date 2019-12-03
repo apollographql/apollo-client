@@ -31,7 +31,16 @@
 - The `gql` template tag should now be imported from the `@apollo/client` package, rather than the `graphql-tag` package. Although the `graphql-tag` package still works for now, future versions of `@apollo/client` may change the implementation details of `gql` without a major version bump. <br/>
   [@hwillson](https://github.com/hwillson) in [#5451](https://github.com/apollographql/apollo-client/pull/5451)
 
-### Breaking Changes
+- `@apollo/client/core` can be used to import the Apollo Client core, which includes everything the main `@apollo/client` package does, except for all React related functionality.  <br/>
+  [@kamilkisiela](https://github.com/kamilkisiela) in [#5541](https://github.com/apollographql/apollo-client/pull/5541)
+
+- `@apollo/client/cache` can be used to import the Apollo Client cache without importing other parts of the Apollo Client codebase. <br/>
+  [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
+
+- Local state resolver functions now receive a `fragmentMap: FragmentMap`
+  object, in addition to the `field: FieldNode` object, via the `info`
+  parameter. <br/>
+  [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
 
 - Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
@@ -61,6 +70,14 @@
 
 - Utilities that were previously externally available through the `apollo-utilities` package, are now internal only. <br/>
   [@hwillson](https://github.com/hwillson) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
+
+- The `ObservableQuery#getCurrentResult` method no longer falls back to reading from the cache, so calling it immediately after `client.watchQuery` will consistently return a `loading: true` result. When the `fetchPolicy` permits cached results, those results will be delivered via the `next` method of the `ObservableQuery`, and can be obtained by `getCurrentResult` after they have been delivered. This change prevents race conditions where the initial behavior of one query could depend on the timing of cache writes associated with other queries. </br>
+  [@benjamn](https://github.com/benjamn) in [#5565](https://github.com/apollographql/apollo-client/pull/5565)
+
+- The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
+
+- `InMemoryCache` will no longer merge the fields of written objects unless the objects are known to have the same identity, and the values of fields with the same name will not be recursively merged unless a custom `merge` function is defined by a field policy for that field, within a type policy associated with the `__typename` of the parent object. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5603](https://github.com/apollographql/apollo-client/pull/5603)
 
 ## Apollo Client (2.6.4)
 

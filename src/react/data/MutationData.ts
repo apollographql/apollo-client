@@ -1,10 +1,9 @@
 import { equal as isEqual } from '@wry/equality';
 
-import { ApolloContextValue } from '../context/ApolloContext';
 import { DocumentType } from '../parser/parser';
 import { ApolloError } from '../../errors/ApolloError';
 import {
-  MutationOptions,
+  MutationDataOptions,
   MutationTuple,
   MutationFunctionOptions,
   MutationResult
@@ -28,8 +27,8 @@ export class MutationData<
     result,
     setResult
   }: {
-    options: MutationOptions<TData, TVariables>;
-    context: ApolloContextValue;
+    options: MutationDataOptions<TData, TVariables>;
+    context: any;
     result: MutationResult<TData>;
     setResult: (result: MutationResult<TData>) => any;
   }) {

@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
 
 import { Observable } from '../../utilities/observables/Observable';
+import { itAsync } from '../../utilities/testing/itAsync';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { ApolloClient } from '../..';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
@@ -325,10 +326,10 @@ describe('@client @export tests', () => {
     });
   });
 
-  it(
+  itAsync(
     'should support setting an @client @export variable, loaded from the ' +
       'cache, on a virtual field that is combined into a remote query.',
-    done => {
+    (resolve, reject) => {
       const query = gql`
         query postRequiringReview($reviewerId: Int!) {
           postRequiringReview {
@@ -361,7 +362,7 @@ describe('@client @export tests', () => {
             reviewerDetails,
           },
         });
-      });
+      }).setOnError(reject);
 
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -375,6 +376,7 @@ describe('@client @export tests', () => {
           postRequiringReview: {
             loggedInReviewerId,
             __typename: 'Post',
+            id: 10,
           },
         },
       });
@@ -388,8 +390,7 @@ describe('@client @export tests', () => {
           },
           reviewerDetails,
         });
-        done();
-      });
+      }).then(resolve, reject);
     },
   );
 

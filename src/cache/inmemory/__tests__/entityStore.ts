@@ -857,25 +857,6 @@ describe('EntityStore', () => {
       "Missing field b while computing key fields",
     );
 
-    function check(query: DocumentNode, object: Record<string, any>) {
-      const rootSelectionSet = getOperationDefinition(query).selectionSet;
-      const abcsSelectionSet = (rootSelectionSet.selections[0] as FieldNode).selectionSet;
-      const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
-
-      expect(cache.identify(object, abcsSelectionSet, fragmentMap)).toBe(
-        'ABCs:{"b":"bee","a":"ay","c":"see"}',
-      );
-    }
-
-    check(queryWithAliases, ABCs);
-
-    check(queryWithoutAliases, {
-      __typename: "ABCs",
-      a: "ay",
-      b: "bee",
-      c: "see",
-    });
-
     expect(cache.readFragment({
       id: cache.identify({
         __typename: "ABCs",

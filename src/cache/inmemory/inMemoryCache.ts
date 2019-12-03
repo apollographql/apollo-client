@@ -198,12 +198,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return (optimistic ? this.optimisticData : this.data).release(rootId);
   }
 
-  public identify(
-    object: StoreObject,
-    selectionSet?: SelectionSetNode,
-    fragmentMap?: FragmentMap,
-  ) {
-    return this.policies.identify(object, selectionSet, fragmentMap);
+  // Returns the canonical ID for a given StoreObject, obeying typePolicies
+  // and keyFields (and dataIdFromObject, if you still use that). At minimum,
+  // the object must contain a __typename and any primary key fields required
+  // to identify entities of that type. If you pass a query result object, be
+  // sure that none of the primary key fields have been renamed by aliasing.
+  public identify(object: StoreObject): string | null {
+    return this.policies.identify(object);
   }
 
   public evict(dataId: string): boolean {

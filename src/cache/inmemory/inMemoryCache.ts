@@ -3,12 +3,10 @@ import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
-import { KeyTrie } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { canUseWeakMap } from '../../utilities/common/canUse';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
@@ -49,7 +47,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
-  private cacheKeyRoot = new KeyTrie<object>(canUseWeakMap);
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -86,7 +83,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.storeReader = new StoreReader({
       addTypename: this.addTypename,
-      cacheKeyRoot: this.cacheKeyRoot,
       policies: this.policies,
     });
 
@@ -101,9 +97,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         const store = c.optimistic ? cache.optimisticData : cache.data;
         if (supportsResultCaching(store)) {
           const { optimistic, rootId, variables } = c;
-          return cache.cacheKeyRoot.lookup(
+          return store.makeCacheKey(
             c.query,
-            store,
             JSON.stringify({ optimistic, rootId, variables }),
           );
         }

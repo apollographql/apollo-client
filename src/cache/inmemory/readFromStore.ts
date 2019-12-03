@@ -5,7 +5,7 @@ import {
   InlineFragmentNode,
   SelectionSetNode,
 } from 'graphql';
-import { wrap, KeyTrie } from 'optimism';
+import { wrap } from 'optimism';
 import { invariant } from 'ts-invariant';
 
 import {
@@ -17,7 +17,6 @@ import {
   makeReference,
   StoreValue,
 } from '../../utilities/graphql/storeUtils';
-import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import {
@@ -75,20 +74,12 @@ type ExecSubSelectedArrayOptions = {
 
 export interface StoreReaderConfig {
   addTypename?: boolean;
-  cacheKeyRoot?: KeyTrie<object>;
   policies: Policies;
 }
 
 export class StoreReader {
   constructor(private config: StoreReaderConfig) {
-    const cacheKeyRoot =
-      config && config.cacheKeyRoot || new KeyTrie<object>(canUseWeakMap);
-
-    this.config = {
-      addTypename: true,
-      cacheKeyRoot,
-      ...config,
-    };
+    this.config = { addTypename: true, ...config };
 
     const {
       executeSelectionSet,
@@ -104,11 +95,12 @@ export class StoreReader {
         context,
       }: ExecSelectionSetOptions) {
         if (supportsResultCaching(context.store)) {
-          return cacheKeyRoot.lookup(
-            context.store,
+          return context.store.makeCacheKey(
             selectionSet,
             JSON.stringify(context.variables),
-            isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
+            isReference(objectOrReference)
+              ? objectOrReference.__ref
+              : objectOrReference,
           );
         }
       }
@@ -119,8 +111,7 @@ export class StoreReader {
     }, {
       makeCacheKey({ field, array, context }) {
         if (supportsResultCaching(context.store)) {
-          return cacheKeyRoot.lookup(
-            context.store,
+          return context.store.makeCacheKey(
             field,
             array,
             JSON.stringify(context.variables),

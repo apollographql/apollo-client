@@ -427,7 +427,7 @@ describe('optimistic cache layers', () => {
     const spinelessAfterRemovingBuzz = readSpinelessFragment();
     expect(spinelessBeforeRemovingBuzz).toEqual(spinelessAfterRemovingBuzz);
     expect(spinelessBeforeRemovingBuzz).not.toBe(spinelessAfterRemovingBuzz);
-    expect(spinelessBeforeRemovingBuzz.author).not.toBe(
+    expect(spinelessBeforeRemovingBuzz.author).toBe(
       spinelessAfterRemovingBuzz.author,
     );
 

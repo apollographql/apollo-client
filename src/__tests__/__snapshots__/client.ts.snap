@@ -4,7 +4,7 @@ exports[`@connection should run a query with the @connection directive and write
 Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
-    "abc": Array [
+    "books:abc": Array [
       Object {
         "__typename": "Book",
         "name": "abcd",
@@ -18,7 +18,7 @@ exports[`@connection should run a query with the connection directive and filter
 Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
-    "abc({\\"order\\":\\"popularity\\"})": Array [
+    "books:abc({\\"order\\":\\"popularity\\"})": Array [
       Object {
         "__typename": "Book",
         "name": "abcd",

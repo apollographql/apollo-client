@@ -7,32 +7,36 @@ import {
 } from '../../utilities/common/mergeDeep';
 import { isEqual } from '../../utilities/common/isEqual';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
-import { getTypenameFromStoreObject } from './helpers';
+import {
+  getTypenameFromStoreObject,
+  fieldNameFromStoreName,
+} from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
 type DependType = OptimisticDependencyFunction<string> | null;
 
-function makeDepKey(dataId: string, fieldName?: string) {
+function makeDepKey(dataId: string, storeFieldName?: string) {
   const parts = [dataId];
-  if (typeof fieldName === "string") {
-    parts.push(fieldName);
+  if (typeof storeFieldName === "string") {
+    parts.push(fieldNameFromStoreName(storeFieldName));
   }
   return JSON.stringify(parts);
 }
 
-function depend(store: EntityStore, dataId: string, fieldName?: string) {
+function depend(store: EntityStore, dataId: string, storeFieldName?: string) {
   if (store.depend) {
-    store.depend(makeDepKey(dataId, fieldName));
+    store.depend(makeDepKey(dataId, storeFieldName));
   }
 }
 
-function dirty(store: EntityStore, dataId: string, fieldName?: string) {
+function dirty(store: EntityStore, dataId: string, storeFieldName?: string) {
   if (store.depend) {
-    store.depend.dirty(makeDepKey(dataId));
-    if (typeof fieldName === "string") {
-      store.depend.dirty(makeDepKey(dataId, fieldName));
-    }
+    store.depend.dirty(
+      typeof storeFieldName === "string"
+        ? makeDepKey(dataId, storeFieldName)
+        : makeDepKey(dataId),
+    );
   }
 }
 
@@ -70,10 +74,10 @@ export abstract class EntityStore implements NormalizedCache {
     return this.data[dataId];
   }
 
-  public getFieldValue(dataId: string, fieldName: string): StoreValue {
-    depend(this, dataId, fieldName);
+  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
+    depend(this, dataId, storeFieldName);
     const storeObject = this.data[dataId];
-    return storeObject && storeObject[fieldName];
+    return storeObject && storeObject[storeFieldName];
   }
 
   public merge(dataId: string, incoming: StoreObject): void {
@@ -89,32 +93,92 @@ export abstract class EntityStore implements NormalizedCache {
         dirty(this, dataId);
         // Now invalidate dependents who called getFieldValue for any
         // fields that are changing as a result of this merge.
-        Object.keys(incoming).forEach(fieldName => {
-          if (!existing || incoming[fieldName] !== existing[fieldName]) {
-            dirty(this, dataId, fieldName);
+        Object.keys(incoming).forEach(storeFieldName => {
+          if (!existing || incoming[storeFieldName] !== existing[storeFieldName]) {
+            dirty(this, dataId, storeFieldName);
           }
         });
       }
     }
   }
 
-  // TODO Allow deleting fields of this.data[dataId] according to their
-  // original field.name.value.
-  public delete(dataId: string): void {
-    const storeObject = this.data[dataId];
+  // If called with only one argument, removes the entire entity
+  // identified by dataId. If called with a fieldName as well, removes all
+  // fields of that entity whose names match fieldName, according to the
+  // fieldNameFromStoreName helper function.
+  public delete(dataId: string, fieldName?: string) {
+    const storeObject = this.get(dataId);
 
-    delete this.data[dataId];
-    delete this.refs[dataId];
-    // Note that we do not delete the this.rootIds[dataId] retainment
-    // count for this ID, since an object with the same ID could appear in
-    // the store again, and should not have to be retained again.
-    // delete this.rootIds[dataId];
+    if (storeObject) {
+      // In case someone passes in a storeFieldName (field.name.value +
+      // arguments key), normalize it down to just the field name.
+      fieldName = fieldName && fieldNameFromStoreName(fieldName);
 
-    if (this.depend && storeObject) {
-      dirty(this, dataId);
-      Object.keys(storeObject).forEach(fieldName => {
-        dirty(this, dataId, fieldName);
+      const storeNamesToDelete: string[] = [];
+      Object.keys(storeObject).forEach(storeFieldName => {
+        // If the field value has already been set to undefined, we do not
+        // need to delete it again.
+        if (storeObject[storeFieldName] !== void 0 &&
+            // If no fieldName provided, delete all fields from storeObject.
+            // If provided, delete all fields matching fieldName.
+            (!fieldName || fieldName === fieldNameFromStoreName(storeFieldName))) {
+          storeNamesToDelete.push(storeFieldName);
+        }
       });
+
+      if (storeNamesToDelete.length) {
+        // If we only have to worry about the Root layer of the store,
+        // then we can safely delete fields within entities, or whole
+        // entities by ID. If this instanceof EntityStore.Layer, however,
+        // then we need to set the "deleted" values to undefined instead
+        // of actually deleting them, so the deletion does not un-shadow
+        // values inherited from lower layers of the store.
+        const canDelete = this instanceof EntityStore.Root;
+        const remove = (obj: Record<string, any>, key: string) => {
+          if (canDelete) {
+            delete obj[key];
+          } else {
+            obj[key] = void 0;
+          }
+        };
+
+        // Note that we do not delete the this.rootIds[dataId] retainment
+        // count for this ID, since an object with the same ID could appear in
+        // the store again, and should not have to be retained again.
+        // delete this.rootIds[dataId];
+        delete this.refs[dataId];
+
+        const fieldsToDirty: Record<string, true> = Object.create(null);
+
+        if (fieldName) {
+          // If we have a fieldName and it matches more than zero fields,
+          // then we need to make a copy of this.data[dataId] without the
+          // fields that are getting deleted.
+          const cleaned = this.data[dataId] = { ...storeObject };
+          storeNamesToDelete.forEach(storeFieldName => {
+            remove(cleaned, storeFieldName);
+          });
+          // Although it would be logically correct to dirty each
+          // storeFieldName in the loop above, we know that they all have
+          // the same name, according to fieldNameFromStoreName.
+          fieldsToDirty[fieldName] = true;
+        } else {
+          // If no fieldName was provided, then we delete the whole entity
+          // from the cache.
+          remove(this.data, dataId);
+          storeNamesToDelete.forEach(storeFieldName => {
+            const fieldName = fieldNameFromStoreName(storeFieldName);
+            fieldsToDirty[fieldName] = true;
+          });
+        }
+
+        if (this.depend) {
+          dirty(this, dataId);
+          Object.keys(fieldsToDirty).forEach(fieldName => {
+            dirty(this, dataId, fieldName);
+          });
+        }
+      }
     }
   }
 
@@ -183,7 +247,7 @@ export abstract class EntityStore implements NormalizedCache {
     if (idsToRemove.length) {
       let root: EntityStore = this;
       while (root instanceof Layer) root = root.parent;
-      idsToRemove.forEach(root.delete, root);
+      idsToRemove.forEach(id => root.delete(id));
     }
     return idsToRemove;
   }
@@ -322,27 +386,19 @@ class Layer extends EntityStore {
     return this.parent.get(dataId);
   }
 
-  public getFieldValue(dataId: string, fieldName: string): StoreValue {
+  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
     if (hasOwn.call(this.data, dataId)) {
       const storeObject = this.data[dataId];
-      if (storeObject && hasOwn.call(storeObject, fieldName)) {
-        return super.getFieldValue(dataId, fieldName);
+      if (storeObject && hasOwn.call(storeObject, storeFieldName)) {
+        return super.getFieldValue(dataId, storeFieldName);
       }
     }
 
     if (this.depend && this.depend !== this.parent.depend) {
-      depend(this, dataId, fieldName);
+      depend(this, dataId, storeFieldName);
     }
 
-    return this.parent.getFieldValue(dataId, fieldName);
-  }
-
-  public delete(dataId: string): void {
-    super.delete(dataId);
-    // In case this.parent (or one of its ancestors) has an entry for this ID,
-    // we need to shadow it with an undefined value, or it might be inherited
-    // by the Layer#get method.
-    this.data[dataId] = void 0;
+    return this.parent.getFieldValue(dataId, storeFieldName);
   }
 
   // Return a Set<string> of all the ID strings that have been retained by this

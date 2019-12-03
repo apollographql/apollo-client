@@ -30,6 +30,8 @@ import {
   StoreObject,
 } from "./types";
 
+import { fieldNameFromStoreName } from './helpers';
+
 const hasOwn = Object.prototype.hasOwnProperty;
 
 export type TypePolicies = {
@@ -383,16 +385,31 @@ export class Policies {
     field: FieldNode,
     variables: Record<string, any>,
   ): string {
+    const fieldName = field.name.value;
+    let storeFieldName: string | undefined;
+
     if (typeof typename === "string") {
-      const policy = this.getFieldPolicy(typename, field.name.value, false);
+      const policy = this.getFieldPolicy(typename, fieldName, false);
       if (policy && policy.keyFn) {
-        return policy.keyFn.call(this, field, {
+        // If the custom keyFn returns a falsy value, fall back to
+        // fieldName instead.
+        storeFieldName = policy.keyFn.call(this, field, {
           typename,
           variables,
-        });
+        }) || fieldName;
       }
     }
-    return storeKeyNameFromField(field, variables);
+
+    if (storeFieldName === void 0) {
+      storeFieldName = storeKeyNameFromField(field, variables);
+    }
+
+    // Make sure custom field names start with the actual field.name.value
+    // of the field, so we can always figure out which properties of a
+    // StoreObject correspond to which original field names.
+    return fieldName === fieldNameFromStoreName(storeFieldName)
+      ? storeFieldName
+      : fieldName + ":" + storeFieldName;
   }
 
   public readFieldFromStoreObject(

@@ -181,25 +181,14 @@ export class QueryManager<TStore> {
     );
 
     if (optimisticResponse) {
-      const optimistic = typeof optimisticResponse === 'function'
-        ? optimisticResponse(variables)
-        : optimisticResponse;
-
-      this.cache.recordOptimisticTransaction(cache => {
-        try {
-          markMutationResult({
-            mutationId: mutationId,
-            result: { data: optimistic },
-            document: mutation,
-            variables: variables,
-            errorPolicy,
-            queryUpdatersById: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
-          }, cache);
-        } catch (error) {
-          invariant.error(error);
-        }
-      }, mutationId);
+      markMutationOptimistic<TStore, T>(optimisticResponse, {
+        mutationId,
+        document: mutation,
+        variables,
+        errorPolicy,
+        queryUpdatersById: generateUpdateQueriesInfo(),
+        update: updateWithProxyFn,
+      }, this);
     }
 
     this.broadcastQueries();
@@ -231,7 +220,7 @@ export class QueryManager<TStore> {
 
           if (fetchPolicy !== 'no-cache') {
             try {
-              markMutationResult({
+              markMutationResult<TStore, T>({
                 mutationId,
                 result,
                 document: mutation,
@@ -239,7 +228,7 @@ export class QueryManager<TStore> {
                 errorPolicy,
                 queryUpdatersById: generateUpdateQueriesInfo(),
                 update: updateWithProxyFn,
-              }, self.cache);
+              }, self);
             } catch (e) {
               error = new ApolloError({
                 networkError: e,
@@ -1076,7 +1065,7 @@ export class QueryManager<TStore> {
   }
 }
 
-function markMutationResult<TStore, TData>(
+export function markMutationResult<TStore, TData>(
   mutation: {
     mutationId: string;
     result: FetchResult<TData>;
@@ -1084,11 +1073,13 @@ function markMutationResult<TStore, TData>(
     variables: any;
     errorPolicy: ErrorPolicy;
     queryUpdatersById: Record<string, QueryWithUpdater>;
-    update:
-      ((cache: ApolloCache<TStore>, mutationResult: Object) => void) |
-      undefined;
+    update?: (
+      cache: ApolloCache<TStore>,
+      result: FetchResult<TData>,
+    ) => void;
   },
-  cache: ApolloCache<TStore>,
+  queryManager: QueryManager<TStore>,
+  cache: ApolloCache<TStore> = queryManager.cache,
 ) {
   // Incorporate the result from this mutation into the store
   if (shouldWriteResult(mutation.result, mutation.errorPolicy)) {
@@ -1122,7 +1113,7 @@ function markMutationResult<TStore, TData>(
           // Run our reducer using the current query result and the mutation result.
           const nextQueryResult = updater(currentQueryResult, {
             mutationResult: mutation.result,
-            queryName: getOperationName(document!) || undefined,
+            queryName: document && getOperationName(document) || void 0,
             queryVariables: variables!,
           });
 
@@ -1151,4 +1142,35 @@ function markMutationResult<TStore, TData>(
       }
     }, /* non-optimistic transaction: */ null);
   }
+}
+
+export function markMutationOptimistic<TStore, TData>(
+  optimisticResponse: any,
+  mutation: {
+    mutationId: string;
+    document: DocumentNode;
+    variables: any;
+    errorPolicy: ErrorPolicy;
+    queryUpdatersById: Record<string, QueryWithUpdater>;
+    update?: (
+      cache: ApolloCache<TStore>,
+      result: FetchResult<TData>,
+    ) => void;
+  },
+  queryManager: QueryManager<TStore>
+) {
+  const data = typeof optimisticResponse === "function"
+    ? optimisticResponse(mutation.variables)
+    : optimisticResponse;
+
+  return queryManager.cache.recordOptimisticTransaction(cache => {
+    try {
+      markMutationResult({
+        ...mutation,
+        result: { data },
+      }, queryManager, cache);
+    } catch (error) {
+      invariant.error(error);
+    }
+  }, mutation.mutationId);
 }

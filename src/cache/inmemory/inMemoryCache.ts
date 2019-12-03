@@ -1,14 +1,13 @@
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
-import { DocumentNode, SelectionSetNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 import { KeyTrie } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { FragmentMap } from '../../utilities/graphql/fragments';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import {
   ApolloReducerConfig,

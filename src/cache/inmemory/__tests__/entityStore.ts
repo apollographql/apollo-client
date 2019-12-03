@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { EntityStore, supportsResultCaching } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
+import { DocumentNode, FieldNode } from 'graphql';
+import { getOperationDefinition, getFragmentDefinitions } from '../../../utilities/graphql/getFromAST';
+import { createFragmentMap } from '../../../utilities/graphql/fragments';
 
 describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
@@ -592,18 +595,22 @@ describe('EntityStore', () => {
   it('allows cache eviction', () => {
     const { cache, query } = newBookAuthorCache();
 
+    const cuckoosCallingBook = {
+      __typename: "Book",
+      isbn: "031648637X",
+      title: "The Cuckoo's Calling",
+      author: {
+        __typename: "Author",
+        name: "Robert Galbraith",
+      },
+    };
+
+    expect(cache.identify(cuckoosCallingBook)).toBe("Book:031648637X");
+
     cache.writeQuery({
       query,
       data: {
-        book: {
-          __typename: "Book",
-          isbn: "031648637X",
-          title: "The Cuckoo's Calling",
-          author: {
-            __typename: "Author",
-            name: "Robert Galbraith",
-          },
-        },
+        book: cuckoosCallingBook,
       },
     });
 
@@ -618,7 +625,7 @@ describe('EntityStore', () => {
     `;
 
     const fragmentResult = cache.readFragment({
-      id: "Book:031648637X",
+      id: cache.identify(cuckoosCallingBook),
       fragment: bookAuthorFragment,
     });
 
@@ -632,7 +639,7 @@ describe('EntityStore', () => {
 
     cache.recordOptimisticTransaction(proxy => {
       proxy.writeFragment({
-        id: "Book:031648637X",
+        id: cache.identify(cuckoosCallingBook),
         fragment: bookAuthorFragment,
         data: {
           ...fragmentResult,
@@ -703,7 +710,7 @@ describe('EntityStore', () => {
     });
 
     cache.writeFragment({
-      id: "Book:031648637X",
+      id: cache.identify(cuckoosCallingBook),
       fragment: bookAuthorFragment,
       data: {
         ...fragmentResult,
@@ -745,13 +752,158 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(cache.retain("Book:031648637X")).toBe(2);
-    expect(cache.release("Book:031648637X")).toBe(1);
-    expect(cache.release("Book:031648637X")).toBe(0);
+    const ccId = cache.identify(cuckoosCallingBook);
+    expect(cache.retain(ccId)).toBe(2);
+    expect(cache.release(ccId)).toBe(1);
+    expect(cache.release(ccId)).toBe(0);
 
     expect(cache.gc().sort()).toEqual([
       "Author:J.K. Rowling",
-      "Book:031648637X",
+      ccId,
     ]);
+  });
+
+  it("supports cache.identify(object)", () => {
+    const queryWithAliases: DocumentNode = gql`
+      query {
+        abcs {
+          first: a
+          second: b
+          ...Rest
+        }
+      }
+      fragment Rest on ABCs {
+        third: c
+      }
+    `;
+
+    const queryWithoutAliases: DocumentNode = gql`
+      query {
+        abcs {
+          a
+          b
+          ...Rest
+        }
+      }
+      fragment Rest on ABCs {
+        c
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        ABCs: {
+          keyFields: ["b", "a", "c"],
+        },
+      },
+    });
+
+    const ABCs = {
+      __typename: "ABCs",
+      first: "ay",
+      second: "bee",
+      third: "see",
+    };
+
+    cache.writeQuery({
+      query: queryWithAliases,
+      data: {
+        abcs: ABCs,
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        abcs: {
+          __ref: 'ABCs:{"b":"bee","a":"ay","c":"see"}',
+        },
+      },
+      'ABCs:{"b":"bee","a":"ay","c":"see"}': {
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      },
+    });
+
+    const resultWithAliases = cache.readQuery({
+      query: queryWithAliases,
+    });
+
+    expect(resultWithAliases).toEqual({ abcs: ABCs });
+
+    const resultWithoutAliases = cache.readQuery({
+      query: queryWithoutAliases,
+    });
+
+    expect(resultWithoutAliases).toEqual({
+      abcs: {
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      },
+    });
+
+    expect(cache.identify({
+      __typename: "ABCs",
+      a: 1,
+      b: 2,
+      c: 3,
+    })).toBe('ABCs:{"b":2,"a":1,"c":3}');
+
+    expect(() => cache.identify(ABCs)).toThrow(
+      "Missing field b while computing key fields",
+    );
+
+    expect(cache.readFragment({
+      id: cache.identify({
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      }),
+      fragment: gql`
+        fragment JustB on ABCs {
+          b
+        }
+      `,
+    })).toEqual({
+      __typename: "ABCs",
+      b: "bee",
+    });
+
+    expect(cache.readQuery({
+      query: queryWithAliases,
+    })).toBe(resultWithAliases);
+
+    expect(cache.readQuery({
+      query: queryWithoutAliases,
+    })).toBe(resultWithoutAliases);
+
+    cache.evict(cache.identify({
+      __typename: "ABCs",
+      a: "ay",
+      b: "bee",
+      c: "see",
+    }));
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        abcs: {
+          __ref: 'ABCs:{"b":"bee","a":"ay","c":"see"}',
+        },
+      },
+    });
+
+    expect(() => cache.readQuery({
+      query: queryWithAliases,
+    })).toThrow(/Can't find field a on object/);
+
+    expect(() => cache.readQuery({
+      query: queryWithoutAliases,
+    })).toThrow(/Can't find field a on object/);
   });
 });

@@ -41,6 +41,7 @@ import {
   FetchType,
   OperationVariables,
   MutationQueryReducer,
+  MutationQueryReducersMap,
 } from './types';
 import { LocalState } from './LocalState';
 import { asyncMap, multiplex } from '../utilities/observables/observables';
@@ -175,32 +176,6 @@ export class QueryManager<TStore> {
       variables = await this.localState.addExportedVariables(mutation, variables, context);
     }
 
-    // Create a map of update queries by id to the query instead of by name.
-    const generateUpdateQueriesInfo: () => {
-      [queryId: string]: QueryWithUpdater;
-    } = () => {
-      const ret: { [queryId: string]: QueryWithUpdater } = {};
-
-      if (updateQueriesByName) {
-        this.queries.forEach(({ observableQuery }, queryId) => {
-          if (observableQuery) {
-            const { queryName } = observableQuery;
-            if (
-              queryName &&
-              hasOwnProperty.call(updateQueriesByName, queryName)
-            ) {
-              ret[queryId] = {
-                updater: updateQueriesByName[queryName],
-                query: this.queryStore.get(queryId),
-              };
-            }
-          }
-        });
-      }
-
-      return ret;
-    };
-
     this.mutationStore.initMutation(
       mutationId,
       mutation,
@@ -208,20 +183,13 @@ export class QueryManager<TStore> {
     );
 
     if (optimisticResponse) {
-      const optimistic = typeof optimisticResponse === 'function'
-        ? optimisticResponse(variables)
-        : optimisticResponse;
-
-      this.cache.recordOptimisticTransaction(cache => {
-        markMutationResult({
-          mutationId: mutationId,
-          result: { data: optimistic },
+        markMutationOptimistic(optimisticResponse, {
+          mutationId,
           document: mutation,
-          variables: variables,
-          queryUpdatersById: generateUpdateQueriesInfo(),
+          variables,
+          updateQueriesByName,
           update: updateWithProxyFn,
-        }, cache);
-      }, mutationId);
+        }, this);
     }
 
     this.broadcastQueries();
@@ -252,14 +220,13 @@ export class QueryManager<TStore> {
           self.mutationStore.markMutationResult(mutationId);
 
           if (fetchPolicy !== 'no-cache') {
-            markMutationResult({
+            markMutationResult(result, {
               mutationId,
-              result,
               document: mutation,
               variables,
-              queryUpdatersById: generateUpdateQueriesInfo(),
+              updateQueriesByName,
               update: updateWithProxyFn,
-            }, self.cache);
+            }, self);
           }
 
           storeResult = result as FetchResult<T>;
@@ -1115,6 +1082,34 @@ export class QueryManager<TStore> {
     return this.localState;
   }
 
+  // Create a map of update queries by id to the query instead of by name.
+    public generateUpdateQueriesInfo<T>(
+        updateQueriesByName: MutationQueryReducersMap<T>
+      ): {
+        [queryId: string]: QueryWithUpdater;
+      } {
+        const ret: { [queryId: string]: QueryWithUpdater } = {};
+
+        if (updateQueriesByName) {
+          this.queries.forEach(({ observableQuery }, queryId) => {
+            if (observableQuery) {
+              const { queryName } = observableQuery;
+              if (
+                queryName &&
+                hasOwnProperty.call(updateQueriesByName, queryName)
+              ) {
+                ret[queryId] = {
+                  updater: updateQueriesByName[queryName],
+                  query: this.queryStore.get(queryId)
+                };
+              }
+            }
+          });
+        }
+
+        return ret;
+      }
+
   private inFlightLinkObservables = new Map<
     DocumentNode,
     Map<string, Observable<FetchResult>>
@@ -1423,27 +1418,30 @@ export class QueryManager<TStore> {
   }
 }
 
-function markMutationResult<TStore>(
+export function markMutationResult<TStore>(
+  mutationResult: ExecutionResult,
   mutation: {
     mutationId: string;
-    result: ExecutionResult;
     document: DocumentNode;
     variables: any;
-    queryUpdatersById: Record<string, QueryWithUpdater>;
+    updateQueriesByName: MutationQueryReducersMap;
     update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
   },
-  cache: ApolloCache<TStore>,
+  queryManager: QueryManager<TStore>,
+  cache: ApolloCache<TStore> = queryManager.cache,
 ) {
   // Incorporate the result from this mutation into the store
-  if (!graphQLResultHasError(mutation.result)) {
+  if (!graphQLResultHasError(mutationResult)) {
     const cacheWrites: Cache.WriteOptions[] = [{
-      result: mutation.result.data,
+      result: mutationResult.data,
       dataId: 'ROOT_MUTATION',
       query: mutation.document,
       variables: mutation.variables,
     }];
 
-    const { queryUpdatersById } = mutation;
+    const queryUpdatersById = queryManager.generateUpdateQueriesInfo(
+         mutation.updateQueriesByName
+    );
     if (queryUpdatersById) {
       Object.keys(queryUpdatersById).forEach(id => {
         const { query, updater } = queryUpdatersById[id];
@@ -1460,7 +1458,7 @@ function markMutationResult<TStore>(
           // Run our reducer using the current query result and the mutation result.
           const nextQueryResult = tryFunctionOrLogError(
             () => updater(currentQueryResult, {
-              mutationResult: mutation.result,
+              mutationResult,
               queryName: getOperationName(query.document) || undefined,
               queryVariables: query.variables,
             }),
@@ -1487,8 +1485,29 @@ function markMutationResult<TStore>(
       // write action.
       const { update } = mutation;
       if (update) {
-        tryFunctionOrLogError(() => update(c, mutation.result));
+        tryFunctionOrLogError(() => update(c, mutationResult));
       }
     });
   }
 }
+
+export function markMutationOptimistic<TStore>(
+    optimisticResponse: any,
+    mutation: {
+      mutationId: string;
+      document: DocumentNode;
+      variables: any;
+      updateQueriesByName: MutationQueryReducersMap;
+      update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
+    },
+    queryManager: QueryManager<TStore>
+  ) {
+    const optimistic =
+      typeof optimisticResponse === "function"
+        ? optimisticResponse(mutation.variables)
+        : optimisticResponse;
+
+    queryManager.cache.recordOptimisticTransaction(cache => {
+      markMutationResult({ data: optimistic }, mutation, queryManager, cache);
+    }, mutation.mutationId);
+  }

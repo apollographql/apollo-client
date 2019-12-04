@@ -2,6 +2,7 @@ import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
 import { FieldPolicy } from "../policies";
+import { Reference } from "../../../utilities/graphql/storeUtils";
 
 describe("type policies", function () {
   const bookQuery = gql`
@@ -1050,5 +1051,241 @@ describe("type policies", function () {
         }],
       }],
     });
+  });
+
+  it("can read from foreign references using getFieldValue", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Author: {
+          keyFields: ["name"],
+
+          fields: {
+            books: {
+              merge(existing: Reference[] = [], incoming: Reference[]) {
+                return [...existing, ...incoming];
+              },
+            },
+
+            // A dynamically computed field that returns the Book
+            // Reference with the earliest year, which requires reading
+            // fields from foreign references.
+            firstBook(_, { isReference, getFieldValue }) {
+              let firstBook: Reference;
+              let firstYear: number;
+              const bookRefs = getFieldValue<Reference[]>("books") || [];
+              bookRefs.forEach(bookRef => {
+                expect(isReference(bookRef)).toBe(true);
+                const year = getFieldValue<number>("year", bookRef);
+                if (firstYear === void 0 || year < firstYear) {
+                  firstBook = bookRef;
+                  firstYear = year;
+                }
+              });
+              // Return a Book Reference, which can have a nested
+              // selection set applied to it.
+              return firstBook;
+            },
+          },
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+      },
+    });
+
+    function addBook(bookData) {
+      cache.writeQuery({
+        query: gql`
+          query {
+            author {
+              name
+              books {
+                isbn
+                title
+                year
+              }
+            }
+          }
+        `,
+        data: {
+          author: {
+            __typename: "Author",
+            name: "Virginia Woolf",
+            books: [{
+              __typename: "Book",
+              ...bookData,
+            }],
+          },
+        },
+      });
+    }
+
+    addBook({
+      __typename: "Book",
+      isbn: "1853262390",
+      title: "Orlando",
+      year: 1928,
+    });
+
+    addBook({
+      __typename: "Book",
+      isbn: "9353420717",
+      title: "A Room of One's Own",
+      year: 1929,
+    });
+
+    addBook({
+      __typename: "Book",
+      isbn: "0156907399",
+      title: "To the Lighthouse",
+      year: 1927,
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        author: {
+          __ref: 'Author:{"name":"Virginia Woolf"}',
+        },
+      },
+      'Author:{"name":"Virginia Woolf"}': {
+        __typename: "Author",
+        name: "Virginia Woolf",
+        books: [
+          { __ref: 'Book:{"isbn":"1853262390"}' },
+          { __ref: 'Book:{"isbn":"9353420717"}' },
+          { __ref: 'Book:{"isbn":"0156907399"}' },
+        ],
+      },
+      'Book:{"isbn":"1853262390"}': {
+        __typename: "Book",
+        isbn: "1853262390",
+        title: "Orlando",
+        year: 1928,
+      },
+      'Book:{"isbn":"9353420717"}': {
+        __typename: "Book",
+        isbn: "9353420717",
+        title: "A Room of One's Own",
+        year: 1929,
+      },
+      'Book:{"isbn":"0156907399"}': {
+        __typename: "Book",
+        isbn: "0156907399",
+        title: "To the Lighthouse",
+        year: 1927,
+      },
+    });
+
+    const firstBookQuery = gql`
+      query {
+        author {
+          name
+          firstBook {
+            title
+            year
+          }
+        }
+      }
+    `;
+
+    function readFirstBookResult() {
+      return cache.readQuery<{ author: any }>({
+        query: firstBookQuery,
+      });
+    }
+
+    const firstBookResult = readFirstBookResult();
+    expect(firstBookResult).toEqual({
+      author: {
+        __typename: "Author",
+        name: "Virginia Woolf",
+        firstBook: {
+          __typename: "Book",
+          title: "To the Lighthouse",
+          year: 1927,
+        },
+      },
+    });
+
+    expect(readFirstBookResult()).toBe(firstBookResult);
+
+    // Add an even earlier book.
+    addBook({
+      isbn: "1420959719",
+      title: "The Voyage Out",
+      year: 1915,
+    });
+
+    const secondFirstBookResult = readFirstBookResult();
+    expect(secondFirstBookResult).not.toBe(firstBookResult);
+    expect(secondFirstBookResult).toEqual({
+      author: {
+        __typename: "Author",
+        name: "Virginia Woolf",
+        firstBook: {
+          __typename: "Book",
+          title: "The Voyage Out",
+          year: 1915,
+        },
+      },
+    });
+
+    // Write a new, unrelated field.
+    cache.writeQuery({
+      query: gql`query { author { afraidCount } }`,
+      data: {
+        author: {
+          __typename: "Author",
+          name: "Virginia Woolf",
+          afraidCount: 2,
+        },
+      },
+    });
+
+    // Make sure afraidCount was written.
+    expect(cache.readFragment({
+      id: cache.identify({
+        __typename: "Author",
+        name: "Virginia Woolf",
+      }),
+      fragment: gql`
+        fragment AfraidFragment on Author {
+          name
+          afraidCount
+        }
+      `,
+    })).toEqual({
+      __typename: "Author",
+      name: "Virginia Woolf",
+      afraidCount: 2,
+    });
+
+    // Since we wrote only the afraidCount field, the firstBook result
+    // should be completely unchanged.
+    expect(readFirstBookResult()).toBe(secondFirstBookResult);
+
+    // Add another book, not published first.
+    addBook({
+      isbn: "9780156949606",
+      title: "The Waves",
+      year: 1931,
+    });
+
+    const thirdFirstBookResult = readFirstBookResult();
+
+    // A change in VW's books field triggers rereading of result objects
+    // that previously involved her books field.
+    expect(thirdFirstBookResult).not.toBe(secondFirstBookResult);
+
+    // However, since the new Book was not the earliest published, the
+    // second and third results are structurally the same.
+    expect(thirdFirstBookResult).toEqual(secondFirstBookResult);
+
+    // In fact, the original author.firstBook object has been reused!
+    expect(thirdFirstBookResult.author.firstBook).toBe(
+      secondFirstBookResult.author.firstBook,
+    );
   });
 });

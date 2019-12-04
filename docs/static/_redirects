@@ -1,5 +1,8 @@
 / /docs/react/
 
+# Remove 'Recompose patterns' article
+/docs/react/development-testing/recompose/ /docs/react/
+
 # Apollo Client Information Architecture refresh
 # https://github.com/apollographql/apollo-client/pull/5321
 /docs/react/features/error-handling/ /docs/react/data/error-handling/
@@ -10,7 +13,7 @@
 /docs/react/advanced/subscriptions/ /docs/react/data/subscriptions/
 /docs/react/recipes/client-schema-mocking/ /docs/react/development-testing/client-schema-mocking/
 /docs/react/features/developer-tooling/ /docs/react/development-testing/developer-tooling/
-/docs/react/recipes/recompose/ /docs/react/development-testing/recompose/
+/docs/react/recipes/recompose/ /docs/react/
 /docs/react/recipes/static-typing/ /docs/react/development-testing/static-typing/
 /docs/react/recipes/testing/ /docs/react/development-testing/testing/
 /docs/react/essentials/get-started/ /docs/react/get-started/

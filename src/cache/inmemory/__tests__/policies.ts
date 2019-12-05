@@ -393,6 +393,135 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
+    it("can use stable storage in read functions", function () {
+      const storageSet = new Set<Record<string, any>>();
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Task: {
+            fields: {
+              result(existing, { args, storage }) {
+                storageSet.add(storage);
+                if (storage.result) return storage.result;
+                return storage.result = compute(args);
+              },
+            },
+          },
+        },
+      });
+
+      let computeCount = 0;
+      function compute(args) {
+        return `expensive result ${++computeCount}`;
+      }
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            tasks {
+              id
+            }
+          }
+        `,
+        data: {
+          tasks: [{
+            __typename: "Task",
+            id: 1,
+          }, {
+            __typename: "Task",
+            id: 2,
+          }],
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          tasks: [
+            { __ref: "Task:1" },
+            { __ref: "Task:2" },
+          ],
+        },
+        "Task:1": {
+          __typename: "Task",
+          id: 1,
+        },
+        "Task:2": {
+          __typename: "Task",
+          id: 2,
+        },
+      });
+
+      const result1 = cache.readQuery({
+        query: gql`
+          query {
+            tasks {
+              result
+            }
+          }
+        `,
+      });
+
+      expect(result1).toEqual({
+        tasks: [{
+          __typename: "Task",
+          result: "expensive result 1",
+        }, {
+          __typename: "Task",
+          result: "expensive result 2",
+        }],
+      });
+
+      const result2 = cache.readQuery({
+        query: gql`
+          query {
+            tasks {
+              id
+              result
+            }
+          }
+        `,
+      });
+
+      expect(result2).toEqual({
+        tasks: [{
+          __typename: "Task",
+          id: 1,
+          result: "expensive result 1",
+        }, {
+          __typename: "Task",
+          id: 2,
+          result: "expensive result 2",
+        }],
+      });
+
+      // Clear the cached results.
+      storageSet.forEach(storage => {
+        delete storage.result;
+      });
+
+      const result3 = cache.readQuery({
+        query: gql`
+          query {
+            tasks {
+              __typename
+              result
+            }
+          }
+        `,
+      });
+
+      expect(result3).toEqual({
+        tasks: [{
+          __typename: "Task",
+          result: "expensive result 3",
+        }, {
+          __typename: "Task",
+          result: "expensive result 4",
+        }],
+      });
+    });
+
     it("can use read function to implement synthetic/computed keys", function () {
       const cache = new InMemoryCache({
         typePolicies: {

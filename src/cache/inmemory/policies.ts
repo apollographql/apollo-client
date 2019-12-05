@@ -33,7 +33,10 @@ import {
 } from "./types";
 
 import { fieldNameFromStoreName } from './helpers';
-import { FieldValueGetter } from './readFromStore';
+import {
+  FieldValueGetter,
+  FieldStorageGetter,
+} from './readFromStore';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -105,6 +108,10 @@ interface FieldFunctionOptions {
 }
 
 interface ReadFunctionOptions extends FieldFunctionOptions {
+  // A handy place to put field-specific data that you want to survive
+  // across multiple read function calls. Useful for caching.
+  storage: ReturnType<FieldStorageGetter>;
+
   // Gets the existing StoreValue for a given field within the current
   // object, without calling any read functions (to prevent any risk of
   // infinite recursion). If the provided FieldNode has arguments, the
@@ -415,6 +422,7 @@ export class Policies {
   public readField(
     field: FieldNode,
     getFieldValue: FieldValueGetter,
+    getFieldStorage: FieldStorageGetter,
     typename = getFieldValue("__typename") as string,
     variables?: Record<string, any>,
   ): StoreValue {
@@ -431,6 +439,7 @@ export class Policies {
         policies,
         isReference,
         toReference: policies.toReference,
+        storage: getFieldStorage(storeFieldName),
         getFieldValue(nameOrField, foreignRef) {
           return getFieldValue(
             typeof nameOrField === "string" ? nameOrField :

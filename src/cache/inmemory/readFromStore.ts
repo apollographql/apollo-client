@@ -5,7 +5,7 @@ import {
   InlineFragmentNode,
   SelectionSetNode,
 } from 'graphql';
-import { wrap } from 'optimism';
+import { wrap, KeyTrie } from 'optimism';
 import { invariant } from 'ts-invariant';
 
 import {
@@ -195,6 +195,8 @@ export class StoreReader {
     };
   }
 
+  private keyMaker = new KeyTrie<Record<string, any>>(true);
+
   private executeSelectionSet({
     selectionSet,
     objectOrReference,
@@ -207,6 +209,12 @@ export class StoreReader {
     const getFieldValue = makeFieldValueGetter(
       policies,
       store,
+      objectOrReference,
+    );
+
+    const getFieldStorage = makeFieldStorageGetter(
+      store,
+      this.keyMaker,
       objectOrReference,
     );
 
@@ -241,6 +249,7 @@ export class StoreReader {
         let fieldValue = policies.readField(
           selection,
           getFieldValue,
+          getFieldStorage,
           typename,
           variables,
         );
@@ -425,6 +434,24 @@ function makeFieldValueGetter(
       maybeDeepFreeze(fieldValue);
     }
     return fieldValue as T;
+  };
+}
+
+export type FieldStorageGetter =
+  ReturnType<typeof makeFieldStorageGetter>;
+
+function makeFieldStorageGetter(
+  store: NormalizedCache,
+  keyMaker: StoreReader["keyMaker"],
+  objectOrReference: StoreObject | Reference,
+) {
+  return function getFieldStorage(storeFieldName: string) {
+    return keyMaker.lookup(
+      isReference(objectOrReference)
+        ? objectOrReference.__ref
+        : objectOrReference,
+      storeFieldName,
+    );
   };
 }
 

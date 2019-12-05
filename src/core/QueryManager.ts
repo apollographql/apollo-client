@@ -654,6 +654,7 @@ export class QueryManager<TStore> {
         // result and mark it as stale.
         const stale = isMissing && !(
           options.returnPartialData ||
+          options.partialRefetch ||
           fetchPolicy === 'cache-only'
         );
 

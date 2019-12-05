@@ -4,7 +4,7 @@ import { render, cleanup, wait } from '@testing-library/react';
 
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
-import { MockedProvider } from '../../../utilities/testing';
+import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { ApolloClient } from '../../../ApolloClient';
@@ -1082,6 +1082,106 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(6);
       });
     });
+  });
+
+  describe('Partial refetching', () => {
+    it(
+      'should attempt a refetch when the query result was marked as being ' +
+        'partial, the returned data was reset to an empty Object by the ' +
+        'Apollo Client QueryManager (due to a cache miss), and the ' +
+        '`partialRefetch` prop is `true`',
+      async () => {
+        const query: DocumentNode = gql`
+          query AllPeople($name: String!) {
+            allPeople(name: $name) {
+              people {
+                name
+              }
+            }
+          }
+        `;
+
+        interface Data {
+          allPeople: {
+            people: Array<{ name: string }>;
+          };
+        }
+
+        const peopleData: Data = {
+          allPeople: { people: [{ name: 'Luke Skywalker' }] }
+        };
+
+        const link = mockSingleLink(
+          {
+            request: {
+              query,
+              variables: {
+                someVar: 'abc123'
+              }
+            },
+            result: {
+              data: undefined
+            }
+          },
+          {
+            request: {
+              query,
+              variables: {
+                someVar: 'abc123'
+              }
+            },
+            result: {
+              data: peopleData
+            }
+          }
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache()
+        });
+
+        let renderCount = 0;
+        const Component = () => {
+          const { loading, data } = useQuery(query, {
+            variables: { someVar: 'abc123' },
+            partialRefetch: true
+          });
+
+          switch (renderCount) {
+            case 0:
+              // Initial loading render
+              expect(loading).toBeTruthy();
+              break;
+            case 1:
+              // `data` is missing and `partialRetch` is true, so a refetch
+              // is triggered and loading is set as true again
+              expect(loading).toBeTruthy();
+              expect(data).toBeUndefined();
+              break;
+            case 2:
+              // Refetch has completed
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(peopleData);
+              break;
+            default:
+          }
+
+          renderCount += 1;
+          return null;
+        };
+
+        render(
+          <ApolloProvider client={client}>
+            <Component />
+          </ApolloProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3);
+        });
+      }
+    );
   });
 
   describe('Callbacks', () => {

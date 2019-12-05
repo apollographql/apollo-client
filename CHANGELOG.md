@@ -79,6 +79,21 @@
 - `InMemoryCache` will no longer merge the fields of written objects unless the objects are known to have the same identity, and the values of fields with the same name will not be recursively merged unless a custom `merge` function is defined by a field policy for that field, within a type policy associated with the `__typename` of the parent object. <br/>
   [@benjamn](https://github.com/benjamn) in [#5603](https://github.com/apollographql/apollo-client/pull/5603)
 
+- Support `cache.identify(entity)` for easily computing entity ID strings. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5642](https://github.com/apollographql/apollo-client/pull/5642)
+
+- Support eviction of specific entity fields using `cache.evict(id, fieldName)`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5643](https://github.com/apollographql/apollo-client/pull/5643)
+
+- Stop paying attention to `previousResult` in `InMemoryCache`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5644](https://github.com/apollographql/apollo-client/pull/5644)
+
+- Improve optimistic update performance by limiting cache key diversity. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5648](https://github.com/apollographql/apollo-client/pull/5648)
+
+- Custom field `read` functions can read from neighboring fields using the `getFieldValue(fieldName)` helper, and may also read fields from other entities by calling `getFieldValue(fieldName, foreignReference)`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5651](https://github.com/apollographql/apollo-client/pull/5651)
+
 ## Apollo Client (2.6.4)
 
 ### Apollo Client (2.6.4)

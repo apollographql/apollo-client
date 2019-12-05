@@ -204,31 +204,11 @@ export class StoreReader {
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
 
-    // Provides a uniform interface from reading field values, whether or
-    // not the parent object is a normalized entity object.
-    function getFieldValue(
-      fieldName: string,
-      foreignRef?: Reference,
-    ): StoreValue {
-      let fieldValue: StoreValue;
-      if (foreignRef) objectOrReference = foreignRef;
-      if (isReference(objectOrReference)) {
-        const dataId = objectOrReference.__ref;
-        fieldValue = store.getFieldValue(dataId, fieldName);
-        if (fieldValue === void 0 && fieldName === "__typename") {
-          // We can infer the __typename of singleton root objects like
-          // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
-          // we have never written that information into the cache.
-          return policies.rootTypenamesById[dataId];
-        }
-      } else {
-        fieldValue = objectOrReference && objectOrReference[fieldName];
-      }
-      if (process.env.NODE_ENV !== "production") {
-        maybeDeepFreeze(fieldValue);
-      }
-      return fieldValue;
-    }
+    const getFieldValue = makeFieldValueGetter(
+      policies,
+      store,
+      objectOrReference,
+    );
 
     const typename = getFieldValue("__typename") as string;
 
@@ -410,6 +390,42 @@ export class StoreReader {
 
     return { result: array, missing };
   }
+}
+
+export type FieldValueGetter =
+  ReturnType<typeof makeFieldValueGetter>;
+
+function makeFieldValueGetter(
+  policies: Policies,
+  store: NormalizedCache,
+  objectOrReference: StoreObject | Reference,
+) {
+  // Provides a uniform interface for reading field values, whether or not
+  // objectOrReference is a normalized entity.
+  return function getFieldValue<T = StoreValue>(
+    storeFieldName: string,
+    foreignRef?: Reference,
+  ): Readonly<T> {
+    let fieldValue: StoreValue;
+    if (foreignRef) objectOrReference = foreignRef;
+    if (isReference(objectOrReference)) {
+      const dataId = objectOrReference.__ref;
+      fieldValue = store.getFieldValue(dataId, storeFieldName);
+      if (fieldValue === void 0 && storeFieldName === "__typename") {
+        // We can infer the __typename of singleton root objects like
+        // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
+        // we have never written that information into the cache.
+        return policies.rootTypenamesById[dataId] as any;
+      }
+    } else {
+      fieldValue = objectOrReference && objectOrReference[storeFieldName];
+    }
+    if (process.env.NODE_ENV !== "production") {
+      // Enforce Readonly<T> at runtime, in development.
+      maybeDeepFreeze(fieldValue);
+    }
+    return fieldValue as T;
+  };
 }
 
 function assertSelectionSetForIdValue(

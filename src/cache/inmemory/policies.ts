@@ -20,9 +20,9 @@ import {
   storeKeyNameFromField,
   StoreValue,
   argumentsObjectFromField,
+  Reference,
   makeReference,
   isReference,
-  Reference,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -33,6 +33,7 @@ import {
 } from "./types";
 
 import { fieldNameFromStoreName } from './helpers';
+import { FieldValueGetter } from './readFromStore';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -96,16 +97,18 @@ interface FieldFunctionOptions {
   // Utilities for dealing with { __ref } objects.
   isReference: typeof isReference;
   toReference: Policies["toReference"];
+}
 
+interface ReadFunctionOptions extends FieldFunctionOptions {
   // Gets the existing StoreValue for a given field within the current
-  // object, without calling any read functions, so it works even with the
-  // current field. If the provided FieldNode has arguments, the same
-  // options.variables will be used. If a foreignRef is provided, the
-  // value will be read from that object instead of the current object, so
-  // this function can be used (together with isReference) to examine the
-  // cache outside the current entity.
+  // object, without calling any read functions (to prevent any risk of
+  // infinite recursion). If the provided FieldNode has arguments, the
+  // same options.variables will be used to compute the argument values.
+  // If a foreignRef is provided, the value will be read from that object
+  // instead of the current object, so this function can be used (together
+  // with isReference) to examine the cache outside the current entity.
   getFieldValue<T = StoreValue>(
-    field: string | FieldNode,
+    nameOrField: string | FieldNode,
     foreignRef?: Reference,
   ): Readonly<T>;
 }
@@ -121,7 +124,7 @@ interface FieldReadFunction<TExisting, TResult = TExisting> {
    // the developer to annotate it with a type, without also having to
    // provide a whole new type for the options object.
    existing: Readonly<TExisting> | undefined,
-   options: FieldFunctionOptions,
+   options: ReadFunctionOptions,
   ): TResult;
 
   // The TypeScript typings for Function.prototype.call are much too generic
@@ -133,7 +136,7 @@ interface FieldReadFunction<TExisting, TResult = TExisting> {
   call(
     self: Policies,
     existing: Readonly<TExisting> | undefined,
-    options: FieldFunctionOptions,
+    options: ReadFunctionOptions,
   ): TResult;
 }
 
@@ -425,10 +428,7 @@ export class Policies {
 
   public readFieldFromStoreObject(
     field: FieldNode,
-    getFieldValue: (
-      field: string,
-      foreignRef?: Reference,
-    ) => any,
+    getFieldValue: FieldValueGetter,
     typename = getFieldValue("__typename") as string,
     variables?: Record<string, any>,
   ): StoreValue {
@@ -473,14 +473,9 @@ export class Policies {
         variables,
         isReference,
         toReference: policies.toReference,
-        getFieldValue: emptyGetFieldValueForMerge,
       });
     }
   }
-}
-
-function emptyGetFieldValueForMerge(): any {
-  invariant.warn("getFieldValue unavailable in merge functions");
 }
 
 export type StoreValueMergeFunction = (

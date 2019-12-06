@@ -412,7 +412,7 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  public readFieldFromStoreObject(
+  public readField(
     field: FieldNode,
     getFieldValue: FieldValueGetter,
     typename = getFieldValue("__typename") as string,

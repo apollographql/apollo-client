@@ -238,7 +238,7 @@ export class StoreReader {
       if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        let fieldValue = policies.readFieldFromStoreObject(
+        let fieldValue = policies.readField(
           selection,
           getFieldValue,
           typename,

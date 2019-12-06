@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
-import { FieldPolicy } from "../policies";
+import { FieldPolicy, Policies } from "../policies";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 
 describe("type policies", function () {
@@ -159,6 +159,7 @@ describe("type policies", function () {
           keyFields(book, context) {
             expect(context.selectionSet.kind).toBe("SelectionSet");
             expect(context.fragmentMap).toEqual({});
+            expect(context.policies).toBeInstanceOf(Policies);
             return context.typename + ":" + book.isbn;
           },
         },
@@ -538,9 +539,15 @@ describe("type policies", function () {
               todos: {
                 keyArgs: [],
 
-                read(existing: any[], { args, toReference, isReference }) {
+                read(existing: any[], {
+                  args,
+                  toReference,
+                  isReference,
+                  policies,
+                }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
+                  expect(policies).toBeInstanceOf(Policies);
                   const slice = existing.slice(
                     args.offset,
                     args.offset + args.limit,
@@ -553,9 +560,11 @@ describe("type policies", function () {
                   args,
                   toReference,
                   isReference,
+                  policies,
                 }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
+                  expect(policies).toBeInstanceOf(Policies);
                   const copy = existing ? existing.slice(0) : [];
                   const limit = args.offset + args.limit;
                   for (let i = args.offset; i < limit; ++i) {

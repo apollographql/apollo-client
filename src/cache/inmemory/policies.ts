@@ -46,12 +46,12 @@ export type TypePolicies = {
 type KeySpecifier = (string | any[])[];
 
 type KeyFieldsFunction = (
-  this: Policies,
   object: Readonly<StoreObject>,
   context: {
     typename: string;
     selectionSet?: SelectionSetNode;
     fragmentMap?: FragmentMap;
+    policies: Policies;
   },
 ) => ReturnType<IdGetter>;
 
@@ -75,11 +75,11 @@ type TypePolicy = {
 };
 
 type KeyArgsFunction = (
-  this: Policies,
   field: FieldNode,
   context: {
     typename: string;
     variables: Record<string, any>;
+    policies: Policies;
   },
 ) => ReturnType<IdGetter>;
 
@@ -93,6 +93,11 @@ interface FieldFunctionOptions {
   args: Record<string, any>;
   field: FieldNode;
   variables?: Record<string, any>;
+
+  // In rare advanced use cases, a read or merge function may wish to
+  // consult the current Policies object, for example to call
+  // getStoreFieldName manually.
+  policies: Policies;
 
   // Utilities for dealing with { __ref } objects.
   isReference: typeof isReference;
@@ -113,49 +118,26 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
   ): Readonly<T>;
 }
 
-interface FieldReadFunction<TExisting, TResult = TExisting> {
-  (this: Policies,
-   // When reading a field, one often needs to know about any existing
-   // value stored for that field. If the field is read before any value
-   // has been written to the cache, this existing parameter will be
-   // undefined, which makes it easy to use a default parameter expression
-   // to supply the initial value. This parameter is positional (rather
-   // than one of the named options) because that makes it possible for
-   // the developer to annotate it with a type, without also having to
-   // provide a whole new type for the options object.
-   existing: Readonly<TExisting> | undefined,
-   options: ReadFunctionOptions,
-  ): TResult;
+type FieldReadFunction<TExisting, TResult = TExisting> = (
+  // When reading a field, one often needs to know about any existing
+  // value stored for that field. If the field is read before any value
+  // has been written to the cache, this existing parameter will be
+  // undefined, which makes it easy to use a default parameter expression
+  // to supply the initial value. This parameter is positional (rather
+  // than one of the named options) because that makes it possible for the
+  // developer to annotate it with a type, without also having to provide
+  // a whole new type for the options object.
+  existing: Readonly<TExisting> | undefined,
+  options: ReadFunctionOptions,
+) => TResult;
 
-  // The TypeScript typings for Function.prototype.call are much too generic
-  // to enforce the type safety we need here, for reasons discussed in this
-  // issue: https://github.com/microsoft/TypeScript/issues/212
-  // The strictBindCallApply compiler option (released in TS 3.2) promises to
-  // improve the behavior of the default F.p.call signature:
-  // https://github.com/microsoft/TypeScript/pull/27028
-  call(
-    self: Policies,
-    existing: Readonly<TExisting> | undefined,
-    options: ReadFunctionOptions,
-  ): TResult;
-}
-
-interface FieldMergeFunction<TExisting> {
-  (this: Policies,
-   existing: Readonly<TExisting> | undefined,
-   // The incoming parameter needs to be positional as well, for the same
-   // reasons discussed in FieldReadFunction above.
-   incoming: Readonly<StoreValue>,
-   options: FieldFunctionOptions,
-  ): TExisting;
-
-  call(
-    self: Policies,
-    existing: Readonly<TExisting> | undefined,
-    incoming: Readonly<StoreValue>,
-    options: FieldFunctionOptions,
-  ): TExisting;
-}
+type FieldMergeFunction<TExisting> = (
+  existing: Readonly<TExisting> | undefined,
+  // The incoming parameter needs to be positional as well, for the same
+  // reasons discussed in FieldReadFunction above.
+  incoming: Readonly<StoreValue>,
+  options: FieldFunctionOptions,
+) => TExisting;
 
 export function defaultDataIdFromObject(object: StoreObject) {
   const { __typename, id, _id } = object;
@@ -198,7 +180,7 @@ export class Policies {
   public readonly usingPossibleTypes = false;
 
   constructor(private config: {
-    dataIdFromObject?: IdGetter;
+    dataIdFromObject?: KeyFieldsFunction;
     possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
   } = {}) {
@@ -242,16 +224,18 @@ export class Policies {
       typename,
       selectionSet,
       fragmentMap,
+      policies: this,
     };
 
     let id: string | null;
 
     const policy = this.getTypePolicy(typename, false);
-    if (policy && policy.keyFn) {
-      id = policy.keyFn.call(this, object, context);
+    const keyFn = policy && policy.keyFn;
+    if (keyFn) {
+      id = keyFn(object, context);
     } else {
       id = this.config.dataIdFromObject
-        ? this.config.dataIdFromObject.call(this, object, context)
+        ? this.config.dataIdFromObject(object, context)
         : null;
     }
 
@@ -404,12 +388,14 @@ export class Policies {
 
     if (typeof typename === "string") {
       const policy = this.getFieldPolicy(typename, fieldName, false);
-      if (policy && policy.keyFn) {
+      const keyFn = policy && policy.keyFn;
+      if (keyFn) {
         // If the custom keyFn returns a falsy value, fall back to
         // fieldName instead.
-        storeFieldName = policy.keyFn.call(this, field, {
+        storeFieldName = keyFn(field, {
           typename,
           variables,
+          policies: this,
         }) || fieldName;
       }
     }
@@ -436,11 +422,13 @@ export class Policies {
     const storeFieldName = policies.getStoreFieldName(typename, field, variables);
     const existing = getFieldValue(storeFieldName);
     const policy = policies.getFieldPolicy(typename, field.name.value, false);
-    if (policy && policy.read) {
-      return policy.read.call(policies, existing, {
+    const read = policy && policy.read;
+    if (read) {
+      return read(existing, {
         args: argumentsObjectFromField(field, variables),
         field,
         variables,
+        policies,
         isReference,
         toReference: policies.toReference,
         getFieldValue(nameOrField, foreignRef) {
@@ -462,15 +450,17 @@ export class Policies {
   ): StoreValueMergeFunction {
     const policies = this;
     const policy = policies.getFieldPolicy(typename, field.name.value, false);
-    if (policy && policy.merge) {
+    const merge = policy && policy.merge;
+    if (merge) {
       const args = argumentsObjectFromField(field, variables);
       return (
         existing: StoreValue,
         incoming: StoreValue,
-      ) => policy.merge.call(policies, existing, incoming, {
+      ) => merge(existing, incoming, {
         args,
         field,
         variables,
+        policies,
         isReference,
         toReference: policies.toReference,
       });

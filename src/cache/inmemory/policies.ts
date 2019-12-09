@@ -5,7 +5,7 @@ import {
   FieldNode,
 } from "graphql";
 
-import { KeyTrie } from 'optimism';
+import { dep, KeyTrie } from 'optimism';
 import invariant from 'ts-invariant';
 
 import {
@@ -111,6 +111,12 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for caching.
   storage: ReturnType<FieldStorageGetter>;
+
+  // Call this function to invalidate any cached queries that previously
+  // consumed this field. If you use options.storage as a cache, setting a
+  // new value in the cache and then calling options.invalidate() can be a
+  // good way to deliver asynchronous results.
+  invalidate(): void;
 
   // Gets the existing StoreValue for a given field within the current
   // object, without calling any read functions (to prevent any risk of
@@ -419,6 +425,8 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
+  private fieldDep = dep<ReturnType<FieldStorageGetter>>();
+
   public readField(
     field: FieldNode,
     getFieldValue: FieldValueGetter,
@@ -432,6 +440,11 @@ export class Policies {
     const policy = policies.getFieldPolicy(typename, field.name.value, false);
     const read = policy && policy.read;
     if (read) {
+      const storage = getFieldStorage(storeFieldName);
+      // By depending on the options.storage object when we call
+      // policy.read, we can easily invalidate the result of the read
+      // function when/if the options.invalidate function is called.
+      policies.fieldDep(storage);
       return read(existing, {
         args: argumentsObjectFromField(field, variables),
         field,
@@ -439,13 +452,16 @@ export class Policies {
         policies,
         isReference,
         toReference: policies.toReference,
-        storage: getFieldStorage(storeFieldName),
+        storage,
         getFieldValue(nameOrField, foreignRef) {
           return getFieldValue(
             typeof nameOrField === "string" ? nameOrField :
               policies.getStoreFieldName(typename, nameOrField, variables),
             foreignRef,
           );
+        },
+        invalidate() {
+          policies.fieldDep.dirty(storage);
         },
       });
     }

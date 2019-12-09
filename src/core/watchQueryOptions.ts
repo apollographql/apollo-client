@@ -103,6 +103,13 @@ export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
    * be fully satisfied by the cache, instead of returning nothing.
    */
   returnPartialData?: boolean;
+
+  /**
+   * If `true`, perform a query `refetch` if the query result is marked as
+   * being partial, and the returned data is reset to an empty Object by the
+   * Apollo Client `QueryManager` (due to a cache miss).
+   */
+  partialRefetch?: boolean;
 }
 
 /**

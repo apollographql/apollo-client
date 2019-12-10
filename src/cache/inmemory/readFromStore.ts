@@ -5,7 +5,7 @@ import {
   InlineFragmentNode,
   SelectionSetNode,
 } from 'graphql';
-import { wrap, KeyTrie } from 'optimism';
+import { wrap } from 'optimism';
 import { invariant } from 'ts-invariant';
 
 import {
@@ -195,8 +195,6 @@ export class StoreReader {
     };
   }
 
-  private keyMaker = new KeyTrie<Record<string, any>>(true);
-
   private executeSelectionSet({
     selectionSet,
     objectOrReference,
@@ -205,20 +203,8 @@ export class StoreReader {
     const { store, fragmentMap, variables, policies } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
-
-    const getFieldValue = makeFieldValueGetter(
-      policies,
-      store,
-      objectOrReference,
-    );
-
-    const getFieldStorage = makeFieldStorageGetter(
-      store,
-      this.keyMaker,
-      objectOrReference,
-    );
-
-    const typename = getFieldValue("__typename") as string;
+    const getFieldValue = makeFieldValueGetter(policies, store);
+    const typename = getFieldValue<string>(objectOrReference, "__typename");
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
@@ -247,10 +233,9 @@ export class StoreReader {
 
       if (isField(selection)) {
         let fieldValue = policies.readField(
+          objectOrReference,
           selection,
           getFieldValue,
-          getFieldStorage,
-          typename,
           variables,
         );
 
@@ -407,16 +392,14 @@ export type FieldValueGetter =
 function makeFieldValueGetter(
   policies: Policies,
   store: NormalizedCache,
-  objectOrReference: StoreObject | Reference,
 ) {
   // Provides a uniform interface for reading field values, whether or not
   // objectOrReference is a normalized entity.
   return function getFieldValue<T = StoreValue>(
+    objectOrReference: StoreObject | Reference,
     storeFieldName: string,
-    foreignRef?: Reference,
   ): Readonly<T> {
     let fieldValue: StoreValue;
-    if (foreignRef) objectOrReference = foreignRef;
     if (isReference(objectOrReference)) {
       const dataId = objectOrReference.__ref;
       fieldValue = store.getFieldValue(dataId, storeFieldName);
@@ -434,24 +417,6 @@ function makeFieldValueGetter(
       maybeDeepFreeze(fieldValue);
     }
     return fieldValue as T;
-  };
-}
-
-export type FieldStorageGetter =
-  ReturnType<typeof makeFieldStorageGetter>;
-
-function makeFieldStorageGetter(
-  store: NormalizedCache,
-  keyMaker: StoreReader["keyMaker"],
-  objectOrReference: StoreObject | Reference,
-) {
-  return function getFieldStorage(storeFieldName: string) {
-    return keyMaker.lookup(
-      isReference(objectOrReference)
-        ? objectOrReference.__ref
-        : objectOrReference,
-      storeFieldName,
-    );
   };
 }
 

@@ -33,10 +33,7 @@ import {
 } from "./types";
 
 import { fieldNameFromStoreName } from './helpers';
-import {
-  FieldValueGetter,
-  FieldStorageGetter,
-} from './readFromStore';
+import { FieldValueGetter } from './readFromStore';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -93,8 +90,14 @@ export type FieldPolicy<TValue> = {
 };
 
 interface FieldFunctionOptions {
-  args: Record<string, any>;
-  field: FieldNode;
+  args: Record<string, any> | null;
+
+  // When a field function is called as part of reading or writing a
+  // query, options.field will be a FieldNode from the query, but it could
+  // be the field.name.value string instead, if the function was called
+  // via options.readField(fieldName).
+  field: string | FieldNode;
+
   variables?: Record<string, any>;
 
   // In rare advanced use cases, a read or merge function may wish to
@@ -107,10 +110,12 @@ interface FieldFunctionOptions {
   toReference: Policies["toReference"];
 }
 
+type StorageType = Record<string, any>;
+
 interface ReadFunctionOptions extends FieldFunctionOptions {
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for caching.
-  storage: ReturnType<FieldStorageGetter>;
+  storage: StorageType;
 
   // Call this function to invalidate any cached queries that previously
   // consumed this field. If you use options.storage as a cache, setting a
@@ -125,7 +130,7 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
   // If a foreignRef is provided, the value will be read from that object
   // instead of the current object, so this function can be used (together
   // with isReference) to examine the cache outside the current entity.
-  getFieldValue<T = StoreValue>(
+  readField<T = StoreValue>(
     nameOrField: string | FieldNode,
     foreignRef?: Reference,
   ): Readonly<T>;
@@ -425,46 +430,60 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  private fieldDep = dep<ReturnType<FieldStorageGetter>>();
+  private storageTrie = new KeyTrie<StorageType>(true);
+  private fieldDep = dep<StorageType>();
 
   public readField(
-    field: FieldNode,
+    objectOrReference: StoreObject | Reference,
+    nameOrField: string | FieldNode,
     getFieldValue: FieldValueGetter,
-    getFieldStorage: FieldStorageGetter,
-    typename = getFieldValue("__typename") as string,
     variables?: Record<string, any>,
   ): StoreValue {
     const policies = this;
-    const storeFieldName = policies.getStoreFieldName(typename, field, variables);
-    const existing = getFieldValue(storeFieldName);
-    const policy = policies.getFieldPolicy(typename, field.name.value, false);
+    const typename = getFieldValue<string>(objectOrReference, "__typename");
+    const storeFieldName = typeof nameOrField === "string" ? nameOrField
+      : policies.getStoreFieldName(typename, nameOrField, variables);
+    const fieldName = fieldNameFromStoreName(storeFieldName);
+    const existing = getFieldValue(objectOrReference, storeFieldName);
+    const policy = policies.getFieldPolicy(typename, fieldName, false);
     const read = policy && policy.read;
+
     if (read) {
-      const storage = getFieldStorage(storeFieldName);
+      const storage = policies.storageTrie.lookup(
+        isReference(objectOrReference)
+          ? objectOrReference.__ref
+          : objectOrReference,
+        storeFieldName,
+      );
+
       // By depending on the options.storage object when we call
       // policy.read, we can easily invalidate the result of the read
       // function when/if the options.invalidate function is called.
       policies.fieldDep(storage);
+
       return read(existing, {
-        args: argumentsObjectFromField(field, variables),
-        field,
+        args: typeof nameOrField === "string" ? null :
+          argumentsObjectFromField(nameOrField, variables),
+        field: typeof nameOrField === "string" ? fieldName : nameOrField,
         variables,
         policies,
         isReference,
         toReference: policies.toReference,
         storage,
-        getFieldValue(nameOrField, foreignRef) {
-          return getFieldValue(
-            typeof nameOrField === "string" ? nameOrField :
-              policies.getStoreFieldName(typename, nameOrField, variables),
-            foreignRef,
-          );
+        readField(nameOrField, foreignRef) {
+          return policies.readField(
+            foreignRef || objectOrReference,
+            nameOrField,
+            getFieldValue,
+            variables,
+          ) as any;
         },
         invalidate() {
           policies.fieldDep.dirty(storage);
         },
       });
     }
+
     return existing;
   }
 

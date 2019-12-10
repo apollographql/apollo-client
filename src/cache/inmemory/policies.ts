@@ -123,13 +123,14 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
   // good way to deliver asynchronous results.
   invalidate(): void;
 
-  // Gets the existing StoreValue for a given field within the current
-  // object, without calling any read functions (to prevent any risk of
-  // infinite recursion). If the provided FieldNode has arguments, the
-  // same options.variables will be used to compute the argument values.
-  // If a foreignRef is provided, the value will be read from that object
+  // Helper function for reading other fields within the current object.
+  // If a foreignRef is provided, the field will be read from that object
   // instead of the current object, so this function can be used (together
   // with isReference) to examine the cache outside the current entity.
+  // If a FieldNode is passed instead of a string, and that FieldNode has
+  // arguments, the same options.variables will be used to compute the
+  // argument values. Note that this function will invoke custom read
+  // functions for other fields, if defined.
   readField<T = StoreValue>(
     nameOrField: string | FieldNode,
     foreignRef?: Reference,

@@ -470,13 +470,15 @@ export class Policies {
         isReference,
         toReference: policies.toReference,
         storage,
-        readField(nameOrField, foreignRef) {
+        // I'm not sure why it's necessary to repeat the parameter types
+        // here, but TypeScript complains if I leave them out.
+        readField<T>(nameOrField: string | FieldNode, ref?: Reference) {
           return policies.readField(
-            foreignRef || objectOrReference,
+            ref || objectOrReference,
             nameOrField,
             getFieldValue,
             variables,
-          ) as any;
+          ) as Readonly<T>;
         },
         invalidate() {
           policies.fieldDep.dirty(storage);

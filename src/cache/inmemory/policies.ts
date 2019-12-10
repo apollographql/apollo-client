@@ -21,6 +21,8 @@ import {
   StoreValue,
   argumentsObjectFromField,
   makeReference,
+  isReference,
+  Reference,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -29,6 +31,8 @@ import {
   IdGetter,
   StoreObject,
 } from "./types";
+
+import { fieldNameFromStoreName } from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -88,13 +92,22 @@ interface FieldFunctionOptions {
   args: Record<string, any>;
   field: FieldNode;
   variables?: Record<string, any>;
+
+  // Utilities for dealing with { __ref } objects.
+  isReference: typeof isReference;
   toReference: Policies["toReference"];
 
   // Gets the existing StoreValue for a given field within the current
   // object, without calling any read functions, so it works even with the
   // current field. If the provided FieldNode has arguments, the same
-  // options.variables will be used.
-  getFieldValue(field: string | FieldNode): Readonly<StoreValue>;
+  // options.variables will be used. If a foreignRef is provided, the
+  // value will be read from that object instead of the current object, so
+  // this function can be used (together with isReference) to examine the
+  // cache outside the current entity.
+  getFieldValue<T = StoreValue>(
+    field: string | FieldNode,
+    foreignRef?: Reference,
+  ): Readonly<T>;
 }
 
 interface FieldReadFunction<TExisting, TResult = TExisting> {
@@ -383,21 +396,39 @@ export class Policies {
     field: FieldNode,
     variables: Record<string, any>,
   ): string {
+    const fieldName = field.name.value;
+    let storeFieldName: string | undefined;
+
     if (typeof typename === "string") {
-      const policy = this.getFieldPolicy(typename, field.name.value, false);
+      const policy = this.getFieldPolicy(typename, fieldName, false);
       if (policy && policy.keyFn) {
-        return policy.keyFn.call(this, field, {
+        // If the custom keyFn returns a falsy value, fall back to
+        // fieldName instead.
+        storeFieldName = policy.keyFn.call(this, field, {
           typename,
           variables,
-        });
+        }) || fieldName;
       }
     }
-    return storeKeyNameFromField(field, variables);
+
+    if (storeFieldName === void 0) {
+      storeFieldName = storeKeyNameFromField(field, variables);
+    }
+
+    // Make sure custom field names start with the actual field.name.value
+    // of the field, so we can always figure out which properties of a
+    // StoreObject correspond to which original field names.
+    return fieldName === fieldNameFromStoreName(storeFieldName)
+      ? storeFieldName
+      : fieldName + ":" + storeFieldName;
   }
 
   public readFieldFromStoreObject(
     field: FieldNode,
-    getFieldValue: (field: string) => StoreValue,
+    getFieldValue: (
+      field: string,
+      foreignRef?: Reference,
+    ) => any,
     typename = getFieldValue("__typename") as string,
     variables?: Record<string, any>,
   ): StoreValue {
@@ -410,11 +441,13 @@ export class Policies {
         args: argumentsObjectFromField(field, variables),
         field,
         variables,
+        isReference,
         toReference: policies.toReference,
-        getFieldValue(nameOrField) {
+        getFieldValue(nameOrField, foreignRef) {
           return getFieldValue(
             typeof nameOrField === "string" ? nameOrField :
               policies.getStoreFieldName(typename, nameOrField, variables),
+            foreignRef,
           );
         },
       });
@@ -438,6 +471,7 @@ export class Policies {
         args,
         field,
         variables,
+        isReference,
         toReference: policies.toReference,
         getFieldValue: emptyGetFieldValueForMerge,
       });
@@ -445,7 +479,7 @@ export class Policies {
   }
 }
 
-function emptyGetFieldValueForMerge() {
+function emptyGetFieldValueForMerge(): any {
   invariant.warn("getFieldValue unavailable in merge functions");
 }
 

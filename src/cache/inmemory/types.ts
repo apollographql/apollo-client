@@ -20,9 +20,9 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string): StoreObject;
-  getFieldValue(dataId: string, fieldName: string): StoreValue;
+  getFieldValue(dataId: string, storeFieldName: string): StoreValue;
   merge(dataId: string, incoming: StoreObject): void;
-  delete(dataId: string): void;
+  delete(dataId: string, fieldName?: string): void;
   clear(): void;
 
   // non-Map elements:
@@ -57,7 +57,7 @@ export interface NormalizedCacheObject {
 
 export interface StoreObject {
   __typename?: string;
-  [storeFieldKey: string]: StoreValue;
+  [storeFieldName: string]: StoreValue;
 }
 
 export type OptimisticStoreItem = {

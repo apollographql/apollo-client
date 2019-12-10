@@ -5,7 +5,7 @@ import {
   InlineFragmentNode,
   SelectionSetNode,
 } from 'graphql';
-import { wrap, KeyTrie } from 'optimism';
+import { wrap } from 'optimism';
 import { invariant } from 'ts-invariant';
 
 import {
@@ -17,7 +17,6 @@ import {
   makeReference,
   StoreValue,
 } from '../../utilities/graphql/storeUtils';
-import { canUseWeakMap } from '../../utilities/common/canUse';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import {
@@ -26,7 +25,6 @@ import {
   getMainDefinition,
   getQueryDefinition,
 } from '../../utilities/graphql/getFromAST';
-import { isEqual } from '../../utilities/common/isEqual';
 import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { mergeDeepArray } from '../../utilities/common/mergeDeep';
 import { Cache } from '../core/types/Cache';
@@ -76,20 +74,12 @@ type ExecSubSelectedArrayOptions = {
 
 export interface StoreReaderConfig {
   addTypename?: boolean;
-  cacheKeyRoot?: KeyTrie<object>;
   policies: Policies;
 }
 
 export class StoreReader {
   constructor(private config: StoreReaderConfig) {
-    const cacheKeyRoot =
-      config && config.cacheKeyRoot || new KeyTrie<object>(canUseWeakMap);
-
-    this.config = {
-      addTypename: true,
-      cacheKeyRoot,
-      ...config,
-    };
+    this.config = { addTypename: true, ...config };
 
     const {
       executeSelectionSet,
@@ -105,11 +95,12 @@ export class StoreReader {
         context,
       }: ExecSelectionSetOptions) {
         if (supportsResultCaching(context.store)) {
-          return cacheKeyRoot.lookup(
-            context.store,
+          return context.store.makeCacheKey(
             selectionSet,
             JSON.stringify(context.variables),
-            isReference(objectOrReference) ? objectOrReference.__ref : objectOrReference,
+            isReference(objectOrReference)
+              ? objectOrReference.__ref
+              : objectOrReference,
           );
         }
       }
@@ -120,8 +111,7 @@ export class StoreReader {
     }, {
       makeCacheKey({ field, array, context }) {
         if (supportsResultCaching(context.store)) {
-          return cacheKeyRoot.lookup(
-            context.store,
+          return context.store.makeCacheKey(
             field,
             array,
             JSON.stringify(context.variables),
@@ -141,10 +131,6 @@ export class StoreReader {
    *
    * @param {Object} [variables] A map from the name of a variable to its value. These variables can
    * be referenced by the query document.
-   *
-   * @param {any} previousResult The previous result returned by this function for the same query.
-   * If nothing in the store changed since that previous result then values from the previous result
-   * will be returned to preserve referential equality.
    */
   public readQueryFromStore<QueryType>(
     options: ReadQueryOptions,
@@ -160,14 +146,12 @@ export class StoreReader {
    * identify if any data was missing from the store.
    * @param  {DocumentNode} query A parsed GraphQL query document
    * @param  {Store} store The Apollo Client store object
-   * @param  {any} previousResult The previous result returned by this function for the same query
    * @return {result: Object, complete: [boolean]}
    */
   public diffQueryAgainstStore<T>({
     store,
     query,
     variables,
-    previousResult,
     returnPartialData = true,
     rootId = 'ROOT_QUERY',
     config,
@@ -205,12 +189,6 @@ export class StoreReader {
       });
     }
 
-    if (previousResult) {
-      if (isEqual(previousResult, execResult.result)) {
-        execResult.result = previousResult;
-      }
-    }
-
     return {
       result: execResult.result,
       complete: !hasMissingFields,
@@ -228,8 +206,12 @@ export class StoreReader {
 
     // Provides a uniform interface from reading field values, whether or
     // not the parent object is a normalized entity object.
-    function getFieldValue(fieldName: string): StoreValue {
+    function getFieldValue(
+      fieldName: string,
+      foreignRef?: Reference,
+    ): StoreValue {
       let fieldValue: StoreValue;
+      if (foreignRef) objectOrReference = foreignRef;
       if (isReference(objectOrReference)) {
         const dataId = objectOrReference.__ref;
         fieldValue = store.getFieldValue(dataId, fieldName);

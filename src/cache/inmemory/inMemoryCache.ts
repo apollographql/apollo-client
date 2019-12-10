@@ -3,15 +3,14 @@ import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
-import { KeyTrie } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { canUseWeakMap } from '../../utilities/common/canUse';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
+  StoreObject,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
@@ -48,7 +47,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
-  private cacheKeyRoot = new KeyTrie<object>(canUseWeakMap);
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -85,7 +83,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.storeReader = new StoreReader({
       addTypename: this.addTypename,
-      cacheKeyRoot: this.cacheKeyRoot,
       policies: this.policies,
     });
 
@@ -95,20 +92,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return maybeBroadcastWatch.call(this, c);
     }, {
       makeCacheKey(c: Cache.WatchOptions) {
-        if (c.previousResult) {
-          // If a previousResult was provided, assume the caller would prefer
-          // to compare the previous data to the new data to determine whether
-          // to broadcast, so we should disable caching by returning here, to
-          // give maybeBroadcastWatch a chance to do that comparison.
-          return;
-        }
-
-        if (supportsResultCaching(cache.data)) {
-          // Return a cache key (thus enabling caching) only if we're currently
-          // using a data store that can track cache dependencies.
-          return cache.cacheKeyRoot.lookup(
+        // Return a cache key (thus enabling result caching) only if we're
+        // currently using a data store that can track cache dependencies.
+        const store = c.optimistic ? cache.optimisticData : cache.data;
+        if (supportsResultCaching(store)) {
+          const { optimistic, rootId, variables } = c;
+          return store.makeCacheKey(
             c.query,
-            JSON.stringify(c.variables),
+            JSON.stringify({ optimistic, rootId, variables }),
           );
         }
       }
@@ -135,7 +126,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       query: options.query,
       variables: options.variables,
       rootId: options.rootId,
-      previousResult: options.previousResult,
       config: this.config,
     }) || null;
   }
@@ -158,7 +148,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       query: options.query,
       variables: options.variables,
       returnPartialData: options.returnPartialData,
-      previousResult: options.previousResult,
       config: this.config,
     });
   }
@@ -196,12 +185,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return (optimistic ? this.optimisticData : this.data).release(rootId);
   }
 
-  public evict(dataId: string): boolean {
+  // Returns the canonical ID for a given StoreObject, obeying typePolicies
+  // and keyFields (and dataIdFromObject, if you still use that). At minimum,
+  // the object must contain a __typename and any primary key fields required
+  // to identify entities of that type. If you pass a query result object, be
+  // sure that none of the primary key fields have been renamed by aliasing.
+  public identify(object: StoreObject): string | null {
+    return this.policies.identify(object);
+  }
+
+  public evict(dataId: string, fieldName?: string): boolean {
     if (this.optimisticData.has(dataId)) {
       // Note that this deletion does not trigger a garbage collection, which
       // is convenient in cases where you want to evict multiple entities before
       // performing a single garbage collection.
-      this.optimisticData.delete(dataId);
+      this.optimisticData.delete(dataId, fieldName);
       this.broadcastWatches();
       return !this.optimisticData.has(dataId);
     }
@@ -295,7 +293,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.diff({
         query: c.query,
         variables: c.variables,
-        previousResult: c.previousResult && c.previousResult(),
         optimistic: c.optimistic,
       }),
     );

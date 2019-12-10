@@ -390,7 +390,7 @@ export class QueryData<TData, TVariables> extends OperationData {
         const { partialRefetch } = options;
         if (
           partialRefetch &&
-          !data &&
+          (!data || Object.keys(data).length === 0) &&
           fetchPolicy !== 'cache-only'
         ) {
           // When a `Query` component is mounted, and a mutation is executed

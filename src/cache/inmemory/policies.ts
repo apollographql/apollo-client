@@ -433,18 +433,18 @@ export class Policies {
   private storageTrie = new KeyTrie<StorageType>(true);
   private fieldDep = dep<StorageType>();
 
-  public readField(
+  public readField<V = StoreValue>(
     objectOrReference: StoreObject | Reference,
     nameOrField: string | FieldNode,
     getFieldValue: FieldValueGetter,
     variables?: Record<string, any>,
-  ): StoreValue {
+  ): Readonly<V> {
     const policies = this;
     const typename = getFieldValue<string>(objectOrReference, "__typename");
     const storeFieldName = typeof nameOrField === "string" ? nameOrField
       : policies.getStoreFieldName(typename, nameOrField, variables);
     const fieldName = fieldNameFromStoreName(storeFieldName);
-    const existing = getFieldValue(objectOrReference, storeFieldName);
+    const existing = getFieldValue<V>(objectOrReference, storeFieldName);
     const policy = policies.getFieldPolicy(typename, fieldName, false);
     const read = policy && policy.read;
 
@@ -473,17 +473,17 @@ export class Policies {
         // I'm not sure why it's necessary to repeat the parameter types
         // here, but TypeScript complains if I leave them out.
         readField<T>(nameOrField: string | FieldNode, ref?: Reference) {
-          return policies.readField(
+          return policies.readField<T>(
             ref || objectOrReference,
             nameOrField,
             getFieldValue,
             variables,
-          ) as Readonly<T>;
+          );
         },
         invalidate() {
           policies.fieldDep.dirty(storage);
         },
-      });
+      }) as Readonly<V>;
     }
 
     return existing;

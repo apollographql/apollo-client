@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@babel/core": "7.7.5",
-    "@babel/plugin-transform-modules-commonjs": "7.7.4",
+    "@babel/plugin-transform-modules-commonjs": "7.7.5",
     "@babel/plugin-transform-modules-umd": "7.7.4",
     "@condenast/bundlesize": "0.18.1",
     "@octokit/rest": "16.35.0",

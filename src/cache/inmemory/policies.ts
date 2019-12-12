@@ -5,7 +5,7 @@ import {
   FieldNode,
 } from "graphql";
 
-import { KeyTrie } from 'optimism';
+import { dep, KeyTrie } from 'optimism';
 import invariant from 'ts-invariant';
 
 import {
@@ -20,9 +20,9 @@ import {
   storeKeyNameFromField,
   StoreValue,
   argumentsObjectFromField,
+  Reference,
   makeReference,
   isReference,
-  Reference,
 } from '../../utilities/graphql/storeUtils';
 
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -33,6 +33,7 @@ import {
 } from "./types";
 
 import { fieldNameFromStoreName } from './helpers';
+import { FieldValueGetter } from './readFromStore';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -45,12 +46,12 @@ export type TypePolicies = {
 type KeySpecifier = (string | any[])[];
 
 type KeyFieldsFunction = (
-  this: Policies,
   object: Readonly<StoreObject>,
   context: {
     typename: string;
     selectionSet?: SelectionSetNode;
     fragmentMap?: FragmentMap;
+    policies: Policies;
   },
 ) => ReturnType<IdGetter>;
 
@@ -74,11 +75,11 @@ type TypePolicy = {
 };
 
 type KeyArgsFunction = (
-  this: Policies,
   field: FieldNode,
   context: {
     typename: string;
     variables: Record<string, any>;
+    policies: Policies;
   },
 ) => ReturnType<IdGetter>;
 
@@ -89,70 +90,75 @@ export type FieldPolicy<TValue> = {
 };
 
 interface FieldFunctionOptions {
-  args: Record<string, any>;
-  field: FieldNode;
+  args: Record<string, any> | null;
+
+  // When a field function is called as part of reading or writing a
+  // query, options.field will be a FieldNode from the query, but it could
+  // be the field.name.value string instead, if the function was called
+  // via options.readField(fieldName).
+  field: string | FieldNode;
+
   variables?: Record<string, any>;
+
+  // In rare advanced use cases, a read or merge function may wish to
+  // consult the current Policies object, for example to call
+  // getStoreFieldName manually.
+  policies: Policies;
 
   // Utilities for dealing with { __ref } objects.
   isReference: typeof isReference;
   toReference: Policies["toReference"];
+}
 
-  // Gets the existing StoreValue for a given field within the current
-  // object, without calling any read functions, so it works even with the
-  // current field. If the provided FieldNode has arguments, the same
-  // options.variables will be used. If a foreignRef is provided, the
-  // value will be read from that object instead of the current object, so
-  // this function can be used (together with isReference) to examine the
-  // cache outside the current entity.
-  getFieldValue<T = StoreValue>(
-    field: string | FieldNode,
+type StorageType = Record<string, any>;
+
+interface ReadFunctionOptions extends FieldFunctionOptions {
+  // A handy place to put field-specific data that you want to survive
+  // across multiple read function calls. Useful for field-level caching,
+  // if your read function does any expensive work.
+  storage: StorageType;
+
+  // Call this function to invalidate any cached queries that previously
+  // consumed this field. If you use options.storage to cache the result
+  // of an expensive read function, updating options.storage and then
+  // calling options.invalidate() can be a good way to deliver the new
+  // result asynchronously.
+  invalidate(): void;
+
+  // Helper function for reading other fields within the current object.
+  // If a foreignRef is provided, the field will be read from that object
+  // instead of the current object, so this function can be used (together
+  // with isReference) to examine the cache outside the current entity.
+  // If a FieldNode is passed instead of a string, and that FieldNode has
+  // arguments, the same options.variables will be used to compute the
+  // argument values. Note that this function will invoke custom read
+  // functions for other fields, if defined.
+  readField<T = StoreValue>(
+    nameOrField: string | FieldNode,
     foreignRef?: Reference,
   ): Readonly<T>;
 }
 
-interface FieldReadFunction<TExisting, TResult = TExisting> {
-  (this: Policies,
-   // When reading a field, one often needs to know about any existing
-   // value stored for that field. If the field is read before any value
-   // has been written to the cache, this existing parameter will be
-   // undefined, which makes it easy to use a default parameter expression
-   // to supply the initial value. This parameter is positional (rather
-   // than one of the named options) because that makes it possible for
-   // the developer to annotate it with a type, without also having to
-   // provide a whole new type for the options object.
-   existing: Readonly<TExisting> | undefined,
-   options: FieldFunctionOptions,
-  ): TResult;
+type FieldReadFunction<TExisting, TResult = TExisting> = (
+  // When reading a field, one often needs to know about any existing
+  // value stored for that field. If the field is read before any value
+  // has been written to the cache, this existing parameter will be
+  // undefined, which makes it easy to use a default parameter expression
+  // to supply the initial value. This parameter is positional (rather
+  // than one of the named options) because that makes it possible for the
+  // developer to annotate it with a type, without also having to provide
+  // a whole new type for the options object.
+  existing: Readonly<TExisting> | undefined,
+  options: ReadFunctionOptions,
+) => TResult;
 
-  // The TypeScript typings for Function.prototype.call are much too generic
-  // to enforce the type safety we need here, for reasons discussed in this
-  // issue: https://github.com/microsoft/TypeScript/issues/212
-  // The strictBindCallApply compiler option (released in TS 3.2) promises to
-  // improve the behavior of the default F.p.call signature:
-  // https://github.com/microsoft/TypeScript/pull/27028
-  call(
-    self: Policies,
-    existing: Readonly<TExisting> | undefined,
-    options: FieldFunctionOptions,
-  ): TResult;
-}
-
-interface FieldMergeFunction<TExisting> {
-  (this: Policies,
-   existing: Readonly<TExisting> | undefined,
-   // The incoming parameter needs to be positional as well, for the same
-   // reasons discussed in FieldReadFunction above.
-   incoming: Readonly<StoreValue>,
-   options: FieldFunctionOptions,
-  ): TExisting;
-
-  call(
-    self: Policies,
-    existing: Readonly<TExisting> | undefined,
-    incoming: Readonly<StoreValue>,
-    options: FieldFunctionOptions,
-  ): TExisting;
-}
+type FieldMergeFunction<TExisting> = (
+  existing: Readonly<TExisting> | undefined,
+  // The incoming parameter needs to be positional as well, for the same
+  // reasons discussed in FieldReadFunction above.
+  incoming: Readonly<StoreValue>,
+  options: FieldFunctionOptions,
+) => TExisting;
 
 export function defaultDataIdFromObject(object: StoreObject) {
   const { __typename, id, _id } = object;
@@ -195,7 +201,7 @@ export class Policies {
   public readonly usingPossibleTypes = false;
 
   constructor(private config: {
-    dataIdFromObject?: IdGetter;
+    dataIdFromObject?: KeyFieldsFunction;
     possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
   } = {}) {
@@ -239,16 +245,18 @@ export class Policies {
       typename,
       selectionSet,
       fragmentMap,
+      policies: this,
     };
 
     let id: string | null;
 
     const policy = this.getTypePolicy(typename, false);
-    if (policy && policy.keyFn) {
-      id = policy.keyFn.call(this, object, context);
+    const keyFn = policy && policy.keyFn;
+    if (keyFn) {
+      id = keyFn(object, context);
     } else {
       id = this.config.dataIdFromObject
-        ? this.config.dataIdFromObject.call(this, object, context)
+        ? this.config.dataIdFromObject(object, context)
         : null;
     }
 
@@ -401,12 +409,14 @@ export class Policies {
 
     if (typeof typename === "string") {
       const policy = this.getFieldPolicy(typename, fieldName, false);
-      if (policy && policy.keyFn) {
+      const keyFn = policy && policy.keyFn;
+      if (keyFn) {
         // If the custom keyFn returns a falsy value, fall back to
         // fieldName instead.
-        storeFieldName = policy.keyFn.call(this, field, {
+        storeFieldName = keyFn(field, {
           typename,
           variables,
+          policies: this,
         }) || fieldName;
       }
     }
@@ -423,35 +433,62 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  public readFieldFromStoreObject(
-    field: FieldNode,
-    getFieldValue: (
-      field: string,
-      foreignRef?: Reference,
-    ) => any,
-    typename = getFieldValue("__typename") as string,
+  private storageTrie = new KeyTrie<StorageType>(true);
+  private fieldDep = dep<StorageType>();
+
+  public readField<V = StoreValue>(
+    objectOrReference: StoreObject | Reference,
+    nameOrField: string | FieldNode,
+    getFieldValue: FieldValueGetter,
     variables?: Record<string, any>,
-  ): StoreValue {
+    typename = getFieldValue<string>(objectOrReference, "__typename"),
+  ): Readonly<V> {
     const policies = this;
-    const storeFieldName = policies.getStoreFieldName(typename, field, variables);
-    const existing = getFieldValue(storeFieldName);
-    const policy = policies.getFieldPolicy(typename, field.name.value, false);
-    if (policy && policy.read) {
-      return policy.read.call(policies, existing, {
-        args: argumentsObjectFromField(field, variables),
-        field,
+    const storeFieldName = typeof nameOrField === "string" ? nameOrField
+      : policies.getStoreFieldName(typename, nameOrField, variables);
+    const fieldName = fieldNameFromStoreName(storeFieldName);
+    const existing = getFieldValue<V>(objectOrReference, storeFieldName);
+    const policy = policies.getFieldPolicy(typename, fieldName, false);
+    const read = policy && policy.read;
+
+    if (read) {
+      const storage = policies.storageTrie.lookup(
+        isReference(objectOrReference)
+          ? objectOrReference.__ref
+          : objectOrReference,
+        storeFieldName,
+      );
+
+      // By depending on the options.storage object when we call
+      // policy.read, we can easily invalidate the result of the read
+      // function when/if the options.invalidate function is called.
+      policies.fieldDep(storage);
+
+      return read(existing, {
+        args: typeof nameOrField === "string" ? null :
+          argumentsObjectFromField(nameOrField, variables),
+        field: typeof nameOrField === "string" ? fieldName : nameOrField,
         variables,
+        policies,
         isReference,
         toReference: policies.toReference,
-        getFieldValue(nameOrField, foreignRef) {
-          return getFieldValue(
-            typeof nameOrField === "string" ? nameOrField :
-              policies.getStoreFieldName(typename, nameOrField, variables),
-            foreignRef,
+        storage,
+        // I'm not sure why it's necessary to repeat the parameter types
+        // here, but TypeScript complains if I leave them out.
+        readField<T>(nameOrField: string | FieldNode, ref?: Reference) {
+          return policies.readField<T>(
+            ref || objectOrReference,
+            nameOrField,
+            getFieldValue,
+            variables,
           );
         },
-      });
+        invalidate() {
+          policies.fieldDep.dirty(storage);
+        },
+      }) as Readonly<V>;
     }
+
     return existing;
   }
 
@@ -462,25 +499,22 @@ export class Policies {
   ): StoreValueMergeFunction {
     const policies = this;
     const policy = policies.getFieldPolicy(typename, field.name.value, false);
-    if (policy && policy.merge) {
+    const merge = policy && policy.merge;
+    if (merge) {
       const args = argumentsObjectFromField(field, variables);
       return (
         existing: StoreValue,
         incoming: StoreValue,
-      ) => policy.merge.call(policies, existing, incoming, {
+      ) => merge(existing, incoming, {
         args,
         field,
         variables,
+        policies,
         isReference,
         toReference: policies.toReference,
-        getFieldValue: emptyGetFieldValueForMerge,
       });
     }
   }
-}
-
-function emptyGetFieldValueForMerge(): any {
-  invariant.warn("getFieldValue unavailable in merge functions");
 }
 
 export type StoreValueMergeFunction = (

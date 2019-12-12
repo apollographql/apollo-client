@@ -330,10 +330,10 @@ describe('Link interactions', () => {
         typePolicies: {
           Query: {
             fields: {
-              book(_, { args, toReference, getFieldValue }) {
+              book(_, { args, toReference, readField }) {
                 const ref = toReference({ __typename: "Book", id: args.id });
                 expect(ref).toEqual({ __ref: `Book:${args.id}` });
-                const found = (getFieldValue("books") as Reference[]).find(
+                const found = readField<Reference[]>("books").find(
                   book => book.__ref === ref.__ref);
                 expect(found).toBeTruthy();
                 return found;

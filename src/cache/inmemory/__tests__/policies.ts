@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
-import { FieldPolicy } from "../policies";
+import { FieldPolicy, Policies } from "../policies";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 
 describe("type policies", function () {
@@ -159,6 +159,7 @@ describe("type policies", function () {
           keyFields(book, context) {
             expect(context.selectionSet.kind).toBe("SelectionSet");
             expect(context.fragmentMap).toEqual({});
+            expect(context.policies).toBeInstanceOf(Policies);
             return context.typename + ":" + book.isbn;
           },
         },
@@ -392,15 +393,144 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
+    it("can use stable storage in read functions", function () {
+      const storageSet = new Set<Record<string, any>>();
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Task: {
+            fields: {
+              result(existing, { args, storage }) {
+                storageSet.add(storage);
+                if (storage.result) return storage.result;
+                return storage.result = compute(args);
+              },
+            },
+          },
+        },
+      });
+
+      let computeCount = 0;
+      function compute(args) {
+        return `expensive result ${++computeCount}`;
+      }
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            tasks {
+              id
+            }
+          }
+        `,
+        data: {
+          tasks: [{
+            __typename: "Task",
+            id: 1,
+          }, {
+            __typename: "Task",
+            id: 2,
+          }],
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          tasks: [
+            { __ref: "Task:1" },
+            { __ref: "Task:2" },
+          ],
+        },
+        "Task:1": {
+          __typename: "Task",
+          id: 1,
+        },
+        "Task:2": {
+          __typename: "Task",
+          id: 2,
+        },
+      });
+
+      const result1 = cache.readQuery({
+        query: gql`
+          query {
+            tasks {
+              result
+            }
+          }
+        `,
+      });
+
+      expect(result1).toEqual({
+        tasks: [{
+          __typename: "Task",
+          result: "expensive result 1",
+        }, {
+          __typename: "Task",
+          result: "expensive result 2",
+        }],
+      });
+
+      const result2 = cache.readQuery({
+        query: gql`
+          query {
+            tasks {
+              id
+              result
+            }
+          }
+        `,
+      });
+
+      expect(result2).toEqual({
+        tasks: [{
+          __typename: "Task",
+          id: 1,
+          result: "expensive result 1",
+        }, {
+          __typename: "Task",
+          id: 2,
+          result: "expensive result 2",
+        }],
+      });
+
+      // Clear the cached results.
+      storageSet.forEach(storage => {
+        delete storage.result;
+      });
+
+      const result3 = cache.readQuery({
+        query: gql`
+          query {
+            tasks {
+              __typename
+              result
+            }
+          }
+        `,
+      });
+
+      expect(result3).toEqual({
+        tasks: [{
+          __typename: "Task",
+          result: "expensive result 3",
+        }, {
+          __typename: "Task",
+          result: "expensive result 4",
+        }],
+      });
+    });
+
     it("can use read function to implement synthetic/computed keys", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Person: {
             keyFields: ["firstName", "lastName"],
             fields: {
-              fullName(_, { getFieldValue }) {
-                const firstName = getFieldValue("firstName");
-                const lastName = getFieldValue("lastName");
+              fullName(_, { readField }) {
+                const firstName = readField("firstName");
+                const lastName = readField("lastName");
                 return `${firstName} ${lastName}`;
               },
             },
@@ -472,6 +602,473 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
+    it("readField helper function calls custom read functions", function () {
+      // Rather than writing ownTime data into the cache, we maintain it
+      // externally in this object:
+      const ownTimes = {
+        "parent task": 2,
+        "child task 1": 3,
+        "child task 2": 4,
+        "grandchild task": 5,
+        "independent task": 11,
+      };
+
+      const invalidators: Record<string, () => void> = {};
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Agenda: {
+            fields: {
+              taskCount(_, { readField }) {
+                return readField<Reference[]>("tasks").length;
+              },
+
+              tasks: {
+                // Thanks to this read function, the readField("tasks")
+                // call above will always return an array, so we don't
+                // have to guard against the possibility that the tasks
+                // data is undefined above.
+                read(existing = []) {
+                  return existing;
+                },
+
+                merge(existing: Reference[], incoming: Reference[]) {
+                  const merged = existing ? existing.slice(0) : [];
+                  merged.push(...incoming);
+                  return merged;
+                },
+              },
+            },
+          },
+
+          Task: {
+            fields: {
+              ownTime(_, { readField, invalidate }) {
+                const desc = readField<string>("description");
+                // Store the invalidate function so that we can call it
+                // after updating the external ownTimes data.
+                invalidators[desc] = invalidate;
+                return ownTimes[desc] || 0;
+              },
+
+              totalTime(_, { readField, toReference }) {
+                function total(
+                  blockers: Readonly<Reference[]> = [],
+                  seen = new Set<string>(),
+                ) {
+                  let time = 0;
+                  blockers.forEach(blocker => {
+                    if (!seen.has(blocker.__ref)) {
+                      seen.add(blocker.__ref);
+                      time += readField<number>("ownTime", blocker);
+                      time += total(
+                        readField<Reference[]>("blockers", blocker),
+                        seen,
+                      );
+                    }
+                  });
+                  return time;
+                }
+                return total([
+                  toReference({
+                    __typename: "Task",
+                    id: readField("id"),
+                  }),
+                ]);
+              },
+
+              blockers: {
+                merge(existing: Reference[] = [], incoming: Reference[]) {
+                  const seenIDs = new Set(existing.map(ref => ref.__ref));
+                  const merged = existing.slice(0);
+                  incoming.forEach(ref => {
+                    if (!seenIDs.has(ref.__ref)) {
+                      seenIDs.add(ref.__ref);
+                      merged.push(ref);
+                    }
+                  });
+                  return merged;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            agenda {
+              id
+              tasks {
+                id
+                description
+                blockers {
+                  id
+                }
+              }
+            }
+          }
+        `,
+        data: {
+          agenda: {
+            __typename: "Agenda",
+            id: 1,
+            tasks: [{
+              __typename: "Task",
+              id: 1,
+              description: "parent task",
+              blockers: [{
+                __typename: "Task",
+                id: 2,
+              }, {
+                __typename: "Task",
+                id: 3,
+              }],
+            }, {
+              __typename: "Task",
+              id: 2,
+              description: "child task 1",
+              blockers: [{
+                __typename: "Task",
+                id: 4,
+              }],
+            }, {
+              __typename: "Task",
+              id: 3,
+              description: "child task 2",
+              blockers: [{
+                __typename: "Task",
+                id: 4,
+              }],
+            }, {
+              __typename: "Task",
+              id: 4,
+              description: "grandchild task",
+            }],
+          },
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          agenda: { __ref: "Agenda:1" },
+        },
+        "Agenda:1": {
+          __typename: "Agenda",
+          id: 1,
+          tasks: [
+            { __ref: "Task:1" },
+            { __ref: "Task:2" },
+            { __ref: "Task:3" },
+            { __ref: "Task:4" },
+          ],
+        },
+        "Task:1": {
+          __typename: "Task",
+          blockers: [
+            { __ref: "Task:2" },
+            { __ref: "Task:3" },
+          ],
+          description: "parent task",
+          id: 1,
+        },
+        "Task:2": {
+          __typename: "Task",
+          blockers: [
+            { __ref: "Task:4" },
+          ],
+          description: "child task 1",
+          id: 2,
+        },
+        "Task:3": {
+          __typename: "Task",
+          blockers: [
+            { __ref: "Task:4" },
+          ],
+          description: "child task 2",
+          id: 3,
+        },
+        "Task:4": {
+          __typename: "Task",
+          description: "grandchild task",
+          id: 4,
+        },
+      });
+
+      const query = gql`
+        query {
+          agenda {
+            taskCount
+            tasks {
+              description
+              ownTime
+              totalTime
+            }
+          }
+        }
+      `;
+
+      function read() {
+        return cache.readQuery<{ agenda: any }>({ query });
+      }
+
+      const firstResult = read();
+
+      expect(firstResult).toEqual({
+        agenda: {
+          __typename: "Agenda",
+          taskCount: 4,
+          tasks: [{
+            __typename: "Task",
+            description: "parent task",
+            ownTime: 2,
+            totalTime: 2 + 3 + 4 + 5,
+          }, {
+            __typename: "Task",
+            description: "child task 1",
+            ownTime: 3,
+            totalTime: 3 + 5,
+          }, {
+            __typename: "Task",
+            description: "child task 2",
+            ownTime: 4,
+            totalTime: 4 + 5,
+          }, {
+            __typename: "Task",
+            description: "grandchild task",
+            ownTime: 5,
+            totalTime: 5,
+          }],
+        },
+      });
+
+      expect(read()).toBe(firstResult);
+
+      ownTimes["child task 2"] = 6;
+
+      // The query will not be reevaluated until we invalidate the read
+      // function whose result we changed.
+      expect(read()).toBe(firstResult);
+
+      invalidators["child task 2"]();
+
+      const secondResult = read();
+      expect(secondResult).not.toBe(firstResult);
+      expect(secondResult).toEqual({
+        agenda: {
+          __typename: "Agenda",
+          taskCount: 4,
+          tasks: [{
+            __typename: "Task",
+            description: "parent task",
+            ownTime: 2,
+            totalTime: 2 + 3 + 6 + 5,
+          }, {
+            __typename: "Task",
+            description: "child task 1",
+            ownTime: 3,
+            totalTime: 3 + 5,
+          }, {
+            __typename: "Task",
+            description: "child task 2",
+            ownTime: 6,
+            totalTime: 6 + 5,
+          }, {
+            __typename: "Task",
+            description: "grandchild task",
+            ownTime: 5,
+            totalTime: 5,
+          }],
+        },
+      });
+      expect(secondResult.agenda.tasks[0]).not.toBe(firstResult.agenda.tasks[0]);
+      expect(secondResult.agenda.tasks[1]).toBe(firstResult.agenda.tasks[1]);
+      expect(secondResult.agenda.tasks[2]).not.toBe(firstResult.agenda.tasks[2]);
+      expect(secondResult.agenda.tasks[3]).toBe(firstResult.agenda.tasks[3]);
+
+      ownTimes["grandchild task"] = 7;
+      invalidators["grandchild task"]();
+
+      const thirdResult = read();
+      expect(thirdResult).not.toBe(secondResult);
+      expect(thirdResult).toEqual({
+        agenda: {
+          __typename: "Agenda",
+          taskCount: 4,
+          tasks: [{
+            __typename: "Task",
+            description: "parent task",
+            ownTime: 2,
+            totalTime: 2 + 3 + 6 + 7,
+          }, {
+            __typename: "Task",
+            description: "child task 1",
+            ownTime: 3,
+            totalTime: 3 + 7,
+          }, {
+            __typename: "Task",
+            description: "child task 2",
+            ownTime: 6,
+            totalTime: 6 + 7,
+          }, {
+            __typename: "Task",
+            description: "grandchild task",
+            ownTime: 7,
+            totalTime: 7,
+          }],
+        },
+      });
+
+      cache.writeQuery({
+        query: gql`
+          query {
+            agenda {
+              id
+              tasks {
+                id
+                description
+              }
+            }
+          }
+        `,
+        data: {
+          agenda: {
+            __typename: "Agenda",
+            id: 1,
+            tasks: [{
+              __typename: "Task",
+              id: 5,
+              description: "independent task",
+            }],
+          },
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          agenda: { __ref: "Agenda:1" },
+        },
+        "Agenda:1": {
+          __typename: "Agenda",
+          id: 1,
+          tasks: [
+            { __ref: "Task:1" },
+            { __ref: "Task:2" },
+            { __ref: "Task:3" },
+            { __ref: "Task:4" },
+            { __ref: "Task:5" },
+          ],
+        },
+        "Task:1": {
+          __typename: "Task",
+          blockers: [
+            { __ref: "Task:2" },
+            { __ref: "Task:3" },
+          ],
+          description: "parent task",
+          id: 1,
+        },
+        "Task:2": {
+          __typename: "Task",
+          blockers: [
+            { __ref: "Task:4" },
+          ],
+          description: "child task 1",
+          id: 2,
+        },
+        "Task:3": {
+          __typename: "Task",
+          blockers: [
+            { __ref: "Task:4" },
+          ],
+          description: "child task 2",
+          id: 3,
+        },
+        "Task:4": {
+          __typename: "Task",
+          description: "grandchild task",
+          id: 4,
+        },
+        "Task:5": {
+          __typename: "Task",
+          description: "independent task",
+          id: 5,
+        },
+      });
+
+      const fourthResult = read();
+      expect(fourthResult).not.toBe(thirdResult);
+      expect(fourthResult).toEqual({
+        agenda: {
+          __typename: "Agenda",
+          taskCount: 5,
+          tasks: [{
+            __typename: "Task",
+            description: "parent task",
+            ownTime: 2,
+            totalTime: 2 + 3 + 6 + 7,
+          }, {
+            __typename: "Task",
+            description: "child task 1",
+            ownTime: 3,
+            totalTime: 3 + 7,
+          }, {
+            __typename: "Task",
+            description: "child task 2",
+            ownTime: 6,
+            totalTime: 6 + 7,
+          }, {
+            __typename: "Task",
+            description: "grandchild task",
+            ownTime: 7,
+            totalTime: 7,
+          }, {
+            __typename: "Task",
+            description: "independent task",
+            ownTime: 11,
+            totalTime: 11,
+          }],
+        },
+      });
+
+      function checkFirstFourIdentical(result: ReturnType<typeof read>) {
+        for (let i = 0; i < 4; ++i) {
+          expect(result.agenda.tasks[i]).toBe(thirdResult.agenda.tasks[i]);
+        }
+      }
+      // The four original task results should not have been altered by
+      // the addition of a fifth independent task.
+      checkFirstFourIdentical(fourthResult);
+
+      ++ownTimes["independent task"];
+      invalidators["independent task"]();
+
+      const fifthResult = read();
+      expect(fifthResult).not.toBe(fourthResult);
+      expect(fifthResult).toEqual({
+        agenda: {
+          __typename: "Agenda",
+          taskCount: 5,
+          tasks: [
+            fourthResult.agenda.tasks[0],
+            fourthResult.agenda.tasks[1],
+            fourthResult.agenda.tasks[2],
+            fourthResult.agenda.tasks[3],
+            {
+              __typename: "Task",
+              description: "independent task",
+              ownTime: 12,
+              totalTime: 12,
+            },
+          ],
+        },
+      });
+      checkFirstFourIdentical(fifthResult);
+    });
+
     it("can return void to indicate missing field", function () {
       let secretReadAttempted = false;
 
@@ -538,9 +1135,15 @@ describe("type policies", function () {
               todos: {
                 keyArgs: [],
 
-                read(existing: any[], { args, toReference, isReference }) {
+                read(existing: any[], {
+                  args,
+                  toReference,
+                  isReference,
+                  policies,
+                }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
+                  expect(policies).toBeInstanceOf(Policies);
                   const slice = existing.slice(
                     args.offset,
                     args.offset + args.limit,
@@ -553,9 +1156,11 @@ describe("type policies", function () {
                   args,
                   toReference,
                   isReference,
+                  policies,
                 }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
+                  expect(policies).toBeInstanceOf(Policies);
                   const copy = existing ? existing.slice(0) : [];
                   const limit = args.offset + args.limit;
                   for (let i = args.offset; i < limit; ++i) {
@@ -1053,7 +1658,7 @@ describe("type policies", function () {
     });
   });
 
-  it("can read from foreign references using getFieldValue", function () {
+  it("can read from foreign references using read helper", function () {
     const cache = new InMemoryCache({
       typePolicies: {
         Author: {
@@ -1069,13 +1674,13 @@ describe("type policies", function () {
             // A dynamically computed field that returns the Book
             // Reference with the earliest year, which requires reading
             // fields from foreign references.
-            firstBook(_, { isReference, getFieldValue }) {
+            firstBook(_, { isReference, readField }) {
               let firstBook: Reference;
               let firstYear: number;
-              const bookRefs = getFieldValue<Reference[]>("books") || [];
+              const bookRefs = readField<Reference[]>("books") || [];
               bookRefs.forEach(bookRef => {
                 expect(isReference(bookRef)).toBe(true);
-                const year = getFieldValue<number>("year", bookRef);
+                const year = readField<number>("year", bookRef);
                 if (firstYear === void 0 || year < firstYear) {
                   firstBook = bookRef;
                   firstYear = year;

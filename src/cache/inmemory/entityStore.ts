@@ -450,11 +450,6 @@ const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
       return incoming;
     }
 
-    invariant(
-      !isReference(existing) || isReference(incoming),
-      `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
-    );
-
     // It's worth checking deep equality here (even though blindly
     // returning incoming would be logically correct) because preserving
     // the referential identity of existing data can prevent needless
@@ -462,12 +457,75 @@ const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
     if (equal(existing, incoming)) {
       return existing;
     }
+
+    if (process.env.NODE_ENV !== 'production') {
+      warnAboutDataLoss(existingObject, incomingObject, property, store);
+    }
   }
 
   // In all other cases, incoming replaces existing without any effort to
   // merge them deeply, since custom merge functions have already been
   // applied to the incoming data by walkWithMergeOverrides.
   return incoming;
+}
+
+function warnAboutDataLoss(
+  existingObject: Record<string | number, any>,
+  incomingObject: Record<string | number, any>,
+  property: string | number,
+  store: EntityStore,
+) {
+  const existing = existingObject[property];
+  const incoming = incomingObject[property];
+
+  if (!isReference(existing) &&
+      !isReference(incoming) &&
+      !Object.keys(existing).every(key => hasOwn.call(incoming, key))) {
+    const fieldName = fieldNameFromStoreName(String(property));
+
+    const parentType =
+      getTypenameFromStoreObject(store, existingObject) ||
+      getTypenameFromStoreObject(store, incomingObject);
+
+    const childTypenames: string[] = [];
+    // Arrays always need a custom merge function, even if their elements
+    // are normalized entities.
+    if (!Array.isArray(existing) &&
+        !Array.isArray(incoming)) {
+      [existing, incoming].forEach(child => {
+        const typename = getTypenameFromStoreObject(store, child);
+        if (typeof typename === "string" &&
+            !childTypenames.includes(typename)) {
+          childTypenames.push(typename);
+        }
+      });
+    }
+
+    invariant.warn(
+`Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
+
+To address this problem (which is not a bug in Apollo Client), ${
+  childTypenames.length
+    ? "either ensure that objects of type " +
+        childTypenames.join(" and ") + " have IDs, or "
+    : ""
+}define a custom merge function for the ${
+  parentType
+}.${
+  fieldName
+} field, so the InMemoryCache can safely merge these objects:
+
+  existing: ${JSON.stringify(existing).slice(0, 1000)}
+  incoming: ${JSON.stringify(incoming).slice(0, 1000)}
+
+For more information about these options, please refer to the documentation:
+
+  * Ensuring entity objects have IDs: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-configuration/#generating-unique-identifiers
+
+  * Defining custom merge functions: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-field-behavior/#merging-non-normalized-objects
+`
+    );
+  }
 }
 
 export function supportsResultCaching(store: any): store is EntityStore {

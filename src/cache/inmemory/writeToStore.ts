@@ -35,15 +35,11 @@ export type WriteContext = {
   readonly written: {
     [dataId: string]: SelectionSetNode[];
   };
-  readonly mergeFields: StoreObjectMergeFunction;
   readonly variables?: any;
   readonly fragmentMap?: FragmentMap;
+  // General-purpose deep-merge function for use during writes.
+  merge<T>(existing: T, incoming: T): T;
 };
-
-type StoreObjectMergeFunction = (
-  existing: StoreObject,
-  incoming: StoreObject,
-) => StoreObject;
 
 type MergeOverrides = Record<string | number, {
   merge?: StoreValueMergeFunction;
@@ -96,7 +92,7 @@ export class StoreWriter {
     // A DeepMerger that merges arrays and objects structurally, but otherwise
     // prefers incoming scalar values over existing values. Used to accumulate
     // fields when processing a single selection set.
-    const simpleFieldsMerger = new DeepMerger;
+    const simpleMerger = new DeepMerger;
 
     return this.writeSelectionSetToStore({
       result: result || Object.create(null),
@@ -105,8 +101,8 @@ export class StoreWriter {
       context: {
         store,
         written: Object.create(null),
-        mergeFields(existing, incoming) {
-          return simpleFieldsMerger.merge(existing, incoming);
+        merge<T>(existing: T, incoming: T) {
+          return simpleMerger.merge(existing, incoming) as T;
         },
         variables: {
           ...getDefaultValues(operationDefinition),
@@ -212,13 +208,13 @@ export class StoreWriter {
 
           if (merge || processed.mergeOverrides) {
             mergeOverrides = mergeOverrides || Object.create(null);
-            mergeOverrides[storeFieldName] = context.mergeFields(
+            mergeOverrides[storeFieldName] = context.merge(
               mergeOverrides[storeFieldName],
               { merge, child: processed.mergeOverrides },
-            ) as MergeOverrides[string];
+            );
           }
 
-          mergedFields = context.mergeFields(mergedFields, {
+          mergedFields = context.merge(mergedFields, {
             [storeFieldName]: processed.result,
           });
 
@@ -251,16 +247,22 @@ export class StoreWriter {
         );
 
         if (this.policies.fragmentMatches(fragment, typename)) {
-          mergedFields = context.mergeFields(
-            mergedFields,
-            this.processSelectionSet({
-              result,
-              selectionSet: fragment.selectionSet,
-              context,
+          const processed = this.processSelectionSet({
+            result,
+            selectionSet: fragment.selectionSet,
+            context,
+            mergeOverrides,
+            typename,
+          });
+
+          mergedFields = context.merge(mergedFields, processed.result);
+
+          if (processed.mergeOverrides) {
+            mergeOverrides = context.merge(
               mergeOverrides,
-              typename,
-            }).result,
-          );
+              processed.mergeOverrides
+            );
+          }
         }
       }
     });

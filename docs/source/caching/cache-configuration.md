@@ -267,7 +267,7 @@ Here are the `FieldPolicy` type and its related types:
 
 ```ts
 export type FieldPolicy<TValue> = {
-  keyArgs?: KeySpecifier | KeyArgsFunction;
+  keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TValue>;
   merge?: FieldMergeFunction<TValue>;
 };
@@ -277,12 +277,31 @@ type KeyArgsFunction = (
   context: {
     typename: string;
     variables: Record<string, any>;
+    policies: Policies;
   },
 ) => string | null | void;
 
+interface FieldFunctionOptions {
+  args: Record<string, any> | null;
+  field: string | FieldNode;
+  variables?: Record<string, any>;
+  policies: Policies;
+  isReference(obj: any): obj is Reference;
+  toReference(obj: StoreObject): Reference;
+}
+
+interface ReadFunctionOptions extends FieldFunctionOptions {
+  readField<T = StoreValue>(
+    nameOrField: string | FieldNode,
+    foreignObjOrRef?: StoreObject | Reference,
+  ): Readonly<T>;
+  storage: Record<string, any>;
+  invalidate(): void;
+}
+
 type FieldReadFunction<TExisting, TResult = TExisting> = (
   existing: Readonly<TExisting> | undefined,
-  options: FieldFunctionOptions,
+  options: ReadFunctionOptions,
 ) => TResult;
 
 type FieldMergeFunction<TExisting> = (
@@ -290,13 +309,6 @@ type FieldMergeFunction<TExisting> = (
   incoming: Readonly<StoreValue>,
   options: FieldFunctionOptions,
 ) => TExisting;
-
-interface FieldFunctionOptions {
-  args: Record<string, any>;
-  parentObject: Readonly<StoreObject>;
-  field: FieldNode;
-  variables?: Record<string, any>;
-}
 ```
 
 In the sections below, we will break down these types with explanations and examples.
@@ -338,3 +350,271 @@ const cache = new InMemoryCache({
 That said, you might be able to assume the `token` is always the same, or you might not be worried about duplicating field values in the cache, so neglecting to specify `keyArgs: ["key"]` probably will not cause any major problems. Use `keyArgs` when it helps.
 
 On the other hand, perhaps you've requested the secret from the server using the access `token`, but you want various components on your page to be able to access the secret using only they `key`, without having to know the `token`. Storing the value in the cache using only the `key` makes this retrieval possible.
+
+### Reading and merging fields
+
+The GraphQL query language provides a uniform and ergonomic way of reading nested, tree-shaped data from a data graph. However, when you query the `InMemoryCache` rather than sending queries to a GraphQL server, you're reading data from a _client-side data graph_, which is almost always an incomplete copy of the data graph exposed by the server.
+
+To ensure your client-side data graph accurately reproduces the entities and relationships from your server-side data graph, while also extending the server graph with client-only information, you can define custom `read` and `merge` functions as part of any `FieldPolicy`. These functions will be invoked whenever the field is queried (`read`) or updated with new data (`merge`).
+
+#### Custom `read` functions
+
+The most basic custom `read` function simply returns existing data from the cache, without modification:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        name: {
+          read(name: string) {
+            return name;
+          },
+        },
+
+        // Since read functions are so common, you can collapse the FieldPolicy
+        // into a single method, if you only need to define a read function.
+        age(age: number) {
+          return age;
+        },
+      },
+    },
+  },
+});
+```
+
+Neither of these `read` functions really needs to be defined, since they both do exactly what the cache already does by default: they return existing cache data.
+
+Things start to get interesting when you define a `read` function for data that does not exist in the cache:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        userId() {
+          return localStorage.loggedInUserId;
+        },
+      },
+    },
+  },
+});
+```
+
+Or when you want to tweak the existing data slightly:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        age(floatingPointAge: number) {
+          return Math.round(floatingPointAge);
+        },
+      },
+    },
+  },
+});
+```
+
+Or when you want to provide a default value for potentially nonexistent cache data:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        name(name = "Jane Doe") {
+          return name;
+        },
+
+        age(age = /* Median American age: */ 38.1) {
+          return age;
+        },
+      },
+    },
+  },
+});
+```
+
+Or when you want to define computed fields in terms of other fields:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        ageInDogYears(_, { readField }) {
+          // In TypeScript it can be useful to coerce the field value to a known
+          // type, such as number:
+          return readField<number>("age") / 7;
+        },
+
+        // Since this field does not exist in the cache, we ignore the non-existent
+        // existing data given by the first parameter.
+        fullName(_, { readField }) {
+          const firstName = readField<string>("firstName");
+          const lastName = readField<string>("lastName");
+          if (firstName && lastName) {
+            return `${firstName} ${firstName}`;
+          }
+          // Returning undefined indicates the fullName field is missing, because
+          // one or more of its dependencies was not available.
+        },
+      },
+    },
+  },
+});
+```
+
+You can even read fields from other entities in the cache:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        youngestFriend(_, { readField }) {
+          let youngestFriend: object | undefined;
+          let minAge = Infinity;
+          const friends = readField("friends") || [];
+          friends.forEach(friend => {
+            // Passing an object or Reference as the second argument to readField
+            // causes the field value to be read from that entity instead of the
+            // current entity.
+            const friendAge = readField<number>("age", friend);
+            if (friendAge < minAge) {
+              minAge = friendAge;
+              youngestFriend = friend;
+            }
+          });
+          return youngestFriend;
+        },
+      },
+    },
+  },
+});
+```
+
+If the field takes arguments, a `read` function can be used to interpret those arguments:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        // Optionally allow asking for the person's age in any units.
+        age(ageInYears: number, { args }) {
+          if (args && typeof args.units === "string") {
+            return convertUnits(ageInYears, "years", args.units);
+          }
+          return ageInYears;
+        },
+
+        // Sorting/filtering/pagination of the person's list of friends.
+        friends(friendRefs: Reference[], { args, readField }) {
+          if (args && typeof args.sortBy === "string") {
+            // Sort the refs first, if requested. Note that friendRefs is an
+            // immutable array, which is why friendRefs.slice(0) is necessary.
+            friendRefs = friendRefs.slice(0).sort((a, b) => compareBy(
+              args.sortBy,
+              readField(args.sortBy, a),
+              readField(args.sortBy, b),
+            ));
+          }
+
+          if (args && typeof args.limit === "number") {
+            // Offset/limit-based pagination:
+            if (typeof args.offset === "number") {
+              return friendRefs.slice(args.offset, args.offset + args.limit);
+            }
+
+            // Other kinds of pagination:
+            if (typeof args.startId === "string") {
+              const offset = friendRefs.findIndex(
+                ref => readField("id", ref) === args.startId);
+              if (offset >= 0) {
+                return friendRefs.slice(offset, offset + args.limit);
+              }
+            }
+
+            // Returning undefined indicates that the field is missing.
+            // Throwing an exception might also be appropriate here.
+            return;
+          }
+
+          // Return the whole list if no pagination arguments provided.
+          return friendRefs;
+        },
+      },
+    },
+  },
+});
+```
+
+Now that you've gotten a taste for the power and flexibility of `read` functions, let's have a look at all the options that are provided by the second parameter:
+
+```ts
+// These options are common to both read and merge functions:
+interface FieldFunctionOptions {
+  // The final argument values passed to the field, after applying variables.
+  // If no arguments were provided, this property will be null.
+  args: Record<string, any> | null;
+
+  // The name of the field, equal to options.field.name.value when
+  // options.field is available. Useful if you reuse the same function for
+  // multiple fields, and you need to know which field you're currently
+  // processing. Always a string, even when options.field is null.
+  fieldName: string;
+
+  // The FieldNode object used to read this field. Useful if you need to
+  // know about other attributes of the field, such as its directives. This
+  // option will be null when a string was passed to options.readField.
+  field: FieldNode | null;
+
+  // The variables that were provided when reading the query that contained
+  // this field. Possibly undefined, if no variables were provided.
+  variables?: Record<string, any>;
+
+  // Utilities for handling { __ref: string } references.
+  isReference(obj: any): obj is Reference;
+  toReference(obj: StoreObject): Reference;
+
+  // A reference to the Policies object created by passing typePolicies to
+  // the InMemoryCache constructor, for advanced/internal use.
+  policies: Policies;
+}
+
+// These options are specific to read functions:
+interface ReadFunctionOptions extends FieldFunctionOptions {
+  // Helper function for reading other fields within the current object.
+  // If a foreign object or reference is provided, the field will be read
+  // from that object instead of the current object, so this function can
+  // be used (together with isReference) to examine the cache outside the
+  // current object. If a FieldNode is passed instead of a string, and
+  // that FieldNode has arguments, the same options.variables will be used
+  // to compute the argument values. Note that this function will invoke
+  // custom read functions for other fields, if defined. Always returns
+  // immutable data (enforced with Object.freeze in development).
+  readField<T = StoreValue>(
+    nameOrField: string | FieldNode,
+    foreignObjOrRef?: StoreObject | Reference,
+  ): Readonly<T>;
+
+  // A handy place to put field-specific data that you want to survive
+  // across multiple read function calls. Useful for caching.
+  storage: Record<string, any>;
+
+  // Call this function to invalidate any cached queries that previously
+  // consumed this field. If you use options.storage as a cache, setting a
+  // new value in the cache and then calling options.invalidate() can be a
+  // good way to deliver asynchronous results.
+  invalidate(): void;
+}
+```
+
+You will almost never need to use all of these options at the same time, but each one has an important role to play when reading unusual fields from the cache.
+
+#### Custom `merge` functions
+
+TODO

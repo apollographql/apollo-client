@@ -114,13 +114,15 @@ type StorageType = Record<string, any>;
 
 interface ReadFunctionOptions extends FieldFunctionOptions {
   // A handy place to put field-specific data that you want to survive
-  // across multiple read function calls. Useful for caching.
+  // across multiple read function calls. Useful for field-level caching,
+  // if your read function does any expensive work.
   storage: StorageType;
 
   // Call this function to invalidate any cached queries that previously
-  // consumed this field. If you use options.storage as a cache, setting a
-  // new value in the cache and then calling options.invalidate() can be a
-  // good way to deliver asynchronous results.
+  // consumed this field. If you use options.storage to cache the result
+  // of an expensive read function, updating options.storage and then
+  // calling options.invalidate() can be a good way to deliver the new
+  // result asynchronously.
   invalidate(): void;
 
   // Helper function for reading other fields within the current object.

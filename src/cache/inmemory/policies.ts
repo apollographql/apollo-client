@@ -441,9 +441,9 @@ export class Policies {
     nameOrField: string | FieldNode,
     getFieldValue: FieldValueGetter,
     variables?: Record<string, any>,
+    typename = getFieldValue<string>(objectOrReference, "__typename"),
   ): Readonly<V> {
     const policies = this;
-    const typename = getFieldValue<string>(objectOrReference, "__typename");
     const storeFieldName = typeof nameOrField === "string" ? nameOrField
       : policies.getStoreFieldName(typename, nameOrField, variables);
     const fieldName = fieldNameFromStoreName(storeFieldName);

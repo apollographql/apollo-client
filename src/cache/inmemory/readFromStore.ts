@@ -237,6 +237,7 @@ export class StoreReader {
           selection,
           getFieldValue,
           variables,
+          typename,
         );
 
         if (fieldValue === void 0) {

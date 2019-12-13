@@ -4,6 +4,10 @@ import { StoreValue } from "../../../utilities";
 import { FieldPolicy, Policies } from "../policies";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 
+function reverse(s: string) {
+  return s.split("").reverse().join("");
+}
+
 describe("type policies", function () {
   const bookQuery = gql`
     query {
@@ -391,6 +395,188 @@ describe("type policies", function () {
 
       const result = cache.readQuery({ query });
       expect(result).toEqual(data);
+    });
+
+    it("assumes keyArgs:false when read or merge function present", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          TypeA: {
+            fields: {
+              a() {
+                return "a";
+              },
+            },
+          },
+
+          TypeB: {
+            fields: {
+              b: {
+                keyArgs: ["x"],
+                read() {
+                  return "b";
+                },
+              },
+            },
+          },
+
+          TypeC: {
+            fields: {
+              c: {
+                keyArgs: false,
+                merge(existing, incoming: string) {
+                  return reverse(incoming);
+                },
+              },
+            },
+          },
+
+          TypeD: {
+            fields: {
+              d: {
+                keyArgs(field) {
+                  return "d";
+                },
+                read(existing: string) {
+                  return existing.toLowerCase();
+                },
+                merge(existing: string, incoming: string) {
+                  return incoming.toUpperCase();
+                },
+              },
+            },
+          },
+
+          TypeE: {
+            fields: {
+              e: {
+                read(existing: string) {
+                  return existing.slice(1);
+                },
+                merge(existing: string, incoming: string) {
+                  return "*" + incoming;
+                },
+              },
+            },
+          },
+
+          TypeF: {
+            fields: {
+              f: {
+                // nothing
+              },
+            },
+          },
+
+          Query: {
+            fields: {
+              types(existing: any[], { args }) {
+                const fromCode = args.from.charCodeAt(0);
+                const toCode = args.to.charCodeAt(0);
+                let e = 0;
+                for (let code = fromCode; code <= toCode; ++code) {
+                  const upper = String.fromCharCode(code).toUpperCase();
+                  const obj = existing[e++];
+                  expect(obj.__typename).toBe("Type" + upper);
+                }
+                return existing;
+              },
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          types(from: "A", to: "F") {
+            ... on TypeA { a }
+            ... on TypeB { b(x: 1, y: 2, z: 3) }
+            ... on TypeC { c(see: "si") }
+            ... on TypeD { d }
+            ... on TypeE { e(eee: "ee") }
+            ... on TypeF { f(g: "h") }
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          types: [{
+            __typename: "TypeA",
+          }, {
+            __typename: "TypeB",
+            b: "x1",
+          }, {
+            __typename: "TypeC",
+            c: "naive",
+          }, {
+            __typename: "TypeD",
+            d: "quiet",
+          }, {
+            __typename: "TypeE",
+            e: "asterisk",
+          }, {
+            __typename: "TypeF",
+            f: "effigy",
+          }],
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          types: [
+            {
+              __typename: "TypeA",
+            },
+            {
+              __typename: "TypeB",
+              'b:{"x":1}': "x1",
+            },
+            {
+              __typename: "TypeC",
+              c: "evian",
+            },
+            {
+              __typename: "TypeD",
+              d: "QUIET",
+            },
+            {
+              __typename: "TypeE",
+              e: "*asterisk",
+            },
+            {
+              __typename: "TypeF",
+              'f({"g":"h"})': "effigy",
+            },
+          ],
+        },
+      });
+
+      const result = cache.readQuery({ query });
+      expect(result).toEqual({
+        types: [
+          {
+            __typename: "TypeA",
+            a: "a",
+          }, {
+            __typename: "TypeB",
+            b: "b",
+          }, {
+            __typename: "TypeC",
+            c: "evian",
+          }, {
+            __typename: "TypeD",
+            d: "quiet",
+          }, {
+            __typename: "TypeE",
+            e: "asterisk",
+          }, {
+            __typename: "TypeF",
+            f: "effigy",
+          }
+        ],
+      });
     });
 
     it("can use stable storage in read functions", function () {
@@ -1532,10 +1718,6 @@ describe("type policies", function () {
   });
 
   it("runs read and merge functions for unidentified data", function () {
-    function reverse(s: string) {
-      return s.split("").reverse().join("");
-    }
-
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {

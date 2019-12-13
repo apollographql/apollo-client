@@ -300,10 +300,18 @@ export class Policies {
               // compute a composite identity for the field.
               Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
               // Pass a function to take full control over field identity.
-              typeof keyArgs === "function" ? keyArgs : void 0;
+              typeof keyArgs === "function" ? keyArgs :
+              // Leave existing.keyFn unchanged if all above cases fail.
+              existing.keyFn;
 
             if (typeof read === "function") existing.read = read;
             if (typeof merge === "function") existing.merge = merge;
+          }
+
+          if (existing.read || existing.merge) {
+            // If we have a read or merge function, assume keyArgs:false
+            // unless existing.keyFn has already been explicitly set.
+            existing.keyFn = existing.keyFn || simpleKeyArgsFn;
           }
         });
       }

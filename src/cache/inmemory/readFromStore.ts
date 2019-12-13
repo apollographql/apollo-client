@@ -298,25 +298,14 @@ export class StoreReader {
           );
         }
 
-        const match = policies.fragmentMatches(fragment, typename);
-
-        if (match) {
-          let fragmentExecResult = this.executeSelectionSet({
-            selectionSet: fragment.selectionSet,
-            objectOrReference,
-            context,
-          });
-
-          if (match === 'heuristic' && fragmentExecResult.missing) {
-            fragmentExecResult = {
-              ...fragmentExecResult,
-              missing: fragmentExecResult.missing.map(info => {
-                return { ...info, tolerable: true };
-              }),
-            };
-          }
-
-          objectsToMerge.push(handleMissing(fragmentExecResult));
+        if (policies.fragmentMatches(fragment, typename)) {
+          objectsToMerge.push(handleMissing(
+            this.executeSelectionSet({
+              selectionSet: fragment.selectionSet,
+              objectOrReference,
+              context,
+            })
+          ));
         }
       }
     });

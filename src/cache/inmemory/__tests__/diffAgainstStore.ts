@@ -258,7 +258,7 @@ describe('diffing queries against the store', () => {
         returnPartialData: false,
       });
 
-      expect(complete).toBe(false);
+      expect(complete).toBe(true);
     });
   });
 
@@ -306,7 +306,7 @@ describe('diffing queries against the store', () => {
       query: unionQuery,
     });
 
-    expect(complete).toBe(false);
+    expect(complete).toBe(true);
   });
 
   it('throws an error on a query with fields missing from matching named fragments', () => {

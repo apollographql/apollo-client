@@ -1546,7 +1546,7 @@ describe('writing to the store', () => {
       expect(newStore.get('1')).toEqual(result.todos[0]);
     });
 
-    it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
+    it('should warn when it receives the wrong data with non-union fragments', () => {
       const result = {
         todos: [
           {
@@ -1573,7 +1573,7 @@ describe('writing to the store', () => {
       }, /Missing field description/);
     });
 
-    it('should warn when it receives the wrong data inside a fragment (using an introspection matcher)', () => {
+    it('should warn when it receives the wrong data inside a fragment', () => {
       const queryWithInterface = gql`
         query {
           todos {
@@ -1627,7 +1627,7 @@ describe('writing to the store', () => {
       }, /Missing field price/);
     });
 
-    it('should warn if a result is missing __typename when required (using an heuristic matcher)', () => {
+    it('should warn if a result is missing __typename when required', () => {
       const result: any = {
         todos: [
           {

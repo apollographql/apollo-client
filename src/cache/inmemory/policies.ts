@@ -377,7 +377,7 @@ export class Policies {
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string,
-  ): boolean | "heuristic" {
+  ): boolean {
     if (!fragment.typeCondition) return true;
 
     const supertype = fragment.typeCondition.name.value;
@@ -399,12 +399,9 @@ export class Policies {
           });
         }
       }
-      // When possibleTypes is defined, we always either return true from the
-      // loop above or return false here (never 'heuristic' below).
-      return false;
     }
 
-    return "heuristic";
+    return false;
   }
 
   public getStoreFieldName(

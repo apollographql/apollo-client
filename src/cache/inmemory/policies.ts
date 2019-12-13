@@ -381,6 +381,14 @@ export class Policies {
     if (!fragment.typeCondition) return true;
 
     const supertype = fragment.typeCondition.name.value;
+
+    invariant(
+      typename,
+      `Attempted to match fragment ${
+        fragment.kind === "InlineFragment" ? "" : fragment.name.value + " "
+      }with type condition ${supertype} against object with unknown __typename`,
+    );
+
     if (typename === supertype) return true;
 
     if (this.usingPossibleTypes) {

@@ -308,8 +308,8 @@ describe('roundtrip', () => {
       );
     });
 
-    it('should resolve on union types with inline fragments without typenames with warning', () => {
-      return withWarning(() => {
+    it('should error on union types with inline fragments without typenames', () => {
+      return expect(() => {
         storeRoundtrip(
           gql`
             query {
@@ -337,7 +337,10 @@ describe('roundtrip', () => {
             ],
           },
         );
-      });
+      }).toThrowError(
+        'Attempted to match fragment with type condition Jedi against ' +
+          'object with unknown __typename'
+      );
     });
 
     // XXX this test is weird because it assumes the server returned an incorrect result

@@ -617,4 +617,18 @@ You will almost never need to use all of these options at the same time, but eac
 
 #### Custom `merge` functions
 
-TODO
+If a `read` function allows customizing what happens when a field within an entity object is read from the cache, what about writing fields into the cache?
+
+The short answer is that a `FieldPolicy` object can contain a custom `merge` function that takes the field's existing value and its incoming value, and merges them together into a new value to be stored for that field within its parent entity.
+
+However, in order to understand when you might need to define a custom `merge` function, it's important to understand how the cache merges data by default, without any customization:
+
+1. When `cache.writeQuery({ query, data })` is called, the cache traverses the `query` and the `data` in parallel to find any objects within `data` that have a `__typename` and the necessary fields to compute a unique identifier for the object, using `keyFields` or `dataIdFromObject`. Not all objects have this information, but those that do will be stored in a flat `Map`-like data structure, with the ID strings as keys, and the objects as values. The root `data` object is almost always assigned a special `ROOT_QUERY` ID, since it contains root `Query` fields.
+
+2. If the normalized map already contains an entity object with the same ID, the fields of the new object will be automatically shallow-merged with the existing fields, _replacing_ any fields that overlap. This kind of merging happens automatically, and makes sense because we know the objects have the same ID, which means they represent the same logical entity.
+
+3. Although many of the replaced fields have scalar values, such as strings or numbers, some fields have object or array values. If an ID can be computed for these objects, we can assume they were already written into the cache with that ID (see step 1), and the original field value will be replaced with a special `{ __ref: <ID> }` object that refers to the normalized entity. If no ID can be computed, the object is treated as opaque data, and no attempt is made to merge it with other data.
+
+In short, the top-level fields of normalized entity objects are shallow-merged together, but no additional merging happens by default. Objects are never merged together unless they have the same ID, even if it's possible that they might represent the same logical entity, because mixing fields from different entities is a recipe for data graph inconsistencies.
+
+If this default behavior is insufficient for your needs, because you want to prevent existing field values from being completely replaced, or you want to translate the incoming data somehow before it is stored in the cache, that's when you should consider writing a custom `merge` function for the field.

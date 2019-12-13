@@ -135,11 +135,20 @@ export class StoreWriter {
     if (sets.indexOf(selectionSet) >= 0) return store;
     sets.push(selectionSet);
 
+    const typename =
+      // If the result has a __typename, trust that.
+      getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
+      // If the entity identified by dataId has a __typename in the store,
+      // fall back to that.
+      store.getFieldValue(dataId, "__typename") as string ||
+      // Special dataIds like ROOT_QUERY have a known default __typename.
+      this.policies.rootTypenamesById[dataId];
+
     const processed = this.processSelectionSet({
       result,
       selectionSet,
       context,
-      typename: this.policies.rootTypenamesById[dataId],
+      typename,
     });
 
     if (processed.mergeOverrides) {
@@ -165,14 +174,13 @@ export class StoreWriter {
     selectionSet,
     context,
     mergeOverrides,
-    typename = getTypenameFromResult(
-      result, selectionSet, context.fragmentMap),
+    typename,
   }: {
     result: Record<string, any>;
     selectionSet: SelectionSetNode;
     context: WriteContext;
     mergeOverrides?: MergeOverrides;
-    typename?: string;
+    typename: string;
   }): {
     result: StoreObject;
     mergeOverrides?: MergeOverrides;
@@ -328,6 +336,8 @@ export class StoreWriter {
       result: value,
       selectionSet: field.selectionSet,
       context,
+      typename: getTypenameFromResult(
+        value, field.selectionSet, context.fragmentMap),
     });
   }
 }

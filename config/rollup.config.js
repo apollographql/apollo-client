@@ -108,6 +108,23 @@ function prepareCJSMinified(input) {
   };
 }
 
+function prepareUtilities() {
+  const utilsDistDir = `${distDir}/utilities`;
+  return {
+    input: `${utilsDistDir}/index.js`,
+    external,
+    output: {
+      file: `${utilsDistDir}/utilities.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
+    ],
+  };
+}
+
 // Build a separate CJS only `testing.js` bundle, that includes React
 // testing utilities like `MockedProvider` (testing utilities are kept out of
 // the main `apollo-client` bundle). This bundle can be accessed directly
@@ -144,6 +161,7 @@ function rollup() {
     prepareESM(packageJson.module, distDir),
     prepareCJS(packageJson.module, packageJson.main),
     prepareCJSMinified(packageJson.main),
+    prepareUtilities(),
     prepareTesting(),
   ];
 }

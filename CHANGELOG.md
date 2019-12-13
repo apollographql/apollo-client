@@ -15,10 +15,19 @@
   parameter. <br/>
   [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
 
+- Documentation updates. <br/>
+  [@tomquirk](https://github.com/tomquirk) in [#5645](https://github.com/apollographql/apollo-client/pull/5645) <br/>
+  [@Sequoia](https://github.com/Sequoia) in [#5641](https://github.com/apollographql/apollo-client/pull/5641)
+
 ### GraphQL Anywhere vNext
 
 - Fix `filter` edge case involving `null`.  <br/>
   [@lifeiscontent](https://github.com/lifeiscontent) in [#5110](https://github.com/apollographql/apollo-client/pull/5110)
+
+### Apollo Boost
+
+- Replace `GlobalFetch` reference with `WindowOrWorkerGlobalScope`.  <br/>
+  [@abdonrd](https://github.com/abdonrd) in [#5373](https://github.com/apollographql/apollo-client/pull/5373)
 
 
 ## Apollo Client (2.6.4)

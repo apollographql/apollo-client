@@ -31,7 +31,7 @@ export interface PresetConfig {
   uri?: string | UriFunction;
   credentials?: string;
   headers?: any;
-  fetch?: GlobalFetch['fetch'];
+  fetch?: WindowOrWorkerGlobalScope['fetch'];
   fetchOptions?: HttpLink.Options;
   clientState?: ClientStateConfig;
   onError?: ErrorLink.ErrorHandler;

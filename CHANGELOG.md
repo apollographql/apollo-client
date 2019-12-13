@@ -30,6 +30,9 @@
 - Replace `GlobalFetch` reference with `WindowOrWorkerGlobalScope`.  <br/>
   [@abdonrd](https://github.com/abdonrd) in [#5373](https://github.com/apollographql/apollo-client/pull/5373)
 
+- Add `assumeImmutableResults` typing to apollo boost `PresetConfig` interface. <br/>
+  [@bencoullie](https://github.com/bencoullie) in [#5571](https://github.com/apollographql/apollo-client/pull/5571)
+
 
 ## Apollo Client (2.6.4)
 

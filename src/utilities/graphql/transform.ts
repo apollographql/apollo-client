@@ -325,48 +325,6 @@ function hasDirectivesInSelection(
   );
 }
 
-export function getDirectivesFromDocument(
-  directives: GetDirectiveConfig[],
-  doc: DocumentNode,
-): DocumentNode {
-  checkDocument(doc);
-
-  let parentPath: string;
-
-  return nullIfDocIsEmpty(
-    visit(doc, {
-      SelectionSet: {
-        enter(node, _key, _parent, path) {
-          const currentPath = path.join('-');
-
-          if (
-            !parentPath ||
-            currentPath === parentPath ||
-            !currentPath.startsWith(parentPath)
-          ) {
-            if (node.selections) {
-              const selectionsWithDirectives = node.selections.filter(
-                selection => hasDirectivesInSelection(directives, selection),
-              );
-
-              if (hasDirectivesInSelectionSet(directives, node, false)) {
-                parentPath = currentPath;
-              }
-
-              return {
-                ...node,
-                selections: selectionsWithDirectives,
-              };
-            } else {
-              return null;
-            }
-          }
-        },
-      },
-    }),
-  );
-}
-
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
   return function argumentMatcher(argument: ArgumentNode) {
     return config.some(

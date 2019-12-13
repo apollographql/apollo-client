@@ -1,4 +1,4 @@
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 
 import { ApolloError } from '../../errors/ApolloError';
 import { NetworkStatus } from '../../core/networkStatus';
@@ -245,7 +245,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     };
 
     if (
-      !isEqual(
+      !equal(
         newObservableQueryOptions,
         this.previousData.observableQueryOptions
       )
@@ -280,7 +280,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           previousResult &&
           previousResult.loading === loading &&
           previousResult.networkStatus === networkStatus &&
-          isEqual(previousResult.data, data)
+          equal(previousResult.data, data)
         ) {
           return;
         }
@@ -306,7 +306,7 @@ export class QueryData<TData, TVariables> extends OperationData {
         const previousResult = this.previousData.result;
         if (
           (previousResult && previousResult.loading) ||
-          !isEqual(error, this.previousData.error)
+          !equal(error, this.previousData.error)
         ) {
           this.previousData.error = error;
           onNewData();
@@ -433,8 +433,8 @@ export class QueryData<TData, TVariables> extends OperationData {
       if (
         this.previousOptions &&
         !this.previousData.loading &&
-        isEqual(this.previousOptions.query, query) &&
-        isEqual(this.previousOptions.variables, variables)
+        equal(this.previousOptions.query, query) &&
+        equal(this.previousOptions.variables, variables)
       ) {
         return;
       }

@@ -1,5 +1,6 @@
 import { print } from 'graphql/language/printer';
 import stringify from 'fast-json-stable-stringify';
+import { equal } from '@wry/equality';
 
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
@@ -14,7 +15,6 @@ import {
   removeConnectionDirectiveFromDocument,
 } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { isEqual } from '../../../utilities/common/isEqual';
 
 export type ResultFunction<T> = () => T;
 
@@ -77,7 +77,7 @@ export class MockLink extends ApolloLink {
         const requestVariables = operation.variables || {};
         const mockedResponseVariables = res.request.variables || {};
         if (
-          !isEqual(
+          !equal(
             stringify(requestVariables),
             stringify(mockedResponseVariables)
           )

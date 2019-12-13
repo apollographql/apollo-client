@@ -1,7 +1,7 @@
 import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
 import { invariant } from 'ts-invariant';
 
-import { isEqual } from '../utilities/common/isEqual';
+import { equal } from '@wry/equality';
 import { NetworkStatus } from '../core/networkStatus';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 
@@ -44,7 +44,7 @@ export class QueryStore {
     invariant(
       !previousQuery ||
       previousQuery.document === query.document ||
-      isEqual(previousQuery.document, query.document),
+      equal(previousQuery.document, query.document),
       'Internal Error: may not update existing query string in store',
     );
 
@@ -57,7 +57,7 @@ export class QueryStore {
       previousQuery.networkStatus !== NetworkStatus.loading
       // if the previous query was still loading, we don't want to remember it at all.
     ) {
-      if (!isEqual(previousQuery.variables, query.variables)) {
+      if (!equal(previousQuery.variables, query.variables)) {
         isSetVariables = true;
         previousVariables = previousQuery.variables;
       }

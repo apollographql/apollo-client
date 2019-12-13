@@ -1,11 +1,12 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
 import { invariant } from 'ts-invariant';
+import { equal } from '@wry/equality';
+
 import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
 import {
   DeepMerger,
   ReconcilerFunction,
 } from '../../utilities/common/mergeDeep';
-import { isEqual } from '../../utilities/common/isEqual';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 import {
@@ -482,7 +483,7 @@ const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
     // returning incoming would be logically correct) because preserving
     // the referential identity of existing data can prevent needless
     // rereading and rerendering.
-    if (isEqual(existing, incoming)) {
+    if (equal(existing, incoming)) {
       return existing;
     }
   }

@@ -1,4 +1,4 @@
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 
 import { DocumentType } from '../parser/parser';
 import { ApolloError } from '../../errors/ApolloError';
@@ -175,7 +175,7 @@ export class MutationData<
   private updateResult(result: MutationResult<TData>) {
     if (
       this.isMounted &&
-      (!this.previousResult || !isEqual(this.previousResult, result))
+      (!this.previousResult || !equal(this.previousResult, result))
     ) {
       this.setResult(result);
       this.previousResult = result;

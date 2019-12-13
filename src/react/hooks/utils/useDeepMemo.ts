@@ -1,4 +1,4 @@
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 
 import { requireReactLazily } from '../../react';
 
@@ -17,7 +17,7 @@ export function useDeepMemo<TKey, TValue>(
   const { useRef } = React;
   const ref = useRef<{ key: TKey; value: TValue }>();
 
-  if (!ref.current || !isEqual(key, ref.current.key)) {
+  if (!ref.current || !equal(key, ref.current.key)) {
     ref.current = { key, value: memoFn() };
   }
 

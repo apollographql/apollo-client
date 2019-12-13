@@ -1,7 +1,6 @@
 export {
   DirectiveInfo,
   InclusionDirectives,
-
   shouldInclude,
   hasDirectives,
   hasClientExports,
@@ -11,7 +10,6 @@ export {
 
 export {
   FragmentMap,
-
   createFragmentMap,
   getFragmentQueryDocument,
   getFragmentFromSelection,
@@ -33,7 +31,6 @@ export {
   StoreValue,
   Directives,
   VariableValue,
-
   makeReference,
   isReference,
   isField,
@@ -56,7 +53,6 @@ export {
   RemoveFragmentSpreadConfig,
   RemoveFragmentDefinitionConfig,
   RemoveVariableDefinitionConfig,
-
   addTypenameToDocument,
   buildQueryFromSelectionSet,
   removeDirectivesFromDocument,

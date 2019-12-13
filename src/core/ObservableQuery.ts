@@ -1,6 +1,6 @@
 import { invariant, InvariantError } from 'ts-invariant';
+import { equal } from '@wry/equality';
 
-import { isEqual } from '../utilities/common/isEqual';
 import { tryFunctionOrLogError } from '../utilities/common/errorHandling';
 import { cloneDeep } from '../utilities/common/cloneDeep';
 import { getOperationDefinition } from '../utilities/graphql/getFromAST';
@@ -207,7 +207,7 @@ export class ObservableQuery<
       newResult &&
       snapshot.networkStatus === newResult.networkStatus &&
       snapshot.stale === newResult.stale &&
-      isEqual(snapshot.data, newResult.data)
+      equal(snapshot.data, newResult.data)
     );
   }
 
@@ -260,7 +260,7 @@ export class ObservableQuery<
       fetchPolicy = 'network-only';
     }
 
-    if (!isEqual(this.variables, variables)) {
+    if (!equal(this.variables, variables)) {
       // update observable variables
       this.variables = {
         ...this.variables,
@@ -268,7 +268,7 @@ export class ObservableQuery<
       };
     }
 
-    if (!isEqual(this.options.variables, this.variables)) {
+    if (!equal(this.options.variables, this.variables)) {
       // Update the existing options with new variables
       this.options.variables = {
         ...this.options.variables,
@@ -446,7 +446,7 @@ export class ObservableQuery<
 
     variables = variables || this.variables;
 
-    if (!tryFetch && isEqual(variables, this.variables)) {
+    if (!tryFetch && equal(variables, this.variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
@@ -600,7 +600,7 @@ export class ObservableQuery<
                 previousResult &&
                 fetchPolicy !== 'cache-only' &&
                 queryManager.transform(query).serverQuery &&
-                !isEqual(previousVariables, variables)
+                !equal(previousVariables, variables)
               ) {
                 this.refetch();
               } else {

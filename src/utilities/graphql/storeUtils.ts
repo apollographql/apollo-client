@@ -44,18 +44,6 @@ export type StoreValue =
   | void
   | Object;
 
-export type ScalarValue = StringValueNode | BooleanValueNode | EnumValueNode;
-
-export function isScalarValue(value: ValueNode): value is ScalarValue {
-  return ['StringValue', 'BooleanValue', 'EnumValue'].indexOf(value.kind) > -1;
-}
-
-export type NumberValue = IntValueNode | FloatValueNode;
-
-export function isNumberValue(value: ValueNode): value is NumberValue {
-  return ['IntValue', 'FloatValue'].indexOf(value.kind) > -1;
-}
-
 function isStringValue(value: ValueNode): value is StringValueNode {
   return value.kind === 'StringValue';
 }
@@ -297,38 +285,5 @@ export function isInlineFragment(
   return selection.kind === 'InlineFragment';
 }
 
-function defaultValueFromVariable(node: VariableNode) {
-  throw new InvariantError(`Variable nodes are not supported by valueFromNode`);
-}
-
 export type VariableValue = (node: VariableNode) => any;
 
-/**
- * Evaluate a ValueNode and yield its value in its natural JS form.
- */
-export function valueFromNode(
-  node: ValueNode,
-  onVariable: VariableValue = defaultValueFromVariable,
-): any {
-  switch (node.kind) {
-    case 'Variable':
-      return onVariable(node);
-    case 'NullValue':
-      return null;
-    case 'IntValue':
-      return parseInt(node.value, 10);
-    case 'FloatValue':
-      return parseFloat(node.value);
-    case 'ListValue':
-      return node.values.map(v => valueFromNode(v, onVariable));
-    case 'ObjectValue': {
-      const value: { [key: string]: any } = {};
-      for (const field of node.fields) {
-        value[field.name.value] = valueFromNode(field.value, onVariable);
-      }
-      return value;
-    }
-    default:
-      return node.value;
-  }
-}

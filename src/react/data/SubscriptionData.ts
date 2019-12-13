@@ -1,4 +1,4 @@
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 
 import { OperationData } from './OperationData';
 import {
@@ -54,7 +54,7 @@ export class SubscriptionData<
       this.previousOptions &&
       Object.keys(this.previousOptions).length > 0 &&
       (this.previousOptions.subscription !== this.getOptions().subscription ||
-        !isEqual(this.previousOptions.variables, this.getOptions().variables) ||
+        !equal(this.previousOptions.variables, this.getOptions().variables) ||
         this.previousOptions.skip !== this.getOptions().skip)
     ) {
       this.cleanup();

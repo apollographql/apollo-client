@@ -48,9 +48,6 @@
 - Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
 
-- The `@apollo/client` package is now published without a nested `@apollo/client/lib` directory. <br/>
-  [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
-
 - The `queryManager` property of `ApolloClient` instances is now marked as
   `private`, paving the way for a more aggressive redesign of its API.
 
@@ -67,9 +64,6 @@
 
 - `ApolloClient` is now only available as a named export. The default `ApolloClient` export has been removed. <br/>
   [@hwillson](https://github.com/hwillson) in [#5425](https://github.com/apollographql/apollo-client/pull/5425)
-
-- Utilities that were previously externally available through the `apollo-utilities` package, are now internal only. <br/>
-  [@hwillson](https://github.com/hwillson) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
 
 - The `ObservableQuery#getCurrentResult` method no longer falls back to reading from the cache, so calling it immediately after `client.watchQuery` will consistently return a `loading: true` result. When the `fetchPolicy` permits cached results, those results will be delivered via the `next` method of the `ObservableQuery`, and can be obtained by `getCurrentResult` after they have been delivered. This change prevents race conditions where the initial behavior of one query could depend on the timing of cache writes associated with other queries. </br>
   [@benjamn](https://github.com/benjamn) in [#5565](https://github.com/apollographql/apollo-client/pull/5565)
@@ -93,6 +87,9 @@
 
 - Custom field `read` functions can read from neighboring fields using the `getFieldValue(fieldName)` helper, and may also read fields from other entities by calling `getFieldValue(fieldName, foreignReference)`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5651](https://github.com/apollographql/apollo-client/pull/5651)
+
+- Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
 
 ## Apollo Client (2.6.4)
 

@@ -1201,6 +1201,9 @@ export class QueryManager<TStore> {
     const { clientQuery } = this.transform(query);
     if (clientQuery) {
       observable = asyncMap(observable, result => {
+        if (result.errors) {
+          return result;
+        }
         return this.localState.runResolvers({
           document: clientQuery,
           remoteResult: result,

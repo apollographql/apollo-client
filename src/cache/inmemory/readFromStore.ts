@@ -6,7 +6,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import { wrap } from 'optimism';
-import { invariant } from 'ts-invariant';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   isField,
@@ -51,7 +51,6 @@ interface ExecContext {
 export type ExecResultMissingField = {
   object: StoreObject;
   fieldName: string;
-  tolerable: boolean;
 };
 
 export type ExecResult<R = any> = {
@@ -178,14 +177,11 @@ export class StoreReader {
 
     if (hasMissingFields && ! returnPartialData) {
       execResult.missing!.forEach(info => {
-        invariant(
-          info.tolerable,
-          `Can't find field ${info.fieldName} on object ${JSON.stringify(
-            info.object,
-            null,
-            2,
-          )}.`,
-        );
+        throw new InvariantError(`Can't find field ${
+          info.fieldName
+        } on object ${
+          JSON.stringify(info.object, null, 2)
+        }.`);
       });
     }
 
@@ -244,7 +240,6 @@ export class StoreReader {
           getMissing().push({
             object: objectOrReference as StoreObject,
             fieldName: selection.name.value,
-            tolerable: false,
           });
 
         } else if (Array.isArray(fieldValue)) {

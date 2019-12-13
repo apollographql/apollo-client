@@ -15,6 +15,9 @@
   parameter. <br/>
   [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
 
+- Documentation updates. <br/>
+  [@tomquirk](https://github.com/tomquirk) in [#5645](https://github.com/apollographql/apollo-client/pull/5645)
+
 ### GraphQL Anywhere vNext
 
 - Fix `filter` edge case involving `null`.  <br/>

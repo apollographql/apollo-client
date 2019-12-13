@@ -21,7 +21,12 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
 }
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const policies = new Policies();
+  const policies = new Policies({
+    possibleTypes: {
+      Character: ["Jedi", "Droid"],
+    },
+  });
+
   const reader = new StoreReader({ policies });
   const writer = new StoreWriter({ policies });
 
@@ -338,7 +343,7 @@ describe('roundtrip', () => {
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
     it('should throw an error on two of the same inline fragment types', () => {
-      return expect(() => {
+      return withWarning(() => expect(() => {
         storeRoundtrip(
           gql`
             query {
@@ -364,7 +369,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Can\'t find field rank on object/);
+      }).toThrowError(/Can\'t find field rank on object/));
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
@@ -469,6 +474,7 @@ describe('roundtrip', () => {
                 __typename: 'Droid',
                 name: 'R2D2',
                 model: 'astromech',
+                side: 'bright',
               },
             ],
           },
@@ -477,7 +483,7 @@ describe('roundtrip', () => {
     });
 
     it('should throw on error on two of the same spread fragment types', () => {
-      expect(() =>
+      withWarning(() => expect(() => {
         storeRoundtrip(
           gql`
             fragment jediSide on Jedi {
@@ -506,8 +512,8 @@ describe('roundtrip', () => {
               },
             ],
           },
-        ),
-      ).toThrowError(/Can\'t find field rank on object/);
+        );
+      }).toThrowError(/Can\'t find field rank on object/));
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

@@ -50,7 +50,7 @@
     "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
     "ts-invariant": "^0.4.0",
-    "tslib": "^1.9.3",
+    "tslib": "^1.10.0",
     "zen-observable": "^0.8.0"
   },
   "peerDependencies": {

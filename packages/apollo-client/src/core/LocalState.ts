@@ -41,6 +41,7 @@ export type Resolver = (
   context?: any,
   info?: {
     field: FieldNode;
+    fragmentMap: FragmentMap;
   },
 ) => any;
 
@@ -391,7 +392,7 @@ export class LocalState<TCacheShape> {
             rootValue,
             argumentsObjectFromField(field, variables),
             execContext.context,
-            { field },
+            { field, fragmentMap: execContext.fragmentMap },
           ));
         }
       }

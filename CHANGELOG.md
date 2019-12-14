@@ -6,13 +6,33 @@
 
 - Update the `fetchMore` type signature to accept `context`.  <br/>
   [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
+
 - Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
   [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
+
+- Local state resolver functions now receive a `fragmentMap: FragmentMap`
+  object, in addition to the `field: FieldNode` object, via the `info`
+  parameter. <br/>
+  [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
+
+- Documentation updates. <br/>
+  [@tomquirk](https://github.com/tomquirk) in [#5645](https://github.com/apollographql/apollo-client/pull/5645) <br/>
+  [@Sequoia](https://github.com/Sequoia) in [#5641](https://github.com/apollographql/apollo-client/pull/5641) <br/>
+  [@phryneas](https://github.com/phryneas) in [#5628](https://github.com/apollographql/apollo-client/pull/5628) <br/>
+  [@AryanJ-NYC](https://github.com/AryanJ-NYC) in [#5560](https://github.com/apollographql/apollo-client/pull/5560)
 
 ### GraphQL Anywhere vNext
 
 - Fix `filter` edge case involving `null`.  <br/>
   [@lifeiscontent](https://github.com/lifeiscontent) in [#5110](https://github.com/apollographql/apollo-client/pull/5110)
+
+### Apollo Boost
+
+- Replace `GlobalFetch` reference with `WindowOrWorkerGlobalScope`.  <br/>
+  [@abdonrd](https://github.com/abdonrd) in [#5373](https://github.com/apollographql/apollo-client/pull/5373)
+
+- Add `assumeImmutableResults` typing to apollo boost `PresetConfig` interface. <br/>
+  [@bencoullie](https://github.com/bencoullie) in [#5571](https://github.com/apollographql/apollo-client/pull/5571)
 
 
 ## Apollo Client (2.6.4)

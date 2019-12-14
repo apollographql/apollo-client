@@ -1,8 +1,8 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
-## Apollo Client 2.6.5
+## Apollo Client 2.6.8
 
-### Apollo Client (2.6.5)
+### Apollo Client (2.6.8)
 
 - Update the `fetchMore` type signature to accept `context`.  <br/>
   [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
@@ -21,12 +21,12 @@
   [@phryneas](https://github.com/phryneas) in [#5628](https://github.com/apollographql/apollo-client/pull/5628) <br/>
   [@AryanJ-NYC](https://github.com/AryanJ-NYC) in [#5560](https://github.com/apollographql/apollo-client/pull/5560)
 
-### GraphQL Anywhere (4.2.5)
+### GraphQL Anywhere (4.2.6)
 
 - Fix `filter` edge case involving `null`.  <br/>
   [@lifeiscontent](https://github.com/lifeiscontent) in [#5110](https://github.com/apollographql/apollo-client/pull/5110)
 
-### Apollo Boost (0.4.5)
+### Apollo Boost (0.4.7)
 
 - Replace `GlobalFetch` reference with `WindowOrWorkerGlobalScope`.  <br/>
   [@abdonrd](https://github.com/abdonrd) in [#5373](https://github.com/apollographql/apollo-client/pull/5373)

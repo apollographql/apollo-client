@@ -1,5 +1,5 @@
 import { DocumentNode } from 'graphql';
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../ApolloClient';
@@ -29,7 +29,7 @@ export abstract class OperationData<TOptions = any> {
     newOptions: CommonOptions<TOptions>,
     storePrevious: boolean = false
   ) {
-    if (storePrevious && !isEqual(this.options, newOptions)) {
+    if (storePrevious && !equal(this.options, newOptions)) {
       this.previousOptions = this.options;
     }
     this.options = newOptions;

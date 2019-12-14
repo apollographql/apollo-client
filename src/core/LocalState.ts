@@ -32,7 +32,6 @@ import {
 } from '../utilities/graphql/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
-import { capitalizeFirstLetter } from '../utilities/common/capitalizeFirstLetter';
 
 export type Resolver = (
   rootValue?: any,
@@ -278,7 +277,8 @@ export class LocalState<TCacheShape> {
       .operation;
 
     const defaultOperationType = definitionOperation
-      ? capitalizeFirstLetter(definitionOperation)
+      ? definitionOperation.charAt(0).toUpperCase() +
+        definitionOperation.slice(1)
       : 'Query';
 
     const { cache, client } = this;

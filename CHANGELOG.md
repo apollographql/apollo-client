@@ -89,7 +89,7 @@
   [@benjamn](https://github.com/benjamn) in [#5651](https://github.com/apollographql/apollo-client/pull/5651)
 
 - Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
-  [@hwillson](https://github.com/hwillson) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
+  [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
 
 ## Apollo Client (2.6.4)
 

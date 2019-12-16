@@ -617,18 +617,180 @@ You will almost never need to use all of these options at the same time, but eac
 
 #### Custom `merge` functions
 
-If a `read` function allows customizing what happens when a field within an entity object is read from the cache, what about writing fields into the cache?
+If a `read` function can customize what happens when a field within an entity object is read from the cache, what about writing fields into the cache?
 
-The short answer is that a `FieldPolicy` object can contain a custom `merge` function that takes the field's existing value and its incoming value, and merges them together into a new value to be stored for that field within its parent entity.
+The short answer is that a `FieldPolicy` object can contain a custom `merge` function that takes the field's existing value and an incoming value, and merges them together into a new value that will be stored for that field.
 
 However, in order to understand when you might need to define a custom `merge` function, it's important to understand how the cache merges data by default, without any customization:
 
-1. When `cache.writeQuery({ query, data })` is called, the cache traverses the `query` and the `data` in parallel to find any objects within `data` that have a `__typename` and the necessary fields to compute a unique identifier for the object, using `keyFields` or `dataIdFromObject`. Not all objects have this information, but those that do will be stored in a flat `Map`-like data structure, with the ID strings as keys, and the objects as values. The root `data` object is almost always assigned a special `ROOT_QUERY` ID, since it contains root `Query` fields.
+1. When `cache.writeQuery({ query, data })` is called, the cache traverses `query` and `data` in parallel to find any objects within `data` that have a `__typename` and the necessary fields to compute a unique identifier for the object, using `keyFields` or `dataIdFromObject`. Not all objects have this information, but those that do will be stored in a flat `Map`-like data structure, with the ID strings as keys, and the objects as values.
 
-2. If the normalized map already contains an entity object with the same ID, the fields of the new object will be automatically shallow-merged with the existing fields, _replacing_ any fields that overlap. This kind of merging happens automatically, and makes sense because we know the objects have the same ID, which means they represent the same logical entity.
+ > Note: the root `data` object is always assigned a special `ROOT_QUERY` ID, since it contains root `Query` fields. This is why you do not have to specify `keyFields` for the `Query` type.
 
-3. Although many of the replaced fields have scalar values, such as strings or numbers, some fields have object or array values. If an ID can be computed for these objects, we can assume they were already written into the cache with that ID (see step 1), and the original field value will be replaced with a special `{ __ref: <ID> }` object that refers to the normalized entity. If no ID can be computed, the object is treated as opaque data, and no attempt is made to merge it with other data.
+2. If the normalized map already contains an entity object with the same ID, the fields of the new object will be automatically shallow-merged into the existing fields, _replacing_ any fields that overlap. This kind of merging happens automatically, and makes sense in most cases because we know the objects have the same ID, which means they represent the same logical entity.
 
-In short, the top-level fields of normalized entity objects are shallow-merged together, but no additional merging happens by default. Objects are never merged together unless they have the same ID, even if it's possible that they might represent the same logical entity, because mixing fields from different entities is a recipe for data graph inconsistencies.
+3. By default, the cache does not attempt to merge the _values_ of top-level entity fields, even if those values are objects or arrays. If an ID could be computed for a nested object (or the object elements of an array), the object would already have been written into the cache with that ID (see step 1), and a special `{ __ref: <ID> }` object referring to the normalized entity would become the value of the field. When a field has a scalar value, or when no ID can be computed for an object value, the value is treated as opaque data, and no attempt is made to merge it with other data.
+
+To recap: the top-level fields of normalized entity objects are shallow-merged together, but no additional merging happens by default. Objects are never merged together unless they have the same ID, even if it's possible that they might represent the same logical entity, because mixing fields from different entities is a recipe for data graph inconsistencies.
 
 If this default behavior is insufficient for your needs, because you want to prevent existing field values from being completely replaced, or you want to translate the incoming data somehow before it is stored in the cache, that's when you should consider writing a custom `merge` function for the field.
+
+A simple but common use case for `merge` functions is to define what happens when an array-valued field is about to be overwritten by a new array. Often, it would be better to concatenate the arrays, rather than replacing the existing array:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: {
+          merge(existing = [], incoming: any[]) {
+            return [...existing, ...incoming];
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Note that `existing` will be undefined the very first time the `merge` function is called, since the cache does not contain any data for this field (within this particular object) yet. The `existing = []` default parameter style is a convenient way to handle this case.
+
+You might be tempted to write this function in a more destructive, less "functional" style:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: {
+          merge(existing = [], incoming: any[]) {
+            // Not allowed!
+            existing.push(...incoming);
+            return existing;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+However, modifying existing data in the cache is forbidden, because altering the contents of cached objects without changing their references can prevent the cache from reporting changes to your application in some cases, and also interferes with the ability of the cache to produce immutable snapshots using the `cache.extract()` method. In fact, if you try to modify the `existing` data in an unsafe way in development, you will find that it has been deeply frozen using `Object.freeze`, so your attempted modifications will fail.
+
+When you're working with array-valued fields, especially when the full array might be very large, it's common to use field arguments to request the array from your GraphQL server in smaller chunks (or "pages"), which is a pattern called *pagination*. Pagination poses a challenge for Apollo Client, because the client needs to reconstruct the complete array from partial information. Fortunately, the `FieldPolicy` API, including `read` and `merge` functions, was designed with pagination in mind.
+
+Typically, pagination arguments will specify where to start in the array, using either a numeric offset or a starting ID, and the maximum number of elements to return in a single chunk. These arguments are important to consider when implementing a `merge` function for the field:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: {
+          merge(existing: any[], incoming: any[], { args }) {
+            const merged = existing ? existing.slice(0) : [];
+            // Insert the incoming elements in the right places, according to args.
+            for (let i = args.offset; i < args.offset + args.limit; ++i) {
+              merged[i] = incoming[i - args.offset];
+            }
+            return merged;
+          },
+
+          read(existing: any[], { args }) {
+            // If we read the field before any data has been written to the
+            // cache, this function will return undefined, which correctly
+            // indicates that the field is missing.
+            return existing && existing.slice(
+              args.offset,
+              args.offset + args.limit,
+            );
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+As you can see in this example, your `read` function will often need to cooperate with your `merge` function, by handling the same arguments in the inverse direction.
+
+If you want to start after a specific task ID, rather than starting from `args.offset`, you might implement your `merge` and `read` functions as follows, using the `readField` helper function to examine existing task IDs:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: {
+          merge(existing: any[], incoming: any[], { args, readField }) {
+            const merged = existing ? existing.slice(0) : [];
+            // Obtain a Set of all existing task IDs.
+            const existingIdSet = new Set(
+              merged.map(task => readField("id", task)));
+            // Remove incoming tasks already present in the existing data.
+            incoming = incoming.filter(
+              task => !existingIdSet.has(readField("id", task)));
+            // Find the index of the task just before the incoming page of tasks.
+            const afterIndex = merged.findIndex(
+              task => args.afterId === readField("id", task));
+            if (afterIndex >= 0) {
+              // If we found afterIndex, insert incoming after that index.
+              merged.splice(afterIndex + 1, 0, ...incoming);
+            } else {
+              // Otherwise insert incoming at the end of the existing data.
+              merged.push(...incoming);
+            }
+            return merged;
+          },
+
+          read(existing: any[], { args, readField }) {
+            if (existing) {
+              const afterIndex = existing.findIndex(
+                task => args.afterId === readField("id", task));
+              if (afterIndex >= 0) {
+                return existing.slice(
+                  afterIndex + 1,
+                  afterIndex + 1 + args.limit,
+                );
+              }
+            }
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+As a reminder, if you call `readField(fieldName)`, it will return the value of that field from the current object. If you also pass an object or reference as the second argument, `readField` will read from that object instead of the current object. In this example, reading the `id` field from existing task objects allows us to deduplicate the `incoming` task data.
+
+The above code is getting complicated, but no more complicated than the underlying problem demands. It is, however, already far too complicated for Apollo Client to anticipate by default, which is why the `InMemoryCache` gives you complete control in the form of `read` and `merge` functions.
+
+Although the logic in your `merge` and `read` functions may become increasingly sophisticated over time, remember that this is the only place in your code where you need to describe this logic, and you can often extract common patterns into reusable helper functions that produce `FieldPolicy` objects, since nothing about this code is really specific to `Agenda`s or tasks:
+
+```ts
+function afterIdLimitPaginatedFieldPolicy<T>() {
+  return {
+    merge(existing: T[], incoming: T[], { args, readField }): T[] {
+      ...
+    },
+    read(existing: T[], { args, readField }): T[] {
+      ...
+    },
+  };
+}
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: afterIdLimitPaginatedFieldPolicy<Reference>(),
+      },
+    },
+  },
+});
+```
+
+Another common use case for `merge` functions is to combine nested objects that do not have IDs, but are known by the application developer to represent the same logical entity. Suppose that the `Book` type has an `author` field, which is an object containing information like the author's `name`, `primaryLanguage`, and `yearOfBirth`.
+
+TODO

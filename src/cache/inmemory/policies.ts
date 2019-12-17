@@ -34,7 +34,11 @@ import {
   NormalizedCache,
 } from "./types";
 
-import { fieldNameFromStoreName } from './helpers';
+import {
+  fieldNameFromStoreName,
+  FieldValueToBeMerged,
+  isFieldValueToBeMerged,
+} from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -549,36 +553,81 @@ export class Policies {
     return existing;
   }
 
-  public getFieldMergeFunction(
+  public hasMergeFunction(
     typename: string,
-    field: FieldNode,
-    variables?: Record<string, any>,
-  ): StoreValueMergeFunction {
-    const policies = this;
-    const policy = policies.getFieldPolicy(typename, field.name.value, false);
-    const merge = policy && policy.merge;
-    if (merge) {
-      const args = argumentsObjectFromField(field, variables);
-      return (
-        existing: StoreValue,
-        incoming: StoreValue,
-      ) => merge(existing, incoming, {
-        args,
-        field,
-        fieldName: field.name.value,
+    fieldName: string,
+  ) {
+    const policy = this.getFieldPolicy(typename, fieldName, false);
+    return !!(policy && policy.merge);
+  }
+
+  public applyMerges(
+    store: NormalizedCache,
+    dataId: string,
+    incomingFields: StoreObject,
+    variables: Record<string, any>,
+  ) {
+    Object.keys(incomingFields).forEach(storeFieldName => {
+      incomingFields[storeFieldName] = this.applyMergesHelper(
+        store.getFieldValue(dataId, storeFieldName),
+        incomingFields[storeFieldName],
         variables,
-        policies,
-        isReference,
-        toReference: policies.toReference,
+      );
+    });
+    return incomingFields;
+  }
+
+  private applyMergesHelper(
+    existing: StoreValue,
+    incoming: StoreValue | FieldValueToBeMerged,
+    variables: Record<string, any>,
+  ): StoreValue {
+    if (incoming && typeof incoming === "object") {
+      if (isFieldValueToBeMerged(incoming)) {
+        const field = incoming.__field;
+        const fieldName = field.name.value;
+        const policy = this.getFieldPolicy(
+          incoming.__typename, fieldName, false);
+
+        const merge = policy && policy.merge;
+        if (merge) {
+          // StoreObjects can have multiple layers of child objects/arrays, so
+          // we need to handle child merges before handling parent merges.
+          const applied = this.applyMergesHelper(
+            existing, incoming.__value, variables);
+
+          if (process.env.NODE_ENV !== "production") {
+            // It may be tempting to modify existing data directly, for example
+            // by pushing more elements onto an existing array, but merge
+            // functions are expected to be pure, so it's important that we
+            // enforce immutability in development.
+            maybeDeepFreeze(existing);
+          }
+
+          return merge(existing, applied, {
+            args: argumentsObjectFromField(field, variables),
+            field,
+            fieldName,
+            variables,
+            policies: this,
+            isReference,
+            toReference: this.toReference,
+          });
+        }
+      }
+
+      Object.keys(incoming).forEach(storeFieldName => {
+        (incoming as StoreObject)[storeFieldName] = this.applyMergesHelper(
+          existing && (existing as StoreObject)[storeFieldName],
+          incoming && (incoming as StoreObject)[storeFieldName],
+          variables,
+        );
       });
     }
+
+    return incoming;
   }
 }
-
-export type StoreValueMergeFunction = (
-  existing: StoreValue,
-  incoming: StoreValue,
-) => StoreValue;
 
 function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,

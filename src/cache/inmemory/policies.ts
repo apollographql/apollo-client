@@ -25,15 +25,16 @@ import {
   isReference,
 } from '../../utilities/graphql/storeUtils';
 
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 
 import {
   IdGetter,
   StoreObject,
+  NormalizedCache,
 } from "./types";
 
 import { fieldNameFromStoreName } from './helpers';
-import { FieldValueGetter } from './readFromStore';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -88,6 +89,9 @@ export type FieldPolicy<TValue> = {
   read?: FieldReadFunction<TValue>;
   merge?: FieldMergeFunction<TValue>;
 };
+
+export type FieldValueGetter =
+  ReturnType<Policies["makeFieldValueGetter"]>;
 
 interface FieldFunctionOptions {
   args: Record<string, any> | null;
@@ -410,6 +414,36 @@ export class Policies {
     }
 
     return false;
+  }
+
+  public makeFieldValueGetter(store: NormalizedCache) {
+    const policies = this;
+
+    // Provides a uniform interface for reading field values, whether or not
+    // objectOrReference is a normalized entity.
+    return function getFieldValue<T = StoreValue>(
+      objectOrReference: StoreObject | Reference,
+      storeFieldName: string,
+    ): Readonly<T> {
+      let fieldValue: StoreValue;
+      if (isReference(objectOrReference)) {
+        const dataId = objectOrReference.__ref;
+        fieldValue = store.getFieldValue(dataId, storeFieldName);
+        if (fieldValue === void 0 && storeFieldName === "__typename") {
+          // We can infer the __typename of singleton root objects like
+          // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
+          // we have never written that information into the cache.
+          return policies.rootTypenamesById[dataId] as any;
+        }
+      } else {
+        fieldValue = objectOrReference && objectOrReference[storeFieldName];
+      }
+      if (process.env.NODE_ENV !== "production") {
+        // Enforce Readonly<T> at runtime, in development.
+        maybeDeepFreeze(fieldValue);
+      }
+      return fieldValue as T;
+    };
   }
 
   public getStoreFieldName(

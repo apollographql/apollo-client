@@ -15,7 +15,6 @@ import {
   Reference,
   isReference,
   makeReference,
-  StoreValue,
 } from '../../utilities/graphql/storeUtils';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
@@ -36,7 +35,7 @@ import {
 } from './types';
 import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies } from './policies';
+import { Policies, FieldValueGetter } from './policies';
 
 export type VariableMap = { [name: string]: any };
 
@@ -46,6 +45,7 @@ interface ExecContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
+  getFieldValue: FieldValueGetter;
 };
 
 export type ExecResultMissingField = {
@@ -169,6 +169,7 @@ export class StoreReader {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        getFieldValue: policies.makeFieldValueGetter(store),
       },
     });
 
@@ -196,10 +197,9 @@ export class StoreReader {
     objectOrReference,
     context,
   }: ExecSelectionSetOptions): ExecResult {
-    const { store, fragmentMap, variables, policies } = context;
+    const { fragmentMap, variables, policies, getFieldValue } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
-    const getFieldValue = makeFieldValueGetter(policies, store);
     const typename = getFieldValue<string>(objectOrReference, "__typename");
 
     if (this.config.addTypename &&
@@ -369,40 +369,6 @@ export class StoreReader {
 
     return { result: array, missing };
   }
-}
-
-export type FieldValueGetter =
-  ReturnType<typeof makeFieldValueGetter>;
-
-function makeFieldValueGetter(
-  policies: Policies,
-  store: NormalizedCache,
-) {
-  // Provides a uniform interface for reading field values, whether or not
-  // objectOrReference is a normalized entity.
-  return function getFieldValue<T = StoreValue>(
-    objectOrReference: StoreObject | Reference,
-    storeFieldName: string,
-  ): Readonly<T> {
-    let fieldValue: StoreValue;
-    if (isReference(objectOrReference)) {
-      const dataId = objectOrReference.__ref;
-      fieldValue = store.getFieldValue(dataId, storeFieldName);
-      if (fieldValue === void 0 && storeFieldName === "__typename") {
-        // We can infer the __typename of singleton root objects like
-        // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
-        // we have never written that information into the cache.
-        return policies.rootTypenamesById[dataId] as any;
-      }
-    } else {
-      fieldValue = objectOrReference && objectOrReference[storeFieldName];
-    }
-    if (process.env.NODE_ENV !== "production") {
-      // Enforce Readonly<T> at runtime, in development.
-      maybeDeepFreeze(fieldValue);
-    }
-    return fieldValue as T;
-  };
 }
 
 function assertSelectionSetForIdValue(

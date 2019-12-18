@@ -96,11 +96,16 @@ export type FieldValueGetter =
 interface FieldFunctionOptions {
   args: Record<string, any> | null;
 
-  // When a field function is called as part of reading or writing a
-  // query, options.field will be a FieldNode from the query, but it could
-  // be the field.name.value string instead, if the function was called
-  // via options.readField(fieldName).
-  field: string | FieldNode;
+  // The name of the field, equal to options.field.name.value when
+  // options.field is available. Useful if you reuse the same function for
+  // multiple fields, and you need to know which field you're currently
+  // processing. Always a string, even when options.field is null.
+  fieldName: string;
+
+  // The FieldNode object used to read this field. Useful if you need to
+  // know about other attributes of the field, such as its directives. This
+  // option will be null when a string was passed to options.readField.
+  field: FieldNode | null;
 
   variables?: Record<string, any>;
 
@@ -117,6 +122,20 @@ interface FieldFunctionOptions {
 type StorageType = Record<string, any>;
 
 interface ReadFunctionOptions extends FieldFunctionOptions {
+  // Helper function for reading other fields within the current object.
+  // If a foreign object or reference is provided, the field will be read
+  // from that object instead of the current object, so this function can
+  // be used (together with isReference) to examine the cache outside the
+  // current object. If a FieldNode is passed instead of a string, and
+  // that FieldNode has arguments, the same options.variables will be used
+  // to compute the argument values. Note that this function will invoke
+  // custom read functions for other fields, if defined. Always returns
+  // immutable data (enforced with Object.freeze in development).
+  readField<T = StoreValue>(
+    nameOrField: string | FieldNode,
+    foreignObjOrRef?: StoreObject | Reference,
+  ): Readonly<T>;
+
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
@@ -128,19 +147,6 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
   // calling options.invalidate() can be a good way to deliver the new
   // result asynchronously.
   invalidate(): void;
-
-  // Helper function for reading other fields within the current object.
-  // If a foreignRef is provided, the field will be read from that object
-  // instead of the current object, so this function can be used (together
-  // with isReference) to examine the cache outside the current entity.
-  // If a FieldNode is passed instead of a string, and that FieldNode has
-  // arguments, the same options.variables will be used to compute the
-  // argument values. Note that this function will invoke custom read
-  // functions for other fields, if defined.
-  readField<T = StoreValue>(
-    nameOrField: string | FieldNode,
-    foreignRef?: Reference,
-  ): Readonly<T>;
 }
 
 type FieldReadFunction<TExisting, TResult = TExisting> = (
@@ -514,7 +520,8 @@ export class Policies {
       return read(existing, {
         args: typeof nameOrField === "string" ? null :
           argumentsObjectFromField(nameOrField, variables),
-        field: typeof nameOrField === "string" ? fieldName : nameOrField,
+        field: typeof nameOrField === "string" ? null : nameOrField,
+        fieldName,
         variables,
         policies,
         isReference,
@@ -522,9 +529,12 @@ export class Policies {
         storage,
         // I'm not sure why it's necessary to repeat the parameter types
         // here, but TypeScript complains if I leave them out.
-        readField<T>(nameOrField: string | FieldNode, ref?: Reference) {
+        readField<T>(
+          nameOrField: string | FieldNode,
+          foreignObjOrRef?: Reference,
+        ) {
           return policies.readField<T>(
-            ref || objectOrReference,
+            foreignObjOrRef || objectOrReference,
             nameOrField,
             getFieldValue,
             variables,
@@ -555,6 +565,7 @@ export class Policies {
       ) => merge(existing, incoming, {
         args,
         field,
+        fieldName: field.name.value,
         variables,
         policies,
         isReference,

@@ -561,65 +561,61 @@ export class Policies {
     return !!(policy && policy.merge);
   }
 
-  public applyMerges(
-    store: NormalizedCache,
-    dataId: string,
-    incomingFields: StoreObject,
+  public applyMerges<T extends StoreValue>(
+    existing: T | Reference,
+    incoming: T | FieldValueToBeMerged,
+    getFieldValue: FieldValueGetter,
     variables: Record<string, any>,
-  ) {
-    Object.keys(incomingFields).forEach(storeFieldName => {
-      incomingFields[storeFieldName] = this.applyMergesHelper(
-        store.getFieldValue(dataId, storeFieldName),
-        incomingFields[storeFieldName],
+  ): T {
+    const policies = this;
+
+    if (isFieldValueToBeMerged(incoming)) {
+      const field = incoming.__field;
+      const fieldName = field.name.value;
+      const policy = policies.getFieldPolicy(
+        incoming.__typename, fieldName, false);
+
+      // The incoming data can have multiple layers of nested objects, so
+      // we need to handle child merges before handling parent merges.
+      const applied = policies.applyMerges(
+        existing,
+        incoming.__value as T,
+        getFieldValue,
         variables,
       );
-    });
-    return incomingFields;
-  }
 
-  private applyMergesHelper(
-    existing: StoreValue,
-    incoming: StoreValue | FieldValueToBeMerged,
-    variables: Record<string, any>,
-  ): StoreValue {
-    if (incoming && typeof incoming === "object") {
-      if (isFieldValueToBeMerged(incoming)) {
-        const field = incoming.__field;
-        const fieldName = field.name.value;
-        const policy = this.getFieldPolicy(
-          incoming.__typename, fieldName, false);
-
-        const merge = policy && policy.merge;
-        if (merge) {
-          // StoreObjects can have multiple layers of child objects/arrays, so
-          // we need to handle child merges before handling parent merges.
-          const applied = this.applyMergesHelper(
-            existing, incoming.__value, variables);
-
-          if (process.env.NODE_ENV !== "production") {
-            // It may be tempting to modify existing data directly, for example
-            // by pushing more elements onto an existing array, but merge
-            // functions are expected to be pure, so it's important that we
-            // enforce immutability in development.
-            maybeDeepFreeze(existing);
-          }
-
-          return merge(existing, applied, {
-            args: argumentsObjectFromField(field, variables),
-            field,
-            fieldName,
-            variables,
-            policies: this,
-            isReference,
-            toReference: this.toReference,
-          });
+      const merge = policy && policy.merge;
+      if (merge) {
+        if (process.env.NODE_ENV !== "production") {
+          // It may be tempting to modify existing data directly, for example
+          // by pushing more elements onto an existing array, but merge
+          // functions are expected to be pure, so it's important that we
+          // enforce immutability in development.
+          maybeDeepFreeze(existing);
         }
+
+        return merge(existing, applied, {
+          args: argumentsObjectFromField(field, variables),
+          field,
+          fieldName,
+          variables,
+          policies,
+          isReference,
+          toReference: policies.toReference,
+        }) as T;
       }
 
-      Object.keys(incoming).forEach(storeFieldName => {
-        (incoming as StoreObject)[storeFieldName] = this.applyMergesHelper(
-          existing && (existing as StoreObject)[storeFieldName],
-          incoming && (incoming as StoreObject)[storeFieldName],
+      return applied;
+    }
+
+    if (incoming && typeof incoming === "object") {
+      const e = existing as StoreObject | Reference;
+      const i = incoming as object as StoreObject;
+      Object.keys(i).forEach(storeFieldName => {
+        i[storeFieldName] = policies.applyMerges(
+          getFieldValue(e, storeFieldName),
+          i[storeFieldName],
+          getFieldValue,
           variables,
         );
       });

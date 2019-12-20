@@ -34,7 +34,11 @@ import {
   NormalizedCache,
 } from "./types";
 
-import { fieldNameFromStoreName } from './helpers';
+import {
+  fieldNameFromStoreName,
+  FieldValueToBeMerged,
+  isFieldValueToBeMerged,
+} from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -549,36 +553,77 @@ export class Policies {
     return existing;
   }
 
-  public getFieldMergeFunction(
+  public hasMergeFunction(
     typename: string,
-    field: FieldNode,
-    variables?: Record<string, any>,
-  ): StoreValueMergeFunction {
+    fieldName: string,
+  ) {
+    const policy = this.getFieldPolicy(typename, fieldName, false);
+    return !!(policy && policy.merge);
+  }
+
+  public applyMerges<T extends StoreValue>(
+    existing: T | Reference,
+    incoming: T | FieldValueToBeMerged,
+    getFieldValue: FieldValueGetter,
+    variables: Record<string, any>,
+  ): T {
     const policies = this;
-    const policy = policies.getFieldPolicy(typename, field.name.value, false);
-    const merge = policy && policy.merge;
-    if (merge) {
-      const args = argumentsObjectFromField(field, variables);
-      return (
-        existing: StoreValue,
-        incoming: StoreValue,
-      ) => merge(existing, incoming, {
-        args,
-        field,
-        fieldName: field.name.value,
+
+    if (isFieldValueToBeMerged(incoming)) {
+      const field = incoming.__field;
+      const fieldName = field.name.value;
+      const policy = policies.getFieldPolicy(
+        incoming.__typename, fieldName, false);
+
+      // The incoming data can have multiple layers of nested objects, so
+      // we need to handle child merges before handling parent merges.
+      const applied = policies.applyMerges(
+        existing,
+        incoming.__value as T,
+        getFieldValue,
         variables,
-        policies,
-        isReference,
-        toReference: policies.toReference,
+      );
+
+      const merge = policy && policy.merge;
+      if (merge) {
+        if (process.env.NODE_ENV !== "production") {
+          // It may be tempting to modify existing data directly, for example
+          // by pushing more elements onto an existing array, but merge
+          // functions are expected to be pure, so it's important that we
+          // enforce immutability in development.
+          maybeDeepFreeze(existing);
+        }
+
+        return merge(existing, applied, {
+          args: argumentsObjectFromField(field, variables),
+          field,
+          fieldName,
+          variables,
+          policies,
+          isReference,
+          toReference: policies.toReference,
+        }) as T;
+      }
+
+      return applied;
+    }
+
+    if (incoming && typeof incoming === "object") {
+      const e = existing as StoreObject | Reference;
+      const i = incoming as object as StoreObject;
+      Object.keys(i).forEach(storeFieldName => {
+        i[storeFieldName] = policies.applyMerges(
+          getFieldValue(e, storeFieldName),
+          i[storeFieldName],
+          getFieldValue,
+          variables,
+        );
       });
     }
+
+    return incoming;
   }
 }
-
-export type StoreValueMergeFunction = (
-  existing: StoreValue,
-  incoming: StoreValue,
-) => StoreValue;
 
 function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,

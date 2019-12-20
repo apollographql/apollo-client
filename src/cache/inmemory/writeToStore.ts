@@ -21,14 +21,13 @@ import {
   StoreValue,
 } from '../../utilities/graphql/storeUtils';
 
-import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
-import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 
+import { Policies, FieldValueGetter } from './policies';
 import { defaultNormalizedCacheFactory } from './entityStore';
 import { NormalizedCache, StoreObject } from './types';
-import { Policies, StoreValueMergeFunction } from './policies';
+import { makeProcessedFieldsMerger } from './helpers';
 
 export type WriteContext = {
   readonly store: NormalizedCache;
@@ -37,14 +36,10 @@ export type WriteContext = {
   };
   readonly variables?: any;
   readonly fragmentMap?: FragmentMap;
+  getFieldValue: FieldValueGetter;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
 };
-
-type MergeOverrides = Record<string | number, {
-  merge?: StoreValueMergeFunction;
-  child?: MergeOverrides;
-}>;
 
 export interface StoreWriterConfig {
   policies: Policies;
@@ -89,10 +84,7 @@ export class StoreWriter {
     // owner DocumentNode objects, until/unless evicted for all owners.
     store.retain(dataId);
 
-    // A DeepMerger that merges arrays and objects structurally, but otherwise
-    // prefers incoming scalar values over existing values. Used to accumulate
-    // fields when processing a single selection set.
-    const simpleMerger = new DeepMerger;
+    const merger = makeProcessedFieldsMerger();
 
     return this.writeSelectionSetToStore({
       result: result || Object.create(null),
@@ -102,13 +94,14 @@ export class StoreWriter {
         store,
         written: Object.create(null),
         merge<T>(existing: T, incoming: T) {
-          return simpleMerger.merge(existing, incoming) as T;
+          return merger.merge(existing, incoming) as T;
         },
         variables: {
           ...getDefaultValues(operationDefinition),
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        getFieldValue: this.policies.makeFieldValueGetter(store),
       },
     });
   }
@@ -124,6 +117,7 @@ export class StoreWriter {
     selectionSet: SelectionSetNode;
     context: WriteContext;
   }): NormalizedCache {
+    const { policies } = this;
     const { store, written } = context;
 
     // Avoid processing the same entity object using the same selection set
@@ -135,36 +129,28 @@ export class StoreWriter {
     if (sets.indexOf(selectionSet) >= 0) return store;
     sets.push(selectionSet);
 
+    const entityRef = makeReference(dataId);
     const typename =
       // If the result has a __typename, trust that.
       getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
       // If the entity identified by dataId has a __typename in the store,
       // fall back to that.
-      store.getFieldValue(dataId, "__typename") as string ||
-      // Special dataIds like ROOT_QUERY have a known default __typename.
-      this.policies.rootTypenamesById[dataId];
+      context.getFieldValue<string>(entityRef, "__typename");
 
-    const processed = this.processSelectionSet({
-      result,
-      selectionSet,
-      context,
-      typename,
-    });
-
-    if (processed.mergeOverrides) {
-      // If processSelectionSet reported any custom merge functions, walk
-      // the processed.mergeOverrides structure and preemptively merge
-      // incoming values with (possibly non-existent) existing values
-      // using the custom function. This function updates processed.result
-      // in place with the custom-merged values.
-      walkWithMergeOverrides(
-        store.get(dataId),
-        processed.result,
-        processed.mergeOverrides,
-      );
-    }
-
-    store.merge(dataId, processed.result);
+    store.merge(
+      dataId,
+      policies.applyMerges(
+        entityRef,
+        this.processSelectionSet({
+          result,
+          selectionSet,
+          context,
+          typename,
+        }),
+        context.getFieldValue,
+        context.variables,
+      ),
+    );
 
     return store;
   }
@@ -173,18 +159,13 @@ export class StoreWriter {
     result,
     selectionSet,
     context,
-    mergeOverrides,
     typename,
   }: {
     result: Record<string, any>;
     selectionSet: SelectionSetNode;
     context: WriteContext;
-    mergeOverrides?: MergeOverrides;
     typename: string;
-  }): {
-    result: StoreObject;
-    mergeOverrides?: MergeOverrides;
-  } {
+  }): StoreObject {
     let mergedFields: StoreObject = Object.create(null);
     if (typeof typename === "string") {
       mergedFields.__typename = typename;
@@ -195,39 +176,39 @@ export class StoreWriter {
         return;
       }
 
+      const { policies } = this;
+
       if (isField(selection)) {
         const resultFieldKey = resultKeyNameFromField(selection);
         const value = result[resultFieldKey];
 
         if (typeof value !== 'undefined') {
-          const storeFieldName = this.policies.getStoreFieldName(
+          const storeFieldName = policies.getStoreFieldName(
             typename,
             selection,
             context.variables,
           );
 
-          const processed = this.processFieldValue(value, selection, context);
-
-          const merge = this.policies.getFieldMergeFunction(
-            typename,
-            selection,
-            context.variables,
-          );
-
-          if (merge || processed.mergeOverrides) {
-            mergeOverrides = mergeOverrides || Object.create(null);
-            mergeOverrides[storeFieldName] = context.merge(
-              mergeOverrides[storeFieldName],
-              { merge, child: processed.mergeOverrides },
-            );
-          }
+          const incomingValue =
+            this.processFieldValue(value, selection, context);
 
           mergedFields = context.merge(mergedFields, {
-            [storeFieldName]: processed.result,
+            // If a custom merge function is defined for this field, store
+            // a special FieldValueToBeMerged object, so that we can run
+            // the merge function later, after all processSelectionSet
+            // work is finished.
+            [storeFieldName]: policies.hasMergeFunction(
+              typename,
+              selection.name.value,
+            ) ? {
+              __field: selection,
+              __typename: typename,
+              __value: incomingValue,
+            } : incomingValue,
           });
 
         } else if (
-          this.policies.usingPossibleTypes &&
+          policies.usingPossibleTypes &&
           !(
             selection.directives &&
             selection.directives.some(
@@ -254,62 +235,37 @@ export class StoreWriter {
           context.fragmentMap,
         );
 
-        if (this.policies.fragmentMatches(fragment, typename)) {
-          const processed = this.processSelectionSet({
-            result,
-            selectionSet: fragment.selectionSet,
-            context,
-            mergeOverrides,
-            typename,
-          });
-
-          mergedFields = context.merge(mergedFields, processed.result);
-
-          if (processed.mergeOverrides) {
-            mergeOverrides = context.merge(
-              mergeOverrides,
-              processed.mergeOverrides
-            );
-          }
+        if (policies.fragmentMatches(fragment, typename)) {
+          mergedFields = context.merge(
+            mergedFields,
+            this.processSelectionSet({
+              result,
+              selectionSet: fragment.selectionSet,
+              context,
+              typename,
+            }),
+          );
         }
       }
     });
 
-    return {
-      result: mergedFields,
-      mergeOverrides,
-    };
+    return mergedFields;
   }
 
   private processFieldValue(
     value: any,
     field: FieldNode,
     context: WriteContext,
-  ): {
-    result: StoreValue;
-    mergeOverrides?: MergeOverrides;
-  } {
+  ): StoreValue {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
       // safely frozen with maybeDeepFreeze in readFromStore.ts. In production,
       // it's cheaper to store the scalar values directly in the cache.
-      return {
-        result: process.env.NODE_ENV === 'production' ? value : cloneDeep(value),
-      };
+      return process.env.NODE_ENV === 'production' ? value : cloneDeep(value);
     }
 
     if (Array.isArray(value)) {
-      let overrides: Record<number, { child: MergeOverrides }>;
-      const result = value.map((item, i) => {
-        const { result, mergeOverrides } =
-          this.processFieldValue(item, field, context);
-        if (mergeOverrides) {
-          overrides = overrides || [];
-          overrides[i] = { child: mergeOverrides };
-        }
-        return result;
-      });
-      return { result, mergeOverrides: overrides };
+      return value.map((item, i) => this.processFieldValue(item, field, context));
     }
 
     if (value) {
@@ -328,7 +284,7 @@ export class StoreWriter {
           selectionSet: field.selectionSet,
           context,
         });
-        return { result: makeReference(dataId) };
+        return makeReference(dataId);
       }
     }
 
@@ -340,31 +296,4 @@ export class StoreWriter {
         value, field.selectionSet, context.fragmentMap),
     });
   }
-}
-
-function walkWithMergeOverrides(
-  existingObject: StoreObject,
-  incomingObject: StoreObject,
-  overrides: MergeOverrides,
-): void {
-  Object.keys(overrides).forEach(name => {
-    const { merge, child } = overrides[name];
-    const existingValue: any = existingObject && existingObject[name];
-    const incomingValue: any = incomingObject && incomingObject[name];
-    if (child) {
-      // StoreObjects can have multiple layers of child objects/arrays,
-      // each layer with its own child fields and override functions.
-      walkWithMergeOverrides(existingValue, incomingValue, child);
-    }
-    if (merge) {
-      if (process.env.NODE_ENV !== "production") {
-        // It may be tempting to modify existing data directly, for
-        // example by pushing more elements onto an existing array, but
-        // merge functions are expected to be pure, so it's important that
-        // we enforce immutability in development.
-        maybeDeepFreeze(existingValue);
-      }
-      incomingObject[name] = merge(existingValue, incomingValue);
-    }
-  });
 }

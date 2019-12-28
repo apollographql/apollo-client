@@ -127,7 +127,7 @@ Now, queries and mutations will go over HTTP as normal, but subscriptions will b
 The easiest way to bring live data to your UI is by using React Apollo's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
@@ -149,7 +149,7 @@ function DontReadTheComments({ repoFullName }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
@@ -208,7 +208,7 @@ With `subscribeToMore`, you can easily do the latter.
 Here is a regular query:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -232,7 +232,7 @@ function CommentsPageWithData({ params }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -266,7 +266,7 @@ Add a function called `subscribeToNewComments` that will subscribe using `subscr
 Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -320,7 +320,7 @@ function CommentsPageWithData({ params }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const COMMENT_QUERY = gql`

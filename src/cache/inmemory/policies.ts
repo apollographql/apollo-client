@@ -97,6 +97,8 @@ export type FieldPolicy<TValue> = {
 export type FieldValueGetter =
   ReturnType<Policies["makeFieldValueGetter"]>;
 
+type StorageType = Record<string, any>;
+
 interface FieldFunctionOptions {
   args: Record<string, any> | null;
 
@@ -121,11 +123,7 @@ interface FieldFunctionOptions {
   // Utilities for dealing with { __ref } objects.
   isReference: typeof isReference;
   toReference: Policies["toReference"];
-}
 
-type StorageType = Record<string, any>;
-
-interface ReadFunctionOptions extends FieldFunctionOptions {
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
   // from that object instead of the current object, so this function can
@@ -163,7 +161,7 @@ type FieldReadFunction<TExisting, TResult = TExisting> = (
   // developer to annotate it with a type, without also having to provide
   // a whole new type for the options object.
   existing: Readonly<TExisting> | undefined,
-  options: ReadFunctionOptions,
+  options: FieldFunctionOptions,
 ) => TResult;
 
 type FieldMergeFunction<TExisting> = (
@@ -500,6 +498,11 @@ export class Policies {
     variables?: Record<string, any>,
     typename = getFieldValue<string>(objectOrReference, "__typename"),
   ): Readonly<V> {
+    invariant(
+      objectOrReference,
+      "Must provide an object or Reference when calling Policies#readField",
+    );
+
     const policies = this;
     const storeFieldName = typeof nameOrField === "string" ? nameOrField
       : policies.getStoreFieldName(typename, nameOrField, variables);
@@ -566,6 +569,7 @@ export class Policies {
     incoming: T | FieldValueToBeMerged,
     getFieldValue: FieldValueGetter,
     variables: Record<string, any>,
+    storageKeys?: [string | StoreObject, string],
   ): T {
     const policies = this;
 
@@ -575,13 +579,17 @@ export class Policies {
       const policy = policies.getFieldPolicy(
         incoming.__typename, fieldName, false);
 
-      // The incoming data can have multiple layers of nested objects, so
-      // we need to handle child merges before handling parent merges.
+      // The incoming data can have multiple layers of nested objects, so we
+      // need to handle child merges before handling parent merges. This
+      // post-order traversal also ensures that the incoming data passed to
+      // parent merge functions never contains any FieldValueToBeMerged
+      // objects for fields within child objects.
       const applied = policies.applyMerges(
         existing,
         incoming.__value as T,
         getFieldValue,
         variables,
+        storageKeys,
       );
 
       const merge = policy && policy.merge;
@@ -594,6 +602,17 @@ export class Policies {
           maybeDeepFreeze(existing);
         }
 
+        // If storage ends up null, that just means no options.storage object
+        // has ever been created for a read function for this field before, so
+        // there's nothing this merge function could do with options.storage
+        // that would help the read function do its work. Most merge functions
+        // will never need to worry about options.storage, but if you're
+        // reading this comment then you probably have good reasons for
+        // wanting to know esoteric details like these, you wizard, you.
+        const storage = storageKeys
+          ? policies.storageTrie.lookupArray(storageKeys)
+          : null;
+
         return merge(existing, applied, {
           args: argumentsObjectFromField(field, variables),
           field,
@@ -602,6 +621,34 @@ export class Policies {
           policies,
           isReference,
           toReference: policies.toReference,
+          readField<T>(
+            nameOrField: string | FieldNode,
+            foreignObjOrRef: StoreObject | Reference,
+          ) {
+            // Unlike options.readField for read functions, we do not fall
+            // back to the current object if no foreignObjOrRef is provided,
+            // because it's not clear what the current object should be for
+            // merge functions: the (possibly undefined) existing object, or
+            // the incoming object? If you think your merge function needs
+            // to read sibling fields in order to produce a new value for
+            // the current field, you might want to rethink your strategy,
+            // because that's a recipe for making merge behavior sensitive
+            // to the order in which fields are written into the cache.
+            // However, readField(name, ref) is useful for merge functions
+            // that need to deduplicate child objects and references.
+            return policies.readField<T>(
+              foreignObjOrRef,
+              nameOrField,
+              getFieldValue,
+              variables,
+            );
+          },
+          storage,
+          invalidate() {
+            if (storage) {
+              policies.fieldDep.dirty(storage);
+            }
+          },
         }) as T;
       }
 
@@ -611,12 +658,28 @@ export class Policies {
     if (incoming && typeof incoming === "object") {
       const e = existing as StoreObject | Reference;
       const i = incoming as object as StoreObject;
+
+      // If the existing object is a { __ref } object, e.__ref provides a
+      // stable key for looking up the storage object associated with
+      // e.__ref and storeFieldName. Otherwise, storage is enabled only if
+      // existing is actually a non-null object. It's less common for a
+      // merge function to use options.storage, but it's conceivable that a
+      // pair of read and merge functions might want to cooperate in
+      // managing their shared options.storage object.
+      const firstStorageKey = isReference(e)
+        ? e.__ref
+        : typeof e === "object" && e;
+
       Object.keys(i).forEach(storeFieldName => {
         i[storeFieldName] = policies.applyMerges(
           getFieldValue(e, storeFieldName),
           i[storeFieldName],
           getFieldValue,
           variables,
+          // Avoid enabling storage when firstStorageKey is falsy, which
+          // implies no options.storage object has ever been created for a
+          // read function for this field.
+          firstStorageKey && [firstStorageKey, storeFieldName],
         );
       });
     }

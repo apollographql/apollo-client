@@ -1199,16 +1199,10 @@ describe('EntityStore', () => {
 
     expect(() => cache.readQuery({
       query: queryWithAliases,
-    })).toThrow(
-      "Attempted to match fragment Rest with type condition ABCs against " +
-        "object with unknown __typename"
-    );
+    })).toThrow(/Can't find field a on object/);
 
     expect(() => cache.readQuery({
       query: queryWithoutAliases,
-    })).toThrow(
-      "Attempted to match fragment Rest with type condition ABCs against " +
-        "object with unknown __typename"
-    );
+    })).toThrow(/Can't find field a on object/);
   });
 });

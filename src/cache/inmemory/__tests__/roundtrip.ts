@@ -308,41 +308,6 @@ describe('roundtrip', () => {
       );
     });
 
-    it('should error on union types with inline fragments without typenames', () => {
-      return expect(() => {
-        storeRoundtrip(
-          gql`
-            query {
-              all_people {
-                name
-                ... on Jedi {
-                  side
-                }
-                ... on Droid {
-                  model
-                }
-              }
-            }
-          `,
-          {
-            all_people: [
-              {
-                name: 'Luke Skywalker',
-                side: 'bright',
-              },
-              {
-                name: 'R2D2',
-                model: 'astromech',
-              },
-            ],
-          },
-        );
-      }).toThrowError(
-        'Attempted to match fragment with type condition Jedi against ' +
-          'object with unknown __typename'
-      );
-    });
-
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
     it('should throw an error on two of the same inline fragment types', () => {

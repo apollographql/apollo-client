@@ -392,15 +392,11 @@ export class Policies {
   ): boolean {
     if (!fragment.typeCondition) return true;
 
+    // If the fragment has a type condition but the object we're matching
+    // against does not have a __typename, the fragment cannot match.
+    if (!typename) return false;
+
     const supertype = fragment.typeCondition.name.value;
-
-    invariant(
-      typename,
-      `Attempted to match fragment ${
-        fragment.kind === "InlineFragment" ? "" : fragment.name.value + " "
-      }with type condition ${supertype} against object with unknown __typename`,
-    );
-
     if (typename === supertype) return true;
 
     if (this.usingPossibleTypes) {

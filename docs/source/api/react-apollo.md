@@ -81,7 +81,7 @@ The Query component accepts the following props. Only `query` and `children` are
   <dd>A callback executed once your query successfully completes.</dd>
   <dt><code>onError</code>: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error.</dd>
-  <dt><code>context</code>: Record&lt;string, any&lt;</dt>
+  <dt><code>context</code>: Record&lt;string, any&gt;</dt>
   <dd>Shared context between your Query component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the <code>request</code> function of Apollo Boost.</dd>
   <dt><code>partialRefetch</code>: boolean</dt>
   <dd>If <code>true</code>, perform a query <code>refetch</code> if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client <code>QueryManager</code> (due to a cache miss). The default value is <code>false</code> for backwards-compatibility's sake, but should be changed to true for most use-cases.</dd>
@@ -147,7 +147,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dd>A callback executed once your mutation successfully completes</dd>
   <dt><code>onError</code>: (error: ApolloError) => void</dt>
   <dd>A callback executed in the event of an error</dd>
-  <dt><code>context</code>: Record&lt;string, any&lt;</dt>
+  <dt><code>context</code>: Record&lt;string, any&gt;</dt>
   <dd>Shared context between your Mutation component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the <code>request</code> function of Apollo Boost.</dd>
   <dt><code>client</code>: ApolloClient</dt>
   <dd>An <code>ApolloClient</code> instance. By default <code>Mutation</code> uses the client passed down via context, but a different client can be passed in.</dd>

@@ -50,7 +50,6 @@ module.exports = {
             'development-testing/testing',
             'development-testing/client-schema-mocking',
             'development-testing/developer-tooling',
-            'development-testing/recompose',
           ],
           Performance: [
             'performance/performance',

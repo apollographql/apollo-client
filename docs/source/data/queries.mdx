@@ -28,7 +28,7 @@ The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the pr
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```tsx:title=index.js
 import { gql, useQuery } from '@apollo/client';
@@ -44,7 +44,7 @@ const GET_DOGS = gql`
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```tsx:title=index.js
 import { gql } from "@apollo/client";
@@ -66,7 +66,7 @@ const GET_DOGS = gql`
 Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS` query to the `useQuery` hook:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```tsx:title=index.js
 function Dogs({ onDogSelected }) {
@@ -88,7 +88,7 @@ function Dogs({ onDogSelected }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```tsx:title=index.js
 const Dogs = ({ onDogSelected }) => (
@@ -132,7 +132,7 @@ extremely fast.
 To see this caching in action, let's build a new component called `DogPhoto`. `DogPhoto` accepts a prop called `breed` that reflects the current value of the dropdown menu in our `Dogs` component:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx:title=index.js
 const GET_DOG_PHOTO = gql`
@@ -159,7 +159,7 @@ function DogPhoto({ breed }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx:title=index.js
 const GET_DOG_PHOTO = gql`
@@ -204,7 +204,7 @@ want to make sure that cached data is up to date with your server. Apollo Client
 Polling provides near-real-time synchronization with your server by causing a query to execute periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx:title=index.js
 function DogPhoto({ breed }) {
@@ -224,7 +224,7 @@ function DogPhoto({ breed }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx:title=index.js
 const DogPhoto = ({ breed }) => (
@@ -266,7 +266,7 @@ the `refetch` function. If you don't (as is the case in the following example),
 the query uses the same variables that it used in its previous execution.
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx:title=index.js
 function DogPhoto({ breed }) {
@@ -288,7 +288,7 @@ function DogPhoto({ breed }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx:title=index.js
 const DogPhoto = ({ breed }) => (
@@ -326,7 +326,7 @@ Luckily, the `useQuery` hook's result object provides fine-grained information a
 of this information, we need to set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx:title=index.js
 function DogPhoto({ breed }) {
@@ -353,7 +353,7 @@ function DogPhoto({ breed }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx:title=index.js
 const DogPhoto = ({ breed }) => (

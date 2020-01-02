@@ -16,12 +16,6 @@
 - Fully removed `prettier`. The Apollo Client team has decided to no longer automatically enforce code formatting across the codebase. In most cases existing code styles should be followed as much as possible, but this is not a hard and fast rule.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5227](https://github.com/apollographql/apollo-client/pull/5227)
 
-- Update the `fetchMore` type signature to accept `context`.  <br/>
-  [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
-
-- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
-  [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
-
 - Eliminate "generated" cache IDs to avoid normalizing objects with no meaningful ID, significantly reducing cache memory usage. <br/>
   [@benjamn](https://github.com/benjamn) in [#5146](https://github.com/apollographql/apollo-client/pull/5146)
 
@@ -36,11 +30,6 @@
 
 - `@apollo/client/cache` can be used to import the Apollo Client cache without importing other parts of the Apollo Client codebase. <br/>
   [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
-
-- Local state resolver functions now receive a `fragmentMap: FragmentMap`
-  object, in addition to the `field: FieldNode` object, via the `info`
-  parameter. <br/>
-  [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
 
 - Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
@@ -91,6 +80,40 @@
 - Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
   [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
 
+## Apollo Client 2.6.8
+
+### Apollo Client (2.6.8)
+
+- Update the `fetchMore` type signature to accept `context`.  <br/>
+  [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
+
+- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
+  [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
+
+- Local state resolver functions now receive a `fragmentMap: FragmentMap`
+  object, in addition to the `field: FieldNode` object, via the `info`
+  parameter. <br/>
+  [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
+
+- Documentation updates. <br/>
+  [@tomquirk](https://github.com/tomquirk) in [#5645](https://github.com/apollographql/apollo-client/pull/5645) <br/>
+  [@Sequoia](https://github.com/Sequoia) in [#5641](https://github.com/apollographql/apollo-client/pull/5641) <br/>
+  [@phryneas](https://github.com/phryneas) in [#5628](https://github.com/apollographql/apollo-client/pull/5628) <br/>
+  [@AryanJ-NYC](https://github.com/AryanJ-NYC) in [#5560](https://github.com/apollographql/apollo-client/pull/5560)
+
+### GraphQL Anywhere (4.2.6)
+
+- Fix `filter` edge case involving `null`.  <br/>
+  [@lifeiscontent](https://github.com/lifeiscontent) in [#5110](https://github.com/apollographql/apollo-client/pull/5110)
+
+### Apollo Boost (0.4.7)
+
+- Replace `GlobalFetch` reference with `WindowOrWorkerGlobalScope`.  <br/>
+  [@abdonrd](https://github.com/abdonrd) in [#5373](https://github.com/apollographql/apollo-client/pull/5373)
+
+- Add `assumeImmutableResults` typing to apollo boost `PresetConfig` interface. <br/>
+  [@bencoullie](https://github.com/bencoullie) in [#5571](https://github.com/apollographql/apollo-client/pull/5571)
+
 ## Apollo Client (2.6.4)
 
 ### Apollo Client (2.6.4)
@@ -98,9 +121,11 @@
 - Modify `ObservableQuery` to allow queries with `notifyOnNetworkStatusChange`
   to be notified when loading after an error occurs. <br />
   [@jasonpaulos](https://github.com/jasonpaulos) in [#4992](https://github.com/apollographql/apollo-client/pull/4992)
+
 - Add `graphql` as a `peerDependency` of `apollo-cache` and
   `graphql-anywhere`.  <br/>
   [@ssalbdivad](https://github.com/ssalbdivad) in [#5081](https://github.com/apollographql/apollo-client/pull/5081)
+
 - Documentation updates.  </br>
   [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132)  <br/>
   [@hwillson](https://github.com/hwillson) in [#5141](https://github.com/apollographql/apollo-client/pull/5141)

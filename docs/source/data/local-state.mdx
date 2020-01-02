@@ -24,7 +24,7 @@ There are two main ways to perform local state mutations. The first way is to di
 Direct writes to the cache do not require a GraphQL mutation or a resolver function. They leverage your Apollo Client instance directly by accessing the `client` property returned from the `useApolloClient` hook, made available in the `useQuery` hook result, or within the render prop function of the `ApolloConsumer` component. We recommend using this strategy for simple writes, such as writing a string, or one-off writes. It's important to note that direct writes are not implemented as GraphQL mutations under the hood, so you shouldn't include them in your schema. They also do not validate that the data you're writing to the cache is in the shape of valid GraphQL data. If either of these features are important to you, you should opt to use a local resolver instead.
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 import React from "react";
@@ -45,7 +45,7 @@ function FilterLink({ filter, children }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 import React from "react";
@@ -74,7 +74,7 @@ The `ApolloConsumer` render prop function is called with a single value, the Apo
 What if we want to immediately subscribe to the data we just wrote to the cache? Let's create an `active` property on the link that marks the link's filter as active if it's the same as the current `visibilityFilter` in the cache. To immediately subscribe to a client-side mutation, we can use `useQuery`. The `useQuery` hook also makes the client instance available in its result object.
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 import React from "react";
@@ -103,7 +103,7 @@ function FilterLink({ filter, children }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 import React from "react";
@@ -189,7 +189,7 @@ Once we read the fragment, we toggle the todo's completed status and write the u
 Let's learn how to trigger our `toggleTodo` mutation from our component:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 import React from "react"
@@ -218,7 +218,7 @@ function Todo({ id, completed, text }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 import React from "react";
@@ -257,7 +257,7 @@ First, we create a GraphQL mutation that takes the todo's id we want to toggle a
 Querying for local data is very similar to querying your GraphQL server. The only difference is that you add a `@client` directive on your local fields to indicate they should be resolved from the Apollo Client cache or a local resolver function. Let's look at an example:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 import React from "react";
@@ -290,7 +290,7 @@ function TodoList() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 import React from "react";
@@ -634,7 +634,7 @@ As outlined in [Handling `@client` fields with resolvers][], `@client` fields ca
 [Handling `@client` fields with resolvers]: #handling-client-fields-with-resolvers
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 import React from "react";
@@ -681,7 +681,7 @@ ReactDOM.render(
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 import React from "react";
@@ -738,7 +738,7 @@ Pulling `@client` field values directly out of the cache isn't quite as flexible
 Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](/api/apollo-client/#ApolloClient.query) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request. Let's look at an example:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 import React, { Fragment } from "react";
@@ -782,7 +782,7 @@ export default function Launch({ launchId }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 import React, { Fragment } from "react";
@@ -1215,7 +1215,7 @@ export const Stats = Loadable({
 and wait until our `Stats` component is called to define our local resolvers (using `addResolvers`):
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```js
 import React from "react";
@@ -1260,7 +1260,7 @@ export function MessageCount() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```js
 import React from "react";

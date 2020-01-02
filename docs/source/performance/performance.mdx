@@ -89,7 +89,7 @@ Prefetching is one of the easiest ways to make your application's UI feel a lot 
 We can accomplish this in only a few lines of code by calling `client.query` whenever the user hovers over a link. Let's see this in action in the `Feed` component in our example app [Pupstagram](https://codesandbox.io/s/r5qp83z0yq).
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 function Feed() {
@@ -135,7 +135,7 @@ function Feed() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const Feed = () => (
@@ -293,7 +293,7 @@ const client = new ApolloClient({
 A component for the second view that implements the two queries could look like this:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`
@@ -360,7 +360,7 @@ function SeriesDetailView({ seriesId }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`

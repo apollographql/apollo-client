@@ -32,7 +32,7 @@ The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the
 Let's look at an example. First, we'll create a GraphQL mutation named `ADD_TODO`, which represents adding an item to a to-do list. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx:title=index.js
 import gql from 'graphql-tag';
@@ -50,7 +50,7 @@ const ADD_TODO = gql`
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx:title=index.js
 import gql from 'graphql-tag';
@@ -73,7 +73,7 @@ Next, we'll create a component named `AddTodo` that represents the submission fo
 `ADD_TODO` mutation to the `useMutation` hook:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx:title=index.js
 function AddTodo() {
@@ -102,7 +102,7 @@ function AddTodo() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx:title=index.js
 const AddTodo = () => {
@@ -174,7 +174,7 @@ Let's look at an example that enables us to modify the value of any existing
 item in our to-do list:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const UPDATE_TODO = gql`
@@ -221,7 +221,7 @@ function Todos() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const UPDATE_TODO = gql`
@@ -295,7 +295,7 @@ cached version of the to-do list.
 The following sample illustrates defining an update function in a call to `useMutation`:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const GET_TODOS = gql`
@@ -341,7 +341,7 @@ function AddTodo() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const GET_TODOS = gql`
@@ -419,7 +419,7 @@ state of a mutation.
 Let's revisit the `Todos` component from [Updating a single existing entity](#updating-a-single-existing-entity):
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 function Todos() {
@@ -465,7 +465,7 @@ function Todos() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const Todos = () => (

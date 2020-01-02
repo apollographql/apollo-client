@@ -1040,6 +1040,201 @@ describe("type policies", function () {
       });
     });
 
+    it("merge functions can deduplicate items using readField", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              books: {
+                merge(existing: any[] = [], incoming: any[], {
+                  readField,
+                }) {
+                  if (existing) {
+                    const merged = existing.slice(0);
+                    const existingIsbnSet =
+                      new Set(merged.map(book => readField("isbn", book)));
+                    incoming.forEach(book => {
+                      const isbn = readField("isbn", book);
+                      if (!existingIsbnSet.has(isbn)) {
+                        existingIsbnSet.add(isbn);
+                        merged.push(book);
+                      }
+                    });
+                    return merged;
+                  }
+                  return incoming;
+                },
+
+                // Returns the books array, sorted by title.
+                read(existing: any[], { readField }) {
+                  if (existing) {
+                    return existing.slice(0).sort((a, b) => {
+                      const aTitle = readField<string>("title", a);
+                      const bTitle = readField<string>("title", b);
+                      if (aTitle === bTitle) return 0;
+                      if (aTitle < bTitle) return -1;
+                      return 1;
+                    });
+                  }
+                  return [];
+                },
+              },
+            },
+          },
+
+          Book: {
+            keyFields: ["isbn"],
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          books {
+            isbn
+            title
+          }
+        }
+      `;
+
+      const programmingRustBook = {
+        __typename: "Book",
+        isbn: "9781491927281",
+        title: "Programming Rust: Fast, Safe Systems Development",
+      };
+
+      const officialRustBook = {
+        __typename: "Book",
+        isbn: "1593278284",
+        title: "The Rust Programming Language",
+      };
+
+      const handsOnConcurrencyBook = {
+        __typename: "Book",
+        isbn: "1788399978",
+        title: "Hands-On Concurrency with Rust",
+      };
+
+      const wasmWithRustBook = {
+        __typename: "Book",
+        isbn: "1680506366",
+        title: "Programming WebAssembly with Rust",
+      };
+
+      function addBooks(...books: (typeof programmingRustBook)[]) {
+        cache.writeQuery({
+          query,
+          data: {
+            books,
+          },
+        });
+      }
+
+      addBooks(officialRustBook);
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          books: [
+            { __ref: 'Book:{"isbn":"1593278284"}' },
+          ],
+        },
+        'Book:{"isbn":"1593278284"}': {
+          __typename: "Book",
+          isbn: "1593278284",
+          title: "The Rust Programming Language",
+        },
+      });
+
+      addBooks(
+        programmingRustBook,
+        officialRustBook,
+      );
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          books: [
+            { __ref: 'Book:{"isbn":"1593278284"}' },
+            { __ref: 'Book:{"isbn":"9781491927281"}' },
+          ],
+        },
+        'Book:{"isbn":"1593278284"}': officialRustBook,
+        'Book:{"isbn":"9781491927281"}': programmingRustBook,
+      });
+
+      addBooks(
+        wasmWithRustBook,
+        wasmWithRustBook,
+        programmingRustBook,
+        wasmWithRustBook,
+      );
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          books: [
+            { __ref: 'Book:{"isbn":"1593278284"}' },
+            { __ref: 'Book:{"isbn":"9781491927281"}' },
+            { __ref: 'Book:{"isbn":"1680506366"}' },
+          ],
+        },
+        'Book:{"isbn":"1593278284"}': officialRustBook,
+        'Book:{"isbn":"9781491927281"}': programmingRustBook,
+        'Book:{"isbn":"1680506366"}': wasmWithRustBook,
+      });
+
+      addBooks(
+        programmingRustBook,
+        officialRustBook,
+        handsOnConcurrencyBook,
+        wasmWithRustBook,
+      );
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          books: [
+            { __ref: 'Book:{"isbn":"1593278284"}' },
+            { __ref: 'Book:{"isbn":"9781491927281"}' },
+            { __ref: 'Book:{"isbn":"1680506366"}' },
+            { __ref: 'Book:{"isbn":"1788399978"}' },
+          ],
+        },
+        'Book:{"isbn":"1593278284"}': officialRustBook,
+        'Book:{"isbn":"9781491927281"}': programmingRustBook,
+        'Book:{"isbn":"1680506366"}': wasmWithRustBook,
+        'Book:{"isbn":"1788399978"}': handsOnConcurrencyBook,
+      });
+
+      expect(cache.readQuery({ query })).toEqual({
+        // Note that these books have been sorted by title, thanks to the
+        // custom read function we defined above.
+        "books": [
+          {
+            "__typename": "Book",
+            "isbn": "1788399978",
+            "title": "Hands-On Concurrency with Rust",
+          },
+          {
+            "__typename": "Book",
+            "isbn": "9781491927281",
+            "title": "Programming Rust: Fast, Safe Systems Development",
+          },
+          {
+            "__typename": "Book",
+            "isbn": "1680506366",
+            "title": "Programming WebAssembly with Rust",
+          },
+          {
+            "__typename": "Book",
+            "isbn": "1593278284",
+            "title": "The Rust Programming Language",
+          },
+        ],
+      });
+    });
+
     it("readField helper function calls custom read functions", function () {
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:

@@ -36,7 +36,6 @@
     "no-internal-module": true,
     "no-null-keyword": false,
     "no-require-imports": false,
-    "no-shadowed-variable": true,
     "no-switch-case-fall-through": true,
     "no-trailing-whitespace": true,
     "no-unused-expression": true,

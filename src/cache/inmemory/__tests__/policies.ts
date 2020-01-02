@@ -788,6 +788,258 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
+    it("read and merge can cooperate through options.storage", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              jobs: {
+                merge(existing: any[] = [], incoming: any[]) {
+                  return [...existing, ...incoming];
+                },
+              },
+            },
+          },
+
+          Job: {
+            keyFields: ["name"],
+            fields: {
+              result: {
+                read(_, { storage }) {
+                  return storage.result;
+                },
+                merge(_, incoming, { storage, invalidate }) {
+                  storage.result = incoming;
+                  invalidate();
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          jobs {
+            name
+            result
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          jobs: [{
+            __typename: "Job",
+            name: "Job #1",
+            // intentionally omitting the result field
+          }, {
+            __typename: "Job",
+            name: "Job #2",
+            // intentionally omitting the result field
+          }, {
+            __typename: "Job",
+            name: "Job #3",
+            // intentionally omitting the result field
+          }],
+        },
+      });
+
+      const snapshot1 = {
+        ROOT_QUERY: {
+          __typename: "Query",
+          jobs: [
+            { __ref: 'Job:{"name":"Job #1"}' },
+            { __ref: 'Job:{"name":"Job #2"}' },
+            { __ref: 'Job:{"name":"Job #3"}' },
+          ],
+        },
+        'Job:{"name":"Job #1"}': {
+          __typename: "Job",
+          name: "Job #1",
+        },
+        'Job:{"name":"Job #2"}': {
+          __typename: "Job",
+          name: "Job #2",
+        },
+        'Job:{"name":"Job #3"}': {
+          __typename: "Job",
+          name: "Job #3",
+        },
+      };
+
+      expect(cache.extract()).toEqual(snapshot1);
+
+      expect(cache.diff({
+        query,
+        optimistic: false,
+        returnPartialData: true,
+      })).toEqual({
+        result: {
+          jobs: [{
+            __typename: "Job",
+            name: "Job #1",
+          }, {
+            __typename: "Job",
+            name: "Job #2",
+          }, {
+            __typename: "Job",
+            name: "Job #3",
+          }],
+        },
+        complete: false,
+      });
+
+      function setResult(jobNum: number) {
+        cache.writeFragment({
+          id: cache.identify({
+            __typename: "Job",
+            name: `Job #${jobNum}`,
+          }),
+          fragment: gql`
+            fragment JobResult on Job {
+              result
+            }
+          `,
+          data: {
+            __typename: "Job",
+            result: `result for job ${jobNum}`,
+          },
+        });
+      }
+
+      setResult(2);
+
+      // Nothing should have changed in the cache itself as a result of
+      // writing a result for job #2.
+      expect(cache.extract()).toEqual(snapshot1);
+
+      expect(cache.diff({
+        query,
+        optimistic: false,
+        returnPartialData: true,
+      })).toEqual({
+        result: {
+          jobs: [{
+            __typename: "Job",
+            name: "Job #1",
+          }, {
+            __typename: "Job",
+            name: "Job #2",
+            result: "result for job 2",
+          }, {
+            __typename: "Job",
+            name: "Job #3",
+          }],
+        },
+        complete: false,
+      });
+
+      cache.writeQuery({
+        query,
+        data: {
+          jobs: [{
+            __typename: "Job",
+            name: "Job #4",
+            result: "result for job 4",
+          }],
+        },
+      });
+
+      const snapshot2 = {
+        ...snapshot1,
+        ROOT_QUERY: {
+          ...snapshot1.ROOT_QUERY,
+          jobs: [
+            ...snapshot1.ROOT_QUERY.jobs,
+            { __ref: 'Job:{"name":"Job #4"}' },
+          ],
+        },
+        'Job:{"name":"Job #4"}': {
+          __typename: "Job",
+          name: "Job #4",
+        },
+      };
+
+      expect(cache.extract()).toEqual(snapshot2);
+
+      expect(cache.diff({
+        query,
+        optimistic: false,
+        returnPartialData: true,
+      })).toEqual({
+        result: {
+          jobs: [{
+            __typename: "Job",
+            name: "Job #1",
+          }, {
+            __typename: "Job",
+            name: "Job #2",
+            result: "result for job 2",
+          }, {
+            __typename: "Job",
+            name: "Job #3",
+          }, {
+            __typename: "Job",
+            name: "Job #4",
+            result: "result for job 4",
+          }],
+        },
+        complete: false,
+      });
+
+      setResult(1);
+      setResult(3);
+
+      expect(cache.diff({
+        query,
+        optimistic: false,
+        returnPartialData: true,
+      })).toEqual({
+        result: {
+          jobs: [{
+            __typename: "Job",
+            name: "Job #1",
+            result: "result for job 1",
+          }, {
+            __typename: "Job",
+            name: "Job #2",
+            result: "result for job 2",
+          }, {
+            __typename: "Job",
+            name: "Job #3",
+            result: "result for job 3",
+          }, {
+            __typename: "Job",
+            name: "Job #4",
+            result: "result for job 4",
+          }],
+        },
+        complete: true,
+      });
+
+      expect(cache.readQuery({ query })).toEqual({
+        jobs: [{
+          __typename: "Job",
+          name: "Job #1",
+          result: "result for job 1",
+        }, {
+          __typename: "Job",
+          name: "Job #2",
+          result: "result for job 2",
+        }, {
+          __typename: "Job",
+          name: "Job #3",
+          result: "result for job 3",
+        }, {
+          __typename: "Job",
+          name: "Job #4",
+          result: "result for job 4",
+        }],
+      });
+    });
+
     it("readField helper function calls custom read functions", function () {
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:

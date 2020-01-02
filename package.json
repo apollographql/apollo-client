@@ -9,7 +9,6 @@
     "test": "jest --verbose",
     "test-ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "benchmark": "cd packages/apollo-client && npm run benchmark",
-    "prelint": "npm run lint-fix",
     "lint": "lerna run lint",
     "lint-fix": "prettier --ignore-path \"./config/prettierignore\" --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",

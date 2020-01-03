@@ -105,7 +105,7 @@
     "tslint": "5.20.1",
     "typescript": "3.7.4",
     "uglify-js": "3.7.3",
-    "webpack": "4.41.2",
+    "webpack": "4.41.5",
     "webpack-bundle-analyzer": "3.6.0"
   },
   "renovate": {

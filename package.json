@@ -78,6 +78,7 @@
     "danger": "7.1.4",
     "fetch-mock": "7.7.3",
     "flow-bin": "0.114.0",
+    "fsevents": "2.1.2",
     "graphql": "14.5.8",
     "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",

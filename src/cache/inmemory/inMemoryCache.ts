@@ -99,6 +99,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
           const { optimistic, rootId, variables } = c;
           return store.makeCacheKey(
             c.query,
+            // Different watches can have the same query, optimistic
+            // status, rootId, and variables, but if their callbacks are
+            // different, the (identical) result needs to be delivered to
+            // each distinct callback. The easiest way to achieve that
+            // separation is to include c.callback in the cache key for
+            // maybeBroadcastWatch calls. See issue #5733.
+            c.callback,
             JSON.stringify({ optimistic, rootId, variables }),
           );
         }

@@ -1187,3 +1187,140 @@ describe('Cache', () => {
     });
   });
 });
+
+describe("InMemoryCache#broadcastWatches", function () {
+  it("should keep distinct consumers distinct (issue #5733)", function () {
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        value(arg: $arg) {
+          name
+        }
+      }
+    `;
+
+    const receivedCallbackResults: [string, number, any][] = [];
+
+    let nextWatchId = 1;
+    function watch(arg) {
+      const watchId = `id${nextWatchId++}`;
+      cache.watch({
+        query,
+        variables: { arg },
+        optimistic: false,
+        callback(result) {
+          receivedCallbackResults.push([watchId, arg, result]);
+        },
+      });
+      return watchId;
+    }
+
+    const id1 = watch(1);
+    expect(receivedCallbackResults).toEqual([]);
+
+    function write(arg: number, name: string) {
+      cache.writeQuery({
+        query,
+        variables: { arg },
+        data: {
+          value: { name },
+        },
+      });
+    }
+
+    write(1, "one");
+
+    const received1 = [id1, 1, {
+      result: {
+        value: {
+          name: "one",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+    ]);
+
+    const id2 = watch(2);
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+    ]);
+
+    write(2, "two");
+
+    const received2 = [id2, 2, {
+      result: {
+        value: {
+          name: "two",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+      // New results:
+      received1,
+      received2,
+    ]);
+
+    const id3 = watch(1);
+    const id4 = watch(1);
+
+    write(1, "one");
+
+    const received3 = [id3, 1, {
+      result: {
+        value: {
+          name: "one",
+        },
+      },
+      complete: true,
+    }];
+
+    const received4 = [id4, 1, {
+      result: {
+        value: {
+          name: "one",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+      received1,
+      received2,
+      // New results:
+      received3,
+      received4,
+    ]);
+
+    write(2, "TWO");
+
+    const received2AllCaps = [id2, 2, {
+      result: {
+        value: {
+          name: "TWO",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+      received1,
+      received2,
+      received3,
+      received4,
+      // New results:
+      received1,
+      received2AllCaps,
+      received3,
+      received4,
+    ]);
+  });
+});

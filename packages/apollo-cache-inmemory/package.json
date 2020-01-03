@@ -33,7 +33,7 @@
     "prebuild": "npm run clean",
     "build": "tsc -b .",
     "postbuild": "npm run bundle",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js",
+    "bundle": "npx rollup -c rollup.config.js",
     "watch": "../../node_modules/tsc-watch/index.js --onSuccess \"npm run postbuild\"",
     "clean": "rm -rf coverage/* lib/*",
     "prepublishOnly": "npm run build"

@@ -32,7 +32,7 @@
     "watch": "tsc -w -p .",
     "clean": "rm -rf coverage/* lib/*",
     "prepublishOnly": "npm run build",
-    "bundle": "../../node_modules/rollup/bin/rollup -c rollup.config.js"
+    "bundle": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
     "apollo-cache": "file:../apollo-cache",

@@ -44,14 +44,12 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/zen-observable": "^0.8.0",
     "apollo-cache": "file:../apollo-cache",
     "apollo-link": "^1.0.0",
     "apollo-utilities": "file:../apollo-utilities",
     "symbol-observable": "^1.0.2",
     "ts-invariant": "^0.4.0",
-    "tslib": "^1.10.0",
-    "zen-observable": "^0.8.0"
+    "tslib": "^1.10.0"
   },
   "peerDependencies": {
     "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"

@@ -65,3 +65,7 @@
 /docs/react/api/apollo-client.html#FetchPolicy docs/react/api/react-apollo.html#graphql-config-options-fetchPolicy
 /docs/react/api/apollo-client.html#ErrorPolicy docs/react/api/react-apollo.html#graphql-config-options-errorPolicy
 /docs/react/features/performance.html /docs/react/recipes/performance.html
+
+# AC 3 changes
+/docs/react/api/apollo-client /docs/react/api/core
+/docs/react/api/react-common /docs/react/api/react-hooks

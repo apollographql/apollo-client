@@ -1,152 +1,169 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
-import typescriptPlugin from 'rollup-plugin-typescript2';
-import typescript from 'typescript';
-import path from 'path';
-import fs from 'fs';
-import { transformSync } from '@babel/core';
-import cjsModulesTransform from '@babel/plugin-transform-modules-commonjs';
-import umdModulesTransform from '@babel/plugin-transform-modules-umd';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
+import cjs from 'rollup-plugin-commonjs';
+import fs from 'fs';
 
-function onwarn(message) {
-  const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];
+import packageJson from '../package.json';
 
-  if (!suppressed.find(code => message.code === code)) {
-    return console.warn(message.message);
-  }
-}
+const distDir = './dist';
 
-const defaultGlobals = {
-  'apollo-client': 'apollo.core',
-  'apollo-cache': 'apolloCache.core',
-  'apollo-link': 'apolloLink.core',
-  'apollo-link-dedup': 'apolloLink.dedup',
-  'apollo-utilities': 'apollo.utilities',
-  'graphql-anywhere': 'graphqlAnywhere',
-  'graphql-anywhere/lib/async': 'graphqlAnywhere.async',
-  'apollo-boost': 'apollo.boost',
-  'tslib': 'tslib',
+const globals = {
+  tslib: 'tslib',
   'ts-invariant': 'invariant',
+  'symbol-observable': '$$observable',
+  'graphql/language/printer': 'print',
+  optimism: 'optimism',
+  'graphql/language/visitor': 'visitor',
+  'graphql/execution/execute': 'execute',
+  'graphql-tag': 'graphqlTag',
+  'fast-json-stable-stringify': 'stringify',
+  '@wry/equality': 'wryEquality',
+  graphql: 'graphql',
+  react: 'React',
+  'zen-observable': 'Observable',
 };
 
-export function rollup({
-  name,
-  input = './src/index.ts',
-  outputPrefix = 'bundle',
-  extraGlobals = {},
-}) {
-  const projectDir = path.join(__filename, '..');
-  console.info(`Building project esm ${projectDir}`);
-  const tsconfig = `${projectDir}/tsconfig.json`;
+const hasOwn = Object.prototype.hasOwnProperty;
 
-  const globals = {
-    ...defaultGlobals,
-    ...extraGlobals,
-  };
+function external(id) {
+  return hasOwn.call(globals, id);
+}
 
-  function external(id) {
-    return Object.prototype.hasOwnProperty.call(globals, id);
-  }
-
-  function outputFile(format) {
-    return './lib/' + outputPrefix + '.' + format + '.js';
-  }
-
-  function fromSource(format) {
-    return {
-      input,
-      external,
-      output: {
-        file: outputFile(format),
-        format,
-        sourcemap: true,
-      },
-      plugins: [
-        nodeResolve({
-          extensions: ['.ts', '.tsx'],
-          module: true,
-        }),
-        typescriptPlugin({ typescript, tsconfig }),
-        invariantPlugin({
-          // Instead of completely stripping InvariantError messages in
-          // production, this option assigns a numeric code to the
-          // production version of each error (unique to the call/throw
-          // location), which makes it much easier to trace production
-          // errors back to the unminified code where they were thrown,
-          // where the full error string can be found. See #4519.
-          errorCodes: true,
-        }),
-      ],
-      onwarn,
-    };
-  }
-
-  function fromESM(toFormat) {
-    return {
-      input: outputFile('esm'),
-      output: {
-        file: outputFile(toFormat),
-        format: 'esm',
-        sourcemap: false,
-      },
-      // The UMD bundle expects `this` to refer to the global object. By default
-      // Rollup replaces `this` with `undefined`, but this default behavior can
-      // be overridden with the `context` option.
-      context: 'this',
-      plugins: [{
-        transform(source, id) {
-          const output = transformSync(source, {
-            inputSourceMap: JSON.parse(fs.readFileSync(id + '.map')),
-            sourceMaps: true,
-            plugins: [
-              [toFormat === 'umd' ? umdModulesTransform : cjsModulesTransform, {
-                loose: true,
-                allowTopLevelThis: true,
-              }],
-            ],
-          });
-
-          // There doesn't seem to be any way to get Rollup to emit a source map
-          // that goes all the way back to the source file (rather than just to
-          // the bundle.esm.js intermediate file), so we pass sourcemap:false in
-          // the output options above, and manually write the CJS and UMD source
-          // maps here.
-          fs.writeFileSync(
-            outputFile(toFormat) + '.map',
-            JSON.stringify(output.map),
-          );
-
-          return {
-            code: output.code,
-          };
-        }
-      }],
-    }
-  }
-
-  return [
-    fromSource('esm'),
-    fromESM('cjs'),
-    fromESM('umd'),
-    {
-      input: outputFile('cjs'),
-      output: {
-        file: outputFile('cjs.min'),
-        format: 'esm',
-      },
-      plugins: [
-        minify({
-          mangle: {
-            toplevel: true,
-          },
-          compress: {
-            global_defs: {
-              '@process.env.NODE_ENV': JSON.stringify('production'),
-            },
-          },
-        }),
-      ],
+function prepareESM(input, outputDir) {
+  return {
+    input,
+    external,
+    output: {
+      dir: outputDir,
+      format: 'esm',
+      sourcemap: true,
     },
+    // The purpose of this job is to ensure each `./dist` ESM file is run
+    // through the `invariantPlugin`, with any resulting changes added
+    // directly back into each ESM file. By setting `preserveModules`
+    // to `true`, we're making sure Rollup doesn't attempt to create a single
+    // combined ESM bundle with the final result of running this job.
+    preserveModules: true,
+    plugins: [
+      nodeResolve(),
+      invariantPlugin({
+        // Instead of completely stripping InvariantError messages in
+        // production, this option assigns a numeric code to the
+        // production version of each error (unique to the call/throw
+        // location), which makes it much easier to trace production
+        // errors back to the unminified code where they were thrown,
+        // where the full error string can be found. See #4519.
+        errorCodes: true,
+      }),
+      cjs({
+        namedExports: {
+          'graphql-tag': ['gql'],
+        },
+      }),
+    ],
+  };
+}
+
+function prepareCJS(input, output) {
+  return {
+    input,
+    external,
+    output: {
+      file: output,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
+      cjs({
+        namedExports: {
+          'graphql-tag': ['gql'],
+        },
+      }),
+    ],
+  };
+}
+
+function prepareCJSMinified(input) {
+  return {
+    input,
+    output: {
+      file: input.replace('.js', '.min.js'),
+      format: 'cjs',
+    },
+    plugins: [
+      minify({
+        mangle: {
+          toplevel: true,
+        },
+        compress: {
+          global_defs: {
+            '@process.env.NODE_ENV': JSON.stringify('production'),
+          },
+        },
+      }),
+    ],
+  };
+}
+
+function prepareUtilities() {
+  const utilsDistDir = `${distDir}/utilities`;
+  return {
+    input: `${utilsDistDir}/index.js`,
+    external,
+    output: {
+      file: `${utilsDistDir}/utilities.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
+    ],
+  };
+}
+
+// Build a separate CJS only `testing.js` bundle, that includes React
+// testing utilities like `MockedProvider` (testing utilities are kept out of
+// the main `apollo-client` bundle). This bundle can be accessed directly
+// like:
+//
+// import { MockedProvider } from '@apollo/client/testing';
+function prepareTesting() {
+  const bundleName = 'testing';
+
+  // Create a type file for the new testing bundle that points to the existing
+  // `react/testing` type definitions.
+  fs.writeFileSync(
+    `${distDir}/${bundleName}.d.ts`,
+    "export * from './utilities/testing';"
+  );
+
+  return {
+    input: `${distDir}/utilities/testing/index.js`,
+    external,
+    output: {
+      file: `${distDir}/${bundleName}.js`,
+      format: 'cjs',
+    },
+    plugins: [
+      nodeResolve({
+        extensions: ['.js', '.jsx'],
+      }),
+    ],
+  };
+}
+
+function rollup() {
+  return [
+    prepareESM(packageJson.module, distDir),
+    prepareCJS(packageJson.module, packageJson.main),
+    prepareCJSMinified(packageJson.main),
+    prepareUtilities(),
+    prepareTesting(),
   ];
 }
+
+export default rollup();

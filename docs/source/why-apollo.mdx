@@ -9,7 +9,7 @@ Data management shouldn't have to be so difficult! If you're wondering how to si
 
 ## Declarative data fetching
 
-With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated by the `useQuery` Hook. This encapsulation makes integrating query results into your presentational components a breeze! Let's see what this looks like in practice with React Apollo:
+With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated by the `useQuery` Hook. This encapsulation makes integrating query results into your presentational components a breeze! Let's see what this looks like in practice with Apollo Client and React:
 
 <MultiCodeBlock>
 <div data-language="hooks-js">
@@ -54,7 +54,7 @@ You'll find that when you switch to Apollo Client, you'll be able to delete a lo
 One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Just by setting up Apollo Client, you get an intelligent cache out of the box with no additional configuration required. From the home page of the [Pupstagram example app](https://codesandbox.io/s/r5qp83z0yq), click one of the dogs to see its detail page. Then, go back to the home page. You'll notice that the images on the home page load instantaneously, thanks to the Apollo cache.
 
 ```js
-import ApolloClient from 'apollo-boost';
+import { ApolloClient } from '@apollo/client';
 
 // the Apollo cache is set up automatically
 const client = new ApolloClient();
@@ -101,10 +101,10 @@ const GET_DOG = gql`
 `;
 ```
 
-Here's our cache redirect, which we can set up easily by specifying a map on the `cacheRedirects` property of the `apollo-boost` client. The cache redirect returns a key that the query can use to look up the data in the cache.
+Here's our cache redirect, which we can set up easily by specifying a map on the `cacheRedirects` property of `ApolloClient`. The cache redirect returns a key that the query can use to look up the data in the cache.
 
 ```js
-import ApolloClient from 'apollo-boost';
+import { ApolloClient } from '@apollo/client';
 
 const client = new ApolloClient({
   cacheRedirects: {
@@ -117,7 +117,7 @@ const client = new ApolloClient({
 
 ## Combine local & remote data
 
-Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? Apollo Client includes [local state management](/data/local-state/) features out of the box, that allow you to use your Apollo cache as the single source of truth for data in your application.
+Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? Apollo Client includes [local state management](data/local-state/) features out of the box, that allow you to use your Apollo cache as the single source of truth for data in your application.
 
 Managing all your data with Apollo Client allows you to take advantage of GraphQL as a unified interface to all of your data. This enables you to inspect both your local and remote schemas in Apollo DevTools through GraphiQL.
 
@@ -139,7 +139,7 @@ By leveraging Apollo Client's local state functionality, you can add client-side
 
 ## Vibrant ecosystem
 
-Apollo Client is easy to get started with, but extensible for when you need to build out more advanced features. If you need custom functionality that isn't covered with `apollo-boost`, such as app-specific middleware or cache persistence, you can create your own client by plugging in an Apollo cache and chaining together your network stack with Apollo Link.
+Apollo Client is easy to get started with, but extensible for when you need to build out more advanced features. If you need custom functionality that isn't covered with `@apollo/client`, such as app-specific middleware or cache persistence, you can leverage the Apollo Link architecture to plug-in new network stack functionality.
 
 This flexibility makes it simple to create your dream client by building extensions on top of Apollo. We're always really impressed by what our contributors have built on top of Apollo - check out some of their packages:
 - [Apollo Link community links](https://www.apollographql.com/docs/link/links/community): Pluggable links created by the community

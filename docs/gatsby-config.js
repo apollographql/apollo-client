@@ -11,23 +11,27 @@ module.exports = {
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
-        defaultVersion: 2.6,
+        defaultVersion: 3.0,
+        /*
         versions: {
           '3.0 beta': 'release-3.0',
-          2.5: 'version-2.5',
-          2.4: 'version-2.4',
+          '2.6': 'version-2.6',
+          '2.5': 'version-2.5',
+          '2.4': 'version-2.4',
         },
+        */
         checkLinksOptions: {
           exceptions: [
-            '/api/apollo-client/',
-            '/v3.0-beta/api/core/',
-            '/v2.5/api/apollo-client/',
-            '/v2.4/api/apollo-client/',
+            '/api/core/',
+            '/v2.4/api/core/',
+            '/v2.5/api/core/',
+            '/v2.6/api/core/',
+            '/v3.0/api/core/'
           ],
         },
         typescriptApiBox: {
           data: require('./docs.json'),
-          filepathPrefix: 'packages/apollo-client/src/',
+          filepathPrefix: 'src/',
         },
         sidebarCategories: {
           null: ['index', 'why-apollo', 'get-started'],
@@ -59,15 +63,17 @@ module.exports = {
             'integrations/meteor',
             'integrations/webpack',
           ],
-          Networking: ['networking/network-layer', 'networking/authentication'],
-          'API Reference': [
-            'api/apollo-client',
+          Networking: [
+            'networking/network-layer',
+            'networking/authentication',
+          ],
+          'Apollo Client API': [
+            'api/core',
             'api/react-hooks',
-            'api/react-ssr',
             'api/react-testing',
+            'api/react-ssr',
             'api/react-components',
-            'api/react-hoc',
-            'api/react-common',
+            'api/react-hoc'
           ],
           Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
         },

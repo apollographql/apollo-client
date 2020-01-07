@@ -11,7 +11,7 @@
 | `skip` | boolean | If skip is true, the query will be skipped entirely. **Not available with `useLazyQuery`**. |
 | `onCompleted` | (data: TData &#124; {}) => void | A callback executed once your query successfully completes. |
 | `onError` | (error: ApolloError) => void | A callback executed in the event of an error. |
-| `context` | Record&lt;string, any&gt; | Shared context between your component and your network interface (Apollo Link). Useful for setting headers from props or sending information to the `request` function of Apollo Boost. |
+| `context` | Record&lt;string, any&gt; | Shared context between your component and your network interface (Apollo Link). |
 | `partialRefetch` | boolean | If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases. |
 | `client` | ApolloClient | An `ApolloClient` instance. By default `useQuery` / `Query` uses the client passed down via context, but a different client can be passed in. |
 | `returnPartialData` | boolean | Opt into receiving partial results from the cache for queries that are not fully satisfied by the cache. false by default. |

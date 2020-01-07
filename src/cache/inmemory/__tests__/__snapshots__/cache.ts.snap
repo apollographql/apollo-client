@@ -1,0 +1,229 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 1`] = `
+Object {
+  "bar": Object {
+    "i": 7,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 2`] = `
+Object {
+  "bar": Object {
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 3`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 4`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 5`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 6`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 1`] = `
+Object {
+  "bar": Object {
+    "i": 7,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 2`] = `
+Object {
+  "bar": Object {
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 3`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 4`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 5`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 6`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;

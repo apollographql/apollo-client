@@ -1,6 +1,6 @@
 ---
-title: '@apollo/react-components'
-description: API reference
+title: 'React - Components (DEPRECATED)'
+description: Deprecated React Apollo render prop component API
 ---
 
 import QueryOptions from '../../shared/query-options.mdx';
@@ -9,7 +9,8 @@ import MutationOptions from '../../shared/mutation-options.mdx';
 import MutationResult from '../../shared/mutation-result.mdx';
 import SubscriptionOptions from '../../shared/subscription-options.mdx';
 import SubscriptionResult from '../../shared/subscription-result.mdx';
-import ApolloProvider from '../../shared/apollo-provider.mdx';
+
+> **NOTE:** React Apollo's render prop components have been deprecated. They will continue to receive bug fixes until March 2020, after which they will no longer be maintained by Apollo.
 
 ## Installation
 
@@ -56,7 +57,3 @@ The Subscription component accepts the following props. Only `subscription` is *
 The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties.
 
 <SubscriptionResult />
-
-## `ApolloProvider`
-
-<ApolloProvider />

@@ -1,0 +1,377 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ApolloClient constructor will throw an error if \`uri\` or \`link\` is not passed in 1`] = `
+"To initialize Apollo Client, you must specify 'uri' or 'link' and 'cache' properties in the options object. 
+For more information, please visit: https://www.apollographql.com/docs/react/"
+`;
+
+exports[`ApolloClient constructor will throw an error if cache is not passed in 1`] = `
+"To initialize Apollo Client, you must specify 'uri' or 'link' and 'cache' properties in the options object. 
+For more information, please visit: https://www.apollographql.com/docs/react/"
+`;
+
+exports[`ApolloClient write then read will not use a default id getter if either _id or id is present when __typename is not also present 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "b": 2,
+    "bar": Object {
+      "foo": Object {
+        "_id": "barfoo",
+        "k": 12,
+        "l": 13,
+      },
+      "i": 10,
+      "j": 11,
+    },
+    "foo": Object {
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
+    },
+    "g": 8,
+    "h": 9,
+  },
+  "bar:foobar": Object {
+    "__typename": "bar",
+    "e": 5,
+    "f": 6,
+    "id": "foobar",
+  },
+}
+`;
+
+exports[`ApolloClient write then read will not use a default id getter if id and _id are not present 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "b": 2,
+    "bar": Object {
+      "__typename": "bar",
+      "foo": Object {
+        "__typename": "foo",
+        "k": 12,
+        "l": 13,
+      },
+      "i": 10,
+      "j": 11,
+    },
+    "foo": Object {
+      "__typename": "foo",
+      "bar": Object {
+        "__typename": "bar",
+        "e": 5,
+        "f": 6,
+      },
+      "c": 3,
+      "d": 4,
+    },
+    "g": 8,
+    "h": 9,
+  },
+}
+`;
+
+exports[`ApolloClient write then read will use a default id getter if __typename and _id are present 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "b": 2,
+    "foo": Object {
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
+    },
+  },
+  "bar:foobar": Object {
+    "__typename": "bar",
+    "_id": "foobar",
+    "e": 5,
+    "f": 6,
+  },
+}
+`;
+
+exports[`ApolloClient write then read will use a default id getter if __typename and id are present 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "b": 2,
+    "foo": Object {
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
+    },
+  },
+  "bar:foobar": Object {
+    "__typename": "bar",
+    "e": 5,
+    "f": 6,
+    "id": "foobar",
+  },
+}
+`;
+
+exports[`ApolloClient write then read will use a default id getter if one is not specified and __typename is present along with either _id or id 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "b": 2,
+    "bar": Object {
+      "__typename": "bar",
+      "foo": Object {
+        "__ref": "foo:barfoo",
+      },
+      "i": 10,
+      "j": 11,
+    },
+    "foo": Object {
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "bar:foobar",
+      },
+      "c": 3,
+      "d": 4,
+    },
+    "g": 8,
+    "h": 9,
+  },
+  "bar:foobar": Object {
+    "__typename": "bar",
+    "e": 5,
+    "f": 6,
+    "id": "foobar",
+  },
+  "foo:barfoo": Object {
+    "__typename": "foo",
+    "_id": "barfoo",
+    "k": 12,
+    "l": 13,
+  },
+}
+`;
+
+exports[`ApolloClient write then read will write data locally which will then be read back 1`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "d": 8,
+    "e": 9,
+    "f": 6,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "a": 7,
+    "b": 2,
+    "bar": Object {
+      "__ref": "bar",
+    },
+    "c": 3,
+  },
+}
+`;
+
+exports[`ApolloClient write then read will write data to a specific id 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "b": 2,
+    "foo": Object {
+      "__typename": "foo",
+      "bar": Object {
+        "__ref": "foobar",
+      },
+      "c": 3,
+      "d": 4,
+    },
+  },
+  "foobar": Object {
+    "__typename": "bar",
+    "e": 5,
+    "f": 6,
+    "key": "foobar",
+  },
+}
+`;
+
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 1`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 7,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 2`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 3`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 4`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 5`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 7,
+    "j": 8,
+    "k": 9,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 6`] = `
+Object {
+  "bar": Object {
+    "__typename": "Bar",
+    "i": 10,
+    "j": 11,
+    "k": 12,
+  },
+  "foo": Object {
+    "__typename": "Foo",
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": Object {
+      "__ref": "bar",
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeQuery will write some deeply nested data to the store 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "d": Object {
+      "__typename": "D",
+      "e": 4,
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeQuery will write some deeply nested data to the store 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "d": Object {
+      "__typename": "D",
+      "h": Object {
+        "__typename": "H",
+        "i": 7,
+      },
+    },
+  },
+}
+`;
+
+exports[`ApolloClient writeQuery will write some deeply nested data to the store 3`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": 1,
+    "b": 2,
+    "c": 3,
+    "d": Object {
+      "__typename": "D",
+      "e": 4,
+      "f": 5,
+      "g": 6,
+      "h": Object {
+        "__typename": "H",
+        "i": 7,
+        "j": 8,
+        "k": 9,
+      },
+    },
+  },
+}
+`;

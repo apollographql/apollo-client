@@ -21,7 +21,7 @@ meteor/apollo | apollo client | apollo server
 
 ```shell
 meteor add apollo
-meteor npm install graphql apollo-server-express apollo-boost
+meteor npm install graphql apollo-server-express @apollo/client
 ```
 
 ### Client
@@ -29,27 +29,7 @@ meteor npm install graphql apollo-server-express apollo-boost
 Create your [ApolloClient](https://www.apollographql.com/docs/react/) instance:
 
 ```js
-import { Accounts } from 'meteor/accounts-base'
-import ApolloClient from 'apollo-boost'
-
-const client = new ApolloClient({
-  uri: '/graphql',
-  request: operation =>
-    operation.setContext(() => ({
-      headers: {
-        authorization: Accounts._storedLoginToken()
-      }
-    }))
-})
-```
-
-Or if you're using `apollo-client` instead of `apollo-boost`, use `MeteorAccountsLink()`:
-
-```js
-import { ApolloClient } from 'apollo-client'
-import { InMemoryCache } from 'apollo-cache-inmemory'
-import { ApolloLink } from 'apollo-link'
-import { HttpLink } from 'apollo-link-http'
+import { ApolloClient, InMemoryCache, ApolloLink, HttpLink } from '@apollo/client'
 import { MeteorAccountsLink } from 'meteor/apollo'
 
 const client = new ApolloClient({
@@ -145,7 +125,7 @@ Meteor.logout(function() {
 ```
 
 ## SSR
-There are two additional configurations that you need to keep in mind when using [React Server Side Rendering](/performance/server-side-rendering/) with Meteor.
+There are two additional configurations that you need to keep in mind when using [React Server Side Rendering](../performance/server-side-rendering/) with Meteor.
 
 1. Use `isomorphic-fetch` to polyfill `fetch` server-side (used by Apollo Client's network interface).
 2. Connect your express server to Meteor's existing server with [WebApp.connectHandlers.use](https://docs.meteor.com/packages/webapp.html)
@@ -157,7 +137,7 @@ Here is a full working example using `apollo@2.*` (outdated):
 
 ```
 meteor add apollo webapp
-meteor npm install --save react react-dom apollo-client redux react-apollo react-router react-helmet express isomorphic-fetch
+meteor npm install --save react react-dom @apollo/client redux react-router react-helmet express isomorphic-fetch
 ```
 
 ```js
@@ -166,9 +146,9 @@ import { WebApp } from 'meteor/webapp';
 import { meteorClientConfig, createMeteorNetworkInterface } from 'meteor/apollo';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
-import ApolloClient from 'apollo-client';
+import { ApolloClient, ApolloProvider } from '@apollo/client';
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
-import { ApolloProvider, renderToStringWithData } from 'react-apollo';
+import { renderToStringWithData } from '@apollo/react-ssr';
 import { match, RouterContext } from 'react-router';
 import Express from 'express';
 // #1 import isomorphic-fetch so the network interface can be created
@@ -310,7 +290,7 @@ You can also use GraphQL subscriptions with your Meteor app if you need to. The 
 ### Client
 
 ```js
-import { ApolloClient } from 'apollo-client';
+import { ApolloClient } from '@apollo/client';
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
 import { getMeteorLoginToken, createMeteorNetworkInterface } from 'meteor/apollo';
 

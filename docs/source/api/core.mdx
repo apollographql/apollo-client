@@ -1,0 +1,128 @@
+---
+title: Core
+description: Apollo Client core API reference
+order: 11
+---
+
+import { TypescriptApiBox } from 'gatsby-theme-apollo-docs';
+
+The `ApolloClient` class encapsulates Apollo's core client-side API. It backs all available view-layer integrations (React, iOS, and so on).
+
+## The `ApolloClient` constructor
+
+<TypescriptApiBox name="ApolloClient.constructor" />
+
+The constructor for `ApolloClient` accepts an `ApolloClientOptions` object that supports the required and optional fields listed below. These fields make it easy to customize how Apollo works based on your application's needs.
+
+### Example constructor call
+
+```js
+import { ApolloClient } from 'apollo-client';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { HttpLink } from 'apollo-link-http';
+
+// Instantiate required constructor fields
+const cache = new InMemoryCache();
+const link = new HttpLink({
+  uri: 'http://localhost:4000/',
+});
+
+const client = new ApolloClient({
+  // Provide required constructor fields
+  cache: cache,
+  link: link,
+
+  // Provide some optional constructor fields
+  name: 'react-web-client',
+  version: '1.3',
+  queryDeduplication: false,
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'cache-and-network',
+    },
+  },
+});
+```
+
+### Required fields
+
+| Name    | Description                                                                                                                                                                                                                                                                                                       |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `link`  | Apollo Client uses an Apollo Link instance to serve as its network layer. The vast majority of clients use HTTP and should provide an instance of `HttpLink` from the `apollo-link-http` package. <br/><br/> For more information, see the [Apollo Link documentation](https://www.apollographql.com/docs/link/). |
+| `cache` | Apollo Client uses an Apollo Cache instance to handle its caching strategy. The recommended cache is `apollo-cache-inmemory`, which exports an `{ InMemoryCache }`. For more information, see [Configuring the cache](../caching/cache-configuration/).                                                                                 |
+
+### Optional fields
+
+| Name                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`               | A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server uses this property as part of its [Client Awareness](https://www.apollographql.com/docs/apollo-server/v2/features/metrics#Client-Awareness) feature.                                                                                                                                                                                                  |
+| `version`            | A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server uses this property as part of its [Client Awareness](https://www.apollographql.com/docs/apollo-server/v2/features/metrics#Client-Awareness) feature. <br/><br/> Note that this version string is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client. |
+| `ssrMode`            | When using Apollo Client for [server-side rendering](../performance/server-side-rendering/), set this to `true` so that React Apollo's `getDataFromTree` function can work effectively.                                                                                                                                                                                                                                                                                |
+| `ssrForceFetchDelay` | Provide this to specify a time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render. This value is `0` by default.                                                                                                                                                                                                                                                                                                    |
+| `connectToDevTools`  | Set this to `true` to allow the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools) Chrome extension to connect to your application's Apollo Client in production. (This connection is allowed automatically in dev mode.)                                                                                                                                                                                                               |
+| `queryDeduplication` | Set this to `false` to force all created queries to be sent to the server, even if a query with completely identical parameters (query, variables, operationName) is already in flight.                                                                                                                                                                                                                                                                           |
+| `defaultOptions`     | Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.                                                                                                                                                                                                                                                                                     |
+
+### Example `defaultOptions` object
+
+```js
+const defaultOptions = {
+  watchQuery: {
+    fetchPolicy: 'cache-and-network',
+    errorPolicy: 'ignore',
+  },
+  query: {
+    fetchPolicy: 'network-only',
+    errorPolicy: 'all',
+  },
+  mutate: {
+    errorPolicy: 'all',
+  },
+};
+```
+
+You can override any default option you specify in this object by providing a
+different value for the same option in individual function calls.
+
+> **Note:** The `<Query />` React component uses Apollo Client's `watchQuery` function. To set `defaultOptions` when using the `<Query />` component, make sure to set them under the `defaultOptions.watchQuery` property.
+
+## `ApolloClient` functions
+
+<TypescriptApiBox name="ApolloClient.watchQuery" />
+<TypescriptApiBox name="ApolloClient.query" />
+<TypescriptApiBox name="ApolloClient.mutate" />
+<TypescriptApiBox name="ApolloClient.subscribe" />
+<TypescriptApiBox name="ApolloClient.readQuery" />
+<TypescriptApiBox name="ApolloClient.readFragment" />
+<TypescriptApiBox name="ApolloClient.writeQuery" />
+<TypescriptApiBox name="ApolloClient.writeFragment" />
+<TypescriptApiBox name="ApolloClient.resetStore" />
+<TypescriptApiBox name="ApolloClient.onResetStore" />
+<TypescriptApiBox name="ApolloClient.clearStore" />
+<TypescriptApiBox name="ApolloClient.onClearStore" />
+<TypescriptApiBox name="ApolloClient.stop" />
+<TypescriptApiBox name="ApolloClient.reFetchObservableQueries" />
+
+## `ObservableQuery` functions
+
+`ApolloClient` Observables extend the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional context and API options.
+
+<TypescriptApiBox name="ObservableQuery.variables" />
+<TypescriptApiBox name="ObservableQuery.result" />
+<TypescriptApiBox name="ObservableQuery.getCurrentResult" />
+<TypescriptApiBox name="ObservableQuery.refetch" />
+<TypescriptApiBox name="ObservableQuery.setOptions" />
+<TypescriptApiBox name="ObservableQuery.setVariables" />
+<TypescriptApiBox name="ObservableQuery.fetchMore" />
+<TypescriptApiBox name="ObservableQuery.updateQuery" />
+<TypescriptApiBox name="ObservableQuery.startPolling" />
+<TypescriptApiBox name="ObservableQuery.stopPolling" />
+<TypescriptApiBox name="ObservableQuery.subscribeToMore" />
+
+## Types
+
+<TypescriptApiBox name="ApolloClientOptions" />
+<TypescriptApiBox name="DefaultOptions" />
+<TypescriptApiBox name="NetworkStatus" />
+<TypescriptApiBox name="ApolloQueryResult" />
+<TypescriptApiBox name="ApolloCurrentQueryResult" />

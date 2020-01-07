@@ -5,31 +5,31 @@ title: Interacting with cached data
 The `ApolloClient` object provides the following methods for interacting
 with cached data:
 
-* `readQuery`
-* `readFragment`
-* `writeQuery`
-* `writeFragment`
+* [`readQuery`](#readquery) and [`readFragment`](#readfragment)
+* [`writeQuery` and `writeFragment`](#writequery-and-writefragment)
+* Methods for [garbage collection and cache eviction](#garbage-collection-and-cache-eviction)
+
 
 These methods are described in detail below.
 
 > **Important:** You should call these methods on your app's `ApolloClient` object, _not_
-> directly on the cache. By doing so, the `ApolloClient` object broadcasts 
+> directly on the cache. By doing so, the `ApolloClient` object broadcasts
 > cache changes to your entire app, which enables automatic UI updates. If you
 > call these methods directly on the cache instead, changes are _not_ broadcast.
 
-All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` tag from `graphql-tag`.
+All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
 
 ## `readQuery`
 
 The `readQuery` method enables you to run GraphQL queries directly on your
 cache.
 
-If your cache contains all of the data necessary to fulfill a specified query, 
+If your cache contains all of the data necessary to fulfill a specified query,
 `readQuery` returns a data object in the shape of your query, just like a GraphQL
 server does.
 
 If your cache _doesn't_ contain all of the data necessary to fulfill a specified
-query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote 
+query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote
 server.
 
 Pass `readQuery` a GraphQL query string like so:
@@ -67,7 +67,7 @@ const { todo } = client.readQuery({
 });
 ```
 
-> **Do not modify the return value of `readQuery`.** The same object might be 
+> **Do not modify the return value of `readQuery`.** The same object might be
 > returned to multiple components. To update data in the cache, instead create a
 > replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
 
@@ -92,9 +92,9 @@ const todo = client.readFragment({
 });
 ```
 
-The first argument, `id`, is the [unique identifier](/caching/cache-configuration/#assigning-unique-identifiers) 
+The first argument, `id`, is the [unique identifier](cache-configuration/#generating-unique-identifiers)
 that was assigned to the object you want to read from the cache. This should match
-the value that your `dataIdFromObject` function assigned to the object when it was 
+the value that your `dataIdFromObject` function assigned to the object when it was
 stored.
 
 For example, let's say you initialize `ApolloClient` like so:
@@ -140,9 +140,9 @@ methods.
 > changes will disappear.
 
 These methods have the same signature as their `read` counterparts, except they
-require an additional `data` variable. 
+require an additional `data` variable.
 
-For example, the following call to `writeFragment` _locally_ updates the `completed` 
+For example, the following call to `writeFragment` _locally_ updates the `completed`
 flag for a `Todo` object with an `id` of `5`:
 
 ```js
@@ -194,6 +194,48 @@ client.writeQuery({
   },
 });
 ```
+
+## Garbage collection and cache eviction
+
+Apollo Client 3 enables you to selectively remove cached data that is no longer useful. The default garbage collection strategy of the `gc` method is suitable for most applications, but the `evict` method provides more fine-grained control for applications that require it.
+
+> You call these methods directly on the `InMemoryCache` object, not on the `ApolloClient` object.
+
+### `gc`
+
+The `gc` method removes all objects from the normalized cache that are not **reachable**:
+
+```js
+cache.gc();
+```
+
+ To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
+
+#### Configuring garbage collection
+
+You can use the `retain` method to prevent an object (and its children) from being garbage collected, even if the object isn't reachable:
+
+```js
+cache.retain('my-object-id');
+```
+
+If you later want a `retain`ed object to be garbage collected, use the `release` method:
+
+```js
+cache.release('my-object-id');
+```
+
+If the object is unreachable, it will be garbage collected during next call to `gc`.
+
+### `evict`
+
+You can remove any normalized object from the cache with the `evict` method:
+
+```js
+cache.evict('my-object-id');
+```
+
+Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
 
 ## Recipes
 
@@ -249,7 +291,7 @@ mutate({
 })
 ```
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-hooks/#usemutation).
 
 ```jsx
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -430,7 +472,7 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```js
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache({
   cacheRedirects: {
@@ -480,7 +522,7 @@ cacheRedirects: {
 
 ### Resetting the store
 
-Sometimes, you may want to reset the store entirely, such as [when a user logs out](/networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
+Sometimes, you may want to reset the store entirely, such as [when a user logs out](../networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {
@@ -497,8 +539,7 @@ To register a callback function to be executed after the store has been reset, c
 In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](https://www.apollographql.com/docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { withClientState } from 'apollo-link-state';
 
 import { resolvers, defaults } from './resolvers';
@@ -519,7 +560,7 @@ You can also call `client.onResetStore` from your React components. This can be 
 If you would like to unsubscribe your callbacks from resetStore, use the return value of `client.onResetStore` for your unsubscribe function.
 
 ```js
-import { withApollo } from "react-apollo";
+import { withApollo } from "@apollo/react-hoc";
 
 export class Foo extends Component {
   constructor(props) {
@@ -559,7 +600,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check out our more in depth guide [here](/performance/server-side-rendering/).
+If you would like to learn more about server side rendering, please check out our more in depth guide [here](../performance/server-side-rendering/).
 
 ### Cache persistence
 
@@ -571,7 +612,7 @@ To get started, simply pass your Apollo Cache and a storage provider to `persist
 
 ```js
 import { AsyncStorage } from 'react-native';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache } from '@apollo/cache';
 import { persistCache } from 'apollo-cache-persist';
 
 const cache = new InMemoryCache();

@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@connection should run a query with the @connection directive and write the result to the store key defined in the directive 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "books:abc": Array [
+      Object {
+        "__typename": "Book",
+        "name": "abcd",
+      },
+    ],
+  },
+}
+`;
+
+exports[`@connection should run a query with the connection directive and filter arguments and write the result to the correct store key 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "books:abc({\\"order\\":\\"popularity\\"})": Array [
+      Object {
+        "__typename": "Book",
+        "name": "abcd",
+      },
+    ],
+  },
+}
+`;
+
+exports[`@connection should support cache field policies that filter key arguments 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "books:{\\"order\\":\\"popularity\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "name": "abcd",
+      },
+    ],
+  },
+}
+`;

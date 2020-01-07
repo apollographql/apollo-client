@@ -8,27 +8,19 @@ import packageJson from '../package.json';
 
 const distDir = './dist';
 
-const globals = {
-  tslib: 'tslib',
-  'ts-invariant': 'invariant',
-  'symbol-observable': '$$observable',
-  'graphql/language/printer': 'print',
-  optimism: 'optimism',
-  'graphql/language/visitor': 'visitor',
-  'graphql/execution/execute': 'execute',
-  'graphql-tag': 'graphqlTag',
-  'fast-json-stable-stringify': 'stringify',
-  '@wry/equality': 'wryEquality',
-  graphql: 'graphql',
-  react: 'React',
-  'zen-observable': 'Observable',
-};
-
-const hasOwn = Object.prototype.hasOwnProperty;
-
-function external(id) {
-  return hasOwn.call(globals, id);
-}
+const external = [
+  'tslib',
+  'ts-invariant',
+  'symbol-observable',
+  'graphql/language/printer',
+  'optimism',
+  'graphql/language/visitor',
+  'graphql-tag',
+  'fast-json-stable-stringify',
+  '@wry/equality',
+  'react',
+  'zen-observable'
+];
 
 function prepareESM(input, outputDir) {
   return {

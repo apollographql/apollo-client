@@ -15,11 +15,9 @@ const external = [
   'graphql/language/printer',
   'optimism',
   'graphql/language/visitor',
-  'graphql/execution/execute',
   'graphql-tag',
   'fast-json-stable-stringify',
   '@wry/equality',
-  'graphql',
   'react',
   'zen-observable'
 ];

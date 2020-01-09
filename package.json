@@ -29,7 +29,7 @@
   "homepage": "https://www.apollographql.com",
   "scripts": {
     "prebuild": "npm run clean",
-    "build": "npx tsc",
+    "build": "npx tsc && npx tsc --declaration false --declarationMap false --target es2015 --outDir dist/_es2015",
     "postbuild": "npm run bundle && npm run prepdist",
     "watch": "npx tsc-watch --onSuccess \"npm run postbuild\"",
     "clean": "npx rimraf -r dist coverage lib",

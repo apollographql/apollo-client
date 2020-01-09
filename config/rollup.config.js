@@ -151,6 +151,7 @@ function prepareTesting() {
 function rollup() {
   return [
     prepareESM(packageJson.module, distDir),
+    prepareESM('./dist/_es2015/index.js', './dist/_es2015'),
     prepareCJS(packageJson.module, packageJson.main),
     prepareCJSMinified(packageJson.main),
     prepareUtilities(),

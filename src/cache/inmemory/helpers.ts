@@ -8,7 +8,7 @@ export function getTypenameFromStoreObject(
   objectOrReference: StoreObject | Reference,
 ): string | undefined {
   return isReference(objectOrReference)
-    ? store.getFieldValue(objectOrReference.__ref, "__typename") as string
+    ? store.get(objectOrReference.__ref, "__typename") as string
     : objectOrReference && objectOrReference.__typename;
 }
 

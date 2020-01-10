@@ -157,7 +157,7 @@ fieldName: (obj, args, context, info) => result;
 Let's take a look at an example of a resolver where we toggle a todo's completed status:
 
 ```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),

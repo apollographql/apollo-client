@@ -207,10 +207,14 @@ export abstract class EntityStore implements NormalizedCache {
     return 0;
   }
 
-  // This method will be overridden in the Layer class to merge root IDs for all
-  // layers (including the root).
-  public getRootIdSet() {
-    return new Set(Object.keys(this.rootIds));
+  // Return a Set<string> of all the ID strings that have been retained by
+  // this layer/root *and* any layers/roots beneath it.
+  public getRootIdSet(ids = new Set<string>()) {
+    Object.keys(this.rootIds).forEach(ids.add, ids);
+    if (this instanceof Layer) {
+      this.parent.getRootIdSet(ids);
+    }
+    return ids;
   }
 
   // The goal of garbage collection is to remove IDs from the Root layer of the
@@ -401,14 +405,6 @@ class Layer extends EntityStore {
       ...this.parent.toObject(),
       ...this.data,
     };
-  }
-
-  // Return a Set<string> of all the ID strings that have been retained by this
-  // Layer *and* any layers/roots beneath it.
-  public getRootIdSet(): Set<string> {
-    const ids = this.parent.getRootIdSet();
-    super.getRootIdSet().forEach(ids.add, ids);
-    return ids;
   }
 
   public findChildRefIds(dataId: string): Record<string, true> {

@@ -15,6 +15,7 @@ module.exports = {
         versions: {
           '3.0 beta': 'release-3.0',
           2.5: 'version-2.5',
+          2.6: 'version-2.6',
           2.4: 'version-2.4',
         },
         checkLinksOptions: {

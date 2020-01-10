@@ -21,10 +21,12 @@ module.exports = {
         checkLinksOptions: {
           exceptions: [
             '/api/core/',
+            '/v3.0-beta/api/core/'
+          ],
+          ignore: [
             '/v2.4/',
             '/v2.5/',
             '/v2.6/',
-            '/v3.0-beta/api/core/'
           ],
         },
         typescriptApiBox: {

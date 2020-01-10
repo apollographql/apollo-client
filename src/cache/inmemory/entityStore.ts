@@ -36,19 +36,24 @@ export abstract class EntityStore implements NormalizedCache {
     return { ...this.data };
   }
 
-  public has(dataId: string): boolean {
-    return this.get(dataId) !== void 0;
+  public has(dataId: string, fieldName?: string): boolean {
+    return this.get(dataId, fieldName) !== void 0;
   }
 
-  public get(dataId: string): StoreObject {
-    this.group.depend(dataId);
-    return this.data[dataId];
-  }
-
-  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
-    this.group.depend(dataId, storeFieldName);
-    const storeObject = this.data[dataId];
-    return storeObject && storeObject[storeFieldName];
+  public get(dataId: string): StoreObject;
+  public get(dataId: string, fieldName: string): StoreValue;
+  public get(dataId: string, fieldName?: string): StoreValue {
+    this.group.depend(dataId, fieldName);
+    if (hasOwn.call(this.data, dataId)) {
+      const storeObject = this.data[dataId];
+      if (!fieldName) return storeObject;
+      if (hasOwn.call(storeObject, fieldName)) {
+        return storeObject[fieldName];
+      }
+    }
+    if (this instanceof Layer) {
+      return this.parent.get(dataId, fieldName);
+    }
   }
 
   public merge(dataId: string, incoming: StoreObject): void {
@@ -59,8 +64,8 @@ export abstract class EntityStore implements NormalizedCache {
       this.data[dataId] = merged;
       delete this.refs[dataId];
       if (this.group.caching) {
-        // First, invalidate any dependents that called get rather than
-        // getFieldValue.
+        // First, invalidate any dependents that called store.get(id)
+        // rather than store.get(id, fieldName).
         this.group.dirty(dataId);
         // Now invalidate dependents who called getFieldValue for any
         // fields that are changing as a result of this merge.
@@ -284,11 +289,7 @@ class CacheGroup {
 
   public dirty(dataId: string, storeFieldName?: string) {
     if (this.d) {
-      this.d.dirty(
-        typeof storeFieldName === "string"
-          ? makeDepKey(dataId, storeFieldName)
-          : makeDepKey(dataId),
-      );
+      this.d.dirty(makeDepKey(dataId, storeFieldName));
     }
   }
 
@@ -388,40 +389,6 @@ class Layer extends EntityStore {
       ...this.parent.toObject(),
       ...this.data,
     };
-  }
-
-  public get(dataId: string): StoreObject {
-    if (hasOwn.call(this.data, dataId)) {
-      return super.get(dataId);
-    }
-
-    // If this layer has a this.depend function and it's not the one
-    // this.parent is using, we need to depend on the given dataId using
-    // this.depend before delegating to the parent. This check saves us
-    // from calling this.depend for every optimistic layer we examine, but
-    // ensures we call this.depend in the last optimistic layer before we
-    // reach the root layer.
-
-    if (this.group.caching && this.group !== this.parent.group) {
-      this.group.depend(dataId);
-    }
-
-    return this.parent.get(dataId);
-  }
-
-  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
-    if (hasOwn.call(this.data, dataId)) {
-      const storeObject = this.data[dataId];
-      if (storeObject && hasOwn.call(storeObject, storeFieldName)) {
-        return super.getFieldValue(dataId, storeFieldName);
-      }
-    }
-
-    if (this.group.caching && this.group !== this.parent.group) {
-      this.group.depend(dataId, storeFieldName);
-    }
-
-    return this.parent.getFieldValue(dataId, storeFieldName);
   }
 
   // Return a Set<string> of all the ID strings that have been retained by this

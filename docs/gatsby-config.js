@@ -24,7 +24,7 @@ module.exports = {
             '/v2.4/api/core/',
             '/v2.5/api/core/',
             '/v2.6/api/core/',
-            '/v3.0/api/core/'
+            '/v3.0-beta/api/core/'
           ],
         },
         typescriptApiBox: {

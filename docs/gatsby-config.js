@@ -21,9 +21,9 @@ module.exports = {
         checkLinksOptions: {
           exceptions: [
             '/api/core/',
-            '/v2.4/api/',
-            '/v2.5/api/',
-            '/v2.6/api/',
+            '/v2.4/',
+            '/v2.5/',
+            '/v2.6/',
             '/v3.0-beta/api/core/'
           ],
         },

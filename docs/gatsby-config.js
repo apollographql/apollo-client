@@ -14,7 +14,7 @@ module.exports = {
         localVersion: '3.0 beta',
         defaultVersion: '2.6',
         versions: {
-          '2.6': 'version-2.6',
+          '2.6': 'version-2.6-relative',
           '2.5': 'version-2.5',
           '2.4': 'version-2.4',
         },

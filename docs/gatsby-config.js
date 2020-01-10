@@ -22,6 +22,7 @@ module.exports = {
           exceptions: [
             '/api/apollo-client/',
             '/v3.0-beta/api/core/',
+            '/v2.6/api/apollo-client/',
             '/v2.5/api/apollo-client/',
             '/v2.4/api/apollo-client/',
           ],

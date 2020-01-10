@@ -42,8 +42,10 @@ export class MutationData<
   public execute(result: MutationResult<TData>) {
     this.isMounted = true;
     this.verifyDocumentType(this.getOptions().mutation, DocumentType.Mutation);
-    result.client = this.refreshClient().client;
-    return [this.runMutation, result] as MutationTuple<TData, TVariables>;
+    return [
+      this.runMutation,
+      { ...result, client: this.refreshClient().client }
+    ] as MutationTuple<TData, TVariables>;
   }
 
   public afterExecute() {

@@ -43,7 +43,7 @@ customize its behavior. This object supports the following fields:
 | ------- | -----| --------- |
 | `addTypename`  | boolean | Indicates whether to add `__typename` to the document (default: `true`) |
 | `dataIdFromObject` | function | A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in [Custom identifiers](#custom-identifiers). |
-|`fragmentMatcher`| object | By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](/data/fragments/#fragments-on-unions-and-interfaces). |
+|`fragmentMatcher`| object | By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](/v2.6/data/fragments/#fragments-on-unions-and-interfaces). |
 |`cacheRedirects`| object | A map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](/caching/cache-interaction/#cache-redirects-with-cacheredirects). |
 
 ## Data normalization
@@ -67,12 +67,12 @@ Avoid this fallback strategy whenever possible, because it scopes cached objects
 to individual queries. This means that if multiple queries all return the same
 object, each query inefficiently caches a separate instance of that object.
 
-> **Warning:** Each object type you cache should either _always_ include an `id` 
+> **Warning:** Each object type you cache should either _always_ include an `id`
 > field or _never_ include an `id` field. `InMemoryCache` [throws an error](https://github.com/apollographql/apollo-client/blob/451482ff85d93e1738df31007f3c2a7f0fbe8cff/packages/apollo-cache-inmemory/src/__tests__/__snapshots__/writeToStore.ts.snap#L4) if it
-> encounters an inconsistency in the presence or absence of this field for a 
+> encounters an inconsistency in the presence or absence of this field for a
 > particular type.
 
-#### Custom identifiers 
+#### Custom identifiers
 
 You can define a custom strategy for generating unique identifiers for cached
 objects. To do so, provide the `dataIdFromObject` [configuration option](#configuring-the-cache)

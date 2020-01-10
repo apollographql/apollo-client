@@ -154,8 +154,20 @@ export abstract class EntityStore implements NormalizedCache {
             this.group.dirty(dataId, fieldName);
           });
         }
+
+        return true;
       }
     }
+
+    return false;
+  }
+
+  public evict(dataId: string, fieldName?: string): boolean {
+    let evicted = this.delete(dataId, fieldName);
+    if (this instanceof Layer) {
+      evicted = this.parent.evict(dataId, fieldName) || evicted;
+    }
+    return evicted;
   }
 
   public clear(): void {

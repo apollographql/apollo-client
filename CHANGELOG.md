@@ -68,6 +68,9 @@
 - Support eviction of specific entity fields using `cache.evict(id, fieldName)`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5643](https://github.com/apollographql/apollo-client/pull/5643)
 
+- Make `InMemoryCache#evict` remove data from all `EntityStore` layers. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5773](https://github.com/apollographql/apollo-client/pull/5773)
+
 - Stop paying attention to `previousResult` in `InMemoryCache`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5644](https://github.com/apollographql/apollo-client/pull/5644)
 

@@ -432,7 +432,7 @@ export class Policies {
       let fieldValue: StoreValue;
       if (isReference(objectOrReference)) {
         const dataId = objectOrReference.__ref;
-        fieldValue = store.getFieldValue(dataId, storeFieldName);
+        fieldValue = store.get(dataId, storeFieldName);
         if (fieldValue === void 0 && storeFieldName === "__typename") {
           // We can infer the __typename of singleton root objects like
           // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if

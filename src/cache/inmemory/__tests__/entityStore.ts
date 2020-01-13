@@ -703,10 +703,8 @@ describe('EntityStore', () => {
         },
         title: "The Cuckoo's Calling",
       },
-      "Author:Robert Galbraith": {
-        __typename: "Author",
-        name: "Robert Galbraith",
-      },
+      // The Robert Galbraith Author record is no longer here because
+      // cache.evict evicts data from all EntityStore layers.
     });
 
     cache.writeFragment({
@@ -721,7 +719,25 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(cache.extract(true)).toEqual(snapshotWithBothNames);
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: {
+          __ref: "Book:031648637X",
+        },
+      },
+      "Book:031648637X": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:J.K. Rowling",
+        },
+        title: "The Cuckoo's Calling",
+      },
+      "Author:J.K. Rowling": {
+        __typename: "Author",
+        name: "J.K. Rowling",
+      },
+    });
 
     expect(cache.retain("Author:Robert Galbraith")).toBe(2);
 
@@ -730,9 +746,7 @@ describe('EntityStore', () => {
     expect(cache.release("Author:Robert Galbraith")).toBe(1);
     expect(cache.release("Author:Robert Galbraith")).toBe(0);
 
-    expect(cache.gc()).toEqual([
-      "Author:Robert Galbraith",
-    ]);
+    expect(cache.gc()).toEqual([]);
 
     // If you're ever tempted to do this, you probably want to use cache.clear()
     // instead, but evicting the ROOT_QUERY should work at least.

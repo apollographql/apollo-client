@@ -88,6 +88,8 @@
 - `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>
   [@hwillson](https://github/com/hwillson) in [#5770](https://github.com/apollographql/apollo-client/pull/5770)
 
+- Missing `__typename` fields no longer cause the `InMemoryCache#diff` result to be marked `complete: false`, if those fields were added by `InMemoryCache#transformDocument` (which calls `addTypenameToDocument`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#5787](https://github.com/apollographql/apollo-client/pull/5787)
 
 ## Apollo Client 2.6.8
 

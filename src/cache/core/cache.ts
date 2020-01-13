@@ -3,7 +3,10 @@ import { DocumentNode } from 'graphql';
 import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
-import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
+import { queryFromPojo, fragmentFromPojo } from './utils';
+
+import gql from 'graphql-tag';
+const justTypenameQuery = gql`query { __typename }`;
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

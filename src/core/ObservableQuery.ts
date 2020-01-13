@@ -650,12 +650,12 @@ function iterateObserversSafely<E, A>(
   observersWithMethod.forEach(obs => (obs as any)[method](argument));
 }
 
-function assertNotCacheFirstOrOnly<TData, TVariables>(
-  obsQuery: ObservableQuery<TData, TVariables>,
-) {
-  const { fetchPolicy } = obsQuery.options;
-  invariant(
-    fetchPolicy !== 'cache-first' && fetchPolicy !== 'cache-only',
-    'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
-  );
-}
+// function assertNotCacheFirstOrOnly<TData, TVariables>(
+//   obsQuery: ObservableQuery<TData, TVariables>,
+// ) {
+//   const { fetchPolicy } = obsQuery.options;
+//   invariant(
+//     fetchPolicy !== 'cache-first' && fetchPolicy !== 'cache-only',
+//     'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
+//   );
+// }

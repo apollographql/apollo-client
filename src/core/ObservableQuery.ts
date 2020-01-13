@@ -559,7 +559,7 @@ export class ObservableQuery<
       queryManager.addObservableQuery<TData>(queryId, this);
     }
 
-    if (this.options.pollInterval) {
+    if (this.options.pollInterval && !this.queryManager.ssrMode) {
       assertNotCacheFirstOrOnly(this);
       queryManager.startPollingQuery(this.options, queryId);
     }

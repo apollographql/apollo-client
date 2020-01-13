@@ -506,7 +506,7 @@ export class ObservableQuery<
   }
 
   public startPolling(pollInterval: number) {
-    assertNotCacheFirstOrOnly(this);
+    //assertNotCacheFirstOrOnly(this);
     this.options.pollInterval = pollInterval;
     this.queryManager.startPollingQuery(this.options, this.queryId);
   }
@@ -559,8 +559,8 @@ export class ObservableQuery<
       queryManager.addObservableQuery<TData>(queryId, this);
     }
 
-    if (this.options.pollInterval && !this.queryManager.ssrMode) {
-      assertNotCacheFirstOrOnly(this);
+    if (this.options.pollInterval) {
+      //assertNotCacheFirstOrOnly(this);
       queryManager.startPollingQuery(this.options, queryId);
     }
 

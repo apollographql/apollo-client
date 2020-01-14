@@ -4,7 +4,7 @@ title: Configuring the cache
 
 Apollo Client stores the results of its GraphQL queries in a normalized, in-memory cache. This enables your client to respond to future queries for the same data without sending unnecessary network requests.
 
->This article describes cache setup and configuration. To learn how to interact with cached data, see [Interacting with cached data](cache-interaction/).
+>This article describes cache setup and configuration. To learn how to interact with cached data, see [Interacting with cached data](./cache-interaction).
 
 ## Installation
 
@@ -52,7 +52,7 @@ The `InMemoryCache` **normalizes** query response objects before it saves them t
 
 1. The cache [generates a unique ID](#generating-unique-identifiers) for every identifiable object included in the response.
 2. The cache stores the objects by ID in a flat lookup table.
-3. Whenever an object is stored with the same ID as an _existing_ object, the fields of those objects are _merged_. The new object overwrites the values of any fields that appear in both.
+3. Whenever an object is stored with the same ID as an _existing_ object, the fields of those objects are _merged_. The new object overwrites the values of any fields that appear in the existing object.
 
 Normalization constructs a partial copy of your data graph on your client, in a format that's optimized for reading and updating the graph as your application changes state.
 
@@ -62,13 +62,13 @@ Normalization constructs a partial copy of your data graph on your client, in a 
 
 #### Default identifier generation
 
-By default, the `InMemoryCache` generates a unique identifier for any object that includes a `__typename` field by combining the object's `__typename` with its `id` or `_id` field (whichever is defined). These two values are separated by a colon (`:`).
+By default, the `InMemoryCache` generates a unique identifier for any object that includes a `__typename` field. To do so, it combines the object's `__typename` with its `id` or `_id` field (whichever is defined). These two values are separated by a colon (`:`).
 
 For example, an object with a `__typename` of `Task` and an `id` of `14` is assigned a default identifier of `Task:14`.
 
 #### Customizing identifier generation by type
 
-If one of your types defines its primary key with a field besides `id` or `_id`, you can customize how the `InMemoryCache` generates its unique identifier by defining a `TypePolicy` for the type. You specify all of your cache's `typePolicies` in [the `options` object you provide to the `InMemoryCache` constructor](#configuring-the-cache).
+If one of your types defines its primary key with a field _besides_ `id` or `_id`, you can customize how the `InMemoryCache` generates unique identifiers for that type. To do so, you define `TypePolicy` for the type. You specify all of your cache's `typePolicies` in [the `options` object you provide to the `InMemoryCache` constructor](#configuring-the-cache).
 
 Include a `keyFields` field in relevant `TypePolicy` objects, like so:
 
@@ -97,52 +97,21 @@ const cache = new InMemoryCache({
 
 This example shows three `typePolicies`: one for a `Product` type, one for a `Person` type, and one for a `Book` type. Each `TypePolicy`'s `keyFields` array defines which fields on the type _together_ represent the type's primary key.
 
-Note that the `Book` type uses a _subfield_ as part of its primary key. The `["name"]` item indicates that the `name` field of the _previous_ field in the array (`author`) is part of the primary key. The `Book`'s `author` field must be an object that includes a `name` field for this to be valid.
+The `Book` type above uses a _subfield_ as part of its primary key. The `["name"]` item indicates that the `name` field of the _previous_ field in the array (`author`) is part of the primary key. The `Book`'s `author` field must be an object that includes a `name` field for this to be valid.
 
-In the example above, the unique identifier string for a `Book` object has the following format:
+In the example above, the resulting identifier string for a `Book` object has the following structure:
 
 ```
 Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
 ```
 
-The object's primary key fields are always listed in the same order to ensure uniqueness.
+An object's primary key fields are always listed in the same order to ensure uniqueness.
 
-Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias). This note is important if you ever attempt to use a function to implement `keyFields`:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Person: {
-      keyFields(responseObject, { typename, selectionSet, fragmentMap }) {
-        let id: string | null = null;
-        selectionSet.selections.some(selection => {
-          if (selection.kind === 'Field') {
-            // If you fail to take aliasing into account, your custom
-            // normalization is likely to break whenever a query contains
-            // an alias for key field.
-            const actualFieldName = selection.name.value;
-            const responseFieldName = (selection.alias || selection.name).value;
-            if (actualFieldName === 'socialSecurityNumber') {
-              id = `${typename}:${responseObject[responseFieldName]}`;
-              return true;
-            }
-          } else {
-            // Handle fragments using the fragmentMap...
-          }
-          return false;
-        });
-        return id;
-      },
-    },
-  },
-});
-```
-
-If this edge case seems obscure, you should probably steer clear of implementing your own `keyFields` functions, and instead stick to passing an array of strings for `keyFields`, so that you never have to worry about subtle bugs like these. As a general rule, the `typePolicies` API allows you to configure normalization behavior in one place, when you first create your cache, and does not require you to write your queries differently by aliasing fields or using directives.
+Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias).
 
 #### Customizing identifier generation globally
 
-If you need to define a single fallback `keyFields` function that isn't specific to any particular `__typename`, the old `dataIdFromObject` function from Apollo Client 2.x is still supported:
+If you need to define a single fallback `keyFields` function that isn't specific to any particular `__typename`, you can use the `dataIdFromObject` function that was introduced in Apollo Client 2.x:
 
 ```ts
 import { defaultDataIdFromObject } from '@apollo/client';
@@ -158,17 +127,17 @@ const cache = new InMemoryCache({
 });
 ```
 
-Notice how this function ends up needing to select different keys based on specific `object.__typename` strings anyway, so you might as well have used `keyFields` arrays for the `Product` and `Person` types via `typePolicies`. Also, this code is sensitive to aliasing mistakes, it does nothing to protect against undefined `object` properties, and accidentally using different key fields at different times could cause inconsistencies in the cache.
+> The `dataIdFromObject` API is included in Apollo Client 3.0 to ease the transition from Apollo Client 2.x. The API might be removed in a future version of `@apollo/client`.
 
-The `dataIdFromObject` API is meant to ease the transition from Apollo Client 2.x to 3.0, and may be removed in future versions of `@apollo/client`.
+Notice that the above function still uses different logic to generate keys based on an object's `__typename`. In the above case, you might as well define `keyFields` arrays for the `Product` and `Person` types via `typePolicies`. Also, this code is sensitive to aliasing mistakes, it does nothing to protect against undefined `object` properties, and accidentally using different key fields at different times can cause inconsistencies in the cache.
 
 ### Disabling normalization
 
-You can instruct the `InMemoryCache` _not_ to normalize objects of a certain type. This might make sense for metrics and other transient data that are identified by a timestamp and never receive updates.
+You can instruct the `InMemoryCache` _not_ to normalize objects of a certain type. This can be useful for metrics and other transient data that's identified by a timestamp and never receives updates.
 
-To disable normalization for a type, define a `TypePolicy` for the type (as shown in [Customizing identifier generation by type](#customizing-identifier-generation-by-type)), but set the policy's `keyFields` field to `false`.
+To disable normalization for a type, define a `TypePolicy` for the type (as shown in [Customizing identifier generation by type](#customizing-identifier-generation-by-type)) and set the policy's `keyFields` field to `false`.
 
-Objects that are not normalized are instead embedded within their _parent_ object in the cache. You cannot access these objects directly and must instead access them via their parent.
+Objects that are not normalized are instead embedded within their _parent_ object in the cache. You can't access these objects directly, but you can access them via their parent.
 
 ## The `TypePolicy` type
 
@@ -351,31 +320,27 @@ That said, you might be able to assume the `token` is always the same, or you mi
 
 On the other hand, perhaps you've requested the secret from the server using the access `token`, but you want various components on your page to be able to access the secret using only they `key`, without having to know the `token`. Storing the value in the cache using only the `key` makes this retrieval possible.
 
-### Reading and merging fields
+## Customizing cache reads and writes
 
-The GraphQL query language provides a uniform and ergonomic way of reading nested, tree-shaped data from a data graph. However, when you query the `InMemoryCache` rather than sending queries to a GraphQL server, you're reading data from a _client-side data graph_, which is almost always an incomplete copy of the data graph exposed by the server.
+You can customize the cache's behavior when you read or write particular fields. For example, you might want the cache to return a particular default value for a field when that field isn't present in the cache.
 
-To ensure your client-side data graph accurately reproduces the entities and relationships from your server-side data graph, while also extending the server graph with client-only information, you can define custom `read` and `merge` functions as part of any `FieldPolicy`. These functions will be invoked whenever the field is queried (`read`) or updated with new data (`merge`).
+To accomplish this, you can define `read` and `merge` functions as part of any field's `FieldPolicy`. These functions are called whenever the associated field is queried (`read`) or updated (`merge`) in the cache.
 
-#### Custom `read` functions
+### The `read` function
 
-The most basic custom `read` function simply returns existing data from the cache, without modification:
+If you define a `read` function for a field, the cache calls that function whenever your client queries for the field. In the query response, the field is populated with the `read` function's return value, _instead of the field's cached value_.
+
+The `read` function takes the field's cached value as a parameter, so you can use it to help determine the function's return value.
+
+The following `read` function assigns a default value of `UNKNOWN NAME` to the `name` field of a `Person` type, if the actual value is not available in the cache. In all other cases, the cached value is returned.
 
 ```ts
 const cache = new InMemoryCache({
   typePolicies: {
     Person: {
       fields: {
-        name: {
-          read(name: string) {
-            return name;
-          },
-        },
-
-        // Since read functions are so common, you can collapse the FieldPolicy
-        // into a single method, if you only need to define a read function.
-        age(age: number) {
-          return age;
+        name(name = "UNKNOWN NAME") {
+          return name;
         },
       },
     },
@@ -383,9 +348,26 @@ const cache = new InMemoryCache({
 });
 ```
 
-Neither of these `read` functions really needs to be defined, since they both do exactly what the cache already does by default: they return existing cache data.
+If a particular field accepts arguments, its associated `read` function is passed those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
 
-Things start to get interesting when you define a `read` function for data that does not exist in the cache:
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        name(name: string, { args }) {
+          if (args && typeof args.maxLength === "number") {
+            return name.substring(0, args.maxLength);
+          }
+          return name;
+        },
+      },
+    },
+  },
+});
+```
+
+You can define a `read` function for a field that isn't even defined in your schema. For example, the following `read` function enables you to query a `userId` field that is always populated with locally stored data:
 
 ```ts
 const cache = new InMemoryCache({
@@ -401,156 +383,13 @@ const cache = new InMemoryCache({
 });
 ```
 
-Or when you want to tweak the existing data slightly:
+> Note that to query for a field that is only defined locally, your query should [include the `@client` directive](/data/local-state/#querying-local-state) on that field so it isn't included in requests to your GraphQL server.
 
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Person: {
-      fields: {
-        age(floatingPointAge: number) {
-          return Math.round(floatingPointAge);
-        },
-      },
-    },
-  },
-});
-```
+Other applications of a `read` function include:
 
-Or when you want to provide a default value for potentially nonexistent cache data:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Person: {
-      fields: {
-        name(name = "Jane Doe") {
-          return name;
-        },
-
-        age(age = /* Median American age: */ 38.1) {
-          return age;
-        },
-      },
-    },
-  },
-});
-```
-
-Or when you want to define computed fields in terms of other fields:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Person: {
-      fields: {
-        ageInDogYears(_, { readField }) {
-          // In TypeScript it can be useful to coerce the field value to a known
-          // type, such as number:
-          return readField<number>("age") / 7;
-        },
-
-        // Since this field does not exist in the cache, we ignore the non-existent
-        // existing data given by the first parameter.
-        fullName(_, { readField }) {
-          const firstName = readField<string>("firstName");
-          const lastName = readField<string>("lastName");
-          if (firstName && lastName) {
-            return `${firstName} ${firstName}`;
-          }
-          // Returning undefined indicates the fullName field is missing, because
-          // one or more of its dependencies was not available.
-        },
-      },
-    },
-  },
-});
-```
-
-You can even read fields from other entities in the cache:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Person: {
-      fields: {
-        youngestFriend(_, { readField }) {
-          let youngestFriend: object | undefined;
-          let minAge = Infinity;
-          const friends = readField("friends") || [];
-          friends.forEach(friend => {
-            // Passing an object or Reference as the second argument to readField
-            // causes the field value to be read from that entity instead of the
-            // current entity.
-            const friendAge = readField<number>("age", friend);
-            if (friendAge < minAge) {
-              minAge = friendAge;
-              youngestFriend = friend;
-            }
-          });
-          return youngestFriend;
-        },
-      },
-    },
-  },
-});
-```
-
-If the field takes arguments, a `read` function can be used to interpret those arguments:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Person: {
-      fields: {
-        // Optionally allow asking for the person's age in any units.
-        age(ageInYears: number, { args }) {
-          if (args && typeof args.units === "string") {
-            return convertUnits(ageInYears, "years", args.units);
-          }
-          return ageInYears;
-        },
-
-        // Sorting/filtering/pagination of the person's list of friends.
-        friends(friendRefs: Reference[], { args, readField }) {
-          if (args && typeof args.sortBy === "string") {
-            // Sort the refs first, if requested. Note that friendRefs is an
-            // immutable array, which is why friendRefs.slice(0) is necessary.
-            friendRefs = friendRefs.slice(0).sort((a, b) => compareBy(
-              args.sortBy,
-              readField(args.sortBy, a),
-              readField(args.sortBy, b),
-            ));
-          }
-
-          if (args && typeof args.limit === "number") {
-            // Offset/limit-based pagination:
-            if (typeof args.offset === "number") {
-              return friendRefs.slice(args.offset, args.offset + args.limit);
-            }
-
-            // Other kinds of pagination:
-            if (typeof args.startId === "string") {
-              const offset = friendRefs.findIndex(
-                ref => readField("id", ref) === args.startId);
-              if (offset >= 0) {
-                return friendRefs.slice(offset, offset + args.limit);
-              }
-            }
-
-            // Returning undefined indicates that the field is missing.
-            // Throwing an exception might also be appropriate here.
-            return;
-          }
-
-          // Return the whole list if no pagination arguments provided.
-          return friendRefs;
-        },
-      },
-    },
-  },
-});
-```
+* Transforming cached data to suit your client's needs, such as rounding floating-point values to the nearest integer
+* Defining local-only fields that are derived from schema fields on the same object (such as deriving an `age` field from a `birthDate` field)
+* Defining local-only fields that are derived from schema fields across _multiple_ objects
 
 Now that you've gotten a taste for the power and flexibility of `read` functions, let's have a look at all the options that are provided by the second parameter:
 
@@ -615,27 +454,11 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
 
 You will almost never need to use all of these options at the same time, but each one has an important role to play when reading unusual fields from the cache.
 
-#### Custom `merge` functions
+### The `merge` function
 
-If a `read` function can customize what happens when a field within an entity object is read from the cache, what about writing fields into the cache?
+If you define a `merge` function for a field, the cache calls that function whenever the field is about to be written with an incoming value. When the write occurs, the field's new value is set to the `merge` function's return value, _instead of the original incoming value_.
 
-The short answer is that a `FieldPolicy` object can contain a custom `merge` function that takes the field's existing value and an incoming value, and merges them together into a new value that will be stored for that field.
-
-However, in order to understand when you might need to define a custom `merge` function, it's important to understand how the cache merges data by default, without any customization:
-
-1. When `cache.writeQuery({ query, data })` is called, the cache traverses `query` and `data` in parallel to find any objects within `data` that have a `__typename` and the necessary fields to compute a unique identifier for the object, using `keyFields` or `dataIdFromObject`. Not all objects have this information, but those that do will be stored in a flat `Map`-like data structure, with the ID strings as keys, and the objects as values.
-
- > Note: the root `data` object is always assigned a special `ROOT_QUERY` ID, since it contains root `Query` fields. This is why you do not have to specify `keyFields` for the `Query` type.
-
-2. If the normalized map already contains an entity object with the same ID, the fields of the new object will be automatically shallow-merged into the existing fields, _replacing_ any fields that overlap. This kind of merging happens automatically, and makes sense in most cases because we know the objects have the same ID, which means they represent the same logical entity.
-
-3. By default, the cache does not attempt to merge the _values_ of top-level entity fields, even if those values are objects or arrays. If an ID could be computed for a nested object (or the object elements of an array), the object would already have been written into the cache with that ID (see step 1), and a special `{ __ref: <ID> }` object referring to the normalized entity would become the value of the field. When a field has a scalar value, or when no ID can be computed for an object value, the value is treated as opaque data, and no attempt is made to merge it with other data.
-
-To recap: the top-level fields of normalized entity objects are shallow-merged together, but no additional merging happens by default. Objects are never merged together unless they have the same ID, even if it's possible that they might represent the same logical entity, because mixing fields from different entities is a recipe for data graph inconsistencies.
-
-If this default behavior is insufficient for your needs, because you want to prevent existing field values from being completely replaced, or you want to translate the incoming data somehow before it is stored in the cache, that's when you should consider writing a custom `merge` function for the field.
-
-A simple but common use case for `merge` functions is to define what happens when an array-valued field is about to be overwritten by a new array. Often, it would be better to concatenate the arrays, rather than replacing the existing array:
+A common use case for a `merge` function is to define how to write to a field that holds an array. By default, the field's existing array is _completely replaced_ by the incoming array. Often, it's preferable to _concatenate_ the two arrays instead, like so:
 
 ```ts
 const cache = new InMemoryCache({
@@ -653,29 +476,11 @@ const cache = new InMemoryCache({
 });
 ```
 
-Note that `existing` will be undefined the very first time the `merge` function is called, since the cache does not contain any data for this field (within this particular object) yet. The `existing = []` default parameter style is a convenient way to handle this case.
+Note that `existing` is undefined the very first time the `merge` function is called for a given instance of the field, because the cache does not contain any data. The `existing = []` default parameter style is a convenient way to handle this case.
 
-You might be tempted to write this function in a more destructive, less "functional" style:
+> Your `merge` function **cannot** push the `incoming` array directly onto the `existing` array. It must instead return an entirely new array. Modifying existing data in the cache is forbidden to prevent errors.
 
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Agenda: {
-      fields: {
-        tasks: {
-          merge(existing = [], incoming: any[]) {
-            // Not allowed!
-            existing.push(...incoming);
-            return existing;
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-However, modifying existing data in the cache is forbidden, because altering the contents of cached objects without changing their references can prevent the cache from reporting changes to your application in some cases, and also interferes with the ability of the cache to produce immutable snapshots using the `cache.extract()` method. In fact, if you try to modify the `existing` data in an unsafe way in development, you will find that it has been deeply frozen using `Object.freeze`, so your attempted modifications will fail.
+### Handling pagination
 
 When you're working with array-valued fields, especially when the full array might be very large, it's common to use field arguments to request the array from your GraphQL server in smaller chunks (or "pages"), which is a pattern called *pagination*. Pagination poses a challenge for Apollo Client, because the client needs to reconstruct the complete array from partial information. Fortunately, the `FieldPolicy` API, including `read` and `merge` functions, was designed with pagination in mind.
 

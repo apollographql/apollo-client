@@ -54,9 +54,6 @@
 - `ApolloClient` is now only available as a named export. The default `ApolloClient` export has been removed. <br/>
   [@hwillson](https://github.com/hwillson) in [#5425](https://github.com/apollographql/apollo-client/pull/5425)
 
-- The `ObservableQuery#getCurrentResult` method no longer falls back to reading from the cache, so calling it immediately after `client.watchQuery` will consistently return a `loading: true` result. When the `fetchPolicy` permits cached results, those results will be delivered via the `next` method of the `ObservableQuery`, and can be obtained by `getCurrentResult` after they have been delivered. This change prevents race conditions where the initial behavior of one query could depend on the timing of cache writes associated with other queries. </br>
-  [@benjamn](https://github.com/benjamn) in [#5565](https://github.com/apollographql/apollo-client/pull/5565)
-
 - The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
 
 - `InMemoryCache` will no longer merge the fields of written objects unless the objects are known to have the same identity, and the values of fields with the same name will not be recursively merged unless a custom `merge` function is defined by a field policy for that field, within a type policy associated with the `__typename` of the parent object. <br/>

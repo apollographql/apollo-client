@@ -1052,7 +1052,7 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  private getCurrentQueryResult<T>(
+  public getCurrentQueryResult<T>(
     observableQuery: ObservableQuery<T>,
     optimistic: boolean = true,
   ): {

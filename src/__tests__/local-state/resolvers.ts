@@ -681,8 +681,15 @@ describe('Writing cache data from resolvers', () => {
               console.warn = originalWarn;
 
               cache.writeData({
-                id: '$ROOT_QUERY.obj',
-                data: { field: { field2: 2, __typename: 'Field' } },
+                id: 'ROOT_QUERY',
+                data: {
+                  obj: {
+                    field: {
+                      field2: 2,
+                      __typename: 'Field',
+                    },
+                  },
+                },
               });
               return { start: true };
             },

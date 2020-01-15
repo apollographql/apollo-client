@@ -228,87 +228,43 @@ Compared to the `__typename`s of entity objects like `Book`s or `Person`s, which
 
 The final property within `TypePolicy` is the `fields` property, which is a map from string field names to `FieldPolicy` objects. The next section covers field policies in depth.
 
-## Field policies
+## Configuring individual fields
 
-In addition to configuring the identification and normalization of `__typename`-having entity objects, a `TypePolicy` can provide policies for any of the fields supported by that type.
+You can define a `FieldPolicy` object to customize cache interactions that involve a particular field. You nest `FieldPolicy` definitions within a corresponding `TypePolicy` definition.
 
-Here are the `FieldPolicy` type and its related types:
+The following example defines a `FieldPolicy` for the `name` field of a `Person` type. The `FieldPolicy` includes a [`read` function](#the-read-function), which modifies what the cache returns whenever the field is queried:
 
 ```ts
-export type FieldPolicy<TValue> = {
-  keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TValue>;
-  merge?: FieldMergeFunction<TValue>;
-};
-
-type KeyArgsFunction = (
-  field: FieldNode,
-  context: {
-    typename: string;
-    variables: Record<string, any>;
-    policies: Policies;
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        name: {
+          read(name) {
+            return name.toUpperCase();
+          }
+        }
+      },
+    },
   },
-) => string | null | void;
-
-interface FieldFunctionOptions {
-  args: Record<string, any> | null;
-  field: string | FieldNode;
-  variables?: Record<string, any>;
-  policies: Policies;
-  isReference(obj: any): obj is Reference;
-  toReference(obj: StoreObject): Reference;
-}
-
-interface ReadFunctionOptions extends FieldFunctionOptions {
-  readField<T = StoreValue>(
-    nameOrField: string | FieldNode,
-    foreignObjOrRef?: StoreObject | Reference,
-  ): Readonly<T>;
-  storage: Record<string, any>;
-  invalidate(): void;
-}
-
-type FieldReadFunction<TExisting, TResult = TExisting> = (
-  existing: Readonly<TExisting> | undefined,
-  options: ReadFunctionOptions,
-) => TResult;
-
-type FieldMergeFunction<TExisting> = (
-  existing: Readonly<TExisting> | undefined,
-  incoming: Readonly<StoreValue>,
-  options: FieldFunctionOptions,
-) => TExisting;
+});
 ```
 
-In the sections below, we will break down these types with explanations and examples.
+The use cases for `FieldPolicy` objects are described below.
 
-### Key arguments
+## Reducing cache duplicates by specifying key arguments
 
-Similar to the `keyFields` property of `TypePolicy` objects, the `keyArgs` property of `FieldPolicy` objects tells the cache which arguments passed to the field are "important" in the sense that their values (together with the enclosing entity object) determine the field's value.
+If a field accepts arguments, you can specify an array of `keyArgs` in the field's `FieldPolicy`. This array indicates which arguments are **key arguments** that are used to calculate the field's value. Specifying this array can help reduce the amount of duplicate data in your cache.
 
-By default, the cache assumes all field arguments might be important, so it stores a separate field value for each unique combination of argument values it has received for that field. This is a safe policy because it ensures field values do not collide with each other if there was any difference in their arguments. However, this policy can also lead to unnecessary copies of field values, as well as missed opportunities for fields to share the same logical value even if their arguments were slightly different.
-
-For example, imagine you have a field that returns a secret value according to a given key, but also requires an access token to authenticate the request:
-
-```ts
-query GetSecret {
-  secret(key: $secretKey, token: $secretAccessToken) {
-    message
-  }
-}
-```
-
-As long as you have a valid access token, the value of this field depends only on the `key`. In other words, you won't get a different secret message back just because you used a different (valid) token.
-
-In cases like this, it would be wasteful and potentially inconsistent to let the access token factor into the storage of the field value, so you should let the cache know that only `key` is "important" by using the `keyArgs` option of the `FieldPolicy` for the `secret` field:
+Let's say your schema defines a query named `monthForNumber` that returns the details of a `Month` type, given a provided `number` argument (January for `1` and so on). The `number` argument is a key argument for this query, because it is used when calculating the query's result:
 
 ```ts
 const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
-        secret: {
-          keyArgs: ["key"],
+        monthForNumber: {
+          keyArgs: ["number"],
         },
       },
     },
@@ -316,13 +272,13 @@ const cache = new InMemoryCache({
 });
 ```
 
-That said, you might be able to assume the `token` is always the same, or you might not be worried about duplicating field values in the cache, so neglecting to specify `keyArgs: ["key"]` probably will not cause any major problems. Use `keyArgs` when it helps.
+An example of a _non-key_ argument is an access token, which is used to authorize a query but _not_ to calculate its result. If `monthForNumber` accepts an `accessToken` argument, the value of that argument does _not_ affect the details of the returned `Month` type.
 
-On the other hand, perhaps you've requested the secret from the server using the access `token`, but you want various components on your page to be able to access the secret using only they `key`, without having to know the `token`. Storing the value in the cache using only the `key` makes this retrieval possible.
+By default, the cache stores a separate result value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different `monthForNumber` queries with the _same_ value for `number` but _different_ values for `accessToken`, the cache can safely and efficiently store a _single_ value that acts as the field result for both queries.
 
-## Customizing cache reads and writes
+## Customizing field reads and writes
 
-You can customize the cache's behavior when you read or write particular fields. For example, you might want the cache to return a particular default value for a field when that field isn't present in the cache.
+You can customize the cache's behavior when you read or write a particular field. For example, you might want the cache to return a particular default value for a field when that field isn't present in the cache.
 
 To accomplish this, you can define `read` and `merge` functions as part of any field's `FieldPolicy`. These functions are called whenever the associated field is queried (`read`) or updated (`merge`) in the cache.
 
@@ -339,8 +295,10 @@ const cache = new InMemoryCache({
   typePolicies: {
     Person: {
       fields: {
-        name(name = "UNKNOWN NAME") {
-          return name;
+        name: {
+          read(name = "UNKNOWN NAME") {
+            return name;
+          }
         },
       },
     },
@@ -348,13 +306,17 @@ const cache = new InMemoryCache({
 });
 ```
 
-If a particular field accepts arguments, its associated `read` function is passed those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
+If a field accepts arguments, its associated `read` function is passed the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
 
 ```ts
 const cache = new InMemoryCache({
   typePolicies: {
     Person: {
       fields: {
+
+        // If a field's TypePolicy would only include a read function,
+        // you can optionally define the function like so, instead of 
+        // nesting it inside an object as shown in the example above.
         name(name: string, { args }) {
           if (args && typeof args.maxLength === "number") {
             return name.substring(0, args.maxLength);
@@ -383,17 +345,189 @@ const cache = new InMemoryCache({
 });
 ```
 
-> Note that to query for a field that is only defined locally, your query should [include the `@client` directive](/data/local-state/#querying-local-state) on that field so it isn't included in requests to your GraphQL server.
+> Note that to query for a field that is only defined locally, your query should [include the `@client` directive](/data/local-state/#querying-local-state) on that field so that Apollo Client doesn't include it in requests to your GraphQL server.
 
-Other applications of a `read` function include:
+Other use cases for a `read` function include:
 
 * Transforming cached data to suit your client's needs, such as rounding floating-point values to the nearest integer
-* Defining local-only fields that are derived from schema fields on the same object (such as deriving an `age` field from a `birthDate` field)
-* Defining local-only fields that are derived from schema fields across _multiple_ objects
+* Deriving local-only fields from one or more schema fields on the same object (such as deriving an `age` field from a `birthDate` field)
+* Deriving local-only fields from one or more schema fields across _multiple_ objects
 
-Now that you've gotten a taste for the power and flexibility of `read` functions, let's have a look at all the options that are provided by the second parameter:
+For a full list of the options provided to the `read` function, see the [API reference](#fieldpolicy-api-reference). You will almost never need to use all of these options, but each one has an important role when reading fields from the cache.
+
+### The `merge` function
+
+If you define a `merge` function for a field, the cache calls that function whenever the field is about to be written with an incoming value (such as from your GraphQL server). When the write occurs, the field's new value is set to the `merge` function's return value, _instead of the original incoming value_.
+
+#### Merging arrays
+
+A common use case for a `merge` function is to define how to write to a field that holds an array. By default, the field's existing array is _completely replaced_ by the incoming array. Often, it's preferable to _concatenate_ the two arrays instead, like so:
 
 ```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: {
+          merge(existing = [], incoming: any[]) {
+            return [...existing, ...incoming];
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Note that `existing` is undefined the very first time this function is called for a given instance of the field, because the cache does not yet contain any data for the field. Providing the `existing = []` default parameter is a convenient way to handle this case.
+
+> Your `merge` function **cannot** push the `incoming` array directly onto the `existing` array. It must instead return an entirely new array. Modifying existing data in the cache is forbidden to prevent errors.
+
+#### Merging non-normalized objects
+
+Another common use case for `merge` functions is to combine nested objects that do not have IDs but definitely represent the same underlying object. Suppose that a `Book` type has an `author` field, which is an object containing information like the author's `name`, `primaryLanguage`, and `yearOfBirth`.
+
+TODO
+
+### Handling pagination
+
+When a field holds an array, it's often useful to [paginate](/data/pagination/) that array's results, because the total result set can be arbitrarily large.
+
+Typically, a query includes pagination arguments that specify:
+
+* Where to start in the array, using either a numeric offset or a starting ID
+* The maximum number of elements to return in a single "page" 
+
+If you implement pagination for a field, it's important to keep pagination arguments in mind if you then implement `read` and `merge` functions for the field:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: {
+          merge(existing: any[], incoming: any[], { args }) {
+            const merged = existing ? existing.slice(0) : [];
+            // Insert the incoming elements in the right places, according to args.
+            for (let i = args.offset; i < args.offset + args.limit; ++i) {
+              merged[i] = incoming[i - args.offset];
+            }
+            return merged;
+          },
+
+          read(existing: any[], { args }) {
+            // If we read the field before any data has been written to the
+            // cache, this function will return undefined, which correctly
+            // indicates that the field is missing.
+            return existing && existing.slice(
+              args.offset,
+              args.offset + args.limit,
+            );
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+As this example shows, your `read` function often needs to cooperate with your `merge` function, by handling the same arguments in the inverse direction.
+
+If you want a given "page" to start after a specific entity ID instead of starting from `args.offset`, you can implement your `merge` and `read` functions as follows, using the `readField` helper function to examine existing task IDs:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: {
+          merge(existing: any[], incoming: any[], { args, readField }) {
+            const merged = existing ? existing.slice(0) : [];
+            // Obtain a Set of all existing task IDs.
+            const existingIdSet = new Set(
+              merged.map(task => readField("id", task)));
+            // Remove incoming tasks already present in the existing data.
+            incoming = incoming.filter(
+              task => !existingIdSet.has(readField("id", task)));
+            // Find the index of the task just before the incoming page of tasks.
+            const afterIndex = merged.findIndex(
+              task => args.afterId === readField("id", task));
+            if (afterIndex >= 0) {
+              // If we found afterIndex, insert incoming after that index.
+              merged.splice(afterIndex + 1, 0, ...incoming);
+            } else {
+              // Otherwise insert incoming at the end of the existing data.
+              merged.push(...incoming);
+            }
+            return merged;
+          },
+
+          read(existing: any[], { args, readField }) {
+            if (existing) {
+              const afterIndex = existing.findIndex(
+                task => args.afterId === readField("id", task));
+              if (afterIndex >= 0) {
+                return existing.slice(
+                  afterIndex + 1,
+                  afterIndex + 1 + args.limit,
+                );
+              }
+            }
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Note that if you call `readField(fieldName)`, it returns the value of the specified field from the current object. If you pass an object as a _second_ argument to `readField`, (e.g., `readField("id", task)`), `readField` instead reads the specified field from the specified object. In the above example, reading the `id` field from existing `Task` objects allows us to deduplicate the `incoming` task data.
+
+The pagination code above is complicated, but after you define it for your preferred pagination strategy, you can reuse it for every field that uses that strategy, regardless of the field's type. For example:
+
+```ts
+function afterIdLimitPaginatedFieldPolicy<T>() {
+  return {
+    merge(existing: T[], incoming: T[], { args, readField }): T[] {
+      ...
+    },
+    read(existing: T[], { args, readField }): T[] {
+      ...
+    },
+  };
+}
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Agenda: {
+      fields: {
+        tasks: afterIdLimitPaginatedFieldPolicy<Reference>(),
+      },
+    },
+  },
+});
+```
+
+## `FieldPolicy` API reference
+
+Here are the definitions for the `FieldPolicy` type and its related types:
+
+```ts
+export type FieldPolicy<TValue> = {
+  keyArgs?: KeySpecifier | KeyArgsFunction | false;
+  read?: FieldReadFunction<TValue>;
+  merge?: FieldMergeFunction<TValue>;
+};
+
+type KeyArgsFunction = (
+  field: FieldNode,
+  context: {
+    typename: string;
+    variables: Record<string, any>;
+    policies: Policies;
+  },
+) => string | null | void;
+
 // These options are common to both read and merge functions:
 interface FieldFunctionOptions {
   // The final argument values passed to the field, after applying variables.
@@ -452,150 +586,14 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
 }
 ```
 
-You will almost never need to use all of these options at the same time, but each one has an important role to play when reading unusual fields from the cache.
+type FieldReadFunction<TExisting, TResult = TExisting> = (
+  existing: Readonly<TExisting> | undefined,
+  options: ReadFunctionOptions,
+) => TResult;
 
-### The `merge` function
-
-If you define a `merge` function for a field, the cache calls that function whenever the field is about to be written with an incoming value. When the write occurs, the field's new value is set to the `merge` function's return value, _instead of the original incoming value_.
-
-A common use case for a `merge` function is to define how to write to a field that holds an array. By default, the field's existing array is _completely replaced_ by the incoming array. Often, it's preferable to _concatenate_ the two arrays instead, like so:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Agenda: {
-      fields: {
-        tasks: {
-          merge(existing = [], incoming: any[]) {
-            return [...existing, ...incoming];
-          },
-        },
-      },
-    },
-  },
-});
+type FieldMergeFunction<TExisting> = (
+  existing: Readonly<TExisting> | undefined,
+  incoming: Readonly<StoreValue>,
+  options: FieldFunctionOptions,
+) => TExisting;
 ```
-
-Note that `existing` is undefined the very first time the `merge` function is called for a given instance of the field, because the cache does not contain any data. The `existing = []` default parameter style is a convenient way to handle this case.
-
-> Your `merge` function **cannot** push the `incoming` array directly onto the `existing` array. It must instead return an entirely new array. Modifying existing data in the cache is forbidden to prevent errors.
-
-### Handling pagination
-
-When you're working with array-valued fields, especially when the full array might be very large, it's common to use field arguments to request the array from your GraphQL server in smaller chunks (or "pages"), which is a pattern called *pagination*. Pagination poses a challenge for Apollo Client, because the client needs to reconstruct the complete array from partial information. Fortunately, the `FieldPolicy` API, including `read` and `merge` functions, was designed with pagination in mind.
-
-Typically, pagination arguments will specify where to start in the array, using either a numeric offset or a starting ID, and the maximum number of elements to return in a single chunk. These arguments are important to consider when implementing a `merge` function for the field:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Agenda: {
-      fields: {
-        tasks: {
-          merge(existing: any[], incoming: any[], { args }) {
-            const merged = existing ? existing.slice(0) : [];
-            // Insert the incoming elements in the right places, according to args.
-            for (let i = args.offset; i < args.offset + args.limit; ++i) {
-              merged[i] = incoming[i - args.offset];
-            }
-            return merged;
-          },
-
-          read(existing: any[], { args }) {
-            // If we read the field before any data has been written to the
-            // cache, this function will return undefined, which correctly
-            // indicates that the field is missing.
-            return existing && existing.slice(
-              args.offset,
-              args.offset + args.limit,
-            );
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-As you can see in this example, your `read` function will often need to cooperate with your `merge` function, by handling the same arguments in the inverse direction.
-
-If you want to start after a specific task ID, rather than starting from `args.offset`, you might implement your `merge` and `read` functions as follows, using the `readField` helper function to examine existing task IDs:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Agenda: {
-      fields: {
-        tasks: {
-          merge(existing: any[], incoming: any[], { args, readField }) {
-            const merged = existing ? existing.slice(0) : [];
-            // Obtain a Set of all existing task IDs.
-            const existingIdSet = new Set(
-              merged.map(task => readField("id", task)));
-            // Remove incoming tasks already present in the existing data.
-            incoming = incoming.filter(
-              task => !existingIdSet.has(readField("id", task)));
-            // Find the index of the task just before the incoming page of tasks.
-            const afterIndex = merged.findIndex(
-              task => args.afterId === readField("id", task));
-            if (afterIndex >= 0) {
-              // If we found afterIndex, insert incoming after that index.
-              merged.splice(afterIndex + 1, 0, ...incoming);
-            } else {
-              // Otherwise insert incoming at the end of the existing data.
-              merged.push(...incoming);
-            }
-            return merged;
-          },
-
-          read(existing: any[], { args, readField }) {
-            if (existing) {
-              const afterIndex = existing.findIndex(
-                task => args.afterId === readField("id", task));
-              if (afterIndex >= 0) {
-                return existing.slice(
-                  afterIndex + 1,
-                  afterIndex + 1 + args.limit,
-                );
-              }
-            }
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-As a reminder, if you call `readField(fieldName)`, it will return the value of that field from the current object. If you also pass an object or reference as the second argument, `readField` will read from that object instead of the current object. In this example, reading the `id` field from existing task objects allows us to deduplicate the `incoming` task data.
-
-The above code is getting complicated, but no more complicated than the underlying problem demands. It is, however, already far too complicated for Apollo Client to anticipate by default, which is why the `InMemoryCache` gives you complete control in the form of `read` and `merge` functions.
-
-Although the logic in your `merge` and `read` functions may become increasingly sophisticated over time, remember that this is the only place in your code where you need to describe this logic, and you can often extract common patterns into reusable helper functions that produce `FieldPolicy` objects, since nothing about this code is really specific to `Agenda`s or tasks:
-
-```ts
-function afterIdLimitPaginatedFieldPolicy<T>() {
-  return {
-    merge(existing: T[], incoming: T[], { args, readField }): T[] {
-      ...
-    },
-    read(existing: T[], { args, readField }): T[] {
-      ...
-    },
-  };
-}
-
-const cache = new InMemoryCache({
-  typePolicies: {
-    Agenda: {
-      fields: {
-        tasks: afterIdLimitPaginatedFieldPolicy<Reference>(),
-      },
-    },
-  },
-});
-```
-
-Another common use case for `merge` functions is to combine nested objects that do not have IDs, but are known by the application developer to represent the same logical entity. Suppose that the `Book` type has an `author` field, which is an object containing information like the author's `name`, `primaryLanguage`, and `yearOfBirth`.
-
-TODO

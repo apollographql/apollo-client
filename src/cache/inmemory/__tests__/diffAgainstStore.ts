@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference, makeReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference } from '../../../core';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';

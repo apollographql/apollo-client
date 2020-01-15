@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 
 import { Observable } from '../utilities/observables/Observable';
-import { makeReference } from '../utilities/graphql/storeUtils';
+import { makeReference } from '../core';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { HttpLink } from '../link/http/HttpLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';

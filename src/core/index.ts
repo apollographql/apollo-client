@@ -71,6 +71,11 @@ export { ServerError, throwServerError } from '../link/utils/throwServerError';
 
 export { Observable } from '../utilities/observables/Observable';
 export { getMainDefinition } from '../utilities/graphql/getFromAST';
+export {
+  Reference,
+  isReference,
+  makeReference,
+} from '../utilities/graphql/storeUtils';
 
 /* Supporting */
 

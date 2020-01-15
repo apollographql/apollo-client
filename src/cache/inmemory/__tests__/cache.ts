@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference } from '../../../utilities/graphql/storeUtils';
+import { makeReference } from '../../../core';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 disableFragmentWarnings();

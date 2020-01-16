@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 import { InMemoryCache } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
 import { FieldPolicy, Policies } from "../policies";
-import { Reference } from "../../../utilities/graphql/storeUtils";
+import { Reference } from "../../../core";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");

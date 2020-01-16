@@ -8,7 +8,7 @@ import { MutationQueryReducersMap } from '../core/types';
 import { Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
-import { makeReference } from '../utilities/graphql/storeUtils';
+import { makeReference } from '../core';
 import { stripSymbols } from '../utilities/testing/stripSymbols';
 import { itAsync } from '../utilities/testing/itAsync';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';

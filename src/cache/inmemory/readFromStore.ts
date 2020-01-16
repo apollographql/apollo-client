@@ -18,6 +18,7 @@ import {
 } from '../../utilities/graphql/storeUtils';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
+import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import {
   getDefaultValues,
   getFragmentDefinitions,
@@ -237,10 +238,12 @@ export class StoreReader {
         );
 
         if (fieldValue === void 0) {
-          getMissing().push({
-            object: objectOrReference as StoreObject,
-            fieldName: selection.name.value,
-          });
+          if (!addTypenameToDocument.added(selection)) {
+            getMissing().push({
+              object: objectOrReference as StoreObject,
+              fieldName: selection.name.value,
+            });
+          }
 
         } else if (Array.isArray(fieldValue)) {
           fieldValue = handleMissing(this.executeSubSelectedArray({

@@ -54,9 +54,6 @@
 - `ApolloClient` is now only available as a named export. The default `ApolloClient` export has been removed. <br/>
   [@hwillson](https://github.com/hwillson) in [#5425](https://github.com/apollographql/apollo-client/pull/5425)
 
-- The `ObservableQuery#getCurrentResult` method no longer falls back to reading from the cache, so calling it immediately after `client.watchQuery` will consistently return a `loading: true` result. When the `fetchPolicy` permits cached results, those results will be delivered via the `next` method of the `ObservableQuery`, and can be obtained by `getCurrentResult` after they have been delivered. This change prevents race conditions where the initial behavior of one query could depend on the timing of cache writes associated with other queries. </br>
-  [@benjamn](https://github.com/benjamn) in [#5565](https://github.com/apollographql/apollo-client/pull/5565)
-
 - The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
 
 - `InMemoryCache` will no longer merge the fields of written objects unless the objects are known to have the same identity, and the values of fields with the same name will not be recursively merged unless a custom `merge` function is defined by a field policy for that field, within a type policy associated with the `__typename` of the parent object. <br/>
@@ -67,6 +64,9 @@
 
 - Support eviction of specific entity fields using `cache.evict(id, fieldName)`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5643](https://github.com/apollographql/apollo-client/pull/5643)
+
+- Make `InMemoryCache#evict` remove data from all `EntityStore` layers. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5773](https://github.com/apollographql/apollo-client/pull/5773)
 
 - Stop paying attention to `previousResult` in `InMemoryCache`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5644](https://github.com/apollographql/apollo-client/pull/5644)
@@ -79,6 +79,14 @@
 
 - Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
   [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
+
+### Bug Fixes
+
+- `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>
+  [@hwillson](https://github/com/hwillson) in [#5770](https://github.com/apollographql/apollo-client/pull/5770)
+
+- Missing `__typename` fields no longer cause the `InMemoryCache#diff` result to be marked `complete: false`, if those fields were added by `InMemoryCache#transformDocument` (which calls `addTypenameToDocument`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#5787](https://github.com/apollographql/apollo-client/pull/5787)
 
 ## Apollo Client 2.6.8
 

@@ -1219,4 +1219,139 @@ describe('EntityStore', () => {
       query: queryWithoutAliases,
     })).toThrow(/Can't find field a on object/);
   });
+
+  it("gracefully handles eviction amid optimistic updates", () => {
+    const cache = new InMemoryCache;
+    const query = gql`
+      query {
+        book {
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    function writeInitialData(cache: ApolloCache<any>) {
+      cache.writeQuery({
+        query,
+        data: {
+          book: {
+            __typename: "Book",
+            id: 1,
+            author: {
+              __typename: "Author",
+              id: 2,
+              name: "Geoffrey Chaucer",
+            },
+          },
+        },
+      });
+    }
+
+    writeInitialData(cache);
+
+    // Writing data in an optimistic transaction to exercise the
+    // interaction between eviction and optimistic layers.
+    cache.recordOptimisticTransaction(proxy => {
+      writeInitialData(proxy);
+    }, "initial transaction");
+
+    expect(cache.extract(true)).toEqual({
+      "Author:2": {
+        __typename: "Author",
+        name: "Geoffrey Chaucer",
+      },
+      "Book:1": {
+        __typename: "Book",
+        author: { __ref: "Author:2" },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: { __ref: "Book:1" },
+      },
+    });
+
+    const authorId = cache.identify({
+      __typename: "Author",
+      id: 2,
+    });
+
+    expect(cache.evict(authorId)).toBe(true);
+
+    expect(cache.extract(true)).toEqual({
+      "Book:1": {
+        __typename: "Book",
+        author: { __ref: "Author:2" },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: { __ref: "Book:1" },
+      },
+    });
+
+    expect(cache.evict(authorId)).toBe(false);
+
+    expect(cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })).toEqual({
+      complete: false,
+      result: {
+        book: {
+          __typename: "Book",
+          author: {},
+        },
+      },
+    });
+
+    cache.removeOptimistic("initial transaction");
+
+    // The root layer is exposed again once the optimistic layer is
+    // removed, but the Author:2 entity has been evicted from all layers.
+    expect(cache.extract(true)).toEqual({
+      "Book:1": {
+        __typename: "Book",
+        author: { __ref: "Author:2" },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: { __ref: "Book:1" },
+      },
+    });
+
+    expect(cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })).toEqual({
+      complete: false,
+      result: {
+        book: {
+          __typename: "Book",
+          author: {},
+        },
+      },
+    });
+
+    writeInitialData(cache);
+
+    expect(cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })).toEqual({
+      complete: true,
+      result: {
+        book: {
+          __typename: "Book",
+          author: {
+            __typename: "Author",
+            name: "Geoffrey Chaucer",
+          },
+        },
+      },
+    });
+  });
 });

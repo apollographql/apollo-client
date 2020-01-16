@@ -52,7 +52,7 @@ The `InMemoryCache` **normalizes** query response objects before it saves them t
 
 1. The cache [generates a unique ID](#generating-unique-identifiers) for every identifiable object included in the response.
 2. The cache stores the objects by ID in a flat lookup table.
-3. Whenever an object is stored with the same ID as an _existing_ object, the fields of those objects are _merged_. The new object overwrites the values of any fields that appear in the existing object.
+3. Whenever an incoming object is stored with the same ID as an _existing_ object, the fields of those objects are _merged_. If the incoming object and the existing object share any fields, the incoming object _overwrites_ the cached values for those fields. Fields that appear _only_ in the existing object _or_ the incoming object are preserved.
 
 Normalization constructs a partial copy of your data graph on your client, in a format that's optimized for reading and updating the graph as your application changes state.
 
@@ -256,7 +256,7 @@ The use cases for `FieldPolicy` objects are described below.
 
 If a field accepts arguments, you can specify an array of `keyArgs` in the field's `FieldPolicy`. This array indicates which arguments are **key arguments** that are used to calculate the field's value. Specifying this array can help reduce the amount of duplicate data in your cache.
 
-Let's say your schema defines a query named `monthForNumber` that returns the details of a `Month` type, given a provided `number` argument (January for `1` and so on). The `number` argument is a key argument for this query, because it is used when calculating the query's result:
+Let's say your schema's `Query` type includes a `monthForNumber` field that returns the details of a `Month` type, given a provided `number` argument (January for `1` and so on). The `number` argument is a key argument for this field, because it is used when calculating the field's result:
 
 ```ts
 const cache = new InMemoryCache({
@@ -274,7 +274,7 @@ const cache = new InMemoryCache({
 
 An example of a _non-key_ argument is an access token, which is used to authorize a query but _not_ to calculate its result. If `monthForNumber` accepts an `accessToken` argument, the value of that argument does _not_ affect the details of the returned `Month` type.
 
-By default, the cache stores a separate result value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different `monthForNumber` queries with the _same_ value for `number` but _different_ values for `accessToken`, the cache can safely and efficiently store a _single_ value that acts as the field result for both queries.
+By default, the cache stores a separate value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different queries with the `monthForNumber` field, passing the _same_ `number` argument but _different_ `accessToken` arguments, the second query response will overwrite the first, because both invocations have the same key arguments.
 
 ## Customizing field reads and writes
 
@@ -381,7 +381,7 @@ const cache = new InMemoryCache({
 
 Note that `existing` is undefined the very first time this function is called for a given instance of the field, because the cache does not yet contain any data for the field. Providing the `existing = []` default parameter is a convenient way to handle this case.
 
-> Your `merge` function **cannot** push the `incoming` array directly onto the `existing` array. It must instead return an entirely new array. Modifying existing data in the cache is forbidden to prevent errors.
+> Your `merge` function **cannot** push the `incoming` array directly onto the `existing` array. It must instead return a new array to prevent potential errors. In development mode, Apollo Client prevents unintended modification of the `existing` data with `Object.freeze`.
 
 #### Merging non-normalized objects
 

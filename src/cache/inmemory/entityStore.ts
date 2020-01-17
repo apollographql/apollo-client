@@ -47,7 +47,7 @@ export abstract class EntityStore implements NormalizedCache {
     if (hasOwn.call(this.data, dataId)) {
       const storeObject = this.data[dataId];
       if (!fieldName) return storeObject;
-      if (hasOwn.call(storeObject, fieldName)) {
+      if (storeObject && hasOwn.call(storeObject, fieldName)) {
         return storeObject[fieldName];
       }
     }

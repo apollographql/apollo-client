@@ -3,7 +3,10 @@ import { DocumentNode } from 'graphql';
 import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
-import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
+import { queryFromPojo, fragmentFromPojo } from './utils';
+
+import gql from 'graphql-tag';
+const justTypenameQuery = gql`query { __typename }`;
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -18,8 +21,12 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): void;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
-  public abstract evict(dataId: string): boolean;
   public abstract reset(): Promise<void>;
+
+  // If called with only one argument, removes the entire entity
+  // identified by dataId. If called with a fieldName as well, removes all
+  // fields of the identified entity whose store names match fieldName.
+  public abstract evict(dataId: string, fieldName?: string): boolean;
 
   // intializer / offline / ssr API
   /**

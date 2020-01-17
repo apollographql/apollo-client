@@ -2,11 +2,11 @@ import gql from 'graphql-tag';
 
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../__tests__/utils/stripSymbols';
-import { itAsync } from '../../__tests__/utils/itAsync';
+import { stripSymbols } from '../../utilities/testing/stripSymbols';
+import { itAsync } from '../../utilities/testing/itAsync';
 import { ApolloClient } from '../..';
-import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
-import { mockSingleLink } from '../../__mocks__/mockLinks';
+import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
+import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
 import { NetworkStatus } from '../networkStatus';
 
 const query = gql`
@@ -55,50 +55,37 @@ const mutationResult = {
 const merged = { author: { ...result.author, firstName: 'James' } };
 
 const createLink = (reject: (reason: any) => any) =>
-  mockSingleLink(
-    reject,
-    {
-      request: { query },
-      result: { data: result },
-    },
-    {
-      request: { query },
-      result: { data: result },
-    },
-  );
+  mockSingleLink({
+    request: { query },
+    result: { data: result },
+  }, {
+    request: { query },
+    result: { data: result },
+  }).setOnError(reject);
 
 const createFailureLink = (reject: (reason: any) => any) =>
-  mockSingleLink(
-    reject,
-    {
-      request: { query },
-      error: new Error('query failed'),
-    },
-    {
-      request: { query },
-      result: { data: result },
-    },
-  );
+  mockSingleLink({
+    request: { query },
+    error: new Error('query failed'),
+  }, {
+    request: { query },
+    result: { data: result },
+  }).setOnError(reject);
 
 const createMutationLink = (reject: (reason: any) => any) =>
   // fetch the data
-  mockSingleLink(
-    reject,
-    {
-      request: { query },
-      result: { data: result },
-    },
-    // update the data
-    {
-      request: { query: mutation, variables },
-      result: { data: mutationResult },
-    },
-    // get the new results
-    {
-      request: { query },
-      result: { data: merged },
-    },
-  );
+  mockSingleLink({
+    request: { query },
+    result: { data: result },
+  }, // update the data
+  {
+    request: { query: mutation, variables },
+    result: { data: mutationResult },
+  }, // get the new results
+  {
+    request: { query },
+    result: { data: merged },
+  }).setOnError(reject);
 
 describe('network-only', () => {
   itAsync('requests from the network even if already in cache', (resolve, reject) => {

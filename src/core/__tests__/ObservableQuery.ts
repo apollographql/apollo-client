@@ -4,19 +4,19 @@ import { GraphQLError } from 'graphql';
 import { Observable } from '../../utilities/observables/Observable';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import mockQueryManager from '../../__mocks__/mockQueryManager';
-import mockWatchQuery from '../../__mocks__/mockWatchQuery';
-import { mockSingleLink } from '../../__mocks__/mockLinks';
+import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
+import mockWatchQuery from '../../utilities/testing/mocking/mockWatchQuery';
+import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
 
 import { ObservableQuery } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';
 import { QueryManager } from '../QueryManager';
 import { ApolloClient } from '../../';
 
-import wrap from '../../__tests__/utils/wrap';
-import subscribeAndCount from '../../__tests__/utils/subscribeAndCount';
-import { stripSymbols } from '../../__tests__/utils/stripSymbols';
-import { itAsync } from '../../__tests__/utils/itAsync';
+import wrap from '../../utilities/testing/wrap';
+import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
+import { stripSymbols } from '../../utilities/testing/stripSymbols';
+import { itAsync } from '../../utilities/testing/itAsync';
 import { ApolloError } from '../../errors/ApolloError';
 
 describe('ObservableQuery', () => {
@@ -306,11 +306,8 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(data2);
           // go back to first set of variables
-          await observable.setOptions({ variables });
-          const current = observable.getCurrentResult();
+          const current = await observable.setOptions({ variables });
           expect(stripSymbols(current.data)).toEqual(data);
-          const secondCurrent = observable.getCurrentResult();
-          expect(current.data).toEqual(secondCurrent.data);
           resolve();
         }
       });
@@ -472,11 +469,11 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(reject, observable, async (handleCount, result) => {
-        if (handleCount === 2) {
+        if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual({});
           expect(timesFired).toBe(0);
           await observable.setOptions({ fetchPolicy: 'cache-first' });
-        } else if (handleCount === 3) {
+        } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
           resolve();
@@ -1392,17 +1389,13 @@ describe('ObservableQuery', () => {
         pets: petData.slice(0, 3),
       };
 
-      const ni = mockSingleLink(
-        reject,
-        {
-          request: { query: queryWithFragment, variables },
-          result: { data: dataOneWithTypename },
-        },
-        {
-          request: { query: queryWithFragment, variables },
-          result: { data: dataTwoWithTypename },
-        },
-      );
+      const ni = mockSingleLink({
+        request: { query: queryWithFragment, variables },
+        result: { data: dataOneWithTypename },
+      }, {
+        request: { query: queryWithFragment, variables },
+        result: { data: dataTwoWithTypename },
+      }).setOnError(reject);
 
       const client = new ApolloClient({
         link: ni,
@@ -1456,6 +1449,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
+          stale: false,
           partial: false,
         });
         resolve();
@@ -1465,6 +1459,7 @@ describe('ObservableQuery', () => {
         loading: true,
         data: undefined,
         networkStatus: 1,
+        stale: false,
         partial: true,
       });
 
@@ -1474,6 +1469,7 @@ describe('ObservableQuery', () => {
             loading: true,
             data: undefined,
             networkStatus: 1,
+            stale: false,
             partial: true,
           });
         }),
@@ -1500,8 +1496,9 @@ describe('ObservableQuery', () => {
         });
         expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: dataOne,
-          loading: false,
-          networkStatus: 7,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          stale: false,
           partial: false,
         });
       }).then(resolve, reject);
@@ -1636,6 +1633,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: true,
           networkStatus: 1,
+          stale: false,
           partial: true,
         });
 
@@ -1693,6 +1691,7 @@ describe('ObservableQuery', () => {
           data: undefined,
           loading: true,
           networkStatus: 1,
+          stale: false,
           partial: false,
         });
 
@@ -1702,14 +1701,16 @@ describe('ObservableQuery', () => {
             loading,
             networkStatus,
           } = observable.getCurrentResult();
-          expect(subResult).toEqual({
-            data,
-            loading,
-            networkStatus,
-            stale: false,
-          });
 
-          if (handleCount === 2) {
+          if (handleCount === 1) {
+            expect(subResult).toEqual({
+              data,
+              loading,
+              networkStatus,
+              stale: false,
+              partial: false,
+            });
+          } else if (handleCount === 2) {
             expect(stripSymbols(subResult)).toEqual({
               data: dataTwo,
               loading: false,
@@ -1745,6 +1746,7 @@ describe('ObservableQuery', () => {
           data: undefined,
           loading: true,
           networkStatus: 1,
+          stale: false,
           partial: false,
         });
 
@@ -1754,14 +1756,16 @@ describe('ObservableQuery', () => {
             loading,
             networkStatus,
           } = observable.getCurrentResult();
-          expect(subResult).toEqual({
-            data,
-            loading,
-            networkStatus,
-            stale: false,
-          });
 
-          if (handleCount === 2) {
+          if (handleCount === 1) {
+            expect(subResult).toEqual({
+              data,
+              loading,
+              networkStatus,
+              stale: false,
+              partial: false,
+            });
+          } else if (handleCount === 2) {
             expect(stripSymbols(subResult)).toEqual({
               data: dataTwo,
               loading: false,
@@ -1870,11 +1874,10 @@ describe('ObservableQuery', () => {
       }) {
         const client = new ApolloClient({
           link: mockSingleLink(
-            error => { throw error },
             { request: queryOptions, result: { data: { value: 1 } } },
             { request: queryOptions, result: { data: { value: 2 } } },
-            { request: queryOptions, result: { data: { value: 3 } } },
-          ),
+            { request: queryOptions, result: { data: { value: 3 } } }
+          ).setOnError(error => { throw error }),
           assumeImmutableResults,
           cache: new InMemoryCache(),
         });

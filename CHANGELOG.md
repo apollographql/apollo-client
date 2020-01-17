@@ -16,12 +16,6 @@
 - Fully removed `prettier`. The Apollo Client team has decided to no longer automatically enforce code formatting across the codebase. In most cases existing code styles should be followed as much as possible, but this is not a hard and fast rule.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5227](https://github.com/apollographql/apollo-client/pull/5227)
 
-- Update the `fetchMore` type signature to accept `context`.  <br/>
-  [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
-
-- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
-  [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
-
 - Eliminate "generated" cache IDs to avoid normalizing objects with no meaningful ID, significantly reducing cache memory usage. <br/>
   [@benjamn](https://github.com/benjamn) in [#5146](https://github.com/apollographql/apollo-client/pull/5146)
 
@@ -31,7 +25,11 @@
 - The `gql` template tag should now be imported from the `@apollo/client` package, rather than the `graphql-tag` package. Although the `graphql-tag` package still works for now, future versions of `@apollo/client` may change the implementation details of `gql` without a major version bump. <br/>
   [@hwillson](https://github.com/hwillson) in [#5451](https://github.com/apollographql/apollo-client/pull/5451)
 
-### Breaking Changes
+- `@apollo/client/core` can be used to import the Apollo Client core, which includes everything the main `@apollo/client` package does, except for all React related functionality.  <br/>
+  [@kamilkisiela](https://github.com/kamilkisiela) in [#5541](https://github.com/apollographql/apollo-client/pull/5541)
+
+- `@apollo/client/cache` can be used to import the Apollo Client cache without importing other parts of the Apollo Client codebase. <br/>
+  [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
 
 - Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
@@ -39,8 +37,16 @@
 - Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
 
-- The `@apollo/client` package is now published without a nested `@apollo/client/lib` directory. <br/>
-  [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
+- `InMemoryCache` provides a new API for storing local state that can be easily updated by external code:
+  ```ts
+  const lv = cache.makeLocalVar(123)
+  console.log(lv()) // 123
+  console.log(lv(lv() + 1)) // 124
+  console.log(lv()) // 124
+  lv("asdf") // TS type error
+  ```
+  These local variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
 
 - The `queryManager` property of `ApolloClient` instances is now marked as
   `private`, paving the way for a more aggressive redesign of its API.
@@ -59,8 +65,73 @@
 - `ApolloClient` is now only available as a named export. The default `ApolloClient` export has been removed. <br/>
   [@hwillson](https://github.com/hwillson) in [#5425](https://github.com/apollographql/apollo-client/pull/5425)
 
-- Utilities that were previously externally available through the `apollo-utilities` package, are now internal only. <br/>
-  [@hwillson](https://github.com/hwillson) in [#TODO](https://github.com/apollographql/apollo-client/pull/TODO)
+- The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
+
+- `InMemoryCache` will no longer merge the fields of written objects unless the objects are known to have the same identity, and the values of fields with the same name will not be recursively merged unless a custom `merge` function is defined by a field policy for that field, within a type policy associated with the `__typename` of the parent object. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5603](https://github.com/apollographql/apollo-client/pull/5603)
+
+- Support `cache.identify(entity)` for easily computing entity ID strings. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5642](https://github.com/apollographql/apollo-client/pull/5642)
+
+- Support eviction of specific entity fields using `cache.evict(id, fieldName)`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5643](https://github.com/apollographql/apollo-client/pull/5643)
+
+- Make `InMemoryCache#evict` remove data from all `EntityStore` layers. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5773](https://github.com/apollographql/apollo-client/pull/5773)
+
+- Stop paying attention to `previousResult` in `InMemoryCache`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5644](https://github.com/apollographql/apollo-client/pull/5644)
+
+- Improve optimistic update performance by limiting cache key diversity. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5648](https://github.com/apollographql/apollo-client/pull/5648)
+
+- Custom field `read` functions can read from neighboring fields using the `getFieldValue(fieldName)` helper, and may also read fields from other entities by calling `getFieldValue(fieldName, foreignReference)`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5651](https://github.com/apollographql/apollo-client/pull/5651)
+
+- Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
+
+### Bug Fixes
+
+- `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>
+  [@hwillson](https://github/com/hwillson) in [#5770](https://github.com/apollographql/apollo-client/pull/5770)
+
+- Missing `__typename` fields no longer cause the `InMemoryCache#diff` result to be marked `complete: false`, if those fields were added by `InMemoryCache#transformDocument` (which calls `addTypenameToDocument`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#5787](https://github.com/apollographql/apollo-client/pull/5787)
+
+## Apollo Client 2.6.8
+
+### Apollo Client (2.6.8)
+
+- Update the `fetchMore` type signature to accept `context`.  <br/>
+  [@koenpunt](https://github.com/koenpunt) in [#5147](https://github.com/apollographql/apollo-client/pull/5147)
+
+- Fix type for `Resolver` and use it in the definition of `Resolvers`. <br />
+  [@peoplenarthax](https://github.com/peoplenarthax) in [#4943](https://github.com/apollographql/apollo-client/pull/4943)
+
+- Local state resolver functions now receive a `fragmentMap: FragmentMap`
+  object, in addition to the `field: FieldNode` object, via the `info`
+  parameter. <br/>
+  [@mjlyons](https://github.com/mjlyons) in [#5388](https://github.com/apollographql/apollo-client/pull/5388)
+
+- Documentation updates. <br/>
+  [@tomquirk](https://github.com/tomquirk) in [#5645](https://github.com/apollographql/apollo-client/pull/5645) <br/>
+  [@Sequoia](https://github.com/Sequoia) in [#5641](https://github.com/apollographql/apollo-client/pull/5641) <br/>
+  [@phryneas](https://github.com/phryneas) in [#5628](https://github.com/apollographql/apollo-client/pull/5628) <br/>
+  [@AryanJ-NYC](https://github.com/AryanJ-NYC) in [#5560](https://github.com/apollographql/apollo-client/pull/5560)
+
+### GraphQL Anywhere (4.2.6)
+
+- Fix `filter` edge case involving `null`.  <br/>
+  [@lifeiscontent](https://github.com/lifeiscontent) in [#5110](https://github.com/apollographql/apollo-client/pull/5110)
+
+### Apollo Boost (0.4.7)
+
+- Replace `GlobalFetch` reference with `WindowOrWorkerGlobalScope`.  <br/>
+  [@abdonrd](https://github.com/abdonrd) in [#5373](https://github.com/apollographql/apollo-client/pull/5373)
+
+- Add `assumeImmutableResults` typing to apollo boost `PresetConfig` interface. <br/>
+  [@bencoullie](https://github.com/bencoullie) in [#5571](https://github.com/apollographql/apollo-client/pull/5571)
 
 ## Apollo Client (2.6.4)
 
@@ -69,9 +140,11 @@
 - Modify `ObservableQuery` to allow queries with `notifyOnNetworkStatusChange`
   to be notified when loading after an error occurs. <br />
   [@jasonpaulos](https://github.com/jasonpaulos) in [#4992](https://github.com/apollographql/apollo-client/pull/4992)
+
 - Add `graphql` as a `peerDependency` of `apollo-cache` and
   `graphql-anywhere`.  <br/>
   [@ssalbdivad](https://github.com/ssalbdivad) in [#5081](https://github.com/apollographql/apollo-client/pull/5081)
+
 - Documentation updates.  </br>
   [@raibima](https://github.com/raibima) in [#5132](https://github.com/apollographql/apollo-client/pull/5132)  <br/>
   [@hwillson](https://github.com/hwillson) in [#5141](https://github.com/apollographql/apollo-client/pull/5141)

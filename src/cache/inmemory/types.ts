@@ -2,6 +2,7 @@ import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
 import { StoreValue } from '../../utilities/graphql/storeUtils';
+export { StoreValue }
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -18,10 +19,11 @@ export declare type IdGetter = (
  * StoreObjects from the cache
  */
 export interface NormalizedCache {
-  has(dataId: string): boolean;
+  has(dataId: string, fieldName?: string): boolean;
   get(dataId: string): StoreObject;
-  set(dataId: string, value: StoreObject): void;
-  delete(dataId: string): void;
+  get(dataId: string, fieldName: string): StoreValue;
+  merge(dataId: string, incoming: StoreObject): void;
+  delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
   // non-Map elements:
@@ -56,7 +58,7 @@ export interface NormalizedCacheObject {
 
 export interface StoreObject {
   __typename?: string;
-  [storeFieldKey: string]: StoreValue;
+  [storeFieldName: string]: StoreValue;
 }
 
 export type OptimisticStoreItem = {

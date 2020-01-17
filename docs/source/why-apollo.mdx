@@ -12,7 +12,7 @@ Data management shouldn't have to be so difficult! If you're wondering how to si
 With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated by the `useQuery` Hook. This encapsulation makes integrating query results into your presentational components a breeze! Let's see what this looks like in practice with Apollo Client and React:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 function Feed() {
@@ -25,7 +25,7 @@ function Feed() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const Feed = () => (
@@ -117,7 +117,7 @@ const client = new ApolloClient({
 
 ## Combine local & remote data
 
-Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? Apollo Client includes [local state management](/data/local-state/) features out of the box, that allow you to use your Apollo cache as the single source of truth for data in your application.
+Thousands of developers have told us that Apollo Client excels at managing remote data, which equates to roughly 80% of their data needs. But what about local data (like global flags and device API results) that make up the other 20% of the pie? Apollo Client includes [local state management](data/local-state/) features out of the box, that allow you to use your Apollo cache as the single source of truth for data in your application.
 
 Managing all your data with Apollo Client allows you to take advantage of GraphQL as a unified interface to all of your data. This enables you to inspect both your local and remote schemas in Apollo DevTools through GraphiQL.
 

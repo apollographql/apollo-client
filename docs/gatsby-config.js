@@ -11,21 +11,19 @@ module.exports = {
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
-        defaultVersion: 3.0,
-        /*
+        localVersion: '3.0 beta',
+        defaultVersion: '2.6',
         versions: {
-          2.6: 'version-2.6',
-          2.5: 'version-2.5',
-          2.4: 'version-2.4',
+          '2.6': 'version-2.6-relative',
+          '2.5': 'version-2.5',
+          '2.4': 'version-2.4',
         },
-        */
         checkLinksOptions: {
           exceptions: [
-            '/api/core/',
-            '/v2.4/api/core/',
-            '/v2.5/api/core/',
-            '/v2.6/api/core/',
-            '/v3.0/api/core/'
+            '/api/apollo-client/',
+            '/v3.0-beta/api/core/',
+            '/v2.5/api/apollo-client/',
+            '/v2.4/api/apollo-client/',
           ],
         },
         typescriptApiBox: {
@@ -33,11 +31,7 @@ module.exports = {
           filepathPrefix: 'src/',
         },
         sidebarCategories: {
-          null: [
-            'index',
-            'why-apollo',
-            'get-started',
-          ],
+          null: ['index', 'why-apollo', 'get-started'],
           'Fetching data': [
             'data/queries',
             'data/mutations',
@@ -47,16 +41,12 @@ module.exports = {
             'data/fragments',
             'data/error-handling',
           ],
-          'Caching': [
-            'caching/cache-configuration',
-            'caching/cache-interaction',
-          ],
+          Caching: ['caching/cache-configuration', 'caching/cache-interaction'],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',
             'development-testing/client-schema-mocking',
             'development-testing/developer-tooling',
-            'development-testing/recompose',
           ],
           Performance: [
             'performance/performance',
@@ -96,10 +86,7 @@ module.exports = {
             'api/link/apollo-link-schema',
             'api/link/apollo-link-ws'
           ],
-          Migrating: [
-            'migrating/hooks-migration',
-            'migrating/boost-migration',
-          ]
+          Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
         },
       },
     },

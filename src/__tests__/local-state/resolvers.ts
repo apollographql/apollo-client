@@ -5,9 +5,9 @@ import { assign } from 'lodash';
 import { Observable, Observer } from '../../utilities/observables/Observable';
 import { ApolloLink } from '../../link/core/ApolloLink';
 import { ApolloClient } from '../..';
-import mockQueryManager from '../../__mocks__/mockQueryManager';
-import wrap from '../../__tests__/utils/wrap';
-import { itAsync } from '../utils/itAsync';
+import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
+import wrap from '../../utilities/testing/wrap';
+import { itAsync } from '../../utilities/testing/itAsync';
 import { ApolloQueryResult, Resolvers } from '../../core/types';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
 import { LocalState } from '../../core/LocalState';
@@ -681,8 +681,15 @@ describe('Writing cache data from resolvers', () => {
               console.warn = originalWarn;
 
               cache.writeData({
-                id: '$ROOT_QUERY.obj',
-                data: { field: { field2: 2, __typename: 'Field' } },
+                id: 'ROOT_QUERY',
+                data: {
+                  obj: {
+                    field: {
+                      field2: 2,
+                      __typename: 'Field',
+                    },
+                  },
+                },
               });
               return { start: true };
             },

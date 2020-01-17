@@ -1,12 +1,12 @@
 import gql from 'graphql-tag';
 
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../__tests__/utils/stripSymbols';
-import { itAsync } from '../../__tests__/utils/itAsync';
+import { stripSymbols } from '../../utilities/testing/stripSymbols';
+import { itAsync } from '../../utilities/testing/itAsync';
 
 import { QueryManager } from '../QueryManager';
 import { WatchQueryOptions } from '../../core/watchQueryOptions';
-import { mockSingleLink } from '../../__mocks__/mockLinks';
+import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
 import { NetworkStatus } from '../../core/networkStatus';
 
 import { ObservableQuery } from '../../core/ObservableQuery';
@@ -39,7 +39,7 @@ function eachPollingQuery(
 describe('QueryScheduler', () => {
   itAsync('should throw an error if we try to start polling a non-polling query', (resolve, reject) => {
     const queryManager = new QueryManager({
-      link: mockSingleLink(reject),
+      link: mockSingleLink().setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -80,10 +80,10 @@ describe('QueryScheduler', () => {
       pollInterval: 80,
     };
 
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
-    });
+    }).setOnError(reject);
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
       link: link,
@@ -118,12 +118,12 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 20,
     };
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: {
         query: queryOptions.query,
       },
       result: { data },
-    });
+    }).setOnError(reject);
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
       link: link,
@@ -166,10 +166,10 @@ describe('QueryScheduler', () => {
       query: myQuery,
       pollInterval: 20,
     };
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
-    });
+    }).setOnError(reject);
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
       link,
@@ -211,11 +211,10 @@ describe('QueryScheduler', () => {
       pollInterval: 20,
     };
     const link = mockSingleLink(
-      reject,
       { request: queryOptions, result: { data: data[0] } },
       { request: queryOptions, result: { data: data[1] } },
-      { request: queryOptions, result: { data: data[2] } },
-    );
+      { request: queryOptions, result: { data: data[2] } }
+    ).setOnError(reject);
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
       link,
@@ -259,10 +258,10 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 80,
     };
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: queryOptions,
       error,
-    });
+    }).setOnError(reject);
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
       link,
@@ -301,11 +300,11 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10,
     };
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
       delay: 20000,
-    });
+    }).setOnError(reject);
     const queryManager = new QueryManager({
       cache: new InMemoryCache(),
       link,
@@ -332,10 +331,10 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10000,
     };
-    const link = mockSingleLink(reject, {
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
-    });
+    }).setOnError(reject);
     const queryManager = new QueryManager<any>({
       cache: new InMemoryCache(),
       link,
@@ -389,17 +388,13 @@ describe('QueryScheduler', () => {
     };
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
-      link: mockSingleLink(
-        reject,
-        {
-          request: { query: query1 },
-          result: { data: data1 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data2 },
-        },
-      ),
+      link: mockSingleLink({
+        request: { query: query1 },
+        result: { data: data1 },
+      }, {
+        request: { query: query2 },
+        result: { data: data2 },
+      }).setOnError(reject),
     });
     const observable1 = registerPollingQuery(queryManager, queryOptions1);
     observable1.subscribe({
@@ -443,10 +438,10 @@ describe('QueryScheduler', () => {
     };
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
-      link: mockSingleLink(reject, {
+      link: mockSingleLink({
         request: { query },
         result: { data },
-      }),
+      }).setOnError(reject),
     });
     let timesFired = 0;
     const observable = registerPollingQuery(queryManager, {
@@ -495,13 +490,7 @@ describe('QueryScheduler', () => {
       request: queryOptions,
       result: { data },
     };
-    const link = mockSingleLink(
-      reject,
-      networkResult,
-      networkResult,
-      networkResult,
-      networkResult,
-    );
+    const link = mockSingleLink(networkResult, networkResult, networkResult, networkResult).setOnError(reject);
     const queryManager = new QueryManager({
       cache: new InMemoryCache({ addTypename: false }),
       link: link,

@@ -4,14 +4,14 @@ import gql from 'graphql-tag';
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
+import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 
 // mocks
-import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
+import { MockSubscriptionLink } from '../../../utilities/testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';
-import { Reference } from '../../../utilities/graphql/storeUtils';
+import { Reference } from '../../../core';
 
 describe('Link interactions', () => {
   it('includes the cache on the context for eviction links', done => {
@@ -330,10 +330,10 @@ describe('Link interactions', () => {
         typePolicies: {
           Query: {
             fields: {
-              book(_, { parentObject: rootQuery, args, toReference }) {
+              book(_, { args, toReference, readField }) {
                 const ref = toReference({ __typename: "Book", id: args.id });
                 expect(ref).toEqual({ __ref: `Book:${args.id}` });
-                const found = (rootQuery.books as Reference[]).find(
+                const found = readField<Reference[]>("books").find(
                   book => book.__ref === ref.__ref);
                 expect(found).toBeTruthy();
                 return found;

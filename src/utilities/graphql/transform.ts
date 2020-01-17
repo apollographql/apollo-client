@@ -261,6 +261,13 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
   });
 }
 
+export interface addTypenameToDocument {
+  added(field: FieldNode): boolean;
+}
+addTypenameToDocument.added = function (field: FieldNode) {
+  return field === TYPENAME_FIELD;
+};
+
 const connectionRemoveConfig = {
   test: (directive: DirectiveNode) => {
     const willRemove = directive.name.value === 'connection';
@@ -322,48 +329,6 @@ function hasDirectivesInSelection(
         selection.selectionSet,
         nestedCheck,
       ))
-  );
-}
-
-export function getDirectivesFromDocument(
-  directives: GetDirectiveConfig[],
-  doc: DocumentNode,
-): DocumentNode {
-  checkDocument(doc);
-
-  let parentPath: string;
-
-  return nullIfDocIsEmpty(
-    visit(doc, {
-      SelectionSet: {
-        enter(node, _key, _parent, path) {
-          const currentPath = path.join('-');
-
-          if (
-            !parentPath ||
-            currentPath === parentPath ||
-            !currentPath.startsWith(parentPath)
-          ) {
-            if (node.selections) {
-              const selectionsWithDirectives = node.selections.filter(
-                selection => hasDirectivesInSelection(directives, selection),
-              );
-
-              if (hasDirectivesInSelectionSet(directives, node, false)) {
-                parentPath = currentPath;
-              }
-
-              return {
-                ...node,
-                selections: selectionsWithDirectives,
-              };
-            } else {
-              return null;
-            }
-          }
-        },
-      },
-    }),
   );
 }
 

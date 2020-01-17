@@ -3,11 +3,12 @@ import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { Operation } from '../link/core/types';
-import { mockSingleLink, mockObservableLink } from '../__mocks__/mockLinks';
+import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
+import { mockObservableLink } from '../utilities/testing/mocking/mockSubscriptionLink';
 import { ApolloClient } from '../';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from './utils/stripSymbols';
-import { itAsync } from './utils/itAsync';
+import { stripSymbols } from '../utilities/testing/stripSymbols';
+import { itAsync } from '../utilities/testing/itAsync';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
@@ -61,7 +62,7 @@ describe('subscribeToMore', () => {
   itAsync('triggers new result from subscription data', (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req1);
+    const httpLink = mockSingleLink(req1).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -113,7 +114,7 @@ describe('subscribeToMore', () => {
   itAsync('calls error callback on error', (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req1);
+    const httpLink = mockSingleLink(req1).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -172,7 +173,7 @@ describe('subscribeToMore', () => {
     let latestResult: any = null;
 
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req1);
+    const httpLink = mockSingleLink(req1).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -232,7 +233,7 @@ describe('subscribeToMore', () => {
   itAsync('should not corrupt the cache (#3062)', async (resolve, reject) => {
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, req4);
+    const httpLink = mockSingleLink(req4).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
@@ -344,7 +345,7 @@ describe('subscribeToMore', () => {
 
     let latestResult: any = null;
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(reject, typedReq);
+    const httpLink = mockSingleLink(typedReq).setOnError(reject);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;

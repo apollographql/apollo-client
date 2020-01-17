@@ -1,22 +1,25 @@
 import gql from 'graphql-tag';
-import { EntityCache, supportsResultCaching } from '../entityCache';
+import { EntityStore, supportsResultCaching } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
+import { DocumentNode, FieldNode } from 'graphql';
+import { getOperationDefinition, getFragmentDefinitions } from '../../../utilities/graphql/getFromAST';
+import { createFragmentMap } from '../../../utilities/graphql/fragments';
 
-describe('EntityCache', () => {
+describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
-    const cacheWithResultCaching = new EntityCache.Root({
+    const storeWithResultCaching = new EntityStore.Root({
       resultCaching: true,
     });
 
-    const cacheWithoutResultCaching = new EntityCache.Root({
+    const storeWithoutResultCaching = new EntityStore.Root({
       resultCaching: false,
     });
 
     expect(supportsResultCaching({ some: "arbitrary object " })).toBe(false);
-    expect(supportsResultCaching(cacheWithResultCaching)).toBe(true);
-    expect(supportsResultCaching(cacheWithoutResultCaching)).toBe(false);
+    expect(supportsResultCaching(storeWithResultCaching)).toBe(true);
+    expect(supportsResultCaching(storeWithoutResultCaching)).toBe(false);
 
-    const layerWithCaching = cacheWithResultCaching.addLayer("with caching", () => {});
+    const layerWithCaching = storeWithResultCaching.addLayer("with caching", () => {});
     expect(supportsResultCaching(layerWithCaching)).toBe(true);
     const anotherLayer = layerWithCaching.addLayer("another layer", () => {});
     expect(supportsResultCaching(anotherLayer)).toBe(true);
@@ -24,13 +27,13 @@ describe('EntityCache', () => {
       anotherLayer
         .removeLayer("with caching")
         .removeLayer("another layer")
-    ).toBe(cacheWithResultCaching);
-    expect(supportsResultCaching(cacheWithResultCaching)).toBe(true);
+    ).toBe(storeWithResultCaching);
+    expect(supportsResultCaching(storeWithResultCaching)).toBe(true);
 
-    const layerWithoutCaching = cacheWithoutResultCaching.addLayer("with caching", () => {});
+    const layerWithoutCaching = storeWithoutResultCaching.addLayer("with caching", () => {});
     expect(supportsResultCaching(layerWithoutCaching)).toBe(false);
-    expect(layerWithoutCaching.removeLayer("with caching")).toBe(cacheWithoutResultCaching);
-    expect(supportsResultCaching(cacheWithoutResultCaching)).toBe(false);
+    expect(layerWithoutCaching.removeLayer("with caching")).toBe(storeWithoutResultCaching);
+    expect(supportsResultCaching(storeWithoutResultCaching)).toBe(false);
   });
 
   function newBookAuthorCache() {
@@ -592,18 +595,22 @@ describe('EntityCache', () => {
   it('allows cache eviction', () => {
     const { cache, query } = newBookAuthorCache();
 
+    const cuckoosCallingBook = {
+      __typename: "Book",
+      isbn: "031648637X",
+      title: "The Cuckoo's Calling",
+      author: {
+        __typename: "Author",
+        name: "Robert Galbraith",
+      },
+    };
+
+    expect(cache.identify(cuckoosCallingBook)).toBe("Book:031648637X");
+
     cache.writeQuery({
       query,
       data: {
-        book: {
-          __typename: "Book",
-          isbn: "031648637X",
-          title: "The Cuckoo's Calling",
-          author: {
-            __typename: "Author",
-            name: "Robert Galbraith",
-          },
-        },
+        book: cuckoosCallingBook,
       },
     });
 
@@ -618,7 +625,7 @@ describe('EntityCache', () => {
     `;
 
     const fragmentResult = cache.readFragment({
-      id: "Book:031648637X",
+      id: cache.identify(cuckoosCallingBook),
       fragment: bookAuthorFragment,
     });
 
@@ -632,7 +639,7 @@ describe('EntityCache', () => {
 
     cache.recordOptimisticTransaction(proxy => {
       proxy.writeFragment({
-        id: "Book:031648637X",
+        id: cache.identify(cuckoosCallingBook),
         fragment: bookAuthorFragment,
         data: {
           ...fragmentResult,
@@ -696,14 +703,12 @@ describe('EntityCache', () => {
         },
         title: "The Cuckoo's Calling",
       },
-      "Author:Robert Galbraith": {
-        __typename: "Author",
-        name: "Robert Galbraith",
-      },
+      // The Robert Galbraith Author record is no longer here because
+      // cache.evict evicts data from all EntityStore layers.
     });
 
     cache.writeFragment({
-      id: "Book:031648637X",
+      id: cache.identify(cuckoosCallingBook),
       fragment: bookAuthorFragment,
       data: {
         ...fragmentResult,
@@ -714,7 +719,25 @@ describe('EntityCache', () => {
       },
     });
 
-    expect(cache.extract(true)).toEqual(snapshotWithBothNames);
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: {
+          __ref: "Book:031648637X",
+        },
+      },
+      "Book:031648637X": {
+        __typename: "Book",
+        author: {
+          __ref: "Author:J.K. Rowling",
+        },
+        title: "The Cuckoo's Calling",
+      },
+      "Author:J.K. Rowling": {
+        __typename: "Author",
+        name: "J.K. Rowling",
+      },
+    });
 
     expect(cache.retain("Author:Robert Galbraith")).toBe(2);
 
@@ -723,9 +746,7 @@ describe('EntityCache', () => {
     expect(cache.release("Author:Robert Galbraith")).toBe(1);
     expect(cache.release("Author:Robert Galbraith")).toBe(0);
 
-    expect(cache.gc()).toEqual([
-      "Author:Robert Galbraith",
-    ]);
+    expect(cache.gc()).toEqual([]);
 
     // If you're ever tempted to do this, you probably want to use cache.clear()
     // instead, but evicting the ROOT_QUERY should work at least.
@@ -745,13 +766,592 @@ describe('EntityCache', () => {
       },
     });
 
-    expect(cache.retain("Book:031648637X")).toBe(2);
-    expect(cache.release("Book:031648637X")).toBe(1);
-    expect(cache.release("Book:031648637X")).toBe(0);
+    const ccId = cache.identify(cuckoosCallingBook);
+    expect(cache.retain(ccId)).toBe(2);
+    expect(cache.release(ccId)).toBe(1);
+    expect(cache.release(ccId)).toBe(0);
 
     expect(cache.gc().sort()).toEqual([
       "Author:J.K. Rowling",
-      "Book:031648637X",
+      ccId,
     ]);
+  });
+
+  it("allows evicting specific fields", () => {
+    const query: DocumentNode = gql`
+      query {
+        authorOfBook(isbn: $isbn) {
+          name
+          hobby
+        }
+        publisherOfBook(isbn: $isbn) {
+          name
+          yearOfFounding
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            authorOfBook: {
+              keyArgs: ["isbn"],
+            },
+          },
+        },
+        Author: {
+          keyFields: ["name"],
+        },
+        Publisher: {
+          keyFields: ["name"],
+        },
+      },
+    });
+
+    const TedChiangData = {
+      __typename: "Author",
+      name: "Ted Chiang",
+      hobby: "video games",
+    };
+
+    const KnopfData = {
+      __typename: "Publisher",
+      name: "Alfred A. Knopf",
+      yearOfFounding: 1915,
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: TedChiangData,
+        publisherOfBook: KnopfData,
+      },
+      variables: {
+        isbn: "1529014514",
+      },
+    });
+
+    const justTedRootQueryData = {
+      __typename: "Query",
+      'authorOfBook:{"isbn":"1529014514"}': {
+        __ref: 'Author:{"name":"Ted Chiang"}',
+      },
+      // This storeFieldName format differs slightly from that of
+      // authorOfBook because we did not define keyArgs for the
+      // publisherOfBook field, so the legacy storeKeyNameFromField
+      // function was used instead.
+      'publisherOfBook({"isbn":"1529014514"})': {
+        __ref: 'Publisher:{"name":"Alfred A. Knopf"}',
+      },
+    };
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: justTedRootQueryData,
+      'Author:{"name":"Ted Chiang"}': TedChiangData,
+      'Publisher:{"name":"Alfred A. Knopf"}': KnopfData,
+    });
+
+    const JennyOdellData = {
+      __typename: "Author",
+      name: "Jenny Odell",
+      hobby: "birding",
+    };
+
+    const MelvilleData = {
+      __typename: "Publisher",
+      name: "Melville House",
+      yearOfFounding: 2001,
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: JennyOdellData,
+        publisherOfBook: MelvilleData,
+      },
+      variables: {
+        isbn: "1760641790",
+      },
+    });
+
+    const justJennyRootQueryData = {
+      __typename: "Query",
+      'authorOfBook:{"isbn":"1760641790"}': {
+        __ref: 'Author:{"name":"Jenny Odell"}',
+      },
+      'publisherOfBook({"isbn":"1760641790"})': {
+        __ref: 'Publisher:{"name":"Melville House"}',
+      },
+    };
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        ...justTedRootQueryData,
+        ...justJennyRootQueryData,
+      },
+      'Author:{"name":"Ted Chiang"}': TedChiangData,
+      'Publisher:{"name":"Alfred A. Knopf"}': KnopfData,
+      'Author:{"name":"Jenny Odell"}': JennyOdellData,
+      'Publisher:{"name":"Melville House"}': MelvilleData,
+    });
+
+    const fullTedResult = cache.readQuery<any>({
+      query,
+      variables: {
+        isbn: "1529014514",
+      },
+    });
+
+    expect(fullTedResult).toEqual({
+      authorOfBook: TedChiangData,
+      publisherOfBook: KnopfData,
+    });
+
+    const fullJennyResult = cache.readQuery<any>({
+      query,
+      variables: {
+        isbn: "1760641790",
+      },
+    });
+
+    expect(fullJennyResult).toEqual({
+      authorOfBook: JennyOdellData,
+      publisherOfBook: MelvilleData,
+    });
+
+    cache.evict(
+      cache.identify({
+        __typename: "Publisher",
+        name: "Alfred A. Knopf",
+      }),
+      "yearOfFounding",
+    );
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        ...justTedRootQueryData,
+        ...justJennyRootQueryData,
+      },
+      'Author:{"name":"Ted Chiang"}': TedChiangData,
+      'Publisher:{"name":"Alfred A. Knopf"}': {
+        __typename: "Publisher",
+        name: "Alfred A. Knopf",
+        // yearOfFounding has been removed
+      },
+      'Author:{"name":"Jenny Odell"}': JennyOdellData,
+      'Publisher:{"name":"Melville House"}': MelvilleData,
+    });
+
+    // Nothing to garbage collect yet.
+    expect(cache.gc()).toEqual([]);
+
+    cache.evict(cache.identify({
+      __typename: "Publisher",
+      name: "Melville House",
+    }));
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        ...justTedRootQueryData,
+        ...justJennyRootQueryData,
+      },
+      'Author:{"name":"Ted Chiang"}': TedChiangData,
+      'Publisher:{"name":"Alfred A. Knopf"}': {
+        __typename: "Publisher",
+        name: "Alfred A. Knopf",
+      },
+      'Author:{"name":"Jenny Odell"}': JennyOdellData,
+      // Melville House has been removed
+    });
+
+    cache.evict("ROOT_QUERY", "publisherOfBook");
+
+    function withoutPublisherOfBook(obj: object) {
+      const clean = { ...obj };
+      Object.keys(obj).forEach(key => {
+        if (key.startsWith("publisherOfBook")) {
+          delete clean[key];
+        }
+      });
+      return clean;
+    }
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        ...withoutPublisherOfBook(justTedRootQueryData),
+        ...withoutPublisherOfBook(justJennyRootQueryData),
+      },
+      'Author:{"name":"Ted Chiang"}': TedChiangData,
+      'Publisher:{"name":"Alfred A. Knopf"}': {
+        __typename: "Publisher",
+        name: "Alfred A. Knopf",
+      },
+      'Author:{"name":"Jenny Odell"}': JennyOdellData,
+    });
+
+    expect(cache.gc()).toEqual([
+      'Publisher:{"name":"Alfred A. Knopf"}',
+    ]);
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        ...withoutPublisherOfBook(justTedRootQueryData),
+        ...withoutPublisherOfBook(justJennyRootQueryData),
+      },
+      'Author:{"name":"Ted Chiang"}': TedChiangData,
+      'Author:{"name":"Jenny Odell"}': JennyOdellData,
+    });
+
+    const partialTedResult = cache.diff<any>({
+      query,
+      returnPartialData: true,
+      optimistic: false, // required but not important
+      variables: {
+        isbn: "1529014514",
+      },
+    });
+    expect(partialTedResult.complete).toBe(false);
+    expect(partialTedResult.result).toEqual({
+      authorOfBook: TedChiangData,
+    });
+    // The result caching system preserves the referential identity of
+    // unchanged nested result objects.
+    expect(
+      partialTedResult.result.authorOfBook,
+    ).toBe(fullTedResult.authorOfBook);
+
+    const partialJennyResult = cache.diff<any>({
+      query,
+      returnPartialData: true,
+      optimistic: true, // required but not important
+      variables: {
+        isbn: "1760641790",
+      },
+    });
+    expect(partialJennyResult.complete).toBe(false);
+    expect(partialJennyResult.result).toEqual({
+      authorOfBook: JennyOdellData,
+    });
+    // The result caching system preserves the referential identity of
+    // unchanged nested result objects.
+    expect(
+      partialJennyResult.result.authorOfBook,
+    ).toBe(fullJennyResult.authorOfBook);
+
+    const tedWithoutHobby = {
+      __typename: "Author",
+      name: "Ted Chiang",
+    };
+
+    cache.evict(
+      cache.identify(tedWithoutHobby),
+      "hobby",
+    );
+
+    expect(cache.diff<any>({
+      query,
+      returnPartialData: true,
+      optimistic: false, // required but not important
+      variables: {
+        isbn: "1529014514",
+      },
+    })).toEqual({
+      complete: false,
+      result: {
+        authorOfBook: tedWithoutHobby,
+      },
+    });
+
+    cache.evict("ROOT_QUERY", "authorOfBook");
+    expect(cache.gc().sort()).toEqual([
+      'Author:{"name":"Jenny Odell"}',
+      'Author:{"name":"Ted Chiang"}',
+    ]);
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        // Everything else has been removed.
+        __typename: "Query",
+      },
+    });
+  });
+
+  it("supports cache.identify(object)", () => {
+    const queryWithAliases: DocumentNode = gql`
+      query {
+        abcs {
+          first: a
+          second: b
+          ...Rest
+        }
+      }
+      fragment Rest on ABCs {
+        third: c
+      }
+    `;
+
+    const queryWithoutAliases: DocumentNode = gql`
+      query {
+        abcs {
+          a
+          b
+          ...Rest
+        }
+      }
+      fragment Rest on ABCs {
+        c
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        ABCs: {
+          keyFields: ["b", "a", "c"],
+        },
+      },
+    });
+
+    const ABCs = {
+      __typename: "ABCs",
+      first: "ay",
+      second: "bee",
+      third: "see",
+    };
+
+    cache.writeQuery({
+      query: queryWithAliases,
+      data: {
+        abcs: ABCs,
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        abcs: {
+          __ref: 'ABCs:{"b":"bee","a":"ay","c":"see"}',
+        },
+      },
+      'ABCs:{"b":"bee","a":"ay","c":"see"}': {
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      },
+    });
+
+    const resultWithAliases = cache.readQuery({
+      query: queryWithAliases,
+    });
+
+    expect(resultWithAliases).toEqual({ abcs: ABCs });
+
+    const resultWithoutAliases = cache.readQuery({
+      query: queryWithoutAliases,
+    });
+
+    expect(resultWithoutAliases).toEqual({
+      abcs: {
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      },
+    });
+
+    expect(cache.identify({
+      __typename: "ABCs",
+      a: 1,
+      b: 2,
+      c: 3,
+    })).toBe('ABCs:{"b":2,"a":1,"c":3}');
+
+    expect(() => cache.identify(ABCs)).toThrow(
+      "Missing field b while computing key fields",
+    );
+
+    expect(cache.readFragment({
+      id: cache.identify({
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      }),
+      fragment: gql`
+        fragment JustB on ABCs {
+          b
+        }
+      `,
+    })).toEqual({
+      __typename: "ABCs",
+      b: "bee",
+    });
+
+    expect(cache.readQuery({
+      query: queryWithAliases,
+    })).toBe(resultWithAliases);
+
+    expect(cache.readQuery({
+      query: queryWithoutAliases,
+    })).toBe(resultWithoutAliases);
+
+    cache.evict(cache.identify({
+      __typename: "ABCs",
+      a: "ay",
+      b: "bee",
+      c: "see",
+    }));
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        abcs: {
+          __ref: 'ABCs:{"b":"bee","a":"ay","c":"see"}',
+        },
+      },
+    });
+
+    expect(() => cache.readQuery({
+      query: queryWithAliases,
+    })).toThrow(/Can't find field a on object/);
+
+    expect(() => cache.readQuery({
+      query: queryWithoutAliases,
+    })).toThrow(/Can't find field a on object/);
+  });
+
+  it("gracefully handles eviction amid optimistic updates", () => {
+    const cache = new InMemoryCache;
+    const query = gql`
+      query {
+        book {
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    function writeInitialData(cache: ApolloCache<any>) {
+      cache.writeQuery({
+        query,
+        data: {
+          book: {
+            __typename: "Book",
+            id: 1,
+            author: {
+              __typename: "Author",
+              id: 2,
+              name: "Geoffrey Chaucer",
+            },
+          },
+        },
+      });
+    }
+
+    writeInitialData(cache);
+
+    // Writing data in an optimistic transaction to exercise the
+    // interaction between eviction and optimistic layers.
+    cache.recordOptimisticTransaction(proxy => {
+      writeInitialData(proxy);
+    }, "initial transaction");
+
+    expect(cache.extract(true)).toEqual({
+      "Author:2": {
+        __typename: "Author",
+        name: "Geoffrey Chaucer",
+      },
+      "Book:1": {
+        __typename: "Book",
+        author: { __ref: "Author:2" },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: { __ref: "Book:1" },
+      },
+    });
+
+    const authorId = cache.identify({
+      __typename: "Author",
+      id: 2,
+    });
+
+    expect(cache.evict(authorId)).toBe(true);
+
+    expect(cache.extract(true)).toEqual({
+      "Book:1": {
+        __typename: "Book",
+        author: { __ref: "Author:2" },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: { __ref: "Book:1" },
+      },
+    });
+
+    expect(cache.evict(authorId)).toBe(false);
+
+    expect(cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })).toEqual({
+      complete: false,
+      result: {
+        book: {
+          __typename: "Book",
+          author: {},
+        },
+      },
+    });
+
+    cache.removeOptimistic("initial transaction");
+
+    // The root layer is exposed again once the optimistic layer is
+    // removed, but the Author:2 entity has been evicted from all layers.
+    expect(cache.extract(true)).toEqual({
+      "Book:1": {
+        __typename: "Book",
+        author: { __ref: "Author:2" },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: { __ref: "Book:1" },
+      },
+    });
+
+    expect(cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })).toEqual({
+      complete: false,
+      result: {
+        book: {
+          __typename: "Book",
+          author: {},
+        },
+      },
+    });
+
+    writeInitialData(cache);
+
+    expect(cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })).toEqual({
+      complete: true,
+      result: {
+        book: {
+          __typename: "Book",
+          author: {
+            __typename: "Author",
+            name: "Geoffrey Chaucer",
+          },
+        },
+      },
+    });
   });
 });

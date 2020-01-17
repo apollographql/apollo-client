@@ -1,7 +1,7 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
-import { defaultNormalizedCacheFactory } from '../entityCache';
+import { Reference, makeReference } from '../../../core';
+import { defaultNormalizedCacheFactory } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { defaultDataIdFromObject } from '../policies';
@@ -258,7 +258,7 @@ describe('diffing queries against the store', () => {
         returnPartialData: false,
       });
 
-      expect(complete).toBe(false);
+      expect(complete).toBe(true);
     });
   });
 
@@ -306,7 +306,7 @@ describe('diffing queries against the store', () => {
       query: unionQuery,
     });
 
-    expect(complete).toBe(false);
+    expect(complete).toBe(true);
   });
 
   it('throws an error on a query with fields missing from matching named fragments', () => {
@@ -959,14 +959,14 @@ describe('diffing queries against the store', () => {
         typePolicies: {
           Query: {
             fields: {
-              person(_, { args, parentObject: rootQuery, toReference }) {
+              person(_, { args, isReference, toReference, readField }) {
                 expect(typeof args.id).toBe('number');
                 const ref = toReference({ __typename: 'Person', id: args.id });
                 expect(isReference(ref)).toBe(true);
                 expect(ref).toEqual({
                   __ref: `Person:${JSON.stringify({ id: args.id })}`,
                 });
-                const found = (rootQuery.people as Reference[]).find(
+                const found = readField<Reference[]>("people").find(
                   person => person.__ref === ref.__ref);
                 expect(found).toBeTruthy();
                 return found;

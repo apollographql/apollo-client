@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { withError } from './diffAgainstStore';
 import { withWarning } from './writeToStore';
-import { EntityCache } from '../entityCache';
+import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { Policies } from '../policies';
@@ -21,7 +21,12 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
 }
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const policies = new Policies();
+  const policies = new Policies({
+    possibleTypes: {
+      Character: ["Jedi", "Droid"],
+    },
+  });
+
   const reader = new StoreReader({ policies });
   const writer = new StoreWriter({ policies });
 
@@ -42,7 +47,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
 
   // Make sure the result is identical if we haven't written anything new
   // to the store. https://github.com/apollographql/apollo-client/pull/3394
-  expect(store).toBeInstanceOf(EntityCache);
+  expect(store).toBeInstanceOf(EntityStore);
   expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
 
   const immutableResult = reader.readQueryFromStore(readOptions);
@@ -303,42 +308,10 @@ describe('roundtrip', () => {
       );
     });
 
-    it('should resolve on union types with inline fragments without typenames with warning', () => {
-      return withWarning(() => {
-        storeRoundtrip(
-          gql`
-            query {
-              all_people {
-                name
-                ... on Jedi {
-                  side
-                }
-                ... on Droid {
-                  model
-                }
-              }
-            }
-          `,
-          {
-            all_people: [
-              {
-                name: 'Luke Skywalker',
-                side: 'bright',
-              },
-              {
-                name: 'R2D2',
-                model: 'astromech',
-              },
-            ],
-          },
-        );
-      });
-    });
-
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
     it('should throw an error on two of the same inline fragment types', () => {
-      return expect(() => {
+      return withWarning(() => expect(() => {
         storeRoundtrip(
           gql`
             query {
@@ -364,7 +337,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Can\'t find field rank on object/);
+      }).toThrowError(/Can\'t find field rank on object/));
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
@@ -469,6 +442,7 @@ describe('roundtrip', () => {
                 __typename: 'Droid',
                 name: 'R2D2',
                 model: 'astromech',
+                side: 'bright',
               },
             ],
           },
@@ -477,7 +451,7 @@ describe('roundtrip', () => {
     });
 
     it('should throw on error on two of the same spread fragment types', () => {
-      expect(() =>
+      withWarning(() => expect(() => {
         storeRoundtrip(
           gql`
             fragment jediSide on Jedi {
@@ -506,8 +480,8 @@ describe('roundtrip', () => {
               },
             ],
           },
-        ),
-      ).toThrowError(/Can\'t find field rank on object/);
+        );
+      }).toThrowError(/Can\'t find field rank on object/));
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

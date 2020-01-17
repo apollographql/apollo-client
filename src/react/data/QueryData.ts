@@ -1,6 +1,5 @@
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 
-import { ApolloQueryResult } from '../../core/types';
 import { ApolloError } from '../../errors/ApolloError';
 import { NetworkStatus } from '../../core/networkStatus';
 import {
@@ -11,12 +10,11 @@ import {
   FetchMoreOptions,
   UpdateQueryOptions
 } from '../../core/ObservableQuery';
-import { ApolloContextValue } from '../context/ApolloContext';
 import { DocumentType } from '../parser/parser';
 import {
   QueryResult,
   QueryPreviousData,
-  QueryOptions,
+  QueryDataOptions,
   QueryCurrentObservable,
   QueryTuple,
   QueryLazyOptions,
@@ -37,8 +35,8 @@ export class QueryData<TData, TVariables> extends OperationData {
     context,
     forceUpdate
   }: {
-    options: QueryOptions<TData, TVariables>;
-    context: ApolloContextValue;
+    options: QueryDataOptions<TData, TVariables>;
+    context: any;
     forceUpdate: any;
   }) {
     super(options, context);
@@ -76,21 +74,23 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   // For server-side rendering
-  public fetchData(): Promise<ApolloQueryResult<any>> | boolean {
+  public fetchData(): Promise<void> | boolean {
     const options = this.getOptions();
     if (options.skip || options.ssr === false) return false;
-
-    // currentObservable.query is already assigned the registered SSR observable in initializeObservableQuery.
-    const obs = this.currentObservable.query!;
-    const currentResult = obs.getCurrentResult();
-    return currentResult.loading ? obs.result() : false;
+    return new Promise(resolve => this.startQuerySubscription(resolve));
   }
 
-  public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
+  public afterExecute({
+    queryResult,
+    lazy = false,
+  }: {
+    queryResult: QueryResult<TData, TVariables>;
+    lazy?: boolean;
+  }) {
     this.isMounted = true;
 
     if (!lazy || this.runLazy) {
-      this.handleErrorOrCompleted();
+      this.handleErrorOrCompleted(queryResult);
 
       // When the component is done rendering stored query errors, we'll
       // remove those errors from the `ObservableQuery` query store, so they
@@ -142,7 +142,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.forceUpdate();
   };
 
-  private getExecuteResult = (): QueryResult<TData, TVariables> => {
+  private getExecuteResult(): QueryResult<TData, TVariables> {
     const result = this.getQueryResult();
     this.startQuerySubscription();
     return result;
@@ -171,7 +171,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       result =
         this.context.renderPromises!.addQueryPromise(
           this,
-          this.getExecuteResult
+          this.getQueryResult
         ) || ssrLoading;
     }
 
@@ -245,7 +245,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     };
 
     if (
-      !isEqual(
+      !equal(
         newObservableQueryOptions,
         this.previousData.observableQueryOptions
       )
@@ -261,7 +261,13 @@ export class QueryData<TData, TVariables> extends OperationData {
     }
   }
 
-  private startQuerySubscription() {
+  // Setup a subscription to watch for Apollo Client `ObservableQuery` changes.
+  // When new data is received, and it doesn't match the data that was used
+  // during the last `QueryData.execute` call (and ultimately the last query
+  // component render), trigger the `onNewData` callback. If not specified,
+  // `onNewData` will trigger the `forceUpdate` function, which leads to a
+  // query component re-render.
+  private startQuerySubscription(onNewData: () => void = this.forceUpdate) {
     if (this.currentObservable.subscription || this.getOptions().skip) return;
 
     const obsQuery = this.currentObservable.query!;
@@ -274,12 +280,24 @@ export class QueryData<TData, TVariables> extends OperationData {
           previousResult &&
           previousResult.loading === loading &&
           previousResult.networkStatus === networkStatus &&
-          isEqual(previousResult.data, data)
+          equal(previousResult.data, data)
         ) {
           return;
         }
 
-        this.forceUpdate();
+        // If we skipped previously, `previousResult.data` is set to undefined.
+        // When this subscription is run after skipping, Apollo Client sends
+        // the last query result data alongside the `loading` true state. This
+        // means the previous skipped `data` of undefined and the incoming
+        // data won't match, which would normally mean we want to trigger a
+        // render to show the new data. In this case however we're already
+        // showing the loading state, and want to avoid triggering an
+        // additional and unnecessary render showing the same loading state.
+        if (this.previousOptions.skip) {
+          return;
+        }
+
+        onNewData();
       },
       error: error => {
         this.resubscribeToQuery();
@@ -288,10 +306,10 @@ export class QueryData<TData, TVariables> extends OperationData {
         const previousResult = this.previousData.result;
         if (
           (previousResult && previousResult.loading) ||
-          !isEqual(error, this.previousData.error)
+          !equal(error, this.previousData.error)
         ) {
           this.previousData.error = error;
-          this.forceUpdate();
+          onNewData();
         }
       }
     });
@@ -317,7 +335,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     });
   }
 
-  private getQueryResult(): QueryResult<TData, TVariables> {
+  private getQueryResult = (): QueryResult<TData, TVariables> => {
     let result: any = this.observableQueryFields();
     const options = this.getOptions();
 
@@ -372,8 +390,8 @@ export class QueryData<TData, TVariables> extends OperationData {
         const { partialRefetch } = options;
         if (
           partialRefetch &&
-          !data &&
           partial &&
+          (!data || Object.keys(data).length === 0) &&
           fetchPolicy !== 'cache-only'
         ) {
           // When a `Query` component is mounted, and a mutation is executed
@@ -397,18 +415,18 @@ export class QueryData<TData, TVariables> extends OperationData {
     }
 
     result.client = this.client;
+    // Store options as this.previousOptions.
+    this.setOptions(options, true);
     this.previousData.loading =
-      (this.previousData.result && this.previousData.result.loading) || false;
-    this.previousData.result = result;
-    return result;
+      this.previousData.result && this.previousData.result.loading || false;
+    return this.previousData.result = result;
   }
 
-  private handleErrorOrCompleted() {
-    const obsQuery = this.currentObservable.query;
-    if (!obsQuery) return;
-
-    const { data, loading, error } = obsQuery.getCurrentResult();
-
+  private handleErrorOrCompleted({
+    data,
+    loading,
+    error,
+  }: QueryResult<TData, TVariables>) {
     if (!loading) {
       const { query, variables, onCompleted, onError } = this.getOptions();
 
@@ -416,8 +434,8 @@ export class QueryData<TData, TVariables> extends OperationData {
       if (
         this.previousOptions &&
         !this.previousData.loading &&
-        isEqual(this.previousOptions.query, query) &&
-        isEqual(this.previousOptions.variables, variables)
+        equal(this.previousOptions.query, query) &&
+        equal(this.previousOptions.variables, variables)
       ) {
         return;
       }

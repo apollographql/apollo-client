@@ -1,8 +1,8 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { stripSymbols } from '../../../__tests__/utils/stripSymbols';
+import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference } from '../../../utilities/graphql/storeUtils';
+import { makeReference } from '../../../core';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 disableFragmentWarnings();
@@ -701,8 +701,9 @@ describe('Cache', () => {
           ROOT_QUERY: {
             __typename: "Query",
             a: 1,
+            // The new value for d overwrites the old value, since there
+            // is no custom merge function defined for Query.d.
             d: {
-              e: 4,
               h: {
                 i: 7,
               },
@@ -1183,6 +1184,250 @@ describe('Cache', () => {
       );
 
       expect(numBroadcasts).toEqual(1);
+    });
+  });
+});
+
+describe("InMemoryCache#broadcastWatches", function () {
+  it("should keep distinct consumers distinct (issue #5733)", function () {
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        value(arg: $arg) {
+          name
+        }
+      }
+    `;
+
+    const receivedCallbackResults: [string, number, any][] = [];
+
+    let nextWatchId = 1;
+    function watch(arg) {
+      const watchId = `id${nextWatchId++}`;
+      cache.watch({
+        query,
+        variables: { arg },
+        optimistic: false,
+        callback(result) {
+          receivedCallbackResults.push([watchId, arg, result]);
+        },
+      });
+      return watchId;
+    }
+
+    const id1 = watch(1);
+    expect(receivedCallbackResults).toEqual([]);
+
+    function write(arg: number, name: string) {
+      cache.writeQuery({
+        query,
+        variables: { arg },
+        data: {
+          value: { name },
+        },
+      });
+    }
+
+    write(1, "one");
+
+    const received1 = [id1, 1, {
+      result: {
+        value: {
+          name: "one",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+    ]);
+
+    const id2 = watch(2);
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+    ]);
+
+    write(2, "two");
+
+    const received2 = [id2, 2, {
+      result: {
+        value: {
+          name: "two",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+      // New results:
+      received1,
+      received2,
+    ]);
+
+    const id3 = watch(1);
+    const id4 = watch(1);
+
+    write(1, "one");
+
+    const received3 = [id3, 1, {
+      result: {
+        value: {
+          name: "one",
+        },
+      },
+      complete: true,
+    }];
+
+    const received4 = [id4, 1, {
+      result: {
+        value: {
+          name: "one",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+      received1,
+      received2,
+      // New results:
+      received3,
+      received4,
+    ]);
+
+    write(2, "TWO");
+
+    const received2AllCaps = [id2, 2, {
+      result: {
+        value: {
+          name: "TWO",
+        },
+      },
+      complete: true,
+    }];
+
+    expect(receivedCallbackResults).toEqual([
+      received1,
+      received1,
+      received2,
+      received3,
+      received4,
+      // New results:
+      received1,
+      received2AllCaps,
+      received3,
+      received4,
+    ]);
+  });
+});
+
+describe("cache.makeLocalVar", () => {
+  function makeCacheAndVar(resultCaching: boolean) {
+    const cache: InMemoryCache = new InMemoryCache({
+      resultCaching,
+      typePolicies: {
+        Person: {
+          fields: {
+            name() {
+              return nameVar();
+            },
+          },
+        },
+      },
+    });
+
+    const nameVar = cache.makeLocalVar("Ben");
+
+    const query = gql`
+      query {
+        onCall {
+          name
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        onCall: {
+          __typename: "Person",
+        },
+      },
+    });
+
+    return {
+      cache,
+      nameVar,
+      query,
+    };
+  }
+
+  it("should work with resultCaching enabled (default)", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(true);
+
+    const result1 = cache.readQuery({ query });
+    expect(result1).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Ben",
+      },
+    });
+
+    // No change before updating the nameVar.
+    expect(cache.readQuery({ query })).toBe(result1);
+
+    expect(nameVar()).toBe("Ben");
+    expect(nameVar("Hugh")).toBe("Hugh");
+
+    const result2 = cache.readQuery({ query });
+    expect(result2).not.toBe(result1);
+    expect(result2).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Hugh",
+      },
+    });
+
+    expect(nameVar()).toBe("Hugh");
+    expect(nameVar("James")).toBe("James");
+
+    expect(cache.readQuery({ query })).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "James",
+      },
+    });
+  });
+
+  it("should work with resultCaching disabled (unusual)", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(false);
+
+    const result1 = cache.readQuery({ query });
+    expect(result1).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Ben",
+      },
+    });
+
+    const result2 = cache.readQuery({ query });
+    // Without resultCaching, equivalent results will not be ===.
+    expect(result2).not.toBe(result1);
+    expect(result2).toEqual(result1);
+
+    expect(nameVar()).toBe("Ben");
+    expect(nameVar("Hugh")).toBe("Hugh");
+
+    const result3 = cache.readQuery({ query });
+    expect(result3).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Hugh",
+      },
     });
   });
 });

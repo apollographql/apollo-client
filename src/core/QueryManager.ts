@@ -431,9 +431,9 @@ export class QueryManager<TStore> {
       fetchMoreForQueryId,
     });
 
-    this.broadcastQueries();
-
     if (shouldFetch) {
+      this.broadcastQueries();
+
       const networkResult = this.fetchRequest<T>({
         requestId,
         queryId,
@@ -654,6 +654,7 @@ export class QueryManager<TStore> {
         // result and mark it as stale.
         const stale = isMissing && !(
           options.returnPartialData ||
+          options.partialRefetch ||
           fetchPolicy === 'cache-only'
         );
 
@@ -765,11 +766,28 @@ export class QueryManager<TStore> {
 
     let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
 
-    return new ObservableQuery<T, TVariables>({
+    const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
     });
+
+    this.queryStore.initQuery({
+      queryId: observable.queryId,
+      document: this.transform(options.query).document,
+      variables: options.variables,
+      storePreviousVariables: false,
+      // Even if options.pollInterval is a number, we have not started
+      // polling this query yet (and we have not yet performed the first
+      // fetch), so NetworkStatus.loading (not NetworkStatus.poll or
+      // NetworkStatus.refetch) is the appropriate status for now.
+      isPoll: false,
+      isRefetch: false,
+      metadata: options.metadata,
+      fetchMoreForQueryId: void 0,
+    });
+
+    return observable;
   }
 
   public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {

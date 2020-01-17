@@ -58,9 +58,9 @@ In order to render your application on the server, you need to handle a HTTP req
 
 We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
 
-1. When [creating an Apollo Client instance](/get-started/) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
+1. When [creating an Apollo Client instance](../get-started/) on the server, you'll need to set up your network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
 2. Since you only want to fetch each query result once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid repeated force-fetching.
-3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](/networking/authentication/).
+3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](../networking/authentication/).
 
 Once you put that all together, you'll end up with initialization code that looks like this:
 
@@ -240,7 +240,7 @@ const client = new ApolloClient({
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 function withClientOnlyUser() {
@@ -250,7 +250,7 @@ function withClientOnlyUser() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const withClientOnlyUser = () => (

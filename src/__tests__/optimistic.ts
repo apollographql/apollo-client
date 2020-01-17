@@ -3,14 +3,14 @@ import { take, toArray, map } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { mockSingleLink } from '../__mocks__/mockLinks';
+import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { MutationQueryReducersMap } from '../core/types';
 import { Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
-import { makeReference } from '../utilities/graphql/storeUtils';
-import { stripSymbols } from './utils/stripSymbols';
-import { itAsync } from './utils/itAsync';
+import { makeReference } from '../core';
+import { stripSymbols } from '../utilities/testing/stripSymbols';
+import { itAsync } from '../utilities/testing/itAsync';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 
 describe('optimistic mutation results', () => {
@@ -104,14 +104,10 @@ describe('optimistic mutation results', () => {
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: { query },
-        result,
-      },
-      ...mockedResponses,
-    );
+    link = mockSingleLink({
+      request: { query },
+      result,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -280,18 +276,19 @@ describe('optimistic mutation results', () => {
         await Promise.all([promise, promise2]);
 
         subscriptionHandle.unsubscribe();
-        const dataInStore = (client.cache as InMemoryCache).extract(true);
-        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-        expect(dataInStore).toHaveProperty('Todo66');
-        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-          makeReference('Todo66'),
-        );
-        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-          makeReference('Todo99'),
-        );
-
-        resolve();
+        {
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).toHaveProperty('Todo66');
+          expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+            makeReference('Todo66'),
+          );
+          expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+            makeReference('Todo99'),
+          );
+          resolve();
+        }
       });
 
       itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
@@ -516,18 +513,19 @@ describe('optimistic mutation results', () => {
         await Promise.all([promise, promise2]);
 
         subscriptionHandle.unsubscribe();
-        const dataInStore = (client.cache as InMemoryCache).extract(true);
-        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-        expect(dataInStore).toHaveProperty('Todo66');
-        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-          makeReference('Todo66'),
-        );
-        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-          makeReference('Todo99'),
-        );
-
-        resolve();
+        {
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).toHaveProperty('Todo66');
+          expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+            makeReference('Todo66'),
+          );
+          expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+            makeReference('Todo99'),
+          );
+          resolve();
+        }
       });
 
       itAsync('can run 2 mutations concurrently and handles all intermediate states well', async (resolve, reject) => {
@@ -1217,39 +1215,35 @@ describe('optimistic mutation results', () => {
       await Promise.all([promise, promise2]);
 
       subscriptionHandle.unsubscribe();
-      const dataInStore = (client.cache as InMemoryCache).extract(true);
-      expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
-      expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-      expect(dataInStore).toHaveProperty('Todo66');
-      expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-        makeReference('Todo66'),
-      );
-      expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-        makeReference('Todo99'),
-      );
-
-      resolve();
+      {
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
+        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).toHaveProperty('Todo66');
+        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+          makeReference('Todo66'),
+        );
+        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+          makeReference('Todo99'),
+        );
+        resolve();
+      }
     });
 
     itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
-      link = mockSingleLink(
-        reject,
-        {
-          request: { query },
-          result,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult,
-          delay: 10,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult2,
-          delay: 20,
-        },
-      );
+      link = mockSingleLink({
+        request: { query },
+        result,
+      }, {
+        request: { query: mutation },
+        result: mutationResult,
+        delay: 10,
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+        delay: 20,
+      }).setOnError(reject);
 
       const customOptimisticResponse1 = {
         __typename: 'Mutation',
@@ -1682,39 +1676,35 @@ describe('optimistic mutation results', () => {
       await Promise.all([promise, promise2]);
 
       subscriptionHandle.unsubscribe();
-      const dataInStore = (client.cache as InMemoryCache).extract(true);
-      expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-      expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
-      expect(dataInStore).toHaveProperty('Todo66');
-      expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
-        makeReference('Todo66'),
-      );
-      expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
-        makeReference('Todo99'),
-      );
-
-      resolve();
+      {
+        const dataInStore = (client.cache as InMemoryCache).extract(true);
+        expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
+        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).toHaveProperty('Todo66');
+        expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
+          makeReference('Todo66'),
+        );
+        expect((dataInStore['TodoList5'] as any).todos).not.toContainEqual(
+          makeReference('Todo99'),
+        );
+        resolve();
+      }
     });
 
     itAsync('will handle dependent updates', async (resolve, reject) => {
       expect.assertions(1);
-      link = mockSingleLink(
-        reject,
-        {
-          request: { query },
-          result,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult,
-          delay: 10,
-        },
-        {
-          request: { query: mutation },
-          result: mutationResult2,
-          delay: 20,
-        },
-      );
+      link = mockSingleLink({
+        request: { query },
+        result,
+      }, {
+        request: { query: mutation },
+        result: mutationResult,
+        delay: 10,
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+        delay: 20,
+      }).setOnError(reject);
 
       const customOptimisticResponse1 = {
         __typename: 'Mutation',
@@ -1890,24 +1880,19 @@ describe('optimistic mutation - githunt comments', () => {
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: {
-          query: addTypenameToDocument(query),
-          variables,
-        },
-        result,
+    link = mockSingleLink({
+      request: {
+        query: addTypenameToDocument(query),
+        variables,
       },
-      {
-        request: {
-          query: addTypenameToDocument(queryWithFragment),
-          variables,
-        },
-        result,
+      result,
+    }, {
+      request: {
+        query: addTypenameToDocument(queryWithFragment),
+        variables,
       },
-      ...mockedResponses,
-    );
+      result,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,

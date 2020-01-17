@@ -313,9 +313,9 @@ describe('optimistic cache layers', () => {
     // because the original query did not ask for author information.
     const resultWithSpinlessAuthor = read();
     expect(resultWithSpinlessAuthor).toEqual(result);
-    expect(resultWithSpinlessAuthor).not.toBe(result);
+    expect(resultWithSpinlessAuthor).toBe(result);
     expect(resultWithSpinlessAuthor.books[0]).toBe(result.books[0]);
-    expect(resultWithSpinlessAuthor.books[1]).not.toBe(result.books[1]);
+    expect(resultWithSpinlessAuthor.books[1]).toBe(result.books[1]);
 
     cache.recordOptimisticTransaction(proxy => {
       proxy.writeFragment({
@@ -427,7 +427,7 @@ describe('optimistic cache layers', () => {
     const spinelessAfterRemovingBuzz = readSpinelessFragment();
     expect(spinelessBeforeRemovingBuzz).toEqual(spinelessAfterRemovingBuzz);
     expect(spinelessBeforeRemovingBuzz).not.toBe(spinelessAfterRemovingBuzz);
-    expect(spinelessBeforeRemovingBuzz.author).not.toBe(
+    expect(spinelessBeforeRemovingBuzz.author).toBe(
       spinelessAfterRemovingBuzz.author,
     );
 
@@ -436,7 +436,7 @@ describe('optimistic cache layers', () => {
     expect(resultAfterRemovingBuzzLayer).not.toBe(resultWithBuzz);
     resultWithTwoAuthors.books.forEach((book, i) => {
       expect(book).toEqual(resultAfterRemovingBuzzLayer.books[i]);
-      expect(book).not.toBe(resultAfterRemovingBuzzLayer.books[i]);
+      expect(book).toBe(resultAfterRemovingBuzzLayer.books[i]);
     });
 
     const nonOptimisticResult = readWithAuthors(false);

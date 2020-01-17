@@ -1,10 +1,28 @@
 import React from 'react';
 
-import { ApolloClient } from '../../../ApolloClient';
+import { ApolloClient, DefaultOptions } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../context/ApolloProvider';
-import { MockLink } from './mockLink';
-import { MockedProviderProps, MockedProviderState } from './types';
+import { ApolloProvider } from '../../../react/context/ApolloProvider';
+import { MockLink } from '../../../utilities/testing/mocking/mockLink';
+import { ApolloLink } from '../../../link/core/ApolloLink';
+import { Resolvers } from '../../../core/types';
+import { ApolloCache } from '../../../cache/core/cache';
+import { MockedResponse } from '../../../utilities/testing/mocking/mockLink';
+
+export interface MockedProviderProps<TSerializedCache = {}> {
+  mocks?: ReadonlyArray<MockedResponse>;
+  addTypename?: boolean;
+  defaultOptions?: DefaultOptions;
+  cache?: ApolloCache<TSerializedCache>;
+  resolvers?: Resolvers;
+  childProps?: object;
+  children?: React.ReactElement;
+  link?: ApolloLink;
+}
+
+export interface MockedProviderState {
+  client: ApolloClient<any>;
+}
 
 export class MockedProvider extends React.Component<
   MockedProviderProps,
@@ -28,8 +46,11 @@ export class MockedProvider extends React.Component<
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
       defaultOptions,
-      link: link || new MockLink(() => {}, mocks || [], addTypename),
-      resolvers
+      link: link || new MockLink(
+        mocks || [],
+        addTypename,
+      ),
+      resolvers,
     });
 
     this.state = { client };

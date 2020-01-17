@@ -1,14 +1,17 @@
-import React, { useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { MockedProvider, mockSingleLink } from '../../testing';
-import { itAsync } from '../../../__tests__/utils/itAsync';
+import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
+import { itAsync } from '../../../utilities/testing/itAsync';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useMutation } from '../useMutation';
+import { requireReactLazily } from '../../react';
+
+const React = requireReactLazily();
+const { useEffect } = React;
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -294,7 +297,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const link = mockSingleLink(reject, ...mocks);
+      const link = mockSingleLink(...mocks).setOnError(reject);
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,

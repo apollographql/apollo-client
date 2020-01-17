@@ -1,7 +1,6 @@
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.
 import {
-  FieldNode,
   SelectionNode,
   VariableNode,
   BooleanValueNode,
@@ -15,28 +14,9 @@ import { visit } from 'graphql/language/visitor';
 
 import { invariant } from 'ts-invariant';
 
-import { argumentsObjectFromField } from './storeUtils';
-
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
 };
-
-export function getDirectiveInfoFromField(
-  field: FieldNode,
-  variables: Object,
-): DirectiveInfo {
-  if (field.directives && field.directives.length) {
-    const directiveObj: DirectiveInfo = {};
-    field.directives.forEach((directive: DirectiveNode) => {
-      directiveObj[directive.name.value] = argumentsObjectFromField(
-        directive,
-        variables,
-      );
-    });
-    return directiveObj;
-  }
-  return null;
-}
 
 export function shouldInclude(
   selection: SelectionNode,

@@ -11,22 +11,6 @@ import { assign } from '../common/assign';
 
 import { valueToObjectRepresentation } from './storeUtils';
 
-export function getMutationDefinition(
-  doc: DocumentNode,
-): OperationDefinitionNode {
-  checkDocument(doc);
-
-  let mutationDef: OperationDefinitionNode | null = doc.definitions.filter(
-    definition =>
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'mutation',
-  )[0] as OperationDefinitionNode;
-
-  invariant(mutationDef, 'Must contain a mutation definition.');
-
-  return mutationDef;
-}
-
 // Checks the document for errors and throws an exception if there is an error.
 export function checkDocument(doc: DocumentNode) {
   invariant(
@@ -63,14 +47,6 @@ export function getOperationDefinition(
   return doc.definitions.filter(
     definition => definition.kind === 'OperationDefinition',
   )[0] as OperationDefinitionNode;
-}
-
-export function getOperationDefinitionOrDie(
-  document: DocumentNode,
-): OperationDefinitionNode {
-  const def = getOperationDefinition(document);
-  invariant(def, `GraphQL document is missing an operation`);
-  return def;
 }
 
 export function getOperationName(doc: DocumentNode): string | null {
@@ -194,20 +170,4 @@ export function getDefaultValues(
   }
 
   return {};
-}
-
-/**
- * Returns the names of all variables declared by the operation.
- */
-export function variablesInOperation(
-  operation: OperationDefinitionNode,
-): Set<string> {
-  const names = new Set<string>();
-  if (operation.variableDefinitions) {
-    for (const definition of operation.variableDefinitions) {
-      names.add(definition.variable.name.value);
-    }
-  }
-
-  return names;
 }

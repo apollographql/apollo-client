@@ -3,11 +3,11 @@ import gql from 'graphql-tag';
 
 import { Observable, Subscription } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
-import { mockSingleLink } from '../__mocks__/mockLinks';
+import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { withWarning } from './utils/wrap';
-import { itAsync } from './utils/itAsync';
+import { withWarning } from '../utilities/testing/wrap';
+import { itAsync } from '../utilities/testing/itAsync';
 
 describe('mutation results', () => {
   const query = gql`
@@ -124,14 +124,10 @@ describe('mutation results', () => {
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: { query: queryWithTypename } as any,
-        result,
-      },
-      ...mockedResponses,
-    );
+    link = mockSingleLink({
+      request: { query: queryWithTypename } as any,
+      result,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -158,15 +154,11 @@ describe('mutation results', () => {
     delay: number,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink(
-      reject,
-      {
-        request: { query: queryWithTypename } as any,
-        result,
-        delay,
-      },
-      ...mockedResponses,
-    );
+    link = mockSingleLink({
+      request: { query: queryWithTypename } as any,
+      result,
+      delay,
+    }, ...mockedResponses).setOnError(reject);
 
     client = new ApolloClient({
       link,
@@ -261,29 +253,25 @@ describe('mutation results', () => {
       }
     `;
 
-    const link = mockSingleLink(
-      reject,
-      {
-        request: {
-          query,
-          variables: { id: 1 },
-        } as any,
-        delay: 100,
-        result: {
-          data: { mini: { id: 1, cover: 'image', __typename: 'Mini' } },
-        },
+    const link = mockSingleLink({
+      request: {
+        query,
+        variables: { id: 1 },
+      } as any,
+      delay: 100,
+      result: {
+        data: { mini: { id: 1, cover: 'image', __typename: 'Mini' } },
       },
-      {
-        request: {
-          query: mutation,
-          variables: { signature: '1234' },
-        } as any,
-        delay: 150,
-        result: {
-          data: { mini: { id: 1, cover: 'image2', __typename: 'Mini' } },
-        },
+    }, {
+      request: {
+        query: mutation,
+        variables: { signature: '1234' },
+      } as any,
+      delay: 150,
+      result: {
+        data: { mini: { id: 1, cover: 'image2', __typename: 'Mini' } },
       },
-    );
+    }).setOnError(reject);
 
     interface Data {
       mini: { id: number; cover: string; __typename: string };
@@ -773,21 +761,16 @@ describe('mutation results', () => {
       },
     };
 
-    link = mockSingleLink(
-      reject,
-      {
-        request: { query: variableQuery, variables: variables1 } as any,
-        result: result1,
-      },
-      {
-        request: { query: variableQuery, variables: variables2 } as any,
-        result: result2,
-      },
-      {
-        request: { query: resetMutation } as any,
-        result: resetMutationResult,
-      },
-    );
+    link = mockSingleLink({
+      request: { query: variableQuery, variables: variables1 } as any,
+      result: result1,
+    }, {
+      request: { query: variableQuery, variables: variables2 } as any,
+      result: result2,
+    }, {
+      request: { query: resetMutation } as any,
+      result: resetMutationResult,
+    }).setOnError(reject);
 
     client = new ApolloClient({
       link,

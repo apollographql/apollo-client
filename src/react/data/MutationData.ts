@@ -1,10 +1,9 @@
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 
-import { ApolloContextValue } from '../context/ApolloContext';
 import { DocumentType } from '../parser/parser';
 import { ApolloError } from '../../errors/ApolloError';
 import {
-  MutationOptions,
+  MutationDataOptions,
   MutationTuple,
   MutationFunctionOptions,
   MutationResult
@@ -28,8 +27,8 @@ export class MutationData<
     result,
     setResult
   }: {
-    options: MutationOptions<TData, TVariables>;
-    context: ApolloContextValue;
+    options: MutationDataOptions<TData, TVariables>;
+    context: any;
     result: MutationResult<TData>;
     setResult: (result: MutationResult<TData>) => any;
   }) {
@@ -43,8 +42,10 @@ export class MutationData<
   public execute(result: MutationResult<TData>) {
     this.isMounted = true;
     this.verifyDocumentType(this.getOptions().mutation, DocumentType.Mutation);
-    result.client = this.refreshClient().client;
-    return [this.runMutation, result] as MutationTuple<TData, TVariables>;
+    return [
+      this.runMutation,
+      { ...result, client: this.refreshClient().client }
+    ] as MutationTuple<TData, TVariables>;
   }
 
   public afterExecute() {
@@ -176,7 +177,7 @@ export class MutationData<
   private updateResult(result: MutationResult<TData>) {
     if (
       this.isMounted &&
-      (!this.previousResult || !isEqual(this.previousResult, result))
+      (!this.previousResult || !equal(this.previousResult, result))
     ) {
       this.setResult(result);
       this.previousResult = result;

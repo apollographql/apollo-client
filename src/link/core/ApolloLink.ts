@@ -138,4 +138,13 @@ export class ApolloLink {
   ): Observable<FetchResult> | null {
     throw new InvariantError('request is not implemented');
   }
+
+  protected onError(reason: any) {
+    throw reason;
+  }
+
+  public setOnError(fn: (reason: any) => any): this {
+    this.onError = fn;
+    return this;
+  }
 }

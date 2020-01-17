@@ -285,10 +285,12 @@ const cache = new InMemoryCache({
 Here are the definitions for the `FieldPolicy` type and its related types:
 
 ```ts
-export type FieldPolicy<TValue> = {
+// These generic type parameters will be inferred from the provided policy in
+// most cases, though you can use this type to constrain them more precisely.
+export type FieldPolicy<TExisting, TIncoming, TReadResult> = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TValue>;
-  merge?: FieldMergeFunction<TValue>;
+  read?: FieldReadFunction<TExisting, TReadResult>;
+  merge?: FieldMergeFunction<TExisting, TIncoming>;
 };
 
 type KeyArgsFunction = (
@@ -299,6 +301,17 @@ type KeyArgsFunction = (
     policies: Policies;
   },
 ) => string | null | void;
+
+type FieldReadFunction<TExisting, TResult = TExisting> = (
+  existing: Readonly<TExisting> | undefined,
+  options: FieldFunctionOptions,
+) => TResult;
+
+type FieldMergeFunction<TExisting, TIncoming> = (
+  existing: Readonly<TExisting> | undefined,
+  incoming: Readonly<TIncoming>,
+  options: FieldFunctionOptions,
+) => TExisting;
 
 // These options are common to both read and merge functions:
 interface FieldFunctionOptions {
@@ -325,13 +338,6 @@ interface FieldFunctionOptions {
   isReference(obj: any): obj is Reference;
   toReference(obj: StoreObject): Reference;
 
-  // A reference to the Policies object created by passing typePolicies to
-  // the InMemoryCache constructor, for advanced/internal use.
-  policies: Policies;
-}
-
-// These options are specific to read functions:
-interface ReadFunctionOptions extends FieldFunctionOptions {
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
   // from that object instead of the current object, so this function can
@@ -344,27 +350,23 @@ interface ReadFunctionOptions extends FieldFunctionOptions {
   readField<T = StoreValue>(
     nameOrField: string | FieldNode,
     foreignObjOrRef?: StoreObject | Reference,
-  ): Readonly<T>;
+  ): T;
 
   // A handy place to put field-specific data that you want to survive
-  // across multiple read function calls. Useful for caching.
+  // across multiple read function calls. Useful for field-level caching,
+  // if your read function does any expensive work.
   storage: Record<string, any>;
 
   // Call this function to invalidate any cached queries that previously
-  // consumed this field. If you use options.storage as a cache, setting a
-  // new value in the cache and then calling options.invalidate() can be a
-  // good way to deliver asynchronous results.
+  // consumed this field. If you use options.storage to cache the result
+  // of an expensive read function, updating options.storage and then
+  // calling options.invalidate() can be a good way to deliver the new
+  // result asynchronously.
   invalidate(): void;
+
+  // In rare advanced use cases, a read or merge function may wish to
+  // consult the current Policies object, for example to call
+  // getStoreFieldName manually.
+  policies: Policies;
 }
-
-type FieldReadFunction<TExisting, TResult = TExisting> = (
-  existing: Readonly<TExisting> | undefined,
-  options: ReadFunctionOptions,
-) => TResult;
-
-type FieldMergeFunction<TExisting> = (
-  existing: Readonly<TExisting> | undefined,
-  incoming: Readonly<StoreValue>,
-  options: FieldFunctionOptions,
-) => TExisting;
 ```

@@ -64,16 +64,16 @@ The most popular transport for GraphQL subscriptions today is [`subscriptions-tr
 
 Let's look at how to add support for this transport to Apollo Client.
 
-First, install the WebSocket Apollo Link (`apollo-link-ws`) from npm:
+First, install the WebSocket Apollo Link (`@apollo/link-ws`) from npm:
 
 ```shell
-npm install --save apollo-link-ws subscriptions-transport-ws
+npm install --save @apollo/link-ws subscriptions-transport-ws
 ```
 
 Then, initialize a GraphQL subscriptions transport link:
 
 ```js
-import { WebSocketLink } from 'apollo-link-ws';
+import { WebSocketLink } from '@apollo/link-ws';
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,
@@ -85,7 +85,7 @@ const wsLink = new WebSocketLink({
 
 ```js
 import { split, HttpLink, getMainDefinition } from '@apollo/client';
-import { WebSocketLink } from 'apollo-link-ws';
+import { WebSocketLink } from '@apollo/link-ws';
 
 // Create an http link:
 const httpLink = new HttpLink({
@@ -387,7 +387,7 @@ export class CommentsPage extends Component {
 In many cases it is necessary to authenticate clients before allowing them to receive subscription results. To do this, the `SubscriptionClient` constructor accepts a `connectionParams` field, which passes a custom object that the server can use to validate the connection before setting up any subscriptions.
 
 ```js
-import { WebSocketLink } from 'apollo-link-ws';
+import { WebSocketLink } from '@apollo/link-ws';
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,

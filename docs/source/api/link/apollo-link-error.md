@@ -1,5 +1,5 @@
 ---
-title: apollo-link-error
+title: Error Link
 description: Handle and inspect errors in your GraphQL network stack.
 ---
 
@@ -8,7 +8,7 @@ description: Handle and inspect errors in your GraphQL network stack.
 Use this link to perform some custom logic when a GraphQL or network error happens:
 
 ```js
-import { onError } from "apollo-link-error";
+import { onError } from "@apollo/link-error";
 
 const link = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
@@ -71,7 +71,7 @@ onError(({ graphQLErrors, networkError, operation, forward }) => {
     console.log(`[Network error]: ${networkError}`);
     // if you would also like to retry automatically on
     // network errors, we recommend that you use
-    // apollo-link-retry
+    // @apollo/link-retry
   }
 });
 ```

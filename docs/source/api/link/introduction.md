@@ -10,10 +10,10 @@ The **Apollo Link** library helps you customize the flow of data between Apollo 
 ![Visualization of link interaction](../../assets/link/concepts-intro-2.png)
 
  In the above diagram:
- 
+
  1. The first link might log the details of the operation for debugging purposes.
  2. The second link might add an HTTP header to the outgoing operation request.
- 3. The third link might then _send_ the request to a GraphQL server over HTTP. 
+ 3. The third link might then _send_ the request to a GraphQL server over HTTP.
 
  Note that although the figure above shows the rightmost link requesting results from a remote server, it can execute GraphQL operations against any local or remote target that can respond to them.
 
@@ -68,7 +68,7 @@ The `Operation` object includes the following fields:
 
 #### The `forward` function
 
-When a link's request handler is done executing its logic, it should return a call to the `forward` function that's passed to it (unless it's the chain's [terminating link](#the-terminating-link)). Calling the `forward` function passes execution along to the next link in the chain. 
+When a link's request handler is done executing its logic, it should return a call to the `forward` function that's passed to it (unless it's the chain's [terminating link](#the-terminating-link)). Calling the `forward` function passes execution along to the next link in the chain.
 
 You can use Apollo Link helper functions from the `@apollo/client` package to compose  your links. These functions are members of the `ApolloLink` class itself, and are explained in further detail in [Composing a link chain](#composing-a-link-chain).
 
@@ -93,7 +93,7 @@ If you have a collection of two or more links that should always be executed in 
 
 ```js
 import { from, HttpLink } from '@apollo/client';
-import { RetryLink } from 'apollo-link-retry';
+import { RetryLink } from '@apollo/link-retry';
 import MyAuthLink from '../auth';
 
 const link = from([
@@ -117,7 +117,7 @@ In the following example, a `RetryLink` passes execution along to one of two dif
 
 ```js
 import { ApolloLink, HttpLink } from '@apollo/client';
-import { RetryLink } from 'apollo-link-retry';
+import { RetryLink } from '@apollo/link-retry';
 
 const link = new RetryLink().split(
   (operation) => operation.getContext().version === 1,
@@ -130,7 +130,7 @@ Other uses for the `split` method include:
 
 * Customizing the number of allowed retry attempts depending on the operation type
 * Using different transport methods depending on the operation type (such as HTTP for queries and WebSocket for subscriptions)
-* Customizing logic depending on whether a user is logged in 
+* Customizing logic depending on whether a user is logged in
 
 
 ## Link types
@@ -229,13 +229,13 @@ class OperationCountLink extends ApolloLink {
 const link = new OperationCountLink();
 ```
 
-This stateful link maintains a counter called `operationCount` as an instance variable. Every time a request is passed through the link, `operationCount` is incremented. 
+This stateful link maintains a counter called `operationCount` as an instance variable. Every time a request is passed through the link, `operationCount` is incremented.
 
 ## Managing context
 
 As an operation moves down your link chain, it maintains a `context` that each link can read and modify. This allows links to pass metadata down the chain that _other_ links use in their execution logic.
 
-* Obtain the current context object by calling `operation.getContext()`. 
+* Obtain the current context object by calling `operation.getContext()`.
 * Modify the context object and then write it back with `operation.setContext(newContext)` or `operation.setContext((prevContext) => newContext)`.
 
 Note that this context is *not* included with the operation in the terminating link's request to the GraphQL server or other destination.

@@ -1,5 +1,5 @@
 ---
-title: apollo-link-rest
+title: REST Link
 description: Call REST APIs inside your GraphQL queries.
 ---
 
@@ -12,7 +12,7 @@ Calling REST APIs from a GraphQL client opens the benefits of GraphQL for more p
 * You have an existing codebase, but you're looking to evaluate whether GraphQL can work for your needs.
 * You have a large codebase, and the GraphQL migration is happening on the backend, but you want to use GraphQL *now* without waiting!
 
-With `apollo-link-rest`, you can call your endpoints inside your GraphQL queries and have all your data managed by Apollo Client. `apollo-link-rest` is suitable for just dipping your toes in the water, or doing a full-steam ahead integration, and then later on migrating to a backend-driven GraphQL experience.
+With `@apollo/link-rest`, you can call your endpoints inside your GraphQL queries and have all your data managed by Apollo Client. `@apollo/link-rest` is suitable for just dipping your toes in the water, or doing a full-steam ahead integration, and then later on migrating to a backend-driven GraphQL experience.
 
 > For more advanced or complex back-ends, you may want to consider using [`apollo-server`](https://www.apollographql.com/docs/apollo-server/).
 
@@ -21,14 +21,14 @@ With `apollo-link-rest`, you can call your endpoints inside your GraphQL queries
 To get started, first install Apollo Client and any `peerDependencies` we need:
 
 ```bash
-npm install --save @apollo/client apollo-link-rest graphql qs
+npm install --save @apollo/client @apollo/link-rest graphql qs
 ```
 
 After this, you're ready to setup the Apollo Client instance:
 
 ```js
 import { ApolloClient } from '@apollo/client';
-import { RestLink } from 'apollo-link-rest';
+import { RestLink } from '@apollo/link-rest';
 
 // Set `RestLink` with your endpoint
 const restLink = new RestLink({ uri: "https://swapi.co/api/" });
@@ -394,7 +394,7 @@ const link = new RestLink({
 
 ## Link Context
 
-`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`apollo-link-context`](/api/link/apollo-link-context/) page for a discussion of why you might want this).
+`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`@apollo/link-context`](/api/link/apollo-link-context/) page for a discussion of why you might want this).
 
 | Option | Type | Description |
 | - | - | - |
@@ -406,7 +406,7 @@ const link = new RestLink({
 
 ### Example
 
-`RestLink` uses the `headers` field on the [`apollo-link-context`](/api/link/apollo-link-context/) so you can compose other links that provide additional & dynamic headers to a given query.
+`RestLink` uses the `headers` field on the [`@apollo/link-context`](/api/link/apollo-link-context/) so you can compose other links that provide additional & dynamic headers to a given query.
 
 Here is one way to add request `headers` to the context and retrieve the response headers of the operation:
 
@@ -442,7 +442,7 @@ const client = new ApolloClient({
 
 ## Link order
 
-If you are using multiple link types, `restLink` should go before `httpLink`, as `httpLink` will swallow any calls that should be routed through `apollo-link-rest`.
+If you are using multiple link types, `restLink` should go before `httpLink`, as `httpLink` will swallow any calls that should be routed through `@apollo/link-rest`.
 
 For example:
 
@@ -458,7 +458,7 @@ const client = new ApolloClient({
 });
 ```
 
-_Note: you should also consider this if you're using [`apollo-link-context`](/api/link/apollo-link-context/) to set `Headers`, you need that link to be before `restLink` as well._
+_Note: you should also consider this if you're using [`@apollo/link-context`](/api/link/apollo-link-context/) to set `Headers`, you need that link to be before `restLink` as well._
 
 ## @rest directive
 
@@ -509,7 +509,7 @@ query postTitle {
 Things to note:
 
 1. This will be converted into `/search?query=some%20key%20words&page_size=5&lang=en`
-2. The `context.language / lang=en` is extracting an object from the Apollo Context, that was added via an `apollo-link-context` Link.
+2. The `context.language / lang=en` is extracting an object from the Apollo Context, that was added via an `@apollo/link-context` Link.
 3. The query string arguments are assembled by npm:qs and have `encodeURIComponent` called on them.
 
 The available variable sources are:
@@ -518,7 +518,7 @@ The available variable sources are:
 | - | - |
 | `args` | These are the things passed directly to this field parameters. In the above example `postSearch` had `query` and `page_size` in args. |
 | `exportVariables` | These are the things in the parent context that were tagged as `@export(as: ...)` |
-| `context` | These are the apollo-context, so you can have globals set up via `apollo-link-context` |
+| `context` | These are the apollo-context, so you can have globals set up via `@apollo/link-context` |
 | `@rest` | These include any other parameters you pass to the `@rest()` directive. This is probably more useful when working with `pathBuilder`, documented below. |
 
 #### `pathBuilder`
@@ -671,7 +671,7 @@ const QUERY = gql`
 
 ## Mutations
 
-You can write also mutations with the apollo-link-rest, for example:
+You can write also mutations with the @apollo/link-rest, for example:
 
 ```graphql
   mutation deletePost($id: ID!) {
@@ -684,7 +684,7 @@ You can write also mutations with the apollo-link-rest, for example:
 
 ## Troubleshooting
 
-Here are a few common `apollo-link-rest` problems and solutions.
+Here are a few common `@apollo/link-rest` problems and solutions.
 
 * `Missing field __typename in ...` -- If you see this, it's possible you haven't provided `type:` to the [`@rest(...)`](#rest-directive)-directive. Alternately you need to set up a [`typePatcher`](#typename-patching).
 * `Headers is undefined` -- If you see something like this, you're running in a browser or other Javascript environment that does not yet support the full specification for the `Headers` API.

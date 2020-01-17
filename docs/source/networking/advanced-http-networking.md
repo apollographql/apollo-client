@@ -80,11 +80,11 @@ In the example above, the `authMiddleware` link sets each request's `Authorizati
 
 You can also use Apollo Link to customize Apollo Client's behavior whenever it receives a response from a request.
 
-The following example demonstrates using [`apollo-link-error`](/api/link/apollo-link-error/) to handle network errors that are included in a response:
+The following example demonstrates using [`@apollo/link-error`](/api/link/apollo-link-error/) to handle network errors that are included in a response:
 
 ```js
 import { ApolloClient, HttpLink } from '@apollo/client';
-import { onError } from 'apollo-link-error';
+import { onError } from '@apollo/link-error';
 
 import { logout } from './logout';
 
@@ -203,6 +203,6 @@ const link = new HttpLink({ fetch: customFetch });
 
 ## Using other links
 
-Apollo Link includes many links for specialized use cases, such as the `WebSocketLink` for communicating over WebSocket and the `BatchHttpLink` for combining multiple GraphQL operations in a single HTTP request. 
+Apollo Link includes many links for specialized use cases, such as the `WebSocketLink` for communicating over WebSocket and the `BatchHttpLink` for combining multiple GraphQL operations in a single HTTP request.
 
 To learn more about what's available, see the [Apollo Link API documentation](/api/link/introduction/).

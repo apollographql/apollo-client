@@ -251,7 +251,7 @@ export class QueryManager<TStore> {
 
           self.mutationStore.markMutationResult(mutationId);
 
-          if (fetchPolicy !== 'no-cache') {
+          if (fetchPolicy === 'no-cache') {
             markMutationResult({
               mutationId,
               result,

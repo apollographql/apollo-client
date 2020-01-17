@@ -37,6 +37,17 @@
 - Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
 
+- `InMemoryCache` provides a new API for storing local state that can be easily updated by external code:
+  ```ts
+  const lv = cache.makeLocalVar(123)
+  console.log(lv()) // 123
+  console.log(lv(lv() + 1)) // 124
+  console.log(lv()) // 124
+  lv("asdf") // TS type error
+  ```
+  These local variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
+
 - The `queryManager` property of `ApolloClient` instances is now marked as
   `private`, paving the way for a more aggressive redesign of its API.
 

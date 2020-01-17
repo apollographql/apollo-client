@@ -2,7 +2,7 @@
 import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
-import { wrap } from 'optimism';
+import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
@@ -298,4 +298,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }),
     );
   }
+
+  public makeLocalVar<T>(value: T): LocalVar<T> {
+    return function LocalVar(newValue) {
+      if (arguments.length > 0) {
+        if (value !== newValue) {
+          value = newValue;
+          localVarDep.dirty(LocalVar);
+        }
+      } else {
+        localVarDep(LocalVar);
+      }
+      return value;
+    };
+  }
 }
+
+const localVarDep = dep<LocalVar<any>>();
+export type LocalVar<T> = (newValue?: T) => T;

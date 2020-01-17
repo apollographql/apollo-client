@@ -1324,3 +1324,110 @@ describe("InMemoryCache#broadcastWatches", function () {
     ]);
   });
 });
+
+describe("cache.makeLocalVar", () => {
+  function makeCacheAndVar(resultCaching: boolean) {
+    const cache: InMemoryCache = new InMemoryCache({
+      resultCaching,
+      typePolicies: {
+        Person: {
+          fields: {
+            name() {
+              return nameVar();
+            },
+          },
+        },
+      },
+    });
+
+    const nameVar = cache.makeLocalVar("Ben");
+
+    const query = gql`
+      query {
+        onCall {
+          name
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        onCall: {
+          __typename: "Person",
+        },
+      },
+    });
+
+    return {
+      cache,
+      nameVar,
+      query,
+    };
+  }
+
+  it("should work with resultCaching enabled (default)", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(true);
+
+    const result1 = cache.readQuery({ query });
+    expect(result1).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Ben",
+      },
+    });
+
+    // No change before updating the nameVar.
+    expect(cache.readQuery({ query })).toBe(result1);
+
+    expect(nameVar()).toBe("Ben");
+    expect(nameVar("Hugh")).toBe("Hugh");
+
+    const result2 = cache.readQuery({ query });
+    expect(result2).not.toBe(result1);
+    expect(result2).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Hugh",
+      },
+    });
+
+    expect(nameVar()).toBe("Hugh");
+    expect(nameVar("James")).toBe("James");
+
+    expect(cache.readQuery({ query })).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "James",
+      },
+    });
+  });
+
+  it("should work with resultCaching disabled (unusual)", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(false);
+
+    const result1 = cache.readQuery({ query });
+    expect(result1).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Ben",
+      },
+    });
+
+    const result2 = cache.readQuery({ query });
+    // Without resultCaching, equivalent results will not be ===.
+    expect(result2).not.toBe(result1);
+    expect(result2).toEqual(result1);
+
+    expect(nameVar()).toBe("Ben");
+    expect(nameVar("Hugh")).toBe("Hugh");
+
+    const result3 = cache.readQuery({ query });
+    expect(result3).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Hugh",
+      },
+    });
+  });
+});

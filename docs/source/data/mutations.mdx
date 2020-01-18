@@ -142,7 +142,7 @@ at any time to instruct Apollo Client to execute the mutation. In the example ab
 
 ### Providing options
 
-Both `useMutation` itself and the mutate function accept options that are described in the [API reference](../api/react-hooks/#usemutation). Any options you provide to a mutate function _override_ corresponding options
+Both `useMutation` itself and the mutate function accept options that are described in the [API reference](../api/react/hooks/#usemutation). Any options you provide to a mutate function _override_ corresponding options
 you previously provided to `useMutation`. In the example above, we provide the
 `variables` option to `addTodo`, which enables us to specify any GraphQL variables that the mutation requires.
 
@@ -151,7 +151,7 @@ you previously provided to `useMutation`. In the example above, we provide the
 
 In addition to a mutate function, the `useMutation` hook returns an object that
 represents the current state of the mutation's execution. The fields of this
-object (fully documented in the [API reference](../api/react-hooks/#result-2)) include booleans that indicate whether the mutate function has been `called` yet, and whether the mutation's result is currently `loading`.
+object (fully documented in the [API reference](../api/react/hooks/)) include booleans that indicate whether the mutate function has been `called` yet, and whether the mutation's result is currently `loading`.
 
 ## Updating the cache after a mutation
 
@@ -513,7 +513,7 @@ const Todos = () => (
 As shown above, we can destructure the `loading` and `error` properties from
 the result object returned by `useMutation` to track the mutation's state in our UI. The `useMutation` hook also supports `onCompleted` and `onError` options if you prefer to use callbacks.
 
-Learn about all of the fields returned by `useMutation` in the [API reference](../api/react-hooks/#result-2).
+Learn about all of the fields returned by `useMutation` in the [API reference](../api/react/hooks/).
 
 ## `useMutation` API
 
@@ -521,7 +521,7 @@ Supported options and result fields for the `useMutation` hook are listed below.
 
 Most calls to `useMutation` can omit the majority of these options, but it's
 useful to know they exist. To learn about the `useMutation` hook API in more
-detail with usage examples, see the [API reference](../api/react-hooks/#usemutation).
+detail with usage examples, see the [API reference](../api/react/hooks/).
 
 ### Options
 

@@ -61,16 +61,30 @@ module.exports = {
             'integrations/webpack',
           ],
           Networking: [
-            'networking/network-layer',
+            'networking/basic-http-networking',
+            'networking/advanced-http-networking',
             'networking/authentication',
           ],
-          'Apollo Client API': [
-            'api/core',
-            'api/react-hooks',
-            'api/react-testing',
-            'api/react-ssr',
-            'api/react-components',
-            'api/react-hoc'
+          'API - Core': [
+            'api/core/ApolloClient',
+            'api/core/ObservableQuery'
+          ],
+          'API - React': [
+            'api/react/hooks',
+            'api/react/testing',
+            'api/react/ssr',
+            'api/react/components',
+            'api/react/hoc'
+          ],
+          'API - Link': [
+            'api/link/introduction',
+            'api/link/apollo-link-batch-http',
+            'api/link/apollo-link-context',
+            'api/link/apollo-link-error',
+            'api/link/apollo-link-rest',
+            'api/link/apollo-link-retry',
+            'api/link/apollo-link-schema',
+            'api/link/apollo-link-ws'
           ],
           Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
         },

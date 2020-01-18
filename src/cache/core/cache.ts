@@ -6,7 +6,7 @@ import { Cache } from './types/Cache';
 import { queryFromPojo, fragmentFromPojo } from './utils';
 
 import gql from 'graphql-tag';
-const justTypenameQuery = gql`query { __typename }`;
+const justTypenameQuery = gql`{ __typename }`;
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

@@ -3,7 +3,7 @@ title: Apollo Link overview
 description: Customize Apollo Client's data flow
 ---
 
-> If your application only needs to send conventional HTTP-based requests to a GraphQL server, you probably don't need to use the Apollo Link API. To learn more, see [Basic HTTP networking](/networking/basic-http-networking/).
+> If your application only needs to send conventional HTTP-based requests to a GraphQL server, you probably don't need to use the Apollo Link API. To learn more, see [Basic HTTP networking](../../networking/basic-http-networking/).
 
 The **Apollo Link** library helps you customize the flow of data between Apollo Client and your GraphQL server. You can define your client's network behavior as a list of **link** objects that execute in a sequence:
 

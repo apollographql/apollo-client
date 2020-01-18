@@ -26,7 +26,7 @@ The `getDataFromTree` function takes your React tree, determines which queries a
 
 ### Example
 
-Refer to the [Using `getDataFromTree`](../performance/server-side-rendering/#using-getdatafromtree) section of the docs.
+Refer to the [Using `getDataFromTree`](../../performance/server-side-rendering/#using-getdatafromtree) section of the docs.
 
 ## `renderToStringWithData`
 
@@ -44,4 +44,4 @@ The `renderToStringWithData` function is similar to `getDataFromTree`, but uses 
 
 ### Example
 
-Refer to the [Using `renderToStringWithData`](../performance/server-side-rendering/#using-rendertostringwithdata) section of the docs.
+Refer to the [Using `renderToStringWithData`](../../performance/server-side-rendering/#using-rendertostringwithdata) section of the docs.

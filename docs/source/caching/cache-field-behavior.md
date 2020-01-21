@@ -85,7 +85,6 @@ const cache = new InMemoryCache({
   typePolicies: {
     Person: {
       fields: {
-
         // If a field's TypePolicy would only include a read function,
         // you can optionally define the function like so, instead of
         // nesting it inside an object as shown in the example above.
@@ -157,13 +156,13 @@ Note that `existing` is undefined the very first time this function is called fo
 
 #### Merging non-normalized objects
 
-Another common use case for `merge` functions is to combine nested objects that do not have IDs, but are known (by you, the application developer) to represent the same logical object, assuming the parent object is the same.
+Another common use case for custom field `merge` functions is to combine nested objects that do not have IDs, but are known (by you, the application developer) to represent the same logical object, assuming the parent object is the same.
 
 Suppose that a `Book` type has an `author` field, which is an object containing information like the author's `name`, `language`, and `dateOfBirth`. The `Book` object has `__typename: "Book"` and a unique `isbn` field, so the cache can tell when two `Book` result objects represent the same logical entity. However, for whatever reason, the query that retrieved this `Book` did not ask for enough information about the `book.author` object. Perhaps no `keyFields` were specified for the `Author` type, and there is no default `id` field.
 
-This lack of identifying information poses a problem for the cache, because it cannot determine automatically whether two `Author` result objects are the same. If multiple queries ask for different information about the author of this `Book`, the order of the queries begins to matter, because the `favoriteBook.author` object from the second query cannot be safely merged with the `favoriteBook.author` object from the first query, and vice-versa:
+This lack of identifying information poses a problem for the cache, because it cannot determine automatically whether two `Author` result objects are the same. If multiple queries ask for different information about the author of this `Book`, the order of the queries matters, because the `favoriteBook.author` object from the second query cannot be safely merged with the `favoriteBook.author` object from the first query, and vice-versa:
 
-```gql
+```graphql
 query BookWithAuthorName {
   favoriteBook {
     isbn
@@ -187,11 +186,11 @@ query BookWithAuthorLanguage {
 
 In such situations, the cache defaults to _replacing_ the existing `favoriteBook.author` data with the incoming data, without merging the `name` and `language` fields together, because the risk of merging inconsistent `name` and `language` fields from different authors is unacceptable.
 
-> Note: Apollo Client 2.x would sometimes merge unidentified objects together. While this behavior might accidentally have aligned with the intentions of the developer, it led to subtle inconsistencies within the cache. Apollo Client 3.0 refuses to perform unsafe merges, and instead warns about potential loss of unidentified data.
+> Note: Apollo Client 2.x would sometimes merge unidentified objects. While this behavior might accidentally have aligned with the intentions of the developer, it led to subtle inconsistencies within the cache. Apollo Client 3.0 refuses to perform unsafe merges, and instead warns about potential loss of unidentified data.
 
-You could fix this problem by modifying your queries to request an `id` field for the `favoriteBook.author` objects, or by specifying custom `keyFields` in the `Author` type policy, such as `["name", "dateOfBirth"]`. Providing the cache with this information allows it to know when two `Author` objects represent the same logical entity, so that it can safely merge their fields. This solution is recommended, when feasible.
+You could fix this problem by modifying your queries to request an `id` field for the `favoriteBook.author` objects, or by specifying custom `keyFields` in the `Author` type policy, such as `["name", "dateOfBirth"]`. Providing the cache with this information allows it to know when two `Author` objects represent the same logical entity, so it can safely merge their fields. This solution is recommended, when feasible.
 
-However, you may encounter situations where your data model does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
+However, you may encounter situations where your data graph does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
 
 In such situations, you can define a custom `merge` function for the `author` field within the type policy for `Book`:
 
@@ -237,7 +236,7 @@ Of course, you can implement your `merge` functions however you like&mdash;these
 
 Once you're comfortable with the ideas and recommendations from the previous section, consider what happens when a `Book` can have multiple authors:
 
-```gql
+```graphql
 query BookWithAuthorNames {
   favoriteBook {
     isbn

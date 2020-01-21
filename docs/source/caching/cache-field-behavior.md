@@ -156,16 +156,33 @@ Note that `existing` is undefined the very first time this function is called fo
 
 #### Merging non-normalized objects
 
-Another common use case for custom field `merge` functions is to combine nested objects that do not have IDs, but are known (by you, the application developer) to represent the same logical object, assuming the parent object is the same.
+Sometimes, the Apollo Client cache can't [normalize](./cache-configuration/#data-normalization) a particular object that's returned by your GraphQL server. This might be because a query didn't request the object's unique identifier (by default its `id` or `_id` field), or because [normalization is disabled](./cache-configuration#disabling-normalization) for that object's type.
 
-Suppose that a `Book` type has an `author` field, which is an object containing information like the author's `name`, `language`, and `dateOfBirth`. The `Book` object has `__typename: "Book"` and a unique `isbn` field, so the cache can tell when two `Book` result objects represent the same logical entity. However, for whatever reason, the query that retrieved this `Book` did not ask for enough information about the `book.author` object. Perhaps no `keyFields` were specified for the `Author` type, and there is no default `id` field.
+When an object can't be normalized, the cache embeds the object directly within its parent instead of storing it as a separate entity.
 
-This lack of identifying information poses a problem for the cache, because it cannot determine automatically whether two `Author` result objects are the same. If multiple queries ask for different information about the author of this `Book`, the order of the queries matters, because the `favoriteBook.author` object from the second query cannot be safely merged with the `favoriteBook.author` object from the first query, and vice-versa:
+For example, let's say your schema defines a `Book` type that includes an `author` field of type `Author`:
 
 ```graphql
+type Book {
+  id: ID!
+  title: String
+  author: Author
+}
+
+type Author {
+  name: String
+  dateOfBirth: String
+}
+```
+
+In this schema, `Book`s have a unique `id`, but `Author`s do not. Consequently, `Author` objects are embedded within `Book` objects in the cache.
+
+ Now let's say your client executes the following two queries, one after the other:
+
+```graphql{6,16}
 query BookWithAuthorName {
   favoriteBook {
-    isbn
+    id
     title
     author {
       name
@@ -173,26 +190,20 @@ query BookWithAuthorName {
   }
 }
 
-query BookWithAuthorLanguage {
+query BookWithAuthorBirthdate {
   favoriteBook {
-    isbn
+    id
     title
     author {
-      language
+      dateOfBirth
     }
   }
 }
 ```
 
-In such situations, the cache defaults to _replacing_ the existing `favoriteBook.author` data with the incoming data, without merging the `name` and `language` fields together, because the risk of merging inconsistent `name` and `language` fields from different authors is unacceptable.
+Assuming `favoriteBook` always returns the same `Book`, these two queries fetch different fields from the same `Author` object. But because the `Author` object isn't normalized, the cache _doesn't know_ that these fields belong to the same object! Consequently, the cache _overwrites_ the `Author` object returned by `BookWithAuthorName` with the `Author` object returned by `BookWithAuthorBirthdate`, resulting in an object that includes _only_ a `dateOfBirth` field.
 
-> Note: Apollo Client 2.x would sometimes merge unidentified objects. While this behavior might accidentally have aligned with the intentions of the developer, it led to subtle inconsistencies within the cache. Apollo Client 3.0 refuses to perform unsafe merges, and instead warns about potential loss of unidentified data.
-
-You could fix this problem by modifying your queries to request an `id` field for the `favoriteBook.author` objects, or by specifying custom `keyFields` in the `Author` type policy, such as `["name", "dateOfBirth"]`. Providing the cache with this information allows it to know when two `Author` objects represent the same logical entity, so it can safely merge their fields. This solution is recommended, when feasible.
-
-However, you may encounter situations where your data graph does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
-
-In such situations, you can define a custom `merge` function for the `author` field within the type policy for `Book`:
+Whenever possible, we recommend resolving this issue by [normalizing the affected objects](./cache-configuration/#data-normalization) (in this case, `Author`). When that _isn't_ possible, you can define a `merge` function like the following when you are certain that a field's underlying object always refers to the _same_ object:
 
 ```ts
 const cache = new InMemoryCache({
@@ -210,9 +221,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-This policy allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
-
-If you would prefer to keep the default replacement behavior while silencing the warnings, the following `merge` function will explicitly permit replacement:
+If the cache _should_ overwrite a non-normalized object with every query response, you can define a `merge` function like the following. This function behaves identically to the cache's default behavior, except it silences the warnings that Apollo Client otherwise emits when overwriting a non-normalized object:
 
 ```ts
 const cache = new InMemoryCache({
@@ -229,8 +238,6 @@ const cache = new InMemoryCache({
   },
 });
 ```
-
-Of course, you can implement your `merge` functions however you like&mdash;these are just the simplest and most common implementations.
 
 #### Merging arrays of non-normalized objects
 

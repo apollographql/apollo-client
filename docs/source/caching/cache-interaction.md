@@ -229,13 +229,13 @@ If the object is unreachable, it will be garbage collected during next call to `
 
 ### `evict`
 
-You can remove any normalized object from the cache with the `evict` method:
+You can remove any normalized object from the cache using the `.evict` method. An optional second argument `fieldName` can be passed, which is the actual name of the field as defined in your schema.
 
 ```js
-cache.evict('my-object-id');
+cache.evict('my-object-id', fieldName)
 ```
 
-Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
+Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after using `evict` on one or more objects in the cache.
 
 ## Recipes
 

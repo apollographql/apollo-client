@@ -87,7 +87,7 @@ const cache = new InMemoryCache({
       fields: {
 
         // If a field's TypePolicy would only include a read function,
-        // you can optionally define the function like so, instead of 
+        // you can optionally define the function like so, instead of
         // nesting it inside an object as shown in the example above.
         name(name: string, { args }) {
           if (args && typeof args.maxLength === "number") {
@@ -168,7 +168,7 @@ When a field holds an array, it's often useful to [paginate](/data/pagination/) 
 Typically, a query includes pagination arguments that specify:
 
 * Where to start in the array, using either a numeric offset or a starting ID
-* The maximum number of elements to return in a single "page" 
+* The maximum number of elements to return in a single "page"
 
 If you implement pagination for a field, it's important to keep pagination arguments in mind if you then implement `read` and `merge` functions for the field:
 
@@ -287,11 +287,17 @@ Here are the definitions for the `FieldPolicy` type and its related types:
 ```ts
 // These generic type parameters will be inferred from the provided policy in
 // most cases, though you can use this type to constrain them more precisely.
-export type FieldPolicy<TExisting, TIncoming, TReadResult> = {
+type FieldPolicy<
+  TExisting,
+  TIncoming = TExisting,
+  TReadResult = TExisting,
+> = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
   merge?: FieldMergeFunction<TExisting, TIncoming>;
 };
+
+type KeySpecifier = (string | KeySpecifier)[];
 
 type KeyArgsFunction = (
   field: FieldNode,
@@ -302,12 +308,12 @@ type KeyArgsFunction = (
   },
 ) => string | null | void;
 
-type FieldReadFunction<TExisting, TResult = TExisting> = (
+type FieldReadFunction<TExisting, TReadResult = TExisting> = (
   existing: Readonly<TExisting> | undefined,
   options: FieldFunctionOptions,
-) => TResult;
+) => TReadResult;
 
-type FieldMergeFunction<TExisting, TIncoming> = (
+type FieldMergeFunction<TExisting, TIncoming = TExisting> = (
   existing: Readonly<TExisting> | undefined,
   incoming: Readonly<TIncoming>,
   options: FieldFunctionOptions,

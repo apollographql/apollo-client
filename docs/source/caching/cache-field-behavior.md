@@ -233,7 +233,89 @@ const cache = new InMemoryCache({
 
 Of course, you can implement your `merge` functions however you like&mdash;these are just the simplest and most common implementations.
 
-If you do end up specifying `keyFields` for the `Author` type, the `existing` and `incoming` parameters to the `merge` function will be `Reference` objects with the shape `{ __ref: <ID> }`, referring to normalized data elsewhere in the cache. A custom `merge` function will no longer be necessary, but remains safe because it prefers `incoming` references.
+#### Merging arrays of non-normalized objects
+
+Once you're comfortable with the ideas and recommendations from the previous section, consider what happens when a `Book` can have multiple authors:
+
+```gql
+query BookWithAuthorNames {
+  favoriteBook {
+    isbn
+    title
+    authors {
+      name
+    }
+  }
+}
+
+query BookWithAuthorLanguages {
+  favoriteBook {
+    isbn
+    title
+    authors {
+      language
+    }
+  }
+}
+```
+
+In this case, the `favoriteBook.authors` field is no longer just a single object, but an array of authors, so it's even more imporant to define a custom `merge` function to prevent loss of data by replacement:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        authors: {
+          merge(existing: any[] = [], incoming: any[], { readField }) {
+            const merged: any[] = [];
+            const authors = new Map<string, any>();
+            function add(author: any) {
+              const name = readField<string>("name", author);
+              if (authors.has(name)) {
+                // Merge the new author data with the existing author data.
+                authors.set(name, {
+                  ...authors.get(name),
+                  ...author,
+                });
+              } else {
+                // First time we've seen this author in this array.
+                authors.set(name, author);
+                merged.push(author);
+              }
+            }
+            existing.forEach(add);
+            incoming.forEach(add);
+            return merged;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Instead of blindly replacing the existing `authors` array with the incoming array, this code concatenates the arrays together, while also checking for duplicate author names, merging the fields of any repeated `author` objects.
+
+The `readField` helper function is more robust than using `author.name`, because it also tolerates the possibility that the `author` is a `Reference` object referring to data elsewhere in the cache, which could happen if you (or someone else on your team) eventually gets around to specifying `keyFields` for the `Author` type.
+
+As this example suggests, `merge` functions can become quite sophisticated. When this happens, you can often extract the generic logic into a reusable helper function:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        authors: {
+          merge: mergeArrayByField<AuthorType>("name"),
+        },
+      },
+    },
+  },
+});
+```
+
+Now that you've hidden the details behind a reusable abstraction, it no longer matters how complicated the implementation gets. This is liberating, because it allows you to improve your client-side business logic over time, while keeping related logic consistent across your entire application.
 
 ### Handling pagination
 
@@ -329,7 +411,7 @@ const cache = new InMemoryCache({
 
 Note that if you call `readField(fieldName)`, it returns the value of the specified field from the current object. If you pass an object as a _second_ argument to `readField`, (e.g., `readField("id", task)`), `readField` instead reads the specified field from the specified object. In the above example, reading the `id` field from existing `Task` objects allows us to deduplicate the `incoming` task data.
 
-The pagination code above is complicated, but after you define it for your preferred pagination strategy, you can reuse it for every field that uses that strategy, regardless of the field's type. For example:
+The pagination code above is complicated, but after you implement your preferred pagination strategy, you can reuse it for every field that uses that strategy, regardless of the field's type. For example:
 
 ```ts
 function afterIdLimitPaginatedFieldPolicy<T>() {

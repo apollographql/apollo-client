@@ -449,11 +449,8 @@ export class Policies {
       } else {
         fieldValue = objectOrReference && objectOrReference[storeFieldName];
       }
-      if (process.env.NODE_ENV !== "production") {
-        // Enforce Readonly<T> at runtime, in development.
-        maybeDeepFreeze(fieldValue);
-      }
-      return fieldValue as T;
+      // Enforce Readonly<T> at runtime, in development.
+      return maybeDeepFreeze(fieldValue) as T;
     };
   }
 
@@ -597,14 +594,6 @@ export class Policies {
 
       const merge = policy && policy.merge;
       if (merge) {
-        if (process.env.NODE_ENV !== "production") {
-          // It may be tempting to modify existing data directly, for example
-          // by pushing more elements onto an existing array, but merge
-          // functions are expected to be pure, so it's important that we
-          // enforce immutability in development.
-          maybeDeepFreeze(existing);
-        }
-
         // If storage ends up null, that just means no options.storage object
         // has ever been created for a read function for this field before, so
         // there's nothing this merge function could do with options.storage

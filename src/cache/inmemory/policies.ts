@@ -354,9 +354,10 @@ export class Policies {
     typename: string,
     createIfMissing: boolean,
   ): Policies["typePolicies"][string] {
-    const { typePolicies } = this;
-    return typePolicies[typename] || (
-      createIfMissing && (typePolicies[typename] = Object.create(null)));
+    if (typename) {
+      return this.typePolicies[typename] || (
+        createIfMissing && (this.typePolicies[typename] = Object.create(null)));
+    }
   }
 
   private getSubtypeSet(

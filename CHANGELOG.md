@@ -27,6 +27,9 @@
 
 - **[BREAKING]** The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
 
+- **[BREAKING]** We are no longer exporting certain intended to be internal only cache and graphql based utilities. If you are depending on some of the lesser known exports from `apollo-cache`, `apollo-cache-inmemory`, or `apollo-utilities`, they may no longer be available from `@apollo/client`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#5437](https://github.com/apollographql/apollo-client/pull/5437) and [#5514](https://github.com/apollographql/apollo-client/pull/5514)
+
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 

@@ -5,8 +5,23 @@ import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
 import { queryFromPojo, fragmentFromPojo } from './utils';
 
-import gql from 'graphql-tag';
-const justTypenameQuery = gql`query { __typename }`;
+const justTypenameQuery: DocumentNode = {
+  kind: "Document",
+  definitions: [{
+    kind: "OperationDefinition",
+    operation: "query",
+    selectionSet: {
+      kind: "SelectionSet",
+      selections: [{
+        kind: "Field",
+        name: {
+          kind: "Name",
+          value: "__typename",
+        },
+      }],
+    },
+  }],
+};
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

@@ -92,7 +92,7 @@ const todo = client.readFragment({
 });
 ```
 
-The first argument, `id`, is the [unique identifier](/v2.6/caching/cache-configuration/#assigning-unique-identifiers)
+The first argument, `id`, is the [unique identifier](./cache-configuration/#assigning-unique-identifiers)
 that was assigned to the object you want to read from the cache. This should match
 the value that your `dataIdFromObject` function assigned to the object when it was
 stored.

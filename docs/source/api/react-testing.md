@@ -15,7 +15,7 @@ npm install @apollo/react-testing
 import { MockedProvider } from "@apollo/react-testing";
 ```
 
-The `MockedProvider` is a test-utility that allows you to create a mocked version of the [`ApolloProvider`](/v2.6/api/react-common/#apolloprovider) that doesn't send out network requests to your API, but rather allows you to specify the exact response payload for a given request.
+The `MockedProvider` is a test-utility that allows you to create a mocked version of the [`ApolloProvider`](./react-common/#apolloprovider) that doesn't send out network requests to your API, but rather allows you to specify the exact response payload for a given request.
 
 The `<MockedProvider />` component takes the following props:
 

@@ -65,7 +65,7 @@
     "@wry/equality": "^0.1.9",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-tag": "^2.10.1",
-    "optimism": "^0.11.3",
+    "optimism": "^0.11.5",
     "symbol-observable": "^1.2.0",
     "ts-invariant": "^0.4.4",
     "tslib": "^1.10.0",

@@ -1,8 +1,32 @@
 {
-  "packageRules": [
+  "extends": [
+    ":pinOnlyDevDependencies"
+  ],
+  "semanticCommits": true,
+  "timezone": "America/Los_Angeles",
+  "schedule": [
+    "after 10pm and before 5am on every weekday"
+  ],
+  "rebaseStalePrs": true,
+  "prCreation": "not-pending",
+  "automerge": "minor",
+  "labels": [
+    "dependencies"
+  ],
+  "assignees": [
+    "@hwillson"
+  ],
+  "reviewers": [
+    "@hwillson"
+  ],
+  "pathRules": [
     {
-      "paths": ["docs/package.json"],
-      "extends": ["apollo-docs"]
+      "paths": [
+        "docs/package.json"
+      ],
+      "extends": [
+        "apollo-docs"
+      ]
     }
   ]
 }

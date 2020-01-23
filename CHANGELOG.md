@@ -53,6 +53,9 @@
 - `@apollo/client/cache` can be used to import the Apollo Client cache without importing other parts of the Apollo Client codebase. <br/>
   [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
 
+- The result caching system (introduced in [#3394](https://github.com/apollographql/apollo-client/pull/3394)) now tracks dependencies at the field level, rather than at the level of whole entity objects, allowing the cache to return identical (`===`) results much more often than before. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5617](https://github.com/apollographql/apollo-client/pull/5617)
+
 - `InMemoryCache` provides a new API for storing local state that can be easily updated by external code:
   ```ts
   const lv = cache.makeLocalVar(123)

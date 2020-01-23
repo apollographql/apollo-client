@@ -1,0 +1,15 @@
+{
+  "extends": [
+    "apollo-open-source"
+  ],
+  "pathRules": [
+    {
+      "paths": [
+        "docs/package.json"
+      ],
+      "extends": [
+        "apollo-docs"
+      ]
+    }
+  ]
+}

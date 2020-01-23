@@ -133,7 +133,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       dataId: options.id,
       result: options.data,
       variables: options.variables,
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: this.getFragmentDoc(options.fragment, options.fragmentName),
     });
   }
 

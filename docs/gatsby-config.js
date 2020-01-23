@@ -11,11 +11,12 @@ module.exports = {
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
-        defaultVersion: 2.6,
+        localVersion: '3.0 beta',
+        defaultVersion: '2.6',
         versions: {
-          '3.0 beta': 'version-3.0-beta',
-          2.5: 'version-2.5',
-          2.4: 'version-2.4',
+          '2.6': 'version-2.6-relative',
+          '2.5': 'version-2.5',
+          '2.4': 'version-2.4',
         },
         checkLinksOptions: {
           exceptions: [
@@ -27,7 +28,7 @@ module.exports = {
         },
         typescriptApiBox: {
           data: require('./docs.json'),
-          filepathPrefix: 'packages/apollo-client/src/',
+          filepathPrefix: 'src/',
         },
         sidebarCategories: {
           null: ['index', 'why-apollo', 'get-started'],
@@ -46,7 +47,6 @@ module.exports = {
             'development-testing/testing',
             'development-testing/client-schema-mocking',
             'development-testing/developer-tooling',
-            'development-testing/recompose',
           ],
           Performance: [
             'performance/performance',
@@ -60,15 +60,31 @@ module.exports = {
             'integrations/meteor',
             'integrations/webpack',
           ],
-          Networking: ['networking/network-layer', 'networking/authentication'],
-          'API Reference': [
-            'api/apollo-client',
-            'api/react-hooks',
-            'api/react-ssr',
-            'api/react-testing',
-            'api/react-components',
-            'api/react-hoc',
-            'api/react-common',
+          Networking: [
+            'networking/basic-http-networking',
+            'networking/advanced-http-networking',
+            'networking/authentication',
+          ],
+          'API - Core': [
+            'api/core/ApolloClient',
+            'api/core/ObservableQuery'
+          ],
+          'API - React': [
+            'api/react/hooks',
+            'api/react/testing',
+            'api/react/ssr',
+            'api/react/components',
+            'api/react/hoc'
+          ],
+          'API - Link': [
+            'api/link/introduction',
+            'api/link/apollo-link-batch-http',
+            'api/link/apollo-link-context',
+            'api/link/apollo-link-error',
+            'api/link/apollo-link-rest',
+            'api/link/apollo-link-retry',
+            'api/link/apollo-link-schema',
+            'api/link/apollo-link-ws'
           ],
           Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
         },

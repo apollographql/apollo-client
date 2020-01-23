@@ -1,11 +1,24 @@
 {
-  "extends": "./config/tsconfig.base.json",
-  "references": [
-    { "path": "packages/apollo-boost" },
-    { "path": "packages/apollo-cache" },
-    { "path": "packages/apollo-cache-inmemory" },
-    { "path": "packages/apollo-client" },
-    { "path": "packages/apollo-utilities" },
-    { "path": "packages/graphql-anywhere" }
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "target": "es5",
+    "module": "es2015",
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "lib": ["es2015", "esnext.asynciterable", "dom"],
+    "jsx": "react"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "src/**/__tests__/**/*"
   ]
 }

@@ -1,0 +1,108 @@
+---
+title: HTTP Batch Link
+description: Batch multiple operations into a single HTTP request
+---
+
+## Overview
+
+`@apollo/link-batch-http` is a terminating link that combines multiple GraphQL
+operations into a single HTTP request. This link batches individual
+operations together into an array that is sent to a single GraphQL endpoint.
+
+```js
+import { BatchHttpLink } from "@apollo/link-batch-http";
+
+const link = new BatchHttpLink({ uri: "/graphql" });
+```
+
+## Options
+
+The batch HTTP link accepts a configuration object that can be used to customize the behavior
+of the link. There are two different categories of options: http and batch.
+
+| Option | Description |
+| - | - |
+| `uri` | The URI key is a string endpoint -- will default to "/graphql" if not specified |
+| `includeExtensions` | Allow passing the extensions field to your graphql server, defaults to false |
+| `fetch` | A `fetch` compatible API for making a request |
+| `headers` | An object representing values to be sent as headers on the request |
+| `credentials` | A string representing the credentials policy you want for the fetch call |
+| `fetchOptions` | Any overrides of the fetch options argument to pass to the fetch call. Note that you cannot use batching with the GET HTTP method. |
+
+The batching options indicate how operations are batched together, the size of batches, and the maximum time a batch will wait before automatically being sent over the network.
+
+| Option | Description |
+| - | - |
+| `batchMax` | A max number of items to batch, defaults at 10 |
+| `batchInterval` | The interval at which to batch (in ms), defaults to 10 |
+| `batchKey` | A function that accepts an operation and returns a string key, which uniquely names the batch the operation belongs to, defaults to returning the same string |
+
+## Fetch polyfill
+
+The batch HTTP link relies on having `fetch` present in your runtime environment. If you are running on react-native, or modern browsers, this should not be a problem. If you are targeting an environment without `fetch` such as older browsers or the server however, you will need to pass your own `fetch` to the link through its options. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for Node.
+
+## Context
+
+The batch HTTP link currently uses the context in two different ways, per batch and per query. The context fields below are used per batch and taken from the first operation in the batch.
+
+| Option | Description |
+| - | - |
+| `headers` | An object representing values to be sent as headers on the request |
+| `credentials` | A string representing the credentials policy you want for the fetch call |
+| `uri` | A string of the endpoint you want to fetch from |
+| `fetchOptions` | Any overrides of the fetch options argument to pass to the fetch call |
+| `response` | This is the raw response from the fetch request after it is made |
+
+For each query, the `http` field is used to modify each individual query in the batch, such as persisted queries (see below).
+
+### Persisted queries
+
+The batch HTTP link supports an advanced GraphQL feature called persisted queries. This allows you to not send the stringified query over the wire, but instead send some kind of identifier for the query. To support this you need to attach the id somewhere in the extensions field, and pass the following options to the context:
+
+```js
+operation.setContext({
+  http: {
+    includeExtensions: true,
+    includeQuery: false,
+  }
+})
+```
+
+The context `http` object currently supports two keys:
+
+* `includeExtensions`: Send the extensions object for this request.
+* `includeQuery`: Don't send the `query` field for this request.
+
+One way to use persisted queries is with [apollo-link-persisted-queries](https://github.com/apollographql/apollo-link-persisted-queries) and [Apollo Server](https://www.apollographql.com/docs/apollo-server/performance/apq/).
+
+## Custom fetching
+
+You can use the `fetch` option when creating an `HttpLink`, to do a lot of custom networking. This is useful if you want to modify the request based on calculated headers or calculate the uri based on the operation.
+
+### Custom auth
+
+```js
+const customFetch = (uri, options) => {
+  const { header } = Hawk.client.header(
+    "http://example.com:8000/resource/1?b=1&a=2",
+    "POST",
+    { credentials: credentials, ext: "some-app-data" }
+  );
+  options.headers.Authorization = header;
+  return fetch(uri, options);
+};
+
+const link = new BatchHttpLink({ fetch: customFetch });
+```
+
+### Dynamic URI
+
+```js
+const customFetch = (uri, options) => {
+  const operationNames =
+    JSON.parse(options.body).map(operation => operation.operationName);
+  return fetch(`${uri}/graph/graphql?opname=${operationNames}`, options);
+};
+
+const link = new BatchHttpLink({ fetch: customFetch });
+```

@@ -1,0 +1,303 @@
+---
+title: Hooks
+description: Apollo Client react hooks API reference
+---
+
+import ApolloProvider from '../../../shared/apollo-provider.mdx';
+import QueryOptions from '../../../shared/query-options.mdx';
+import QueryResult from '../../../shared/query-result.mdx';
+import MutationOptions from '../../../shared/mutation-options.mdx';
+import MutationResult from '../../../shared/mutation-result.mdx';
+import SubscriptionOptions from '../../../shared/subscription-options.mdx';
+import SubscriptionResult from '../../../shared/subscription-result.mdx';
+
+## Installation
+
+Apollo Client >= 3 includes React hooks functionality out of the box. You don't need to install any additional packages.
+
+## `ApolloProvider`
+
+<ApolloProvider />
+
+## `ApolloConsumer`
+
+One way to access the configured Apollo Client instance directly is to create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function will be called with your `ApolloClient` instance as its only argument. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [React Context API](https://reactjs.org/docs/context.html).
+
+### Example
+
+```jsx
+import React from 'react';
+import { ApolloConsumer } from '@apollo/client';
+
+const WithApolloClient = () => (
+  <ApolloConsumer>
+    {client => 'We have access to the client!' /* do stuff here */}
+  </ApolloConsumer>
+);
+```
+
+## `useQuery`
+
+### Example
+
+```jsx
+import { gql, useQuery } from '@apollo/client';
+
+const GET_GREETING = gql`
+  query getGreeting($language: String!) {
+    greeting(language: $language) {
+      message
+    }
+  }
+`;
+
+function Hello() {
+  const { loading, error, data } = useQuery(GET_GREETING, {
+    variables: { language: 'english' },
+  });
+  if (loading) return <p>Loading ...</p>;
+  return <h1>Hello {data.greeting.message}!</h1>;
+}
+```
+
+> Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useQuery`.
+
+### Function Signature
+
+```ts
+function useQuery<TData = any, TVariables = OperationVariables>(
+  query: DocumentNode,
+  options?: QueryHookOptions<TData, TVariables>,
+): QueryResult<TData, TVariables> {}
+```
+
+### Params
+
+#### `query`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
+
+#### `options`
+
+<QueryOptions />
+
+### Result
+
+<QueryResult />
+
+## `useLazyQuery`
+
+### Example
+
+```jsx
+import { gql, useLazyQuery } from "@apollo/client";
+
+const GET_GREETING = gql`
+  query getGreeting($language: String!) {
+    greeting(language: $language) {
+      message
+    }
+  }
+`;
+
+function Hello() {
+  const [loadGreeting, { called, loading, data }] = useLazyQuery(
+    GET_GREETING,
+    { variables: { language: "english" } }
+  );
+  if (called && loading) return <p>Loading ...</p>
+  if (!called) {
+    return <button onClick={() => loadGreeting()}>Load greeting</button>
+  }
+  return <h1>Hello {data.greeting.message}!</h1>;
+}
+```
+
+> Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useLazyQuery`.
+
+### Function Signature
+
+```ts
+function useLazyQuery<TData = any, TVariables = OperationVariables>(
+  query: DocumentNode,
+  options?: LazyQueryHookOptions<TData, TVariables>,
+): [
+  (options?: QueryLazyOptions<TVariables>) => void,
+  QueryResult<TData, TVariables>
+] {}
+```
+
+### Params
+
+#### `query`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
+
+#### `options`
+
+<QueryOptions />
+
+### Result
+
+**Execute function**
+
+| Param            | Type                                                  | Description                                                                                                                     |
+| ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Execute function | options?: QueryLazyOptions&lt;TVariables&gt;) => void | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. |
+
+**Result object**
+
+<QueryResult />
+
+## `useMutation`
+
+### Example
+
+```jsx
+import { gql, useMutation } from '@apollo/client';
+
+const ADD_TODO = gql`
+  mutation AddTodo($type: String!) {
+    addTodo(type: $type) {
+      id
+      type
+    }
+  }
+`;
+
+function AddTodo() {
+  let input;
+  const [addTodo, { data }] = useMutation(ADD_TODO);
+
+  return (
+    <div>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          addTodo({ variables: { type: input.value } });
+          input.value = '';
+        }}
+      >
+        <input
+          ref={node => {
+            input = node;
+          }}
+        />
+        <button type="submit">Add Todo</button>
+      </form>
+    </div>
+  );
+}
+```
+
+> Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useMutation`.
+
+### Function Signature
+
+```ts
+function useMutation<TData = any, TVariables = OperationVariables>(
+  mutation: DocumentNode,
+  options?: MutationHookOptions<TData, TVariables>,
+): MutationTuple<TData, TVariables> {}
+```
+
+### Params
+
+#### `mutation`
+
+| Param      | Type         | Description                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------- |
+| `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `gql`. |
+
+#### `options`
+
+<MutationOptions />
+
+### Result
+
+<MutationResult />
+
+## `useSubscription`
+
+### Example
+
+```jsx
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription onCommentAdded($repoFullName: String!) {
+    commentAdded(repoFullName: $repoFullName) {
+      id
+      content
+    }
+  }
+`;
+
+function DontReadTheComments({ repoFullName }) {
+  const {
+    data: { commentAdded },
+    loading,
+  } = useSubscription(COMMENTS_SUBSCRIPTION, { variables: { repoFullName } });
+  return <h4>New comment: {!loading && commentAdded.content}</h4>;
+}
+```
+
+> Refer to the [Subscriptions](../../data/subscriptions/) section for a more in-depth overview of `useSubscription`.
+
+### Function Signature
+
+```ts
+function useSubscription<TData = any, TVariables = OperationVariables>(
+  subscription: DocumentNode,
+  options?: SubscriptionHookOptions<TData, TVariables>,
+): {
+  variables: TVariables;
+  loading: boolean;
+  data?: TData;
+  error?: ApolloError;
+} {}
+```
+
+### Params
+
+#### `subscription`
+
+| Param          | Type         | Description                                                          |
+| -------------- | ------------ | -------------------------------------------------------------------- |
+| `subscription` | DocumentNode | A GraphQL subscription document parsed into an AST by `gql`. |
+
+#### `options`
+
+<SubscriptionOptions />
+
+### Result
+
+<SubscriptionResult />
+
+## `useApolloClient`
+
+### Example
+
+```jsx
+import { useApolloClient } from '@apollo/client';
+
+function SomeComponent() {
+  const client = useApolloClient();
+  // `client` is now set to the `ApolloClient` instance being used by the
+  // application (that was configured using something like `ApolloProvider`)
+}
+```
+
+### Function Signature
+
+```ts
+function useApolloClient(): ApolloClient<object> {}
+```
+
+### Result
+
+| Param                  | Type                       | Description                                                |
+| ---------------------- | -------------------------- | ---------------------------------------------------------- |
+| Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |

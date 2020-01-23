@@ -13,8 +13,6 @@ GraphQL subscriptions are a way to push data from the server to the clients that
 
 A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-> This is an advanced feature that Apollo Boost does not support. Learn how to set Apollo Client up manually in our [Apollo Boost migration guide](/migrating/boost-migration/).
-
 ## Overview
 
 GraphQL subscriptions have to be defined in the schema, just like queries and mutations:
@@ -66,16 +64,16 @@ The most popular transport for GraphQL subscriptions today is [`subscriptions-tr
 
 Let's look at how to add support for this transport to Apollo Client.
 
-First, install the WebSocket Apollo Link (`apollo-link-ws`) from npm:
+First, install the WebSocket Apollo Link (`@apollo/link-ws`) from npm:
 
 ```shell
-npm install --save apollo-link-ws subscriptions-transport-ws
+npm install --save @apollo/link-ws subscriptions-transport-ws
 ```
 
 Then, initialize a GraphQL subscriptions transport link:
 
 ```js
-import { WebSocketLink } from 'apollo-link-ws';
+import { WebSocketLink } from '@apollo/link-ws';
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,
@@ -86,10 +84,8 @@ const wsLink = new WebSocketLink({
 ```
 
 ```js
-import { split } from 'apollo-link';
-import { HttpLink } from 'apollo-link-http';
-import { WebSocketLink } from 'apollo-link-ws';
-import { getMainDefinition } from 'apollo-utilities';
+import { split, HttpLink, getMainDefinition } from '@apollo/client';
+import { WebSocketLink } from '@apollo/link-ws';
 
 // Create an http link:
 const httpLink = new HttpLink({
@@ -124,10 +120,10 @@ Now, queries and mutations will go over HTTP as normal, but subscriptions will b
 
 ## useSubscription Hook
 
-The easiest way to bring live data to your UI is by using React Apollo's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
+The easiest way to bring live data to your UI is by using Apollo Client's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
@@ -149,7 +145,7 @@ function DontReadTheComments({ repoFullName }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
@@ -180,7 +176,7 @@ const DontReadTheComments = ({ repoFullName }) => (
 
 If you're looking for an overview of all the options `useSubscription` accepts, and its result properties, look no further!
 
-> **Note:** If you're using React Apollo's `Subscription` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `subscription` prop (which holds a GraphQL subscription document parsed into an AST by `graphql-tag`) is also required.
+> **Note:** If you're using React Apollo's `Subscription` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `subscription` prop (which holds a GraphQL subscription document parsed into an AST by `gql`) is also required.
 
 ### Options
 
@@ -203,12 +199,12 @@ With GraphQL subscriptions your client will be alerted on push from the server a
 
 With `subscribeToMore`, you can easily do the latter.
 
-`subscribeToMore` is a function available on every query result in React Apollo. It works just like [`fetchMore`](/caching/cache-interaction/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
+`subscribeToMore` is a function available on every query result, made using Apollo Client's React integration. It works just like [`fetchMore`](../caching/cache-interaction/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -232,7 +228,7 @@ function CommentsPageWithData({ params }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -266,7 +262,7 @@ Add a function called `subscribeToNewComments` that will subscribe using `subscr
 Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -320,7 +316,7 @@ function CommentsPageWithData({ params }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -391,7 +387,7 @@ export class CommentsPage extends Component {
 In many cases it is necessary to authenticate clients before allowing them to receive subscription results. To do this, the `SubscriptionClient` constructor accepts a `connectionParams` field, which passes a custom object that the server can use to validate the connection before setting up any subscriptions.
 
 ```js
-import { WebSocketLink } from 'apollo-link-ws';
+import { WebSocketLink } from '@apollo/link-ws';
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,

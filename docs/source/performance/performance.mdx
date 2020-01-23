@@ -35,8 +35,7 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```js
-import { toIdValue } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { toIdValue, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache({
   cacheRedirects: {
@@ -89,7 +88,7 @@ Prefetching is one of the easiest ways to make your application's UI feel a lot 
 We can accomplish this in only a few lines of code by calling `client.query` whenever the user hovers over a link. Let's see this in action in the `Feed` component in our example app [Pupstagram](https://codesandbox.io/s/r5qp83z0yq).
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 function Feed() {
@@ -135,7 +134,7 @@ function Feed() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const Feed = () => (
@@ -185,7 +184,7 @@ There are a lot of different ways to anticipate that the user will end up needin
 2. The route of a call-to-action button
 3. All of the data for a sub-area of the application, to make navigating within that area instant
 
-If you have some other ideas, please send a PR to this article, and maybe add some more code snippets. A special form of prefetching is [store hydration from the server](/performance/server-side-rendering/#store-rehydration), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
+If you have some other ideas, please send a PR to this article, and maybe add some more code snippets. A special form of prefetching is [store hydration from the server](server-side-rendering/#store-rehydration), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
 
 ## Query splitting
 
@@ -268,12 +267,10 @@ query SeriesEpisodes($seriesId: Int!) {
 }
 ```
 
-By adding a [custom resolver](/caching/cache-interaction/#cache-redirects-with-cacheredirects) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
+By adding a [custom resolver](../caching/cache-interaction/#cache-redirects-with-cacheredirects) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
 
 ```javascript
-import { ApolloClient } from 'apollo-client';
-import { toIdValue } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, toIdValue, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache({
   cacheResolvers: {
@@ -293,7 +290,7 @@ const client = new ApolloClient({
 A component for the second view that implements the two queries could look like this:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`
@@ -360,7 +357,7 @@ function SeriesDetailView({ seriesId }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`
@@ -422,4 +419,4 @@ const SeriesDetailView = ({ seriesId }) => (
 </div>
 </MultiCodeBlock>
 
-Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](https://www.apollographql.com/docs/link/links/batch-http) those two queries can be sent to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](../api/link/apollo-link-batch-http/) those two queries can be sent to the server in one network request.

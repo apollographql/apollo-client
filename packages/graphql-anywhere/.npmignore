@@ -1,8 +1,0 @@
-.gitignore
-.rpt2_cache
-CHANGELOG.md
-rollup.*.js
-tsconfig.json
-tslint.json
-Gruntfile.js
-.travis.yml

@@ -19,8 +19,7 @@ export declare type IdGetter = (
  * StoreObjects from the cache
  */
 export interface NormalizedCache {
-  has(dataId: string, fieldName?: string): boolean;
-  get(dataId: string): StoreObject;
+  has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
   merge(dataId: string, incoming: StoreObject): void;
   delete(dataId: string, fieldName?: string): boolean;

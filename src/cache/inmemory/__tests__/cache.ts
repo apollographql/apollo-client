@@ -597,6 +597,127 @@ describe('Cache', () => {
         ).toEqual({ a: 1, b: 2, c: 3 });
       },
     );
+
+    it("should not accidentally depend on unrelated entity fields", () => {
+      const cache = new InMemoryCache({
+        resultCaching: true,
+      });
+
+      const firstNameFragment = gql`
+        fragment FirstNameFragment on Person {
+          firstName
+        }
+      `;
+
+      const lastNameFragment = gql`
+        fragment LastNameFragment on Person {
+          lastName
+        }
+      `;
+
+      const bothNamesData = {
+        __typename: "Person",
+        id: 123,
+        firstName: "Ben",
+        lastName: "Newman",
+      };
+
+      const id = cache.identify(bothNamesData);
+
+      cache.writeFragment({
+        id,
+        fragment: firstNameFragment,
+        data: bothNamesData,
+      });
+
+      expect(cache.extract()).toEqual({
+        "Person:123": {
+          __typename: "Person",
+          firstName: "Ben",
+        },
+      });
+
+      const firstNameResult = cache.readFragment({
+        id,
+        fragment: firstNameFragment,
+      });
+
+      expect(firstNameResult).toEqual({
+        __typename: "Person",
+        firstName: "Ben",
+      });
+
+      cache.writeFragment({
+        id,
+        fragment: lastNameFragment,
+        data: bothNamesData,
+      });
+
+      expect(cache.extract()).toEqual({
+        "Person:123": {
+          __typename: "Person",
+          firstName: "Ben",
+          lastName: "Newman",
+        },
+      });
+
+      // This is the crucial test: modifying the lastName field should not
+      // invalidate results that did not depend on the lastName field.
+      expect(cache.readFragment({
+        id,
+        fragment: firstNameFragment,
+      })).toBe(firstNameResult);
+
+      const lastNameResult = cache.readFragment({
+        id,
+        fragment: lastNameFragment,
+      });
+
+      expect(lastNameResult).toEqual({
+        __typename: "Person",
+        lastName: "Newman",
+      });
+
+      cache.writeFragment({
+        id,
+        fragment: firstNameFragment,
+        data: {
+          ...bothNamesData,
+          firstName: "Benjamin",
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        "Person:123": {
+          __typename: "Person",
+          firstName: "Benjamin",
+          lastName: "Newman",
+        },
+      });
+
+      const benjaminResult = cache.readFragment({
+        id,
+        fragment: firstNameFragment,
+      });
+
+      expect(benjaminResult).toEqual({
+        __typename: "Person",
+        firstName: "Benjamin",
+      });
+
+      // Still the same as it was?
+      expect(firstNameResult).toEqual({
+        __typename: "Person",
+        firstName: "Ben",
+      });
+
+      // Updating the firstName should not have invalidated the
+      // previously-read lastNameResult.
+      expect(cache.readFragment({
+        id,
+        fragment: lastNameFragment,
+      })).toBe(lastNameResult);
+    });
   });
 
   describe('writeQuery', () => {

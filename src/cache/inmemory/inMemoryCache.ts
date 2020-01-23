@@ -123,13 +123,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    if (typeof options.rootId === 'string' &&
-        !this.data.has(options.rootId)) {
+    const store = options.optimistic ? this.optimisticData : this.data;
+    if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
       return null;
     }
-
     return this.storeReader.readQueryFromStore({
-      store: options.optimistic ? this.optimisticData : this.data,
+      store,
       query: options.query,
       variables: options.variables,
       rootId: options.rootId,

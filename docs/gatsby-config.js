@@ -27,8 +27,7 @@ module.exports = {
           ],
         },
         typescriptApiBox: {
-          data: require('./docs.json'),
-          filepathPrefix: 'src/',
+          data: require('./docs.json')
         },
         sidebarCategories: {
           null: ['index', 'why-apollo', 'get-started'],

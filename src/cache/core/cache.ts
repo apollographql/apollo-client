@@ -1,4 +1,5 @@
 import { DocumentNode } from 'graphql';
+import { wrap } from 'optimism';
 
 import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
 import { DataProxy } from './types/DataProxy';
@@ -98,12 +99,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
+  // Make sure we compute the same (===) fragment query document every
+  // time we receive the same fragment in readFragment.
+  private getFragmentDoc = wrap(getFragmentQueryDocument);
+
   public readFragment<FragmentType, TVariables = any>(
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: this.getFragmentDoc(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
       optimistic,

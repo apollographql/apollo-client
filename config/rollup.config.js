@@ -91,6 +91,7 @@ function prepareCJSMinified(input) {
           toplevel: true,
         },
         compress: {
+          toplevel: true,
           global_defs: {
             '@process.env.NODE_ENV': JSON.stringify('production'),
           },

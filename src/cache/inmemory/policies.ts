@@ -651,10 +651,6 @@ export class Policies {
       const e = existing as StoreObject | Reference;
       const i = incoming as object as StoreObject;
 
-      const typename =
-        getFieldValue<string>(e, "__typename") ||
-        getFieldValue<string>(i, "__typename");
-
       // If the existing object is a { __ref } object, e.__ref provides a
       // stable key for looking up the storage object associated with
       // e.__ref and storeFieldName. Otherwise, storage is enabled only if
@@ -667,9 +663,8 @@ export class Policies {
         : typeof e === "object" && e;
 
       Object.keys(i).forEach(storeFieldName => {
-        const existingValue = getFieldValue(e, storeFieldName);
-        const mergedValue = i[storeFieldName] = policies.applyMerges(
-          existingValue,
+        i[storeFieldName] = policies.applyMerges(
+          getFieldValue(e, storeFieldName),
           i[storeFieldName],
           getFieldValue,
           variables,
@@ -678,101 +673,11 @@ export class Policies {
           // read function for this field.
           firstStorageKey && [firstStorageKey, storeFieldName],
         );
-
-        if (
-          process.env.NODE_ENV !== 'production' &&
-          mergedValue !== existingValue &&
-          !policies.hasMergeFunction(
-            typename, fieldNameFromStoreName(storeFieldName))
-        ) {
-          warnAboutDataLoss(e, i, storeFieldName, getFieldValue);
-        }
       });
     }
 
     return incoming;
   }
-}
-
-const warnings = new Set<string>();
-
-// Note that this function is unused in production, and thus should be pruned
-// by any well-configured minifier.
-function warnAboutDataLoss(
-  existingObject: StoreObject | Reference,
-  incomingObject: StoreObject | Reference,
-  storeFieldName: string,
-  getFieldValue: FieldValueGetter,
-) {
-  const getChild = (objOrRef: StoreObject | Reference): StoreObject => {
-    const child = getFieldValue<StoreObject>(objOrRef, storeFieldName);
-    return typeof child === "object" && child;
-  };
-
-  const existing = getChild(existingObject);
-  if (!existing) return;
-
-  const incoming = getChild(incomingObject);
-  if (!incoming) return;
-
-  // It's always safe to replace a reference, since it refers to data
-  // safely stored elsewhere.
-  if (isReference(existing)) return;
-
-  // If we're replacing every key of the existing object, then the
-  // existing data would be overwritten even if the objects were
-  // normalized, so warning would not be helpful here.
-  if (Object.keys(existing).every(
-    key => getFieldValue(incoming, key) !== void 0)) {
-    return;
-  }
-
-  const parentType =
-    getFieldValue(existingObject, "__typename") ||
-    getFieldValue(incomingObject, "__typename");
-
-  const fieldName = fieldNameFromStoreName(storeFieldName);
-  const typeDotName = `${parentType}.${fieldName}`;
-
-  if (warnings.has(typeDotName)) return;
-  warnings.add(typeDotName);
-
-  const childTypenames: string[] = [];
-  // Arrays do not have __typename fields, and always need a custom merge
-  // function, even if their elements are normalized entities.
-  if (!Array.isArray(existing) &&
-      !Array.isArray(incoming)) {
-    [existing, incoming].forEach(child => {
-      const typename = getFieldValue(child, "__typename");
-      if (typeof typename === "string" &&
-          !childTypenames.includes(typename)) {
-        childTypenames.push(typename);
-      }
-    });
-  }
-
-  invariant.warn(
-`Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
-
-To address this problem (which is not a bug in Apollo Client), ${
-  childTypenames.length
-    ? "either ensure that objects of type " +
-        childTypenames.join(" and ") + " have IDs, or "
-    : ""
-}define a custom merge function for the ${
-  typeDotName
-} field, so the InMemoryCache can safely merge these objects:
-
-  existing: ${JSON.stringify(existing).slice(0, 1000)}
-  incoming: ${JSON.stringify(incoming).slice(0, 1000)}
-
-For more information about these options, please refer to the documentation:
-
-  * Ensuring entity objects have IDs: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-configuration/#generating-unique-identifiers
-
-  * Defining custom merge functions: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-field-behavior/#merging-non-normalized-objects
-`
-  );
 }
 
 function keyArgsFnFromSpecifier(

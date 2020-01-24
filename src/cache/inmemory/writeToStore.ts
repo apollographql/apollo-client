@@ -19,6 +19,8 @@ import {
   isField,
   resultKeyNameFromField,
   StoreValue,
+  Reference,
+  isReference,
 } from '../../utilities/graphql/storeUtils';
 
 import { shouldInclude } from '../../utilities/graphql/directives';
@@ -27,7 +29,7 @@ import { cloneDeep } from '../../utilities/common/cloneDeep';
 import { Policies, FieldValueGetter } from './policies';
 import { defaultNormalizedCacheFactory } from './entityStore';
 import { NormalizedCache, StoreObject } from './types';
-import { makeProcessedFieldsMerger } from './helpers';
+import { makeProcessedFieldsMerger, fieldNameFromStoreName } from './helpers';
 
 export type WriteContext = {
   readonly store: NormalizedCache;
@@ -137,20 +139,30 @@ export class StoreWriter {
       // fall back to that.
       context.getFieldValue<string>(entityRef, "__typename");
 
-    store.merge(
-      dataId,
-      policies.applyMerges(
-        entityRef,
-        this.processSelectionSet({
-          result,
-          selectionSet,
-          context,
-          typename,
-        }),
-        context.getFieldValue,
-        context.variables,
-      ),
+    const incoming = policies.applyMerges(
+      entityRef,
+      this.processSelectionSet({
+        result,
+        selectionSet,
+        context,
+        typename,
+      }),
+      context.getFieldValue,
+      context.variables,
     );
+
+    if (process.env.NODE_ENV !== "production") {
+      Object.keys(incoming).forEach(storeFieldName => {
+        warnAboutDataLoss(
+          entityRef,
+          incoming,
+          storeFieldName,
+          context.getFieldValue,
+        );
+      });
+    }
+
+    store.merge(dataId, incoming);
 
     return store;
   }
@@ -296,4 +308,85 @@ export class StoreWriter {
         value, field.selectionSet, context.fragmentMap),
     });
   }
+}
+
+const warnings = new Set<string>();
+
+// Note that this function is unused in production, and thus should be pruned
+// by any well-configured minifier.
+function warnAboutDataLoss(
+  existingObject: StoreObject | Reference,
+  incomingObject: StoreObject | Reference,
+  storeFieldName: string,
+  getFieldValue: FieldValueGetter,
+) {
+  const getChild = (objOrRef: StoreObject | Reference): StoreObject => {
+    const child = getFieldValue<StoreObject>(objOrRef, storeFieldName);
+    return typeof child === "object" && child;
+  };
+
+  const existing = getChild(existingObject);
+  if (!existing) return;
+
+  const incoming = getChild(incomingObject);
+  if (!incoming) return;
+
+  // It's always safe to replace a reference, since it refers to data
+  // safely stored elsewhere.
+  if (isReference(existing)) return;
+
+  // If we're replacing every key of the existing object, then the
+  // existing data would be overwritten even if the objects were
+  // normalized, so warning would not be helpful here.
+  if (Object.keys(existing).every(
+    key => getFieldValue(incoming, key) !== void 0)) {
+    return;
+  }
+
+  const parentType =
+    getFieldValue(existingObject, "__typename") ||
+    getFieldValue(incomingObject, "__typename");
+
+  const fieldName = fieldNameFromStoreName(storeFieldName);
+  const typeDotName = `${parentType}.${fieldName}`;
+
+  if (warnings.has(typeDotName)) return;
+  warnings.add(typeDotName);
+
+  const childTypenames: string[] = [];
+  // Arrays do not have __typename fields, and always need a custom merge
+  // function, even if their elements are normalized entities.
+  if (!Array.isArray(existing) &&
+      !Array.isArray(incoming)) {
+    [existing, incoming].forEach(child => {
+      const typename = getFieldValue(child, "__typename");
+      if (typeof typename === "string" &&
+          !childTypenames.includes(typename)) {
+        childTypenames.push(typename);
+      }
+    });
+  }
+
+  invariant.warn(
+`Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
+
+To address this problem (which is not a bug in Apollo Client), ${
+  childTypenames.length
+    ? "either ensure that objects of type " +
+        childTypenames.join(" and ") + " have IDs, or "
+    : ""
+}define a custom merge function for the ${
+  typeDotName
+} field, so the InMemoryCache can safely merge these objects:
+
+  existing: ${JSON.stringify(existing).slice(0, 1000)}
+  incoming: ${JSON.stringify(incoming).slice(0, 1000)}
+
+For more information about these options, please refer to the documentation:
+
+  * Ensuring entity objects have IDs: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-configuration/#generating-unique-identifiers
+
+  * Defining custom merge functions: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-field-behavior/#merging-non-normalized-objects
+`
+  );
 }

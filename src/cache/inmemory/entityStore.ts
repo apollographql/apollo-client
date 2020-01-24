@@ -1,5 +1,4 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
-import { invariant } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
 import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
@@ -460,89 +459,12 @@ const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
     if (equal(existing, incoming)) {
       return existing;
     }
-
-    if (process.env.NODE_ENV !== 'production') {
-      warnAboutDataLoss(existingObject, incomingObject, property, store);
-    }
   }
 
   // In all other cases, incoming replaces existing without any effort to
   // merge them deeply, since custom merge functions have already been
   // applied to the incoming data by walkWithMergeOverrides.
   return incoming;
-}
-
-const warnings = new Set<string>();
-
-function warnAboutDataLoss(
-  existingObject: Record<string | number, any>,
-  incomingObject: Record<string | number, any>,
-  property: string | number,
-  store: EntityStore,
-) {
-  const existing = existingObject[property];
-  const incoming = incomingObject[property];
-
-  // It's always safe to replace a reference, since it refers to data
-  // safely stored elsewhere.
-  if (isReference(existing)) return;
-
-  // If we're replacing every key of the existing object, then the
-  // existing data would be overwritten even if the objects were
-  // normalized, so warning would not be helpful here.
-  if (Object.keys(existing).every(
-    isReference(incoming)
-      ? key => store.has(incoming.__ref, key)
-      : key => hasOwn.call(incoming, key))) {
-    return;
-  }
-
-  const parentType =
-    getTypenameFromStoreObject(store, existingObject) ||
-    getTypenameFromStoreObject(store, incomingObject);
-
-  const fieldName = fieldNameFromStoreName(String(property));
-  const typeDotName = `${parentType}.${fieldName}`;
-
-  if (warnings.has(typeDotName)) return;
-  warnings.add(typeDotName);
-
-  const childTypenames: string[] = [];
-  // Arrays do not have __typename fields, and always need a custom merge
-  // function, even if their elements are normalized entities.
-  if (!Array.isArray(existing) &&
-      !Array.isArray(incoming)) {
-    [existing, incoming].forEach(child => {
-      const typename = getTypenameFromStoreObject(store, child);
-      if (typeof typename === "string" &&
-          !childTypenames.includes(typename)) {
-        childTypenames.push(typename);
-      }
-    });
-  }
-
-  invariant.warn(
-`Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
-
-To address this problem (which is not a bug in Apollo Client), ${
-  childTypenames.length
-    ? "either ensure that objects of type " +
-        childTypenames.join(" and ") + " have IDs, or "
-    : ""
-}define a custom merge function for the ${
-  typeDotName
-} field, so the InMemoryCache can safely merge these objects:
-
-  existing: ${JSON.stringify(existing).slice(0, 1000)}
-  incoming: ${JSON.stringify(incoming).slice(0, 1000)}
-
-For more information about these options, please refer to the documentation:
-
-  * Ensuring entity objects have IDs: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-configuration/#generating-unique-identifiers
-
-  * Defining custom merge functions: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-field-behavior/#merging-non-normalized-objects
-`
-  );
 }
 
 export function supportsResultCaching(store: any): store is EntityStore {

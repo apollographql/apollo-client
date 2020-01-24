@@ -36,8 +36,11 @@ export abstract class EntityStore implements NormalizedCache {
     return { ...this.data };
   }
 
-  public has(dataId: string): boolean {
-    return this.lookup(dataId, true) !== void 0;
+  public has(dataId: string, fieldName?: string): boolean {
+    const found = fieldName
+      ? this.get(dataId, fieldName)
+      : this.lookup(dataId, true);
+    return found !== void 0;
   }
 
   public get(dataId: string, fieldName: string): StoreValue {

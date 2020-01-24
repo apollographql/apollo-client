@@ -605,7 +605,7 @@ export class Policies {
           ? policies.storageTrie.lookupArray(storageKeys)
           : null;
 
-        return merge(existing, applied, {
+        return merge(maybeDeepFreeze(existing), maybeDeepFreeze(applied), {
           args: argumentsObjectFromField(field, variables),
           field,
           fieldName,

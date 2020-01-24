@@ -483,33 +483,45 @@ function warnAboutDataLoss(
   const existing = existingObject[property];
   const incoming = incomingObject[property];
 
-  if (!isReference(existing) &&
-      !isReference(incoming) &&
-      !Object.keys(existing).every(key => hasOwn.call(incoming, key))) {
-    const parentType =
-      getTypenameFromStoreObject(store, existingObject) ||
-      getTypenameFromStoreObject(store, incomingObject);
-    const fieldName = fieldNameFromStoreName(String(property));
-    const typeDotName = `${parentType}.${fieldName}`;
+  // It's always safe to replace a reference, since it refers to data
+  // safely stored elsewhere.
+  if (isReference(existing)) return;
 
-    if (warnings.has(typeDotName)) return;
-    warnings.add(typeDotName);
+  // If we're replacing every key of the existing object, then the
+  // existing data would be overwritten even if the objects were
+  // normalized, so warning would not be helpful here.
+  if (Object.keys(existing).every(
+    isReference(incoming)
+      ? key => store.has(incoming.__ref, key)
+      : key => hasOwn.call(incoming, key))) {
+    return;
+  }
 
-    const childTypenames: string[] = [];
-    // Arrays always need a custom merge function, even if their elements
-    // are normalized entities.
-    if (!Array.isArray(existing) &&
-        !Array.isArray(incoming)) {
-      [existing, incoming].forEach(child => {
-        const typename = getTypenameFromStoreObject(store, child);
-        if (typeof typename === "string" &&
-            !childTypenames.includes(typename)) {
-          childTypenames.push(typename);
-        }
-      });
-    }
+  const parentType =
+    getTypenameFromStoreObject(store, existingObject) ||
+    getTypenameFromStoreObject(store, incomingObject);
 
-    invariant.warn(
+  const fieldName = fieldNameFromStoreName(String(property));
+  const typeDotName = `${parentType}.${fieldName}`;
+
+  if (warnings.has(typeDotName)) return;
+  warnings.add(typeDotName);
+
+  const childTypenames: string[] = [];
+  // Arrays do not have __typename fields, and always need a custom merge
+  // function, even if their elements are normalized entities.
+  if (!Array.isArray(existing) &&
+      !Array.isArray(incoming)) {
+    [existing, incoming].forEach(child => {
+      const typename = getTypenameFromStoreObject(store, child);
+      if (typeof typename === "string" &&
+          !childTypenames.includes(typename)) {
+        childTypenames.push(typename);
+      }
+    });
+  }
+
+  invariant.warn(
 `Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
 
 To address this problem (which is not a bug in Apollo Client), ${
@@ -530,8 +542,7 @@ For more information about these options, please refer to the documentation:
 
   * Defining custom merge functions: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-field-behavior/#merging-non-normalized-objects
 `
-    );
-  }
+  );
 }
 
 export function supportsResultCaching(store: any): store is EntityStore {

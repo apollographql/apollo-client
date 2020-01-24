@@ -469,6 +469,8 @@ const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
   return incoming;
 }
 
+const warnings = new Set<string>();
+
 function warnAboutDataLoss(
   existingObject: Record<string | number, any>,
   incomingObject: Record<string | number, any>,
@@ -481,11 +483,14 @@ function warnAboutDataLoss(
   if (!isReference(existing) &&
       !isReference(incoming) &&
       !Object.keys(existing).every(key => hasOwn.call(incoming, key))) {
-    const fieldName = fieldNameFromStoreName(String(property));
-
     const parentType =
       getTypenameFromStoreObject(store, existingObject) ||
       getTypenameFromStoreObject(store, incomingObject);
+    const fieldName = fieldNameFromStoreName(String(property));
+    const typeDotName = `${parentType}.${fieldName}`;
+
+    if (warnings.has(typeDotName)) return;
+    warnings.add(typeDotName);
 
     const childTypenames: string[] = [];
     // Arrays always need a custom merge function, even if their elements
@@ -510,9 +515,7 @@ To address this problem (which is not a bug in Apollo Client), ${
         childTypenames.join(" and ") + " have IDs, or "
     : ""
 }define a custom merge function for the ${
-  parentType
-}.${
-  fieldName
+  typeDotName
 } field, so the InMemoryCache can safely merge these objects:
 
   existing: ${JSON.stringify(existing).slice(0, 1000)}

@@ -71,4 +71,29 @@ export { Observable } from '../utilities/observables/Observable';
 
 /* Supporting */
 
-export { default as gql } from 'graphql-tag';
+// Note that importing `gql` by itself, then destructuring
+// additional properties separately before exporting, is intentional.
+// Due to the way the `graphql-tag` library is setup, certain bundlers
+// can't find the properties added to the exported `gql` function without
+// additional guidance (e.g. Rollup - see
+// https://rollupjs.org/guide/en/#error-name-is-not-exported-by-module).
+// Instead of having people that are using bundlers with `@apollo/client` add
+// extra bundler config to help `graphql-tag` exports be found (which would be
+// awkward since they aren't importing `graphql-tag` themselves), this
+// workaround of pulling the extra properties off the `gql` function,
+// then re-exporting them separately, helps keeps bundlers happy without any
+// additional config changes.
+import gql from 'graphql-tag';
+const {
+  resetCaches,
+  disableFragmentWarnings,
+  enableExperimentalFragmentVariables,
+  disableExperimentalFragmentVariables
+} = gql;
+export {
+  gql,
+  resetCaches,
+  disableFragmentWarnings,
+  enableExperimentalFragmentVariables,
+  disableExperimentalFragmentVariables
+};

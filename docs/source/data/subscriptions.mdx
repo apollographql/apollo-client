@@ -84,7 +84,8 @@ const wsLink = new WebSocketLink({
 ```
 
 ```js
-import { split, HttpLink, getMainDefinition } from '@apollo/client';
+import { split, HttpLink } from '@apollo/client';
+import { getMainDefinition } from '@apollo/client/utilities';
 import { WebSocketLink } from '@apollo/link-ws';
 
 // Create an http link:

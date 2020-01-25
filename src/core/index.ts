@@ -66,11 +66,7 @@ export { createHttpLink } from '../link/http/createHttpLink';
 export { HttpLink } from '../link/http/HttpLink';
 export { fromError } from '../link/utils/fromError';
 export { ServerError, throwServerError } from '../link/utils/throwServerError';
-
-/* Utilities */
-
 export { Observable } from '../utilities/observables/Observable';
-export { getMainDefinition } from '../utilities/graphql/getFromAST';
 
 /* Supporting */
 

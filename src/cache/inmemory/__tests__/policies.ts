@@ -397,7 +397,7 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
-    it("assumes keyArgs:false when read or merge function present", function () {
+    it("assumes keyArgs:false when read and merge function present", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           TypeA: {
@@ -525,7 +525,7 @@ describe("type policies", function () {
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
           __typename: "Query",
-          types: [
+          'types({"from":"A","to":"F"})': [
             {
               __typename: "TypeA",
             },

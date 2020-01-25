@@ -65,6 +65,7 @@ export { selectURI } from '../link/http/selectURI';
 export { createHttpLink } from '../link/http/createHttpLink';
 export { HttpLink } from '../link/http/HttpLink';
 export { fromError } from '../link/utils/fromError';
+export { toPromise } from '../link/utils/toPromise';
 export { ServerError, throwServerError } from '../link/utils/throwServerError';
 export { Observable } from '../utilities/observables/Observable';
 

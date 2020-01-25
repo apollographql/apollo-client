@@ -53,7 +53,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  private lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
+  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
     // The has method (above) calls lookup with dependOnExistence = true, so
     // that it can later be invalidated when we add or remove a StoreObject for
     // this dataId. Any consumer who cares about the contents of the StoreObject
@@ -67,8 +67,10 @@ export abstract class EntityStore implements NormalizedCache {
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
     const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming, this);
+    // Even if merged === existing, existing may have come from a lower
+    // layer, so we always need to set this.data[dataId] on this level.
+    this.data[dataId] = merged;
     if (merged !== existing) {
-      this.data[dataId] = merged;
       delete this.refs[dataId];
       if (this.group.caching) {
         // If we added a new StoreObject where there was previously none, dirty
@@ -387,9 +389,16 @@ class Layer extends EntityStore {
 
     if (layerId === this.id) {
       // Dirty every ID we're removing.
-      // TODO Some of these IDs could escape dirtying if value unchanged.
       if (this.group.caching) {
-        Object.keys(this.data).forEach(dataId => this.delete(dataId));
+        Object.keys(this.data).forEach(dataId => {
+          // If this.data[dataId] contains nothing different from what
+          // lies beneath, we can avoid dirtying this dataId and all of
+          // its fields, and simply discard this Layer. The only reason we
+          // call this.delete here is to dirty the removed fields.
+          if (this.data[dataId] !== (parent as Layer).lookup(dataId)) {
+            this.delete(dataId);
+          }
+        });
       }
       return parent;
     }

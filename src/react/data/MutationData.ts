@@ -87,7 +87,8 @@ export class MutationData<
       update,
       context: mutationContext = {},
       awaitRefetchQueries = false,
-      fetchPolicy
+      fetchPolicy,
+      errorPolicy,
     } = this.getOptions();
     const mutateOptions = { ...mutationFunctionOptions };
 
@@ -107,6 +108,7 @@ export class MutationData<
       update,
       context: mutationContext,
       fetchPolicy,
+      errorPolicy,
       variables: mutateVariables,
       ...mutateOptions
     });

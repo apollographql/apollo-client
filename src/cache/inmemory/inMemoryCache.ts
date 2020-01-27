@@ -131,13 +131,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
       return null;
     }
-    return this.storeReader.readQueryFromStore({
-      store,
-      query: options.query,
-      variables: options.variables,
-      rootId: options.rootId,
-      config: this.config,
-    }) || null;
+
+    try {
+      return this.storeReader.readQueryFromStore({
+        store,
+        query: options.query,
+        variables: options.variables,
+        rootId: options.rootId,
+        config: this.config,
+      }) || null;
+    } catch (e) {
+      return null;
+    }
   }
 
   public write(options: Cache.WriteOptions): void {

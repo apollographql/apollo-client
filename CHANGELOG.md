@@ -96,6 +96,9 @@
 - Fully removed `prettier`. The Apollo Client team has decided to no longer automatically enforce code formatting across the codebase. In most cases existing code styles should be followed as much as possible, but this is not a hard and fast rule.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5227](https://github.com/apollographql/apollo-client/pull/5227)
 
+- Make sure `ApolloContext` plays nicely with IE11 when storing the shared context.  <br/>
+  [@ms](https://github.com/ms) in [#5840](https://github.com/apollographql/apollo-client/pull/5840)
+
 ### Bug Fixes
 
 - `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>

@@ -374,7 +374,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: DataProxy.Query<TVariables>,
     optimistic: boolean = false,
   ): T | null {
-    return this.cache.readQuery<T, TVariables>(options, optimistic);
+    try {
+      return this.cache.readQuery<T, TVariables>(options, optimistic);
+    } catch (e) {
+      return null;
+    }
   }
 
   /**

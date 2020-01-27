@@ -102,15 +102,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         if (supportsResultCaching(store)) {
           const { optimistic, rootId, variables } = c;
           return store.makeCacheKey(
-            c.query,
-            // Different watches can have the same query, optimistic
-            // status, rootId, and variables, but if their callbacks are
-            // different, the (identical) result needs to be delivered to
-            // each distinct callback. The easiest way to achieve that
-            // separation is to include c.callback in the cache key for
-            // maybeBroadcastWatch calls. See issue #5733.
-            c.callback,
-            JSON.stringify({ optimistic, rootId, variables }),
+              c.query,
+              // Different watches can have the same query, optimistic
+              // status, rootId, and variables, but if their callbacks are
+              // different, the (identical) result needs to be delivered to
+              // each distinct callback. The easiest way to achieve that
+              // separation is to include c.callback in the cache key for
+              // maybeBroadcastWatch calls. See issue #5733.
+              c.callback,
+              JSON.stringify({ optimistic, rootId, variables }),
           );
         }
       }
@@ -132,17 +132,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return null;
     }
 
-    try {
-      return this.storeReader.readQueryFromStore({
-        store,
-        query: options.query,
-        variables: options.variables,
-        rootId: options.rootId,
-        config: this.config,
-      }) || null;
-    } catch (e) {
-      return null;
-    }
+    return this.storeReader.readQueryFromStore({
+      store,
+      query: options.query,
+      variables: options.variables,
+      rootId: options.rootId,
+      config: this.config,
+    }) || null;
   }
 
   public write(options: Cache.WriteOptions): void {
@@ -231,11 +227,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public performTransaction(
-    transaction: (proxy: InMemoryCache) => any,
-    // This parameter is not part of the performTransaction signature inherited
-    // from the ApolloCache abstract class, but it's useful because it saves us
-    // from duplicating this implementation in recordOptimisticTransaction.
-    optimisticId?: string,
+      transaction: (proxy: InMemoryCache) => any,
+      // This parameter is not part of the performTransaction signature inherited
+      // from the ApolloCache abstract class, but it's useful because it saves us
+      // from duplicating this implementation in recordOptimisticTransaction.
+      optimisticId?: string,
   ) {
     const perform = (layer?: EntityStore) => {
       const proxy: InMemoryCache = Object.create(this);
@@ -267,8 +263,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public recordOptimisticTransaction(
-    transaction: Transaction<NormalizedCacheObject>,
-    id: string,
+      transaction: Transaction<NormalizedCacheObject>,
+      id: string,
   ) {
     return this.performTransaction(transaction, id);
   }
@@ -299,11 +295,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // if the data that would be broadcast has changed.
   private maybeBroadcastWatch(c: Cache.WatchOptions) {
     c.callback(
-      this.diff({
-        query: c.query,
-        variables: c.variables,
-        optimistic: c.optimistic,
-      }),
+        this.diff({
+          query: c.query,
+          variables: c.variables,
+          optimistic: c.optimistic,
+        }),
     );
   }
 

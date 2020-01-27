@@ -2340,8 +2340,8 @@ describe('client', () => {
       expect(count).toEqual(2);
 
       try {
-        client.readQuery({ query });
-        fail('should not see any data');
+        const res = client.readQuery({ query });
+        expect(res).toEqual(null);
       } catch (e) {
         expect(e.message).toMatch(/Can't find field author on ROOT_QUERY object/);
       }

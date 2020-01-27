@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
-import { makeReference } from '../../../utilities/graphql/storeUtils';
+import { makeReference } from '../../../core';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { withError } from './diffAgainstStore';
 import { Policies } from '../policies';
@@ -553,7 +553,7 @@ describe('reading from the store', () => {
           }
         `,
       });
-    }).toThrowError(/field missingField on object/);
+    }).toThrowError(/Can't find field missingField on ROOT_QUERY object/);
   });
 
   it('runs a nested query where the reference is null', () => {

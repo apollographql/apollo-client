@@ -1507,7 +1507,7 @@ describe('writing to the store', () => {
     });
 
     Object.keys(store.toObject()).forEach(field => {
-      expect(store.get(field)).toEqual(newStore.get(field));
+      expect((store as any).lookup(field)).toEqual((newStore as any).lookup(field));
     });
   });
 
@@ -1543,7 +1543,7 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('1')).toEqual(result.todos[0]);
+      expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
     });
 
     it('should warn when it receives the wrong data with non-union fragments', () => {
@@ -1569,7 +1569,7 @@ describe('writing to the store', () => {
           result,
         });
 
-        expect(newStore.get('1')).toEqual(result.todos[0]);
+        expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
       }, /Missing field description/);
     });
 
@@ -1623,7 +1623,7 @@ describe('writing to the store', () => {
           result,
         });
 
-        expect(newStore.get('1')).toEqual(result.todos[0]);
+        expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
       }, /Missing field price/);
     });
 
@@ -1651,7 +1651,7 @@ describe('writing to the store', () => {
           result,
         });
 
-        expect(newStore.get('1')).toEqual(result.todos[0]);
+        expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
       }, /Missing field __typename/);
     });
 
@@ -1671,7 +1671,7 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('ROOT_QUERY')).toEqual({
+      expect((newStore as any).lookup('ROOT_QUERY')).toEqual({
         __typename: 'Query',
         todos: null,
       });
@@ -1700,7 +1700,7 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
+      expect((newStore as any).lookup('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
       expect(console.warn).not.toBeCalled();
       console.warn = originalWarn;
     });

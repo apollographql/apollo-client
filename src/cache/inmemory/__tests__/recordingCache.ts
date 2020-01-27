@@ -1,9 +1,13 @@
-import { NormalizedCacheObject } from '../types';
+import { NormalizedCacheObject, StoreObject } from '../types';
 import { EntityStore } from '../entityStore';
 
 describe('Optimistic EntityStore layering', () => {
   function makeLayer(root: EntityStore) {
     return root.addLayer('whatever', () => {});
+  }
+
+  function lookup(store: EntityStore, dataId: string) {
+    return (store as any).lookup(dataId) as StoreObject;
   }
 
   describe('returns correct values during recording', () => {
@@ -24,23 +28,23 @@ describe('Optimistic EntityStore layering', () => {
     });
 
     it('should passthrough values if not defined in recording', () => {
-      expect(store.get('Human')).toBe(data.Human);
-      expect(store.get('Animal')).toBe(data.Animal);
+      expect(lookup(store, 'Human')).toBe(data.Human);
+      expect(lookup(store, 'Animal')).toBe(data.Animal);
     });
 
     it('should return values defined during recording', () => {
       store.merge('Human', dataToRecord.Human);
-      expect(store.get('Human')).toEqual(dataToRecord.Human);
-      expect(underlyingStore.get('Human')).toBe(data.Human);
+      expect(lookup(store, 'Human')).toEqual(dataToRecord.Human);
+      expect(lookup(underlyingStore, 'Human')).toBe(data.Human);
     });
 
     it('should return undefined for values deleted during recording', () => {
-      expect(store.get('Animal')).toBe(data.Animal);
+      expect(lookup(store, 'Animal')).toBe(data.Animal);
       // delete should be registered in the recording:
       store.delete('Animal');
-      expect(store.get('Animal')).toBeUndefined();
+      expect(lookup(store, 'Animal')).toBeUndefined();
       expect(store.toObject()).toHaveProperty('Animal');
-      expect(underlyingStore.get('Animal')).toBe(data.Animal);
+      expect(lookup(underlyingStore, 'Animal')).toBe(data.Animal);
     });
   });
 

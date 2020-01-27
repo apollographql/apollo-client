@@ -37,31 +37,44 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public has(dataId: string): boolean {
-    return this.get(dataId) !== void 0;
+    return this.lookup(dataId, true) !== void 0;
   }
 
-  public get(dataId: string): StoreObject {
-    this.group.depend(dataId);
-    return this.data[dataId];
+  public get(dataId: string, fieldName: string): StoreValue {
+    this.group.depend(dataId, fieldName);
+    if (hasOwn.call(this.data, dataId)) {
+      const storeObject = this.data[dataId];
+      if (storeObject && hasOwn.call(storeObject, fieldName)) {
+        return storeObject[fieldName];
+      }
+    }
+    if (this instanceof Layer) {
+      return this.parent.get(dataId, fieldName);
+    }
   }
 
-  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
-    this.group.depend(dataId, storeFieldName);
-    const storeObject = this.data[dataId];
-    return storeObject && storeObject[storeFieldName];
+  private lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
+    // The has method (above) calls lookup with dependOnExistence = true, so
+    // that it can later be invalidated when we add or remove a StoreObject for
+    // this dataId. Any consumer who cares about the contents of the StoreObject
+    // should not rely on this dependency, since the contents could change
+    // without the object being added or removed.
+    if (dependOnExistence) this.group.depend(dataId, "__exists");
+    return hasOwn.call(this.data, dataId) ? this.data[dataId] :
+      this instanceof Layer ? this.parent.lookup(dataId, dependOnExistence) : void 0;
   }
 
   public merge(dataId: string, incoming: StoreObject): void {
-    const existing = this.get(dataId);
-    const merged = new DeepMerger(storeObjectReconciler)
-      .merge(existing, incoming, this);
+    const existing = this.lookup(dataId);
+    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming, this);
     if (merged !== existing) {
       this.data[dataId] = merged;
       delete this.refs[dataId];
       if (this.group.caching) {
-        // First, invalidate any dependents that called get rather than
-        // getFieldValue.
-        this.group.dirty(dataId);
+        // If we added a new StoreObject where there was previously none, dirty
+        // anything that depended on the existence of this dataId, such as the
+        // EntityStore#has method.
+        if (!existing) this.group.dirty(dataId, "__exists");
         // Now invalidate dependents who called getFieldValue for any
         // fields that are changing as a result of this merge.
         Object.keys(incoming).forEach(storeFieldName => {
@@ -78,24 +91,20 @@ export abstract class EntityStore implements NormalizedCache {
   // fields of that entity whose names match fieldName, according to the
   // fieldNameFromStoreName helper function.
   public delete(dataId: string, fieldName?: string) {
-    const storeObject = this.get(dataId);
+    const storeObject = this.lookup(dataId);
 
     if (storeObject) {
       // In case someone passes in a storeFieldName (field.name.value +
       // arguments key), normalize it down to just the field name.
       fieldName = fieldName && fieldNameFromStoreName(fieldName);
 
-      const storeNamesToDelete: string[] = [];
-      Object.keys(storeObject).forEach(storeFieldName => {
+      const storeNamesToDelete = Object.keys(storeObject).filter(
         // If the field value has already been set to undefined, we do not
         // need to delete it again.
-        if (storeObject[storeFieldName] !== void 0 &&
-            // If no fieldName provided, delete all fields from storeObject.
-            // If provided, delete all fields matching fieldName.
-            (!fieldName || fieldName === fieldNameFromStoreName(storeFieldName))) {
-          storeNamesToDelete.push(storeFieldName);
-        }
-      });
+        storeFieldName => storeObject[storeFieldName] !== void 0 &&
+          // If no fieldName provided, delete all fields from storeObject.
+          // If provided, delete all fields matching fieldName.
+          (!fieldName || fieldName === fieldNameFromStoreName(storeFieldName)));
 
       if (storeNamesToDelete.length) {
         // If we only have to worry about the Root layer of the store,
@@ -119,7 +128,7 @@ export abstract class EntityStore implements NormalizedCache {
         // delete this.rootIds[dataId];
         delete this.refs[dataId];
 
-        const fieldsToDirty: Record<string, true> = Object.create(null);
+        const fieldsToDirty = new Set<string>();
 
         if (fieldName) {
           // If we have a fieldName and it matches more than zero fields,
@@ -132,25 +141,38 @@ export abstract class EntityStore implements NormalizedCache {
           // Although it would be logically correct to dirty each
           // storeFieldName in the loop above, we know that they all have
           // the same name, according to fieldNameFromStoreName.
-          fieldsToDirty[fieldName] = true;
+          fieldsToDirty.add(fieldName);
         } else {
           // If no fieldName was provided, then we delete the whole entity
           // from the cache.
           remove(this.data, dataId);
           storeNamesToDelete.forEach(storeFieldName => {
-            const fieldName = fieldNameFromStoreName(storeFieldName);
-            fieldsToDirty[fieldName] = true;
+            fieldsToDirty.add(fieldNameFromStoreName(storeFieldName));
           });
+          // Let dependents (such as EntityStore#has) know that this dataId has
+          // been removed from this layer of the store.
+          fieldsToDirty.add("__exists");
         }
 
         if (this.group.caching) {
-          this.group.dirty(dataId);
-          Object.keys(fieldsToDirty).forEach(fieldName => {
+          fieldsToDirty.forEach(fieldName => {
             this.group.dirty(dataId, fieldName);
           });
         }
+
+        return true;
       }
     }
+
+    return false;
+  }
+
+  public evict(dataId: string, fieldName?: string): boolean {
+    let evicted = this.delete(dataId, fieldName);
+    if (this instanceof Layer) {
+      evicted = this.parent.evict(dataId, fieldName) || evicted;
+    }
+    return evicted;
   }
 
   public clear(): void {
@@ -190,10 +212,14 @@ export abstract class EntityStore implements NormalizedCache {
     return 0;
   }
 
-  // This method will be overridden in the Layer class to merge root IDs for all
-  // layers (including the root).
-  public getRootIdSet() {
-    return new Set(Object.keys(this.rootIds));
+  // Return a Set<string> of all the ID strings that have been retained by
+  // this layer/root *and* any layers/roots beneath it.
+  public getRootIdSet(ids = new Set<string>()) {
+    Object.keys(this.rootIds).forEach(ids.add, ids);
+    if (this instanceof Layer) {
+      this.parent.getRootIdSet(ids);
+    }
+    return ids;
   }
 
   // The goal of garbage collection is to remove IDs from the Root layer of the
@@ -276,19 +302,15 @@ class CacheGroup {
     this.d = caching ? dep<string>() : null;
   }
 
-  public depend(dataId: string, storeFieldName?: string) {
+  public depend(dataId: string, storeFieldName: string) {
     if (this.d) {
       this.d(makeDepKey(dataId, storeFieldName));
     }
   }
 
-  public dirty(dataId: string, storeFieldName?: string) {
+  public dirty(dataId: string, storeFieldName: string) {
     if (this.d) {
-      this.d.dirty(
-        typeof storeFieldName === "string"
-          ? makeDepKey(dataId, storeFieldName)
-          : makeDepKey(dataId),
-      );
+      this.d.dirty(makeDepKey(dataId, storeFieldName));
     }
   }
 
@@ -297,12 +319,8 @@ class CacheGroup {
   public readonly keyMaker = new KeyTrie<object>(canUseWeakMap);
 }
 
-function makeDepKey(dataId: string, storeFieldName?: string) {
-  const parts = [dataId];
-  if (typeof storeFieldName === "string") {
-    parts.push(fieldNameFromStoreName(storeFieldName));
-  }
-  return JSON.stringify(parts);
+function makeDepKey(dataId: string, storeFieldName: string) {
+  return JSON.stringify([dataId, fieldNameFromStoreName(storeFieldName)]);
 }
 
 export namespace EntityStore {
@@ -348,7 +366,7 @@ export namespace EntityStore {
 class Layer extends EntityStore {
   constructor(
     public readonly id: string,
-    public readonly parent: Layer | EntityStore.Root,
+    public readonly parent: EntityStore,
     public readonly replay: (layer: EntityStore) => any,
     public readonly group: CacheGroup,
   ) {
@@ -388,48 +406,6 @@ class Layer extends EntityStore {
       ...this.parent.toObject(),
       ...this.data,
     };
-  }
-
-  public get(dataId: string): StoreObject {
-    if (hasOwn.call(this.data, dataId)) {
-      return super.get(dataId);
-    }
-
-    // If this layer has a this.depend function and it's not the one
-    // this.parent is using, we need to depend on the given dataId using
-    // this.depend before delegating to the parent. This check saves us
-    // from calling this.depend for every optimistic layer we examine, but
-    // ensures we call this.depend in the last optimistic layer before we
-    // reach the root layer.
-
-    if (this.group.caching && this.group !== this.parent.group) {
-      this.group.depend(dataId);
-    }
-
-    return this.parent.get(dataId);
-  }
-
-  public getFieldValue(dataId: string, storeFieldName: string): StoreValue {
-    if (hasOwn.call(this.data, dataId)) {
-      const storeObject = this.data[dataId];
-      if (storeObject && hasOwn.call(storeObject, storeFieldName)) {
-        return super.getFieldValue(dataId, storeFieldName);
-      }
-    }
-
-    if (this.group.caching && this.group !== this.parent.group) {
-      this.group.depend(dataId, storeFieldName);
-    }
-
-    return this.parent.getFieldValue(dataId, storeFieldName);
-  }
-
-  // Return a Set<string> of all the ID strings that have been retained by this
-  // Layer *and* any layers/roots beneath it.
-  public getRootIdSet(): Set<string> {
-    const ids = this.parent.getRootIdSet();
-    super.getRootIdSet().forEach(ids.add, ids);
-    return ids;
   }
 
   public findChildRefIds(dataId: string): Record<string, true> {

@@ -20,6 +20,7 @@ import { isNonEmptyArray } from '../utilities/common/arrays';
 
 export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
   error?: ApolloError;
+  partial?: boolean;
 };
 
 export interface FetchMoreOptions<
@@ -131,8 +132,12 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(): ApolloCurrentQueryResult<TData> {
-    const { lastResult, lastError } = this;
-    const { fetchPolicy } = this.options;
+    const {
+      lastResult,
+      lastError,
+      options: { fetchPolicy },
+    } = this;
+
     const isNetworkFetchPolicy =
       fetchPolicy === 'network-only' ||
       fetchPolicy === 'no-cache';
@@ -145,7 +150,7 @@ export class ObservableQuery<
 
     const result: ApolloCurrentQueryResult<TData> = {
       data: !lastError && lastResult && lastResult.data || void 0,
-      error: this.lastError,
+      error: lastError,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
       stale: lastResult ? lastResult.stale : false,
@@ -154,6 +159,9 @@ export class ObservableQuery<
     if (this.isTornDown) {
       return result;
     }
+
+    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
+    Object.assign(result, { data, partial });
 
     const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
     if (queryStoreValue) {
@@ -176,11 +184,10 @@ export class ObservableQuery<
       // the original `ObservableQuery`. We'll update the observable query
       // variables here to match, so retrieving from the cache doesn't fail.
       if (queryStoreValue.variables) {
-        this.options.variables = {
+        this.variables = this.options.variables = {
           ...this.options.variables,
           ...(queryStoreValue.variables as TVariables),
         };
-        this.variables = this.options.variables;
       }
 
       Object.assign(result, {
@@ -193,7 +200,10 @@ export class ObservableQuery<
       }
     }
 
-    this.updateLastResult(result);
+    if (!partial) {
+      result.stale = false;
+      this.updateLastResult(result);
+    }
 
     return result;
   }

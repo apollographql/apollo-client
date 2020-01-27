@@ -219,11 +219,11 @@ function Html({ content, state }) {
 
 If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work.
 
-One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](https://www.apollographql.com/docs/link/links/schema) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
+One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](../api/link/apollo-link-schema/) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
 
 ```js
 import { ApolloClient } from '@apollo/client'
-import { SchemaLink } from 'apollo-link-schema';
+import { SchemaLink } from '@apollo/link-schema';
 
 // ...
 

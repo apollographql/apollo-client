@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference } from '../../../utilities/graphql/storeUtils';
+import { makeReference } from '../../../core';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 disableFragmentWarnings();
@@ -597,6 +597,223 @@ describe('Cache', () => {
         ).toEqual({ a: 1, b: 2, c: 3 });
       },
     );
+
+    it("should not accidentally depend on unrelated entity fields", () => {
+      const cache = new InMemoryCache({
+        resultCaching: true,
+      });
+
+      const firstNameFragment = gql`
+        fragment FirstNameFragment on Person {
+          firstName
+        }
+      `;
+
+      const lastNameFragment = gql`
+        fragment LastNameFragment on Person {
+          lastName
+        }
+      `;
+
+      const bothNamesData = {
+        __typename: "Person",
+        id: 123,
+        firstName: "Ben",
+        lastName: "Newman",
+      };
+
+      const id = cache.identify(bothNamesData);
+
+      cache.writeFragment({
+        id,
+        fragment: firstNameFragment,
+        data: bothNamesData,
+      });
+
+      expect(cache.extract()).toEqual({
+        "Person:123": {
+          __typename: "Person",
+          firstName: "Ben",
+        },
+      });
+
+      const firstNameResult = cache.readFragment({
+        id,
+        fragment: firstNameFragment,
+      });
+
+      expect(firstNameResult).toEqual({
+        __typename: "Person",
+        firstName: "Ben",
+      });
+
+      cache.writeFragment({
+        id,
+        fragment: lastNameFragment,
+        data: bothNamesData,
+      });
+
+      expect(cache.extract()).toEqual({
+        "Person:123": {
+          __typename: "Person",
+          firstName: "Ben",
+          lastName: "Newman",
+        },
+      });
+
+      // This is the crucial test: modifying the lastName field should not
+      // invalidate results that did not depend on the lastName field.
+      expect(cache.readFragment({
+        id,
+        fragment: firstNameFragment,
+      })).toBe(firstNameResult);
+
+      const lastNameResult = cache.readFragment({
+        id,
+        fragment: lastNameFragment,
+      });
+
+      expect(lastNameResult).toEqual({
+        __typename: "Person",
+        lastName: "Newman",
+      });
+
+      cache.writeFragment({
+        id,
+        fragment: firstNameFragment,
+        data: {
+          ...bothNamesData,
+          firstName: "Benjamin",
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        "Person:123": {
+          __typename: "Person",
+          firstName: "Benjamin",
+          lastName: "Newman",
+        },
+      });
+
+      const benjaminResult = cache.readFragment({
+        id,
+        fragment: firstNameFragment,
+      });
+
+      expect(benjaminResult).toEqual({
+        __typename: "Person",
+        firstName: "Benjamin",
+      });
+
+      // Still the same as it was?
+      expect(firstNameResult).toEqual({
+        __typename: "Person",
+        firstName: "Ben",
+      });
+
+      // Updating the firstName should not have invalidated the
+      // previously-read lastNameResult.
+      expect(cache.readFragment({
+        id,
+        fragment: lastNameFragment,
+      })).toBe(lastNameResult);
+    });
+
+    it("should not return null when ID found in optimistic layer", () => {
+      const cache = new InMemoryCache();
+
+      const fragment = gql`
+        fragment NameFragment on Person {
+          firstName
+          lastName
+        }
+      `;
+
+      const data = {
+        __typename: "Person",
+        id: 321,
+        firstName: "Hugh",
+        lastName: "Willson",
+      };
+
+      const id = cache.identify(data);
+
+      cache.recordOptimisticTransaction(proxy => {
+        proxy.writeFragment({ id, fragment, data });
+      }, "optimistic Hugh");
+
+      expect(cache.extract(false)).toEqual({});
+      expect(cache.extract(true)).toEqual({
+        "Person:321": {
+          __typename: "Person",
+          firstName: "Hugh",
+          lastName: "Willson",
+        },
+      });
+
+      expect(
+        cache.readFragment(
+          { id, fragment },
+          false, // not optimistic
+        ),
+      ).toBe(null);
+
+      expect(
+        cache.readFragment(
+          { id, fragment },
+          true, // optimistic
+        ),
+      ).toEqual({
+        __typename: "Person",
+        firstName: "Hugh",
+        lastName: "Willson",
+      });
+
+      cache.writeFragment({
+        id,
+        fragment,
+        data: {
+          ...data,
+          firstName: "HUGH",
+          lastName: "WILLSON",
+        },
+      });
+
+      expect(
+        cache.readFragment(
+          { id, fragment },
+          false, // not optimistic
+        ),
+      ).toEqual({
+        __typename: "Person",
+        firstName: "HUGH",
+        lastName: "WILLSON",
+      });
+
+      expect(
+        cache.readFragment(
+          { id, fragment },
+          true, // optimistic
+        ),
+      ).toEqual({
+        __typename: "Person",
+        firstName: "Hugh",
+        lastName: "Willson",
+      });
+
+      cache.removeOptimistic("optimistic Hugh");
+
+      expect(
+        cache.readFragment(
+          { id, fragment },
+          true, // optimistic
+        ),
+      ).toEqual({
+        __typename: "Person",
+        firstName: "HUGH",
+        lastName: "WILLSON",
+      });
+    });
   });
 
   describe('writeQuery', () => {
@@ -1322,5 +1539,112 @@ describe("InMemoryCache#broadcastWatches", function () {
       received3,
       received4,
     ]);
+  });
+});
+
+describe("cache.makeLocalVar", () => {
+  function makeCacheAndVar(resultCaching: boolean) {
+    const cache: InMemoryCache = new InMemoryCache({
+      resultCaching,
+      typePolicies: {
+        Person: {
+          fields: {
+            name() {
+              return nameVar();
+            },
+          },
+        },
+      },
+    });
+
+    const nameVar = cache.makeLocalVar("Ben");
+
+    const query = gql`
+      query {
+        onCall {
+          name
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        onCall: {
+          __typename: "Person",
+        },
+      },
+    });
+
+    return {
+      cache,
+      nameVar,
+      query,
+    };
+  }
+
+  it("should work with resultCaching enabled (default)", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(true);
+
+    const result1 = cache.readQuery({ query });
+    expect(result1).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Ben",
+      },
+    });
+
+    // No change before updating the nameVar.
+    expect(cache.readQuery({ query })).toBe(result1);
+
+    expect(nameVar()).toBe("Ben");
+    expect(nameVar("Hugh")).toBe("Hugh");
+
+    const result2 = cache.readQuery({ query });
+    expect(result2).not.toBe(result1);
+    expect(result2).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Hugh",
+      },
+    });
+
+    expect(nameVar()).toBe("Hugh");
+    expect(nameVar("James")).toBe("James");
+
+    expect(cache.readQuery({ query })).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "James",
+      },
+    });
+  });
+
+  it("should work with resultCaching disabled (unusual)", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(false);
+
+    const result1 = cache.readQuery({ query });
+    expect(result1).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Ben",
+      },
+    });
+
+    const result2 = cache.readQuery({ query });
+    // Without resultCaching, equivalent results will not be ===.
+    expect(result2).not.toBe(result1);
+    expect(result2).toEqual(result1);
+
+    expect(nameVar()).toBe("Ben");
+    expect(nameVar("Hugh")).toBe("Hugh");
+
+    const result3 = cache.readQuery({ query });
+    expect(result3).toEqual({
+      onCall: {
+        __typename: "Person",
+        name: "Hugh",
+      },
+    });
   });
 });

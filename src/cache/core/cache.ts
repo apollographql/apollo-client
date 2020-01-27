@@ -1,9 +1,28 @@
 import { DocumentNode } from 'graphql';
+import { wrap } from 'optimism';
 
 import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
-import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
+import { queryFromPojo, fragmentFromPojo } from './utils';
+
+const justTypenameQuery: DocumentNode = {
+  kind: "Document",
+  definitions: [{
+    kind: "OperationDefinition",
+    operation: "query",
+    selectionSet: {
+      kind: "SelectionSet",
+      selections: [{
+        kind: "Field",
+        name: {
+          kind: "Name",
+          value: "__typename",
+        },
+      }],
+    },
+  }],
+};
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -80,12 +99,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
+  // Make sure we compute the same (===) fragment query document every
+  // time we receive the same fragment in readFragment.
+  private getFragmentDoc = wrap(getFragmentQueryDocument);
+
   public readFragment<FragmentType, TVariables = any>(
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: this.getFragmentDoc(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
       optimistic,
@@ -110,7 +133,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       dataId: options.id,
       result: options.data,
       variables: options.variables,
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: this.getFragmentDoc(options.fragment, options.fragmentName),
     });
   }
 

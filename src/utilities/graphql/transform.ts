@@ -261,6 +261,13 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
   });
 }
 
+export interface addTypenameToDocument {
+  added(field: FieldNode): boolean;
+}
+addTypenameToDocument.added = function (field: FieldNode) {
+  return field === TYPENAME_FIELD;
+};
+
 const connectionRemoveConfig = {
   test: (directive: DirectiveNode) => {
     const willRemove = directive.name.value === 'connection';

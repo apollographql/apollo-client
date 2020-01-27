@@ -2,7 +2,7 @@
 import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
-import { wrap } from 'optimism';
+import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
@@ -42,11 +42,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
-  private policies: Policies;
 
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+
+  // Dynamically imported code can augment existing typePolicies or
+  // possibleTypes by calling cache.policies.addTypePolicies or
+  // cache.policies.addPossibletypes.
+  public readonly policies: Policies;
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -123,13 +127,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    if (typeof options.rootId === 'string' &&
-        !this.data.has(options.rootId)) {
+    const store = options.optimistic ? this.optimisticData : this.data;
+    if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
       return null;
     }
-
     return this.storeReader.readQueryFromStore({
-      store: options.optimistic ? this.optimisticData : this.data,
+      store,
       query: options.query,
       variables: options.variables,
       rootId: options.rootId,
@@ -202,15 +205,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(dataId: string, fieldName?: string): boolean {
-    if (this.optimisticData.has(dataId)) {
-      // Note that this deletion does not trigger a garbage collection, which
-      // is convenient in cases where you want to evict multiple entities before
-      // performing a single garbage collection.
-      this.optimisticData.delete(dataId, fieldName);
-      this.broadcastWatches();
-      return !this.optimisticData.has(dataId);
-    }
-    return false;
+    const evicted = this.optimisticData.evict(dataId, fieldName);
+    if (evicted) this.broadcastWatches();
+    return evicted;
   }
 
   public reset(): Promise<void> {
@@ -304,4 +301,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }),
     );
   }
+
+  public makeLocalVar<T>(value: T): LocalVar<T> {
+    return function LocalVar(newValue) {
+      if (arguments.length > 0) {
+        if (value !== newValue) {
+          value = newValue;
+          localVarDep.dirty(LocalVar);
+        }
+      } else {
+        localVarDep(LocalVar);
+      }
+      return value;
+    };
+  }
 }
+
+const localVarDep = dep<LocalVar<any>>();
+export type LocalVar<T> = (newValue?: T) => T;

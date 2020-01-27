@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference, makeReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference } from '../../../core';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
@@ -179,7 +179,7 @@ describe('diffing queries against the store', () => {
     });
 
     expect(complete).toBeTruthy();
-    expect(store.get('Person:{"id":"1"}')).toEqual({
+    expect((store as any).lookup('Person:{"id":"1"}')).toEqual({
       __typename: 'Person',
       id: '1',
       name: 'Luke Skywalker',

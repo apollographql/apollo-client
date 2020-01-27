@@ -18,6 +18,7 @@ import {
 } from '../../utilities/graphql/storeUtils';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
+import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import {
   getDefaultValues,
   getFragmentDefinitions,
@@ -48,15 +49,10 @@ interface ExecContext {
   getFieldValue: FieldValueGetter;
 };
 
-export type ExecResultMissingField = {
-  object: StoreObject;
-  fieldName: string;
-};
-
 export type ExecResult<R = any> = {
   result: R;
   // Empty array if no missing fields encountered while computing result.
-  missing?: ExecResultMissingField[];
+  missing?: InvariantError[];
 };
 
 type ExecSelectionSetOptions = {
@@ -175,15 +171,8 @@ export class StoreReader {
 
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
-
-    if (hasMissingFields && ! returnPartialData) {
-      execResult.missing!.forEach(info => {
-        throw new InvariantError(`Can't find field ${
-          info.fieldName
-        } on object ${
-          JSON.stringify(info.object, null, 2)
-        }.`);
-      });
+    if (hasMissingFields && !returnPartialData) {
+      throw execResult.missing[0];
     }
 
     return {
@@ -197,6 +186,17 @@ export class StoreReader {
     objectOrReference,
     context,
   }: ExecSelectionSetOptions): ExecResult {
+    if (isReference(objectOrReference) &&
+        !context.policies.rootTypenamesById[objectOrReference.__ref] &&
+        !context.store.has(objectOrReference.__ref)) {
+      return {
+        result: {},
+        missing: [new InvariantError(
+          `Dangling reference to missing ${objectOrReference.__ref} object`
+        )],
+      };
+    }
+
     const { fragmentMap, variables, policies, getFieldValue } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
@@ -237,10 +237,15 @@ export class StoreReader {
         );
 
         if (fieldValue === void 0) {
-          getMissing().push({
-            object: objectOrReference as StoreObject,
-            fieldName: selection.name.value,
-          });
+          if (!addTypenameToDocument.added(selection)) {
+            getMissing().push(new InvariantError(`Can't find field ${
+              selection.name.value
+            } on ${
+              isReference(objectOrReference)
+                ? objectOrReference.__ref + " object"
+                : "object " + JSON.stringify(objectOrReference, null, 2)
+            }`));
+          }
 
         } else if (Array.isArray(fieldValue)) {
           fieldValue = handleMissing(this.executeSubSelectedArray({
@@ -321,7 +326,7 @@ export class StoreReader {
     array,
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
-    let missing: ExecResultMissingField[] | undefined;
+    let missing: InvariantError[] | undefined;
 
     function handleMissing<T>(childResult: ExecResult<T>): T {
       if (childResult.missing) {

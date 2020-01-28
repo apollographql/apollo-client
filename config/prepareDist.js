@@ -82,7 +82,7 @@ function writeCjsIndex(bundleName, exportNames, includeNames = true) {
   fs.writeFileSync(`${distRoot}/${bundleName}/${bundleName}.cjs.js`, [
     "var allExports = require('../apollo-client.cjs');",
     `var names = new Set(${JSON.stringify(exportNames)});`,
-    "Object.keys(allExports).forEach(name => {",
+    "Object.keys(allExports).forEach(function (name) {",
     `  if (${filterPrefix}names.has(name)) {`,
     "    exports[name] = allExports[name];",
     "  }",

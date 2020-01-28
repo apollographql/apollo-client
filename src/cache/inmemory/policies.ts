@@ -576,78 +576,82 @@ export class Policies {
     if (isFieldValueToBeMerged(incoming)) {
       const field = incoming.__field;
       const fieldName = field.name.value;
-      const policy = policies.getFieldPolicy(
+      // This policy and its merge function are guaranteed to exist
+      // because the incoming value is a FieldValueToBeMerged object.
+      const { merge } = policies.getFieldPolicy(
         incoming.__typename, fieldName, false);
 
-      // The incoming data can have multiple layers of nested objects, so we
-      // need to handle child merges before handling parent merges. This
-      // post-order traversal also ensures that the incoming data passed to
-      // parent merge functions never contains any FieldValueToBeMerged
-      // objects for fields within child objects.
-      const applied = policies.applyMerges(
-        existing,
-        incoming.__value as T,
-        getFieldValue,
+      // If storage ends up null, that just means no options.storage object
+      // has ever been created for a read function for this field before, so
+      // there's nothing this merge function could do with options.storage
+      // that would help the read function do its work. Most merge functions
+      // will never need to worry about options.storage, but if you're reading
+      // this comment then you probably have good reasons for wanting to know
+      // esoteric details like these, you wizard, you.
+      const storage = storageKeys
+        ? policies.storageTrie.lookupArray(storageKeys)
+        : null;
+
+      incoming = merge(existing, incoming.__value, {
+        args: argumentsObjectFromField(field, variables),
+        field,
+        fieldName,
         variables,
-        storageKeys,
-      );
-
-      const merge = policy && policy.merge;
-      if (merge) {
-        // If storage ends up null, that just means no options.storage object
-        // has ever been created for a read function for this field before, so
-        // there's nothing this merge function could do with options.storage
-        // that would help the read function do its work. Most merge functions
-        // will never need to worry about options.storage, but if you're
-        // reading this comment then you probably have good reasons for
-        // wanting to know esoteric details like these, you wizard, you.
-        const storage = storageKeys
-          ? policies.storageTrie.lookupArray(storageKeys)
-          : null;
-
-        return merge(existing, applied, {
-          args: argumentsObjectFromField(field, variables),
-          field,
-          fieldName,
-          variables,
-          policies,
-          isReference,
-          toReference: policies.toReference,
-          readField<T>(
-            nameOrField: string | FieldNode,
-            foreignObjOrRef: StoreObject | Reference,
-          ) {
-            // Unlike options.readField for read functions, we do not fall
-            // back to the current object if no foreignObjOrRef is provided,
-            // because it's not clear what the current object should be for
-            // merge functions: the (possibly undefined) existing object, or
-            // the incoming object? If you think your merge function needs
-            // to read sibling fields in order to produce a new value for
-            // the current field, you might want to rethink your strategy,
-            // because that's a recipe for making merge behavior sensitive
-            // to the order in which fields are written into the cache.
-            // However, readField(name, ref) is useful for merge functions
-            // that need to deduplicate child objects and references.
-            return policies.readField<T>(
-              foreignObjOrRef,
-              nameOrField,
-              getFieldValue,
-              variables,
-            );
-          },
-          storage,
-          invalidate() {
-            if (storage) {
-              policies.fieldDep.dirty(storage);
-            }
-          },
-        }) as T;
-      }
-
-      return applied;
+        policies,
+        isReference,
+        toReference: policies.toReference,
+        readField<T>(
+          nameOrField: string | FieldNode,
+          foreignObjOrRef: StoreObject | Reference,
+        ) {
+          // Unlike options.readField for read functions, we do not fall
+          // back to the current object if no foreignObjOrRef is provided,
+          // because it's not clear what the current object should be for
+          // merge functions: the (possibly undefined) existing object, or
+          // the incoming object? If you think your merge function needs
+          // to read sibling fields in order to produce a new value for
+          // the current field, you might want to rethink your strategy,
+          // because that's a recipe for making merge behavior sensitive
+          // to the order in which fields are written into the cache.
+          // However, readField(name, ref) is useful for merge functions
+          // that need to deduplicate child objects and references.
+          return policies.readField<T>(
+            foreignObjOrRef,
+            nameOrField,
+            getFieldValue,
+            variables,
+          );
+        },
+        storage,
+        invalidate() {
+          if (storage) {
+            policies.fieldDep.dirty(storage);
+          }
+        },
+      }) as T;
     }
 
     if (incoming && typeof incoming === "object") {
+      if (isReference(incoming)) {
+        return incoming;
+      }
+
+      if (Array.isArray(incoming)) {
+        return incoming.map(item => policies.applyMerges(
+          // Items in the same position in different arrays are not
+          // necessarily related to each other, so there is no basis for
+          // merging them. Passing void here means any FieldValueToBeMerged
+          // objects within item will be handled as if there was no existing
+          // data. Also, we do not pass storageKeys because the array itself
+          // is never an entity with a __typename, so its indices can never
+          // have custom read or merge functions.
+          void 0,
+          item,
+          getFieldValue,
+          variables,
+        )) as T;
+      }
+
       const e = existing as StoreObject | Reference;
       const i = incoming as object as StoreObject;
 

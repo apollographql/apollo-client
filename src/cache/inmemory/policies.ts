@@ -5,7 +5,7 @@ import {
   FieldNode,
 } from "graphql";
 
-import { dep, KeyTrie } from 'optimism';
+import { KeyTrie } from 'optimism';
 import invariant from 'ts-invariant';
 
 import {
@@ -146,13 +146,6 @@ interface FieldFunctionOptions {
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
   storage: StorageType;
-
-  // Call this function to invalidate any cached queries that previously
-  // consumed this field. If you use options.storage to cache the result
-  // of an expensive read function, updating options.storage and then
-  // calling options.invalidate() can be a good way to deliver the new
-  // result asynchronously.
-  invalidate(): void;
 }
 
 export type FieldReadFunction<TExisting, TReadResult = TExisting> = (
@@ -489,7 +482,6 @@ export class Policies {
   }
 
   private storageTrie = new KeyTrie<StorageType>(true);
-  private fieldDep = dep<StorageType>();
 
   public readField<V = StoreValue>(
     objectOrReference: StoreObject | Reference,
@@ -519,11 +511,6 @@ export class Policies {
         storeFieldName,
       );
 
-      // By depending on the options.storage object when we call
-      // policy.read, we can easily invalidate the result of the read
-      // function when/if the options.invalidate function is called.
-      policies.fieldDep(storage);
-
       return read(existing, {
         args: typeof nameOrField === "string" ? null :
           argumentsObjectFromField(nameOrField, variables),
@@ -546,9 +533,6 @@ export class Policies {
             getFieldValue,
             variables,
           );
-        },
-        invalidate() {
-          policies.fieldDep.dirty(storage);
         },
       }) as Readonly<V>;
     }
@@ -623,11 +607,6 @@ export class Policies {
           );
         },
         storage,
-        invalidate() {
-          if (storage) {
-            policies.fieldDep.dirty(storage);
-          }
-        },
       }) as T;
     }
 

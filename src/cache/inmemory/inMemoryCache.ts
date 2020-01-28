@@ -302,7 +302,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     );
   }
 
-  public makeLocalVar<T>(value: T): LocalVar<T> {
+  public makeLocalVar<T>(value?: T): LocalVar<T> {
     return function LocalVar(newValue) {
       if (arguments.length > 0) {
         if (value !== newValue) {

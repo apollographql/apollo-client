@@ -80,6 +80,7 @@ object that was stored as part of _any_ query result. Unlike `readQuery`, calls 
 Here's an example:
 
 ```js
+const optimistic = true; // defaults to false, set to true if readFragment should re-run on optimic responses
 const todo = client.readFragment({
   id: ..., // `id` is any id that could be returned by `dataIdFromObject`.
   fragment: gql`
@@ -89,7 +90,7 @@ const todo = client.readFragment({
       completed
     }
   `,
-});
+}, optimistic);
 ```
 
 The first argument, `id`, is the [unique identifier](cache-configuration/#generating-unique-identifiers)
@@ -229,10 +230,16 @@ If the object is unreachable, it will be garbage collected during next call to `
 
 ### `evict`
 
-You can remove any normalized object from the cache with the `evict` method:
+You can remove any normalized object from the cache using the `evict` method:
 
 ```js
-cache.evict('my-object-id');
+cache.evict('my-object-id')
+```
+
+You can pass an optional second parameter to the `evict` method, that is the name of a specific field from a normalized entity that you would like to delete:
+
+```js
+cache.evict('my-object-id', 'yearOfFounding');
 ```
 
 Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.

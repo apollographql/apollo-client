@@ -426,10 +426,7 @@ describe('optimistic cache layers', () => {
     cache.removeOptimistic('buzz book');
     const spinelessAfterRemovingBuzz = readSpinelessFragment();
     expect(spinelessBeforeRemovingBuzz).toEqual(spinelessAfterRemovingBuzz);
-    expect(spinelessBeforeRemovingBuzz).not.toBe(spinelessAfterRemovingBuzz);
-    expect(spinelessBeforeRemovingBuzz.author).toBe(
-      spinelessAfterRemovingBuzz.author,
-    );
+    expect(spinelessBeforeRemovingBuzz).toBe(spinelessAfterRemovingBuzz);
 
     const resultAfterRemovingBuzzLayer = readWithAuthors();
     expect(resultAfterRemovingBuzzLayer).toEqual(resultWithBuzz);

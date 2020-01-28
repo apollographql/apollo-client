@@ -42,11 +42,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
-  private policies: Policies;
 
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+
+  // Dynamically imported code can augment existing typePolicies or
+  // possibleTypes by calling cache.policies.addTypePolicies or
+  // cache.policies.addPossibletypes.
+  public readonly policies: Policies;
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -123,13 +127,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    if (typeof options.rootId === 'string' &&
-        !this.data.has(options.rootId)) {
+    const store = options.optimistic ? this.optimisticData : this.data;
+    if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
       return null;
     }
-
     return this.storeReader.readQueryFromStore({
-      store: options.optimistic ? this.optimisticData : this.data,
+      store,
       query: options.query,
       variables: options.variables,
       rootId: options.rootId,

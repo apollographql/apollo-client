@@ -179,7 +179,7 @@ describe('diffing queries against the store', () => {
     });
 
     expect(complete).toBeTruthy();
-    expect(store.get('Person:{"id":"1"}')).toEqual({
+    expect((store as any).lookup('Person:{"id":"1"}')).toEqual({
       __typename: 'Person',
       id: '1',
       name: 'Luke Skywalker',

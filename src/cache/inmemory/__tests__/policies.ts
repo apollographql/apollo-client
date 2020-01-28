@@ -2162,6 +2162,196 @@ describe("type policies", function () {
 
       expect(cache.gc()).toEqual([]);
     });
+
+    it("should report dangling references returned by read functions", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              book: {
+                keyArgs: ["isbn"],
+                read(existing, { args, toReference }) {
+                  return existing || toReference({
+                    __typename: "Book",
+                    isbn: args.isbn,
+                  });
+                },
+              },
+            },
+          },
+
+          Book: {
+            keyFields: ["isbn"],
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          book(isbn: $isbn) {
+            title
+            author
+          }
+        }
+      `;
+
+      function read(isbn = "156858217X") {
+        return cache.readQuery({
+          query,
+          variables: { isbn },
+        });
+      }
+
+      expect(read).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      );
+
+      cache.writeQuery({
+        query,
+        variables: { isbn: "0393354326" },
+        data: {
+          book: {
+            __typename: "Book",
+            isbn: "0393354326",
+            title: "Guns, Germs, and Steel",
+            author: "Jared Diamond",
+          },
+        },
+      });
+
+      expect(read).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      );
+
+      const stealThisData = {
+        __typename: "Book",
+        isbn: "156858217X",
+        title: "Steal This Book",
+        author: "Abbie Hoffman",
+      };
+
+      const stealThisID = cache.identify(stealThisData);
+
+      cache.writeFragment({
+        id: stealThisID,
+        fragment: gql`
+          fragment BookTitleAuthor on Book {
+            title
+            author
+          }
+        `,
+        data: stealThisData,
+      });
+
+      expect(read()).toEqual({
+        book: {
+          __typename: "Book",
+          title: "Steal This Book",
+          author: "Abbie Hoffman",
+        },
+      });
+
+      expect(read("0393354326")).toEqual({
+        book: {
+          __typename: "Book",
+          title: "Guns, Germs, and Steel",
+          author: "Jared Diamond",
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          'book:{"isbn":"0393354326"}': {
+            __ref: 'Book:{"isbn":"0393354326"}',
+          },
+        },
+        'Book:{"isbn":"0393354326"}': {
+          __typename: "Book",
+          author: "Jared Diamond",
+          title: "Guns, Germs, and Steel",
+        },
+        'Book:{"isbn":"156858217X"}': {
+          __typename: "Book",
+          author: "Abbie Hoffman",
+          title: "Steal This Book",
+        },
+      });
+
+      // Nothing removed because stealThisID was retained by writeFragment.
+      expect(cache.gc()).toEqual([]);
+      expect(cache.release(stealThisID)).toBe(0);
+      expect(cache.gc()).toEqual([
+        stealThisID,
+      ]);
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          'book:{"isbn":"0393354326"}': {
+            __ref: 'Book:{"isbn":"0393354326"}',
+          },
+        },
+        'Book:{"isbn":"0393354326"}': {
+          __typename: "Book",
+          author: "Jared Diamond",
+          title: "Guns, Germs, and Steel",
+        },
+      });
+
+      cache.writeQuery({
+        query,
+        variables: { isbn: "156858217X" },
+        data: {
+          book: stealThisData,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          'book:{"isbn":"0393354326"}': {
+            __ref: 'Book:{"isbn":"0393354326"}',
+          },
+          'book:{"isbn":"156858217X"}': {
+            __ref: 'Book:{"isbn":"156858217X"}',
+          },
+        },
+        'Book:{"isbn":"0393354326"}': {
+          __typename: "Book",
+          author: "Jared Diamond",
+          title: "Guns, Germs, and Steel",
+        },
+        'Book:{"isbn":"156858217X"}': {
+          __typename: "Book",
+          author: "Abbie Hoffman",
+          title: "Steal This Book",
+        },
+      });
+
+      expect(cache.gc()).toEqual([]);
+
+      expect(cache.evict("ROOT_QUERY", "book")).toBe(true);
+
+      expect(cache.gc().sort()).toEqual([
+        'Book:{"isbn":"0393354326"}',
+        'Book:{"isbn":"156858217X"}',
+      ]);
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+        },
+      });
+
+      expect(() => read("0393354326")).toThrow(
+        /Dangling reference to missing Book:{"isbn":"0393354326"} object/
+      );
+
+      expect(() => read("156858217X")).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      );
+    });
   });
 
   it("runs read and merge functions for unidentified data", function () {

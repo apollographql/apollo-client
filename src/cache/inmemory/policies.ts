@@ -60,7 +60,7 @@ type KeyFieldsFunction = (
   },
 ) => ReturnType<IdGetter>;
 
-type TypePolicy = {
+export type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
   // array of field names or a function that returns an arbitrary string.
   keyFields?: KeySpecifier | KeyFieldsFunction | false;
@@ -88,10 +88,14 @@ type KeyArgsFunction = (
   },
 ) => ReturnType<IdGetter>;
 
-export type FieldPolicy<TValue> = {
+export type FieldPolicy<
+  TExisting,
+  TIncoming = TExisting,
+  TReadResult = TExisting,
+> = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TValue>;
-  merge?: FieldMergeFunction<TValue>;
+  read?: FieldReadFunction<TExisting, TReadResult>;
+  merge?: FieldMergeFunction<TExisting, TIncoming>;
 };
 
 export type FieldValueGetter =
@@ -151,7 +155,7 @@ interface FieldFunctionOptions {
   invalidate(): void;
 }
 
-type FieldReadFunction<TExisting, TResult = TExisting> = (
+export type FieldReadFunction<TExisting, TReadResult = TExisting> = (
   // When reading a field, one often needs to know about any existing
   // value stored for that field. If the field is read before any value
   // has been written to the cache, this existing parameter will be
@@ -162,13 +166,13 @@ type FieldReadFunction<TExisting, TResult = TExisting> = (
   // a whole new type for the options object.
   existing: Readonly<TExisting> | undefined,
   options: FieldFunctionOptions,
-) => TResult;
+) => TReadResult;
 
-type FieldMergeFunction<TExisting> = (
+export type FieldMergeFunction<TExisting, TIncoming = TExisting> = (
   existing: Readonly<TExisting> | undefined,
   // The incoming parameter needs to be positional as well, for the same
   // reasons discussed in FieldReadFunction above.
-  incoming: Readonly<StoreValue>,
+  incoming: Readonly<TIncoming>,
   options: FieldFunctionOptions,
 ) => TExisting;
 

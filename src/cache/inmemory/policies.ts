@@ -512,30 +512,15 @@ export class Policies {
         storeFieldName,
       );
 
-      return read(existing, {
-        args: typeof nameOrField === "string" ? null :
-          argumentsObjectFromField(nameOrField, variables),
-        field: typeof nameOrField === "string" ? null : nameOrField,
-        fieldName,
-        variables,
+      return read(existing, makeFieldFunctionOptions(
         policies,
-        isReference,
-        toReference: policies.toReference,
+        typename,
+        objectOrReference,
+        nameOrField,
         storage,
-        // I'm not sure why it's necessary to repeat the parameter types
-        // here, but TypeScript complains if I leave them out.
-        readField<T>(
-          nameOrField: string | FieldNode,
-          foreignObjOrRef?: Reference,
-        ) {
-          return policies.readField<T>(
-            foreignObjOrRef || objectOrReference,
-            nameOrField,
-            getFieldValue,
-            variables,
-          );
-        },
-      }) as Readonly<V>;
+        getFieldValue,
+        variables,
+      )) as Readonly<V>;
     }
 
     return existing;
@@ -577,38 +562,26 @@ export class Policies {
         ? policies.storageTrie.lookupArray(storageKeys)
         : null;
 
-      incoming = merge(existing, incoming.__value, {
-        args: argumentsObjectFromField(field, variables),
-        field,
-        fieldName,
-        variables,
+      incoming = merge(existing, incoming.__value, makeFieldFunctionOptions(
         policies,
-        isReference,
-        toReference: policies.toReference,
-        readField<T>(
-          nameOrField: string | FieldNode,
-          foreignObjOrRef: StoreObject | Reference,
-        ) {
-          // Unlike options.readField for read functions, we do not fall
-          // back to the current object if no foreignObjOrRef is provided,
-          // because it's not clear what the current object should be for
-          // merge functions: the (possibly undefined) existing object, or
-          // the incoming object? If you think your merge function needs
-          // to read sibling fields in order to produce a new value for
-          // the current field, you might want to rethink your strategy,
-          // because that's a recipe for making merge behavior sensitive
-          // to the order in which fields are written into the cache.
-          // However, readField(name, ref) is useful for merge functions
-          // that need to deduplicate child objects and references.
-          return policies.readField<T>(
-            foreignObjOrRef,
-            nameOrField,
-            getFieldValue,
-            variables,
-          );
-        },
+        incoming.__typename,
+        // Unlike options.readField for read functions, we do not fall
+        // back to the current object if no foreignObjOrRef is provided,
+        // because it's not clear what the current object should be for
+        // merge functions: the (possibly undefined) existing object, or
+        // the incoming object? If you think your merge function needs
+        // to read sibling fields in order to produce a new value for
+        // the current field, you might want to rethink your strategy,
+        // because that's a recipe for making merge behavior sensitive
+        // to the order in which fields are written into the cache.
+        // However, readField(name, ref) is useful for merge functions
+        // that need to deduplicate child objects and references.
+        null,
+        field,
         storage,
-      }) as T;
+        getFieldValue,
+        variables,
+      )) as T;
     }
 
     if (incoming && typeof incoming === "object") {
@@ -662,6 +635,42 @@ export class Policies {
 
     return incoming;
   }
+}
+
+function makeFieldFunctionOptions(
+  policies: Policies,
+  typename: string,
+  objectOrReference: StoreObject | Reference,
+  nameOrField: string | FieldNode,
+  storage: StorageType,
+  getFieldValue: FieldValueGetter,
+  variables?: Record<string, any>,
+): FieldFunctionOptions {
+  const storeFieldName = typeof nameOrField === "string" ? nameOrField :
+    policies.getStoreFieldName(typename, nameOrField, variables);
+  const fieldName = fieldNameFromStoreName(storeFieldName);
+  return {
+    args: typeof nameOrField === "string" ? null :
+      argumentsObjectFromField(nameOrField, variables),
+    field: typeof nameOrField === "string" ? null : nameOrField,
+    fieldName,
+    variables,
+    policies,
+    isReference,
+    toReference: policies.toReference,
+    storage,
+    readField<T>(
+      nameOrField: string | FieldNode,
+      foreignObjOrRef: StoreObject | Reference,
+    ) {
+      return policies.readField<T>(
+        foreignObjOrRef || objectOrReference,
+        nameOrField,
+        getFieldValue,
+        variables,
+      );
+    },
+  };
 }
 
 function keyArgsFnFromSpecifier(

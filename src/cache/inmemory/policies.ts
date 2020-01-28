@@ -6,7 +6,7 @@ import {
 } from "graphql";
 
 import { KeyTrie } from 'optimism';
-import invariant from 'ts-invariant';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   FragmentMap,
@@ -155,6 +155,14 @@ interface FieldFunctionOptions {
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
   storage: StorageType;
+
+  // Instead of just merging objects with { ...existing, ...incoming }, this
+  // helper function can be used to merge objects in a way that respects any
+  // custom merge functions defined for their fields.
+  merge<T extends StoreObject>(
+    existing: T,
+    incoming: T,
+  ): T;
 }
 
 export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
@@ -679,7 +687,38 @@ function makeFieldFunctionOptions(
         variables,
       );
     },
+    merge(existing, incoming) {
+      if (Array.isArray(existing) || Array.isArray(incoming)) {
+        throw new InvariantError("Cannot automatically merge arrays");
+      }
+
+      const eType = getFieldValue(existing, "__typename");
+      const iType = getFieldValue(incoming, "__typename");
+      const typesDiffer = eType && iType && eType !== iType;
+
+      const applied = policies.applyMerges(
+        typesDiffer ? void 0 : existing,
+        incoming,
+        getFieldValue,
+        variables,
+      );
+
+      if (
+        typesDiffer ||
+        !canBeMerged(existing) ||
+        !canBeMerged(applied)
+      ) {
+        return applied;
+      }
+
+      return { ...existing, ...applied };
+    }
   };
+}
+
+function canBeMerged(obj: StoreValue): boolean {
+  return obj && typeof obj === "object" &&
+    !isReference(obj) && !Array.isArray(obj);
 }
 
 function keyArgsFnFromSpecifier(

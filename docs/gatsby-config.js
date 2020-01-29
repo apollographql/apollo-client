@@ -40,7 +40,10 @@ module.exports = {
             'data/fragments',
             'data/error-handling',
           ],
-          Caching: ['caching/cache-configuration', 'caching/cache-interaction'],
+          Caching: [
+            'caching/cache-configuration',
+            'caching/cache-field-behavior',
+            'caching/cache-interaction'],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',

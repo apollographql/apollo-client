@@ -15,7 +15,11 @@
     "esModuleInterop": true,
     "outDir": "./dist",
     "lib": ["es2015", "esnext.asynciterable", "dom"],
-    "jsx": "react"
+    "jsx": "react",
+    "typeRoots": [
+      "src/types",
+      "node_modules/@types"
+    ]
   },
   "include": ["src/**/*.ts"],
   "exclude": [

@@ -324,9 +324,12 @@ export class Policies {
             if (typeof merge === "function") existing.merge = merge;
           }
 
-          if (existing.read || existing.merge) {
-            // If we have a read or merge function, assume keyArgs:false
-            // unless existing.keyFn has already been explicitly set.
+          if (existing.read && existing.merge) {
+            // If we have both a read and a merge function, assume
+            // keyArgs:false, because read and merge together can take
+            // responsibility for interpreting arguments in and out. This
+            // default assumption can always be overridden by specifying
+            // keyArgs explicitly in the FieldPolicy.
             existing.keyFn = existing.keyFn || simpleKeyArgsFn;
           }
         });

@@ -816,7 +816,8 @@ describe('Combining client and server state/operations', () => {
       resolvers: {},
     });
 
-    cache.writeData({
+    cache.writeQuery({
+      query,
       data: {
         count: 0,
       },
@@ -848,7 +849,7 @@ describe('Combining client and server state/operations', () => {
           user: {
             __typename: 'User',
             // We need an id (or a keyFields policy) because, if the User
-            // object is not identifiable, the call to cache.writeData
+            // object is not identifiable, the call to cache.writeQuery
             // below will simply replace the existing data rather than
             // merging the new data with the existing data.
             id: 123,
@@ -864,7 +865,8 @@ describe('Combining client and server state/operations', () => {
       resolvers: {},
     });
 
-    cache.writeData({
+    cache.writeQuery({
+      query,
       data: {
         user: {
           __typename: 'User',
@@ -950,14 +952,18 @@ describe('Combining client and server state/operations', () => {
           incrementCount: (_, __, { cache }) => {
             const { count } = cache.readQuery({ query: counterQuery });
             const data = { count: count + 1 };
-            cache.writeData({ data });
+            cache.writeQuery({
+              query: counterQuery,
+              data,
+            });
             return null;
           },
         },
       },
     });
 
-    cache.writeData({
+    cache.writeQuery({
+      query: counterQuery,
       data: {
         count: 0,
       },

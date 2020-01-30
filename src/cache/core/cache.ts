@@ -5,26 +5,7 @@ import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
 import { StoreObject } from '../../utilities/graphql/storeUtils';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
-import { queryFromPojo, fragmentFromPojo } from './utils';
 import { Modifier, Modifiers } from './types/common';
-
-const justTypenameQuery: DocumentNode = {
-  kind: "Document",
-  definitions: [{
-    kind: "OperationDefinition",
-    operation: "query",
-    selectionSet: {
-      kind: "SelectionSet",
-      selections: [{
-        kind: "Field",
-        name: {
-          kind: "Name",
-          value: "__typename",
-        },
-      }],
-    },
-  }],
-};
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -160,42 +141,5 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       variables: options.variables,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
     });
-  }
-
-  public writeData<TData = any>({
-    id,
-    data,
-  }: Cache.WriteDataOptions<TData>): void {
-    if (typeof id !== 'undefined') {
-      let typenameResult = null;
-      // Since we can't use fragments without having a typename in the store,
-      // we need to make sure we have one.
-      // To avoid overwriting an existing typename, we need to read it out first
-      // and generate a fake one if none exists.
-      try {
-        typenameResult = this.read<any>({
-          rootId: id,
-          optimistic: false,
-          query: justTypenameQuery,
-        });
-      } catch (e) {
-        // Do nothing, since an error just means no typename exists
-      }
-
-      // tslint:disable-next-line
-      const __typename =
-        (typenameResult && typenameResult.__typename) || '__ClientData';
-
-      // Add a type here to satisfy the inmemory cache
-      const dataToWrite = Object.assign({ __typename }, data);
-
-      this.writeFragment({
-        id,
-        fragment: fragmentFromPojo(dataToWrite, __typename),
-        data: dataToWrite,
-      });
-    } else {
-      this.writeQuery({ query: queryFromPojo(data), data });
-    }
   }
 }

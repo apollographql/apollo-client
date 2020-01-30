@@ -88,16 +88,10 @@ export {
 // then re-exporting them separately, helps keeps bundlers happy without any
 // additional config changes.
 import gql from 'graphql-tag';
-const {
+export const {
   resetCaches,
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
   disableExperimentalFragmentVariables
 } = gql;
-export {
-  gql,
-  resetCaches,
-  disableFragmentWarnings,
-  enableExperimentalFragmentVariables,
-  disableExperimentalFragmentVariables
-};
+export { gql };

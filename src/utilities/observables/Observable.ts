@@ -4,7 +4,7 @@ import Observable from 'zen-observable';
 // proposal (https://github.com/zenparsing/es-observable)
 import 'symbol-observable';
 
-export type Subscription = ZenObservable.Subscription;
+export type ObservableSubscription = ZenObservable.Subscription;
 export type Observer<T> = ZenObservable.Observer<T>;
 
 // Use global module augmentation to add RxJS interop functionality. By

@@ -1,5 +1,5 @@
 import gql from "graphql-tag";
-import { InMemoryCache } from "../inMemoryCache";
+import { InMemoryCache, LocalVar } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
 import { FieldPolicy, Policies } from "../policies";
 import { Reference } from "../../../core";
@@ -806,11 +806,17 @@ describe("type policies", function () {
             fields: {
               result: {
                 read(_, { storage }) {
-                  return storage.result;
+                  if (!storage.jobName) {
+                    storage.jobName = cache.makeLocalVar<string>();
+                  }
+                  return storage.jobName();
                 },
-                merge(_, incoming, { storage, invalidate }) {
-                  storage.result = incoming;
-                  invalidate();
+                merge(_, incoming: string, { storage }) {
+                  if (storage.jobName) {
+                    storage.jobName(incoming);
+                  } else {
+                    storage.jobName = cache.makeLocalVar(incoming);
+                  }
                 },
               },
             },
@@ -1236,18 +1242,6 @@ describe("type policies", function () {
     });
 
     it("readField helper function calls custom read functions", function () {
-      // Rather than writing ownTime data into the cache, we maintain it
-      // externally in this object:
-      const ownTimes = {
-        "parent task": 2,
-        "child task 1": 3,
-        "child task 2": 4,
-        "grandchild task": 5,
-        "independent task": 11,
-      };
-
-      const invalidators: Record<string, () => void> = {};
-
       const cache = new InMemoryCache({
         typePolicies: {
           Agenda: {
@@ -1276,12 +1270,8 @@ describe("type policies", function () {
 
           Task: {
             fields: {
-              ownTime(_, { readField, invalidate }) {
-                const desc = readField<string>("description");
-                // Store the invalidate function so that we can call it
-                // after updating the external ownTimes data.
-                invalidators[desc] = invalidate;
-                return ownTimes[desc] || 0;
+              ownTime(_, { readField }) {
+                return ownTimes[readField<string>("description")]() || 0;
               },
 
               totalTime(_, { readField, toReference }) {
@@ -1327,6 +1317,16 @@ describe("type policies", function () {
           },
         },
       });
+
+      // Rather than writing ownTime data into the cache, we maintain it
+      // externally in this object:
+      const ownTimes = {
+        "parent task": cache.makeLocalVar(2),
+        "child task 1": cache.makeLocalVar(3),
+        "child task 2": cache.makeLocalVar(4),
+        "grandchild task": cache.makeLocalVar(5),
+        "independent task": cache.makeLocalVar(11),
+      };
 
       cache.writeQuery({
         query: gql`
@@ -1479,13 +1479,7 @@ describe("type policies", function () {
 
       expect(read()).toBe(firstResult);
 
-      ownTimes["child task 2"] = 6;
-
-      // The query will not be reevaluated until we invalidate the read
-      // function whose result we changed.
-      expect(read()).toBe(firstResult);
-
-      invalidators["child task 2"]();
+      ownTimes["child task 2"](6);
 
       const secondResult = read();
       expect(secondResult).not.toBe(firstResult);
@@ -1521,8 +1515,7 @@ describe("type policies", function () {
       expect(secondResult.agenda.tasks[2]).not.toBe(firstResult.agenda.tasks[2]);
       expect(secondResult.agenda.tasks[3]).toBe(firstResult.agenda.tasks[3]);
 
-      ownTimes["grandchild task"] = 7;
-      invalidators["grandchild task"]();
+      ownTimes["grandchild task"](7);
 
       const thirdResult = read();
       expect(thirdResult).not.toBe(secondResult);
@@ -1676,8 +1669,8 @@ describe("type policies", function () {
       // the addition of a fifth independent task.
       checkFirstFourIdentical(fourthResult);
 
-      ++ownTimes["independent task"];
-      invalidators["independent task"]();
+      const indVar = ownTimes["independent task"];
+      indVar(indVar() + 1);
 
       const fifthResult = read();
       expect(fifthResult).not.toBe(fourthResult);

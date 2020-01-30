@@ -5,7 +5,7 @@
 // be fully updated to use Typescript, and these discrepancies will be fixed.
 
 declare module 'graphql-tag' {
-  function gql(literals: any, ...placeholders: any[]): any;
+  function gql(literals: string[], ...placeholders: any[]): any;
   namespace gql {
     export function resetCaches(): void;
     export function disableFragmentWarnings(): void;

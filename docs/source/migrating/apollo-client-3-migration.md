@@ -1,6 +1,5 @@
 ---
 title: Migrating to Apollo Client 3.0
-description: Getting started with Apollo Client 3.0
 ---
 
 This article walks you through migrating your application to Apollo Client 3.0 from previous versions of Apollo Client.
@@ -22,7 +21,7 @@ Install Apollo Client 3.0 with the following command:
 npm install @apollo/client
 ```
 
-If you’re installing Apollo Client 3.0 in a project that already uses an earlier version, follow the instructions in each section of **Updating imports** that applies to a library you are currently using.
+If you’re installing Apollo Client 3.0 in a project that already uses an earlier version, follow the instructions in each section of [Updating imports](#updating-imports) that applies to a library you are currently using.
 
 ## Updating imports
 
@@ -73,13 +72,13 @@ As part of migrating, we recommend removing all `@apollo/react-testing` dependen
 - `@apollo/react-ssr`
 - `@apollo/react-testing`
 
-Since `@apollo/react-common`, `@apollo/react-hooks` and `@apollo/react-testing` functionality is now included in `@apollo/client` directly, we've released a v4 version of `react-apollo` that includes:
+Because `@apollo/client` includes functionality from `@apollo/react-common`, `@apollo/react-hooks` and `@apollo/react-testing`, we've released a v4 version of `react-apollo` that includes only the following:
 
 - `@apollo/react-components`
 - `@apollo/react-hoc`
 - `@apollo/react-ssr`
 
-This version then also re-exports common, hooks and testing functionality from `@apollo/client`, so if you upgrade to `react-apollo` v4 you should still have access to everything you had in v3. That being said, we highly recommend moving away from the `react-apollo` umbrella package, and just importing the direct packages you want to use.
+This version re-exports the remainder of React functionality directly from `@apollo/client`, so if you upgrade to `react-apollo` v4 you should still have access to everything you had in v3. That being said, we recommend removing all `react-apollo` dependencies and directly installing whichever `@apollo/react-*` packages you need.
 
 ### apollo-boost
 
@@ -170,9 +169,9 @@ Apollo Client 3.0 introduces powerful improvements to its caching system. Most o
 
 ### Breaking changes
 
-The following cache changes are not backward compatible. Take them into consideration before you upgrade to Apollo Client 3.0.
+The following cache changes are **not** backward compatible. Take them into consideration before you upgrade to Apollo Client 3.0.
 
-* By default, the `InMemoryCache` no longer merges the fields of two objects unless those objects have the same unique identifier and that identifier is present in both objects. Additionally, the values of fields with the same name are no longer merged recursively by default. You can define a custom merge function for a field to handle both of these changes for a particular field. You can read more about these changes in the [Merging non-normalized objects](../caching/cache-field-behavior/#merging-non-normalized-objects) section of the docs. ([PR #5603](https://github.com/apollographql/apollo-client/pull/5603)).
+* By default, the `InMemoryCache` no longer merges the fields of two objects unless those objects have the same unique identifier and that identifier is present in both objects. Additionally, the values of fields with the same name are no longer merged recursively by default. You can define a custom `merge`  function for a field to handle both of these changes for a particular field. You can read more about these changes in [Merging non-normalized objects](../caching/cache-field-behavior/#merging-non-normalized-objects). ([PR #5603](https://github.com/apollographql/apollo-client/pull/5603)).
 * All cache results are now frozen/immutable, as promised in the [Apollo Client 2.6 blog post](https://blog.apollographql.com/whats-new-in-apollo-client-2-6-b3acf28ecad1) ([PR #5153](https://github.com/apollographql/apollo-client/pull/5153)).
 * `FragmentMatcher`, `HeuristicFragmentMatcher`, and `IntrospectionFragmentMatcher` have all been removed. We recommend using the `InMemoryCache`’s `possibleTypes` option instead. For more information, see [Defining possibleTypes manually](../data/fragments/#defining-possibletypes-manually) ([PR #5073](https://github.com/apollographql/apollo-client/pull/5073)).
 * The internal representation of normalized data in the cache has changed. If you’re using `apollo-cache-inmemory`’s public API, then these changes shouldn’t impact you. If you are manipulating cached data directly instead, review [PR #5146](https://github.com/apollographql/apollo-client/pull/5146) for details.

@@ -67,7 +67,11 @@ export { HttpLink } from '../link/http/HttpLink';
 export { fromError } from '../link/utils/fromError';
 export { toPromise } from '../link/utils/toPromise';
 export { ServerError, throwServerError } from '../link/utils/throwServerError';
-export { Observable } from '../utilities/observables/Observable';
+export {
+  Observable,
+  Observer,
+  ObservableSubscription
+} from '../utilities/observables/Observable';
 
 /* Supporting */
 

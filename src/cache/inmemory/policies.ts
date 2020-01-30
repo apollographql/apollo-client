@@ -74,8 +74,8 @@ export type TypePolicy = {
 
   fields?: {
     [fieldName: string]:
-      | FieldPolicy<StoreValue>
-      | FieldReadFunction<StoreValue>;
+      | FieldPolicy<any>
+      | FieldReadFunction<any>;
   }
 };
 
@@ -88,8 +88,17 @@ type KeyArgsFunction = (
   },
 ) => ReturnType<IdGetter>;
 
+// The Readonly<T> type only really works for object types, since it marks
+// all of the object's properties as readonly, but there are many cases when
+// a generic type parameter like TExisting might be a string or some other
+// primitive type, in which case we need to avoid wrapping it with Readonly.
+// SafeReadonly<string> collapses to just string, which makes string
+// assignable to SafeReadonly<any>, whereas string is not assignable to
+// Readonly<any>, somewhat surprisingly.
+type SafeReadonly<T> = T extends object ? Readonly<T> : T;
+
 export type FieldPolicy<
-  TExisting,
+  TExisting = any,
   TIncoming = TExisting,
   TReadResult = TExisting,
 > = {
@@ -140,7 +149,7 @@ interface FieldFunctionOptions {
   readField<T = StoreValue>(
     nameOrField: string | FieldNode,
     foreignObjOrRef?: StoreObject | Reference,
-  ): Readonly<T>;
+  ): SafeReadonly<T>;
 
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
@@ -148,7 +157,7 @@ interface FieldFunctionOptions {
   storage: StorageType;
 }
 
-export type FieldReadFunction<TExisting, TReadResult = TExisting> = (
+export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
   // When reading a field, one often needs to know about any existing
   // value stored for that field. If the field is read before any value
   // has been written to the cache, this existing parameter will be
@@ -157,15 +166,15 @@ export type FieldReadFunction<TExisting, TReadResult = TExisting> = (
   // than one of the named options) because that makes it possible for the
   // developer to annotate it with a type, without also having to provide
   // a whole new type for the options object.
-  existing: Readonly<TExisting> | undefined,
+  existing: SafeReadonly<TExisting> | undefined,
   options: FieldFunctionOptions,
 ) => TReadResult;
 
-export type FieldMergeFunction<TExisting, TIncoming = TExisting> = (
-  existing: Readonly<TExisting> | undefined,
+export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
+  existing: SafeReadonly<TExisting> | undefined,
   // The incoming parameter needs to be positional as well, for the same
   // reasons discussed in FieldReadFunction above.
-  incoming: Readonly<TIncoming>,
+  incoming: SafeReadonly<TIncoming>,
   options: FieldFunctionOptions,
 ) => TExisting;
 
@@ -193,8 +202,8 @@ export class Policies {
       fields?: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
-          read?: FieldReadFunction<StoreValue>;
-          merge?: FieldMergeFunction<StoreValue>;
+          read?: FieldReadFunction<any>;
+          merge?: FieldMergeFunction<any>;
         };
       };
     };
@@ -429,7 +438,7 @@ export class Policies {
     return function getFieldValue<T = StoreValue>(
       objectOrReference: StoreObject | Reference,
       storeFieldName: string,
-    ): Readonly<T> {
+    ): SafeReadonly<T> {
       let fieldValue: StoreValue;
       if (isReference(objectOrReference)) {
         const dataId = objectOrReference.__ref;
@@ -444,7 +453,7 @@ export class Policies {
         fieldValue = objectOrReference && objectOrReference[storeFieldName];
       }
       // Enforce Readonly<T> at runtime, in development.
-      return maybeDeepFreeze(fieldValue) as T;
+      return maybeDeepFreeze(fieldValue) as SafeReadonly<T>;
     };
   }
 
@@ -490,7 +499,7 @@ export class Policies {
     getFieldValue: FieldValueGetter,
     variables?: Record<string, any>,
     typename = getFieldValue<string>(objectOrReference, "__typename"),
-  ): Readonly<V> {
+  ): SafeReadonly<V> {
     invariant(
       objectOrReference,
       "Must provide an object or Reference when calling Policies#readField",
@@ -520,7 +529,7 @@ export class Policies {
         storage,
         getFieldValue,
         variables,
-      )) as Readonly<V>;
+      )) as SafeReadonly<V>;
     }
 
     return existing;

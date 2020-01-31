@@ -67,7 +67,11 @@ export { HttpLink } from '../link/http/HttpLink';
 export { fromError } from '../link/utils/fromError';
 export { toPromise } from '../link/utils/toPromise';
 export { ServerError, throwServerError } from '../link/utils/throwServerError';
-export { Observable } from '../utilities/observables/Observable';
+export {
+  Observable,
+  Observer,
+  ObservableSubscription
+} from '../utilities/observables/Observable';
 
 /* Supporting */
 
@@ -84,16 +88,10 @@ export { Observable } from '../utilities/observables/Observable';
 // then re-exporting them separately, helps keeps bundlers happy without any
 // additional config changes.
 import gql from 'graphql-tag';
-const {
+export const {
   resetCaches,
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
   disableExperimentalFragmentVariables
 } = gql;
-export {
-  gql,
-  resetCaches,
-  disableFragmentWarnings,
-  enableExperimentalFragmentVariables,
-  disableExperimentalFragmentVariables
-};
+export { gql };

@@ -2353,7 +2353,13 @@ describe("type policies", function () {
             keyFields: ["isbn"],
             fields: {
               author: {
-                merge(existing, incoming, { merge }) {
+                merge(existing, incoming, { readField, merge }) {
+                  expect(merge(void 0, null)).toBe(null);
+                  expect(() => {
+                    // The type system does a pretty good job of defending
+                    // against this mistake.
+                    merge([1, 2, 3] as any as StoreObject, [4] as any as StoreObject);
+                  }).toThrow(/Cannot automatically merge arrays/);
                   return merge(existing, incoming);
                 },
               },

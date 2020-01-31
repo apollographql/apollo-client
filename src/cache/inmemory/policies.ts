@@ -676,6 +676,7 @@ function makeFieldFunctionOptions(
     isReference,
     toReference: policies.toReference,
     storage,
+
     readField<T>(
       nameOrField: string | FieldNode,
       foreignObjOrRef: StoreObject | Reference,
@@ -687,31 +688,37 @@ function makeFieldFunctionOptions(
         variables,
       );
     },
+
     merge(existing, incoming) {
       if (Array.isArray(existing) || Array.isArray(incoming)) {
         throw new InvariantError("Cannot automatically merge arrays");
       }
 
-      const eType = getFieldValue(existing, "__typename");
-      const iType = getFieldValue(incoming, "__typename");
-      const typesDiffer = eType && iType && eType !== iType;
+      if (existing && typeof existing === "object" &&
+          incoming && typeof incoming === "object") {
+        const eType = getFieldValue(existing, "__typename");
+        const iType = getFieldValue(incoming, "__typename");
+        const typesDiffer = eType && iType && eType !== iType;
 
-      const applied = policies.applyMerges(
-        typesDiffer ? void 0 : existing,
-        incoming,
-        getFieldValue,
-        variables,
-      );
+        const applied = policies.applyMerges(
+          typesDiffer ? void 0 : existing,
+          incoming,
+          getFieldValue,
+          variables,
+        );
 
-      if (
-        typesDiffer ||
-        !canBeMerged(existing) ||
-        !canBeMerged(applied)
-      ) {
-        return applied;
+        if (
+          typesDiffer ||
+          !canBeMerged(existing) ||
+          !canBeMerged(applied)
+        ) {
+          return applied;
+        }
+
+        return { ...existing, ...applied };
       }
 
-      return { ...existing, ...applied };
+      return incoming;
     }
   };
 }

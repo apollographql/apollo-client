@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 import { InMemoryCache, LocalVar } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
 import { FieldPolicy, Policies } from "../policies";
-import { Reference } from "../../../core";
+import { Reference, StoreObject } from "../../../core";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -2353,7 +2353,7 @@ describe("type policies", function () {
             keyFields: ["isbn"],
             fields: {
               author: {
-                merge(existing, incoming, { readField, merge }) {
+                merge(existing: StoreObject, incoming: StoreObject, { merge }) {
                   expect(merge(void 0, null)).toBe(null);
                   expect(() => {
                     // The type system does a pretty good job of defending

@@ -159,7 +159,7 @@ interface FieldFunctionOptions {
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
-  merge<T extends StoreObject>(
+  merge<T extends StoreObject | Reference>(
     existing: T,
     incoming: T,
   ): T;

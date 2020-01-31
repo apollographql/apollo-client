@@ -293,21 +293,21 @@ const cache = new InMemoryCache({
         authors: {
           merge(existing: any[], incoming: any[], { readField, merge }) {
             const merged: any[] = existing ? existing.slice(0) : [];
-            const authorNameToIndex = new Map<string, number>();
+            const authorNameToIndex: Record<string, number> = Object.create(null);
             if (existing) {
-              existing.forEach((author, i) => {
-                authors.set(readField<string>("name", author), i);
+              existing.forEach((author, index) => {
+                authorNameToIndex[readField<string>("name", author)] = index;
               });
             }
             incoming.forEach(author => {
               const name = readField<string>("name", author);
-              if (authors.has(name)) {
+              const index = authorNameToIndex[name];
+              if (typeof index === "number") {
                 // Merge the new author data with the existing author data.
-                const i = authors.get(name);
-                merged[i] = merge(merged[i], author);
+                merged[index] = merge(merged[index], author);
               } else {
                 // First time we've seen this author in this array.
-                authors.set(name, merged.length);
+                authorNameToIndex[name] = merged.length;
                 merged.push(author);
               }
             });

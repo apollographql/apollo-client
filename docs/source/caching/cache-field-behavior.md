@@ -234,7 +234,7 @@ When you use `{ ...existing, ...incoming }`, `Author` objects with differing fie
 
 But what if the `Author` type defines its own custom `merge` functions for fields of the `incoming` object? Since we're using [object spread syntax](https://2ality.com/2016/10/rest-spread-properties.html), such fields will immediately overwrite fields in `existing`, without triggering any nested `merge` functions. The `{ ...existing, ...incoming }` syntax may be an improvement, but it is not fully correct.
 
-Fortunately, you can find a helper function called `options.merge` in the options passed to the `merge` function, which generally behaves the same as `{ ...existing, ...incoming }`, except when the `incoming` fields have custom `merge` functions. When `options.merge` encounters custom `merge` functions for any of the fields in its second argument (`incoming`), those nested `merge` functions will be called before combining the fields of `existing` and `incoming`, as desired:
+Fortunately, you can find a helper function called `options.mergeObjects` in the options passed to the `merge` function, which generally behaves the same as `{ ...existing, ...incoming }`, except when the `incoming` fields have custom `merge` functions. When `options.mergeObjects` encounters custom `merge` functions for any of the fields in its second argument (`incoming`), those nested `merge` functions will be called before combining the fields of `existing` and `incoming`, as desired:
 
 ```ts
 const cache = new InMemoryCache({
@@ -242,9 +242,9 @@ const cache = new InMemoryCache({
     Book: {
       fields: {
         author: {
-          merge(existing, incoming, { merge }) {
+          merge(existing, incoming, { mergeObjects }) {
             // Correct, thanks to invoking nested merge functions.
-            return merge(existing, incoming);
+            return mergeObjects(existing, incoming);
           },
         },
       },
@@ -291,7 +291,7 @@ const cache = new InMemoryCache({
     Book: {
       fields: {
         authors: {
-          merge(existing: any[], incoming: any[], { readField, merge }) {
+          merge(existing: any[], incoming: any[], { readField, mergeObjects }) {
             const merged: any[] = existing ? existing.slice(0) : [];
             const authorNameToIndex: Record<string, number> = Object.create(null);
             if (existing) {
@@ -304,7 +304,7 @@ const cache = new InMemoryCache({
               const index = authorNameToIndex[name];
               if (typeof index === "number") {
                 // Merge the new author data with the existing author data.
-                merged[index] = merge(merged[index], author);
+                merged[index] = mergeObjects(merged[index], author);
               } else {
                 // First time we've seen this author in this array.
                 authorNameToIndex[name] = merged.length;

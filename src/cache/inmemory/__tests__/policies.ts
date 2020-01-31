@@ -2353,21 +2353,21 @@ describe("type policies", function () {
             keyFields: ["isbn"],
             fields: {
               author: {
-                merge(existing: StoreObject, incoming: StoreObject, { merge }) {
-                  expect(merge(void 0, null)).toBe(null);
+                merge(existing: StoreObject, incoming: StoreObject, { mergeObjects }) {
+                  expect(mergeObjects(void 0, null)).toBe(null);
 
                   expect(() => {
                     // The type system does a pretty good job of defending
                     // against this mistake.
-                    merge([1, 2, 3] as any as StoreObject, [4] as any as StoreObject);
+                    mergeObjects([1, 2, 3] as any as StoreObject, [4] as any as StoreObject);
                   }).toThrow(/Cannot automatically merge arrays/);
 
                   const a = { __typename: "A", a: "ay" };
                   const b = { __typename: "B", a: "bee" };
-                  expect(merge(a, b)).toBe(b);
-                  expect(merge(b, a)).toBe(a);
+                  expect(mergeObjects(a, b)).toBe(b);
+                  expect(mergeObjects(b, a)).toBe(a);
 
-                  return merge(existing, incoming);
+                  return mergeObjects(existing, incoming);
                 },
               },
             },

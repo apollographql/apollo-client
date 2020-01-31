@@ -159,7 +159,7 @@ interface FieldFunctionOptions {
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
-  merge<T extends StoreObject | Reference>(
+  mergeObjects<T extends StoreObject | Reference>(
     existing: T,
     incoming: T,
   ): T;
@@ -689,11 +689,15 @@ function makeFieldFunctionOptions(
       );
     },
 
-    merge(existing, incoming) {
+    mergeObjects(existing, incoming) {
       if (Array.isArray(existing) || Array.isArray(incoming)) {
         throw new InvariantError("Cannot automatically merge arrays");
       }
 
+      // These dynamic checks are necessary because the parameters of a
+      // custom merge function can easily have the any type, so the type
+      // system cannot always enforce the StoreObject | Reference
+      // parameter types of options.mergeObjects.
       if (existing && typeof existing === "object" &&
           incoming && typeof incoming === "object") {
         const eType = getFieldValue(existing, "__typename");

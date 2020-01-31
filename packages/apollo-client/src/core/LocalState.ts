@@ -145,7 +145,10 @@ export class LocalState<TCacheShape> {
       ).then(localResult => ({
         ...remoteResult,
         data: localResult.result,
-      }));
+      })).catch(error => ({
+        ...remoteResult,
+        error
+      }))
     }
 
     return remoteResult;

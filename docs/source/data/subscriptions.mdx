@@ -37,6 +37,8 @@ type Subscription {
 }
 ```
 
+For more information on implementing support for subscriptions on the server side, see the [Apollo Server documentation for subscriptions](https://www.apollographql.com/docs/apollo-server/data/subscriptions/).
+
 ### Client side
 
 In your application's client, you define the shape of each subscription you want Apollo Client to execute, like so:
@@ -69,7 +71,7 @@ Whenever your GraphQL server _does_ push data to a subscribing client, that data
 
 ## Setting up the transport
 
-Because subscriptions maintain a persistent connection, they can't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket via the community-maintained [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) library.
+Because subscriptions maintain a persistent connection, they can't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the community-maintained [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) library.
 
 ### 1. Install required libraries
 
@@ -142,25 +144,27 @@ With this code, queries and mutations will use HTTP as normal, and subscriptions
 
 ## Executing a subscription
 
-The easiest way to bring live data to your UI is by using Apollo Client's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
+You use Apollo Client's `useSubscription` Hook to execute a subscription from React. Like [`useQuery`](./queries/#executing-a-query), `useSubscription` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+
+The following example component uses the subscription we defined earlier to render the most recent comment that's been added to a specified blog post. Whenever the GraphQL server pushes a new comment to the client, the component re-renders with the new comment.
 
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($repoFullName: String!) {
-    commentAdded(repoFullName: $repoFullName) {
+  subscription onCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
       id
       content
     }
   }
 `;
 
-function DontReadTheComments({ repoFullName }) {
+function LatestComment({ postID }) {
   const { data: { commentAdded }, loading } = useSubscription(
     COMMENTS_SUBSCRIPTION,
-    { variables: { repoFullName } }
+    { variables: { postID } }
   );
   return <h4>New comment: {!loading && commentAdded.content}</h4>;
 }
@@ -171,18 +175,18 @@ function DontReadTheComments({ repoFullName }) {
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($repoFullName: String!) {
-    commentAdded(repoFullName: $repoFullName) {
+  subscription onCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
       id
       content
     }
   }
 `;
 
-const DontReadTheComments = ({ repoFullName }) => (
+const LatestComment = ({ postID }) => (
   <Subscription
     subscription={COMMENTS_SUBSCRIPTION}
-    variables={{ repoFullName }}
+    variables={{ postID }}
   >
     {({ data: { commentAdded }, loading }) => (
       <h4>New comment: {!loading && commentAdded.content}</h4>
@@ -194,25 +198,23 @@ const DontReadTheComments = ({ repoFullName }) => (
 </div>
 </MultiCodeBlock>
 
-## useSubscription API overview
-
-If you're looking for an overview of all the options `useSubscription` accepts, and its result properties, look no further!
+## `useSubscription` API reference
 
 > **Note:** If you're using React Apollo's `Subscription` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `subscription` prop (which holds a GraphQL subscription document parsed into an AST by `gql`) is also required.
 
 ### Options
 
-The `useSubscription` Hook accepts the following options.
+The `useSubscription` Hook accepts the following options:
 
 <SubscriptionOptions />
 
 ### Result
 
-After being called the `useSubscription` Hook will return a result object with the following properties.
+After being called, the `useSubscription` Hook returns a result object with the following properties:
 
 <SubscriptionResult />
 
-## subscribeToMore
+## `subscribeToMore`
 
 With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
 
@@ -230,8 +232,8 @@ Here is a regular query:
 
 ```jsx
 const COMMENT_QUERY = gql`
-  query Comment($repoName: String!) {
-    entry(repoFullName: $repoName) {
+  query Comment($postID: String!) {
+    entry(postID: $postID) {
       comments {
         id
         content

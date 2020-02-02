@@ -104,7 +104,7 @@ Replace the value of the `uri` option with the URL of your GraphQL server. This 
 
 Apollo Client should use your `WebSocketLink` for subscriptions, but it _shouldn't_ use it for queries or mutations. For those operations, Apollo Client should use HTTP as usual. To support this, the `@apollo/client` library provides a `split` function that lets you use one of two different `Link`s, according to the result of a boolean check.
 
-The following example expands on the one in the previous step by initializing both a `WebSocketLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ link that uses one or the other according to the type of operation being executed.
+The following example expands on the previous one by initializing both a `WebSocketLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
 
 ```js
 import { split, HttpLink } from '@apollo/client';
@@ -124,9 +124,9 @@ const wsLink = new WebSocketLink({
 
 // The split function takes three parameters:
 //
-// * A function that must return a boolean value
-// * The Link to use if the function returns true
-// * The Link to use if the function returns false
+// * A function that's called for each operation to execute
+// * The Link to use for an operation if the function returns a "truthy" value
+// * The Link to use for an operation if the function returns a "falsy" value
 const splitLink = split(
   ({ query }) => {
     const definition = getMainDefinition(query);
@@ -140,7 +140,27 @@ const splitLink = split(
 );
 ```
 
-With this code, queries and mutations will use HTTP as normal, and subscriptions will use WebSocket.
+Using this logic, queries and mutations will use HTTP as normal, and subscriptions will use WebSocket.
+
+### 4. Authenticate over WebSocket (optional)
+
+It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `WebSocketLink` constructor, like so:
+
+```js{7-9}
+import { WebSocketLink } from '@apollo/link-ws';
+
+const wsLink = new WebSocketLink({
+  uri: `ws://localhost:5000/`,
+  options: {
+    reconnect: true,
+    connectionParams: {
+      authToken: user.authToken,
+    },
+});
+```
+
+Your `WebSocketLink` passes the `connectionParams` object to your server whenever it connects. If your server has a [SubscriptionsServer](https://www.apollographql.com/docs/graphql-subscriptions/authentication) object that's listening for WebSocket connections, it receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
+
 
 ## Executing a subscription
 
@@ -198,22 +218,6 @@ const LatestComment = ({ postID }) => (
 </div>
 </MultiCodeBlock>
 
-## `useSubscription` API reference
-
-> **Note:** If you're using React Apollo's `Subscription` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `subscription` prop (which holds a GraphQL subscription document parsed into an AST by `gql`) is also required.
-
-### Options
-
-The `useSubscription` Hook accepts the following options:
-
-<SubscriptionOptions />
-
-### Result
-
-After being called, the `useSubscription` Hook returns a result object with the following properties:
-
-<SubscriptionResult />
-
 ## `subscribeToMore`
 
 With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
@@ -221,7 +225,7 @@ With GraphQL subscriptions your client will be alerted on push from the server a
 * Use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
 * Use the data sent along with the notification and merge it directly into the store (existing queries are automatically notified)
 
-With `subscribeToMore`, you can easily do the latter.
+You can use `subscribeToMore` to do the latter.
 
 `subscribeToMore` is a function available on every query result, made using Apollo Client's React integration. It works just like [`fetchMore`](../caching/cache-interaction/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
 
@@ -406,21 +410,18 @@ export class CommentsPage extends Component {
 }
 ```
 
-## Authentication over WebSocket
+## `useSubscription` API reference
 
-In many cases it is necessary to authenticate clients before allowing them to receive subscription results. To do this, the `SubscriptionClient` constructor accepts a `connectionParams` field, which passes a custom object that the server can use to validate the connection before setting up any subscriptions.
+> **Note:** If you're using React Apollo's `Subscription` render prop component, the option/result details listed below are still valid (options are component props and results are passed into the render prop function). The only difference is that a `subscription` prop (which holds a GraphQL subscription document parsed into an AST by `gql`) is also required.
 
-```js
-import { WebSocketLink } from '@apollo/link-ws';
+### Options
 
-const wsLink = new WebSocketLink({
-  uri: `ws://localhost:5000/`,
-  options: {
-    reconnect: true,
-    connectionParams: {
-        authToken: user.authToken,
-    },
-});
-```
+The `useSubscription` Hook accepts the following options:
 
-> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](https://www.apollographql.com/docs/graphql-subscriptions/authentication).
+<SubscriptionOptions />
+
+### Result
+
+After being called, the `useSubscription` Hook returns a result object with the following properties:
+
+<SubscriptionResult />

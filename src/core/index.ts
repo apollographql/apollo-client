@@ -66,6 +66,7 @@ export { createHttpLink } from '../link/http/createHttpLink';
 export { HttpLink } from '../link/http/HttpLink';
 export { fromError } from '../link/utils/fromError';
 export { toPromise } from '../link/utils/toPromise';
+export { fromPromise } from '../link/utils/fromPromise';
 export { ServerError, throwServerError } from '../link/utils/throwServerError';
 export {
   Observable,

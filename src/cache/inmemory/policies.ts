@@ -112,8 +112,11 @@ export type FieldValueGetter =
 
 type StorageType = Record<string, any>;
 
-interface FieldFunctionOptions {
-  args: Record<string, any> | null;
+export interface FieldFunctionOptions<
+  TArgs = Record<string, any>,
+  TVars = Record<string, any>,
+> {
+  args: TArgs | null;
 
   // The name of the field, equal to options.field.name.value when
   // options.field is available. Useful if you reuse the same function for
@@ -126,7 +129,7 @@ interface FieldFunctionOptions {
   // option will be null when a string was passed to options.readField.
   field: FieldNode | null;
 
-  variables?: Record<string, any>;
+  variables?: TVars;
 
   // In rare advanced use cases, a read or merge function may wish to
   // consult the current Policies object, for example to call

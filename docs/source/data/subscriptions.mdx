@@ -1,6 +1,6 @@
 ---
 title: Subscriptions
-description: Learn how to get real-time updates from your GraphQL server
+description: Get real-time updates from your GraphQL server
 ---
 
 import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
@@ -15,7 +15,7 @@ Subscriptions are useful for notifying your client in real time about changes to
 
 ## When to use subscriptions
 
-In the majority of cases, your client should _not_ use subscriptions to stay up to date with your backend. Instead, you should poll intermittently with queries, or re-execute queries on demand when a user performs a relevant action.
+In the majority of cases, your client should _not_ use subscriptions to stay up to date with your backend. Instead, you should [poll intermittently](./queries/#polling) with queries, or [re-execute queries on demand](./queries/#refetching) when a user performs a relevant action.
 
 You _should_ use subscriptions for the following:
 
@@ -23,9 +23,9 @@ You _should_ use subscriptions for the following:
 
 * **Low-latency, real-time updates**. For example, a chat application's client wants to receive new messages as soon as they're available.
 
-## Defining subscriptions
+## Defining a subscription
 
-You define subscriptions on both the server side and the client side, just like you do queries and mutations.
+You define a subscription on both the server side and the client side, just like you do for queries and mutations.
 
 ### Server side
 
@@ -218,26 +218,21 @@ const LatestComment = ({ postID }) => (
 </div>
 </MultiCodeBlock>
 
-## `subscribeToMore`
+## Subscribing to updates for a query
 
-With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
+Whenever a query returns a result in Apollo Client, that result includes a `subscribeToMore` function. You can use this function to execute a followup subscription that pushes updates to the query's original result.
 
-* Use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
-* Use the data sent along with the notification and merge it directly into the store (existing queries are automatically notified)
+> The `subscribeToMore` function is similar in structure to the [`fetchMore`](../caching/cache-interaction/#incremental-loading-fetchmore) function that's commonly used for handling pagination. The primary difference is that `fetchMore` executes a followup _query_, whereas `subscribeToMore` executes a subscription. 
 
-You can use `subscribeToMore` to do the latter.
-
-`subscribeToMore` is a function available on every query result, made using Apollo Client's React integration. It works just like [`fetchMore`](../caching/cache-interaction/#incremental-loading-fetchmore), except that the update function gets called every time the subscription returns, instead of only once.
-
-Here is a regular query:
+As an example, let's start with a standard query that fetches all of the existing comments for a given blog post:
 
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
 ```jsx
-const COMMENT_QUERY = gql`
-  query Comment($postID: String!) {
-    entry(postID: $postID) {
+const COMMENTS_QUERY = gql`
+  query CommentsForPost($postID: ID!) {
+    post(postID: $postID) {
       comments {
         id
         content
@@ -248,8 +243,8 @@ const COMMENT_QUERY = gql`
 
 function CommentsPageWithData({ params }) {
   const result = useQuery(
-    COMMENT_QUERY,
-    { variables: { repoName: `${params.org}/${params.repoName}` } }
+    COMMENTS_QUERY,
+    { variables: { postID: `${params.postID}` } }
   );
   return <CommentsPage {...result} />;
 }
@@ -259,9 +254,9 @@ function CommentsPageWithData({ params }) {
 <div data-language="js">
 
 ```jsx
-const COMMENT_QUERY = gql`
-  query Comment($repoName: String!) {
-    entry(repoFullName: $repoName) {
+const COMMENTS_QUERY = gql`
+  query CommentsForPost($postID: ID!) {
+    post(postID: $postID) {
       comments {
         id
         content
@@ -272,8 +267,8 @@ const COMMENT_QUERY = gql`
 
 const CommentsPageWithData = ({ params }) => (
   <Query
-    query={COMMENT_QUERY}
-    variables={{ repoName: `${params.org}/${params.repoName}` }}
+    query={COMMENTS_QUERY}
+    variables={{ postID: `${params.postID}` }}
   >
     {result => <CommentsPage {...result} />}
   </Query>
@@ -283,40 +278,29 @@ const CommentsPageWithData = ({ params }) => (
 </div>
 </MultiCodeBlock>
 
-Now, let's add the subscription.
-
-Add a function called `subscribeToNewComments` that will subscribe using `subscribeToMore` and update the query's store with the new data using `updateQuery`.
-
-Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
+Let's say we want our GraphQL server to push an update to our client as soon as a _new_ comment is added to the post. First we need to define the subscription that Apollo Client will execute when the `COMMENTS_QUERY` returns:
 
 ```jsx
-const COMMENT_QUERY = gql`
-  query Comment($repoName: String!) {
-    entry(repoFullName: $repoName) {
-      comments {
-        id
-        content
-      }
-    }
-  }
-`;
-
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($repoName: String!) {
-    commentAdded(repoName: $repoName) {
+  subscription onCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
       id
       content
     }
   }
 `;
+```
 
+Next, we modify our `CommentsPageWithData` function to add a `subscribeToNewComments` property to the `CommentsPage` component it returns. This property is a function that will be responsible for calling `subscribeToMore` after the component mounts.
+
+<MultiCodeBlock>
+<div data-language="hooks-js">
+
+```jsx{10-25}
 function CommentsPageWithData({ params }) {
   const { subscribeToMore, ...result } = useQuery(
     COMMENT_QUERY,
-    { variables: { repoName: `${params.org}/${params.repoName}` } }
+    { variables: { postID: `${params.postID}` } }
   );
 
   return (
@@ -325,14 +309,14 @@ function CommentsPageWithData({ params }) {
       subscribeToNewComments={() =>
         subscribeToMore({
           document: COMMENTS_SUBSCRIPTION,
-          variables: { repoName: params.repoName },
+          variables: { postID: params.postID },
           updateQuery: (prev, { subscriptionData }) => {
             if (!subscriptionData.data) return prev;
             const newFeedItem = subscriptionData.data.commentAdded;
 
             return Object.assign({}, prev, {
-              entry: {
-                comments: [newFeedItem, ...prev.entry.comments]
+              post: {
+                comments: [newFeedItem, ...prev.post.comments]
               }
             });
           }
@@ -346,31 +330,11 @@ function CommentsPageWithData({ params }) {
 </div>
 <div data-language="js">
 
-```jsx
-const COMMENT_QUERY = gql`
-  query Comment($repoName: String!) {
-    entry(repoFullName: $repoName) {
-      comments {
-        id
-        content
-      }
-    }
-  }
-`;
-
-const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($repoName: String!) {
-    commentAdded(repoName: $repoName) {
-      id
-      content
-    }
-  }
-`;
-
+```jsx{9-24}
 const CommentsPageWithData = ({ params }) => (
   <Query
     query={COMMENT_QUERY}
-    variables={{ repoName: `${params.org}/${params.repoName}` }}
+    variables={{ postID: `${params.postID}` }}
   >
     {({ subscribeToMore, ...result }) => (
       <CommentsPage
@@ -378,14 +342,14 @@ const CommentsPageWithData = ({ params }) => (
         subscribeToNewComments={() =>
           subscribeToMore({
             document: COMMENTS_SUBSCRIPTION,
-            variables: { repoName: params.repoName },
+            variables: { postID: params.postID },
             updateQuery: (prev, { subscriptionData }) => {
               if (!subscriptionData.data) return prev;
               const newFeedItem = subscriptionData.data.commentAdded;
 
               return Object.assign({}, prev, {
-                entry: {
-                  comments: [newFeedItem, ...prev.entry.comments]
+                post: {
+                  comments: [newFeedItem, ...prev.post.comments]
                 }
               });
             }
@@ -400,7 +364,13 @@ const CommentsPageWithData = ({ params }) => (
 </div>
 </MultiCodeBlock>
 
-and start the actual subscription by calling the `subscribeToNewComments` function with the subscription variables:
+In the example above, we pass three options to `subscribeToMore`:
+
+* `document` indicates the subscription to execute.
+* `variables` indicates the variables to include when executing the subscription.
+* `updateQuery` is a function that tells Apollo Client how to combine the query's currently cached result (`prev`) with the `subscriptionData` that's pushed by our GraphQL server. The return value of this function **completely replaces** the current cached result for the query.
+
+Finally, in our definition of `CommentsPage`, we tell the component to `subscribeToNewComments` when it mounts:
 
 ```js
 export class CommentsPage extends Component {

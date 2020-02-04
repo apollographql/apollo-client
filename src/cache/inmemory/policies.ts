@@ -113,6 +113,9 @@ export interface FieldFunctionOptions<
   // processing. Always a string, even when options.field is null.
   fieldName: string;
 
+  // The full field key used internally, including serialized key arguments.
+  storeFieldName: string;
+
   // The FieldNode object used to read this field. Useful if you need to
   // know about other attributes of the field, such as its directives. This
   // option will be null when a string was passed to options.readField.
@@ -642,6 +645,7 @@ function makeFieldFunctionOptions(
       argumentsObjectFromField(nameOrField, variables),
     field: typeof nameOrField === "string" ? null : nameOrField,
     fieldName,
+    storeFieldName,
     variables,
     policies,
     isReference,

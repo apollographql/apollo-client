@@ -14,7 +14,7 @@ import {
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
-import { EntityStore, supportsResultCaching } from './entityStore';
+import { EntityStore, supportsResultCaching, Modifiers, Modifier } from './entityStore';
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
@@ -151,6 +151,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
 
     this.broadcastWatches();
+  }
+
+  public modify(
+    dataId: string,
+    modifiers: Modifier<any> | Modifiers,
+    optimistic = false,
+  ): boolean {
+    const store = optimistic ? this.optimisticData : this.data;
+    if (store.modify(dataId, modifiers)) {
+      this.broadcastWatches();
+      return true;
+    }
+    return false;
   }
 
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {

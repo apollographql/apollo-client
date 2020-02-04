@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
 import { StoreValue } from '../../utilities/graphql/storeUtils';
-import { FieldValueGetter } from './entityStore';
+import { Modifiers, Modifier, FieldValueGetter } from './entityStore';
 export { StoreValue }
 
 export interface IdGetterObj extends Object {
@@ -23,6 +23,7 @@ export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
   merge(dataId: string, incoming: StoreObject): void;
+  modify(dataId: string, modifiers: Modifier<any> | Modifiers): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 

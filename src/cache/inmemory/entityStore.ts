@@ -6,13 +6,17 @@ import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 import { fieldNameFromStoreName } from './helpers';
+import { Policies } from './policies';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
 
-  public readonly group: CacheGroup;
+  constructor(
+    public readonly policies: Policies,
+    public readonly group: CacheGroup,
+  ) {}
 
   public abstract addLayer(
     layerId: string,
@@ -335,14 +339,15 @@ export namespace EntityStore {
     private sharedLayerGroup: CacheGroup = null;
 
     constructor({
+      policies,
       resultCaching = true,
       seed,
     }: {
+      policies: Policies;
       resultCaching?: boolean;
       seed?: NormalizedCacheObject;
     }) {
-      super();
-      (this.group as any) = new CacheGroup(resultCaching);
+      super(policies, new CacheGroup(resultCaching));
       this.sharedLayerGroup = new CacheGroup(resultCaching);
       if (seed) this.replace(seed);
     }
@@ -371,7 +376,7 @@ class Layer extends EntityStore {
     public readonly replay: (layer: EntityStore) => any,
     public readonly group: CacheGroup,
   ) {
-    super();
+    super(parent.policies, group);
     replay(this);
   }
 
@@ -448,5 +453,9 @@ export function supportsResultCaching(store: any): store is EntityStore {
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {
-  return new EntityStore.Root({ resultCaching: true, seed });
+  return new EntityStore.Root({
+    policies: new Policies,
+    resultCaching: true,
+    seed,
+  });
 }

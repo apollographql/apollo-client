@@ -71,6 +71,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
     this.data = new EntityStore.Root({
+      policies: this.policies,
       resultCaching: this.config.resultCaching,
     });
 

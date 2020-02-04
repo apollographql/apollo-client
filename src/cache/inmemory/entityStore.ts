@@ -1,10 +1,11 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
 import { equal } from '@wry/equality';
 
-import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
+import { isReference, StoreValue, Reference } from '../../utilities/graphql/storeUtils';
 import { DeepMerger } from '../../utilities/common/mergeDeep';
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
+import { NormalizedCache, NormalizedCacheObject, StoreObject, SafeReadonly } from './types';
 import { fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';
 
@@ -44,6 +45,10 @@ export abstract class EntityStore implements NormalizedCache {
       if (storeObject && hasOwn.call(storeObject, fieldName)) {
         return storeObject[fieldName];
       }
+    }
+    if (fieldName === "__typename" &&
+        hasOwn.call(this.policies.rootTypenamesById, dataId)) {
+      return this.policies.rootTypenamesById[dataId];
     }
     if (this instanceof Layer) {
       return this.parent.get(dataId, fieldName);
@@ -285,6 +290,24 @@ export abstract class EntityStore implements NormalizedCache {
   public makeCacheKey(...args: any[]) {
     return this.group.keyMaker.lookupArray(args);
   }
+}
+
+export type FieldValueGetter = ReturnType<typeof makeFieldValueGetter>;
+
+export function makeFieldValueGetter(store: NormalizedCache) {
+  // Provides a uniform interface for reading field values, whether or not
+  // objectOrReference is a normalized entity.
+  return function getFieldValue<T = StoreValue>(
+    objectOrReference: StoreObject | Reference,
+    storeFieldName: string,
+  ): SafeReadonly<T> {
+    // Enforce Readonly<T> at runtime, in development.
+    return maybeDeepFreeze(
+      isReference(objectOrReference)
+        ? store.get(objectOrReference.__ref, storeFieldName)
+        : objectOrReference && objectOrReference[storeFieldName]
+    ) as SafeReadonly<T>;
+  };
 }
 
 // A single CacheGroup represents a set of one or more EntityStore objects,

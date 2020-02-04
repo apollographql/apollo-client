@@ -34,9 +34,9 @@ import {
   StoreObject,
   NormalizedCache,
 } from './types';
-import { supportsResultCaching } from './entityStore';
+import { supportsResultCaching, FieldValueGetter, makeFieldValueGetter } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies, FieldValueGetter } from './policies';
+import { Policies } from './policies';
 
 export type VariableMap = { [name: string]: any };
 
@@ -165,7 +165,7 @@ export class StoreReader {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        getFieldValue: policies.makeFieldValueGetter(store),
+        getFieldValue: makeFieldValueGetter(store),
       },
     });
 

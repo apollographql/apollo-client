@@ -60,6 +60,15 @@ export interface StoreObject {
   [storeFieldName: string]: StoreValue;
 }
 
+// The Readonly<T> type only really works for object types, since it marks
+// all of the object's properties as readonly, but there are many cases when
+// a generic type parameter like TExisting might be a string or some other
+// primitive type, in which case we need to avoid wrapping it with Readonly.
+// SafeReadonly<string> collapses to just string, which makes string
+// assignable to SafeReadonly<any>, whereas string is not assignable to
+// Readonly<any>, somewhat surprisingly.
+export type SafeReadonly<T> = T extends object ? Readonly<T> : T;
+
 export type OptimisticStoreItem = {
   id: string;
   data: NormalizedCacheObject;

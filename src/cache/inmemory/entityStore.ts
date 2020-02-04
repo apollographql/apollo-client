@@ -166,7 +166,10 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public evict(dataId: string, fieldName?: string): boolean {
-    let evicted = this.delete(dataId, fieldName);
+    let evicted = false;
+    if (hasOwn.call(this.data, dataId)) {
+      evicted = this.delete(dataId, fieldName);
+    }
     if (this instanceof Layer) {
       evicted = this.parent.evict(dataId, fieldName) || evicted;
     }

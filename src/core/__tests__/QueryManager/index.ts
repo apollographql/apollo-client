@@ -2312,69 +2312,6 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync('should error if we replace a real id node in the store with a generated id node', (resolve, reject) => {
-    const queryWithId = gql`
-      query {
-        author {
-          firstName
-          lastName
-          __typename
-          id
-        }
-      }
-    `;
-    const dataWithId = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-        id: '129',
-        __typename: 'Author',
-      },
-    };
-    const queryWithoutId = gql`
-      query {
-        author {
-          address
-        }
-      }
-    `;
-    const dataWithoutId = {
-      author: {
-        address: 'fake address',
-      },
-    };
-    const reducerConfig = { dataIdFromObject };
-    const queryManager = createQueryManager({
-      link: mockSingleLink({
-        request: { query: queryWithId },
-        result: { data: dataWithId },
-      }, {
-        request: { query: queryWithoutId },
-        result: { data: dataWithoutId },
-      }).setOnError(reject),
-      config: reducerConfig,
-    });
-
-    const observableWithId = queryManager.watchQuery<any>({
-      query: queryWithId,
-    });
-    const observableWithoutId = queryManager.watchQuery<any>({
-      query: queryWithoutId,
-    });
-
-    // I'm not sure the waiting 60 here really is required, but the test used to do it
-    return Promise.all([
-      observableToPromise({ observable: observableWithId, wait: 60 }, result =>
-        expect(stripSymbols(result.data)).toEqual(dataWithId),
-      ),
-      observableToPromise({
-        observable: observableWithoutId,
-        errorCallbacks: [error => expect(error.message).toMatch('Store error')],
-        wait: 60,
-      }),
-    ]).then(resolve, reject);
-  });
-
   itAsync('should not error when replacing unidentified data with a normalized ID', (resolve, reject) => {
     const queryWithoutId = gql`
       query {

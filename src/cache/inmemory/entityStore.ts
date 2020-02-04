@@ -1,18 +1,11 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
-import { invariant } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
 import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
-import {
-  DeepMerger,
-  ReconcilerFunction,
-} from '../../utilities/common/mergeDeep';
+import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
-import {
-  getTypenameFromStoreObject,
-  fieldNameFromStoreName,
-} from './helpers';
+import { fieldNameFromStoreName } from './helpers';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -53,7 +46,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  private lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
+  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
     // The has method (above) calls lookup with dependOnExistence = true, so
     // that it can later be invalidated when we add or remove a StoreObject for
     // this dataId. Any consumer who cares about the contents of the StoreObject
@@ -66,22 +59,27 @@ export abstract class EntityStore implements NormalizedCache {
 
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
-    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming, this);
+    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming);
+    // Even if merged === existing, existing may have come from a lower
+    // layer, so we always need to set this.data[dataId] on this level.
+    this.data[dataId] = merged;
     if (merged !== existing) {
-      this.data[dataId] = merged;
       delete this.refs[dataId];
       if (this.group.caching) {
+        const fieldsToDirty: Record<string, 1> = Object.create(null);
         // If we added a new StoreObject where there was previously none, dirty
         // anything that depended on the existence of this dataId, such as the
         // EntityStore#has method.
-        if (!existing) this.group.dirty(dataId, "__exists");
-        // Now invalidate dependents who called getFieldValue for any
-        // fields that are changing as a result of this merge.
+        if (!existing) fieldsToDirty.__exists = 1;
+        // Now invalidate dependents who called getFieldValue for any fields
+        // that are changing as a result of this merge.
         Object.keys(incoming).forEach(storeFieldName => {
-          if (!existing || incoming[storeFieldName] !== existing[storeFieldName]) {
-            this.group.dirty(dataId, storeFieldName);
+          if (!existing || existing[storeFieldName] !== merged[storeFieldName]) {
+            fieldsToDirty[fieldNameFromStoreName(storeFieldName)] = 1;
           }
         });
+        Object.keys(fieldsToDirty).forEach(
+          fieldName => this.group.dirty(dataId, fieldName));
       }
     }
   }
@@ -168,7 +166,10 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public evict(dataId: string, fieldName?: string): boolean {
-    let evicted = this.delete(dataId, fieldName);
+    let evicted = false;
+    if (hasOwn.call(this.data, dataId)) {
+      evicted = this.delete(dataId, fieldName);
+    }
     if (this instanceof Layer) {
       evicted = this.parent.evict(dataId, fieldName) || evicted;
     }
@@ -387,9 +388,16 @@ class Layer extends EntityStore {
 
     if (layerId === this.id) {
       // Dirty every ID we're removing.
-      // TODO Some of these IDs could escape dirtying if value unchanged.
       if (this.group.caching) {
-        Object.keys(this.data).forEach(dataId => this.delete(dataId));
+        Object.keys(this.data).forEach(dataId => {
+          // If this.data[dataId] contains nothing different from what
+          // lies beneath, we can avoid dirtying this dataId and all of
+          // its fields, and simply discard this Layer. The only reason we
+          // call this.delete here is to dirty the removed fields.
+          if (this.data[dataId] !== (parent as Layer).lookup(dataId)) {
+            this.delete(dataId);
+          }
+        });
       }
       return parent;
     }
@@ -417,57 +425,19 @@ class Layer extends EntityStore {
   }
 }
 
-const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
-  existingObject,
-  incomingObject,
-  property,
-  // This parameter comes from the additional argument we pass to the
-  // merge method in context.mergeStoreObjects (see writeQueryToStore).
-  store,
-) {
-  // In the future, reconciliation logic may depend on the type of the parent
-  // StoreObject, not just the values of the given property.
-  const existing = existingObject[property];
-  const incoming = incomingObject[property];
-
-  if (
-    existing !== incoming &&
-    // The DeepMerger class has various helpful utilities that we might as
-    // well reuse here.
-    this.isObject(existing) &&
-    this.isObject(incoming)
-  ) {
-    const eType = getTypenameFromStoreObject(store, existing);
-    const iType = getTypenameFromStoreObject(store, incoming);
-    // If both objects have a typename and the typename is different, let the
-    // incoming object win. The typename can change when a different subtype
-    // of a union or interface is written to the store.
-    if (
-      typeof eType === 'string' &&
-      typeof iType === 'string' &&
-      eType !== iType
-    ) {
-      return incoming;
-    }
-
-    invariant(
-      !isReference(existing) || isReference(incoming),
-      `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
-    );
-
-    // It's worth checking deep equality here (even though blindly
-    // returning incoming would be logically correct) because preserving
-    // the referential identity of existing data can prevent needless
-    // rereading and rerendering.
-    if (equal(existing, incoming)) {
-      return existing;
-    }
-  }
-
-  // In all other cases, incoming replaces existing without any effort to
-  // merge them deeply, since custom merge functions have already been
-  // applied to the incoming data by walkWithMergeOverrides.
-  return incoming;
+function storeObjectReconciler(
+  existingObject: StoreObject,
+  incomingObject: StoreObject,
+  property: string | number,
+): StoreValue {
+  const existingValue = existingObject[property];
+  const incomingValue = incomingObject[property];
+  // Wherever there is a key collision, prefer the incoming value, unless
+  // it is deeply equal to the existing value. It's worth checking deep
+  // equality here (even though blindly returning incoming would be
+  // logically correct) because preserving the referential identity of
+  // existing data can prevent needless rereading and rerendering.
+  return equal(existingValue, incomingValue) ? existingValue : incomingValue;
 }
 
 export function supportsResultCaching(store: any): store is EntityStore {

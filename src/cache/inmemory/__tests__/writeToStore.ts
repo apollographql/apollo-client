@@ -1706,64 +1706,6 @@ describe('writing to the store', () => {
     });
   });
 
-  it('throws when trying to write an object without id that was previously queried with id', () => {
-    const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: {
-        __typename: 'Query',
-        item: makeReference('abcd'),
-      },
-      abcd: {
-        id: 'abcd',
-        __typename: 'Item',
-        stringField: 'This is a string!',
-      },
-    });
-
-    const writer = new StoreWriter({
-      policies: new Policies({
-        dataIdFromObject: getIdField,
-      }),
-    });
-
-    expect(() => {
-      writer.writeQueryToStore({
-        store,
-        result: {
-          item: {
-            __typename: 'Item',
-            stringField: 'This is still a string!',
-          },
-        },
-        query: gql`
-          query Failure {
-            item {
-              stringField
-            }
-          }
-        `,
-      });
-    }).toThrowErrorMatchingSnapshot();
-
-    expect(() => {
-      writer.writeQueryToStore({
-        store,
-        query: gql`
-          query {
-            item {
-              stringField
-            }
-          }
-        `,
-        result: {
-          item: {
-            __typename: 'Item',
-            stringField: 'This is still a string!',
-          },
-        },
-      });
-    }).toThrowError(/contains an id of abcd/g);
-  });
-
   it('properly handles the @connection directive', () => {
     const store = defaultNormalizedCacheFactory();
 

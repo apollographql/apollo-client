@@ -244,7 +244,7 @@ const COMMENTS_QUERY = gql`
 function CommentsPageWithData({ params }) {
   const result = useQuery(
     COMMENTS_QUERY,
-    { variables: { postID: `${params.postID}` } }
+    { variables: { postID: params.postID } }
   );
   return <CommentsPage {...result} />;
 }
@@ -268,7 +268,7 @@ const COMMENTS_QUERY = gql`
 const CommentsPageWithData = ({ params }) => (
   <Query
     query={COMMENTS_QUERY}
-    variables={{ postID: `${params.postID}` }}
+    variables={{ postID: params.postID }}
   >
     {result => <CommentsPage {...result} />}
   </Query>
@@ -300,7 +300,7 @@ Next, we modify our `CommentsPageWithData` function to add a `subscribeToNewComm
 function CommentsPageWithData({ params }) {
   const { subscribeToMore, ...result } = useQuery(
     COMMENT_QUERY,
-    { variables: { postID: `${params.postID}` } }
+    { variables: { postID: params.postID } }
   );
 
   return (
@@ -334,7 +334,7 @@ function CommentsPageWithData({ params }) {
 const CommentsPageWithData = ({ params }) => (
   <Query
     query={COMMENT_QUERY}
-    variables={{ postID: `${params.postID}` }}
+    variables={{ postID: params.postID }}
   >
     {({ subscribeToMore, ...result }) => (
       <CommentsPage

@@ -80,9 +80,9 @@ function loadExportNames(bundleName) {
 function writeCjsIndex(bundleName, exportNames, includeNames = true) {
   const filterPrefix = includeNames ? '' : '!';
   fs.writeFileSync(`${distRoot}/${bundleName}/${bundleName}.cjs.js`, [
-    "const allExports = require('../apollo-client.cjs');",
-    `const names = new Set(${JSON.stringify(exportNames)});`,
-    "Object.keys(allExports).forEach(name => {",
+    "var allExports = require('../apollo-client.cjs');",
+    `var names = new Set(${JSON.stringify(exportNames)});`,
+    "Object.keys(allExports).forEach(function (name) {",
     `  if (${filterPrefix}names.has(name)) {`,
     "    exports[name] = allExports[name];",
     "  }",

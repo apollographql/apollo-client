@@ -11,6 +11,18 @@ export {
 export {
   InMemoryCache,
   InMemoryCacheConfig,
+  LocalVar,
 } from './inmemory/inMemoryCache';
-export { defaultDataIdFromObject } from './inmemory/policies';
+
+export {
+  defaultDataIdFromObject,
+  TypePolicies,
+  TypePolicy,
+  FieldPolicy,
+  FieldReadFunction,
+  FieldMergeFunction,
+  FieldFunctionOptions,
+  PossibleTypesMap,
+} from './inmemory/policies';
+
 export * from './inmemory/types';

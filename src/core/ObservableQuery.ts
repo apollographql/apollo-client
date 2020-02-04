@@ -5,7 +5,11 @@ import { tryFunctionOrLogError } from '../utilities/common/errorHandling';
 import { cloneDeep } from '../utilities/common/cloneDeep';
 import { getOperationDefinition } from '../utilities/graphql/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import { Observable, Observer, Subscription } from '../utilities/observables/Observable';
+import {
+  Observable,
+  Observer,
+  ObservableSubscription
+} from '../utilities/observables/Observable';
 import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, FetchType, OperationVariables } from './types';
@@ -65,7 +69,7 @@ export class ObservableQuery<
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
-  private subscriptions = new Set<Subscription>();
+  private subscriptions = new Set<ObservableSubscription>();
 
   private lastResult: ApolloQueryResult<TData>;
   private lastResultSnapshot: ApolloQueryResult<TData>;

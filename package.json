@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.0.0-beta.24",
+  "version": "3.0.0-beta.32",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -29,16 +29,16 @@
   "homepage": "https://www.apollographql.com",
   "scripts": {
     "prebuild": "npm run clean",
-    "build": "npx tsc",
+    "build": "tsc",
     "postbuild": "npm run bundle && npm run prepdist",
-    "watch": "npx tsc-watch --onSuccess \"npm run postbuild\"",
-    "clean": "npx rimraf -r dist coverage lib",
+    "watch": "tsc-watch --onSuccess \"npm run postbuild\"",
+    "clean": "rimraf -r dist coverage lib",
     "test": "jest --config ./config/jest.config.js",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "test:watch": "jest --config ./config/jest.config.js --watch",
-    "bundle": "npx rollup -c ./config/rollup.config.js",
-    "coverage": "npx jest --config ./config/jest.config.js --verbose --coverage",
-    "coverage:upload": "npx codecov",
+    "bundle": "rollup -c ./config/rollup.config.js",
+    "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
+    "coverage:upload": "codecov",
     "bundlesize": "npm run build && bundlesize",
     "prepdist": "node ./config/prepareDist.js",
     "predeploy": "npm run build",
@@ -48,7 +48,7 @@
     {
       "name": "apollo-client",
       "path": "./dist/apollo-client.cjs.min.js",
-      "maxSize": "24.05 kB"
+      "maxSize": "24.1 kB"
     }
   ],
   "peerDependencies": {
@@ -65,7 +65,7 @@
     "@wry/equality": "^0.1.9",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-tag": "^2.10.1",
-    "optimism": "^0.11.3",
+    "optimism": "^0.11.5",
     "symbol-observable": "^1.2.0",
     "ts-invariant": "^0.4.4",
     "tslib": "^1.10.0",
@@ -82,7 +82,6 @@
     "bundlesize": "0.18.0",
     "codecov": "3.6.1",
     "fetch-mock": "7.7.3",
-    "fsevents": "2.1.2",
     "graphql": "14.5.8",
     "jest": "24.9.0",
     "jest-junit": "8.0.0",
@@ -92,8 +91,7 @@
     "react-dom": "16.12.0",
     "recast": "0.18.5",
     "rimraf": "3.0.0",
-    "rollup": "1.27.14",
-    "rollup-plugin-commonjs": "10.1.0",
+    "rollup": "1.29.1",
     "rollup-plugin-invariant": "0.5.6",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-terser": "5.1.3",

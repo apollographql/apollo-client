@@ -5,8 +5,8 @@ import {
   FieldNode,
 } from "graphql";
 
-import { dep, KeyTrie } from 'optimism';
-import invariant from 'ts-invariant';
+import { KeyTrie } from 'optimism';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   FragmentMap,
@@ -60,7 +60,7 @@ type KeyFieldsFunction = (
   },
 ) => ReturnType<IdGetter>;
 
-type TypePolicy = {
+export type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
   // array of field names or a function that returns an arbitrary string.
   keyFields?: KeySpecifier | KeyFieldsFunction | false;
@@ -74,8 +74,8 @@ type TypePolicy = {
 
   fields?: {
     [fieldName: string]:
-      | FieldPolicy<StoreValue>
-      | FieldReadFunction<StoreValue>;
+      | FieldPolicy<any>
+      | FieldReadFunction<any>;
   }
 };
 
@@ -88,10 +88,23 @@ type KeyArgsFunction = (
   },
 ) => ReturnType<IdGetter>;
 
-export type FieldPolicy<TValue> = {
+// The Readonly<T> type only really works for object types, since it marks
+// all of the object's properties as readonly, but there are many cases when
+// a generic type parameter like TExisting might be a string or some other
+// primitive type, in which case we need to avoid wrapping it with Readonly.
+// SafeReadonly<string> collapses to just string, which makes string
+// assignable to SafeReadonly<any>, whereas string is not assignable to
+// Readonly<any>, somewhat surprisingly.
+type SafeReadonly<T> = T extends object ? Readonly<T> : T;
+
+export type FieldPolicy<
+  TExisting = any,
+  TIncoming = TExisting,
+  TReadResult = TExisting,
+> = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TValue>;
-  merge?: FieldMergeFunction<TValue>;
+  read?: FieldReadFunction<TExisting, TReadResult>;
+  merge?: FieldMergeFunction<TExisting, TIncoming>;
 };
 
 export type FieldValueGetter =
@@ -99,8 +112,11 @@ export type FieldValueGetter =
 
 type StorageType = Record<string, any>;
 
-interface FieldFunctionOptions {
-  args: Record<string, any> | null;
+export interface FieldFunctionOptions<
+  TArgs = Record<string, any>,
+  TVars = Record<string, any>,
+> {
+  args: TArgs | null;
 
   // The name of the field, equal to options.field.name.value when
   // options.field is available. Useful if you reuse the same function for
@@ -113,7 +129,7 @@ interface FieldFunctionOptions {
   // option will be null when a string was passed to options.readField.
   field: FieldNode | null;
 
-  variables?: Record<string, any>;
+  variables?: TVars;
 
   // In rare advanced use cases, a read or merge function may wish to
   // consult the current Policies object, for example to call
@@ -136,22 +152,23 @@ interface FieldFunctionOptions {
   readField<T = StoreValue>(
     nameOrField: string | FieldNode,
     foreignObjOrRef?: StoreObject | Reference,
-  ): Readonly<T>;
+  ): SafeReadonly<T>;
 
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
   storage: StorageType;
 
-  // Call this function to invalidate any cached queries that previously
-  // consumed this field. If you use options.storage to cache the result
-  // of an expensive read function, updating options.storage and then
-  // calling options.invalidate() can be a good way to deliver the new
-  // result asynchronously.
-  invalidate(): void;
+  // Instead of just merging objects with { ...existing, ...incoming }, this
+  // helper function can be used to merge objects in a way that respects any
+  // custom merge functions defined for their fields.
+  mergeObjects<T extends StoreObject | Reference>(
+    existing: T,
+    incoming: T,
+  ): T;
 }
 
-type FieldReadFunction<TExisting, TResult = TExisting> = (
+export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
   // When reading a field, one often needs to know about any existing
   // value stored for that field. If the field is read before any value
   // has been written to the cache, this existing parameter will be
@@ -160,15 +177,15 @@ type FieldReadFunction<TExisting, TResult = TExisting> = (
   // than one of the named options) because that makes it possible for the
   // developer to annotate it with a type, without also having to provide
   // a whole new type for the options object.
-  existing: Readonly<TExisting> | undefined,
+  existing: SafeReadonly<TExisting> | undefined,
   options: FieldFunctionOptions,
-) => TResult;
+) => TReadResult;
 
-type FieldMergeFunction<TExisting> = (
-  existing: Readonly<TExisting> | undefined,
+export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
+  existing: SafeReadonly<TExisting> | undefined,
   // The incoming parameter needs to be positional as well, for the same
   // reasons discussed in FieldReadFunction above.
-  incoming: Readonly<StoreValue>,
+  incoming: SafeReadonly<TIncoming>,
   options: FieldFunctionOptions,
 ) => TExisting;
 
@@ -196,8 +213,8 @@ export class Policies {
       fields?: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
-          read?: FieldReadFunction<StoreValue>;
-          merge?: FieldMergeFunction<StoreValue>;
+          read?: FieldReadFunction<any>;
+          merge?: FieldMergeFunction<any>;
         };
       };
     };
@@ -320,9 +337,12 @@ export class Policies {
             if (typeof merge === "function") existing.merge = merge;
           }
 
-          if (existing.read || existing.merge) {
-            // If we have a read or merge function, assume keyArgs:false
-            // unless existing.keyFn has already been explicitly set.
+          if (existing.read && existing.merge) {
+            // If we have both a read and a merge function, assume
+            // keyArgs:false, because read and merge together can take
+            // responsibility for interpreting arguments in and out. This
+            // default assumption can always be overridden by specifying
+            // keyArgs explicitly in the FieldPolicy.
             existing.keyFn = existing.keyFn || simpleKeyArgsFn;
           }
         });
@@ -354,9 +374,10 @@ export class Policies {
     typename: string,
     createIfMissing: boolean,
   ): Policies["typePolicies"][string] {
-    const { typePolicies } = this;
-    return typePolicies[typename] || (
-      createIfMissing && (typePolicies[typename] = Object.create(null)));
+    if (typename) {
+      return this.typePolicies[typename] || (
+        createIfMissing && (this.typePolicies[typename] = Object.create(null)));
+    }
   }
 
   private getSubtypeSet(
@@ -428,7 +449,7 @@ export class Policies {
     return function getFieldValue<T = StoreValue>(
       objectOrReference: StoreObject | Reference,
       storeFieldName: string,
-    ): Readonly<T> {
+    ): SafeReadonly<T> {
       let fieldValue: StoreValue;
       if (isReference(objectOrReference)) {
         const dataId = objectOrReference.__ref;
@@ -442,11 +463,8 @@ export class Policies {
       } else {
         fieldValue = objectOrReference && objectOrReference[storeFieldName];
       }
-      if (process.env.NODE_ENV !== "production") {
-        // Enforce Readonly<T> at runtime, in development.
-        maybeDeepFreeze(fieldValue);
-      }
-      return fieldValue as T;
+      // Enforce Readonly<T> at runtime, in development.
+      return maybeDeepFreeze(fieldValue) as SafeReadonly<T>;
     };
   }
 
@@ -485,7 +503,6 @@ export class Policies {
   }
 
   private storageTrie = new KeyTrie<StorageType>(true);
-  private fieldDep = dep<StorageType>();
 
   public readField<V = StoreValue>(
     objectOrReference: StoreObject | Reference,
@@ -493,7 +510,7 @@ export class Policies {
     getFieldValue: FieldValueGetter,
     variables?: Record<string, any>,
     typename = getFieldValue<string>(objectOrReference, "__typename"),
-  ): Readonly<V> {
+  ): SafeReadonly<V> {
     invariant(
       objectOrReference,
       "Must provide an object or Reference when calling Policies#readField",
@@ -515,38 +532,15 @@ export class Policies {
         storeFieldName,
       );
 
-      // By depending on the options.storage object when we call
-      // policy.read, we can easily invalidate the result of the read
-      // function when/if the options.invalidate function is called.
-      policies.fieldDep(storage);
-
-      return read(existing, {
-        args: typeof nameOrField === "string" ? null :
-          argumentsObjectFromField(nameOrField, variables),
-        field: typeof nameOrField === "string" ? null : nameOrField,
-        fieldName,
-        variables,
+      return read(existing, makeFieldFunctionOptions(
         policies,
-        isReference,
-        toReference: policies.toReference,
+        typename,
+        objectOrReference,
+        nameOrField,
         storage,
-        // I'm not sure why it's necessary to repeat the parameter types
-        // here, but TypeScript complains if I leave them out.
-        readField<T>(
-          nameOrField: string | FieldNode,
-          foreignObjOrRef?: Reference,
-        ) {
-          return policies.readField<T>(
-            foreignObjOrRef || objectOrReference,
-            nameOrField,
-            getFieldValue,
-            variables,
-          );
-        },
-        invalidate() {
-          policies.fieldDep.dirty(storage);
-        },
-      }) as Readonly<V>;
+        getFieldValue,
+        variables,
+      )) as SafeReadonly<V>;
     }
 
     return existing;
@@ -572,86 +566,65 @@ export class Policies {
     if (isFieldValueToBeMerged(incoming)) {
       const field = incoming.__field;
       const fieldName = field.name.value;
-      const policy = policies.getFieldPolicy(
+      // This policy and its merge function are guaranteed to exist
+      // because the incoming value is a FieldValueToBeMerged object.
+      const { merge } = policies.getFieldPolicy(
         incoming.__typename, fieldName, false);
 
-      // The incoming data can have multiple layers of nested objects, so we
-      // need to handle child merges before handling parent merges. This
-      // post-order traversal also ensures that the incoming data passed to
-      // parent merge functions never contains any FieldValueToBeMerged
-      // objects for fields within child objects.
-      const applied = policies.applyMerges(
-        existing,
-        incoming.__value as T,
+      // If storage ends up null, that just means no options.storage object
+      // has ever been created for a read function for this field before, so
+      // there's nothing this merge function could do with options.storage
+      // that would help the read function do its work. Most merge functions
+      // will never need to worry about options.storage, but if you're reading
+      // this comment then you probably have good reasons for wanting to know
+      // esoteric details like these, you wizard, you.
+      const storage = storageKeys
+        ? policies.storageTrie.lookupArray(storageKeys)
+        : null;
+
+      incoming = merge(existing, incoming.__value, makeFieldFunctionOptions(
+        policies,
+        incoming.__typename,
+        // Unlike options.readField for read functions, we do not fall
+        // back to the current object if no foreignObjOrRef is provided,
+        // because it's not clear what the current object should be for
+        // merge functions: the (possibly undefined) existing object, or
+        // the incoming object? If you think your merge function needs
+        // to read sibling fields in order to produce a new value for
+        // the current field, you might want to rethink your strategy,
+        // because that's a recipe for making merge behavior sensitive
+        // to the order in which fields are written into the cache.
+        // However, readField(name, ref) is useful for merge functions
+        // that need to deduplicate child objects and references.
+        null,
+        field,
+        storage,
         getFieldValue,
         variables,
-        storageKeys,
-      );
-
-      const merge = policy && policy.merge;
-      if (merge) {
-        if (process.env.NODE_ENV !== "production") {
-          // It may be tempting to modify existing data directly, for example
-          // by pushing more elements onto an existing array, but merge
-          // functions are expected to be pure, so it's important that we
-          // enforce immutability in development.
-          maybeDeepFreeze(existing);
-        }
-
-        // If storage ends up null, that just means no options.storage object
-        // has ever been created for a read function for this field before, so
-        // there's nothing this merge function could do with options.storage
-        // that would help the read function do its work. Most merge functions
-        // will never need to worry about options.storage, but if you're
-        // reading this comment then you probably have good reasons for
-        // wanting to know esoteric details like these, you wizard, you.
-        const storage = storageKeys
-          ? policies.storageTrie.lookupArray(storageKeys)
-          : null;
-
-        return merge(existing, applied, {
-          args: argumentsObjectFromField(field, variables),
-          field,
-          fieldName,
-          variables,
-          policies,
-          isReference,
-          toReference: policies.toReference,
-          readField<T>(
-            nameOrField: string | FieldNode,
-            foreignObjOrRef: StoreObject | Reference,
-          ) {
-            // Unlike options.readField for read functions, we do not fall
-            // back to the current object if no foreignObjOrRef is provided,
-            // because it's not clear what the current object should be for
-            // merge functions: the (possibly undefined) existing object, or
-            // the incoming object? If you think your merge function needs
-            // to read sibling fields in order to produce a new value for
-            // the current field, you might want to rethink your strategy,
-            // because that's a recipe for making merge behavior sensitive
-            // to the order in which fields are written into the cache.
-            // However, readField(name, ref) is useful for merge functions
-            // that need to deduplicate child objects and references.
-            return policies.readField<T>(
-              foreignObjOrRef,
-              nameOrField,
-              getFieldValue,
-              variables,
-            );
-          },
-          storage,
-          invalidate() {
-            if (storage) {
-              policies.fieldDep.dirty(storage);
-            }
-          },
-        }) as T;
-      }
-
-      return applied;
+      )) as T;
     }
 
     if (incoming && typeof incoming === "object") {
+      if (isReference(incoming)) {
+        return incoming;
+      }
+
+      if (Array.isArray(incoming)) {
+        return incoming.map(item => policies.applyMerges(
+          // Items in the same position in different arrays are not
+          // necessarily related to each other, so there is no basis for
+          // merging them. Passing void here means any FieldValueToBeMerged
+          // objects within item will be handled as if there was no existing
+          // data. Also, we do not pass storageKeys because the array itself
+          // is never an entity with a __typename, so its indices can never
+          // have custom read or merge functions.
+          void 0,
+          item,
+          getFieldValue,
+          variables,
+        )) as T;
+      }
+
       const e = existing as StoreObject | Reference;
       const i = incoming as object as StoreObject;
 
@@ -682,6 +655,84 @@ export class Policies {
 
     return incoming;
   }
+}
+
+function makeFieldFunctionOptions(
+  policies: Policies,
+  typename: string,
+  objectOrReference: StoreObject | Reference,
+  nameOrField: string | FieldNode,
+  storage: StorageType,
+  getFieldValue: FieldValueGetter,
+  variables?: Record<string, any>,
+): FieldFunctionOptions {
+  const storeFieldName = typeof nameOrField === "string" ? nameOrField :
+    policies.getStoreFieldName(typename, nameOrField, variables);
+  const fieldName = fieldNameFromStoreName(storeFieldName);
+  return {
+    args: typeof nameOrField === "string" ? null :
+      argumentsObjectFromField(nameOrField, variables),
+    field: typeof nameOrField === "string" ? null : nameOrField,
+    fieldName,
+    variables,
+    policies,
+    isReference,
+    toReference: policies.toReference,
+    storage,
+
+    readField<T>(
+      nameOrField: string | FieldNode,
+      foreignObjOrRef: StoreObject | Reference,
+    ) {
+      return policies.readField<T>(
+        foreignObjOrRef || objectOrReference,
+        nameOrField,
+        getFieldValue,
+        variables,
+      );
+    },
+
+    mergeObjects(existing, incoming) {
+      if (Array.isArray(existing) || Array.isArray(incoming)) {
+        throw new InvariantError("Cannot automatically merge arrays");
+      }
+
+      // These dynamic checks are necessary because the parameters of a
+      // custom merge function can easily have the any type, so the type
+      // system cannot always enforce the StoreObject | Reference
+      // parameter types of options.mergeObjects.
+      if (existing && typeof existing === "object" &&
+          incoming && typeof incoming === "object") {
+        const eType = getFieldValue(existing, "__typename");
+        const iType = getFieldValue(incoming, "__typename");
+        const typesDiffer = eType && iType && eType !== iType;
+
+        const applied = policies.applyMerges(
+          typesDiffer ? void 0 : existing,
+          incoming,
+          getFieldValue,
+          variables,
+        );
+
+        if (
+          typesDiffer ||
+          !canBeMerged(existing) ||
+          !canBeMerged(applied)
+        ) {
+          return applied;
+        }
+
+        return { ...existing, ...applied };
+      }
+
+      return incoming;
+    }
+  };
+}
+
+function canBeMerged(obj: StoreValue): boolean {
+  return obj && typeof obj === "object" &&
+    !isReference(obj) && !Array.isArray(obj);
 }
 
 function keyArgsFnFromSpecifier(

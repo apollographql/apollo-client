@@ -1,8 +1,8 @@
 import gql from "graphql-tag";
-import { InMemoryCache } from "../inMemoryCache";
+import { InMemoryCache, LocalVar } from "../inMemoryCache";
 import { StoreValue } from "../../../utilities";
 import { FieldPolicy, Policies } from "../policies";
-import { Reference } from "../../../core";
+import { Reference, StoreObject } from "../../../core";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -397,7 +397,7 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
-    it("assumes keyArgs:false when read or merge function present", function () {
+    it("assumes keyArgs:false when read and merge function present", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           TypeA: {
@@ -525,7 +525,7 @@ describe("type policies", function () {
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
           __typename: "Query",
-          types: [
+          'types({"from":"A","to":"F"})': [
             {
               __typename: "TypeA",
             },
@@ -806,11 +806,17 @@ describe("type policies", function () {
             fields: {
               result: {
                 read(_, { storage }) {
-                  return storage.result;
+                  if (!storage.jobName) {
+                    storage.jobName = cache.makeLocalVar<string>();
+                  }
+                  return storage.jobName();
                 },
-                merge(_, incoming, { storage, invalidate }) {
-                  storage.result = incoming;
-                  invalidate();
+                merge(_, incoming: string, { storage }) {
+                  if (storage.jobName) {
+                    storage.jobName(incoming);
+                  } else {
+                    storage.jobName = cache.makeLocalVar(incoming);
+                  }
                 },
               },
             },
@@ -1236,18 +1242,6 @@ describe("type policies", function () {
     });
 
     it("readField helper function calls custom read functions", function () {
-      // Rather than writing ownTime data into the cache, we maintain it
-      // externally in this object:
-      const ownTimes = {
-        "parent task": 2,
-        "child task 1": 3,
-        "child task 2": 4,
-        "grandchild task": 5,
-        "independent task": 11,
-      };
-
-      const invalidators: Record<string, () => void> = {};
-
       const cache = new InMemoryCache({
         typePolicies: {
           Agenda: {
@@ -1276,12 +1270,8 @@ describe("type policies", function () {
 
           Task: {
             fields: {
-              ownTime(_, { readField, invalidate }) {
-                const desc = readField<string>("description");
-                // Store the invalidate function so that we can call it
-                // after updating the external ownTimes data.
-                invalidators[desc] = invalidate;
-                return ownTimes[desc] || 0;
+              ownTime(_, { readField }) {
+                return ownTimes[readField<string>("description")]() || 0;
               },
 
               totalTime(_, { readField, toReference }) {
@@ -1327,6 +1317,16 @@ describe("type policies", function () {
           },
         },
       });
+
+      // Rather than writing ownTime data into the cache, we maintain it
+      // externally in this object:
+      const ownTimes = {
+        "parent task": cache.makeLocalVar(2),
+        "child task 1": cache.makeLocalVar(3),
+        "child task 2": cache.makeLocalVar(4),
+        "grandchild task": cache.makeLocalVar(5),
+        "independent task": cache.makeLocalVar(11),
+      };
 
       cache.writeQuery({
         query: gql`
@@ -1479,13 +1479,7 @@ describe("type policies", function () {
 
       expect(read()).toBe(firstResult);
 
-      ownTimes["child task 2"] = 6;
-
-      // The query will not be reevaluated until we invalidate the read
-      // function whose result we changed.
-      expect(read()).toBe(firstResult);
-
-      invalidators["child task 2"]();
+      ownTimes["child task 2"](6);
 
       const secondResult = read();
       expect(secondResult).not.toBe(firstResult);
@@ -1521,8 +1515,7 @@ describe("type policies", function () {
       expect(secondResult.agenda.tasks[2]).not.toBe(firstResult.agenda.tasks[2]);
       expect(secondResult.agenda.tasks[3]).toBe(firstResult.agenda.tasks[3]);
 
-      ownTimes["grandchild task"] = 7;
-      invalidators["grandchild task"]();
+      ownTimes["grandchild task"](7);
 
       const thirdResult = read();
       expect(thirdResult).not.toBe(secondResult);
@@ -1676,8 +1669,8 @@ describe("type policies", function () {
       // the addition of a fifth independent task.
       checkFirstFourIdentical(fourthResult);
 
-      ++ownTimes["independent task"];
-      invalidators["independent task"]();
+      const indVar = ownTimes["independent task"];
+      indVar(indVar() + 1);
 
       const fifthResult = read();
       expect(fifthResult).not.toBe(fourthResult);
@@ -2161,6 +2154,435 @@ describe("type policies", function () {
       });
 
       expect(cache.gc()).toEqual([]);
+    });
+
+    it("should report dangling references returned by read functions", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              book: {
+                keyArgs: ["isbn"],
+                read(existing, { args, toReference }) {
+                  return existing || toReference({
+                    __typename: "Book",
+                    isbn: args.isbn,
+                  });
+                },
+              },
+            },
+          },
+
+          Book: {
+            keyFields: ["isbn"],
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          book(isbn: $isbn) {
+            title
+            author
+          }
+        }
+      `;
+
+      function read(isbn = "156858217X") {
+        return cache.readQuery({
+          query,
+          variables: { isbn },
+        });
+      }
+
+      expect(read).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      );
+
+      cache.writeQuery({
+        query,
+        variables: { isbn: "0393354326" },
+        data: {
+          book: {
+            __typename: "Book",
+            isbn: "0393354326",
+            title: "Guns, Germs, and Steel",
+            author: "Jared Diamond",
+          },
+        },
+      });
+
+      expect(read).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      );
+
+      const stealThisData = {
+        __typename: "Book",
+        isbn: "156858217X",
+        title: "Steal This Book",
+        author: "Abbie Hoffman",
+      };
+
+      const stealThisID = cache.identify(stealThisData);
+
+      cache.writeFragment({
+        id: stealThisID,
+        fragment: gql`
+          fragment BookTitleAuthor on Book {
+            title
+            author
+          }
+        `,
+        data: stealThisData,
+      });
+
+      expect(read()).toEqual({
+        book: {
+          __typename: "Book",
+          title: "Steal This Book",
+          author: "Abbie Hoffman",
+        },
+      });
+
+      expect(read("0393354326")).toEqual({
+        book: {
+          __typename: "Book",
+          title: "Guns, Germs, and Steel",
+          author: "Jared Diamond",
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          'book:{"isbn":"0393354326"}': {
+            __ref: 'Book:{"isbn":"0393354326"}',
+          },
+        },
+        'Book:{"isbn":"0393354326"}': {
+          __typename: "Book",
+          author: "Jared Diamond",
+          title: "Guns, Germs, and Steel",
+        },
+        'Book:{"isbn":"156858217X"}': {
+          __typename: "Book",
+          author: "Abbie Hoffman",
+          title: "Steal This Book",
+        },
+      });
+
+      // Nothing removed because stealThisID was retained by writeFragment.
+      expect(cache.gc()).toEqual([]);
+      expect(cache.release(stealThisID)).toBe(0);
+      expect(cache.gc()).toEqual([
+        stealThisID,
+      ]);
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          'book:{"isbn":"0393354326"}': {
+            __ref: 'Book:{"isbn":"0393354326"}',
+          },
+        },
+        'Book:{"isbn":"0393354326"}': {
+          __typename: "Book",
+          author: "Jared Diamond",
+          title: "Guns, Germs, and Steel",
+        },
+      });
+
+      cache.writeQuery({
+        query,
+        variables: { isbn: "156858217X" },
+        data: {
+          book: stealThisData,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          'book:{"isbn":"0393354326"}': {
+            __ref: 'Book:{"isbn":"0393354326"}',
+          },
+          'book:{"isbn":"156858217X"}': {
+            __ref: 'Book:{"isbn":"156858217X"}',
+          },
+        },
+        'Book:{"isbn":"0393354326"}': {
+          __typename: "Book",
+          author: "Jared Diamond",
+          title: "Guns, Germs, and Steel",
+        },
+        'Book:{"isbn":"156858217X"}': {
+          __typename: "Book",
+          author: "Abbie Hoffman",
+          title: "Steal This Book",
+        },
+      });
+
+      expect(cache.gc()).toEqual([]);
+
+      expect(cache.evict("ROOT_QUERY", "book")).toBe(true);
+
+      expect(cache.gc().sort()).toEqual([
+        'Book:{"isbn":"0393354326"}',
+        'Book:{"isbn":"156858217X"}',
+      ]);
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+        },
+      });
+
+      expect(() => read("0393354326")).toThrow(
+        /Dangling reference to missing Book:{"isbn":"0393354326"} object/
+      );
+
+      expect(() => read("156858217X")).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      );
+    });
+
+    it("can force merging of unidentified non-normalized data", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+            fields: {
+              author: {
+                merge(existing: StoreObject, incoming: StoreObject, { mergeObjects }) {
+                  expect(mergeObjects(void 0, null)).toBe(null);
+
+                  expect(() => {
+                    // The type system does a pretty good job of defending
+                    // against this mistake.
+                    mergeObjects([1, 2, 3] as any as StoreObject, [4] as any as StoreObject);
+                  }).toThrow(/Cannot automatically merge arrays/);
+
+                  const a = { __typename: "A", a: "ay" };
+                  const b = { __typename: "B", a: "bee" };
+                  expect(mergeObjects(a, b)).toBe(b);
+                  expect(mergeObjects(b, a)).toBe(a);
+
+                  return mergeObjects(existing, incoming);
+                },
+              },
+            },
+          },
+
+          Author: {
+            keyFields: false,
+            fields: {
+              books: {
+                merge(existing: any[], incoming: any[], {
+                  isReference,
+                }) {
+                  const merged = existing ? existing.slice(0) : [];
+                  const seen = new Set<string>();
+                  if (existing) {
+                    existing.forEach(book => {
+                      if (isReference(book)) {
+                        seen.add(book.__ref);
+                      }
+                    });
+                  }
+                  incoming.forEach(book => {
+                    if (isReference(book)) {
+                      if (!seen.has(book.__ref)) {
+                        merged.push(book);
+                        seen.add(book.__ref);
+                      }
+                    } else {
+                      merged.push(book);
+                    }
+                  });
+                  return merged;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const queryWithAuthorName = gql`
+        query {
+          currentlyReading {
+            isbn
+            title
+            author {
+              name
+            }
+          }
+        }
+      `;
+
+      const queryWithAuthorBooks = gql`
+        query {
+          currentlyReading {
+            isbn
+            author {
+              books {
+                isbn
+                title
+              }
+            }
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query: queryWithAuthorName,
+        data: {
+          currentlyReading: {
+            __typename: "Book",
+            isbn: "1250758009",
+            title: "The Topeka School",
+            author: {
+              __typename: "Author",
+              name: "Ben Lerner",
+            },
+          },
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          currentlyReading: {
+            __ref: 'Book:{"isbn":"1250758009"}',
+          },
+        },
+        'Book:{"isbn":"1250758009"}': {
+          __typename: "Book",
+          author: {
+            __typename: "Author",
+            name: "Ben Lerner",
+          },
+          isbn: "1250758009",
+          title: "The Topeka School",
+        },
+      });
+
+      cache.writeQuery({
+        query: queryWithAuthorBooks,
+        data: {
+          currentlyReading: {
+            __typename: "Book",
+            isbn: "1250758009",
+            author: {
+              __typename: "Author",
+              books: [{
+                __typename: "Book",
+                isbn: "1250758009",
+              }],
+            },
+          },
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          currentlyReading: {
+            __ref: 'Book:{"isbn":"1250758009"}',
+          },
+        },
+        'Book:{"isbn":"1250758009"}': {
+          __typename: "Book",
+          author: {
+            __typename: "Author",
+            name: "Ben Lerner",
+            books: [
+              { __ref: 'Book:{"isbn":"1250758009"}' },
+            ],
+          },
+          isbn: "1250758009",
+          title: "The Topeka School",
+        },
+      });
+
+      cache.writeQuery({
+        query: queryWithAuthorBooks,
+        data: {
+          currentlyReading: {
+            __typename: "Book",
+            isbn: "1250758009",
+            author: {
+              __typename: "Author",
+              books: [{
+                __typename: "Book",
+                isbn: "1566892740",
+                title: "Leaving the Atocha Station",
+              }],
+            },
+          },
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          currentlyReading: {
+            __ref: 'Book:{"isbn":"1250758009"}',
+          },
+        },
+        'Book:{"isbn":"1250758009"}': {
+          __typename: "Book",
+          author: {
+            __typename: "Author",
+            name: "Ben Lerner",
+            books: [
+              { __ref: 'Book:{"isbn":"1250758009"}' },
+              { __ref: 'Book:{"isbn":"1566892740"}' },
+            ],
+          },
+          isbn: "1250758009",
+          title: "The Topeka School",
+        },
+        'Book:{"isbn":"1566892740"}': {
+          __typename: "Book",
+          isbn: "1566892740",
+          title: "Leaving the Atocha Station",
+        },
+      });
+
+      expect(cache.readQuery({
+        query: queryWithAuthorBooks,
+      })).toEqual({
+        currentlyReading: {
+          __typename: "Book",
+          isbn: "1250758009",
+          author: {
+            __typename: "Author",
+            books: [{
+              __typename: "Book",
+              isbn: "1250758009",
+              title: "The Topeka School",
+            }, {
+              __typename: "Book",
+              isbn: "1566892740",
+              title: "Leaving the Atocha Station",
+            }],
+          },
+        },
+      });
+
+      expect(cache.readQuery({
+        query: queryWithAuthorName,
+      })).toEqual({
+        currentlyReading: {
+          __typename: "Book",
+          isbn: "1250758009",
+          title: "The Topeka School",
+          author: {
+            __typename: "Author",
+            name: "Ben Lerner",
+          },
+        },
+      });
     });
   });
 

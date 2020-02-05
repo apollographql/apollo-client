@@ -161,10 +161,11 @@ describe("type policies", function () {
       typePolicies: {
         Book: {
           keyFields(book, context) {
+            expect(context.typename).toBe("Book");
             expect(context.selectionSet.kind).toBe("SelectionSet");
             expect(context.fragmentMap).toEqual({});
             expect(context.policies).toBeInstanceOf(Policies);
-            return context.typename + ":" + book.isbn;
+            return ["isbn"];
           },
         },
       },
@@ -181,10 +182,10 @@ describe("type policies", function () {
       ROOT_QUERY: {
         __typename: "Query",
         book: {
-          __ref: "Book:1400096235",
+          __ref: 'Book:{"isbn":"1400096235"}',
         },
       },
-      "Book:1400096235": {
+      'Book:{"isbn":"1400096235"}': {
         __typename: "Book",
         title: "The Information",
         author: {

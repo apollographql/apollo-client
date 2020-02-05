@@ -433,7 +433,7 @@ describe("type policies", function () {
           TypeD: {
             fields: {
               d: {
-                keyArgs(field) {
+                keyArgs() {
                   return "d";
                 },
                 read(existing: string) {
@@ -576,6 +576,123 @@ describe("type policies", function () {
             f: "effigy",
           }
         ],
+      });
+    });
+
+    it("can return KeySpecifier arrays from keyArgs functions", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Thread: {
+            keyFields: ["tid"],
+            fields: {
+              comments: {
+                keyArgs(args, context) {
+                  expect(context.typename).toBe("Thread");
+                  expect(context.fieldName).toBe("comments");
+                  expect(context.field.name.value).toBe("comments");
+                  expect(context.variables).toEqual({});
+                  expect(context.policies).toBeInstanceOf(Policies);
+
+                  if (typeof args.limit === "number") {
+                    if (typeof args.offset === "number") {
+                      return ["offset", "limit"];
+                    }
+                    if (args.beforeId) {
+                      return ["beforeId", "limit"];
+                    }
+                  }
+                },
+              },
+            },
+          },
+
+          Comment: {
+            keyFields: ["author", ["name"]],
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          thread {
+            tid
+            offsetComments: comments(offset: 0, limit: 2) {
+              author { name }
+            }
+            beforeIdComments: comments(beforeId: "asdf", limit: 2) {
+              author { name }
+            }
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          thread: {
+            __typename: "Thread",
+            tid: "12345",
+            offsetComments: [{
+              __typename: "Comment",
+              author: { name: "Alice" },
+            }, {
+              __typename: "Comment",
+              author: { name: "Bobby" },
+            }],
+            beforeIdComments: [{
+              __typename: "Comment",
+              author: { name: "Calvin" },
+            }, {
+              __typename: "Comment",
+              author: { name: "Hobbes" },
+            }],
+          },
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          thread: {
+            __ref: 'Thread:{"tid":"12345"}',
+          },
+        },
+        'Thread:{"tid":"12345"}': {
+          __typename: "Thread",
+          tid: "12345",
+          'comments:{"beforeId":"asdf","limit":2}': [
+            { __ref: 'Comment:{"author":{"name":"Calvin"}}' },
+            { __ref: 'Comment:{"author":{"name":"Hobbes"}}' },
+          ],
+          'comments:{"offset":0,"limit":2}': [
+            { __ref: 'Comment:{"author":{"name":"Alice"}}' },
+            { __ref: 'Comment:{"author":{"name":"Bobby"}}' },
+          ],
+        },
+        'Comment:{"author":{"name":"Alice"}}': {
+          __typename: "Comment",
+          author: {
+            name: "Alice",
+          },
+        },
+        'Comment:{"author":{"name":"Bobby"}}': {
+          __typename: "Comment",
+          author: {
+            name: "Bobby",
+          },
+        },
+        'Comment:{"author":{"name":"Calvin"}}': {
+          __typename: "Comment",
+          author: {
+            name: "Calvin",
+          },
+        },
+        'Comment:{"author":{"name":"Hobbes"}}': {
+          __typename: "Comment",
+          author: {
+            name: "Hobbes",
+          },
+        },
       });
     });
 

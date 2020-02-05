@@ -16,7 +16,6 @@ import {
 import {
   isField,
   getTypenameFromResult,
-  valueToObjectRepresentation,
   storeKeyNameFromField,
   StoreValue,
   argumentsObjectFromField,
@@ -80,13 +79,15 @@ export type TypePolicy = {
 };
 
 type KeyArgsFunction = (
-  field: FieldNode,
+  args: Record<string, any>,
   context: {
     typename: string;
+    fieldName: string;
+    field: FieldNode;
     variables: Record<string, any>;
     policies: Policies;
   },
-) => ReturnType<IdGetter>;
+) => KeySpecifier | ReturnType<IdGetter>;
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
@@ -179,7 +180,7 @@ export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
   // a whole new type for the options object.
   existing: SafeReadonly<TExisting> | undefined,
   options: FieldFunctionOptions,
-) => TReadResult;
+) => TReadResult | undefined;
 
 export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   existing: SafeReadonly<TExisting> | undefined,
@@ -199,7 +200,7 @@ export function defaultDataIdFromObject(object: StoreObject) {
 }
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => null;
-const simpleKeyArgsFn: KeyArgsFunction = field => field.name.value;
+const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -474,19 +475,23 @@ export class Policies {
     variables: Record<string, any>,
   ): string {
     const fieldName = field.name.value;
+    const policy = this.getFieldPolicy(typename, fieldName, false);
     let storeFieldName: string | undefined;
 
-    if (typeof typename === "string") {
-      const policy = this.getFieldPolicy(typename, fieldName, false);
-      const keyFn = policy && policy.keyFn;
-      if (keyFn) {
-        // If the custom keyFn returns a falsy value, fall back to
-        // fieldName instead.
-        storeFieldName = keyFn(field, {
-          typename,
-          variables,
-          policies: this,
-        }) || fieldName;
+    let keyFn = policy && policy.keyFn;
+    if (keyFn) {
+      const args = argumentsObjectFromField(field, variables);
+      const context = { typename, fieldName, field, variables, policies: this };
+      while (keyFn) {
+        const specifierOrString = keyFn(args, context);
+        if (Array.isArray(specifierOrString)) {
+          keyFn = keyArgsFnFromSpecifier(specifierOrString);
+        } else {
+          // If the custom keyFn returns a falsy value, fall back to
+          // fieldName instead.
+          storeFieldName = specifierOrString || fieldName;
+          break;
+        }
       }
     }
 
@@ -738,33 +743,12 @@ function canBeMerged(obj: StoreValue): boolean {
 function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,
 ): KeyArgsFunction {
-  const topLevelArgNames: Record<string, true> = Object.create(null);
-
-  specifier.forEach(name => {
-    if (typeof name === "string") {
-      topLevelArgNames[name] = true;
-    }
-  });
-
-  return (field, context) => {
+  return (args, context) => {
+    const field = context.field;
     const fieldName = field.name.value;
-
-    if (field.arguments && field.arguments.length > 0) {
-      const args = Object.create(null);
-
-      field.arguments.forEach(arg => {
-        // Avoid converting arguments that were not mentioned in the specifier.
-        if (topLevelArgNames[arg.name.value] === true) {
-          valueToObjectRepresentation(args, arg.name, arg.value, context.variables);
-        }
-      });
-
-      return `${fieldName}:${
-        JSON.stringify(computeKeyObject(args, specifier))
-      }`;
-    }
-
-    return fieldName;
+    return `${fieldName}:${
+      JSON.stringify(computeKeyObject(args, specifier))
+    }`;
   };
 }
 

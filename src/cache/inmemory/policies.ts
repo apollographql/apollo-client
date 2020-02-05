@@ -180,7 +180,7 @@ export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
   // a whole new type for the options object.
   existing: SafeReadonly<TExisting> | undefined,
   options: FieldFunctionOptions,
-) => TReadResult;
+) => TReadResult | undefined;
 
 export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   existing: SafeReadonly<TExisting> | undefined,

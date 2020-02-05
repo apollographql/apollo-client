@@ -2343,7 +2343,7 @@ describe('client', () => {
         client.readQuery({ query });
         fail('should not see any data');
       } catch (e) {
-        expect(e.message).toMatch(/Can't find field/);
+        expect(e.message).toMatch(/Can't find field author on ROOT_QUERY object/);
       }
 
       client.cache.writeQuery({ query, data: data2 });

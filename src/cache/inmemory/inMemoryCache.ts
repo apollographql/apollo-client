@@ -42,11 +42,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
-  private policies: Policies;
 
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+
+  // Dynamically imported code can augment existing typePolicies or
+  // possibleTypes by calling cache.policies.addTypePolicies or
+  // cache.policies.addPossibletypes.
+  public readonly policies: Policies;
 
   // Set this while in a transaction to prevent broadcasts...
   // don't forget to turn it back on!
@@ -298,7 +302,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     );
   }
 
-  public makeLocalVar<T>(value: T): LocalVar<T> {
+  public makeLocalVar<T>(value?: T): LocalVar<T> {
     return function LocalVar(newValue) {
       if (arguments.length > 0) {
         if (value !== newValue) {

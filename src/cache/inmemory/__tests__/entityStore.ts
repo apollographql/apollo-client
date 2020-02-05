@@ -1213,11 +1213,11 @@ describe('EntityStore', () => {
 
     expect(() => cache.readQuery({
       query: queryWithAliases,
-    })).toThrow(/Can't find field a on object/);
+    })).toThrow(/Dangling reference to missing ABCs:.* object/);
 
     expect(() => cache.readQuery({
       query: queryWithoutAliases,
-    })).toThrow(/Can't find field a on object/);
+    })).toThrow(/Dangling reference to missing ABCs:.* object/);
   });
 
   it("gracefully handles eviction amid optimistic updates", () => {

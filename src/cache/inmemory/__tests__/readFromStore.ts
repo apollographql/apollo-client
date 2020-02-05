@@ -553,7 +553,7 @@ describe('reading from the store', () => {
           }
         `,
       });
-    }).toThrowError(/field missingField on object/);
+    }).toThrowError(/Can't find field missingField on ROOT_QUERY object/);
   });
 
   it('runs a nested query where the reference is null', () => {

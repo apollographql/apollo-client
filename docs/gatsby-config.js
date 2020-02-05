@@ -27,8 +27,7 @@ module.exports = {
           ],
         },
         typescriptApiBox: {
-          data: require('./docs.json'),
-          filepathPrefix: 'src/',
+          data: require('./docs.json')
         },
         sidebarCategories: {
           null: ['index', 'why-apollo', 'get-started'],
@@ -41,7 +40,10 @@ module.exports = {
             'data/fragments',
             'data/error-handling',
           ],
-          Caching: ['caching/cache-configuration', 'caching/cache-interaction'],
+          Caching: [
+            'caching/cache-configuration',
+            'caching/cache-field-behavior',
+            'caching/cache-interaction'],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',
@@ -86,7 +88,10 @@ module.exports = {
             'api/link/apollo-link-schema',
             'api/link/apollo-link-ws'
           ],
-          Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
+          Migrating: [
+            'migrating/apollo-client-3-migration',
+            'migrating/hooks-migration'
+          ],
         },
       },
     },

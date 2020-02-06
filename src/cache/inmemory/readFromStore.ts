@@ -206,9 +206,7 @@ export class StoreReader {
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
-        Object.values(
-          policies.rootTypenamesById
-        ).indexOf(typename) < 0) {
+        !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
       // field, if we have one, and this.config.addTypename is true. Note
       // that this field can be overridden by other merged objects.

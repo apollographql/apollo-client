@@ -1235,7 +1235,7 @@ describe('writing to the store', () => {
           __typename: 'Query',
           author: makeReference(policies.identify(data.author)),
         },
-        [policies.identify(data.author)!]: {
+        [policies.identify(data.author)[0]!]: {
           firstName: data.author.firstName,
           id: data.author.id,
           __typename: data.author.__typename,
@@ -1275,7 +1275,7 @@ describe('writing to the store', () => {
           __typename: 'Query',
           author: makeReference(policies.identify(data.author)),
         },
-        [policies.identify(data.author)!]: {
+        [policies.identify(data.author)[0]!]: {
           __typename: data.author.__typename,
           id: data.author.id,
           info: data.author.info,

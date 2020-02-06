@@ -57,7 +57,7 @@ type KeyFieldsFunction = (
     fragmentMap?: FragmentMap;
     policies: Policies;
   },
-) => ReturnType<IdGetter>;
+) => KeySpecifier | ReturnType<IdGetter>;
 
 export type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
@@ -278,16 +278,18 @@ export class Policies {
       policies: this,
     };
 
-    let id: string | null;
+    let id: string | null = null;
 
     const policy = this.getTypePolicy(typename, false);
-    const keyFn = policy && policy.keyFn;
-    if (keyFn) {
-      id = keyFn(object, context);
-    } else {
-      id = this.config.dataIdFromObject
-        ? this.config.dataIdFromObject(object, context)
-        : null;
+    let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
+    while (keyFn) {
+      const specifierOrId = keyFn(object, context);
+      if (Array.isArray(specifierOrId)) {
+        keyFn = keyFieldsFnFromSpecifier(specifierOrId);
+      } else {
+        id = specifierOrId;
+        break;
+      }
     }
 
     return id && String(id);

@@ -165,7 +165,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public watch(watch: Cache.WatchOptions): () => void {
     this.watches.add(watch);
-
+    if (watch.immediate) {
+      this.maybeBroadcastWatch(watch);
+    }
     return () => {
       this.watches.delete(watch);
     };

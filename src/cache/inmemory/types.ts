@@ -2,6 +2,7 @@ import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
 import { StoreValue } from '../../utilities/graphql/storeUtils';
+import { FieldValueGetter } from './entityStore';
 export { StoreValue }
 
 export interface IdGetterObj extends Object {
@@ -45,6 +46,8 @@ export interface NormalizedCache {
    */
   retain(rootId: string): number;
   release(rootId: string): number;
+
+  getFieldValue: FieldValueGetter;
 }
 
 /**

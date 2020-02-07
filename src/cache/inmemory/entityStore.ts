@@ -290,25 +290,20 @@ export abstract class EntityStore implements NormalizedCache {
   public makeCacheKey(...args: any[]) {
     return this.group.keyMaker.lookupArray(args);
   }
-}
 
-export type FieldValueGetter = ReturnType<typeof makeFieldValueGetter>;
-
-export function makeFieldValueGetter(store: NormalizedCache) {
-  // Provides a uniform interface for reading field values, whether or not
-  // objectOrReference is a normalized entity.
-  return function getFieldValue<T = StoreValue>(
+  // Bound function that can be passed around to provide easy access to fields
+  // of Reference objects as well as ordinary objects.
+  public getFieldValue = <T = StoreValue>(
     objectOrReference: StoreObject | Reference,
     storeFieldName: string,
-  ): SafeReadonly<T> {
-    // Enforce Readonly<T> at runtime, in development.
-    return maybeDeepFreeze(
-      isReference(objectOrReference)
-        ? store.get(objectOrReference.__ref, storeFieldName)
-        : objectOrReference && objectOrReference[storeFieldName]
-    ) as SafeReadonly<T>;
-  };
+  ) => maybeDeepFreeze(
+    isReference(objectOrReference)
+      ? this.get(objectOrReference.__ref, storeFieldName)
+      : objectOrReference && objectOrReference[storeFieldName]
+  ) as SafeReadonly<T>;
 }
+
+export type FieldValueGetter = EntityStore["getFieldValue"];
 
 // A single CacheGroup represents a set of one or more EntityStore objects,
 // typically the Root store in a CacheGroup by itself, and all active Layer

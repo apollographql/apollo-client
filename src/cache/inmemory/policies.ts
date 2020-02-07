@@ -24,13 +24,12 @@ import {
   isReference,
 } from '../../utilities/graphql/storeUtils';
 
-import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 
 import {
   IdGetter,
   StoreObject,
-  NormalizedCache,
+  SafeReadonly,
 } from "./types";
 
 import {
@@ -38,6 +37,7 @@ import {
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
 } from './helpers';
+import { FieldValueGetter } from './entityStore';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -89,15 +89,6 @@ type KeyArgsFunction = (
   },
 ) => KeySpecifier | ReturnType<IdGetter>;
 
-// The Readonly<T> type only really works for object types, since it marks
-// all of the object's properties as readonly, but there are many cases when
-// a generic type parameter like TExisting might be a string or some other
-// primitive type, in which case we need to avoid wrapping it with Readonly.
-// SafeReadonly<string> collapses to just string, which makes string
-// assignable to SafeReadonly<any>, whereas string is not assignable to
-// Readonly<any>, somewhat surprisingly.
-type SafeReadonly<T> = T extends object ? Readonly<T> : T;
-
 export type FieldPolicy<
   TExisting = any,
   TIncoming = TExisting,
@@ -107,9 +98,6 @@ export type FieldPolicy<
   read?: FieldReadFunction<TExisting, TReadResult>;
   merge?: FieldMergeFunction<TExisting, TIncoming>;
 };
-
-export type FieldValueGetter =
-  ReturnType<Policies["makeFieldValueGetter"]>;
 
 type StorageType = Record<string, any>;
 
@@ -442,33 +430,6 @@ export class Policies {
     }
 
     return false;
-  }
-
-  public makeFieldValueGetter(store: NormalizedCache) {
-    const policies = this;
-
-    // Provides a uniform interface for reading field values, whether or not
-    // objectOrReference is a normalized entity.
-    return function getFieldValue<T = StoreValue>(
-      objectOrReference: StoreObject | Reference,
-      storeFieldName: string,
-    ): SafeReadonly<T> {
-      let fieldValue: StoreValue;
-      if (isReference(objectOrReference)) {
-        const dataId = objectOrReference.__ref;
-        fieldValue = store.get(dataId, storeFieldName);
-        if (fieldValue === void 0 && storeFieldName === "__typename") {
-          // We can infer the __typename of singleton root objects like
-          // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
-          // we have never written that information into the cache.
-          return policies.rootTypenamesById[dataId] as any;
-        }
-      } else {
-        fieldValue = objectOrReference && objectOrReference[storeFieldName];
-      }
-      // Enforce Readonly<T> at runtime, in development.
-      return maybeDeepFreeze(fieldValue) as SafeReadonly<T>;
-    };
   }
 
   public getStoreFieldName(

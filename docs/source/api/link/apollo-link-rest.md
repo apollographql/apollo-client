@@ -12,7 +12,7 @@ Calling REST APIs from a GraphQL client opens the benefits of GraphQL for more p
 * You have an existing codebase, but you're looking to evaluate whether GraphQL can work for your needs.
 * You have a large codebase, and the GraphQL migration is happening on the backend, but you want to use GraphQL *now* without waiting!
 
-With `@apollo/link-rest`, you can call your endpoints inside your GraphQL queries and have all your data managed by Apollo Client. `@apollo/link-rest` is suitable for just dipping your toes in the water, or doing a full-steam ahead integration, and then later on migrating to a backend-driven GraphQL experience.
+With `apollo-link-rest`, you can call your endpoints inside your GraphQL queries and have all your data managed by Apollo Client. `apollo-link-rest` is suitable for just dipping your toes in the water, or doing a full-steam ahead integration, and then later on migrating to a backend-driven GraphQL experience.
 
 > For more advanced or complex back-ends, you may want to consider using [`apollo-server`](https://www.apollographql.com/docs/apollo-server/).
 
@@ -21,14 +21,14 @@ With `@apollo/link-rest`, you can call your endpoints inside your GraphQL querie
 To get started, first install Apollo Client and any `peerDependencies` we need:
 
 ```bash
-npm install --save @apollo/client @apollo/link-rest graphql qs
+npm install --save @apollo/client apollo-link-rest graphql qs
 ```
 
 After this, you're ready to setup the Apollo Client instance:
 
 ```js
 import { ApolloClient } from '@apollo/client';
-import { RestLink } from '@apollo/link-rest';
+import { RestLink } from 'apollo-link-rest';
 
 // Set `RestLink` with your endpoint
 const restLink = new RestLink({ uri: "https://swapi.co/api/" });
@@ -442,7 +442,7 @@ const client = new ApolloClient({
 
 ## Link order
 
-If you are using multiple link types, `restLink` should go before `httpLink`, as `httpLink` will swallow any calls that should be routed through `@apollo/link-rest`.
+If you are using multiple link types, `restLink` should go before `httpLink`, as `httpLink` will swallow any calls that should be routed through `apollo-link-rest`.
 
 For example:
 
@@ -671,7 +671,7 @@ const QUERY = gql`
 
 ## Mutations
 
-You can write also mutations with the @apollo/link-rest, for example:
+You can write also mutations with the apollo-link-rest, for example:
 
 ```graphql
   mutation deletePost($id: ID!) {
@@ -684,7 +684,7 @@ You can write also mutations with the @apollo/link-rest, for example:
 
 ## Troubleshooting
 
-Here are a few common `@apollo/link-rest` problems and solutions.
+Here are a few common `apollo-link-rest` problems and solutions.
 
 * `Missing field __typename in ...` -- If you see this, it's possible you haven't provided `type:` to the [`@rest(...)`](#rest-directive)-directive. Alternately you need to set up a [`typePatcher`](#typename-patching).
 * `Headers is undefined` -- If you see something like this, you're running in a browser or other Javascript environment that does not yet support the full specification for the `Headers` API.

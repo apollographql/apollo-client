@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@babel/preset-react": "^7.0.0",
-    "rimraf": "^3.0.0",
+    "rimraf": "3.0.2",
     "rollup": "1.29.1",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^10.1.0",

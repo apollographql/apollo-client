@@ -384,9 +384,9 @@ To address this problem (which is not a bug in Apollo Client), ${
 
 For more information about these options, please refer to the documentation:
 
-  * Ensuring entity objects have IDs: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-configuration/#generating-unique-identifiers
+  * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
 
-  * Defining custom merge functions: https://deploy-preview-5677--apollo-client-docs.netlify.com/docs/react/v3.0-beta/caching/cache-field-behavior/#merging-non-normalized-objects
+  * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
 `
   );
 }

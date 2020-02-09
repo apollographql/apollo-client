@@ -2,16 +2,19 @@ import gql from 'graphql-tag';
 import { EntityStore, supportsResultCaching } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
 import { DocumentNode, FieldNode } from 'graphql';
-import { getOperationDefinition, getFragmentDefinitions } from '../../../utilities/graphql/getFromAST';
-import { createFragmentMap } from '../../../utilities/graphql/fragments';
+import { Policies } from '../policies';
+import { StoreObject } from '../types';
+import { ApolloCache } from '../../core/cache';
 
 describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
     const storeWithResultCaching = new EntityStore.Root({
+      policies: new Policies,
       resultCaching: true,
     });
 
     const storeWithoutResultCaching = new EntityStore.Root({
+      policies: new Policies,
       resultCaching: false,
     });
 
@@ -624,7 +627,7 @@ describe('EntityStore', () => {
       }
     `;
 
-    const fragmentResult = cache.readFragment({
+    const fragmentResult = cache.readFragment<StoreObject>({
       id: cache.identify(cuckoosCallingBook),
       fragment: bookAuthorFragment,
     });

@@ -1,18 +1,23 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
 import { equal } from '@wry/equality';
 
-import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
+import { isReference, StoreValue, Reference } from '../../utilities/graphql/storeUtils';
 import { DeepMerger } from '../../utilities/common/mergeDeep';
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
+import { NormalizedCache, NormalizedCacheObject, StoreObject, SafeReadonly } from './types';
 import { fieldNameFromStoreName } from './helpers';
+import { Policies } from './policies';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
 
-  public readonly group: CacheGroup;
+  constructor(
+    public readonly policies: Policies,
+    public readonly group: CacheGroup,
+  ) {}
 
   public abstract addLayer(
     layerId: string,
@@ -40,6 +45,10 @@ export abstract class EntityStore implements NormalizedCache {
       if (storeObject && hasOwn.call(storeObject, fieldName)) {
         return storeObject[fieldName];
       }
+    }
+    if (fieldName === "__typename" &&
+        hasOwn.call(this.policies.rootTypenamesById, dataId)) {
+      return this.policies.rootTypenamesById[dataId];
     }
     if (this instanceof Layer) {
       return this.parent.get(dataId, fieldName);
@@ -283,6 +292,24 @@ export abstract class EntityStore implements NormalizedCache {
   }
 }
 
+export type FieldValueGetter = ReturnType<typeof makeFieldValueGetter>;
+
+export function makeFieldValueGetter(store: NormalizedCache) {
+  // Provides a uniform interface for reading field values, whether or not
+  // objectOrReference is a normalized entity.
+  return function getFieldValue<T = StoreValue>(
+    objectOrReference: StoreObject | Reference,
+    storeFieldName: string,
+  ): SafeReadonly<T> {
+    // Enforce Readonly<T> at runtime, in development.
+    return maybeDeepFreeze(
+      isReference(objectOrReference)
+        ? store.get(objectOrReference.__ref, storeFieldName)
+        : objectOrReference && objectOrReference[storeFieldName]
+    ) as SafeReadonly<T>;
+  };
+}
+
 // A single CacheGroup represents a set of one or more EntityStore objects,
 // typically the Root store in a CacheGroup by itself, and all active Layer
 // stores in a group together. A single EntityStore object belongs to only
@@ -335,14 +362,15 @@ export namespace EntityStore {
     private sharedLayerGroup: CacheGroup = null;
 
     constructor({
+      policies,
       resultCaching = true,
       seed,
     }: {
+      policies: Policies;
       resultCaching?: boolean;
       seed?: NormalizedCacheObject;
     }) {
-      super();
-      (this.group as any) = new CacheGroup(resultCaching);
+      super(policies, new CacheGroup(resultCaching));
       this.sharedLayerGroup = new CacheGroup(resultCaching);
       if (seed) this.replace(seed);
     }
@@ -371,7 +399,7 @@ class Layer extends EntityStore {
     public readonly replay: (layer: EntityStore) => any,
     public readonly group: CacheGroup,
   ) {
-    super();
+    super(parent.policies, group);
     replay(this);
   }
 
@@ -448,5 +476,9 @@ export function supportsResultCaching(store: any): store is EntityStore {
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {
-  return new EntityStore.Root({ resultCaching: true, seed });
+  return new EntityStore.Root({
+    policies: new Policies,
+    resultCaching: true,
+    seed,
+  });
 }

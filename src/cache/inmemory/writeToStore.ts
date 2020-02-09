@@ -24,8 +24,8 @@ import {
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
-import { Policies, FieldValueGetter } from './policies';
-import { defaultNormalizedCacheFactory } from './entityStore';
+import { Policies } from './policies';
+import { defaultNormalizedCacheFactory, FieldValueGetter, makeFieldValueGetter } from './entityStore';
 import { NormalizedCache, StoreObject } from './types';
 import { makeProcessedFieldsMerger } from './helpers';
 
@@ -101,7 +101,7 @@ export class StoreWriter {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        getFieldValue: this.policies.makeFieldValueGetter(store),
+        getFieldValue: makeFieldValueGetter(store),
       },
     });
   }

@@ -93,6 +93,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic: boolean = false,
   ): QueryType | null {
     return this.read({
+      rootId: options.id || 'ROOT_QUERY',
       query: options.query,
       variables: options.variables,
       optimistic,
@@ -119,7 +120,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: Cache.WriteQueryOptions<TData, TVariables>,
   ): void {
     this.write({
-      dataId: 'ROOT_QUERY',
+      dataId: options.id || 'ROOT_QUERY',
       result: options.data,
       query: options.query,
       variables: options.variables,

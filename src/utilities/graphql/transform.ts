@@ -59,6 +59,22 @@ const TYPENAME_FIELD: FieldNode = {
   },
 };
 
+const INVALIDATED_BY_FIELD: FieldNode = {
+  kind: 'Field',
+  name: {
+    kind: 'Name',
+    value: '_invalidatedBy',
+  },
+};
+
+const INVALIDATES_FIELD: FieldNode = {
+  kind: 'Field',
+  name: {
+    kind: 'Name',
+    value: '_invalidates',
+  },
+};
+
 function isEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
   fragments: FragmentMap,
@@ -229,20 +245,32 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
 
         // If selections already have a __typename, or are part of an
         // introspection query, do nothing.
-        const skip = selections.some(selection => {
+        const skipTypename = selections.some(selection => {
           return (
             isField(selection) &&
             (selection.name.value === '__typename' ||
               selection.name.value.lastIndexOf('__', 0) === 0)
           );
         });
-        if (skip) {
-          return;
-        }
+        const skipInvalidatedBy = selections.some(selection => {
+          return (
+            isField(selection) &&
+            (selection.name.value === '_invalidatedBy' ||
+              selection.name.value.lastIndexOf('__', 0) === 0)
+          );
+        });
+        const skipInvalidates = selections.some(selection => {
+          return (
+            isField(selection) &&
+            (selection.name.value === '_invalidates' ||
+              selection.name.value.lastIndexOf('__', 0) === 0)
+          );
+        });
 
         // If this SelectionSet is @export-ed as an input variable, it should
         // not have a __typename field (see issue #4691).
         const field = parent as FieldNode;
+        const updatedSelections = [...selections];
         if (
           isField(field) &&
           field.directives &&
@@ -250,11 +278,21 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
         ) {
           return;
         }
+        if (!skipTypename) {
+          updatedSelections.push(TYPENAME_FIELD)
+        }
+        if (!skipInvalidatedBy) {
+          updatedSelections.push(INVALIDATED_BY_FIELD)
+        }
+        if (!skipInvalidates) {
+          updatedSelections.push(INVALIDATES_FIELD)
+        }
+
 
         // Create and return a new SelectionSet with a __typename Field.
         return {
           ...node,
-          selections: [...selections, TYPENAME_FIELD],
+          selections: updatedSelections,
         };
       },
     },

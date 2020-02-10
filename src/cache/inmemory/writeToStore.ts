@@ -25,7 +25,7 @@ import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
 import { Policies } from './policies';
-import { defaultNormalizedCacheFactory, FieldValueGetter, makeFieldValueGetter } from './entityStore';
+import { defaultNormalizedCacheFactory } from './entityStore';
 import { NormalizedCache, StoreObject } from './types';
 import { makeProcessedFieldsMerger } from './helpers';
 
@@ -36,7 +36,6 @@ export type WriteContext = {
   };
   readonly variables?: any;
   readonly fragmentMap?: FragmentMap;
-  getFieldValue: FieldValueGetter;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
 };
@@ -101,7 +100,6 @@ export class StoreWriter {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        getFieldValue: makeFieldValueGetter(store),
       },
     });
   }
@@ -129,25 +127,24 @@ export class StoreWriter {
     if (sets.indexOf(selectionSet) >= 0) return store;
     sets.push(selectionSet);
 
-    const entityRef = makeReference(dataId);
     const typename =
       // If the result has a __typename, trust that.
       getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
       // If the entity identified by dataId has a __typename in the store,
       // fall back to that.
-      context.getFieldValue<string>(entityRef, "__typename");
+      store.get(dataId, "__typename") as string;
 
     store.merge(
       dataId,
       policies.applyMerges(
-        entityRef,
+        makeReference(dataId),
         this.processSelectionSet({
           result,
           selectionSet,
           context,
           typename,
         }),
-        context.getFieldValue,
+        store.getFieldValue,
         context.variables,
       ),
     );

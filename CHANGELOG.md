@@ -56,6 +56,17 @@
 - The result caching system (introduced in [#3394](https://github.com/apollographql/apollo-client/pull/3394)) now tracks dependencies at the field level, rather than at the level of whole entity objects, allowing the cache to return identical (`===`) results much more often than before. <br/>
   [@benjamn](https://github.com/benjamn) in [#5617](https://github.com/apollographql/apollo-client/pull/5617)
 
+- `InMemoryCache` now has a method called `modify` which can be used to update the value of a specific field within a specific entity object:
+  ```ts
+  cache.modify(cache.identify(post), {
+    comments(comments: Reference[], { readField }) {
+      return comments.filter(comment => idToRemove !== readField("id", comment));
+    },
+  });
+  ```
+  This API gracefully handles cases where multiple field values are associated with a single field name, and also removes the need for updating the cache by reading a query or fragment, modifying the result, and writing the modified result back into the cache. Behind the scenes, the `cache.evict` method is now implemented in terms of `cache.modify`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5909](https://github.com/apollographql/apollo-client/pull/5909)
+
 - `InMemoryCache` provides a new API for storing local state that can be easily updated by external code:
   ```ts
   const lv = cache.makeLocalVar(123)

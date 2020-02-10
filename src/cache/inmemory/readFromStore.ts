@@ -34,7 +34,7 @@ import {
   StoreObject,
   NormalizedCache,
 } from './types';
-import { supportsResultCaching, FieldValueGetter, makeFieldValueGetter } from './entityStore';
+import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 
@@ -46,7 +46,6 @@ interface ExecContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
-  getFieldValue: FieldValueGetter;
 };
 
 export type ExecResult<R = any> = {
@@ -165,7 +164,6 @@ export class StoreReader {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        getFieldValue: makeFieldValueGetter(store),
       },
     });
 
@@ -197,10 +195,10 @@ export class StoreReader {
       };
     }
 
-    const { fragmentMap, variables, policies, getFieldValue } = context;
+    const { fragmentMap, variables, policies, store } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
-    const typename = getFieldValue<string>(objectOrReference, "__typename");
+    const typename = store.getFieldValue<string>(objectOrReference, "__typename");
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
@@ -231,7 +229,7 @@ export class StoreReader {
         let fieldValue = policies.readField(
           objectOrReference,
           selection,
-          getFieldValue,
+          store.getFieldValue,
           variables,
           typename,
         );

@@ -145,10 +145,9 @@ export class StoreReader {
   public diffQueryAgainstStore<T>({
     store,
     query,
+    rootId = 'ROOT_QUERY',
     variables,
     returnPartialData = true,
-    rootId = 'ROOT_QUERY',
-    config,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const { policies } = this.config;
 

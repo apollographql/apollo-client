@@ -13,6 +13,13 @@ export namespace DataProxy {
      * Any variables that the GraphQL query may depend on.
      */
     variables?: TVariables;
+
+    /**
+     * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
+     * root query object. This property makes writeQuery capable of writing data
+     * to any object in the cache, which renders writeFragment mostly useless.
+     */
+    id?: string;
   }
 
   export interface Fragment<TVariables> {

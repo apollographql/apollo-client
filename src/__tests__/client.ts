@@ -2338,14 +2338,7 @@ describe('client', () => {
       expect(count).toEqual(0);
       await delay(11).then(() => count++);
       expect(count).toEqual(2);
-
-      try {
-        client.readQuery({ query });
-        fail('should not see any data');
-      } catch (e) {
-        expect(e.message).toMatch(/Can't find field author on ROOT_QUERY object/);
-      }
-
+      expect(client.readQuery({ query })).toBe(null);
       client.cache.writeQuery({ query, data: data2 });
     });
 

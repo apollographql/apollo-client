@@ -603,18 +603,6 @@ describe('Cache', () => {
         resultCaching: true,
       });
 
-      const firstNameFragment = gql`
-        fragment FirstNameFragment on Person {
-          firstName
-        }
-      `;
-
-      const lastNameFragment = gql`
-        fragment LastNameFragment on Person {
-          lastName
-        }
-      `;
-
       const bothNamesData = {
         __typename: "Person",
         id: 123,
@@ -622,11 +610,14 @@ describe('Cache', () => {
         lastName: "Newman",
       };
 
+      const firstNameQuery = gql`{ firstName }`;
+      const lastNameQuery = gql`{ lastName }`;
+
       const id = cache.identify(bothNamesData);
 
-      cache.writeFragment({
+      cache.writeQuery({
         id,
-        fragment: firstNameFragment,
+        query: firstNameQuery,
         data: bothNamesData,
       });
 
@@ -637,9 +628,9 @@ describe('Cache', () => {
         },
       });
 
-      const firstNameResult = cache.readFragment({
+      const firstNameResult = cache.readQuery({
         id,
-        fragment: firstNameFragment,
+        query: firstNameQuery,
       });
 
       expect(firstNameResult).toEqual({
@@ -647,9 +638,9 @@ describe('Cache', () => {
         firstName: "Ben",
       });
 
-      cache.writeFragment({
+      cache.writeQuery({
         id,
-        fragment: lastNameFragment,
+        query: lastNameQuery,
         data: bothNamesData,
       });
 
@@ -663,14 +654,14 @@ describe('Cache', () => {
 
       // This is the crucial test: modifying the lastName field should not
       // invalidate results that did not depend on the lastName field.
-      expect(cache.readFragment({
+      expect(cache.readQuery({
         id,
-        fragment: firstNameFragment,
+        query: firstNameQuery,
       })).toBe(firstNameResult);
 
-      const lastNameResult = cache.readFragment({
+      const lastNameResult = cache.readQuery({
         id,
-        fragment: lastNameFragment,
+        query: lastNameQuery,
       });
 
       expect(lastNameResult).toEqual({
@@ -678,9 +669,9 @@ describe('Cache', () => {
         lastName: "Newman",
       });
 
-      cache.writeFragment({
+      cache.writeQuery({
         id,
-        fragment: firstNameFragment,
+        query: firstNameQuery,
         data: {
           ...bothNamesData,
           firstName: "Benjamin",
@@ -695,9 +686,9 @@ describe('Cache', () => {
         },
       });
 
-      const benjaminResult = cache.readFragment({
+      const benjaminResult = cache.readQuery({
         id,
-        fragment: firstNameFragment,
+        query: firstNameQuery,
       });
 
       expect(benjaminResult).toEqual({
@@ -713,9 +704,9 @@ describe('Cache', () => {
 
       // Updating the firstName should not have invalidated the
       // previously-read lastNameResult.
-      expect(cache.readFragment({
+      expect(cache.readQuery({
         id,
-        fragment: lastNameFragment,
+        query: lastNameQuery,
       })).toBe(lastNameResult);
     });
 

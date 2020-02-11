@@ -169,6 +169,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
     return this.storeReader.diffQueryAgainstStore({
       store: options.optimistic ? this.optimisticData : this.data,
+      rootId: options.id || "ROOT_QUERY",
       query: options.query,
       variables: options.variables,
       returnPartialData: options.returnPartialData,

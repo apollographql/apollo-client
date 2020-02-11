@@ -2313,9 +2313,7 @@ describe("type policies", function () {
         });
       }
 
-      expect(read).toThrow(
-        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
-      );
+      expect(read()).toBe(null);
 
       cache.writeQuery({
         query,

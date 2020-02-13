@@ -361,7 +361,10 @@ class CacheGroup {
 }
 
 function makeDepKey(dataId: string, storeFieldName: string) {
-  return JSON.stringify([dataId, fieldNameFromStoreName(storeFieldName)]);
+  // Since field names cannot have newline characters in them, this method
+  // of joining the field name and the ID should be unambiguous, and much
+  // cheaper than JSON.stringify([dataId, fieldName]).
+  return fieldNameFromStoreName(storeFieldName) + "\n" + dataId;
 }
 
 export namespace EntityStore {

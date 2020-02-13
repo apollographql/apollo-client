@@ -222,10 +222,16 @@ export class StoreReader {
       return result.result;
     }
 
-    selectionSet.selections.forEach(selection => {
+    const selections = selectionSet.selections.slice(0);
+
+    // Reevaluating selections.length each time is important, because we
+    // add additional selections in the fragment case below.
+    for (let s = 0; s < selections.length; ++s) {
+      const selection = selections[s];
+
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
-      if (!shouldInclude(selection, variables)) return;
+      if (!shouldInclude(selection, variables)) continue;
 
       if (isField(selection)) {
         let fieldValue = policies.readField(
@@ -299,16 +305,10 @@ export class StoreReader {
         }
 
         if (policies.fragmentMatches(fragment, typename)) {
-          objectsToMerge.push(handleMissing(
-            this.executeSelectionSet({
-              selectionSet: fragment.selectionSet,
-              objectOrReference,
-              context,
-            })
-          ));
+          selections.push(...fragment.selectionSet.selections);
         }
       }
-    });
+    }
 
     // Perform a single merge at the end so that we can avoid making more
     // defensive shallow copies than necessary.

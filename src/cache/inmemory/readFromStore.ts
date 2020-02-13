@@ -46,6 +46,8 @@ interface ExecContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
 };
 
 export type ExecResult<R = any> = {
@@ -91,7 +93,7 @@ export class StoreReader {
         if (supportsResultCaching(context.store)) {
           return context.store.makeCacheKey(
             selectionSet,
-            JSON.stringify(context.variables),
+            context.varString,
             isReference(objectOrReference)
               ? objectOrReference.__ref
               : objectOrReference,
@@ -108,7 +110,7 @@ export class StoreReader {
           return context.store.makeCacheKey(
             field,
             array,
-            JSON.stringify(context.variables),
+            context.varString,
           );
         }
       }
@@ -151,6 +153,11 @@ export class StoreReader {
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const { policies } = this.config;
 
+    variables = {
+      ...getDefaultValues(getQueryDefinition(query)),
+      ...variables,
+    };
+
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: makeReference(rootId),
@@ -158,10 +165,8 @@ export class StoreReader {
         store,
         query,
         policies,
-        variables: {
-          ...getDefaultValues(getQueryDefinition(query)),
-          ...variables,
-        },
+        variables,
+        varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       },
     });

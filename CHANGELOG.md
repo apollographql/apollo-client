@@ -124,6 +124,9 @@
 - Missing `__typename` fields no longer cause the `InMemoryCache#diff` result to be marked `complete: false`, if those fields were added by `InMemoryCache#transformDocument` (which calls `addTypenameToDocument`). <br/>
   [@benjamn](https://github.com/benjamn) in [#5787](https://github.com/apollographql/apollo-client/pull/5787)
 
+- Fixed an issue that allowed `@client @export` based queries to lead to extra unnecessary network requests being fired.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5946](https://github.com/apollographql/apollo-client/pull/5946)
+
 ## Apollo Client 2.6.8
 
 ### Apollo Client (2.6.8)

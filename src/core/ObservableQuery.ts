@@ -590,34 +590,42 @@ export class ObservableQuery<
       iterateObserversSafely(this.observers, 'error', this.lastError = error);
     };
 
+    const {
+      hasClientExports,
+      serverQuery
+    } = queryManager.transform(this.options.query);
+
     queryManager.observeQuery<TData>(queryId, this.options, {
       next: (result: ApolloQueryResult<TData>) => {
         if (this.lastError || this.isDifferentFromLastResult(result)) {
           const previousResult = this.updateLastResult(result);
+
           const { query, variables, fetchPolicy } = this.options;
 
           // Before calling `next` on each observer, we need to first see if
           // the query is using `@client @export` directives, and update
           // any variables that might have changed. If `@export` variables have
-          // changed, and the query is calling against both local and remote
-          // data, a refetch is needed to pull in new data, using the
-          // updated `@export` variables.
-          if (queryManager.transform(query).hasClientExports) {
+          // changed, and the query is requesting both local and remote
+          // data, `setVariables` is used as a network refetch might be
+          // needed to pull in new data, using the updated `@export` variables.
+          if (hasClientExports) {
             queryManager.getLocalState().addExportedVariables(
               query,
               variables,
             ).then((variables: TVariables) => {
               const previousVariables = this.variables;
-              this.variables = this.options.variables = variables;
               if (
                 !result.loading &&
                 previousResult &&
                 fetchPolicy !== 'cache-only' &&
-                queryManager.transform(query).serverQuery &&
+                serverQuery &&
                 !equal(previousVariables, variables)
               ) {
-                this.refetch();
+                this.setVariables(variables).then(updatedResult => {
+                  iterateObserversSafely(this.observers, 'next', updatedResult)
+                });
               } else {
+                this.variables = this.options.variables = variables;
                 iterateObserversSafely(this.observers, 'next', result);
               }
             });

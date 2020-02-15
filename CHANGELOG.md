@@ -127,6 +127,9 @@
 - Fixed an issue that allowed `@client @export` based queries to lead to extra unnecessary network requests being fired.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5946](https://github.com/apollographql/apollo-client/pull/5946)
 
+- Refined `useLazyQuery` types to help prevent runtime errors.  <br/>
+  [@benmosher](https://github.com/benmosher) in [#5935](https://github.com/apollographql/apollo-client/pull/5935)
+
 ## Apollo Client 2.6.8
 
 ### Apollo Client (2.6.8)

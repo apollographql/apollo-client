@@ -183,14 +183,10 @@ export class StoreWriter {
     }
 
     const { policies } = this;
-    const selections = selectionSet.selections.slice(0);
+    const workSet = new Set(selectionSet.selections);
 
-    // Reevaluating selections.length each time is important, because we
-    // add additional selections in the fragment case below.
-    for (let s = 0; s < selections.length; ++s) {
-      const selection = selections[s];
-
-      if (!shouldInclude(selection, context.variables)) continue;
+    workSet.forEach(selection => {
+      if (!shouldInclude(selection, context.variables)) return;
 
       if (isField(selection)) {
         const resultFieldKey = resultKeyNameFromField(selection);
@@ -255,10 +251,10 @@ export class StoreWriter {
         );
 
         if (policies.fragmentMatches(fragment, typename)) {
-          selections.push(...fragment.selectionSet.selections);
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }
-    }
+    });
 
     return mergedFields;
   }

@@ -82,7 +82,7 @@ export interface QueryResult<TData = any, TVariables = OperationVariables>
   error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;
-  called: boolean;
+  called: true;
 }
 
 export interface QueryDataOptions<TData = any, TVariables = OperationVariables>
@@ -123,9 +123,32 @@ export interface QueryLazyOptions<TVariables> {
   context?: Context;
 }
 
+type UnexecutedLazyFields = {
+  loading: false;
+  networkStatus: NetworkStatus.ready;
+  called: false;
+  data: undefined;
+}
+
+type Impartial<T> = {
+  [P in keyof T]?: never;
+}
+
+type AbsentLazyResultFields =
+  Omit<
+    Impartial<QueryResult<unknown, unknown>>,
+    keyof UnexecutedLazyFields>
+
+type UnexecutedLazyResult =
+   UnexecutedLazyFields & AbsentLazyResultFields
+
+export type LazyQueryResult<TData, TVariables> =
+  | UnexecutedLazyResult
+  | QueryResult<TData, TVariables>;
+
 export type QueryTuple<TData, TVariables> = [
   (options?: QueryLazyOptions<TVariables>) => void,
-  QueryResult<TData, TVariables>
+  LazyQueryResult<TData, TVariables>
 ];
 
 /* Mutation types */

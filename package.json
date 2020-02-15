@@ -80,7 +80,7 @@
     "@types/react": "16.9.17",
     "@types/react-dom": "16.9.4",
     "bundlesize": "0.18.0",
-    "codecov": "3.6.1",
+    "codecov": "3.6.5",
     "fetch-mock": "7.7.3",
     "graphql": "14.5.8",
     "jest": "24.9.0",

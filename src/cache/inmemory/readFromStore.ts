@@ -46,6 +46,8 @@ interface ExecContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
 };
 
 export type ExecResult<R = any> = {
@@ -91,7 +93,7 @@ export class StoreReader {
         if (supportsResultCaching(context.store)) {
           return context.store.makeCacheKey(
             selectionSet,
-            JSON.stringify(context.variables),
+            context.varString,
             isReference(objectOrReference)
               ? objectOrReference.__ref
               : objectOrReference,
@@ -108,7 +110,7 @@ export class StoreReader {
           return context.store.makeCacheKey(
             field,
             array,
-            JSON.stringify(context.variables),
+            context.varString,
           );
         }
       }
@@ -151,6 +153,11 @@ export class StoreReader {
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const { policies } = this.config;
 
+    variables = {
+      ...getDefaultValues(getQueryDefinition(query)),
+      ...variables,
+    };
+
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: makeReference(rootId),
@@ -158,10 +165,8 @@ export class StoreReader {
         store,
         query,
         policies,
-        variables: {
-          ...getDefaultValues(getQueryDefinition(query)),
-          ...variables,
-        },
+        variables,
+        varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       },
     });
@@ -201,9 +206,7 @@ export class StoreReader {
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
-        Object.values(
-          policies.rootTypenamesById
-        ).indexOf(typename) < 0) {
+        !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
       // field, if we have one, and this.config.addTypename is true. Note
       // that this field can be overridden by other merged objects.
@@ -219,7 +222,9 @@ export class StoreReader {
       return result.result;
     }
 
-    selectionSet.selections.forEach(selection => {
+    const workSet = new Set(selectionSet.selections);
+
+    workSet.forEach(selection => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
       if (!shouldInclude(selection, variables)) return;
@@ -296,13 +301,7 @@ export class StoreReader {
         }
 
         if (policies.fragmentMatches(fragment, typename)) {
-          objectsToMerge.push(handleMissing(
-            this.executeSelectionSet({
-              selectionSet: fragment.selectionSet,
-              objectOrReference,
-              context,
-            })
-          ));
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }
     });

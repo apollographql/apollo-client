@@ -212,12 +212,8 @@ export class Policies {
     };
   } = Object.create(null);
 
-  public readonly rootTypenamesById: Readonly<Record<string, string>> = {
-    __proto__: null, // Equivalent to Object.create(null)
-    ROOT_QUERY: "Query",
-    ROOT_MUTATION: "Mutation",
-    ROOT_SUBSCRIPTION: "Subscription",
-  };
+  public readonly rootIdsByTypename: Record<string, string> = Object.create(null);
+  public readonly rootTypenamesById: Record<string, string> = Object.create(null);
 
   public readonly usingPossibleTypes = false;
 
@@ -230,6 +226,10 @@ export class Policies {
       dataIdFromObject: defaultDataIdFromObject,
       ...config,
     };
+
+    this.setRootTypename("Query");
+    this.setRootTypename("Mutation");
+    this.setRootTypename("Subscription");
 
     if (config.possibleTypes) {
       this.addPossibleTypes(config.possibleTypes);
@@ -346,13 +346,14 @@ export class Policies {
 
   private setRootTypename(
     which: "Query" | "Mutation" | "Subscription",
-    typename: string,
+    typename: string = which,
   ) {
     const rootId = "ROOT_" + which.toUpperCase();
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
-      invariant(old === which, `Cannot change root ${which} __typename more than once`);
-      (this.rootTypenamesById as any)[rootId] = typename;
+      invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      this.rootIdsByTypename[typename] = rootId;
+      this.rootTypenamesById[rootId] = typename;
     }
   }
 

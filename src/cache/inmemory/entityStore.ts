@@ -364,7 +364,7 @@ function makeDepKey(dataId: string, storeFieldName: string) {
   // Since field names cannot have newline characters in them, this method
   // of joining the field name and the ID should be unambiguous, and much
   // cheaper than JSON.stringify([dataId, fieldName]).
-  return fieldNameFromStoreName(storeFieldName) + "\n" + dataId;
+  return fieldNameFromStoreName(storeFieldName) + "#" + dataId;
 }
 
 export namespace EntityStore {

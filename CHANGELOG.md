@@ -78,6 +78,9 @@
   These local variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
   [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
 
+- Various cache read and write performance optimizations, cutting read and write times by more than 50% in larger benchmarks. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5948](https://github.com/apollographql/apollo-client/pull/5948)
+
 - The `cache.readQuery` and `cache.writeQuery` methods now accept an `options.id` string, which eliminates most use cases for `cache.readFragment` and `cache.writeFragment`, and skips the implicit conversion of fragment documents to query documents performed by `cache.{read,write}Fragment`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5930](https://github.com/apollographql/apollo-client/pull/5930)
 

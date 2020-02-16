@@ -19,6 +19,7 @@ import {
   isField,
   resultKeyNameFromField,
   StoreValue,
+  StoreObject,
 } from '../../utilities/graphql/storeUtils';
 
 import { shouldInclude } from '../../utilities/graphql/directives';
@@ -26,7 +27,7 @@ import { cloneDeep } from '../../utilities/common/cloneDeep';
 
 import { Policies } from './policies';
 import { defaultNormalizedCacheFactory } from './entityStore';
-import { NormalizedCache, StoreObject } from './types';
+import { NormalizedCache } from './types';
 import { makeProcessedFieldsMerger, FieldValueToBeMerged } from './helpers';
 
 export type WriteContext = {

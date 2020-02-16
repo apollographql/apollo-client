@@ -2,9 +2,11 @@ import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 
 import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
+import { StoreObject } from '../../utilities/graphql/storeUtils';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
 import { queryFromPojo, fragmentFromPojo } from './utils';
+import { Modifier, Modifiers } from './types/common';
 
 const justTypenameQuery: DocumentNode = {
   kind: "Document",
@@ -61,23 +63,41 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    */
   public abstract extract(optimistic?: boolean): TSerialized;
 
-  // optimistic API
+  // Optimistic API
+
   public abstract removeOptimistic(id: string): void;
 
-  // transactional API
+  // Transactional API
+
   public abstract performTransaction(
     transaction: Transaction<TSerialized>,
   ): void;
+
   public abstract recordOptimisticTransaction(
     transaction: Transaction<TSerialized>,
     id: string,
   ): void;
 
-  // optional API
+  // Optional API
+
   public transformDocument(document: DocumentNode): DocumentNode {
     return document;
   }
-  // experimental
+
+  public identify(object: StoreObject): string | null {
+    return null;
+  }
+
+  public modify(
+    dataId: string,
+    modifiers: Modifier<any> | Modifiers,
+    optimistic = false,
+  ): boolean {
+    return false;
+  }
+
+  // Experimental API
+
   public transformForLink(document: DocumentNode): DocumentNode {
     return document;
   }

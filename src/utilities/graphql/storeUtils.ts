@@ -44,6 +44,11 @@ export type StoreValue =
   | void
   | Object;
 
+export interface StoreObject {
+  __typename?: string;
+  [storeFieldName: string]: StoreValue;
+}
+
 function isStringValue(value: ValueNode): value is StringValueNode {
   return value.kind === 'StringValue';
 }

@@ -15,6 +15,7 @@ import {
   Reference,
   isReference,
   makeReference,
+  StoreObject,
 } from '../../utilities/graphql/storeUtils';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
@@ -31,7 +32,6 @@ import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,
   ReadQueryOptions,
-  StoreObject,
   NormalizedCache,
 } from './types';
 import { supportsResultCaching } from './entityStore';

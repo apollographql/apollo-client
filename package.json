@@ -17,8 +17,11 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": [
-    "./dist/cache/inmemory/fixPolyfills.js"
+    "./dist/cache/inmemory/fixPolyfills.native.js"
   ],
+  "react-native": {
+    "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"

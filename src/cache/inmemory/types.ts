@@ -1,8 +1,9 @@
 import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { StoreValue } from '../../utilities/graphql/storeUtils';
-import { Modifiers, Modifier, FieldValueGetter } from './entityStore';
+import { Modifier, Modifiers } from '../core/types/common';
+import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
+import { FieldValueGetter } from './entityStore';
 export { StoreValue }
 
 export interface IdGetterObj extends Object {
@@ -58,20 +59,6 @@ export interface NormalizedCache {
 export interface NormalizedCacheObject {
   [dataId: string]: StoreObject | undefined;
 }
-
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldName: string]: StoreValue;
-}
-
-// The Readonly<T> type only really works for object types, since it marks
-// all of the object's properties as readonly, but there are many cases when
-// a generic type parameter like TExisting might be a string or some other
-// primitive type, in which case we need to avoid wrapping it with Readonly.
-// SafeReadonly<string> collapses to just string, which makes string
-// assignable to SafeReadonly<any>, whereas string is not assignable to
-// Readonly<any>, somewhat surprisingly.
-export type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 export type OptimisticStoreItem = {
   id: string;

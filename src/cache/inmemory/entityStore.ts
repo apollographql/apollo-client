@@ -1,31 +1,22 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
 import { equal } from '@wry/equality';
 
-import { isReference, StoreValue, Reference, makeReference } from '../../utilities/graphql/storeUtils';
+import {
+  isReference,
+  StoreValue,
+  StoreObject,
+  Reference,
+  makeReference
+} from '../../utilities/graphql/storeUtils';
 import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { NormalizedCache, NormalizedCacheObject, StoreObject, SafeReadonly } from './types';
+import { NormalizedCache, NormalizedCacheObject } from './types';
 import { fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';
+import  { Modifier, Modifiers, SafeReadonly } from '../core/types/common';
 
 const hasOwn = Object.prototype.hasOwnProperty;
-
-export type Modifier<T> = (value: T, details: {
-  DELETE: typeof DELETE;
-  fieldName: string;
-  storeFieldName: string;
-  isReference: typeof isReference;
-  toReference: Policies["toReference"];
-  readField<V = StoreValue>(
-    fieldName: string,
-    objOrRef?: StoreObject | Reference,
-  ): SafeReadonly<V>;
-}) => T;
-
-export type Modifiers = {
-  [fieldName: string]: Modifier<any>;
-}
 
 const DELETE: any = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;

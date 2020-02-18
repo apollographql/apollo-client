@@ -12,32 +12,26 @@ import {
   FragmentMap,
   getFragmentFromSelection,
 } from '../../utilities/graphql/fragments';
-
 import {
   isField,
   getTypenameFromResult,
   storeKeyNameFromField,
   StoreValue,
+  StoreObject,
   argumentsObjectFromField,
   Reference,
   makeReference,
   isReference,
 } from '../../utilities/graphql/storeUtils';
-
 import { canUseWeakMap } from '../../utilities/common/canUse';
-
-import {
-  IdGetter,
-  StoreObject,
-  SafeReadonly,
-} from "./types";
-
+import { IdGetter } from "./types";
 import {
   fieldNameFromStoreName,
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
 } from './helpers';
 import { FieldValueGetter } from './entityStore';
+import { SafeReadonly } from '../core/types/common';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 

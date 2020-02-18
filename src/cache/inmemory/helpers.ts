@@ -1,6 +1,13 @@
 import { FieldNode } from 'graphql';
-import { NormalizedCache, StoreObject } from './types';
-import { Reference, isReference, StoreValue, isField } from '../../utilities/graphql/storeUtils';
+
+import { NormalizedCache } from './types';
+import {
+  Reference,
+  isReference,
+  StoreValue,
+  StoreObject,
+  isField
+} from '../../utilities/graphql/storeUtils';
 import { DeepMerger, ReconcilerFunction } from '../../utilities/common/mergeDeep';
 
 export function getTypenameFromStoreObject(

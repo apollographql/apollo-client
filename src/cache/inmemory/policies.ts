@@ -20,7 +20,6 @@ import {
   StoreObject,
   argumentsObjectFromField,
   Reference,
-  makeReference,
   isReference,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
@@ -30,7 +29,7 @@ import {
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
 } from './helpers';
-import { FieldValueGetter } from './entityStore';
+import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { SafeReadonly } from '../core/types/common';
 
 const hasOwn = Object.prototype.hasOwnProperty;
@@ -124,7 +123,7 @@ export interface FieldFunctionOptions<
 
   // Utilities for dealing with { __ref } objects.
   isReference: typeof isReference;
-  toReference: Policies["toReference"];
+  toReference: ToReferenceFunction;
 
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
@@ -232,17 +231,6 @@ export class Policies {
     if (config.typePolicies) {
       this.addTypePolicies(config.typePolicies);
     }
-  }
-
-  // Bound function that returns a Reference using this.identify.
-  // Provided to read/merge functions as part of their options.
-  public toReference = (
-    object: StoreObject,
-    selectionSet?: SelectionSetNode,
-    fragmentMap?: FragmentMap,
-  ) => {
-    const id = this.identify(object, selectionSet, fragmentMap);
-    return id && makeReference(id);
   }
 
   public identify(
@@ -473,9 +461,8 @@ export class Policies {
   public readField<V = StoreValue>(
     objectOrReference: StoreObject | Reference,
     nameOrField: string | FieldNode,
-    getFieldValue: FieldValueGetter,
-    variables?: Record<string, any>,
-    typename = getFieldValue<string>(objectOrReference, "__typename"),
+    context: ReadMergeContext,
+    typename = context.getFieldValue<string>(objectOrReference, "__typename"),
   ): SafeReadonly<V> {
     invariant(
       objectOrReference,
@@ -484,9 +471,9 @@ export class Policies {
 
     const policies = this;
     const storeFieldName = typeof nameOrField === "string" ? nameOrField
-      : policies.getStoreFieldName(typename, nameOrField, variables);
+      : policies.getStoreFieldName(typename, nameOrField, context.variables);
     const fieldName = fieldNameFromStoreName(storeFieldName);
-    const existing = getFieldValue<V>(objectOrReference, storeFieldName);
+    const existing = context.getFieldValue<V>(objectOrReference, storeFieldName);
     const policy = policies.getFieldPolicy(typename, fieldName, false);
     const read = policy && policy.read;
 
@@ -504,8 +491,7 @@ export class Policies {
         objectOrReference,
         nameOrField,
         storage,
-        getFieldValue,
-        variables,
+        context,
       )) as SafeReadonly<V>;
     }
 
@@ -523,8 +509,7 @@ export class Policies {
   public applyMerges<T extends StoreValue>(
     existing: T | Reference,
     incoming: T | FieldValueToBeMerged,
-    getFieldValue: FieldValueGetter,
-    variables: Record<string, any>,
+    context: ReadMergeContext,
     storageKeys?: [string | StoreObject, string],
   ): T {
     const policies = this;
@@ -565,8 +550,7 @@ export class Policies {
         null,
         field,
         storage,
-        getFieldValue,
-        variables,
+        context,
       )) as T;
     }
 
@@ -586,8 +570,7 @@ export class Policies {
           // have custom read or merge functions.
           void 0,
           item,
-          getFieldValue,
-          variables,
+          context,
         )) as T;
       }
 
@@ -607,10 +590,9 @@ export class Policies {
 
       Object.keys(i).forEach(storeFieldName => {
         i[storeFieldName] = policies.applyMerges(
-          getFieldValue(e, storeFieldName),
+          context.getFieldValue(e, storeFieldName),
           i[storeFieldName],
-          getFieldValue,
-          variables,
+          context,
           // Avoid enabling storage when firstStorageKey is falsy, which
           // implies no options.storage object has ever been created for a
           // read function for this field.
@@ -623,15 +605,21 @@ export class Policies {
   }
 }
 
+export interface ReadMergeContext {
+  variables: Record<string, any>;
+  toReference: ToReferenceFunction;
+  getFieldValue: FieldValueGetter;
+}
+
 function makeFieldFunctionOptions(
   policies: Policies,
   typename: string,
   objectOrReference: StoreObject | Reference,
   nameOrField: string | FieldNode,
   storage: StorageType,
-  getFieldValue: FieldValueGetter,
-  variables?: Record<string, any>,
+  context: ReadMergeContext,
 ): FieldFunctionOptions {
+  const { toReference, getFieldValue, variables } = context;
   const storeFieldName = typeof nameOrField === "string" ? nameOrField :
     policies.getStoreFieldName(typename, nameOrField, variables);
   const fieldName = fieldNameFromStoreName(storeFieldName);
@@ -644,7 +632,7 @@ function makeFieldFunctionOptions(
     variables,
     policies,
     isReference,
-    toReference: policies.toReference,
+    toReference,
     storage,
 
     readField<T>(
@@ -654,8 +642,7 @@ function makeFieldFunctionOptions(
       return policies.readField<T>(
         foreignObjOrRef || objectOrReference,
         nameOrField,
-        getFieldValue,
-        variables,
+        context,
       );
     },
 
@@ -677,8 +664,7 @@ function makeFieldFunctionOptions(
         const applied = policies.applyMerges(
           typesDiffer ? void 0 : existing,
           incoming,
-          getFieldValue,
-          variables,
+          context,
         );
 
         if (

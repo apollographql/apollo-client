@@ -36,11 +36,11 @@ import {
 } from './types';
 import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies } from './policies';
+import { Policies, ReadMergeContext } from './policies';
 
 export type VariableMap = { [name: string]: any };
 
-interface ExecContext {
+interface ExecContext extends ReadMergeContext {
   query: DocumentNode;
   store: NormalizedCache;
   policies: Policies;
@@ -168,6 +168,8 @@ export class StoreReader {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        toReference: store.toReference,
+        getFieldValue: store.getFieldValue,
       },
     });
 
@@ -233,9 +235,9 @@ export class StoreReader {
         let fieldValue = policies.readField(
           objectOrReference,
           selection,
-          store.getFieldValue,
-          variables,
-          typename,
+          // Since ExecContext extends ReadMergeContext, we can pass it
+          // here without any modifications.
+          context,
         );
 
         if (fieldValue === void 0) {

@@ -139,7 +139,7 @@ export abstract class EntityStore implements NormalizedCache {
               fieldName,
               storeFieldName,
               isReference,
-              toReference: this.policies.toReference,
+              toReference: this.toReference,
               readField,
             });
           if (newValue === DELETE) newValue = void 0;
@@ -310,7 +310,24 @@ export abstract class EntityStore implements NormalizedCache {
       ? this.get(objectOrReference.__ref, storeFieldName)
       : objectOrReference && objectOrReference[storeFieldName]
   ) as SafeReadonly<T>;
+
+  // Bound function that converts an object with a __typename and primary
+  // key fields to a Reference object. Pass true for mergeIntoStore if you
+  // would also like this object to be persisted into the store.
+  public toReference = (
+    object: StoreObject,
+    mergeIntoStore?: boolean,
+  ) => {
+    const id = this.policies.identify(object);
+    const ref = id && makeReference(id);
+    if (ref && mergeIntoStore) {
+      this.merge(id, object);
+    }
+    return ref;
+  }
 }
+
+export type ToReferenceFunction = EntityStore["toReference"];
 
 export type FieldValueGetter = EntityStore["getFieldValue"];
 

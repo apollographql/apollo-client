@@ -1248,7 +1248,7 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          author: policies.toReference(data.author),
+          author: makeReference(policies.identify(data.author)),
         },
         [policies.identify(data.author)!]: {
           firstName: data.author.firstName,
@@ -1288,7 +1288,7 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          author: policies.toReference(data.author),
+          author: makeReference(policies.identify(data.author)),
         },
         [policies.identify(data.author)!]: {
           __typename: data.author.__typename,

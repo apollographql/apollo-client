@@ -36,7 +36,7 @@ export function operationName(type: DocumentType) {
   return name;
 }
 
-// This parser is mostly used to saftey check incoming documents.
+// This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
   const cached = cache.get(document);
   if (cached) return cached;
@@ -44,7 +44,7 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   let variables, type, name;
 
   invariant(
-    !!document && !!document.kind,
+    Boolean(document?.kind),
     `Argument of ${document} passed to parser was not a valid GraphQL ` +
       `DocumentNode. You may need to use 'graphql-tag' or another method ` +
       `to convert your operation into a document`

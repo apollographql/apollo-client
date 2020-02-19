@@ -60,7 +60,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
-    this.addTypename = !!this.config.addTypename;
+    this.addTypename = Boolean(this.config.addTypename);
 
     this.policies = new Policies({
       dataIdFromObject: this.config.dataIdFromObject,

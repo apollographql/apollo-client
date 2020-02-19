@@ -477,7 +477,7 @@ function storeObjectReconciler(
 
 export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
-  return !!(store instanceof EntityStore && store.group.caching);
+  return Boolean(store instanceof EntityStore && store.group.caching);
 }
 
 export function defaultNormalizedCacheFactory(

@@ -163,7 +163,7 @@ Instead of passing a boolean to `config.skip`, you may also pass a function to `
 
 ```js
 export default graphql(gql`{ ... }`, {
-  skip: props => !!props.skip,
+  skip: props => Boolean(props.skip),
 })(MyComponent);
 ```
 

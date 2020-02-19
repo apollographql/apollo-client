@@ -46,7 +46,7 @@ export class SubscriptionData<
 
     let { shouldResubscribe } = this.getOptions();
     if (typeof shouldResubscribe === 'function') {
-      shouldResubscribe = !!shouldResubscribe(this.getOptions());
+      shouldResubscribe = Boolean(shouldResubscribe(this.getOptions()));
     }
 
     if (

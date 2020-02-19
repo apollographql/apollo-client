@@ -517,7 +517,7 @@ export class Policies {
     fieldName: string,
   ) {
     const policy = this.getFieldPolicy(typename, fieldName, false);
-    return !!(policy && policy.merge);
+    return Boolean(policy?.merge);
   }
 
   public applyMerges<T extends StoreValue>(

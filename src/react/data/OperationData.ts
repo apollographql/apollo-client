@@ -49,7 +49,7 @@ export abstract class OperationData<TOptions = any> {
       (this.context && this.context.client);
 
     invariant(
-      !!client,
+      Boolean(client),
       'Could not find "client" in the context or passed in as an option. ' +
         'Wrap the root component in an <ApolloProvider>, or pass an ' +
         'ApolloClient instance in via options.'

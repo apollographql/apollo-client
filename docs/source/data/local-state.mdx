@@ -644,7 +644,7 @@ const client = new ApolloClient({
 
 cache.writeData({
   data: {
-    isLoggedIn: !!localStorage.getItem("token"),
+    isLoggedIn: Boolean(localStorage.getItem("token")),
   },
 });
 
@@ -694,7 +694,7 @@ const client = new ApolloClient({
 
 cache.writeData({
   data: {
-    isLoggedIn: !!localStorage.getItem("token"),
+    isLoggedIn: Boolean(localStorage.getItem("token")),
   },
 });
 
@@ -717,7 +717,7 @@ ReactDOM.render(
 </div>
 </MultiCodeBlock>
 
-In the above example, we first prep the cache using `cache.writeData` to store a value for the `isLoggedIn` field. We then run the `IS_LOGGED_IN` query via an Apollo Client `useQuery` hook, which includes an `@client` directive. When Apollo Client executes the `IS_LOGGED_IN` query, it first looks for a local resolver that can be used to handle the `@client` field. When it can't find one, it falls back on trying to pull the specified field out of the cache. So in this case, the `data` value returned by the `useQuery` hook has a `isLoggedIn` property available, which includes the `isLoggedIn` result (`!!localStorage.getItem('token')`) pulled directly from the cache.
+In the above example, we first prep the cache using `cache.writeData` to store a value for the `isLoggedIn` field. We then run the `IS_LOGGED_IN` query via an Apollo Client `useQuery` hook, which includes an `@client` directive. When Apollo Client executes the `IS_LOGGED_IN` query, it first looks for a local resolver that can be used to handle the `@client` field. When it can't find one, it falls back on trying to pull the specified field out of the cache. So in this case, the `data` value returned by the `useQuery` hook has a `isLoggedIn` property available, which includes the `isLoggedIn` result (`Boolean(localStorage.getItem('token'))`) pulled directly from the cache.
 
 > ⚠️ If you want to use Apollo Client's `@client` support to query the cache without using local resolvers, you must pass an empty object into the `ApolloClient` constructor `resolvers` option. Without this Apollo Client will not enable its integrated `@client` support, which means your `@client` based queries will be passed to the Apollo Client link chain. You can find more details about why this is necessary [here](https://github.com/apollographql/apollo-client/pull/4499).
 
@@ -865,7 +865,7 @@ const client = new ApolloClient({
   resolvers: {
     Query: {
       isLoggedIn() {
-        return !!localStorage.getItem('token');
+        return Boolean(localStorage.getItem('token'));
       },
     },
   },
@@ -1434,7 +1434,7 @@ import { InMemoryCache } from '@apollo/client';
 const cache = new InMemoryCache();
 cache.writeData({
   data: {
-    isLoggedIn: !!localStorage.getItem('token'),
+    isLoggedIn: Boolean(localStorage.getItem('token')),
     cartItems: [],
   },
 });

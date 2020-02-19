@@ -47,7 +47,7 @@ new RetryLink({
   },
   attempts: {
     max: 5,
-    retryIf: (error, _operation) => !!error
+    retryIf: (error, _operation) => Boolean(error)
   }
 });
 ```
@@ -71,7 +71,7 @@ import { RetryLink } from "@apollo/link-retry";
 
 const link = new RetryLink({
   attempts: (count, operation, error) => {
-    return !!error && operation.operationName != 'specialCase';
+    return Boolean(error) && operation.operationName != 'specialCase';
   },
   delay: (count, operation, error) => {
     return count * 1000 * Math.random();

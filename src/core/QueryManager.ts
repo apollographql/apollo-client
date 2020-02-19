@@ -126,7 +126,7 @@ export class QueryManager<TStore> {
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
-    this.assumeImmutableResults = !!assumeImmutableResults;
+    this.assumeImmutableResults = Boolean(assumeImmutableResults);
   }
 
   /**
@@ -578,9 +578,8 @@ export class QueryManager<TStore> {
       const loading = isNetworkRequestInFlight(queryStoreValue.networkStatus);
       const lastResult = observableQuery && observableQuery.getLastResult();
 
-      const networkStatusChanged = !!(
-        lastResult &&
-        lastResult.networkStatus !== queryStoreValue.networkStatus
+      const networkStatusChanged = Boolean(
+        lastResult?.networkStatus !== queryStoreValue.networkStatus
       );
 
       const shouldNotifyIfLoading =

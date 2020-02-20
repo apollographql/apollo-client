@@ -533,7 +533,12 @@ interface FieldFunctionOptions {
 
   // Utilities for handling { __ref: string } references.
   isReference(obj: any): obj is Reference;
-  toReference(obj: StoreObject): Reference;
+  // Returns a Reference object if obj can be identified, which requires,
+  // at minimum, a __typename and any necessary key fields. If true is
+  // passed for the optional mergeIntoStore argument, the object's fields
+  // will also be persisted into the cache, which can be useful to ensure
+  // the Reference actually refers to data stored in the cache.
+  toReference(obj: StoreObject, mergeIntoStore?: boolean): Reference;
 
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read

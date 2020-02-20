@@ -166,9 +166,12 @@ export class ObservableQuery<
 
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
     Object.assign(result, { data, partial });
-
-    const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
-    if (queryStoreValue) {
+    let queryStoreValue: QueryStoreValue;
+    if (!partial && data !== undefined) {
+      // we already have the completed data:
+      result.loading = false;
+      result.networkStatus = NetworkStatus.ready;
+    } else if (queryStoreValue = this.queryManager.queryStore.get(this.queryId)) {
       const { networkStatus } = queryStoreValue;
 
       if (hasError(queryStoreValue, this.options.errorPolicy)) {

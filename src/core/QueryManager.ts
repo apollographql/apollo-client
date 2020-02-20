@@ -54,7 +54,7 @@ const { hasOwnProperty } = Object.prototype;
 
 export interface QueryInfo {
   listeners: Set<QueryListener>;
-  invalidated: boolean;
+  dirty: boolean;
   newData: Cache.DiffResult<any> | null;
   document: DocumentNode | null;
   lastRequestId: number;
@@ -417,11 +417,11 @@ export class QueryManager<TStore> {
     this.setQuery(queryId, () => ({
       document: query,
       lastRequestId: requestId,
-      invalidated: true,
+      dirty: true,
       cancel,
     }));
 
-    this.invalidate(fetchMoreForQueryId);
+    this.dirty(fetchMoreForQueryId);
 
     this.queryStore.initQuery({
       queryId,
@@ -451,8 +451,8 @@ export class QueryManager<TStore> {
         } else {
           if (requestId >= this.getQuery(queryId).lastRequestId) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
-            this.invalidate(queryId);
-            this.invalidate(fetchMoreForQueryId);
+            this.dirty(queryId);
+            this.dirty(fetchMoreForQueryId);
             this.broadcastQueries();
           }
           throw new ApolloError({ networkError: error });
@@ -473,8 +473,8 @@ export class QueryManager<TStore> {
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
     this.queryStore.markQueryResultClient(queryId, !shouldFetch);
-    this.invalidate(queryId);
-    this.invalidate(fetchMoreForQueryId);
+    this.dirty(queryId);
+    this.dirty(fetchMoreForQueryId);
 
     if (this.transform(query).hasForcedResolvers) {
       return this.localState.runResolvers({
@@ -559,8 +559,8 @@ export class QueryManager<TStore> {
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
     ) => {
-      // we're going to take a look at the data, so the query is no longer invalidated
-      this.invalidate(queryId, false);
+      // we're going to take a look at the data, so the query is no longer dirty
+      this.dirty(queryId, false);
 
       // The query store value can be undefined in the event of a store
       // reset.
@@ -845,13 +845,13 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     this.stopPollingQuery(queryId);
     this.queryStore.stopQuery(queryId);
-    this.invalidate(queryId);
+    this.dirty(queryId);
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.setQuery(queryId, ({ listeners }) => {
       listeners.add(listener);
-      return { invalidated: false };
+      return { dirty: false };
     });
   }
 
@@ -871,16 +871,16 @@ export class QueryManager<TStore> {
           previousResult = lastResult.data;
         }
       }
-
       return previousResult;
     };
+
     return this.cache.watch({
       query: document as DocumentNode,
       variables: options.variables,
       optimistic: true,
       previousResult,
       callback: newData => {
-        this.setQuery(queryId, () => ({ invalidated: true, newData }));
+        this.setQuery(queryId, () => ({ dirty: true, newData }));
       },
     });
   }
@@ -954,7 +954,7 @@ export class QueryManager<TStore> {
         }
 
         this.setQuery(queryId, () => ({ newData: null }));
-        this.invalidate(queryId);
+        this.dirty(queryId);
       }
     });
 
@@ -1120,7 +1120,7 @@ export class QueryManager<TStore> {
   public broadcastQueries() {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
-      if (info.invalidated) {
+      if (info.dirty) {
         info.listeners.forEach(listener => {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
@@ -1268,8 +1268,8 @@ export class QueryManager<TStore> {
             fetchMoreForQueryId,
           );
 
-          this.invalidate(queryId);
-          this.invalidate(fetchMoreForQueryId);
+          this.dirty(queryId);
+          this.dirty(fetchMoreForQueryId);
 
           this.broadcastQueries();
         }
@@ -1329,7 +1329,7 @@ export class QueryManager<TStore> {
     return (
       this.queries.get(queryId) || {
         listeners: new Set<QueryListener>(),
-        invalidated: false,
+        dirty: false,
         document: null,
         newData: null,
         lastRequestId: 1,
@@ -1348,12 +1348,12 @@ export class QueryManager<TStore> {
     this.queries.set(queryId, newInfo);
   }
 
-  private invalidate(
+  private dirty(
     queryId: string | undefined,
-    invalidated = true,
+    dirty = true,
   ) {
     if (queryId) {
-      this.setQuery(queryId, () => ({ invalidated }));
+      this.setQuery(queryId, () => ({ dirty }));
     }
   }
 

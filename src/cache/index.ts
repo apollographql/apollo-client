@@ -21,6 +21,7 @@ export {
   FieldPolicy,
   FieldReadFunction,
   FieldMergeFunction,
+  FieldFunctionOptions,
   PossibleTypesMap,
 } from './inmemory/policies';
 

@@ -19,27 +19,36 @@ import {
   isField,
   resultKeyNameFromField,
   StoreValue,
+  StoreObject,
 } from '../../utilities/graphql/storeUtils';
 
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
-import { Policies, FieldValueGetter } from './policies';
-import { defaultNormalizedCacheFactory } from './entityStore';
-import { NormalizedCache, StoreObject } from './types';
-import { makeProcessedFieldsMerger } from './helpers';
+import { Policies, ReadMergeContext } from './policies';
+import { EntityStore } from './entityStore';
+import { NormalizedCache } from './types';
+import { makeProcessedFieldsMerger, FieldValueToBeMerged } from './helpers';
 
-export type WriteContext = {
+export interface WriteContext extends ReadMergeContext {
   readonly store: NormalizedCache;
   readonly written: {
     [dataId: string]: SelectionSetNode[];
   };
-  readonly variables?: any;
   readonly fragmentMap?: FragmentMap;
-  getFieldValue: FieldValueGetter;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
 };
+
+interface ProcessSelectionSetOptions {
+  result: Record<string, any>;
+  selectionSet: SelectionSetNode;
+  context: WriteContext;
+  typename: string;
+  out: {
+    shouldApplyMerges?: boolean;
+  };
+}
 
 export interface StoreWriterConfig {
   policies: Policies;
@@ -68,7 +77,9 @@ export class StoreWriter {
     query,
     result,
     dataId = 'ROOT_QUERY',
-    store = defaultNormalizedCacheFactory(),
+    store = new EntityStore.Root({
+      policies: this.policies,
+    }),
     variables,
   }: {
     query: DocumentNode;
@@ -101,7 +112,8 @@ export class StoreWriter {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        getFieldValue: this.policies.makeFieldValueGetter(store),
+        toReference: store.toReference,
+        getFieldValue: store.getFieldValue,
       },
     });
   }
@@ -129,28 +141,34 @@ export class StoreWriter {
     if (sets.indexOf(selectionSet) >= 0) return store;
     sets.push(selectionSet);
 
-    const entityRef = makeReference(dataId);
     const typename =
       // If the result has a __typename, trust that.
       getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
       // If the entity identified by dataId has a __typename in the store,
       // fall back to that.
-      context.getFieldValue<string>(entityRef, "__typename");
+      store.get(dataId, "__typename") as string;
 
-    store.merge(
-      dataId,
-      policies.applyMerges(
-        entityRef,
-        this.processSelectionSet({
-          result,
-          selectionSet,
-          context,
-          typename,
-        }),
-        context.getFieldValue,
-        context.variables,
-      ),
-    );
+    const out: ProcessSelectionSetOptions["out"] = Object.create(null);
+
+    let processed = this.processSelectionSet({
+      result,
+      selectionSet,
+      context,
+      typename,
+      out,
+    });
+
+    if (out.shouldApplyMerges) {
+      processed = policies.applyMerges(
+        makeReference(dataId),
+        processed,
+        // Since WriteContext extends ReadMergeContext, we can pass it
+        // here without any modifications.
+        context,
+      );
+    }
+
+    store.merge(dataId, processed);
 
     return store;
   }
@@ -160,23 +178,20 @@ export class StoreWriter {
     selectionSet,
     context,
     typename,
-  }: {
-    result: Record<string, any>;
-    selectionSet: SelectionSetNode;
-    context: WriteContext;
-    typename: string;
-  }): StoreObject {
+    // This object allows processSelectionSet to report useful information
+    // to its callers without explicitly returning that information.
+    out,
+  }: ProcessSelectionSetOptions): StoreObject {
     let mergedFields: StoreObject = Object.create(null);
     if (typeof typename === "string") {
       mergedFields.__typename = typename;
     }
 
-    selectionSet.selections.forEach(selection => {
-      if (!shouldInclude(selection, context.variables)) {
-        return;
-      }
+    const { policies } = this;
+    const workSet = new Set(selectionSet.selections);
 
-      const { policies } = this;
+    workSet.forEach(selection => {
+      if (!shouldInclude(selection, context.variables)) return;
 
       if (isField(selection)) {
         const resultFieldKey = resultKeyNameFromField(selection);
@@ -189,22 +204,27 @@ export class StoreWriter {
             context.variables,
           );
 
-          const incomingValue =
-            this.processFieldValue(value, selection, context);
+          let incomingValue =
+            this.processFieldValue(value, selection, context, out);
 
-          mergedFields = context.merge(mergedFields, {
+          if (policies.hasMergeFunction(typename, selection.name.value)) {
             // If a custom merge function is defined for this field, store
             // a special FieldValueToBeMerged object, so that we can run
             // the merge function later, after all processSelectionSet
             // work is finished.
-            [storeFieldName]: policies.hasMergeFunction(
-              typename,
-              selection.name.value,
-            ) ? {
+            incomingValue = {
               __field: selection,
               __typename: typename,
               __value: incomingValue,
-            } : incomingValue,
+            } as FieldValueToBeMerged;
+
+            // Communicate to the caller that mergedFields contains at
+            // least one FieldValueToBeMerged.
+            out.shouldApplyMerges = true;
+          }
+
+          mergedFields = context.merge(mergedFields, {
+            [storeFieldName]: incomingValue,
           });
 
         } else if (
@@ -236,15 +256,7 @@ export class StoreWriter {
         );
 
         if (policies.fragmentMatches(fragment, typename)) {
-          mergedFields = context.merge(
-            mergedFields,
-            this.processSelectionSet({
-              result,
-              selectionSet: fragment.selectionSet,
-              context,
-              typename,
-            }),
-          );
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }
     });
@@ -256,6 +268,7 @@ export class StoreWriter {
     value: any,
     field: FieldNode,
     context: WriteContext,
+    out: ProcessSelectionSetOptions["out"],
   ): StoreValue {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
@@ -265,7 +278,8 @@ export class StoreWriter {
     }
 
     if (Array.isArray(value)) {
-      return value.map((item, i) => this.processFieldValue(item, field, context));
+      return value.map(
+        (item, i) => this.processFieldValue(item, field, context, out));
     }
 
     if (value) {
@@ -294,6 +308,7 @@ export class StoreWriter {
       context,
       typename: getTypenameFromResult(
         value, field.selectionSet, context.fragmentMap),
+      out,
     });
   }
 }

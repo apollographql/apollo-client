@@ -29,6 +29,7 @@ import {
   resultKeyNameFromField,
   isField,
   isInlineFragment,
+  StoreObject,
 } from '../utilities/graphql/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
@@ -179,26 +180,16 @@ export class LocalState<TCacheShape> {
     return this.resolvers ? removeClientSetsFromDocument(document) : document;
   }
 
-  public prepareContext(context = {}) {
+  public prepareContext(context?: Record<string, any>) {
     const { cache } = this;
-
-    const newContext = {
+    return {
       ...context,
       cache,
       // Getting an entry's cache key is useful for local state resolvers.
-      getCacheKey: (obj: { __typename: string; id: string | number }) => {
-        if ((cache as any).config) {
-          return (cache as any).config.dataIdFromObject(obj);
-        } else {
-          invariant(false,
-            'To use context.getCacheKey, you need to use a cache that has ' +
-              'a configurable dataIdFromObject, like apollo-cache-inmemory.',
-          );
-        }
+      getCacheKey(obj: StoreObject) {
+        return cache.identify(obj);
       },
     };
-
-    return newContext;
   }
 
   // To support `@client @export(as: "someVar")` syntax, we'll first resolve

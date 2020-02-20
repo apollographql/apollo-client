@@ -19,15 +19,18 @@ export type DirectiveInfo = {
 };
 
 export function shouldInclude(
-  selection: SelectionNode,
-  variables: { [name: string]: any } = {},
+  { directives }: SelectionNode,
+  variables?: Record<string, any>,
 ): boolean {
+  if (!directives || !directives.length) {
+    return true;
+  }
   return getInclusionDirectives(
-    selection.directives,
+    directives
   ).every(({ directive, ifArgument }) => {
     let evaledValue: boolean = false;
     if (ifArgument.value.kind === 'Variable') {
-      evaledValue = variables[(ifArgument.value as VariableNode).name.value];
+      evaledValue = variables && variables[(ifArgument.value as VariableNode).name.value];
       invariant(
         evaledValue !== void 0,
         `Invalid variable referenced in @${directive.name.value} directive.`,
@@ -77,31 +80,39 @@ function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
 export function getInclusionDirectives(
   directives: ReadonlyArray<DirectiveNode>,
 ): InclusionDirectives {
-  return directives ? directives.filter(isInclusionDirective).map(directive => {
-    const directiveArguments = directive.arguments;
-    const directiveName = directive.name.value;
+  const result: InclusionDirectives = [];
 
-    invariant(
-      directiveArguments && directiveArguments.length === 1,
-      `Incorrect number of arguments for the @${directiveName} directive.`,
-    );
+  if (directives && directives.length) {
+    directives.forEach(directive => {
+      if (!isInclusionDirective(directive)) return;
 
-    const ifArgument = directiveArguments[0];
-    invariant(
-      ifArgument.name && ifArgument.name.value === 'if',
-      `Invalid argument for the @${directiveName} directive.`,
-    );
+      const directiveArguments = directive.arguments;
+      const directiveName = directive.name.value;
 
-    const ifValue: ValueNode = ifArgument.value;
+      invariant(
+        directiveArguments && directiveArguments.length === 1,
+        `Incorrect number of arguments for the @${directiveName} directive.`,
+      );
 
-    // means it has to be a variable value if this is a valid @skip or @include directive
-    invariant(
-      ifValue &&
-        (ifValue.kind === 'Variable' || ifValue.kind === 'BooleanValue'),
-      `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
-    );
+      const ifArgument = directiveArguments[0];
+      invariant(
+        ifArgument.name && ifArgument.name.value === 'if',
+        `Invalid argument for the @${directiveName} directive.`,
+      );
 
-    return { directive, ifArgument };
-  }) : [];
+      const ifValue: ValueNode = ifArgument.value;
+
+      // means it has to be a variable value if this is a valid @skip or @include directive
+      invariant(
+        ifValue &&
+          (ifValue.kind === 'Variable' || ifValue.kind === 'BooleanValue'),
+        `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
+      );
+
+      result.push({ directive, ifArgument });
+    });
+  }
+
+  return result;
 }
 

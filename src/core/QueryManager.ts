@@ -5,7 +5,6 @@ import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
 import { FetchResult } from '../link/core/types';
 import { Cache } from '../cache/core/types/Cache';
-import { DataProxy } from '../cache/core/types/DataProxy';
 
 import {
   getDefaultValues,
@@ -1452,7 +1451,9 @@ function markMutationResult<TStore>(
     document: DocumentNode;
     variables: any;
     queryUpdatersById: Record<string, QueryWithUpdater>;
-    update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
+    update:
+      ((cache: ApolloCache<TStore>, mutationResult: Object) => void) |
+      undefined;
   },
   cache: ApolloCache<TStore>,
 ) {

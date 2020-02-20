@@ -1,8 +1,10 @@
 import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { StoreValue } from '../../utilities/graphql/storeUtils';
-export { StoreValue }
+import { Modifier, Modifiers } from '../core/types/common';
+import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
+import { FieldValueGetter, ToReferenceFunction } from './entityStore';
+export { StoreObject, StoreValue }
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -22,6 +24,7 @@ export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
   merge(dataId: string, incoming: StoreObject): void;
+  modify(dataId: string, modifiers: Modifier<any> | Modifiers): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
@@ -45,6 +48,9 @@ export interface NormalizedCache {
    */
   retain(rootId: string): number;
   release(rootId: string): number;
+
+  getFieldValue: FieldValueGetter;
+  toReference: ToReferenceFunction;
 }
 
 /**
@@ -53,11 +59,6 @@ export interface NormalizedCache {
  */
 export interface NormalizedCacheObject {
   [dataId: string]: StoreObject | undefined;
-}
-
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldName: string]: StoreValue;
 }
 
 export type OptimisticStoreItem = {

@@ -201,6 +201,7 @@ const cache = new InMemoryCache({
       fields: {
         author: {
           merge(existing, incoming) {
+            // Better, but not quite correct.
             return { ...existing, ...incoming };
           },
         },
@@ -210,9 +211,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-This policy allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
-
-If you would prefer to keep the default replacement behavior while silencing the warnings, the following `merge` function will explicitly permit replacement:
+Alternatively, if you prefer to keep the default behavior of completely replacing the `existing` data with the `incoming` data, while also silencing the warnings, the following `merge` function will explicitly permit replacement:
 
 ```ts
 const cache = new InMemoryCache({
@@ -220,7 +219,8 @@ const cache = new InMemoryCache({
     Book: {
       fields: {
         author: {
-          merge(_ignored, incoming) {
+          merge(existing, incoming) {
+            // Equivalent to what happens if there is no custom merge function.
             return incoming;
           },
         },
@@ -230,7 +230,32 @@ const cache = new InMemoryCache({
 });
 ```
 
-Of course, you can implement your `merge` functions however you like&mdash;these are just the simplest and most common implementations.
+When you use `{ ...existing, ...incoming }`, `Author` objects with differing fields (`name`, `dateOfBirth`) can be combined without losing fields, which is definitely an improvement over blind replacement.
+
+But what if the `Author` type defines its own custom `merge` functions for fields of the `incoming` object? Since we're using [object spread syntax](https://2ality.com/2016/10/rest-spread-properties.html), such fields will immediately overwrite fields in `existing`, without triggering any nested `merge` functions. The `{ ...existing, ...incoming }` syntax may be an improvement, but it is not fully correct.
+
+Fortunately, you can find a helper function called `options.mergeObjects` in the options passed to the `merge` function, which generally behaves the same as `{ ...existing, ...incoming }`, except when the `incoming` fields have custom `merge` functions. When `options.mergeObjects` encounters custom `merge` functions for any of the fields in its second argument (`incoming`), those nested `merge` functions will be called before combining the fields of `existing` and `incoming`, as desired:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        author: {
+          merge(existing, incoming, { mergeObjects }) {
+            // Correct, thanks to invoking nested merge functions.
+            return mergeObjects(existing, incoming);
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Because this `Book.author` field policy has no `Book`- or `Author`-specific logic in it, you can reuse this `merge` function for any field that needs this kind of handling.
+
+In summary, the `Book.author` policy above allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
 
 #### Merging arrays of non-normalized objects
 
@@ -266,25 +291,26 @@ const cache = new InMemoryCache({
     Book: {
       fields: {
         authors: {
-          merge(existing: any[] = [], incoming: any[], { readField }) {
-            const merged: any[] = [];
-            const authors = new Map<string, any>();
-            function add(author: any) {
+          merge(existing: any[], incoming: any[], { readField, mergeObjects }) {
+            const merged: any[] = existing ? existing.slice(0) : [];
+            const authorNameToIndex: Record<string, number> = Object.create(null);
+            if (existing) {
+              existing.forEach((author, index) => {
+                authorNameToIndex[readField<string>("name", author)] = index;
+              });
+            }
+            incoming.forEach(author => {
               const name = readField<string>("name", author);
-              if (authors.has(name)) {
+              const index = authorNameToIndex[name];
+              if (typeof index === "number") {
                 // Merge the new author data with the existing author data.
-                authors.set(name, {
-                  ...authors.get(name),
-                  ...author,
-                });
+                merged[index] = mergeObjects(merged[index], author);
               } else {
                 // First time we've seen this author in this array.
-                authors.set(name, author);
+                authorNameToIndex[name] = merged.length;
                 merged.push(author);
               }
-            }
-            existing.forEach(add);
-            incoming.forEach(add);
+            });
             return merged;
           },
         },
@@ -507,7 +533,12 @@ interface FieldFunctionOptions {
 
   // Utilities for handling { __ref: string } references.
   isReference(obj: any): obj is Reference;
-  toReference(obj: StoreObject): Reference;
+  // Returns a Reference object if obj can be identified, which requires,
+  // at minimum, a __typename and any necessary key fields. If true is
+  // passed for the optional mergeIntoStore argument, the object's fields
+  // will also be persisted into the cache, which can be useful to ensure
+  // the Reference actually refers to data stored in the cache.
+  toReference(obj: StoreObject, mergeIntoStore?: boolean): Reference;
 
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read

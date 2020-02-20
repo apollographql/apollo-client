@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.0.0-beta.31",
+  "version": "3.0.0-beta.36",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -17,8 +17,11 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": [
-    "./dist/cache/inmemory/fixPolyfills.js"
+    "./dist/cache/inmemory/fixPolyfills.native.js"
   ],
+  "react-native": {
+    "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/apollographql/apollo-client.git"
@@ -48,7 +51,7 @@
     {
       "name": "apollo-client",
       "path": "./dist/apollo-client.cjs.min.js",
-      "maxSize": "24.1 kB"
+      "maxSize": "24 kB"
     }
   ],
   "peerDependencies": {
@@ -64,7 +67,7 @@
     "@types/zen-observable": "^0.8.0",
     "@wry/equality": "^0.1.9",
     "fast-json-stable-stringify": "^2.0.0",
-    "graphql-tag": "^2.10.1",
+    "graphql-tag": "^2.10.2",
     "optimism": "^0.11.5",
     "symbol-observable": "^1.2.0",
     "ts-invariant": "^0.4.4",
@@ -80,9 +83,9 @@
     "@types/react": "16.9.17",
     "@types/react-dom": "16.9.4",
     "bundlesize": "0.18.0",
-    "codecov": "3.6.1",
+    "codecov": "3.6.5",
     "fetch-mock": "7.7.3",
-    "graphql": "14.5.8",
+    "graphql": "14.6.0",
     "jest": "24.9.0",
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",
@@ -90,7 +93,7 @@
     "react": "16.12.0",
     "react-dom": "16.12.0",
     "recast": "0.18.5",
-    "rimraf": "3.0.0",
+    "rimraf": "3.0.2",
     "rollup": "1.29.1",
     "rollup-plugin-invariant": "0.5.6",
     "rollup-plugin-node-resolve": "5.2.0",

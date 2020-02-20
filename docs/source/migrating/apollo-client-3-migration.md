@@ -124,6 +124,8 @@ To continue using `apollo-link` packages besides `apollo-link-http`, replace eac
 
 These packages provide the same functionality as their non-`@apollo` counterparts, but they’re updated for compatibility with the `@apollo/client` package.
 
+`apollo-link-rest` has also been updated to use `@apollo/client`, but does not use `@apollo/link-X` naming. It should still be referenced using `apollo-link-rest`, and updated to its `latest` version.
+
 ### graphql-anywhere
 
 The `graphql-anywhere` package’s functionality is no longer included with Apollo Client. You can continue to use the `graphql-anywhere` package, but Apollo no longer uses it and will not actively support it moving forward.

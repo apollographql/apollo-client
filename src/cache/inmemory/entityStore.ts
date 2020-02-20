@@ -1,25 +1,33 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
-import { invariant } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
-import { isReference, StoreValue } from '../../utilities/graphql/storeUtils';
 import {
-  DeepMerger,
-  ReconcilerFunction,
-} from '../../utilities/common/mergeDeep';
+  isReference,
+  StoreValue,
+  StoreObject,
+  Reference,
+  makeReference
+} from '../../utilities/graphql/storeUtils';
+import { DeepMerger } from '../../utilities/common/mergeDeep';
+import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
-import {
-  getTypenameFromStoreObject,
-  fieldNameFromStoreName,
-} from './helpers';
+import { NormalizedCache, NormalizedCacheObject } from './types';
+import { fieldNameFromStoreName } from './helpers';
+import { Policies } from './policies';
+import  { Modifier, Modifiers, SafeReadonly } from '../core/types/common';
 
 const hasOwn = Object.prototype.hasOwnProperty;
+
+const DELETE: any = Object.create(null);
+const delModifier: Modifier<any> = () => DELETE;
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
 
-  public readonly group: CacheGroup;
+  constructor(
+    public readonly policies: Policies,
+    public readonly group: CacheGroup,
+  ) {}
 
   public abstract addLayer(
     layerId: string,
@@ -48,12 +56,16 @@ export abstract class EntityStore implements NormalizedCache {
         return storeObject[fieldName];
       }
     }
+    if (fieldName === "__typename" &&
+        hasOwn.call(this.policies.rootTypenamesById, dataId)) {
+      return this.policies.rootTypenamesById[dataId];
+    }
     if (this instanceof Layer) {
       return this.parent.get(dataId, fieldName);
     }
   }
 
-  private lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
+  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
     // The has method (above) calls lookup with dependOnExistence = true, so
     // that it can later be invalidated when we add or remove a StoreObject for
     // this dataId. Any consumer who cares about the contents of the StoreObject
@@ -66,98 +78,92 @@ export abstract class EntityStore implements NormalizedCache {
 
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
-    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming, this);
+    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming);
+    // Even if merged === existing, existing may have come from a lower
+    // layer, so we always need to set this.data[dataId] on this level.
+    this.data[dataId] = merged;
     if (merged !== existing) {
-      this.data[dataId] = merged;
       delete this.refs[dataId];
       if (this.group.caching) {
+        const fieldsToDirty: Record<string, 1> = Object.create(null);
         // If we added a new StoreObject where there was previously none, dirty
         // anything that depended on the existence of this dataId, such as the
         // EntityStore#has method.
-        if (!existing) this.group.dirty(dataId, "__exists");
-        // Now invalidate dependents who called getFieldValue for any
-        // fields that are changing as a result of this merge.
+        if (!existing) fieldsToDirty.__exists = 1;
+        // Now invalidate dependents who called getFieldValue for any fields
+        // that are changing as a result of this merge.
         Object.keys(incoming).forEach(storeFieldName => {
-          if (!existing || incoming[storeFieldName] !== existing[storeFieldName]) {
-            this.group.dirty(dataId, storeFieldName);
+          if (!existing || existing[storeFieldName] !== merged[storeFieldName]) {
+            fieldsToDirty[fieldNameFromStoreName(storeFieldName)] = 1;
+            // If merged[storeFieldName] has become undefined, and this is the
+            // Root layer, actually delete the property from the merged object,
+            // which is guaranteed to have been created fresh in this method.
+            if (merged[storeFieldName] === void 0 && !(this instanceof Layer)) {
+              delete merged[storeFieldName];
+            }
           }
         });
+        Object.keys(fieldsToDirty).forEach(
+          fieldName => this.group.dirty(dataId, fieldName));
       }
     }
   }
 
-  // If called with only one argument, removes the entire entity
-  // identified by dataId. If called with a fieldName as well, removes all
-  // fields of that entity whose names match fieldName, according to the
-  // fieldNameFromStoreName helper function.
-  public delete(dataId: string, fieldName?: string) {
+  public modify(
+    dataId: string,
+    modifiers: Modifier<any> | Modifiers,
+  ): boolean {
     const storeObject = this.lookup(dataId);
 
     if (storeObject) {
-      // In case someone passes in a storeFieldName (field.name.value +
-      // arguments key), normalize it down to just the field name.
-      fieldName = fieldName && fieldNameFromStoreName(fieldName);
+      const changedFields: Record<string, any> = Object.create(null);
+      let needToMerge = false;
+      let allDeleted = true;
 
-      const storeNamesToDelete = Object.keys(storeObject).filter(
-        // If the field value has already been set to undefined, we do not
-        // need to delete it again.
-        storeFieldName => storeObject[storeFieldName] !== void 0 &&
-          // If no fieldName provided, delete all fields from storeObject.
-          // If provided, delete all fields matching fieldName.
-          (!fieldName || fieldName === fieldNameFromStoreName(storeFieldName)));
+      const readField = <V = StoreValue>(
+        fieldName: string,
+        objOrRef?: StoreObject | Reference,
+      ) => this.getFieldValue<V>(objOrRef || makeReference(dataId), fieldName);
 
-      if (storeNamesToDelete.length) {
-        // If we only have to worry about the Root layer of the store,
-        // then we can safely delete fields within entities, or whole
-        // entities by ID. If this instanceof EntityStore.Layer, however,
-        // then we need to set the "deleted" values to undefined instead
-        // of actually deleting them, so the deletion does not un-shadow
-        // values inherited from lower layers of the store.
-        const canDelete = this instanceof EntityStore.Root;
-        const remove = (obj: Record<string, any>, key: string) => {
-          if (canDelete) {
-            delete obj[key];
-          } else {
-            obj[key] = void 0;
+      Object.keys(storeObject).forEach(storeFieldName => {
+        const fieldName = fieldNameFromStoreName(storeFieldName);
+        let fieldValue = storeObject[storeFieldName];
+        if (fieldValue === void 0) return;
+        const modify: Modifier<StoreValue> = typeof modifiers === "function"
+          ? modifiers
+          : modifiers[fieldName];
+        if (modify) {
+          let newValue = modify === delModifier ? DELETE :
+            modify(maybeDeepFreeze(fieldValue), {
+              DELETE,
+              fieldName,
+              storeFieldName,
+              isReference,
+              toReference: this.toReference,
+              readField,
+            });
+          if (newValue === DELETE) newValue = void 0;
+          if (newValue !== fieldValue) {
+            changedFields[storeFieldName] = newValue;
+            needToMerge = true;
+            fieldValue = newValue;
           }
-        };
-
-        // Note that we do not delete the this.rootIds[dataId] retainment
-        // count for this ID, since an object with the same ID could appear in
-        // the store again, and should not have to be retained again.
-        // delete this.rootIds[dataId];
-        delete this.refs[dataId];
-
-        const fieldsToDirty = new Set<string>();
-
-        if (fieldName) {
-          // If we have a fieldName and it matches more than zero fields,
-          // then we need to make a copy of this.data[dataId] without the
-          // fields that are getting deleted.
-          const cleaned = this.data[dataId] = { ...storeObject };
-          storeNamesToDelete.forEach(storeFieldName => {
-            remove(cleaned, storeFieldName);
-          });
-          // Although it would be logically correct to dirty each
-          // storeFieldName in the loop above, we know that they all have
-          // the same name, according to fieldNameFromStoreName.
-          fieldsToDirty.add(fieldName);
-        } else {
-          // If no fieldName was provided, then we delete the whole entity
-          // from the cache.
-          remove(this.data, dataId);
-          storeNamesToDelete.forEach(storeFieldName => {
-            fieldsToDirty.add(fieldNameFromStoreName(storeFieldName));
-          });
-          // Let dependents (such as EntityStore#has) know that this dataId has
-          // been removed from this layer of the store.
-          fieldsToDirty.add("__exists");
         }
+        if (fieldValue !== void 0) {
+          allDeleted = false;
+        }
+      });
 
-        if (this.group.caching) {
-          fieldsToDirty.forEach(fieldName => {
-            this.group.dirty(dataId, fieldName);
-          });
+      if (needToMerge) {
+        this.merge(dataId, changedFields);
+
+        if (allDeleted) {
+          if (this instanceof Layer) {
+            this.data[dataId] = void 0;
+          } else {
+            delete this.data[dataId];
+          }
+          this.group.dirty(dataId, "__exists");
         }
 
         return true;
@@ -167,8 +173,21 @@ export abstract class EntityStore implements NormalizedCache {
     return false;
   }
 
+  // If called with only one argument, removes the entire entity
+  // identified by dataId. If called with a fieldName as well, removes all
+  // fields of that entity whose names match fieldName according to the
+  // fieldNameFromStoreName helper function.
+  public delete(dataId: string, fieldName?: string) {
+    return this.modify(dataId, fieldName ? {
+      [fieldName]: delModifier,
+    } : delModifier);
+  }
+
   public evict(dataId: string, fieldName?: string): boolean {
-    let evicted = this.delete(dataId, fieldName);
+    let evicted = false;
+    if (hasOwn.call(this.data, dataId)) {
+      evicted = this.delete(dataId, fieldName);
+    }
     if (this instanceof Layer) {
       evicted = this.parent.evict(dataId, fieldName) || evicted;
     }
@@ -280,7 +299,37 @@ export abstract class EntityStore implements NormalizedCache {
   public makeCacheKey(...args: any[]) {
     return this.group.keyMaker.lookupArray(args);
   }
+
+  // Bound function that can be passed around to provide easy access to fields
+  // of Reference objects as well as ordinary objects.
+  public getFieldValue = <T = StoreValue>(
+    objectOrReference: StoreObject | Reference,
+    storeFieldName: string,
+  ) => maybeDeepFreeze(
+    isReference(objectOrReference)
+      ? this.get(objectOrReference.__ref, storeFieldName)
+      : objectOrReference && objectOrReference[storeFieldName]
+  ) as SafeReadonly<T>;
+
+  // Bound function that converts an object with a __typename and primary
+  // key fields to a Reference object. Pass true for mergeIntoStore if you
+  // would also like this object to be persisted into the store.
+  public toReference = (
+    object: StoreObject,
+    mergeIntoStore?: boolean,
+  ) => {
+    const id = this.policies.identify(object);
+    const ref = id && makeReference(id);
+    if (ref && mergeIntoStore) {
+      this.merge(id, object);
+    }
+    return ref;
+  }
 }
+
+export type ToReferenceFunction = EntityStore["toReference"];
+
+export type FieldValueGetter = EntityStore["getFieldValue"];
 
 // A single CacheGroup represents a set of one or more EntityStore objects,
 // typically the Root store in a CacheGroup by itself, and all active Layer
@@ -320,7 +369,10 @@ class CacheGroup {
 }
 
 function makeDepKey(dataId: string, storeFieldName: string) {
-  return JSON.stringify([dataId, fieldNameFromStoreName(storeFieldName)]);
+  // Since field names cannot have '#' characters in them, this method
+  // of joining the field name and the ID should be unambiguous, and much
+  // cheaper than JSON.stringify([dataId, fieldName]).
+  return fieldNameFromStoreName(storeFieldName) + '#' + dataId;
 }
 
 export namespace EntityStore {
@@ -334,14 +386,15 @@ export namespace EntityStore {
     private sharedLayerGroup: CacheGroup = null;
 
     constructor({
+      policies,
       resultCaching = true,
       seed,
     }: {
+      policies: Policies;
       resultCaching?: boolean;
       seed?: NormalizedCacheObject;
     }) {
-      super();
-      (this.group as any) = new CacheGroup(resultCaching);
+      super(policies, new CacheGroup(resultCaching));
       this.sharedLayerGroup = new CacheGroup(resultCaching);
       if (seed) this.replace(seed);
     }
@@ -370,7 +423,7 @@ class Layer extends EntityStore {
     public readonly replay: (layer: EntityStore) => any,
     public readonly group: CacheGroup,
   ) {
-    super();
+    super(parent.policies, group);
     replay(this);
   }
 
@@ -387,9 +440,16 @@ class Layer extends EntityStore {
 
     if (layerId === this.id) {
       // Dirty every ID we're removing.
-      // TODO Some of these IDs could escape dirtying if value unchanged.
       if (this.group.caching) {
-        Object.keys(this.data).forEach(dataId => this.delete(dataId));
+        Object.keys(this.data).forEach(dataId => {
+          // If this.data[dataId] contains nothing different from what
+          // lies beneath, we can avoid dirtying this dataId and all of
+          // its fields, and simply discard this Layer. The only reason we
+          // call this.delete here is to dirty the removed fields.
+          if (this.data[dataId] !== (parent as Layer).lookup(dataId)) {
+            this.delete(dataId);
+          }
+        });
       }
       return parent;
     }
@@ -417,57 +477,19 @@ class Layer extends EntityStore {
   }
 }
 
-const storeObjectReconciler: ReconcilerFunction<[EntityStore]> = function (
-  existingObject,
-  incomingObject,
-  property,
-  // This parameter comes from the additional argument we pass to the
-  // merge method in context.mergeStoreObjects (see writeQueryToStore).
-  store,
-) {
-  // In the future, reconciliation logic may depend on the type of the parent
-  // StoreObject, not just the values of the given property.
-  const existing = existingObject[property];
-  const incoming = incomingObject[property];
-
-  if (
-    existing !== incoming &&
-    // The DeepMerger class has various helpful utilities that we might as
-    // well reuse here.
-    this.isObject(existing) &&
-    this.isObject(incoming)
-  ) {
-    const eType = getTypenameFromStoreObject(store, existing);
-    const iType = getTypenameFromStoreObject(store, incoming);
-    // If both objects have a typename and the typename is different, let the
-    // incoming object win. The typename can change when a different subtype
-    // of a union or interface is written to the store.
-    if (
-      typeof eType === 'string' &&
-      typeof iType === 'string' &&
-      eType !== iType
-    ) {
-      return incoming;
-    }
-
-    invariant(
-      !isReference(existing) || isReference(incoming),
-      `Store error: the application attempted to write an object with no provided id but the store already contains an id of ${existing.__ref} for this object.`,
-    );
-
-    // It's worth checking deep equality here (even though blindly
-    // returning incoming would be logically correct) because preserving
-    // the referential identity of existing data can prevent needless
-    // rereading and rerendering.
-    if (equal(existing, incoming)) {
-      return existing;
-    }
-  }
-
-  // In all other cases, incoming replaces existing without any effort to
-  // merge them deeply, since custom merge functions have already been
-  // applied to the incoming data by walkWithMergeOverrides.
-  return incoming;
+function storeObjectReconciler(
+  existingObject: StoreObject,
+  incomingObject: StoreObject,
+  property: string | number,
+): StoreValue {
+  const existingValue = existingObject[property];
+  const incomingValue = incomingObject[property];
+  // Wherever there is a key collision, prefer the incoming value, unless
+  // it is deeply equal to the existing value. It's worth checking deep
+  // equality here (even though blindly returning incoming would be
+  // logically correct) because preserving the referential identity of
+  // existing data can prevent needless rereading and rerendering.
+  return equal(existingValue, incomingValue) ? existingValue : incomingValue;
 }
 
 export function supportsResultCaching(store: any): store is EntityStore {
@@ -478,5 +500,9 @@ export function supportsResultCaching(store: any): store is EntityStore {
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
 ): NormalizedCache {
-  return new EntityStore.Root({ resultCaching: true, seed });
+  return new EntityStore.Root({
+    policies: new Policies,
+    resultCaching: true,
+    seed,
+  });
 }

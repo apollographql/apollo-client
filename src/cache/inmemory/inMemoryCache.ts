@@ -6,11 +6,12 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
+import { Modifier, Modifiers } from '../core/types/common';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
+import { StoreObject }  from '../../utilities/graphql/storeUtils';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
-  StoreObject,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
@@ -71,6 +72,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
     this.data = new EntityStore.Root({
+      policies: this.policies,
       resultCaching: this.config.resultCaching,
     });
 
@@ -152,9 +154,23 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.broadcastWatches();
   }
 
+  public modify(
+    dataId: string,
+    modifiers: Modifier<any> | Modifiers,
+    optimistic = false,
+  ): boolean {
+    const store = optimistic ? this.optimisticData : this.data;
+    if (store.modify(dataId, modifiers)) {
+      this.broadcastWatches();
+      return true;
+    }
+    return false;
+  }
+
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
     return this.storeReader.diffQueryAgainstStore({
       store: options.optimistic ? this.optimisticData : this.data,
+      rootId: options.id || "ROOT_QUERY",
       query: options.query,
       variables: options.variables,
       returnPartialData: options.returnPartialData,
@@ -164,7 +180,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public watch(watch: Cache.WatchOptions): () => void {
     this.watches.add(watch);
-
+    if (watch.immediate) {
+      this.maybeBroadcastWatch(watch);
+    }
     return () => {
       this.watches.delete(watch);
     };

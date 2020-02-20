@@ -825,4 +825,83 @@ describe('@client @export tests', () => {
       });
     }
   );
+
+  it(
+    'should NOT attempt to refetch over the network if an @export variable ' +
+    'has changed, the current fetch policy is cache-first, and the remote ' +
+    'part of the query (that leverages the @export variable) can be fully ' +
+    'found in the cache.',
+    done => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthorId @client @export(as: "authorId")
+          postCount(authorId: $authorId)
+        }
+      `;
+
+      const testAuthorId1 = 1;
+      const testPostCount1 = 100;
+
+      const testAuthorId2 = 2;
+      const testPostCount2 = 200;
+
+      let fetchCount = 0;
+      const link = new ApolloLink(() => {
+        fetchCount += 1;
+        return Observable.of({
+          data: {
+            postCount: testPostCount1
+          },
+        });
+      });
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+        resolvers: {},
+      });
+
+      client.writeQuery({
+        query: gql`{ currentAuthorId }`,
+        data: { currentAuthorId: testAuthorId1 }
+      });
+
+      let resultCount = 0;
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+      obs.subscribe({
+        next(result) {
+          if (resultCount === 0) {
+            // The initial result is fetched over the network.
+            expect(fetchCount).toBe(1);
+            expect(result.data).toMatchObject({
+              currentAuthorId: testAuthorId1,
+              postCount: testPostCount1,
+            });
+
+            client.writeQuery({
+              query,
+              variables: { authorId: testAuthorId2 },
+              data: { postCount: testPostCount2 }
+            });
+            client.writeQuery({
+              query: gql`{ currentAuthorId }`,
+              data: { currentAuthorId: testAuthorId2 }
+            });
+          } else if (resultCount === 1) {
+            // The updated result should not have been fetched over the
+            // network, as it can be found in the cache.
+            expect(fetchCount).toBe(1);
+            expect(result.data).toMatchObject({
+              currentAuthorId: testAuthorId2,
+              postCount: testPostCount2,
+            });
+            done();
+          }
+
+          resultCount += 1;
+        },
+      });
+    }
+  );
 });

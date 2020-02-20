@@ -559,9 +559,6 @@ export class QueryManager<TStore> {
       queryStoreValue: QueryStoreValue,
       newData?: Cache.DiffResult<T>,
     ) => {
-      // we're going to take a look at the data, so the query is no longer dirty
-      this.dirty(queryId, false);
-
       // The query store value can be undefined in the event of a store
       // reset.
       if (!queryStoreValue) return;
@@ -1121,13 +1118,11 @@ export class QueryManager<TStore> {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
       if (info.dirty) {
+        const queryStoreValue = this.queryStore.get(id);
         info.listeners.forEach(listener => {
-          // it's possible for the listener to be undefined if the query is being stopped
-          // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
-          if (listener) {
-            listener(this.queryStore.get(id), info.newData);
-          }
+          listener(queryStoreValue, info.newData);
         });
+        info.dirty = false;
       }
     });
   }

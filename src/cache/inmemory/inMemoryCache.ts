@@ -53,10 +53,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // cache.policies.addPossibletypes.
   public readonly policies: Policies;
 
-  // Set this while in a transaction to prevent broadcasts...
-  // don't forget to turn it back on!
-  private silenceBroadcast: boolean = false;
-
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
@@ -243,25 +239,28 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
+  private txCount = 0;
+
   public performTransaction(
-    transaction: (proxy: InMemoryCache) => any,
+    transaction: (cache: InMemoryCache) => any,
     // This parameter is not part of the performTransaction signature inherited
     // from the ApolloCache abstract class, but it's useful because it saves us
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
     const perform = (layer?: EntityStore) => {
-      const proxy: InMemoryCache = Object.create(this);
-      proxy.silenceBroadcast = true;
+      const { data, optimisticData } = this;
+      ++this.txCount;
       if (layer) {
-        // The proxy object is just like this except that silenceBroadcast
-        // is set to true, and proxy.data and proxy.optimisticData both
-        // point to the same layer.
-        proxy.data = proxy.optimisticData = layer;
+        this.data = this.optimisticData = layer;
       }
-      // Because the proxy object can simply be forgotten, we do not need
-      // to wrap this call with a try-finally block.
-      return transaction(proxy);
+      try {
+        transaction(this);
+      } finally {
+        --this.txCount;
+        this.data = data;
+        this.optimisticData = optimisticData;
+      }
     };
 
     if (typeof optimisticId === 'string') {
@@ -275,7 +274,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       perform();
     }
 
-    // This broadcast does nothing if this.silenceBroadcast is true.
+    // This broadcast does nothing if this.txCount > 0.
     this.broadcastWatches();
   }
 
@@ -303,7 +302,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   protected broadcastWatches() {
-    if (!this.silenceBroadcast) {
+    if (!this.txCount) {
       this.watches.forEach(c => this.maybeBroadcastWatch(c));
     }
   }

@@ -319,21 +319,25 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     );
   }
 
+  private varDep = dep<ReactiveVar<any>>();
+
   public makeVar<T>(value?: T): ReactiveVar<T> {
+    const cache = this;
     return function rv(newValue) {
       if (arguments.length > 0) {
         if (value !== newValue) {
           value = newValue;
-          varDep.dirty(rv);
+          cache.varDep.dirty(rv);
+          // In order to perform several ReactiveVar updates without
+          // broadcasting each time, use cache.performTransaction.
+          cache.broadcastWatches();
         }
       } else {
-        varDep(rv);
+        cache.varDep(rv);
       }
       return value;
     };
   }
 }
-
-const varDep = dep<ReactiveVar<any>>();
 
 export type ReactiveVar<T> = (newValue?: T) => T;

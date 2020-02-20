@@ -2293,7 +2293,7 @@ describe("InMemoryCache#modify", () => {
   });
 });
 
-describe("cache.makeLocalVar", () => {
+describe("cache.makeVar", () => {
   function makeCacheAndVar(resultCaching: boolean) {
     const cache: InMemoryCache = new InMemoryCache({
       resultCaching,
@@ -2308,7 +2308,7 @@ describe("cache.makeLocalVar", () => {
       },
     });
 
-    const nameVar = cache.makeLocalVar("Ben");
+    const nameVar = cache.makeVar("Ben");
 
     const query = gql`
       query {

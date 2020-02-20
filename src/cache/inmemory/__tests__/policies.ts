@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
-import { InMemoryCache, LocalVar } from "../inMemoryCache";
-import { StoreValue } from "../../../utilities";
-import { FieldPolicy, Policies } from "../policies";
+
+import { InMemoryCache } from "../inMemoryCache";
+import { Policies } from "../policies";
 import { Reference, StoreObject } from "../../../core";
 
 function reverse(s: string) {
@@ -925,7 +925,7 @@ describe("type policies", function () {
               result: {
                 read(_, { storage }) {
                   if (!storage.jobName) {
-                    storage.jobName = cache.makeLocalVar<string>();
+                    storage.jobName = cache.makeVar<string>();
                   }
                   return storage.jobName();
                 },
@@ -933,7 +933,7 @@ describe("type policies", function () {
                   if (storage.jobName) {
                     storage.jobName(incoming);
                   } else {
-                    storage.jobName = cache.makeLocalVar(incoming);
+                    storage.jobName = cache.makeVar(incoming);
                   }
                 },
               },
@@ -1439,11 +1439,11 @@ describe("type policies", function () {
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
       const ownTimes = {
-        "parent task": cache.makeLocalVar(2),
-        "child task 1": cache.makeLocalVar(3),
-        "child task 2": cache.makeLocalVar(4),
-        "grandchild task": cache.makeLocalVar(5),
-        "independent task": cache.makeLocalVar(11),
+        "parent task": cache.makeVar(2),
+        "child task 1": cache.makeVar(3),
+        "child task 2": cache.makeVar(4),
+        "grandchild task": cache.makeVar(5),
+        "independent task": cache.makeVar(11),
       };
 
       cache.writeQuery({

@@ -319,20 +319,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     );
   }
 
-  public makeLocalVar<T>(value?: T): LocalVar<T> {
-    return function LocalVar(newValue) {
+  public makeVar<T>(value?: T): ReactiveVar<T> {
+    return function rv(newValue) {
       if (arguments.length > 0) {
         if (value !== newValue) {
           value = newValue;
-          localVarDep.dirty(LocalVar);
+          varDep.dirty(rv);
         }
       } else {
-        localVarDep(LocalVar);
+        varDep(rv);
       }
       return value;
     };
   }
 }
 
-const localVarDep = dep<LocalVar<any>>();
-export type LocalVar<T> = (newValue?: T) => T;
+const varDep = dep<ReactiveVar<any>>();
+
+export type ReactiveVar<T> = (newValue?: T) => T;

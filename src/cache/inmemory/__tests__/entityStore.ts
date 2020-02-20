@@ -5,6 +5,7 @@ import { DocumentNode, FieldNode } from 'graphql';
 import { Policies } from '../policies';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
+import { Reference } from '../../../utilities/graphql/storeUtils';
 
 describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
@@ -1354,6 +1355,283 @@ describe('EntityStore', () => {
             name: "Geoffrey Chaucer",
           },
         },
+      },
+    });
+  });
+
+  it("supports toReference(obj, true) to persist obj", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            book(_, {
+              args,
+              toReference,
+              readField,
+            }) {
+              const ref = toReference({
+                __typename: "Book",
+                isbn: args.isbn,
+              }, true);
+
+              expect(readField("__typename", ref)).toEqual("Book");
+              const isbn = readField<string>("isbn", ref);
+              expect(isbn).toEqual(args.isbn);
+              expect(readField("title", ref)).toBe(titlesByISBN[isbn]);
+
+              return ref;
+            },
+
+            books: {
+              merge(existing: Reference[] = [], incoming: any[], {
+                isReference,
+                toReference,
+                readField,
+              }) {
+                incoming.forEach(book => {
+                  expect(isReference(book)).toBe(false);
+                  expect(book.__typename).toBeUndefined();
+                });
+
+                const refs = incoming.map(book => toReference({
+                  __typename: "Book",
+                  title: titlesByISBN[book.isbn],
+                  ...book,
+                }, true));
+
+                refs.forEach((ref, i) => {
+                  expect(isReference(ref)).toBe(true);
+                  expect(readField("__typename", ref)).toBe("Book");
+                  const isbn = readField<string>("isbn", ref);
+                  expect(typeof isbn).toBe("string");
+                  expect(isbn).toBe(readField("isbn", incoming[i]));
+                });
+
+                return [...existing, ...refs];
+              },
+            },
+          },
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+      },
+    });
+
+    const booksQuery = gql`
+      query {
+        books {
+          isbn
+        }
+      }
+    `;
+
+    const bookQuery = gql`
+      query {
+        book(isbn: $isbn) {
+          isbn
+          title
+        }
+      }
+    `;
+
+    const titlesByISBN = {
+      9781451673319: "Fahrenheit 451",
+      1603589082: "Eager",
+      1760641790: "How To Do Nothing",
+    };
+
+    cache.writeQuery({
+      query: booksQuery,
+      data: {
+        books: [{
+          // Note: intentionally omitting __typename:"Book" here.
+          isbn: "9781451673319",
+        }, {
+          isbn: "1603589082",
+        }],
+      },
+    });
+
+    const twoBookSnapshot = {
+      ROOT_QUERY: {
+        __typename: "Query",
+        books: [
+          { __ref: 'Book:{"isbn":"9781451673319"}' },
+          { __ref: 'Book:{"isbn":"1603589082"}' },
+        ],
+      },
+      'Book:{"isbn":"9781451673319"}': {
+        __typename: "Book",
+        isbn: "9781451673319",
+        title: "Fahrenheit 451",
+      },
+      'Book:{"isbn":"1603589082"}': {
+        __typename: "Book",
+        isbn: "1603589082",
+        title: "Eager",
+      },
+    };
+
+    // Check that the __typenames were appropriately added.
+    expect(cache.extract()).toEqual(twoBookSnapshot);
+
+    cache.writeQuery({
+      query: booksQuery,
+      data: {
+        books: [{
+          isbn: "1760641790",
+        }],
+      },
+    });
+
+    const threeBookSnapshot = {
+      ...twoBookSnapshot,
+      ROOT_QUERY: {
+        ...twoBookSnapshot.ROOT_QUERY,
+        books: [
+          ...twoBookSnapshot.ROOT_QUERY.books,
+          { __ref: 'Book:{"isbn":"1760641790"}' },
+        ],
+      },
+      'Book:{"isbn":"1760641790"}': {
+        __typename: "Book",
+        isbn: "1760641790",
+        title: "How To Do Nothing",
+      },
+    };
+
+    expect(cache.extract()).toEqual(threeBookSnapshot);
+
+    const howToDoNothingResult = cache.readQuery({
+      query: bookQuery,
+      variables: {
+        isbn: "1760641790",
+      },
+    });
+
+    expect(howToDoNothingResult).toEqual({
+      book: {
+        __typename: "Book",
+        isbn: "1760641790",
+        title: "How To Do Nothing",
+      },
+    });
+
+    // Check that reading the query didn't change anything.
+    expect(cache.extract()).toEqual(threeBookSnapshot);
+
+    const f451Result = cache.readQuery({
+      query: bookQuery,
+      variables: {
+        isbn: "9781451673319",
+      },
+    });
+
+    expect(f451Result).toEqual({
+      book: {
+        __typename: "Book",
+        isbn: "9781451673319",
+        title: "Fahrenheit 451",
+      },
+    });
+
+    const cuckoosCallingDiffResult = cache.diff({
+      query: bookQuery,
+      optimistic: true,
+      variables: {
+        isbn: "031648637X",
+      },
+    });
+
+    expect(cuckoosCallingDiffResult).toEqual({
+      complete: false,
+      result: {
+        book: {
+          __typename: "Book",
+          isbn: "031648637X",
+        },
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ...threeBookSnapshot,
+      // This book was added as a side effect of the read function.
+      'Book:{"isbn":"031648637X"}': {
+        __typename: "Book",
+        isbn: "031648637X",
+      },
+    });
+
+    const cuckoosCallingId = cache.identify({
+      __typename: "Book",
+      isbn: "031648637X",
+    });
+
+    expect(cuckoosCallingId).toBe('Book:{"isbn":"031648637X"}');
+
+    cache.writeQuery({
+      id: cuckoosCallingId,
+      query: gql`{ title }`,
+      data: {
+        title: "The Cuckoo's Calling",
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ...threeBookSnapshot,
+      // This book was added as a side effect of the read function.
+      'Book:{"isbn":"031648637X"}': {
+        __typename: "Book",
+        isbn: "031648637X",
+        title: "The Cuckoo's Calling",
+      },
+    });
+
+    cache.modify(cuckoosCallingId, {
+      title(title: string, {
+        isReference,
+        toReference,
+        readField,
+      }) {
+        const book = {
+          __typename: "Book",
+          isbn: readField("isbn"),
+          author: "J.K. Rowling",
+        };
+
+        // By not passing true as the second argument to toReference, we
+        // get back a Reference object, but the book.author field is not
+        // persisted into the store.
+        const refWithoutAuthor = toReference(book);
+        expect(isReference(refWithoutAuthor)).toBe(true);
+        expect(readField("author", refWithoutAuthor)).toBeUndefined();
+
+        // Update this very Book entity before we modify its title.
+        // Passing true for the second argument causes the extra
+        // book.author field to be persisted into the store.
+        const ref = toReference(book, true);
+        expect(isReference(ref)).toBe(true);
+        expect(readField("author", ref)).toBe("J.K. Rowling");
+
+        // In fact, readField doesn't need the ref if we're reading from
+        // the same entity that we're modifying.
+        expect(readField("author")).toBe("J.K. Rowling");
+
+        // Typography matters!
+        return title.split("'").join("’");
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ...threeBookSnapshot,
+      // This book was added as a side effect of the read function.
+      'Book:{"isbn":"031648637X"}': {
+        __typename: "Book",
+        isbn: "031648637X",
+        title: "The Cuckoo’s Calling",
+        author: "J.K. Rowling",
       },
     });
   });

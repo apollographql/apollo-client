@@ -25,17 +25,16 @@ import {
 import { shouldInclude } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
-import { Policies } from './policies';
-import { defaultNormalizedCacheFactory } from './entityStore';
+import { Policies, ReadMergeContext } from './policies';
+import { EntityStore } from './entityStore';
 import { NormalizedCache } from './types';
 import { makeProcessedFieldsMerger, FieldValueToBeMerged } from './helpers';
 
-export type WriteContext = {
+export interface WriteContext extends ReadMergeContext {
   readonly store: NormalizedCache;
   readonly written: {
     [dataId: string]: SelectionSetNode[];
   };
-  readonly variables?: any;
   readonly fragmentMap?: FragmentMap;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
@@ -78,7 +77,9 @@ export class StoreWriter {
     query,
     result,
     dataId = 'ROOT_QUERY',
-    store = defaultNormalizedCacheFactory(),
+    store = new EntityStore.Root({
+      policies: this.policies,
+    }),
     variables,
   }: {
     query: DocumentNode;
@@ -111,6 +112,8 @@ export class StoreWriter {
           ...variables,
         },
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        toReference: store.toReference,
+        getFieldValue: store.getFieldValue,
       },
     });
   }
@@ -159,8 +162,9 @@ export class StoreWriter {
       processed = policies.applyMerges(
         makeReference(dataId),
         processed,
-        store.getFieldValue,
-        context.variables,
+        // Since WriteContext extends ReadMergeContext, we can pass it
+        // here without any modifications.
+        context,
       );
     }
 

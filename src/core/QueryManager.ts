@@ -64,10 +64,10 @@ export interface QueryInfo {
   observableQuery: ObservableQuery<any> | null;
   subscriptions: Set<ObservableSubscription>;
   cancel?: () => void;
+  storeValue?: QueryStoreValue;
 }
 
 export type QueryStoreValue = {
-  document: DocumentNode;
   variables: Object;
   previousVariables?: Object | null;
   networkStatus: NetworkStatus;
@@ -77,7 +77,7 @@ export type QueryStoreValue = {
 
 type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
-  query: QueryStoreValue;
+  queryInfo: QueryInfo;
 };
 
 export class QueryManager<TStore> {
@@ -202,7 +202,7 @@ export class QueryManager<TStore> {
             ) {
               ret[queryId] = {
                 updater: updateQueriesByName[queryName],
-                query: this.getQueryStoreValue(queryId),
+                queryInfo: this.queries.get(queryId),
               };
             }
           }
@@ -511,14 +511,19 @@ export class QueryManager<TStore> {
 
   // <QueryStore>
 
-  private qsStore: { [queryId: string]: QueryStoreValue } = {};
-
-  public getQueryStore(): { [queryId: string]: QueryStoreValue } {
-    return this.qsStore;
+  public getQueryStore() {
+    const store: Record<string, QueryStoreValue> = Object.create(null);
+    this.queries.forEach(({ storeValue }, queryId) => {
+      if (storeValue) {
+        store[queryId] = storeValue;
+      }
+    });
+    return store;
   }
 
   public getQueryStoreValue(queryId: string): QueryStoreValue {
-    return this.qsStore[queryId];
+    const info = queryId && this.queries.get(queryId);
+    return info && info.storeValue;
   }
 
   private qsInitQuery(query: {
@@ -530,15 +535,17 @@ export class QueryManager<TStore> {
     isRefetch: boolean;
     fetchMoreForQueryId: string | undefined;
   }) {
-    const previousQuery = this.qsStore[query.queryId];
+    this.setQuery(query.queryId, () => {});
+    const queryInfo = this.getQuery(query.queryId);
+    const previousQuery = queryInfo && queryInfo.storeValue;
 
     // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
     // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
     // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
     invariant(
       !previousQuery ||
-      previousQuery.document === query.document ||
-      equal(previousQuery.document, query.document),
+      queryInfo.document === query.document ||
+      equal(queryInfo.document, query.document),
       'Internal Error: may not update existing query string in store',
     );
 
@@ -558,7 +565,7 @@ export class QueryManager<TStore> {
     }
 
     // TODO break this out into a separate function
-    let networkStatus;
+    let networkStatus: NetworkStatus;
     if (isSetVariables) {
       networkStatus = NetworkStatus.setVariables;
     } else if (query.isPoll) {
@@ -578,14 +585,15 @@ export class QueryManager<TStore> {
     // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
     // the store. We probably want a refetch action instead, because I suspect that if you refetch
     // before the initial fetch is done, you'll get an error.
-    this.qsStore[query.queryId] = {
-      document: query.document,
-      variables: query.variables,
-      previousVariables,
-      networkError: null,
-      graphQLErrors: graphQLErrors,
-      networkStatus,
-    };
+    this.setQuery(query.queryId, () => ({
+      storeValue: {
+        variables: query.variables,
+        previousVariables,
+        networkError: null,
+        graphQLErrors,
+        networkStatus,
+      },
+    }));
 
     // If the action had a `moreForQueryId` property then we need to set the
     // network status on that query as well to `fetchMore`.
@@ -594,58 +602,53 @@ export class QueryManager<TStore> {
     // error action branch, but importantly *not* in the client result branch.
     // This is because the implementation of `fetchMore` *always* sets
     // `fetchPolicy` to `network-only` so we would never have a client result.
-    if (
-      typeof query.fetchMoreForQueryId === 'string' &&
-      this.qsStore[query.fetchMoreForQueryId]
-    ) {
-      this.qsStore[query.fetchMoreForQueryId].networkStatus =
-        NetworkStatus.fetchMore;
+    const fetchMoreStoreValue = this.getQueryStoreValue(query.fetchMoreForQueryId);
+    if (fetchMoreStoreValue) {
+      fetchMoreStoreValue.networkStatus = NetworkStatus.fetchMore;
     }
   }
 
   private qsMarkQueryResult(
     queryId: string,
     result: ExecutionResult,
-    fetchMoreForQueryId: string | undefined,
+    fetchMoreForQueryId?: string,
   ) {
-    if (!this.qsStore || !this.qsStore[queryId]) return;
-
-    this.qsStore[queryId].networkError = null;
-    this.qsStore[queryId].graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
-    this.qsStore[queryId].previousVariables = null;
-    this.qsStore[queryId].networkStatus = NetworkStatus.ready;
-
-    // If we have a `fetchMoreForQueryId` then we need to update the network
-    // status for that query. See the branch for query initialization for more
-    // explanation about this process.
-    if (
-      typeof fetchMoreForQueryId === 'string' &&
-      this.qsStore[fetchMoreForQueryId]
-    ) {
-      this.qsStore[fetchMoreForQueryId].networkStatus = NetworkStatus.ready;
+    const storeValue = this.getQueryStoreValue(queryId);
+    if (storeValue) {
+      storeValue.networkError = null;
+      storeValue.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+      storeValue.previousVariables = null;
+      storeValue.networkStatus = NetworkStatus.ready;
+      // If we have a `fetchMoreForQueryId` then we need to update the network
+      // status for that query. See the branch for query initialization for more
+      // explanation about this process.
+      const fetchMoreStoreValue = this.getQueryStoreValue(fetchMoreForQueryId)
+      if (fetchMoreStoreValue) {
+        fetchMoreStoreValue.networkStatus = NetworkStatus.ready;
+      }
     }
   }
 
   private qsMarkQueryError(
     queryId: string,
     error: Error,
-    fetchMoreForQueryId: string | undefined,
+    fetchMoreForQueryId?: string,
   ) {
-    if (!this.qsStore || !this.qsStore[queryId]) return;
-
-    this.qsStore[queryId].networkError = error;
-    this.qsStore[queryId].networkStatus = NetworkStatus.error;
-
-    // If we have a `fetchMoreForQueryId` then we need to update the network
-    // status for that query. See the branch for query initialization for more
-    // explanation about this process.
-    if (typeof fetchMoreForQueryId === 'string') {
-      this.qsMarkQueryResultClient(fetchMoreForQueryId, true);
+    const storeValue = this.getQueryStoreValue(queryId);
+    if (storeValue) {
+      storeValue.networkError = error;
+      storeValue.networkStatus = NetworkStatus.error;
+      // If we have a `fetchMoreForQueryId` then we need to update the network
+      // status for that query. See the branch for query initialization for more
+      // explanation about this process.
+      if (typeof fetchMoreForQueryId === 'string') {
+        this.qsMarkQueryResultClient(fetchMoreForQueryId, true);
+      }
     }
   }
 
   private qsMarkQueryResultClient(queryId: string, complete: boolean) {
-    const storeValue = this.qsStore && this.qsStore[queryId];
+    const storeValue = this.getQueryStoreValue(queryId);
     if (storeValue) {
       storeValue.networkError = null;
       storeValue.previousVariables = null;
@@ -656,16 +659,21 @@ export class QueryManager<TStore> {
   }
 
   private qsStopQuery(queryId: string) {
-    delete this.qsStore[queryId];
+    const queryInfo = this.queries.get(queryId);
+    if (queryInfo) {
+      delete queryInfo.storeValue;
+    }
   }
 
-  private qsReset(observableQueryIds: string[]) {
-    Object.keys(this.qsStore).forEach(queryId => {
-      if (observableQueryIds.indexOf(queryId) < 0) {
-        this.stopQuery(queryId);
+  private qsReset() {
+    this.queries.forEach(({ storeValue, observableQuery }, queryId) => {
+      if (!storeValue) return;
+      if (observableQuery) {
+        // Set loading to true so listeners don't trigger unless they want
+        // results with partial data.
+        storeValue.networkStatus = NetworkStatus.loading;
       } else {
-        // XXX set loading to true so listeners don't trigger unless they want results with partial data
-        this.qsStore[queryId].networkStatus = NetworkStatus.loading;
+        this.qsStopQuery(queryId);
       }
     });
   }
@@ -1079,12 +1087,7 @@ export class QueryManager<TStore> {
       ));
     });
 
-    const resetIds: string[] = [];
-    this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery) resetIds.push(queryId);
-    });
-
-    this.qsReset(resetIds);
+    this.qsReset();
     this.mutationStore.reset();
 
     // begin removing data from the store
@@ -1637,12 +1640,20 @@ function markMutationResult<TStore>(
     const { queryUpdatersById } = mutation;
     if (queryUpdatersById) {
       Object.keys(queryUpdatersById).forEach(id => {
-        const { query, updater } = queryUpdatersById[id];
+        const {
+          updater,
+          queryInfo: {
+            document,
+            storeValue: {
+              variables,
+            },
+          },
+        }= queryUpdatersById[id];
 
         // Read the current query result from the store.
         const { result: currentQueryResult, complete } = cache.diff({
-          query: query.document,
-          variables: query.variables,
+          query: document,
+          variables,
           returnPartialData: true,
           optimistic: false,
         });
@@ -1652,8 +1663,8 @@ function markMutationResult<TStore>(
           const nextQueryResult = tryFunctionOrLogError(
             () => updater(currentQueryResult, {
               mutationResult: mutation.result,
-              queryName: getOperationName(query.document) || undefined,
-              queryVariables: query.variables,
+              queryName: getOperationName(document) || undefined,
+              queryVariables: variables,
             }),
           );
 
@@ -1662,8 +1673,8 @@ function markMutationResult<TStore>(
             cacheWrites.push({
               result: nextQueryResult,
               dataId: 'ROOT_QUERY',
-              query: query.document,
-              variables: query.variables,
+              query: document,
+              variables,
             });
           }
         }

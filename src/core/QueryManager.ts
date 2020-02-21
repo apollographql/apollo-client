@@ -1,5 +1,6 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
+import { equal } from "@wry/equality";
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -877,7 +878,7 @@ export class QueryManager<TStore> {
       optimistic: true,
       previousResult,
       callback: newData => {
-        this.setQuery(queryId, () => ({ dirty: true, newData }));
+        this.setQuery(queryId, () => ({ newData }));
       },
     });
   }
@@ -951,7 +952,6 @@ export class QueryManager<TStore> {
         }
 
         this.setQuery(queryId, () => ({ newData: null }));
-        this.dirty(queryId);
       }
     });
 
@@ -1336,10 +1336,15 @@ export class QueryManager<TStore> {
 
   private setQuery<T extends keyof QueryInfo>(
     queryId: string,
-    updater: (prev: QueryInfo) => Pick<QueryInfo, T> | void,
+    updater: (oldInfo: QueryInfo) => Pick<QueryInfo, T> | void,
   ) {
-    const prev = this.getQuery(queryId);
-    const newInfo = { ...prev, ...updater(prev) };
+    const oldInfo = this.getQuery(queryId);
+    const newInfo = { ...oldInfo, ...updater(oldInfo) };
+    if (!newInfo.dirty &&
+        !equal(oldInfo.newData, newInfo.newData)) {
+      newInfo.dirty = true;
+      // TODO Schedule broadcastQueries.
+    }
     this.queries.set(queryId, newInfo);
   }
 

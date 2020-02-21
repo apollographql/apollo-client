@@ -125,6 +125,9 @@
 - Expose cache `modify` and `identify` to the mutate `update` function.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5956](https://github.com/apollographql/apollo-client/pull/5956)
 
+- Add a default `gc` implementation to `ApolloCache`.  <br/>
+  [@justinwaite](https://github.com/justinwaite) in [#5974](https://github.com/apollographql/apollo-client/pull/5974)
+
 ### Bug Fixes
 
 - `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>

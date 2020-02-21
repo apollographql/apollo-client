@@ -95,6 +95,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): boolean {
     return false;
   }
+  
+  public gc(): string[] {
+    return [];
+  }
 
   // Experimental API
 

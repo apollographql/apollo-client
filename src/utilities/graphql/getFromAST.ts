@@ -7,8 +7,6 @@ import {
 
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { assign } from '../common/assign';
-
 import { valueToObjectRepresentation } from './storeUtils';
 
 // Checks the document for errors and throws an exception if there is an error.
@@ -146,28 +144,18 @@ export function getMainDefinition(
 export function getDefaultValues(
   definition: OperationDefinitionNode | undefined,
 ): Record<string, any> {
-  if (
-    definition &&
-    definition.variableDefinitions &&
-    definition.variableDefinitions.length
-  ) {
-    const defaultValues = definition.variableDefinitions
-      .filter(({ defaultValue }) => defaultValue)
-      .map(
-        ({ variable, defaultValue }): Record<string, any> => {
-          const defaultValueObj: Record<string, any> = {};
-          valueToObjectRepresentation(
-            defaultValueObj,
-            variable.name,
-            defaultValue as ValueNode,
-          );
-
-          return defaultValueObj;
-        },
-      );
-
-    return assign({}, ...defaultValues);
+  const defaultValues = Object.create(null);
+  const defs = definition && definition.variableDefinitions;
+  if (defs && defs.length) {
+    defs.forEach(def => {
+      if (def.defaultValue) {
+        valueToObjectRepresentation(
+          defaultValues,
+          def.variable.name,
+          def.defaultValue as ValueNode,
+        );
+      }
+    });
   }
-
-  return {};
+  return defaultValues;
 }

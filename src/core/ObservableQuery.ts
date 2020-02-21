@@ -19,7 +19,7 @@ import {
   SubscribeToMoreOptions,
   ErrorPolicy,
 } from './watchQueryOptions';
-import { QueryStoreValue } from '../data/queries';
+import { QueryStoreValue } from './QueryManager';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 
 export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
@@ -167,7 +167,7 @@ export class ObservableQuery<
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
     Object.assign(result, { data, partial });
 
-    const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
+    const queryStoreValue = this.queryManager.getQueryStoreValue(this.queryId);
     if (queryStoreValue) {
       const { networkStatus } = queryStoreValue;
 
@@ -243,7 +243,7 @@ export class ObservableQuery<
   }
 
   public resetQueryStoreErrors() {
-    const queryStore = this.queryManager.queryStore.get(this.queryId);
+    const queryStore = this.queryManager.getQueryStoreValue(this.queryId);
     if (queryStore) {
       queryStore.networkError = null;
       queryStore.graphQLErrors = [];

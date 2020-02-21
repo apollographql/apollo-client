@@ -1,7 +1,7 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 
 import { FetchResult } from '../link/core/types';
-import { QueryStoreValue } from '../data/queries';
+import { QueryStoreValue } from './QueryManager';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';
 

@@ -3126,7 +3126,7 @@ describe('QueryManager', () => {
       expect(
         queryManager.cache.extract(),
       ).toEqual({});
-      expect(queryManager.queryStore.getStore()).toEqual({});
+      expect(queryManager.getQueryStore()).toEqual({});
       expect(queryManager.mutationStore.getStore()).toEqual({});
 
       resolve();

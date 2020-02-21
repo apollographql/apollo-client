@@ -1976,7 +1976,7 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         error() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.queryStore.get(observable.queryId);
+          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
           expect(queryStore.graphQLErrors).toEqual([graphQLError]);
 
           observable.resetQueryStoreErrors();
@@ -1998,7 +1998,7 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         next() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.queryStore.get(observable.queryId);
+          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
           queryStore.networkError = networkError;
           observable.resetQueryStoreErrors();
           expect(queryStore.networkError).toBeNull();

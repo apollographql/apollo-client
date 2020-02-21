@@ -2065,41 +2065,6 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync('should store metadata with watched queries', (resolve, reject) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-    `;
-
-    const data = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-
-    const queryManager = mockQueryManager(reject, {
-      request: { query },
-      result: { data },
-    });
-
-    const observable = queryManager.watchQuery({
-      query,
-      metadata: { foo: 'bar' },
-    });
-
-    return observableToPromise({ observable }, result => {
-      expect(stripSymbols(result.data)).toEqual(data);
-      expect(queryManager.queryStore.get(observable.queryId).metadata).toEqual({
-        foo: 'bar',
-      });
-    }).then(resolve, reject);
-  });
-
   itAsync('should return stale data when we orphan a real-id node in the store with a real-id node', (resolve, reject) => {
     const query1 = gql`
       query {

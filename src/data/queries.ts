@@ -12,7 +12,6 @@ export type QueryStoreValue = {
   networkStatus: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
-  metadata: any;
 };
 
 export class QueryStore {
@@ -33,7 +32,6 @@ export class QueryStore {
     variables: Object;
     isPoll: boolean;
     isRefetch: boolean;
-    metadata: any;
     fetchMoreForQueryId: string | undefined;
   }) {
     const previousQuery = this.store[query.queryId];
@@ -91,7 +89,6 @@ export class QueryStore {
       networkError: null,
       graphQLErrors: graphQLErrors,
       networkStatus,
-      metadata: query.metadata,
     };
 
     // If the action had a `moreForQueryId` property then we need to set the

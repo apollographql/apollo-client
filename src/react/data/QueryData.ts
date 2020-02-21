@@ -199,7 +199,6 @@ export class QueryData<TData, TVariables> extends OperationData {
       ...options,
       displayName,
       context: options.context,
-      metadata: { reactComponent: { displayName } }
     };
   }
 

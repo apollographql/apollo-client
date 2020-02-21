@@ -366,7 +366,6 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string,
   ): Promise<FetchResult<T>> {
     const {
-      metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
       context = {},
     } = options;
@@ -431,7 +430,6 @@ export class QueryManager<TStore> {
       variables,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
-      metadata,
       fetchMoreForQueryId,
     });
 
@@ -784,7 +782,6 @@ export class QueryManager<TStore> {
       // NetworkStatus.refetch) is the appropriate status for now.
       isPoll: false,
       isRefetch: false,
-      metadata: options.metadata,
       fetchMoreForQueryId: void 0,
     });
 

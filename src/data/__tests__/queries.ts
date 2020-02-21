@@ -16,7 +16,6 @@ describe('QueryStore', () => {
       variables: {},
       isPoll: false,
       isRefetch: false,
-      metadata: {},
       fetchMoreForQueryId: queryId,
     });
   });
@@ -45,7 +44,6 @@ describe('QueryStore', () => {
             variables: {},
             isPoll: false,
             isRefetch: false,
-            metadata: {},
             fetchMoreForQueryId: queryId,
           });
         }).not.toThrow("Cannot set property 'networkStatus' of undefined");

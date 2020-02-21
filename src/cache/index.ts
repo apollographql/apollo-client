@@ -11,7 +11,7 @@ export {
 export {
   InMemoryCache,
   InMemoryCacheConfig,
-  LocalVar,
+  ReactiveVar,
 } from './inmemory/inMemoryCache';
 
 export {

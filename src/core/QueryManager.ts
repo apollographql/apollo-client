@@ -67,13 +67,13 @@ export interface QueryInfo {
   storeValue?: QueryStoreValue;
 }
 
-export type QueryStoreValue = {
-  variables: Object;
-  previousVariables?: Object | null;
+export interface QueryStoreValue {
+  variables: Record<string, any>;
+  previousVariables?: Record<string, any>;
   networkStatus: NetworkStatus;
-  networkError?: Error | null;
+  networkError?: Error;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
-};
+}
 
 type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;

@@ -665,19 +665,6 @@ export class QueryManager<TStore> {
     }
   }
 
-  private qsReset() {
-    this.queries.forEach(({ storeValue, observableQuery }, queryId) => {
-      if (!storeValue) return;
-      if (observableQuery) {
-        // Set loading to true so listeners don't trigger unless they want
-        // results with partial data.
-        storeValue.networkStatus = NetworkStatus.loading;
-      } else {
-        this.qsStopQuery(queryId);
-      }
-    });
-  }
-
   // </QueryStore>
 
 
@@ -1087,7 +1074,17 @@ export class QueryManager<TStore> {
       ));
     });
 
-    this.qsReset();
+    this.queries.forEach(({ storeValue, observableQuery }, queryId) => {
+      if (!storeValue) return;
+      if (observableQuery) {
+        // Set loading to true so listeners don't trigger unless they want
+        // results with partial data.
+        storeValue.networkStatus = NetworkStatus.loading;
+      } else {
+        this.qsStopQuery(queryId);
+      }
+    });
+
     this.mutationStore.reset();
 
     // begin removing data from the store

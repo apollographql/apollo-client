@@ -590,10 +590,7 @@ export class ObservableQuery<
       iterateObserversSafely(this.observers, 'error', this.lastError = error);
     };
 
-    const {
-      hasClientExports,
-      serverQuery
-    } = queryManager.transform(this.options.query);
+    const { hasClientExports } = queryManager.transform(this.options.query);
 
     queryManager.observeQuery<TData>(queryId, this.options, {
       next: (result: ApolloQueryResult<TData>) => {
@@ -605,9 +602,8 @@ export class ObservableQuery<
           // Before calling `next` on each observer, we need to first see if
           // the query is using `@client @export` directives, and update
           // any variables that might have changed. If `@export` variables have
-          // changed, and the query is requesting both local and remote
-          // data, `setVariables` is used as a network refetch might be
-          // needed to pull in new data, using the updated `@export` variables.
+          // changed, `setVariables` is used to query the cache first, followed
+          // by the network if needed.
           if (hasClientExports) {
             queryManager.getLocalState().addExportedVariables(
               query,
@@ -618,11 +614,10 @@ export class ObservableQuery<
                 !result.loading &&
                 previousResult &&
                 fetchPolicy !== 'cache-only' &&
-                serverQuery &&
                 !equal(previousVariables, variables)
               ) {
                 this.setVariables(variables).then(updatedResult => {
-                  iterateObserversSafely(this.observers, 'next', updatedResult)
+                  iterateObserversSafely(this.observers, 'next', updatedResult);
                 });
               } else {
                 this.variables = this.options.variables = variables;

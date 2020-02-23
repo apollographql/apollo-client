@@ -142,6 +142,9 @@
 - Refined `useLazyQuery` types to help prevent runtime errors.  <br/>
   [@benmosher](https://github.com/benmosher) in [#5935](https://github.com/apollographql/apollo-client/pull/5935)
 
+- Make sure `@client @export` variables used in watched queries are updated each time the query receives new data that changes the value of the `@export` variable.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5986](https://github.com/apollographql/apollo-client/pull/5986)
+
 ## Apollo Client 2.6.8
 
 ### Apollo Client (2.6.8)

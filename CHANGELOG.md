@@ -35,6 +35,9 @@
 - **[BREAKING?]** Remove `fixPolyfills.ts`, except when bundling for React Native. If you have trouble with `Map` or `Set` operations due to frozen key objects in React Native, either update React Native to version 0.59.0 (or 0.61.x, if possible) or investigate why `fixPolyfills.native.js` is not included in your bundle. <br/>
   [@benjamn](https://github.com/benjamn) in [#5962](https://github.com/apollographql/apollo-client/pull/5962)
 
+- **[BREAKING]** Apollo Client 2.x allowed `@client` fields to be passed into the `link` chain if `resolvers` were not set in the constructor. This allowed `@client` fields to be passed into Links like `apollo-link-state`. Apollo Client 3 enforces that `@client` fields are local only, meaning they are no longer passed into the `link` chain, under any circumstances.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5982](https://github.com/apollographql/apollo-client/pull/5982)
+
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 

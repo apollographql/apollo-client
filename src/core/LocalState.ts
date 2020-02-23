@@ -165,19 +165,13 @@ export class LocalState<TCacheShape> {
       if (this.resolvers) {
         return document;
       }
-      invariant.warn(
-        'Found @client directives in a query but no ApolloClient resolvers ' +
-        'were specified. This means ApolloClient local resolver handling ' +
-        'has been disabled, and @client directives will be passed through ' +
-        'to your link chain.',
-      );
     }
     return null;
   }
 
   // Server queries are stripped of all @client based selection sets.
   public serverQuery(document: DocumentNode) {
-    return this.resolvers ? removeClientSetsFromDocument(document) : document;
+    return removeClientSetsFromDocument(document);
   }
 
   public prepareContext(context?: Record<string, any>) {

@@ -691,15 +691,13 @@ export class QueryManager<TStore> {
       }
     }
 
-    return (
-      queryStoreValue: QueryStoreValue,
-      newData?: Cache.DiffResult<T>,
-    ) => {
-      // The query store value can be undefined in the event of a store
-      // reset.
+    return ({
+      document,
+      storeValue: queryStoreValue,
+      newData,
+      observableQuery,
+    }: QueryInfo) => {
       if (!queryStoreValue) return;
-
-      const { observableQuery, document } = this.getQuery(queryId);
 
       const fetchPolicy = observableQuery
         ? observableQuery.options.fetchPolicy
@@ -1253,10 +1251,7 @@ export class QueryManager<TStore> {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
       if (info.dirty) {
-        const queryStoreValue = this.getQueryStoreValue(id);
-        info.listeners.forEach(listener => {
-          listener(queryStoreValue, info.newData);
-        });
+        info.listeners.forEach(listener => listener(info));
         info.dirty = false;
       }
     });

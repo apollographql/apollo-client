@@ -132,8 +132,8 @@ describe('QueryScheduler', () => {
     const queryId = queryManager.startPollingQuery(
       queryOptions,
       'fake-id',
-      queryStoreValue => {
-        if (queryStoreValue.networkStatus !== NetworkStatus.poll) {
+      queryInfo => {
+        if (queryInfo.storeValue.networkStatus !== NetworkStatus.poll) {
           timesFired += 1;
           queryManager.stopPollingQuery(queryId);
         }

@@ -69,7 +69,6 @@ export interface QueryInfo {
 
 export interface QueryStoreValue {
   variables: Record<string, any>;
-  previousVariables?: Record<string, any>;
   networkStatus: NetworkStatus;
   networkError?: Error;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
@@ -432,7 +431,6 @@ export class QueryManager<TStore> {
 
     this.qsInitQuery({
       queryId,
-      storePreviousVariables: shouldFetch,
       variables,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
@@ -527,7 +525,6 @@ export class QueryManager<TStore> {
 
   private qsInitQuery(query: {
     queryId: string;
-    storePreviousVariables: boolean;
     variables: Object;
     isPoll: boolean;
     isRefetch: boolean;
@@ -537,24 +534,12 @@ export class QueryManager<TStore> {
     const queryInfo = this.getQuery(query.queryId);
     const previousQuery = queryInfo && queryInfo.storeValue;
 
-    let isSetVariables = false;
-
-    let previousVariables: Object | null = null;
-    if (
-      query.storePreviousVariables &&
-      previousQuery &&
-      previousQuery.networkStatus !== NetworkStatus.loading
-      // if the previous query was still loading, we don't want to remember it at all.
-    ) {
-      if (!equal(previousQuery.variables, query.variables)) {
-        isSetVariables = true;
-        previousVariables = previousQuery.variables;
-      }
-    }
-
     // TODO break this out into a separate function
     let networkStatus: NetworkStatus;
-    if (isSetVariables) {
+    if (previousQuery &&
+        previousQuery.variables &&
+        previousQuery.networkStatus !== NetworkStatus.loading &&
+        !equal(previousQuery.variables, query.variables)) {
       networkStatus = NetworkStatus.setVariables;
     } else if (query.isPoll) {
       networkStatus = NetworkStatus.poll;
@@ -576,7 +561,6 @@ export class QueryManager<TStore> {
     this.setQuery(query.queryId, () => ({
       storeValue: {
         variables: query.variables,
-        previousVariables,
         networkError: null,
         graphQLErrors,
         networkStatus,
@@ -605,7 +589,6 @@ export class QueryManager<TStore> {
     if (storeValue) {
       storeValue.networkError = null;
       storeValue.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
-      storeValue.previousVariables = null;
       storeValue.networkStatus = NetworkStatus.ready;
       // If we have a `fetchMoreForQueryId` then we need to update the network
       // status for that query. See the branch for query initialization for more
@@ -639,7 +622,6 @@ export class QueryManager<TStore> {
     const storeValue = this.getQueryStoreValue(queryId);
     if (storeValue) {
       storeValue.networkError = null;
-      storeValue.previousVariables = null;
       if (complete) {
         storeValue.networkStatus = NetworkStatus.ready;
       }
@@ -736,7 +718,7 @@ export class QueryManager<TStore> {
 
       const shouldNotifyIfLoading =
         options.returnPartialData ||
-        (!newData && queryStoreValue.previousVariables) ||
+        (!newData && queryStoreValue.networkStatus === NetworkStatus.setVariables) ||
         (networkStatusChanged && options.notifyOnNetworkStatusChange) ||
         fetchPolicy === 'cache-only' ||
         fetchPolicy === 'cache-and-network';
@@ -791,9 +773,7 @@ export class QueryManager<TStore> {
           } else {
             const diffResult = this.cache.diff({
               query: document as DocumentNode,
-              variables:
-                queryStoreValue.previousVariables ||
-                queryStoreValue.variables,
+              variables: queryStoreValue.variables,
               returnPartialData: true,
               optimistic: true,
             });
@@ -929,7 +909,6 @@ export class QueryManager<TStore> {
     this.qsInitQuery({
       queryId: observable.queryId,
       variables: options.variables,
-      storePreviousVariables: false,
       // Even if options.pollInterval is a number, we have not started
       // polling this query yet (and we have not yet performed the first
       // fetch), so NetworkStatus.loading (not NetworkStatus.poll or

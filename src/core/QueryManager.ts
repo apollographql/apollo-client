@@ -1514,7 +1514,6 @@ export class QueryManager<TStore> {
   public startPollingQuery(
     options: WatchQueryOptions,
     queryId: string,
-    listener?: QueryListener,
   ): string {
     const { pollInterval } = options;
 
@@ -1557,10 +1556,6 @@ export class QueryManager<TStore> {
           info.timeout = setTimeout(maybeFetch, info.interval);
         }
       };
-
-      if (listener) {
-        this.addQueryListener(queryId, listener);
-      }
 
       poll();
     }

@@ -129,16 +129,13 @@ describe('QueryScheduler', () => {
       link: link,
     });
     let timesFired = 0;
-    const queryId = queryManager.startPollingQuery(
-      queryOptions,
-      'fake-id',
-      queryInfo => {
-        if (queryInfo.storeValue.networkStatus !== NetworkStatus.poll) {
-          timesFired += 1;
-          queryManager.stopPollingQuery(queryId);
-        }
-      },
-    );
+    const queryId = queryManager.startPollingQuery(queryOptions, 'fake-id');
+    queryManager.addQueryListener(queryId, queryInfo => {
+      if (queryInfo.storeValue.networkStatus !== NetworkStatus.poll) {
+        timesFired += 1;
+        queryManager.stopPollingQuery(queryId);
+      }
+    });
 
     setTimeout(() => {
       expect(timesFired).toEqual(1);
@@ -496,15 +493,13 @@ describe('QueryScheduler', () => {
       link: link,
     });
     let timesFired = 0;
-    let queryId = queryManager.startPollingQuery(
-      queryOptions,
-      'fake-id',
-      () => {
-        queryManager.stopPollingQuery(queryId);
-      },
-    );
+    const queryId = queryManager.startPollingQuery(queryOptions, 'fake-id');
+    queryManager.addQueryListener(queryId, () => {
+      queryManager.stopPollingQuery(queryId);
+    });
     setTimeout(() => {
-      queryManager.startPollingQuery(queryOptions, 'fake-id2', () => {
+      const queryId2 = queryManager.startPollingQuery(queryOptions, 'fake-id2');
+      queryManager.addQueryListener(queryId2, () => {
         timesFired += 1;
       });
       setTimeout(() => {

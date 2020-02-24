@@ -432,7 +432,6 @@ export class QueryManager<TStore> {
 
     this.qsInitQuery({
       queryId,
-      document: query,
       storePreviousVariables: shouldFetch,
       variables,
       isPoll: fetchType === FetchType.poll,
@@ -528,7 +527,6 @@ export class QueryManager<TStore> {
 
   private qsInitQuery(query: {
     queryId: string;
-    document: DocumentNode;
     storePreviousVariables: boolean;
     variables: Object;
     isPoll: boolean;
@@ -538,16 +536,6 @@ export class QueryManager<TStore> {
     this.setQuery(query.queryId, () => {});
     const queryInfo = this.getQuery(query.queryId);
     const previousQuery = queryInfo && queryInfo.storeValue;
-
-    // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
-    // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
-    // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
-    invariant(
-      !previousQuery ||
-      queryInfo.document === query.document ||
-      equal(queryInfo.document, query.document),
-      'Internal Error: may not update existing query string in store',
-    );
 
     let isSetVariables = false;
 
@@ -940,7 +928,6 @@ export class QueryManager<TStore> {
 
     this.qsInitQuery({
       queryId: observable.queryId,
-      document: this.transform(options.query).document,
       variables: options.variables,
       storePreviousVariables: false,
       // Even if options.pollInterval is a number, we have not started

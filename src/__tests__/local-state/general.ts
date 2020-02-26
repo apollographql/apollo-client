@@ -35,40 +35,6 @@ describe('General functionality', () => {
     });
   });
 
-  // TODO The functionality tested here should be removed (along with the test)
-  // once apollo-link-state is fully deprecated.
-  it('should strip @client fields only if client resolvers specified', async () => {
-    const query = gql`
-      {
-        field @client
-      }
-    `;
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new ApolloLink(operation => {
-        expect(hasDirectives(['client'], operation.query)).toBe(true);
-        return Observable.of({ data: { field: 'local' } });
-      }),
-    });
-
-    const { warn } = console;
-    const messages: string[] = [];
-    console.warn = (message: string) => messages.push(message);
-    try {
-      const result = await client.query({ query });
-      expect(result.data).toEqual({ field: 'local' });
-      expect(messages).toEqual([
-        'Found @client directives in a query but no ApolloClient resolvers ' +
-        'were specified. This means ApolloClient local resolver handling ' +
-        'has been disabled, and @client directives will be passed through ' +
-        'to your link chain.',
-      ]);
-    } finally {
-      console.warn = warn;
-    }
-  });
-
   it('should not interfere with server introspection queries', () => {
     const query = gql`
       ${getIntrospectionQuery()}

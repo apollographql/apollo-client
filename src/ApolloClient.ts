@@ -132,19 +132,16 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     let { link } = options;
 
     if (!link) {
-      if (uri) {
-        link = new HttpLink({ uri, credentials, headers });
-      } else if (resolvers) {
-        link = ApolloLink.empty();
-      }
+      link = uri
+        ? new HttpLink({ uri, credentials, headers })
+        : ApolloLink.empty();
     }
 
-    if (!link || !cache) {
+    if (!cache) {
       throw new InvariantError(
-        "To initialize Apollo Client, you must specify 'uri' or 'link' and " +
-        "'cache' properties in the options object. \n" +
-        "For more information, please visit: " +
-        "https://www.apollographql.com/docs/react/"
+        "To initialize Apollo Client, you must specify a 'cache' property " +
+        "in the options object. \n" +
+        "For more information, please visit: https://go.apollo.dev/c/docs"
       );
     }
 

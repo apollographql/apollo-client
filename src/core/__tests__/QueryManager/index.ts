@@ -3381,22 +3381,11 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = mockQueryManager(reject);
+      const obs = queryManager.watchQuery<any>({ query });
+      obs.refetch = resolve as any;
 
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          resolve();
-          return null as never;
-        },
-        options: {
-          query: query,
-        },
-        scheduler: queryManager.scheduler,
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
-
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
     });
 
@@ -3409,27 +3398,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'cache-only';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "cache-only",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -3445,27 +3433,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'standby';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "standby",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -3797,22 +3784,12 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = mockQueryManager(reject);
 
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          resolve();
-          return null as never;
-        },
-        options: {
-          query: query,
-        },
-        scheduler: queryManager.scheduler,
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery({ query });
+      obs.refetch = resolve as any;
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.reFetchObservableQueries();
     });
 
@@ -3825,27 +3802,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'cache-only';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "cache-only",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.reFetchObservableQueries();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -3861,27 +3837,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'standby';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "standby",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.reFetchObservableQueries();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -3897,28 +3872,27 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'standby';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "standby",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       const includeStandBy = true;
       queryManager.reFetchObservableQueries(includeStandBy);
+
       setTimeout(() => {
         expect(refetchCount).toEqual(1);
         resolve();

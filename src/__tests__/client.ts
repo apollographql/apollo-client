@@ -1768,28 +1768,6 @@ describe('client', () => {
   });
 
   describe('standby queries', () => {
-    // XXX queries can only be set to standby by setOptions. This is simply out of caution,
-    // not some fundamental reason. We just want to make sure they're not used in unanticipated ways.
-    // If there's a good use-case, the error and test could be removed.
-    it('cannot be started with watchQuery or query', () => {
-      const client = new ApolloClient({
-        link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
-      });
-      expect(() =>
-        client.watchQuery({
-          query: gql`
-            {
-              abc
-            }
-          `,
-          fetchPolicy: 'standby',
-        }),
-      ).toThrowError(
-        'client.watchQuery cannot be called with fetchPolicy set to "standby"',
-      );
-    });
-
     itAsync('are not watching the store or notifying on updates', (resolve, reject) => {
       const query = gql`
         {

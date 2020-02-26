@@ -884,11 +884,6 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVariables>,
     shouldSubscribe = true,
   ): ObservableQuery<T, TVariables> {
-    invariant(
-      options.fetchPolicy !== 'standby',
-      'client.watchQuery cannot be called with fetchPolicy set to "standby"',
-    );
-
     // assign variable default values if supplied
     options = {
       ...options,

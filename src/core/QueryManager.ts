@@ -528,7 +528,7 @@ export class QueryManager<TStore> {
     variables: Object;
     isPoll: boolean;
     isRefetch: boolean;
-    fetchMoreForQueryId: string | undefined;
+    fetchMoreForQueryId?: string;
   }) {
     this.setQuery(query.queryId, () => {});
     const queryInfo = this.getQuery(query.queryId);
@@ -881,7 +881,7 @@ export class QueryManager<TStore> {
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
   public watchQuery<T, TVariables = OperationVariables>(
-    options: WatchQueryOptions,
+    options: WatchQueryOptions<TVariables>,
     shouldSubscribe = true,
   ): ObservableQuery<T, TVariables> {
     invariant(
@@ -890,17 +890,21 @@ export class QueryManager<TStore> {
     );
 
     // assign variable default values if supplied
-    options.variables = this.getVariables(options.query, options.variables);
+    options = {
+      ...options,
+      variables: this.getVariables(
+        options.query,
+        options.variables,
+      ) as TVariables,
+    };
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
       options.notifyOnNetworkStatusChange = false;
     }
 
-    let transformedOptions = { ...options } as WatchQueryOptions<TVariables>;
-
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
-      options: transformedOptions,
+      options,
       shouldSubscribe: shouldSubscribe,
     });
 
@@ -913,7 +917,6 @@ export class QueryManager<TStore> {
       // NetworkStatus.refetch) is the appropriate status for now.
       isPoll: false,
       isRefetch: false,
-      fetchMoreForQueryId: void 0,
     });
 
     return observable;

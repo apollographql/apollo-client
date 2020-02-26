@@ -59,13 +59,13 @@ export class ObservableQuery<
   public options: WatchQueryOptions<TVariables>;
   public readonly queryId: string;
   public readonly queryName?: string;
+  public readonly watching: boolean;
+
   /**
-   *
    * The current value of the variables for this query. Can change.
    */
   public variables: TVariables;
 
-  private shouldSubscribe: boolean;
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
@@ -95,7 +95,7 @@ export class ObservableQuery<
     this.options = options;
     this.variables = options.variables || ({} as TVariables);
     this.queryId = queryManager.generateQueryId();
-    this.shouldSubscribe = shouldSubscribe;
+    this.watching = shouldSubscribe;
 
     const opDef = getOperationDefinition(options.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
@@ -569,7 +569,7 @@ export class ObservableQuery<
   private setUpQuery() {
     const { queryManager, queryId } = this;
 
-    if (this.shouldSubscribe) {
+    if (this.watching) {
       queryManager.addObservableQuery<TData>(queryId, this);
     }
 

@@ -193,7 +193,8 @@ export class QueryManager<TStore> {
 
       if (updateQueriesByName) {
         this.queries.forEach(({ observableQuery }, queryId) => {
-          if (observableQuery) {
+          if (observableQuery &&
+              observableQuery.watching) {
             const { queryName } = observableQuery;
             if (
               queryName &&
@@ -319,10 +320,9 @@ export class QueryManager<TStore> {
             refetchQueries.forEach(refetchQuery => {
               if (typeof refetchQuery === 'string') {
                 self.queries.forEach(({ observableQuery }) => {
-                  if (
-                    observableQuery &&
-                    observableQuery.queryName === refetchQuery
-                  ) {
+                  if (observableQuery &&
+                      observableQuery.watching &&
+                      observableQuery.queryName === refetchQuery) {
                     refetchQueryPromises.push(observableQuery.refetch());
                   }
                 });
@@ -903,6 +903,11 @@ export class QueryManager<TStore> {
       shouldSubscribe: shouldSubscribe,
     });
 
+    this.setQuery(observable.queryId, () => ({
+      document: options.query,
+      observableQuery: observable,
+    }));
+
     this.qsInitQuery({
       queryId: observable.queryId,
       variables: options.variables,
@@ -1038,7 +1043,8 @@ export class QueryManager<TStore> {
 
     this.queries.forEach(({ storeValue, observableQuery }, queryId) => {
       if (!storeValue) return;
-      if (observableQuery) {
+      if (observableQuery &&
+          observableQuery.watching) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
         storeValue.networkStatus = NetworkStatus.loading;
@@ -1071,7 +1077,8 @@ export class QueryManager<TStore> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
 
     this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery) {
+      if (observableQuery &&
+          observableQuery.watching) {
         const fetchPolicy = observableQuery.options.fetchPolicy;
 
         observableQuery.resetLastResults();

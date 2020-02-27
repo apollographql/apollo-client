@@ -5,7 +5,6 @@ import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
 import { FetchResult } from '../link/core/types';
 import { Cache } from '../cache/core/types/Cache';
-import { DataProxy } from '../cache/core/types/DataProxy';
 
 import {
   getDefaultValues,
@@ -23,7 +22,11 @@ import {
 import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
 import { canUseWeakMap } from '../utilities/common/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
-import { Observer, Subscription, Observable } from '../utilities/observables/Observable';
+import {
+  Observer,
+  ObservableSubscription,
+  Observable
+} from '../utilities/observables/Observable';
 import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
 import {
@@ -59,7 +62,7 @@ export interface QueryInfo {
   // these to keep track of queries that are inflight and error on the observers associated
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   observableQuery: ObservableQuery<any> | null;
-  subscriptions: Set<Subscription>;
+  subscriptions: Set<ObservableSubscription>;
   cancel?: () => void;
 }
 
@@ -1018,7 +1021,7 @@ export class QueryManager<TStore> {
       ).then(makeObservable);
 
       return new Observable<FetchResult<T>>(observer => {
-        let sub: Subscription | null = null;
+        let sub: ObservableSubscription | null = null;
         observablePromise.then(
           observable => sub = observable.subscribe(observer),
           observer.error,
@@ -1331,7 +1334,7 @@ export class QueryManager<TStore> {
         newData: null,
         lastRequestId: 1,
         observableQuery: null,
-        subscriptions: new Set<Subscription>(),
+        subscriptions: new Set<ObservableSubscription>(),
       }
     );
   }
@@ -1448,7 +1451,9 @@ function markMutationResult<TStore>(
     document: DocumentNode;
     variables: any;
     queryUpdatersById: Record<string, QueryWithUpdater>;
-    update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
+    update:
+      ((cache: ApolloCache<TStore>, mutationResult: Object) => void) |
+      undefined;
   },
   cache: ApolloCache<TStore>,
 ) {

@@ -6,11 +6,12 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
+import { Modifier, Modifiers } from '../core/types/common';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
+import { StoreObject }  from '../../utilities/graphql/storeUtils';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
-  StoreObject,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
@@ -52,10 +53,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // cache.policies.addPossibletypes.
   public readonly policies: Policies;
 
-  // Set this while in a transaction to prevent broadcasts...
-  // don't forget to turn it back on!
-  private silenceBroadcast: boolean = false;
-
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
@@ -71,6 +68,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
     this.data = new EntityStore.Root({
+      policies: this.policies,
       resultCaching: this.config.resultCaching,
     });
 
@@ -152,9 +150,23 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.broadcastWatches();
   }
 
+  public modify(
+    dataId: string,
+    modifiers: Modifier<any> | Modifiers,
+    optimistic = false,
+  ): boolean {
+    const store = optimistic ? this.optimisticData : this.data;
+    if (store.modify(dataId, modifiers)) {
+      this.broadcastWatches();
+      return true;
+    }
+    return false;
+  }
+
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
     return this.storeReader.diffQueryAgainstStore({
       store: options.optimistic ? this.optimisticData : this.data,
+      rootId: options.id || "ROOT_QUERY",
       query: options.query,
       variables: options.variables,
       returnPartialData: options.returnPartialData,
@@ -164,7 +176,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public watch(watch: Cache.WatchOptions): () => void {
     this.watches.add(watch);
-
+    if (watch.immediate) {
+      this.maybeBroadcastWatch(watch);
+    }
     return () => {
       this.watches.delete(watch);
     };
@@ -225,25 +239,28 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
+  private txCount = 0;
+
   public performTransaction(
-    transaction: (proxy: InMemoryCache) => any,
+    transaction: (cache: InMemoryCache) => any,
     // This parameter is not part of the performTransaction signature inherited
     // from the ApolloCache abstract class, but it's useful because it saves us
     // from duplicating this implementation in recordOptimisticTransaction.
     optimisticId?: string,
   ) {
     const perform = (layer?: EntityStore) => {
-      const proxy: InMemoryCache = Object.create(this);
-      proxy.silenceBroadcast = true;
+      const { data, optimisticData } = this;
+      ++this.txCount;
       if (layer) {
-        // The proxy object is just like this except that silenceBroadcast
-        // is set to true, and proxy.data and proxy.optimisticData both
-        // point to the same layer.
-        proxy.data = proxy.optimisticData = layer;
+        this.data = this.optimisticData = layer;
       }
-      // Because the proxy object can simply be forgotten, we do not need
-      // to wrap this call with a try-finally block.
-      return transaction(proxy);
+      try {
+        transaction(this);
+      } finally {
+        --this.txCount;
+        this.data = data;
+        this.optimisticData = optimisticData;
+      }
     };
 
     if (typeof optimisticId === 'string') {
@@ -257,7 +274,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       perform();
     }
 
-    // This broadcast does nothing if this.silenceBroadcast is true.
+    // This broadcast does nothing if this.txCount > 0.
     this.broadcastWatches();
   }
 
@@ -285,7 +302,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   protected broadcastWatches() {
-    if (!this.silenceBroadcast) {
+    if (!this.txCount) {
       this.watches.forEach(c => this.maybeBroadcastWatch(c));
     }
   }
@@ -302,20 +319,25 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     );
   }
 
-  public makeLocalVar<T>(value: T): LocalVar<T> {
-    return function LocalVar(newValue) {
+  private varDep = dep<ReactiveVar<any>>();
+
+  public makeVar<T>(value?: T): ReactiveVar<T> {
+    const cache = this;
+    return function rv(newValue) {
       if (arguments.length > 0) {
         if (value !== newValue) {
           value = newValue;
-          localVarDep.dirty(LocalVar);
+          cache.varDep.dirty(rv);
+          // In order to perform several ReactiveVar updates without
+          // broadcasting each time, use cache.performTransaction.
+          cache.broadcastWatches();
         }
       } else {
-        localVarDep(LocalVar);
+        cache.varDep(rv);
       }
       return value;
     };
   }
 }
 
-const localVarDep = dep<LocalVar<any>>();
-export type LocalVar<T> = (newValue?: T) => T;
+export type ReactiveVar<T> = (newValue?: T) => T;

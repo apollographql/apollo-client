@@ -64,8 +64,6 @@ const defaultReconciler: ReconcilerFunction<any[]> =
   };
 
 export class DeepMerger<TContextArgs extends any[]> {
-  private pastCopies: any[] = [];
-
   constructor(
     private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler,
   ) {}
@@ -101,12 +99,10 @@ export class DeepMerger<TContextArgs extends any[]> {
 
   public isObject = isObject;
 
+  private pastCopies = new Set<any>();
+
   public shallowCopyForMerge<T>(value: T): T {
-    if (
-      value !== null &&
-      typeof value === 'object' &&
-      this.pastCopies.indexOf(value) < 0
-    ) {
+    if (isObject(value) && !this.pastCopies.has(value)) {
       if (Array.isArray(value)) {
         value = (value as any).slice(0);
       } else {
@@ -115,7 +111,7 @@ export class DeepMerger<TContextArgs extends any[]> {
           ...value,
         };
       }
-      this.pastCopies.push(value);
+      this.pastCopies.add(value);
     }
     return value;
   }

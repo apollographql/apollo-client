@@ -32,6 +32,12 @@
 - **[BREAKING]** We are no longer exporting certain (intended to be) internal utilities. If you are depending on some of the lesser known exports from `apollo-cache`, `apollo-cache-inmemory`, or `apollo-utilities`, they may no longer be available from `@apollo/client`. <br/>
   [@hwillson](https://github.com/hwillson) in [#5437](https://github.com/apollographql/apollo-client/pull/5437) and [#5514](https://github.com/apollographql/apollo-client/pull/5514)
 
+- **[BREAKING?]** Remove `fixPolyfills.ts`, except when bundling for React Native. If you have trouble with `Map` or `Set` operations due to frozen key objects in React Native, either update React Native to version 0.59.0 (or 0.61.x, if possible) or investigate why `fixPolyfills.native.js` is not included in your bundle. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5962](https://github.com/apollographql/apollo-client/pull/5962)
+
+- **[BREAKING]** Apollo Client 2.x allowed `@client` fields to be passed into the `link` chain if `resolvers` were not set in the constructor. This allowed `@client` fields to be passed into Links like `apollo-link-state`. Apollo Client 3 enforces that `@client` fields are local only, meaning they are no longer passed into the `link` chain, under any circumstances.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5982](https://github.com/apollographql/apollo-client/pull/5982)
+
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 
@@ -56,16 +62,33 @@
 - The result caching system (introduced in [#3394](https://github.com/apollographql/apollo-client/pull/3394)) now tracks dependencies at the field level, rather than at the level of whole entity objects, allowing the cache to return identical (`===`) results much more often than before. <br/>
   [@benjamn](https://github.com/benjamn) in [#5617](https://github.com/apollographql/apollo-client/pull/5617)
 
-- `InMemoryCache` provides a new API for storing local state that can be easily updated by external code:
+- `InMemoryCache` now has a method called `modify` which can be used to update the value of a specific field within a specific entity object:
   ```ts
-  const lv = cache.makeLocalVar(123)
-  console.log(lv()) // 123
-  console.log(lv(lv() + 1)) // 124
-  console.log(lv()) // 124
-  lv("asdf") // TS type error
+  cache.modify(cache.identify(post), {
+    comments(comments: Reference[], { readField }) {
+      return comments.filter(comment => idToRemove !== readField("id", comment));
+    },
+  });
   ```
-  These local variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
+  This API gracefully handles cases where multiple field values are associated with a single field name, and also removes the need for updating the cache by reading a query or fragment, modifying the result, and writing the modified result back into the cache. Behind the scenes, the `cache.evict` method is now implemented in terms of `cache.modify`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5909](https://github.com/apollographql/apollo-client/pull/5909)
+
+- `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
+  ```ts
+  const v = cache.makeVar(123)
+  console.log(v()) // 123
+  console.log(v(v() + 1)) // 124
+  console.log(v()) // 124
+  v("asdf") // TS type error
+  ```
+  These variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
   [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
+
+- Various cache read and write performance optimizations, cutting read and write times by more than 50% in larger benchmarks. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5948](https://github.com/apollographql/apollo-client/pull/5948)
+
+- The `cache.readQuery` and `cache.writeQuery` methods now accept an `options.id` string, which eliminates most use cases for `cache.readFragment` and `cache.writeFragment`, and skips the implicit conversion of fragment documents to query documents performed by `cache.{read,write}Fragment`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5930](https://github.com/apollographql/apollo-client/pull/5930)
 
 - Several deprecated methods have been fully removed:
   - `ApolloClient#initQueryManager`
@@ -87,14 +110,26 @@
 - Improve optimistic update performance by limiting cache key diversity. <br/>
   [@benjamn](https://github.com/benjamn) in [#5648](https://github.com/apollographql/apollo-client/pull/5648)
 
-- Custom field `read` functions can read from neighboring fields using the `getFieldValue(fieldName)` helper, and may also read fields from other entities by calling `getFieldValue(fieldName, foreignReference)`. <br/>
+- Custom field `read` functions can read from neighboring fields using the `readField(fieldName)` helper, and may also read fields from other entities by calling `readField(fieldName, objectOrReference)`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5651](https://github.com/apollographql/apollo-client/pull/5651)
 
 - Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
   [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
 
+- Make sure all `graphql-tag` public exports are re-exported.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5861](https://github.com/apollographql/apollo-client/pull/5861)
+
 - Fully removed `prettier`. The Apollo Client team has decided to no longer automatically enforce code formatting across the codebase. In most cases existing code styles should be followed as much as possible, but this is not a hard and fast rule.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5227](https://github.com/apollographql/apollo-client/pull/5227)
+
+- Make sure `ApolloContext` plays nicely with IE11 when storing the shared context.  <br/>
+  [@ms](https://github.com/ms) in [#5840](https://github.com/apollographql/apollo-client/pull/5840)
+
+- Expose cache `modify` and `identify` to the mutate `update` function.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5956](https://github.com/apollographql/apollo-client/pull/5956)
+
+- Add a default `gc` implementation to `ApolloCache`.  <br/>
+  [@justinwaite](https://github.com/justinwaite) in [#5974](https://github.com/apollographql/apollo-client/pull/5974)
 
 ### Bug Fixes
 
@@ -103,6 +138,15 @@
 
 - Missing `__typename` fields no longer cause the `InMemoryCache#diff` result to be marked `complete: false`, if those fields were added by `InMemoryCache#transformDocument` (which calls `addTypenameToDocument`). <br/>
   [@benjamn](https://github.com/benjamn) in [#5787](https://github.com/apollographql/apollo-client/pull/5787)
+
+- Fixed an issue that allowed `@client @export` based queries to lead to extra unnecessary network requests being fired.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5946](https://github.com/apollographql/apollo-client/pull/5946)
+
+- Refined `useLazyQuery` types to help prevent runtime errors.  <br/>
+  [@benmosher](https://github.com/benmosher) in [#5935](https://github.com/apollographql/apollo-client/pull/5935)
+
+- Make sure `@client @export` variables used in watched queries are updated each time the query receives new data that changes the value of the `@export` variable.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5986](https://github.com/apollographql/apollo-client/pull/5986)
 
 ## Apollo Client 2.6.8
 

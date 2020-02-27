@@ -18,7 +18,8 @@ import {
   QueryCurrentObservable,
   QueryTuple,
   QueryLazyOptions,
-  ObservableQueryFields
+  ObservableQueryFields,
+  LazyQueryResult
 } from '../types/types';
 import { OperationData } from './OperationData';
 
@@ -68,7 +69,7 @@ export class QueryData<TData, TVariables> extends OperationData {
             networkStatus: NetworkStatus.ready,
             called: false,
             data: undefined
-          } as QueryResult<TData, TVariables>
+          }
         ]
       : [this.runLazyQuery, this.execute()];
   }
@@ -84,13 +85,13 @@ export class QueryData<TData, TVariables> extends OperationData {
     queryResult,
     lazy = false,
   }: {
-    queryResult: QueryResult<TData, TVariables>;
+    queryResult: QueryResult<TData, TVariables> | LazyQueryResult<TData, TVariables>;
     lazy?: boolean;
   }) {
     this.isMounted = true;
 
     if (!lazy || this.runLazy) {
-      this.handleErrorOrCompleted(queryResult);
+      this.handleErrorOrCompleted(queryResult as QueryResult<TData, TVariables>);
 
       // When the component is done rendering stored query errors, we'll
       // remove those errors from the `ObservableQuery` query store, so they

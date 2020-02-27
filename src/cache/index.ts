@@ -11,7 +11,7 @@ export {
 export {
   InMemoryCache,
   InMemoryCacheConfig,
-  LocalVar,
+  ReactiveVar,
 } from './inmemory/inMemoryCache';
 
 export {
@@ -21,6 +21,7 @@ export {
   FieldPolicy,
   FieldReadFunction,
   FieldMergeFunction,
+  FieldFunctionOptions,
   PossibleTypesMap,
 } from './inmemory/policies';
 

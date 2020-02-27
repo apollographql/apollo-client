@@ -14,7 +14,7 @@ module.exports = {
         localVersion: '3.0 beta',
         defaultVersion: '2.6',
         versions: {
-          '2.6': 'version-2.6-relative',
+          '2.6': 'version-2.6',
           '2.5': 'version-2.5',
           '2.4': 'version-2.4',
         },
@@ -40,7 +40,10 @@ module.exports = {
             'data/fragments',
             'data/error-handling',
           ],
-          Caching: ['caching/cache-configuration', 'caching/cache-interaction'],
+          Caching: [
+            'caching/cache-configuration',
+            'caching/cache-field-behavior',
+            'caching/cache-interaction'],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',
@@ -85,7 +88,10 @@ module.exports = {
             'api/link/apollo-link-schema',
             'api/link/apollo-link-ws'
           ],
-          Migrating: ['migrating/hooks-migration', 'migrating/boost-migration'],
+          Migrating: [
+            'migrating/apollo-client-3-migration',
+            'migrating/hooks-migration'
+          ],
         },
       },
     },

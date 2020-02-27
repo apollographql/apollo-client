@@ -1,7 +1,6 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
-import cjs from 'rollup-plugin-commonjs';
 import fs from 'fs';
 
 import packageJson from '../package.json';
@@ -47,12 +46,7 @@ function prepareESM(input, outputDir) {
         // errors back to the unminified code where they were thrown,
         // where the full error string can be found. See #4519.
         errorCodes: true,
-      }),
-      cjs({
-        namedExports: {
-          'graphql-tag': ['gql'],
-        },
-      }),
+      })
     ],
   };
 }
@@ -69,11 +63,6 @@ function prepareCJS(input, output) {
     },
     plugins: [
       nodeResolve(),
-      cjs({
-        namedExports: {
-          'graphql-tag': ['gql'],
-        },
-      }),
     ],
   };
 }

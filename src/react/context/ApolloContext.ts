@@ -13,7 +13,11 @@ export interface ApolloContextValue {
 // Since the created context is React specific, we've decided to attach it to
 // the `React` object for sharing.
 
-const contextSymbol = Symbol.for('__APOLLO_CONTEXT__');
+// If Symbol's aren't available, we'll use a fallback string as the context
+// property (we're looking at you, IE11).
+const contextSymbol = typeof Symbol === 'function' ?
+  Symbol.for('__APOLLO_CONTEXT__') :
+  '__APOLLO_CONTEXT__';
 
 export function resetApolloContext() {
   const React = requireReactLazily();

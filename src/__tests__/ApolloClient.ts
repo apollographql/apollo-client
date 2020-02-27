@@ -24,12 +24,6 @@ describe('ApolloClient', () => {
       window.fetch = oldFetch;
     });
 
-    it('will throw an error if `uri` or `link` is not passed in', () => {
-      expect(() => {
-        new ApolloClient({ cache: new InMemoryCache() } as any);
-      }).toThrowErrorMatchingSnapshot();
-    });
-
     it('will throw an error if cache is not passed in', () => {
       expect(() => {
         new ApolloClient({ link: ApolloLink.empty() } as any);
@@ -56,6 +50,14 @@ describe('ApolloClient', () => {
         link: new HttpLink({ uri: uri2 })
       });
       expect((client.link as HttpLink).options.uri).toEqual(uri2);
+    });
+
+    it('should create an empty Link if `uri` and `link` are not provided', () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+      });
+      expect(client.link).toBeDefined();
+      expect(client.link instanceof ApolloLink).toBeTruthy();
     });
   });
 

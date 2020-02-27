@@ -754,8 +754,7 @@ describe('@client @export tests', () => {
             });
             done();
           }
-
-          resultCount +=1;
+          resultCount += 1;
         }
       });
     }
@@ -821,6 +820,146 @@ describe('@client @export tests', () => {
           }
 
           resultCount +=1;
+        },
+      });
+    }
+  );
+
+  it(
+    'should NOT attempt to refetch over the network if an @export variable ' +
+    'has changed, the current fetch policy is cache-first, and the remote ' +
+    'part of the query (that leverages the @export variable) can be fully ' +
+    'found in the cache.',
+    done => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthorId @client @export(as: "authorId")
+          postCount(authorId: $authorId)
+        }
+      `;
+
+      const testAuthorId1 = 1;
+      const testPostCount1 = 100;
+
+      const testAuthorId2 = 2;
+      const testPostCount2 = 200;
+
+      let fetchCount = 0;
+      const link = new ApolloLink(() => {
+        fetchCount += 1;
+        return Observable.of({
+          data: {
+            postCount: testPostCount1
+          },
+        });
+      });
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+        resolvers: {},
+      });
+
+      client.writeQuery({
+        query: gql`{ currentAuthorId }`,
+        data: { currentAuthorId: testAuthorId1 }
+      });
+
+      let resultCount = 0;
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+      obs.subscribe({
+        next(result) {
+          if (resultCount === 0) {
+            // The initial result is fetched over the network.
+            expect(fetchCount).toBe(1);
+            expect(result.data).toMatchObject({
+              currentAuthorId: testAuthorId1,
+              postCount: testPostCount1,
+            });
+
+            client.writeQuery({
+              query,
+              variables: { authorId: testAuthorId2 },
+              data: { postCount: testPostCount2 }
+            });
+            client.writeQuery({
+              query: gql`{ currentAuthorId }`,
+              data: { currentAuthorId: testAuthorId2 }
+            });
+          } else if (resultCount === 1) {
+            // The updated result should not have been fetched over the
+            // network, as it can be found in the cache.
+            expect(fetchCount).toBe(1);
+            expect(result.data).toMatchObject({
+              currentAuthorId: testAuthorId2,
+              postCount: testPostCount2,
+            });
+            done();
+          }
+
+          resultCount += 1;
+        },
+      });
+    }
+  );
+
+  it(
+    "should update @client @export variables on each broadcast if they've " +
+    "changed",
+    done => {
+      const cache = new InMemoryCache();
+
+      const widgetCountQuery = gql`{ widgetCount @client }`;
+      cache.writeQuery({
+        query: widgetCountQuery,
+        data: {
+          widgetCount: 100
+        }
+      });
+
+      const client = new ApolloClient({
+        cache,
+        resolvers: {
+          Query: {
+            doubleWidgets(_, { widgetCount }) {
+              return widgetCount ? widgetCount * 2 : 0;
+            }
+          }
+        }
+      });
+
+      const doubleWidgetsQuery = gql`
+        query DoubleWidgets($widgetCount: Int!) {
+          widgetCount @client @export(as: "widgetCount")
+          doubleWidgets(widgetCount: $widgetCount) @client
+        }
+      `;
+
+      let count = 0;
+      const obs = client.watchQuery({ query: doubleWidgetsQuery });
+      obs.subscribe({
+        next({ data }) {
+          switch (count) {
+            case 0:
+              expect(data.widgetCount).toEqual(100);
+              expect(data.doubleWidgets).toEqual(200);
+
+              client.writeQuery({
+                query: widgetCountQuery,
+                data: {
+                  widgetCount: 500
+                }
+              });
+              break;
+            case 1:
+              expect(data.widgetCount).toEqual(500);
+              expect(data.doubleWidgets).toEqual(1000);
+              done();
+              break;
+            default:
+          }
+          count += 1;
         },
       });
     }

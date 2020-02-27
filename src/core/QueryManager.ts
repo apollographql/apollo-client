@@ -177,8 +177,6 @@ export class QueryManager<TStore> {
     const mutationId = this.generateQueryId();
     mutation = this.transform(mutation).document;
 
-    this.setQuery(mutationId, () => ({ document: mutation }));
-
     variables = this.getVariables(mutation, variables);
 
     if (this.transform(mutation).hasClientExports) {
@@ -282,7 +280,6 @@ export class QueryManager<TStore> {
             self.cache.removeOptimistic(mutationId);
           }
           self.broadcastQueries();
-          self.setQuery(mutationId, () => ({ document: null }));
           reject(
             new ApolloError({
               networkError: err,
@@ -345,8 +342,6 @@ export class QueryManager<TStore> {
           Promise.all(
             awaitRefetchQueries ? refetchQueryPromises : [],
           ).then(() => {
-            self.setQuery(mutationId, () => ({ document: null }));
-
             if (
               errorPolicy === 'ignore' &&
               storeResult &&

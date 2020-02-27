@@ -1018,8 +1018,8 @@ export class QueryManager<TStore> {
   }
 
   public removeObservableQuery(queryId: string) {
-    const { cancel } = this.getQuery(queryId);
-    this.setQuery(queryId, () => ({ observableQuery: null }));
+    const queryInfo = this.queries.get(queryId);
+    const cancel = queryInfo && queryInfo.cancel;
     if (cancel) cancel();
   }
 

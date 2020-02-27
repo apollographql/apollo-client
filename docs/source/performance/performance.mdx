@@ -41,7 +41,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 const cache = new InMemoryCache({
   cacheRedirects: {
     Query: {
-      book: (_, args) => toIdValue(cache.config.dataIdFromObject({ __typename: 'Book', id: args.id })),
+      book: (_, args) => toIdValue(_.config.dataIdFromObject({ __typename: 'Book', id: args.id })),
     },
   },
 });

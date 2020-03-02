@@ -51,13 +51,14 @@ You'll find that when you switch to Apollo Client, you'll be able to delete a lo
 
 ## Zero-config caching
 
-One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Just by setting up Apollo Client, you get an intelligent cache out of the box with no additional configuration required.
+One of the key features that sets Apollo Client apart from other data management solutions is its normalized cache. Apollo Client includes an intelligent cache out of the box, that requires very little configuration to get started with.
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-// the Apollo cache is set up automatically
-const client = new ApolloClient();
+const client = new ApolloClient({
+  cache: new InMemoryCache()
+});
 ```
 
 Caching a graph is no easy task, but we've spent two years focused on solving it. Since you can have multiple paths leading to the same data, normalization is essential for keeping your data consistent across multiple components. Let's look at some practical examples:

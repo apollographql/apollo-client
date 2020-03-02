@@ -20,12 +20,13 @@ The schema link provides a [graphql execution environment](http://graphql.org/gr
 When performing SSR _on the same server_, you can use this library to avoid making network calls.
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { SchemaLink } from '@apollo/link-schema';
 
 import schema from './path/to/your/schema';
 
 const graphqlClient = new ApolloClient({
+  cache: new InMemoryCache(),
   ssrMode: true,
   link: new SchemaLink({ schema })
 });

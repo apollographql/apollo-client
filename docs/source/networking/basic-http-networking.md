@@ -6,10 +6,11 @@ description: Communicate with a GraphQL server over HTTP
 Apollo Client has built-in support for communicating with a GraphQL server over HTTP. To set up this communication, provide the server's URL as the `uri` parameter to the `ApolloClient` constructor:
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
-  uri: 'https://api.example.com'
+  uri: 'https://api.example.com',
+  cache: new InMemoryCache()
 });
 ```
 
@@ -20,10 +21,11 @@ If you provide this parameter, Apollo Client sends all GraphQL operations (queri
 Apollo Client can include user credentials (basic auth, cookies, etc.) in the HTTP requests it makes to a GraphQL server. By default, credentials are included only if the server is hosted at the same origin as the application using Apollo Client. You can adjust this behavior by providing a value for the `credentials` parameter to the `ApolloClient` constructor:
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   uri: 'https://api.example.com',
+  cache: new InMemoryCache(),
   // Enable sending cookies over cross-origin requests
   credentials: 'include'
 });
@@ -44,10 +46,11 @@ For more information, see [`Request.credentials`](https://developer.mozilla.org/
 You can specify the names and values of custom headers to include in every HTTP request to a GraphQL server. To do so, provide the `headers` parameter to the  `ApolloClient` constructor, like so:
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   uri: 'https://api.example.com',
+  cache: new InMemoryCache(),
   headers: {
     authorization: localStorage.getItem('token'),
     'client-name': 'WidgetX Ecom [web]',

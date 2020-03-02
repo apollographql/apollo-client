@@ -27,7 +27,7 @@ npm install --save @apollo/client apollo-link-rest graphql qs
 After this, you're ready to setup the Apollo Client instance:
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { RestLink } from 'apollo-link-rest';
 
 // Set `RestLink` with your endpoint
@@ -35,6 +35,7 @@ const restLink = new RestLink({ uri: "https://swapi.dev/api/" });
 
 // Setup your client
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: restLink
 });
 ```
@@ -436,6 +437,7 @@ const authRestLink = new ApolloLink((operation, forward) => {
 const restLink = new RestLink({ uri: "uri" });
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: ApolloLink.from([authRestLink, restLink])
 });
 ```
@@ -451,6 +453,7 @@ const httpLink = createHttpLink({ uri: "server.com/graphql" });
 const restLink = new RestLink({ uri: "api.server.com" });
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: ApolloLink.from([authLink, restLink, errorLink, retryLink, httpLink])
   // Note: httpLink is terminating so must be last, while retry & error wrap
   // the links to their right. State & context links should happen before (to

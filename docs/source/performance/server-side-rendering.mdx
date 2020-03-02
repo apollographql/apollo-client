@@ -182,7 +182,7 @@ At the point that the promise resolves, your Apollo Client store will be complet
 ```js
 import { getDataFromTree } from "@apollo/react-ssr";
 
-const client = new ApolloClient(....);
+const client = new ApolloClient({ ... });
 
 // during request (see above)
 getDataFromTree(App).then(() => {
@@ -222,7 +222,7 @@ If your GraphQL endpoint is on the same server that you're rendering from, you m
 One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](../api/link/apollo-link-schema/) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
 
 ```js
-import { ApolloClient } from '@apollo/client'
+import { ApolloClient, InMemoryCache } from '@apollo/client'
 import { SchemaLink } from '@apollo/link-schema';
 
 // ...
@@ -271,7 +271,7 @@ The `renderToStringWithData` function simplifies the above and simply returns th
 // server application code (integrated usage)
 import { renderToStringWithData } from "@apollo/react-ssr";
 
-const client = new ApolloClient(...);
+const client = new ApolloClient({ ... });
 
 // during request
 renderToStringWithData(App).then((content) => {

@@ -427,24 +427,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     return result;
   }
 
-  /**
-   * Sugar for writeQuery & writeFragment
-   * This method will construct a query from the data object passed in.
-   * If no id is supplied, writeData will write the data to the root.
-   * If an id is supplied, writeData will write a fragment to the object
-   * specified by the id in the store.
-   *
-   * Since you aren't passing in a query to check the shape of the data,
-   * you must pass in an object that conforms to the shape of valid GraphQL data.
-   */
-  public writeData<TData = any>(
-    options: DataProxy.WriteDataOptions<TData>,
-  ): void {
-    const result = this.cache.writeData<TData>(options);
-    this.queryManager.broadcastQueries();
-    return result;
-  }
-
   public __actionHookForDevTools(cb: () => any) {
     this.devToolsHookCb = cb;
   }

@@ -179,3 +179,25 @@ The following cache changes are **not** backward compatible. Take them into cons
 * All cache results are now frozen/immutable, as promised in the [Apollo Client 2.6 blog post](https://blog.apollographql.com/whats-new-in-apollo-client-2-6-b3acf28ecad1) ([PR #5153](https://github.com/apollographql/apollo-client/pull/5153)).
 * `FragmentMatcher`, `HeuristicFragmentMatcher`, and `IntrospectionFragmentMatcher` have all been removed. We recommend using the `InMemoryCache`’s `possibleTypes` option instead. For more information, see [Defining possibleTypes manually](../data/fragments/#defining-possibletypes-manually) ([PR #5073](https://github.com/apollographql/apollo-client/pull/5073)).
 * The internal representation of normalized data in the cache has changed. If you’re using `apollo-cache-inmemory`’s public API, then these changes shouldn’t impact you. If you are manipulating cached data directly instead, review [PR #5146](https://github.com/apollographql/apollo-client/pull/5146) for details.
+* `client|cache.writeData` have been fully removed. `client|cache.writeQuery`, `client|cache.writeFragment`, and/or `cache.modify` can be used to update the cache. For example:
+
+  ```js
+    client.writeData({
+      data: {
+        cartItems: []
+      }
+    });
+  ```
+
+  can be converted to:
+
+  ```js
+    client.writeQuery({
+      query: gql`{ cartItems }`,
+      data: {
+        cartItems: []
+      }
+    });
+  ```
+
+  For more details around why `writeData` has been removed, see [PR #5923](https://github.com/apollographql/apollo-client/pull/5923).

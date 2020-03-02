@@ -1872,6 +1872,7 @@ describe('ObservableQuery', () => {
         assumeImmutableResults = true,
         assertFrozenResults = false,
       }) {
+        const cache = new InMemoryCache();
         const client = new ApolloClient({
           link: mockSingleLink(
             { request: queryOptions, result: { data: { value: 1 } } },
@@ -1879,7 +1880,7 @@ describe('ObservableQuery', () => {
             { request: queryOptions, result: { data: { value: 3 } } }
           ).setOnError(error => { throw error }),
           assumeImmutableResults,
-          cache: new InMemoryCache(),
+          cache,
         });
 
         const observable = client.watchQuery(queryOptions);
@@ -1887,24 +1888,21 @@ describe('ObservableQuery', () => {
 
         return new Promise<any[]>((resolve, reject) => {
           observable.subscribe({
-            next(result) {
-              values.push(result.data.value);
+            next({ data }) {
+              values.push(data.value);
               if (assertFrozenResults) {
                 try {
-                  result.data.value = 'oyez';
+                  data.value = 'oyez';
                 } catch (error) {
                   reject(error);
                 }
               } else {
-                result = {
-                  ...result,
-                  data: {
-                    ...result.data,
-                    value: 'oyez',
-                  },
+                data = {
+                  ...data,
+                  value: 'oyez',
                 };
               }
-              client.writeData(result);
+              client.writeQuery({ query, data });
             },
             error(err) {
               expect(err.message).toMatch(/No more mocked responses/);
@@ -1913,20 +1911,6 @@ describe('ObservableQuery', () => {
           });
         });
       }
-
-      // When we do not assume immutable results, the observable must do
-      // extra work to take snapshots of past results, just in case those
-      // results are destructively modified. The benefit of that work is
-      // that such mutations can be detected, which is why "oyez" appears
-      // in the list of values here. This is a somewhat indirect way of
-      // detecting that cloneDeep must have been called, but at least it
-      // doesn't violate any abstractions.
-      expect(
-        await check({
-          assumeImmutableResults: false,
-          assertFrozenResults: false,
-        }),
-      ).toEqual([1, 'oyez', 2, 'oyez', 3, 'oyez']);
 
       async function checkThrows(assumeImmutableResults) {
         try {

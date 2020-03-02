@@ -24,7 +24,11 @@ describe('@client @export tests', () => {
         link: ApolloLink.empty(),
         resolvers: {},
       });
-      cache.writeData({ data: { field: 1 } });
+
+      cache.writeQuery({
+        query,
+        data: { field: 1 },
+      });
 
       return client.query({ query }).then(({ data }: any) => {
         expect({ ...data }).toMatchObject({ field: 1 });
@@ -54,7 +58,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           car: {
             engine: {
@@ -106,7 +111,8 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           currentAuthorId: testAuthorId,
         },
@@ -156,7 +162,8 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           currentAuthor: testAuthor,
         },
@@ -206,7 +213,8 @@ describe('@client @export tests', () => {
       resolvers: {},
     });
 
-    cache.writeData({
+    cache.writeQuery({
+      query,
       data: {
         currentAuthor: testAuthor,
       },
@@ -268,7 +276,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           appContainer,
         },
@@ -371,7 +380,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           postRequiringReview: {
             loggedInReviewerId,
@@ -450,7 +460,8 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           postRequiringReview: {
             __typename: 'Post',
@@ -560,7 +571,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query: gql`{ topPost }`,
         data: {
           topPost: testPostId,
         },
@@ -685,7 +697,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           primaryReviewerId,
           secondaryReviewerId,
@@ -736,7 +749,10 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+      client.writeQuery({
+        query,
+        data: { currentAuthorId: testAuthorId1 },
+      });
 
       const obs = client.watchQuery({ query });
       obs.subscribe({
@@ -746,7 +762,10 @@ describe('@client @export tests', () => {
               currentAuthorId: testAuthorId1,
               postCount: testPostCount1,
             });
-            client.writeData({ data: { currentAuthorId: testAuthorId2 } });
+            client.writeQuery({
+              query,
+              data: { currentAuthorId: testAuthorId2 },
+            });
           } else if (resultCount === 1) {
             expect({ ...data }).toMatchObject({
               currentAuthorId: testAuthorId2,
@@ -796,7 +815,10 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+      client.writeQuery({
+        query,
+        data: { currentAuthorId: testAuthorId1 },
+      });
 
       const obs = client.watchQuery({ query });
       obs.subscribe({

@@ -86,7 +86,7 @@ const UPDATE_DISPLAY_IMAGE = gql`
 
 The query, `GET_ALL_DOGS`, fetches a list of dogs and their `displayImage`. The mutation, `UPDATE_DISPLAY_IMAGE`, updates a single dog's `displayImage`. If we update the `displayImage` on a specific dog, we also need that item on the list of all dogs to reflect the new data. Apollo Client splits out each object in a GraphQL result with a `__typename` and an `id` property into its own entry in the Apollo cache. This guarantees that returning a value from a mutation with an id will automatically update any queries that fetch the object with the same id. It also ensures that two queries which return the same data will always be in sync.
 
-Features that are normally complicated to execute are trivial to build with the Apollo cache. Let's go back to our `GET_ALL_DOGS` query from the previous example that displays a list of dogs. What if we want to transition to a detail page for a specific dog? Since we've already fetched information on each dog, we don't want to refetch the same information from our server. With cache redirects, the Apollo cache lets us connect the dots between two queries so we don't have to fetch information that we know is already available.
+Features that are normally complicated to execute are trivial to build with the Apollo cache. Let's go back to our `GET_ALL_DOGS` query from the previous example that displays a list of dogs. What if we want to transition to a detail page for a specific dog? Since we've already fetched information on each dog, we don't want to refetch the same information from our server. Thanks to Apollo Client's cache policies API, we can connect the dots between two queries so we don't have to fetch information that we know is already available.
 
 Here's what our query for one dog looks like:
 
@@ -102,18 +102,27 @@ const GET_DOG = gql`
 `;
 ```
 
-Here's our cache redirect, which we can set up easily by specifying a map on the `cacheRedirects` property of `ApolloClient`. The cache redirect returns a key that the query can use to look up the data in the cache.
+Here we define a custom `FieldPolicy` that returns a reference to the cached `Dog` data, which our query can then use to retrieve that data.
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-const client = new ApolloClient({
-  cacheRedirects: {
+const cache = new InMemoryCache({
+  typePolicies: {
     Query: {
-      dog: (_, { id }, { getCacheKey }) => getCacheKey({ id, __typename: 'Dog' })
+      fields: {
+        dog(_, { args, toReference }) {
+          return toReference({
+            __typename: 'Dog',
+            id: args.id,
+          });
+        }
+      }
     }
   }
-})
+});
+
+const client = new ApolloClient({ cache });
 ```
 
 ## Combine local & remote data

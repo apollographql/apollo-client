@@ -14,7 +14,7 @@ Apollo Link includes installable, premade links that support a variety of use ca
 The following example demonstrates adding a custom link to Apollo Client. This link adds an `Authorization` header to every HTTP request before the `HttpLink` sends it:
 
 ```js
-import { ApolloClient, HttpLink, ApolloLink, concat } from '@apollo/client';
+import { ApolloClient, HttpLink, ApolloLink, InMemoryCache, concat } from '@apollo/client';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 
@@ -30,6 +30,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
 })
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: concat(authMiddleware, httpLink),
 });
 ```
@@ -37,7 +38,7 @@ const client = new ApolloClient({
 This next example demonstrates providing multiple custom links in an array:
 
 ```js
-import { ApolloClient, HttpLink, ApolloLink, from } from '@apollo/client';
+import { ApolloClient, HttpLink, ApolloLink, InMemoryCache, from } from '@apollo/client';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 
@@ -66,6 +67,7 @@ const activityMiddleware = new ApolloLink((operation, forward) => {
 })
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: from([
     authMiddleware,
     activityMiddleware,
@@ -83,7 +85,7 @@ You can also use Apollo Link to customize Apollo Client's behavior whenever it r
 The following example demonstrates using [`@apollo/link-error`](../api/link/apollo-link-error/) to handle network errors that are included in a response:
 
 ```js
-import { ApolloClient, HttpLink } from '@apollo/client';
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { onError } from '@apollo/link-error';
 
 import { logout } from './logout';
@@ -95,6 +97,7 @@ const logoutLink = onError(({ networkError }) => {
 })
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: logoutLink.concat(httpLink),
 });
 ```
@@ -155,9 +158,12 @@ Context options:
 The following example shows how to use the `context` to pass a special header for a single query:
 
 ```js
-import { ApolloClient } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 
-const client = new ApolloClient({ uri: "/graphql" });
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  uri: "/graphql"
+});
 
 client.query({
   query: MY_QUERY,

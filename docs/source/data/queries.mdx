@@ -19,7 +19,7 @@ This article assumes you're familiar with building basic GraphQL queries. If you
 
 This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](../get-started/) if you need help with either of those steps.
 
-> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/j2ly83749w) and [sample GraphQL server](https://codesandbox.io/s/32ypr38l61) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/n3jykqpxwm).
+> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/queries-example-app-start-nvp9z) and [sample GraphQL server](https://codesandbox.io/s/queries-example-app-server-71z1g) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
 
 ## Executing a query
 
@@ -210,7 +210,6 @@ Polling provides near-real-time synchronization with your server by causing a qu
 function DogPhoto({ breed }) {
   const { loading, error, data } = useQuery(GET_DOG_PHOTO, {
     variables: { breed },
-    skip: !breed,
     pollInterval: 500,
   });
 
@@ -231,7 +230,6 @@ const DogPhoto = ({ breed }) => (
   <Query
     query={GET_DOG_PHOTO}
     variables={{ breed }}
-    skip={!breed}
     pollInterval={500}
   >
     {({ loading, error, data }) => {
@@ -271,8 +269,7 @@ the query uses the same variables that it used in its previous execution.
 ```jsx:title=index.js
 function DogPhoto({ breed }) {
   const { loading, error, data, refetch } = useQuery(GET_DOG_PHOTO, {
-    variables: { breed },
-    skip: !breed,
+    variables: { breed }
   });
 
   if (loading) return null;
@@ -292,7 +289,7 @@ function DogPhoto({ breed }) {
 
 ```jsx:title=index.js
 const DogPhoto = ({ breed }) => (
-  <Query query={GET_DOG_PHOTO} variables={{ breed }} skip={!breed}>
+  <Query query={GET_DOG_PHOTO} variables={{ breed }}>
     {({ loading, error, data, refetch }) => {
       if (loading) return null;
       if (error) return `Error! ${error}`;
@@ -336,7 +333,6 @@ function DogPhoto({ breed }) {
     GET_DOG_PHOTO,
     {
       variables: { breed },
-      skip: !breed,
       notifyOnNetworkStatusChange: true,
     },
   );
@@ -364,7 +360,6 @@ const DogPhoto = ({ breed }) => (
   <Query
     query={GET_DOG_PHOTO}
     variables={{ breed }}
-    skip={!breed}
     notifyOnNetworkStatusChange
   >
     {({ loading, error, data, refetch, networkStatus }) => {
@@ -430,7 +425,7 @@ function DelayedQuery() {
 }
 ```
 
-> To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/n3jykqpxwm).
+> To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
 
 ## useQuery API
 

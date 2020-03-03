@@ -1216,6 +1216,127 @@ describe('useQuery Hook', () => {
         });
       }
     );
+
+    it("should retain previous result while refetching", async () => {
+      const query: DocumentNode = gql`
+        query AllPeople($name: String!) {
+          allPeople(name: $name) {
+            people {
+              name
+              age
+            }
+          }
+        }
+      `;
+
+      interface Data {
+        allPeople: {
+          people: Array<{ name: string; age: number }>;
+        };
+      }
+
+      const originalPeopleData: Data = {
+        allPeople: { people: [{ name: "Luke Skywalker", age: 23 }] }
+      };
+      const newPeopleData: Data = {
+        allPeople: {
+          people: [
+            { name: "Luke Skywalker", age: 23 },
+            { name: "Han Solo", age: 35 }
+          ]
+        }
+      };
+
+      const link = mockSingleLink(
+        {
+          request: {
+            query,
+            variables: {
+              someVar: "abc123"
+            }
+          },
+          result: {
+            data: originalPeopleData
+          }
+        },
+        {
+          request: {
+            query,
+            variables: {
+              someVar: "abc123"
+            }
+          },
+          result: {
+            data: newPeopleData
+          }
+        }
+      );
+
+      const cache = new InMemoryCache();
+
+      const client = new ApolloClient({
+        link,
+        cache
+      });
+
+      let renderCount = 0;
+      const Component = () => {
+        const { loading, data } = useQuery(query, {
+          variables: { someVar: "abc123" },
+          partialRefetch: true
+        });
+
+        switch (renderCount) {
+          case 0:
+            // Initial loading render
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 1:
+            // First data render
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(originalPeopleData);
+            // Simulate another component/query updating cache with partial data
+            client.writeQuery({
+              query,
+              data: {
+                allPeople: {
+                  people: [{ name: "Luke Skywalker" }, { name: "Han Solo" }]
+                }
+              },
+              variables: {
+                someVar: "abc123"
+              }
+            });
+            break;
+          case 2:
+            // `data` is partial and `partialRetch` is true, so a refetch
+            // is triggered, loading is set as true again, and old data is still rendered
+            expect(loading).toBeTruthy();
+            expect(data).toEqual(originalPeopleData);
+            break;
+          case 3:
+            // Refetch has completed
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(newPeopleData);
+            break;
+          default:
+        }
+
+        renderCount += 1;
+        return null;
+      };
+
+      render(
+        <ApolloProvider client={client}>
+          <Component />
+        </ApolloProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(4);
+      });
+    });
   });
 
   describe('Callbacks', () => {

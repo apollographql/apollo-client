@@ -363,6 +363,9 @@ export class QueryData<TData, TVariables> extends OperationData {
         error = new ApolloError({ graphQLErrors: errors });
       }
 
+      const previousData =
+        this.previousData.result && this.previousData.result.data;
+
       result = {
         ...result,
         loading,
@@ -372,8 +375,6 @@ export class QueryData<TData, TVariables> extends OperationData {
       };
 
       if (loading) {
-        const previousData =
-          this.previousData.result && this.previousData.result.data;
         result.data =
           previousData && data
             ? {
@@ -406,7 +407,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           Object.assign(result, {
             loading: true,
             networkStatus: NetworkStatus.loading,
-            data: this.previousData.result?.data
+            data: previousData
           });
           result.refetch();
           return result;

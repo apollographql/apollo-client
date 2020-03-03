@@ -22,22 +22,20 @@ npm install @apollo/client graphql
 - `@apollo/client`: Contains everything you need to set up Apollo Client
 - `graphql`: Parses your GraphQL queries
 
-> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/create-a-new-react-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this CodeSandbox](https://codesandbox.io/s/48p1r2roz4) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
+> If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [Create React App](https://create-react-app.dev/) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this CodeSandbox](https://codesandbox.io/s/practical-snyder-48p1r2roz4) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can [view it on CodeSandbox](https://codesandbox.io/s/get-started-coinbase-client-73r10).
 
 ## Create a client
 
-Great, now that you have all the dependencies you need, let's create your Apollo Client. The only thing you need to get started is the endpoint for your [GraphQL server](https://codesandbox.io/s/48p1r2roz4). If you don't pass in `uri` directly, it defaults to the `/graphql` endpoint on the same host your app is served from.
+Great, now that you have all the dependencies you need, let's create your Apollo Client. The only thing you need to get started is the endpoint for your GraphQL server.
 
 In our `index.js` file, let's import `ApolloClient` from `@apollo/client` and add the endpoint for our GraphQL server to the `uri` property of the client config object.
 
 ```js
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: new HttpLink({
-    uri: 'https://48p1r2roz4.sse.codesandbox.io',
-  })
+  uri: 'https://48p1r2roz4.sse.codesandbox.io',
+  cache: new InMemoryCache()
 });
 ```
 
@@ -75,13 +73,15 @@ import { render } from 'react-dom';
 
 import { ApolloProvider } from '@apollo/client';
 
-const App = () => (
-  <ApolloProvider client={client}>
-    <div>
-      <h2>My first Apollo app 🚀</h2>
-    </div>
-  </ApolloProvider>
-);
+function App() {
+  return (
+    <ApolloProvider client={client}>
+      <div>
+        <h2>My first Apollo app 🚀</h2>
+      </div>
+    </ApolloProvider>
+  );
+}
 
 render(<App />, document.getElementById('root'));
 ```
@@ -166,12 +166,7 @@ const ExchangeRates = () => (
 
 Congrats, you just made your first `useQuery` based component! 🎉 If you render your `ExchangeRates` component within your `App` component from the previous example, you'll first see a loading indicator and then data on the page once it's ready. Apollo Client automatically caches this data when it comes back from the server, so you won't see a loading indicator if you run the same query twice.
 
-If you'd like to play around with the app we just built, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4). Don't stop there! Try building more components that leverage `useQuery` and experimenting with the concepts you just learned.
-
-If you'd like to explore further, here are more versions of the example app featuring different front-end libraries:
-
-- React Native Web: https://codesandbox.io/s/xk7zw3n4
-- Angular (Ionic): https://github.com/aaronksaunders/ionicLaunchpadApp
+If you'd like to play around with the app we just built, you can [view it on CodeSandbox](https://codesandbox.io/s/get-started-coinbase-client-73r10). Don't stop there! Try building more components that leverage `useQuery` and experimenting with the concepts you just learned.
 
 ## Next steps
 

@@ -405,7 +405,8 @@ export class QueryData<TData, TVariables> extends OperationData {
           // this we'll attempt to refetch the `Query` data.
           Object.assign(result, {
             loading: true,
-            networkStatus: NetworkStatus.loading
+            networkStatus: NetworkStatus.loading,
+            data: this.previousData.result?.data
           });
           result.refetch();
           return result;

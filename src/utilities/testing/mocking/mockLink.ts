@@ -18,9 +18,9 @@ import { cloneDeep } from '../../../utilities/common/cloneDeep';
 
 export type ResultFunction<T> = () => T;
 
-export interface MockedResponse {
+export interface MockedResponse<TData = { [key: string]: any; }> {
   request: GraphQLRequest;
-  result?: FetchResult | ResultFunction<FetchResult>;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
   error?: Error;
   delay?: number;
   newData?: ResultFunction<FetchResult>;

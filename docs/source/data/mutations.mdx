@@ -20,7 +20,7 @@ This article assumes you're familiar with building basic GraphQL mutations. If y
 
 This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](../get-started/) if you need help with either of those steps.
 
-> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/znl94y0vp) and [sample GraphQL server](https://codesandbox.io/s/plp0mopxq) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/v3mn68xxvy).
+> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/mutations-example-app-start-gm7i5) and [sample GraphQL server](https://codesandbox.io/s/mutations-example-app-server-sxewr) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/mutations-example-app-final-tjoje).
 
 ## Executing a mutation
 
@@ -201,7 +201,6 @@ function Todos() {
           onSubmit={e => {
             e.preventDefault();
             updateTodo({ variables: { id, type: input.value } });
-
             input.value = '';
           }}
         >
@@ -306,18 +305,26 @@ const GET_TODOS = gql`
 
 function AddTodo() {
   let input;
-  const [addTodo] = useMutation(
-    ADD_TODO,
-    {
-      update(cache, { data: { addTodo } }) {
-        const { todos } = cache.readQuery({ query: GET_TODOS });
-        cache.writeQuery({
-          query: GET_TODOS,
-          data: { todos: todos.concat([addTodo]) },
-        });
-      }
+  const [addTodo] = useMutation(ADD_TODO, {
+    update(cache, { data: { addTodo } }) {
+      cache.modify({
+        fields: {
+          todos(existingTodos = []) {
+            const newTodoRef = cache.writeFragment({
+              data: addTodo,
+              fragment: gql`
+                fragment NewTodo on Todo {
+                  id
+                  type
+                }
+              `
+            });
+            return [...existingTodos, newTodoRef];
+          }
+        }
+      });
     }
-  );
+  });
 
   return (
     <div>
@@ -357,10 +364,21 @@ const AddTodo = () => {
     <Mutation
       mutation={ADD_TODO}
       update={(cache, { data: { addTodo } }) => {
-        const { todos } = cache.readQuery({ query: GET_TODOS });
-        cache.writeQuery({
-          query: GET_TODOS,
-          data: { todos: todos.concat([addTodo]) },
+        cache.modify({
+          fields: {
+            todos(existingTodos = []) {
+              const newTodoRef = cache.writeFragment({
+                data: addTodo,
+                fragment: gql`
+                  fragment NewTodo on Todo {
+                    id
+                    type
+                  }
+                `
+              });
+              return [...existingTodos, newTodoRef];
+            }
+          }
         });
       }}
     >
@@ -390,26 +408,17 @@ const AddTodo = () => {
 </div>
 </MultiCodeBlock>
 
-As shown, the update function is passed a `cache` object that represents
-the Apollo Client cache. This object provides `readQuery` and `writeQuery`
-functions that enable you to execute GraphQL operations on the cache as though
-you're interacting with a GraphQL server.
+As shown, the update function is passed a `cache` object that represents the Apollo Client cache. This object provides access to cache API methods like `readQuery`, `writeQuery`, `readFragment`, `writeFragment` and `modify`. These methods enable you to execute GraphQL operations on the cache as though you're interacting with a GraphQL server.
 
 > Learn more about supported cache functions in [Interacting with cached data](../caching/cache-interaction/).
 
-The update function is _also_ passed an object with a `data` property that
-contains the result of the mutation. Use this value to update the
-cache with `cache.writeQuery`.
+The update function is _also_ passed an object with a `data` property that contains the result of the mutation. You can use this value to update the cache with `cache.writeQuery`, `cache.writeFragment` or `cache.modify`.
 
 > If your mutation specifies an [optimistic response](../performance/optimistic-ui/), your update function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
 
-In the example above, the update function first reads the existing to-do list from the cache with `cache.readQuery`. It then adds the new to-do item
-from our mutation to the list and writes it _back_ to the cache with `cache.writeQuery`.
+When the `ADD_TODO` mutation is run in the above example, the newly added and returned todo object is saved into the cache. The previously cached list of todos, being watched by the `GET_TODOS` query, is not automatically updated however. This means the `GET_TODOS` query isn't notified that a new todo was added, which then means the query will not update to show the new todo. To address this we're using `cache.modify` which gives us a way to surgically insert or delete items from the cache, by running modifier functions. In the example above we know the results of the `GET_TODOS` query are stored in the `ROOT_QUERY.todos` array in the cache, so we're using a `todos` modifier function to update the cached array to include a reference to the newly added todo. With the help of `cache.writeFragment` we get an internal reference to the added todo, then store that reference in the `ROOT_QUERY.todos` array.
 
-Any changes you make to cached data inside of an update function are
-automatically broadcast to queries that are listening for changes to that data.
-Consequently, your application's UI will update to reflect newly cached
-values.
+Any changes you make to cached data inside of an update function are automatically broadcast to queries that are listening for changes to that data. Consequently, your application's UI will update to reflect newly cached values.
 
 ## Tracking loading and error states
 
@@ -445,7 +454,6 @@ function Todos() {
           onSubmit={e => {
             e.preventDefault();
             updateTodo({ variables: { id, type: input.value } });
-
             input.value = '';
           }}
         >

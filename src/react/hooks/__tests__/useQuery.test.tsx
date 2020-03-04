@@ -1297,5 +1297,52 @@ describe('useQuery Hook', () => {
         expect(onCompletedCount).toBe(1);
       });
     });
+
+    it('should call onCompleted at least once even when the component rerenders', 
+      async () => {
+        let onCompletedCalled = false;
+        let renderCount = 0;
+        const Component = () => {
+          const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+          if (renderCount === 1) {
+            // As soon as we rerender because data is loaded, schedule a rerender
+            // (could be a setState based on an external condition, etc.)
+            forceUpdate();
+          }
+
+          const { loading, data } = useQuery(CAR_QUERY, {
+            // The options contain some value that changes. Here the
+            // renderCount, could be different variables that resolve to the
+            // same cache entry, etc.
+            context: {
+              renderCount
+            },
+            onCompleted(data) {
+              onCompletedCalled = true;
+              expect(data).toBeDefined();
+            }
+          });
+
+
+          if (!loading) {
+            expect(data).toEqual(CAR_RESULT_DATA);
+          }
+
+          renderCount += 1;
+          return null;
+        };
+
+        render(
+          <MockedProvider mocks={CAR_MOCKS}>
+            <Component />
+          </MockedProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3); // loading => loaded => forceUpdate
+          expect(onCompletedCalled).toBeTruthy();
+        });
+      }
   });
 });

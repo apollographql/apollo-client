@@ -521,7 +521,6 @@ export class ObservableQuery<
 
       queryManager.broadcastQueries();
     }
-
   }
 
   public stopPolling() {

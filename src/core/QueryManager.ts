@@ -63,15 +63,19 @@ export interface QueryInfo {
   observableQuery: ObservableQuery<any> | null;
   subscriptions: Set<ObservableSubscription>;
   cancel?: () => void;
-  storeValue: QueryStoreValue;
-}
 
-export interface QueryStoreValue {
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
 }
+
+export type QueryStoreValue = Pick<QueryInfo,
+  | "variables"
+  | "networkStatus"
+  | "networkError"
+  | "graphQLErrors"
+  >;
 
 type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -504,17 +508,24 @@ export class QueryManager<TStore> {
 
   public getQueryStore() {
     const store: Record<string, QueryStoreValue> = Object.create(null);
-    this.queries.forEach(({ storeValue }, queryId) => {
-      if (storeValue) {
-        store[queryId] = storeValue;
-      }
+    this.queries.forEach(({
+      variables,
+      networkStatus,
+      networkError,
+      graphQLErrors,
+    }, queryId) => {
+      store[queryId] = {
+        variables,
+        networkStatus,
+        networkError,
+        graphQLErrors,
+      };
     });
     return store;
   }
 
   public getQueryStoreValue(queryId: string): QueryStoreValue {
-    const info = queryId && this.queries.get(queryId);
-    return info && info.storeValue;
+    return queryId && this.queries.get(queryId);
   }
 
   private qsInitQuery(query: {
@@ -525,8 +536,7 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string;
   }) {
     this.setQuery(query.queryId, () => {});
-    const queryInfo = this.getQuery(query.queryId);
-    const previousQuery = queryInfo && queryInfo.storeValue;
+    const previousQuery = this.getQuery(query.queryId);
 
     // TODO break this out into a separate function
     let networkStatus: NetworkStatus;
@@ -553,12 +563,10 @@ export class QueryManager<TStore> {
     // the store. We probably want a refetch action instead, because I suspect that if you refetch
     // before the initial fetch is done, you'll get an error.
     this.setQuery(query.queryId, () => ({
-      storeValue: {
-        variables: query.variables,
-        networkError: null,
-        graphQLErrors,
-        networkStatus,
-      },
+      variables: query.variables,
+      networkError: null,
+      graphQLErrors,
+      networkStatus,
     }));
 
     // If the action had a `moreForQueryId` property then we need to set the
@@ -623,9 +631,12 @@ export class QueryManager<TStore> {
   }
 
   private qsStopQuery(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
+    const queryInfo: QueryStoreValue = this.queries.get(queryId);
     if (queryInfo) {
-      queryInfo.storeValue = {};
+      queryInfo.variables =
+      queryInfo.networkStatus =
+      queryInfo.networkError =
+      queryInfo.graphQLErrors = void 0;
     }
   }
 
@@ -686,14 +697,13 @@ export class QueryManager<TStore> {
 
     return ({
       document,
-      storeValue: {
-        variables,
-        networkStatus,
-        graphQLErrors,
-        networkError,
-      },
       newData,
       observableQuery,
+      // QueryStoreValue properties:
+      variables,
+      networkStatus,
+      graphQLErrors,
+      networkError,
     }: QueryInfo) => {
       const {
         fetchPolicy,
@@ -1032,13 +1042,12 @@ export class QueryManager<TStore> {
       ));
     });
 
-    this.queries.forEach(({ storeValue, observableQuery }, queryId) => {
-      if (!storeValue) return;
-      if (observableQuery &&
-          observableQuery.watching) {
+    this.queries.forEach((queryInfo, queryId) => {
+      if (queryInfo.observableQuery &&
+          queryInfo.observableQuery.watching) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
-        storeValue.networkStatus = NetworkStatus.loading;
+        queryInfo.networkStatus = NetworkStatus.loading;
       } else {
         this.qsStopQuery(queryId);
       }
@@ -1456,7 +1465,6 @@ export class QueryManager<TStore> {
         lastRequestId: 1,
         observableQuery: null,
         subscriptions: new Set<ObservableSubscription>(),
-        storeValue: {},
       }
     );
   }
@@ -1595,9 +1603,7 @@ function markMutationResult<TStore>(
           updater,
           queryInfo: {
             document,
-            storeValue: {
-              variables,
-            },
+            variables,
           },
         }= queryUpdatersById[id];
 

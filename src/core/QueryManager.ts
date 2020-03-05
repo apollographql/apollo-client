@@ -34,7 +34,6 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  ErrorPolicy,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -671,7 +670,6 @@ export class QueryManager<TStore> {
   // results (or lack thereof) for a particular query.
   public queryListenerForObserver<T>(
     queryId: string,
-    options: WatchQueryOptions,
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     function invoke(method: 'next' | 'error', argument: any) {
@@ -694,15 +692,20 @@ export class QueryManager<TStore> {
     }: QueryInfo) => {
       if (!queryStoreValue) return;
 
-      const fetchPolicy = observableQuery
-        ? observableQuery.options.fetchPolicy
-        : options.fetchPolicy;
+      invariant(observableQuery);
+      const {
+        fetchPolicy,
+        errorPolicy = 'none',
+        returnPartialData,
+        notifyOnNetworkStatusChange,
+        partialRefetch,
+      } = observableQuery.options;
 
       // don't watch the store for queries on standby
       if (fetchPolicy === 'standby') return;
 
       const loading = isNetworkRequestInFlight(queryStoreValue.networkStatus);
-      const lastResult = observableQuery && observableQuery.getLastResult();
+      const lastResult = observableQuery.getLastResult();
 
       const networkStatusChanged = !!(
         lastResult &&
@@ -710,9 +713,9 @@ export class QueryManager<TStore> {
       );
 
       const shouldNotifyIfLoading =
-        options.returnPartialData ||
+        returnPartialData ||
         (!newData && queryStoreValue.networkStatus === NetworkStatus.setVariables) ||
-        (networkStatusChanged && options.notifyOnNetworkStatusChange) ||
+        (networkStatusChanged && notifyOnNetworkStatusChange) ||
         fetchPolicy === 'cache-only' ||
         fetchPolicy === 'cache-and-network';
 
@@ -721,11 +724,6 @@ export class QueryManager<TStore> {
       }
 
       const hasGraphQLErrors = isNonEmptyArray(queryStoreValue.graphQLErrors);
-
-      const errorPolicy: ErrorPolicy = observableQuery
-        && observableQuery.options.errorPolicy
-        || options.errorPolicy
-        || 'none';
 
       // If we have either a GraphQL error or a network error, we create
       // an error and tell the observer about it.
@@ -754,7 +752,7 @@ export class QueryManager<TStore> {
           data = newData.result;
           isMissing = !newData.complete;
         } else {
-          const lastError = observableQuery && observableQuery.getLastError();
+          const lastError = observableQuery.getLastError();
           const errorStatusChanged =
             errorPolicy !== 'none' &&
             (lastError && lastError.graphQLErrors) !==
@@ -780,8 +778,8 @@ export class QueryManager<TStore> {
         // do not tolerate partial data then we want to return the previous
         // result and mark it as stale.
         const stale = isMissing && !(
-          options.returnPartialData ||
-          options.partialRefetch ||
+          returnPartialData ||
+          partialRefetch ||
           fetchPolicy === 'cache-only'
         );
 
@@ -1097,7 +1095,7 @@ export class QueryManager<TStore> {
   ) {
     this.addQueryListener(
       queryId,
-      this.queryListenerForObserver(queryId, options, observer),
+      this.queryListenerForObserver(queryId, observer),
     );
     return this.fetchQuery<T>(queryId, options);
   }

@@ -643,7 +643,6 @@ export class ObservableQuery<
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();
 
-    queryManager.removeObservableQuery(this.queryId);
     queryManager.stopQuery(this.queryId);
 
     this.observers.clear();

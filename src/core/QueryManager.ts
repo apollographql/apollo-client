@@ -967,6 +967,9 @@ export class QueryManager<TStore> {
   }
 
   private stopQueryInStoreNoBroadcast(queryId: string) {
+    const queryInfo = this.queries.get(queryId);
+    const cancel = queryInfo && queryInfo.cancel;
+    if (cancel) cancel();
     this.stopPollingQuery(queryId);
     this.qsStopQuery(queryId);
     this.dirty(queryId);
@@ -1015,12 +1018,6 @@ export class QueryManager<TStore> {
     observableQuery: ObservableQuery<T>,
   ) {
     this.setQuery(queryId, () => ({ observableQuery }));
-  }
-
-  public removeObservableQuery(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    const cancel = queryInfo && queryInfo.cancel;
-    if (cancel) cancel();
   }
 
   public clearStore(): Promise<void> {

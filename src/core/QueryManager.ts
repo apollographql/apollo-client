@@ -63,12 +63,12 @@ export interface QueryInfo {
   observableQuery: ObservableQuery<any> | null;
   subscriptions: Set<ObservableSubscription>;
   cancel?: () => void;
-  storeValue?: QueryStoreValue;
+  storeValue: QueryStoreValue;
 }
 
 export interface QueryStoreValue {
-  variables: Record<string, any>;
-  networkStatus: NetworkStatus;
+  variables?: Record<string, any>;
+  networkStatus?: NetworkStatus;
   networkError?: Error;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
 }
@@ -625,7 +625,7 @@ export class QueryManager<TStore> {
   private qsStopQuery(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) {
-      delete queryInfo.storeValue;
+      queryInfo.storeValue = {};
     }
   }
 
@@ -686,13 +686,15 @@ export class QueryManager<TStore> {
 
     return ({
       document,
-      storeValue: queryStoreValue,
+      storeValue: {
+        variables,
+        networkStatus,
+        graphQLErrors,
+        networkError,
+      },
       newData,
       observableQuery,
     }: QueryInfo) => {
-      if (!queryStoreValue) return;
-
-      invariant(observableQuery);
       const {
         fetchPolicy,
         errorPolicy = 'none',
@@ -704,17 +706,17 @@ export class QueryManager<TStore> {
       // don't watch the store for queries on standby
       if (fetchPolicy === 'standby') return;
 
-      const loading = isNetworkRequestInFlight(queryStoreValue.networkStatus);
+      const loading = isNetworkRequestInFlight(networkStatus);
       const lastResult = observableQuery.getLastResult();
 
       const networkStatusChanged = !!(
         lastResult &&
-        lastResult.networkStatus !== queryStoreValue.networkStatus
+        lastResult.networkStatus !== networkStatus
       );
 
       const shouldNotifyIfLoading =
         returnPartialData ||
-        (!newData && queryStoreValue.networkStatus === NetworkStatus.setVariables) ||
+        (!newData && networkStatus === NetworkStatus.setVariables) ||
         (networkStatusChanged && notifyOnNetworkStatusChange) ||
         fetchPolicy === 'cache-only' ||
         fetchPolicy === 'cache-and-network';
@@ -723,14 +725,14 @@ export class QueryManager<TStore> {
         return;
       }
 
-      const hasGraphQLErrors = isNonEmptyArray(queryStoreValue.graphQLErrors);
+      const hasGraphQLErrors = isNonEmptyArray(graphQLErrors);
 
       // If we have either a GraphQL error or a network error, we create
       // an error and tell the observer about it.
-      if (errorPolicy === 'none' && hasGraphQLErrors || queryStoreValue.networkError) {
+      if (errorPolicy === 'none' && hasGraphQLErrors || networkError) {
         return invoke('error', new ApolloError({
-          graphQLErrors: queryStoreValue.graphQLErrors,
-          networkError: queryStoreValue.networkError,
+          graphQLErrors,
+          networkError,
         }));
       }
 
@@ -755,8 +757,7 @@ export class QueryManager<TStore> {
           const lastError = observableQuery.getLastError();
           const errorStatusChanged =
             errorPolicy !== 'none' &&
-            (lastError && lastError.graphQLErrors) !==
-              queryStoreValue.graphQLErrors;
+            (lastError && lastError.graphQLErrors) !== graphQLErrors;
 
           if (lastResult && lastResult.data && !errorStatusChanged) {
             data = lastResult.data;
@@ -764,7 +765,7 @@ export class QueryManager<TStore> {
           } else {
             const diffResult = this.cache.diff({
               query: document as DocumentNode,
-              variables: queryStoreValue.variables,
+              variables,
               returnPartialData: true,
               optimistic: true,
             });
@@ -786,13 +787,13 @@ export class QueryManager<TStore> {
         const resultFromStore: ApolloQueryResult<T> = {
           data: stale ? lastResult && lastResult.data : data,
           loading,
-          networkStatus: queryStoreValue.networkStatus,
+          networkStatus,
           stale,
         };
 
         // if the query wants updates on errors we need to add it to the result
         if (errorPolicy === 'all' && hasGraphQLErrors) {
-          resultFromStore.errors = queryStoreValue.graphQLErrors;
+          resultFromStore.errors = graphQLErrors;
         }
 
         invoke('next', resultFromStore);
@@ -1445,7 +1446,7 @@ export class QueryManager<TStore> {
     });
   }
 
-  private getQuery(queryId: string) {
+  private getQuery(queryId: string): QueryInfo {
     return (
       this.queries.get(queryId) || {
         listeners: new Set<QueryListener>(),
@@ -1455,6 +1456,7 @@ export class QueryManager<TStore> {
         lastRequestId: 1,
         observableQuery: null,
         subscriptions: new Set<ObservableSubscription>(),
+        storeValue: {},
       }
     );
   }
@@ -1494,6 +1496,7 @@ export class QueryManager<TStore> {
     const query = this.getQueryStoreValue(queryId);
     return (
       query &&
+      query.networkStatus &&
       query.networkStatus !== NetworkStatus.ready &&
       query.networkStatus !== NetworkStatus.error
     );

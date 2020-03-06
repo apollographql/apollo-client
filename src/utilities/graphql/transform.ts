@@ -108,7 +108,7 @@ export function removeDirectivesFromDocument(
           // Store each variable that's referenced as part of an argument
           // (excluding operation definition variables), so we know which
           // variables are being used. If we later want to remove a variable
-          // we'll fist check to see if it's being used, before continuing with
+          // we'll first check to see if it's being used, before continuing with
           // the removal.
           if (
             (parent as VariableDefinitionNode).kind !== 'VariableDefinition'
@@ -146,7 +146,7 @@ export function removeDirectivesFromDocument(
 
               if (node.selectionSet) {
                 // Store fragment spread names so they can be removed from the
-                // docuemnt.
+                // document.
                 getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
                   frag => {
                     fragmentSpreadsToRemove.push({

@@ -77,6 +77,15 @@ export class QueryInfo {
       // TODO Inform this.listeners.
     }
   }
+
+  notify() {
+    if (this.dirty &&
+        this.listeners.size &&
+        this.observableQuery?.options.fetchPolicy !== "standby") {
+      this.listeners.forEach(listener => listener(this));
+      this.dirty = false;
+    }
+  }
 }
 
 export type QueryStoreValue = Pick<QueryInfo,
@@ -1249,13 +1258,7 @@ export class QueryManager<TStore> {
 
   public broadcastQueries() {
     this.onBroadcast();
-    this.queries.forEach((info, id) => {
-      if (info.dirty &&
-          info.observableQuery?.options.fetchPolicy !== "standby") {
-        info.listeners.forEach(listener => listener(info));
-        info.dirty = false;
-      }
-    });
+    this.queries.forEach(info => info.notify());
   }
 
   public getLocalState(): LocalState<TStore> {

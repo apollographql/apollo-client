@@ -51,19 +51,15 @@ import { ApolloCache } from '../cache/core/cache';
 
 const { hasOwnProperty } = Object.prototype;
 
-export interface QueryInfo {
-  listeners: Set<QueryListener>;
-  dirty: boolean;
-  newData: Cache.DiffResult<any> | null;
-  document: DocumentNode | null;
-  lastRequestId: number;
-  // A map going from queryId to an observer for a query issued by watchQuery. We use
-  // these to keep track of queries that are inflight and error on the observers associated
-  // with them in case of some destabalizing action (e.g. reset of the Apollo store).
-  observableQuery: ObservableQuery<any> | null;
-  subscriptions: Set<ObservableSubscription>;
+export class QueryInfo {
+  listeners = new Set<QueryListener>();
+  dirty = false;
+  newData: Cache.DiffResult<any> | null = null;
+  document: DocumentNode | null = null;
+  lastRequestId = 1;
+  observableQuery: ObservableQuery<any> | null = null;
+  subscriptions = new Set<ObservableSubscription>();
   cancel?: () => void;
-
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error;
@@ -1456,31 +1452,21 @@ export class QueryManager<TStore> {
   }
 
   private getQuery(queryId: string): QueryInfo {
-    return (
-      this.queries.get(queryId) || {
-        listeners: new Set<QueryListener>(),
-        dirty: false,
-        document: null,
-        newData: null,
-        lastRequestId: 1,
-        observableQuery: null,
-        subscriptions: new Set<ObservableSubscription>(),
-      }
-    );
+    return this.queries.get(queryId) || new QueryInfo;
   }
 
   private setQuery<T extends keyof QueryInfo>(
     queryId: string,
     updater: (oldInfo: QueryInfo) => Pick<QueryInfo, T> | void,
   ) {
-    const oldInfo = this.getQuery(queryId);
-    const newInfo = { ...oldInfo, ...updater(oldInfo) };
-    if (!newInfo.dirty &&
-        !equal(oldInfo.newData, newInfo.newData)) {
-      newInfo.dirty = true;
+    const info = this.getQuery(queryId);
+    const { newData: oldData } = info;
+    Object.assign(info, updater(info));
+    if (!info.dirty && !equal(oldData, info.newData)) {
+      info.dirty = true;
       // TODO Schedule broadcastQueries.
     }
-    this.queries.set(queryId, newInfo);
+    this.queries.set(queryId, info);
   }
 
   private dirty(

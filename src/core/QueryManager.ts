@@ -1369,14 +1369,14 @@ export class QueryManager<TStore> {
         variables,
       );
 
+      const subs = this.getQuery(queryId).subscriptions;
+
       const fqrfId = `fetchRequest:${queryId}`;
       this.fetchQueryRejectFns.set(fqrfId, reject);
 
       const cleanup = () => {
         this.fetchQueryRejectFns.delete(fqrfId);
-        this.setQuery(queryId, ({ subscriptions }) => {
-          subscriptions.delete(subscription);
-        });
+        subs.delete(subscription);
       };
 
       const subscription = observable.map((result: ExecutionResult) => {
@@ -1445,14 +1445,15 @@ export class QueryManager<TStore> {
         },
       });
 
-      this.setQuery(queryId, ({ subscriptions }) => {
-        subscriptions.add(subscription);
-      });
+      subs.add(subscription);
     });
   }
 
   private getQuery(queryId: string): QueryInfo {
-    return this.queries.get(queryId) || new QueryInfo;
+    if (queryId && !this.queries.has(queryId)) {
+      this.queries.set(queryId, new QueryInfo);
+    }
+    return this.queries.get(queryId);
   }
 
   private setQuery<T extends keyof QueryInfo>(

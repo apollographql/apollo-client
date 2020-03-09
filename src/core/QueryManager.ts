@@ -79,12 +79,52 @@ export class QueryInfo {
   }
 
   notify() {
-    if (this.dirty &&
-        this.listeners.size &&
-        this.observableQuery?.options.fetchPolicy !== "standby") {
+    if (this.shouldNotify()) {
       this.listeners.forEach(listener => listener(this));
       this.dirty = false;
     }
+  }
+
+  private shouldNotify() {
+    if (!this.dirty || !this.listeners.size) {
+      return false;
+    }
+
+    if (!this.observableQuery) {
+      return true;
+    }
+
+    const {
+      fetchPolicy,
+      returnPartialData,
+      notifyOnNetworkStatusChange,
+    } = this.observableQuery.options;
+
+    if (fetchPolicy === "standby") {
+      return false;
+    }
+
+    if (isNetworkRequestInFlight(this.networkStatus)) {
+      const lastResult = this.observableQuery.getLastResult();
+
+      const networkStatusChanged = !!(
+        lastResult &&
+        lastResult.networkStatus !== this.networkStatus
+      );
+
+      const shouldNotifyIfLoading =
+        returnPartialData ||
+        (!this.newData && this.networkStatus === NetworkStatus.setVariables) ||
+        (networkStatusChanged && notifyOnNetworkStatusChange) ||
+        fetchPolicy === 'cache-only' ||
+        fetchPolicy === 'cache-and-network';
+
+      if (!shouldNotifyIfLoading) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
 
@@ -719,29 +759,11 @@ export class QueryManager<TStore> {
         fetchPolicy,
         errorPolicy = 'none',
         returnPartialData,
-        notifyOnNetworkStatusChange,
         partialRefetch,
       } = observableQuery.options;
 
       const loading = isNetworkRequestInFlight(networkStatus);
       const lastResult = observableQuery.getLastResult();
-
-      const networkStatusChanged = !!(
-        lastResult &&
-        lastResult.networkStatus !== networkStatus
-      );
-
-      const shouldNotifyIfLoading =
-        returnPartialData ||
-        (!newData && networkStatus === NetworkStatus.setVariables) ||
-        (networkStatusChanged && notifyOnNetworkStatusChange) ||
-        fetchPolicy === 'cache-only' ||
-        fetchPolicy === 'cache-and-network';
-
-      if (loading && !shouldNotifyIfLoading) {
-        return;
-      }
-
       const hasGraphQLErrors = isNonEmptyArray(graphQLErrors);
 
       // If we have either a GraphQL error or a network error, we create

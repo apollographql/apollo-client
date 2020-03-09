@@ -54,7 +54,6 @@ const { hasOwnProperty } = Object.prototype;
 export class QueryInfo {
   listeners = new Set<QueryListener>();
   dirty = false;
-  newData: Cache.DiffResult<any> | null = null;
   document: DocumentNode | null = null;
   lastRequestId = 1;
   observableQuery: ObservableQuery<any> | null = null;
@@ -64,6 +63,20 @@ export class QueryInfo {
   networkStatus?: NetworkStatus;
   networkError?: Error;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
+
+  init(info: Partial<QueryInfo>): this {
+    return Object.assign(this, info);
+  }
+
+  newData: Cache.DiffResult<any> | null = null;
+  setData(data: Cache.DiffResult<any> | null) {
+    const oldData = this.newData;
+    this.newData = data;
+    if (!this.dirty && !equal(data, oldData)) {
+      this.dirty = true;
+      // TODO Inform this.listeners.
+    }
+  }
 }
 
 export type QueryStoreValue = Pick<QueryInfo,
@@ -414,12 +427,12 @@ export class QueryManager<TStore> {
       : undefined;
 
     // Initialize query in store with unique requestId
-    this.setQuery(queryId, () => ({
+    this.getQuery(queryId).init({
       document: query,
       lastRequestId: requestId,
       dirty: true,
       cancel,
-    }));
+    });
 
     this.dirty(fetchMoreForQueryId);
 
@@ -531,15 +544,14 @@ export class QueryManager<TStore> {
     isRefetch: boolean;
     fetchMoreForQueryId?: string;
   }) {
-    this.setQuery(query.queryId, () => {});
-    const previousQuery = this.getQuery(query.queryId);
+    const info = this.getQuery(query.queryId);
 
     // TODO break this out into a separate function
     let networkStatus: NetworkStatus;
-    if (previousQuery &&
-        previousQuery.variables &&
-        previousQuery.networkStatus !== NetworkStatus.loading &&
-        !equal(previousQuery.variables, query.variables)) {
+    if (info &&
+        info.variables &&
+        info.networkStatus !== NetworkStatus.loading &&
+        !equal(info.variables, query.variables)) {
       networkStatus = NetworkStatus.setVariables;
     } else if (query.isPoll) {
       networkStatus = NetworkStatus.poll;
@@ -550,20 +562,12 @@ export class QueryManager<TStore> {
       networkStatus = NetworkStatus.loading;
     }
 
-    let graphQLErrors: ReadonlyArray<GraphQLError> = [];
-    if (previousQuery && previousQuery.graphQLErrors) {
-      graphQLErrors = previousQuery.graphQLErrors;
-    }
-
-    // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
-    // the store. We probably want a refetch action instead, because I suspect that if you refetch
-    // before the initial fetch is done, you'll get an error.
-    this.setQuery(query.queryId, () => ({
+    info.init({
       variables: query.variables,
       networkError: null,
-      graphQLErrors,
+      graphQLErrors: info && info.graphQLErrors || [],
       networkStatus,
-    }));
+    });
 
     // If the action had a `moreForQueryId` property then we need to set the
     // network status on that query as well to `fetchMore`.
@@ -650,9 +654,10 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string,
   ) {
     if (fetchPolicy === 'no-cache') {
-      this.setQuery(queryId, () => ({
-        newData: { result: result.data, complete: true },
-      }));
+      this.getQuery(queryId).setData({
+        result: result.data,
+        complete: true,
+      });
     } else {
       const document = this.getQuery(queryId).document!;
       const ignoreErrors = errorPolicy === 'ignore' || errorPolicy === 'all';
@@ -754,7 +759,7 @@ export class QueryManager<TStore> {
           // `newData` first, following by trying the cache (which won't
           // find a hit for `no-cache`).
           if (fetchPolicy !== 'no-cache' && fetchPolicy !== 'network-only') {
-            this.setQuery(queryId, () => ({ newData: null }));
+            this.getQuery(queryId).setData(null);
           }
 
           data = newData.result;
@@ -903,10 +908,10 @@ export class QueryManager<TStore> {
       shouldSubscribe: shouldSubscribe,
     });
 
-    this.setQuery(observable.queryId, () => ({
+    this.getQuery(observable.queryId).init({
       document: options.query,
       observableQuery: observable,
-    }));
+    });
 
     this.qsInitQuery({
       queryId: observable.queryId,
@@ -981,10 +986,7 @@ export class QueryManager<TStore> {
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
-    this.setQuery(queryId, ({ listeners }) => {
-      listeners.add(listener);
-      return { dirty: false };
-    });
+    this.getQuery(queryId).listeners.add(listener);
   }
 
   public updateQueryWatch(
@@ -1012,7 +1014,7 @@ export class QueryManager<TStore> {
       optimistic: true,
       previousResult,
       callback: newData => {
-        this.setQuery(queryId, () => ({ newData }));
+        this.getQuery(queryId).setData(newData);
       },
     });
   }
@@ -1022,7 +1024,7 @@ export class QueryManager<TStore> {
     queryId: string,
     observableQuery: ObservableQuery<T>,
   ) {
-    this.setQuery(queryId, () => ({ observableQuery }));
+    this.getQuery(queryId).observableQuery = observableQuery;
   }
 
   public clearStore(): Promise<void> {
@@ -1085,7 +1087,7 @@ export class QueryManager<TStore> {
           observableQueryPromises.push(observableQuery.refetch());
         }
 
-        this.setQuery(queryId, () => ({ newData: null }));
+        this.getQuery(queryId).setData(null);
       }
     });
 
@@ -1456,26 +1458,12 @@ export class QueryManager<TStore> {
     return this.queries.get(queryId);
   }
 
-  private setQuery<T extends keyof QueryInfo>(
-    queryId: string,
-    updater: (oldInfo: QueryInfo) => Pick<QueryInfo, T> | void,
-  ) {
-    const info = this.getQuery(queryId);
-    const { newData: oldData } = info;
-    Object.assign(info, updater(info));
-    if (!info.dirty && !equal(oldData, info.newData)) {
-      info.dirty = true;
-      // TODO Schedule broadcastQueries.
-    }
-    this.queries.set(queryId, info);
-  }
-
   private dirty(
     queryId: string | undefined,
     dirty = true,
   ) {
     if (queryId) {
-      this.setQuery(queryId, () => ({ dirty }));
+      this.getQuery(queryId).dirty = dirty;
     }
   }
 

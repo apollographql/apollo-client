@@ -714,9 +714,6 @@ export class QueryManager<TStore> {
         partialRefetch,
       } = observableQuery.options;
 
-      // don't watch the store for queries on standby
-      if (fetchPolicy === 'standby') return;
-
       const loading = isNetworkRequestInFlight(networkStatus);
       const lastResult = observableQuery.getLastResult();
 
@@ -1253,7 +1250,8 @@ export class QueryManager<TStore> {
   public broadcastQueries() {
     this.onBroadcast();
     this.queries.forEach((info, id) => {
-      if (info.dirty) {
+      if (info.dirty &&
+          info.observableQuery?.options.fetchPolicy !== "standby") {
         info.listeners.forEach(listener => listener(info));
         info.dirty = false;
       }

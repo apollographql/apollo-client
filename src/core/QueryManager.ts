@@ -52,7 +52,6 @@ const { hasOwnProperty } = Object.prototype;
 
 export class QueryInfo {
   listeners = new Set<QueryListener>();
-  dirty = false;
   document: DocumentNode | null = null;
   lastRequestId = 1;
   observableQuery: ObservableQuery<any> | null = null;
@@ -68,13 +67,31 @@ export class QueryInfo {
     return Object.assign(this, info);
   }
 
+  private dirty: boolean = false;
+
+  public isDirty() {
+    return this.dirty;
+  }
+
+  public setDirty(): this {
+    if (!this.dirty) {
+      this.dirty = true;
+      if (!this.notifyTimeout) {
+        this.notifyTimeout = setTimeout(() => this.notify(), 0);
+      }
+    }
+    return this;
+  }
+
+  private notifyTimeout?: ReturnType<typeof setTimeout>;
+
   private diff: Cache.DiffResult<any> | null = null;
+
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.diff;
     this.diff = diff;
     if (!this.dirty && !equal(diff, oldDiff)) {
-      this.dirty = true;
-      // TODO Inform this.listeners.
+      this.setDirty();
     }
   }
 
@@ -114,6 +131,11 @@ export class QueryInfo {
   }
 
   notify() {
+    if (this.notifyTimeout) {
+      clearTimeout(this.notifyTimeout);
+      this.notifyTimeout = void 0;
+    }
+
     if (this.shouldNotify() && this.getDiff()) {
       this.listeners.forEach(listener => listener(this));
       this.dirty = false;
@@ -540,9 +562,9 @@ export class QueryManager<TStore> {
     this.getQuery(queryId).init({
       document: query,
       lastRequestId: requestId,
-      dirty: true,
     }).updateWatch(options);
 
+    this.dirty(queryId);
     this.dirty(fetchMoreForQueryId);
 
     this.qsInitQuery({
@@ -1206,7 +1228,7 @@ export class QueryManager<TStore> {
       fetchPolicy === 'no-cache' ||
       fetchPolicy === 'network-only';
 
-    if (isNetworkOnly || info.dirty) {
+    if (isNetworkOnly || info.isDirty()) {
       const diff = info.getDiff();
       if (diff?.complete) {
         return { data: diff.result, partial: false };
@@ -1463,12 +1485,9 @@ export class QueryManager<TStore> {
     return this.queries.get(queryId);
   }
 
-  private dirty(
-    queryId: string | undefined,
-    dirty = true,
-  ) {
+  private dirty(queryId?: string) {
     if (queryId) {
-      this.getQuery(queryId).dirty = dirty;
+      this.getQuery(queryId).setDirty();
     }
   }
 

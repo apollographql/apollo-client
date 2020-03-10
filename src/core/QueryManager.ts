@@ -69,18 +69,18 @@ export class QueryInfo {
     return Object.assign(this, info);
   }
 
-  newData: Cache.DiffResult<any> | null = null;
-  setData(data: Cache.DiffResult<any> | null) {
-    const oldData = this.newData;
-    this.newData = data;
-    if (!this.dirty && !equal(data, oldData)) {
+  private diff: Cache.DiffResult<any> | null = null;
+  setDiff(diff: Cache.DiffResult<any> | null) {
+    const oldDiff = this.diff;
+    this.diff = diff;
+    if (!this.dirty && !equal(diff, oldDiff)) {
       this.dirty = true;
       // TODO Inform this.listeners.
     }
   }
 
-  getData() {
-    if (!this.newData) {
+  getDiff() {
+    if (!this.diff) {
       const oq = this.observableQuery;
       const lastResult = oq && oq.getLastResult();
       const lastError = oq && oq.getLastError();
@@ -91,13 +91,13 @@ export class QueryInfo {
         (lastError && lastError.graphQLErrors) !== this.graphQLErrors;
 
       if (lastResult && lastResult.data && !errorStatusChanged) {
-        this.newData = {
+        this.diff = {
           result: lastResult.data,
           complete: true,
         };
       } else if (fetchPolicy !== "no-cache" &&
                  fetchPolicy !== "network-only") {
-        this.newData = this.cache.diff({
+        this.diff = this.cache.diff({
           query: this.document as DocumentNode,
           variables: this.variables,
           returnPartialData: true,
@@ -106,7 +106,7 @@ export class QueryInfo {
       }
     }
 
-    return this.newData;
+    return this.diff;
   }
 
   private getErrorPolicy() {
@@ -115,7 +115,7 @@ export class QueryInfo {
   }
 
   notify() {
-    if (this.shouldNotify() && this.getData()) {
+    if (this.shouldNotify() && this.getDiff()) {
       this.listeners.forEach(listener => listener(this));
       this.dirty = false;
     }
@@ -739,7 +739,7 @@ export class QueryManager<TStore> {
     fetchMoreForQueryId?: string,
   ) {
     if (fetchPolicy === 'no-cache') {
-      this.getQuery(queryId).setData({
+      this.getQuery(queryId).setDiff({
         result: result.data,
         complete: true,
       });
@@ -766,17 +766,14 @@ export class QueryManager<TStore> {
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
   public queryListenerForObserver<T>(queryId: string): QueryListener {
-    return ({
-      document,
-      newData,
-      observableQuery,
-      // QueryStoreValue properties:
-      variables,
-      networkStatus,
-      graphQLErrors,
-      networkError,
-    }: QueryInfo) => {
-      if (!newData) return;
+    return info => {
+      const {
+        observableQuery,
+        // QueryStoreValue properties:
+        networkStatus,
+        networkError,
+        graphQLErrors,
+      } = info;
 
       const {
         observer,
@@ -803,17 +800,19 @@ export class QueryManager<TStore> {
       }
 
       try {
+        const diff = info.getDiff();
+
         // If there is some data missing and the user has told us that they
         // do not tolerate partial data then we want to return the previous
         // result and mark it as stale.
-        const stale = !newData.complete && !(
+        const stale = !diff.complete && !(
           returnPartialData ||
           partialRefetch ||
           fetchPolicy === 'cache-only'
         );
 
         const resultFromStore: ApolloQueryResult<T> = {
-          data: stale ? lastResult && lastResult.data : newData.result,
+          data: stale ? lastResult && lastResult.data : diff.result,
           loading,
           networkStatus,
           stale,
@@ -1030,8 +1029,8 @@ export class QueryManager<TStore> {
       variables: options.variables,
       optimistic: true,
       previousResult,
-      callback: newData => {
-        this.getQuery(queryId).setData(newData);
+      callback: diff => {
+        this.getQuery(queryId).setDiff(diff);
       },
     });
   }
@@ -1104,7 +1103,7 @@ export class QueryManager<TStore> {
           observableQueryPromises.push(observableQuery.refetch());
         }
 
-        this.getQuery(queryId).setData(null);
+        this.getQuery(queryId).setDiff(null);
       }
     });
 
@@ -1220,9 +1219,9 @@ export class QueryManager<TStore> {
       fetchPolicy === 'network-only';
 
     if (isNetworkOnly || info.dirty) {
-      const newData = info.getData();
-      if (newData?.complete) {
-        return { data: newData.result, partial: false };
+      const diff = info.getDiff();
+      if (diff?.complete) {
+        return { data: diff.result, partial: false };
       }
     }
 

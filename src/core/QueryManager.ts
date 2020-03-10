@@ -150,7 +150,7 @@ export class QueryInfo {
 
       const shouldNotifyIfLoading =
         returnPartialData ||
-        (!this.newData && this.networkStatus === NetworkStatus.setVariables) ||
+        this.networkStatus === NetworkStatus.setVariables ||
         (networkStatusChanged && notifyOnNetworkStatusChange) ||
         fetchPolicy === 'cache-only' ||
         fetchPolicy === 'cache-and-network';
@@ -1223,13 +1223,20 @@ export class QueryManager<TStore> {
   } {
     const { variables, query, fetchPolicy, returnPartialData } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
-    const { newData } = this.getQuery(observableQuery.queryId);
+    const info = this.getQuery(observableQuery.queryId);
 
-    if (newData && newData.complete) {
-      return { data: newData.result, partial: false };
+    const isNetworkOnly =
+      fetchPolicy === 'no-cache' ||
+      fetchPolicy === 'network-only';
+
+    if (isNetworkOnly || info.dirty) {
+      const newData = info.getData();
+      if (newData?.complete) {
+        return { data: newData.result, partial: false };
+      }
     }
 
-    if (fetchPolicy === 'no-cache' || fetchPolicy === 'network-only') {
+    if (isNetworkOnly) {
       return { data: undefined, partial: false };
     }
 

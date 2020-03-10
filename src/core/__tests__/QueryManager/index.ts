@@ -1027,27 +1027,30 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(stripSymbols(result.data)).toEqual(data1);
-        observable.refetch();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data1);
+        return observable.refetch();
       },
       result => {
-        expect(stripSymbols(result.data)).toEqual(data2);
-        observable.refetch(variables1);
-      },
-      result => {
-        expect(result.loading).toBe(true);
-        expect(stripSymbols(result.data)).toEqual(data2);
-      },
-      result => {
-        expect(stripSymbols(result.data)).toEqual(data3);
-        observable.refetch(variables2);
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data2);
+        return observable.refetch(variables1);
       },
       result => {
         expect(result.loading).toBe(true);
-        expect(stripSymbols(result.data)).toEqual(data3);
+        expect(result.data).toEqual(data2);
       },
       result => {
-        expect(stripSymbols(result.data)).toEqual(data4);
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data3);
+        return observable.refetch(variables2);
+      },
+      result => {
+        expect(result.loading).toBe(true);
+        expect(result.data).toEqual(data3);
+      },
+      result => {
+        expect(result.data).toEqual(data4);
       },
     ).then(resolve, reject);
   });

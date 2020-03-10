@@ -803,16 +803,6 @@ export class QueryManager<TStore> {
       }
 
       try {
-        // As long as we're using the cache, clear out the latest
-        // `newData`, since it will now become the current data. We need
-        // to keep the `newData` stored with the query when using
-        // `no-cache` since `getCurrentQueryResult` attemps to pull from
-        // `newData` first, following by trying the cache (which won't
-        // find a hit for `no-cache`).
-        if (fetchPolicy !== 'no-cache' && fetchPolicy !== 'network-only') {
-          this.getQuery(queryId).setData(null);
-        }
-
         // If there is some data missing and the user has told us that they
         // do not tolerate partial data then we want to return the previous
         // result and mark it as stale.

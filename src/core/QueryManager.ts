@@ -57,7 +57,6 @@ export class QueryInfo {
   lastRequestId = 1;
   observableQuery: ObservableQuery<any> | null = null;
   subscriptions = new Set<ObservableSubscription>();
-  cancel?: () => void;
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error;
@@ -161,6 +160,37 @@ export class QueryInfo {
     }
 
     return true;
+  }
+
+  // This method can be overridden for a given instance.
+  public cancel() {}
+
+  public updateWatch(
+    options: WatchQueryOptions,
+  ) {
+    this.cancel();
+
+    const previousResult = () => {
+      let previousResult = null;
+      const { observableQuery } = this;
+      if (observableQuery) {
+        const lastResult = observableQuery.getLastResult();
+        if (lastResult) {
+          previousResult = lastResult.data;
+        }
+      }
+      return previousResult;
+    };
+
+    return this.cancel = this.cache.watch({
+      query: this.document,
+      variables: options.variables,
+      optimistic: true,
+      previousResult,
+      callback: diff => {
+        this.setDiff(diff);
+      },
+    });
   }
 }
 
@@ -506,18 +536,12 @@ export class QueryManager<TStore> {
 
     const requestId = this.idCounter++;
 
-    // set up a watcher to listen to cache updates
-    const cancel = fetchPolicy !== 'no-cache'
-      ? this.updateQueryWatch(queryId, query, options)
-      : undefined;
-
     // Initialize query in store with unique requestId
     this.getQuery(queryId).init({
       document: query,
       lastRequestId: requestId,
       dirty: true,
-      cancel,
-    });
+    }).updateWatch(options);
 
     this.dirty(fetchMoreForQueryId);
 
@@ -994,8 +1018,8 @@ export class QueryManager<TStore> {
 
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
-    const cancel = queryInfo && queryInfo.cancel;
-    if (cancel) cancel();
+    if (queryInfo) queryInfo.cancel();
+
     this.stopPollingQuery(queryId);
     this.qsStopQuery(queryId);
     this.dirty(queryId);
@@ -1003,36 +1027,6 @@ export class QueryManager<TStore> {
 
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.getQuery(queryId).listeners.add(listener);
-  }
-
-  public updateQueryWatch(
-    queryId: string,
-    document: DocumentNode,
-    options: WatchQueryOptions,
-  ) {
-    const { cancel } = this.getQuery(queryId);
-    if (cancel) cancel();
-    const previousResult = () => {
-      let previousResult = null;
-      const { observableQuery } = this.getQuery(queryId);
-      if (observableQuery) {
-        const lastResult = observableQuery.getLastResult();
-        if (lastResult) {
-          previousResult = lastResult.data;
-        }
-      }
-      return previousResult;
-    };
-
-    return this.cache.watch({
-      query: document as DocumentNode,
-      variables: options.variables,
-      optimistic: true,
-      previousResult,
-      callback: diff => {
-        this.getQuery(queryId).setDiff(diff);
-      },
-    });
   }
 
   // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.

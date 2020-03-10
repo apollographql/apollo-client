@@ -691,18 +691,10 @@ describe('ObservableQuery', () => {
             dataOne,
           );
           await observable.setVariables(differentVariables);
-          expect(observable.getCurrentResult().data).toEqual({});
-          expect(observable.getCurrentResult().loading).toBe(true);
         }
-        // after loading is false and data has returned
-        if (handleCount === 3) {
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-            dataTwo,
-          );
-          expect(observable.getCurrentResult().loading).toBe(false);
-          resolve();
-        }
+        expect(observable.getCurrentResult().data).toEqual(dataTwo);
+        expect(observable.getCurrentResult().loading).toBe(false);
+        resolve();
       });
     });
 
@@ -760,18 +752,10 @@ describe('ObservableQuery', () => {
             dataOne,
           );
           await observable.setVariables(differentVariables);
-          expect(observable.getCurrentResult().data).toEqual({});
-          expect(observable.getCurrentResult().loading).toBe(true);
         }
-        // after loading is false and data has returned
-        if (handleCount === 3) {
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-            dataTwo,
-          );
-          expect(observable.getCurrentResult().loading).toBe(false);
-          resolve();
-        }
+        expect(observable.getCurrentResult().data).toEqual(dataTwo);
+        expect(observable.getCurrentResult().loading).toBe(false);
+        resolve();
       });
     });
 

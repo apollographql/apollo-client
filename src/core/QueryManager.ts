@@ -63,6 +63,8 @@ export class QueryInfo {
   networkError?: Error;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
 
+  constructor(private cache: ApolloCache<any>) {}
+
   init(info: Partial<QueryInfo>): this {
     return Object.assign(this, info);
   }
@@ -77,8 +79,39 @@ export class QueryInfo {
     }
   }
 
+  getData() {
+    if (!this.newData) {
+      const oq = this.observableQuery;
+      const lastResult = oq && oq.getLastResult();
+      const lastError = oq && oq.getLastError();
+      const errorPolicy = this.getErrorPolicy();
+      const errorStatusChanged =
+        errorPolicy !== 'none' &&
+        (lastError && lastError.graphQLErrors) !== this.graphQLErrors;
+      if (lastResult && lastResult.data && !errorStatusChanged) {
+        this.newData = {
+          result: lastResult.data,
+          complete: true,
+        };
+      } else {
+        this.newData = this.cache.diff({
+          query: this.document as DocumentNode,
+          variables: this.variables,
+          returnPartialData: true,
+          optimistic: true,
+        });
+      }
+    }
+    return this.newData;
+  }
+
+  private getErrorPolicy() {
+    const oq = this.observableQuery;
+    return oq && oq.options.errorPolicy || "none";
+  }
+
   notify() {
-    if (this.shouldNotify()) {
+    if (this.shouldNotify() && this.getData()) {
       this.listeners.forEach(listener => listener(this));
       this.dirty = false;
     }
@@ -739,6 +772,8 @@ export class QueryManager<TStore> {
       graphQLErrors,
       networkError,
     }: QueryInfo) => {
+      if (!newData) return;
+
       const {
         observer,
         options: {
@@ -764,55 +799,27 @@ export class QueryManager<TStore> {
       }
 
       try {
-        let data: any;
-        let isMissing: boolean;
-
-        if (newData) {
-          // As long as we're using the cache, clear out the latest
-          // `newData`, since it will now become the current data. We need
-          // to keep the `newData` stored with the query when using
-          // `no-cache` since `getCurrentQueryResult` attemps to pull from
-          // `newData` first, following by trying the cache (which won't
-          // find a hit for `no-cache`).
-          if (fetchPolicy !== 'no-cache' && fetchPolicy !== 'network-only') {
-            this.getQuery(queryId).setData(null);
-          }
-
-          data = newData.result;
-          isMissing = !newData.complete;
-        } else {
-          const lastError = observableQuery.getLastError();
-          const errorStatusChanged =
-            errorPolicy !== 'none' &&
-            (lastError && lastError.graphQLErrors) !== graphQLErrors;
-
-          if (lastResult && lastResult.data && !errorStatusChanged) {
-            data = lastResult.data;
-            isMissing = false;
-          } else {
-            const diffResult = this.cache.diff({
-              query: document as DocumentNode,
-              variables,
-              returnPartialData: true,
-              optimistic: true,
-            });
-
-            data = diffResult.result;
-            isMissing = !diffResult.complete;
-          }
+        // As long as we're using the cache, clear out the latest
+        // `newData`, since it will now become the current data. We need
+        // to keep the `newData` stored with the query when using
+        // `no-cache` since `getCurrentQueryResult` attemps to pull from
+        // `newData` first, following by trying the cache (which won't
+        // find a hit for `no-cache`).
+        if (fetchPolicy !== 'no-cache' && fetchPolicy !== 'network-only') {
+          this.getQuery(queryId).setData(null);
         }
 
         // If there is some data missing and the user has told us that they
         // do not tolerate partial data then we want to return the previous
         // result and mark it as stale.
-        const stale = isMissing && !(
+        const stale = !newData.complete && !(
           returnPartialData ||
           partialRefetch ||
           fetchPolicy === 'cache-only'
         );
 
         const resultFromStore: ApolloQueryResult<T> = {
-          data: stale ? lastResult && lastResult.data : data,
+          data: stale ? lastResult && lastResult.data : newData.result,
           loading,
           networkStatus,
           stale,
@@ -1463,7 +1470,7 @@ export class QueryManager<TStore> {
 
   private getQuery(queryId: string): QueryInfo {
     if (queryId && !this.queries.has(queryId)) {
-      this.queries.set(queryId, new QueryInfo);
+      this.queries.set(queryId, new QueryInfo(this.cache));
     }
     return this.queries.get(queryId);
   }

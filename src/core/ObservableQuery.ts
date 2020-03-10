@@ -586,11 +586,8 @@ export class ObservableQuery<
       queryManager.startPollingQuery(this.options, queryId);
     }
 
-    queryManager.observeQuery<TData>(
-      queryId,
-      this.options,
-      this.observer,
-    ).catch(this.observer.error);
+    queryManager.observeQuery<TData>(queryId, this.options)
+      .catch(this.observer.error);
   }
 
   public readonly observer = {

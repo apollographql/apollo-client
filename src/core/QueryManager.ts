@@ -24,7 +24,6 @@ import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/tran
 import { canUseWeakMap } from '../utilities/common/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import {
-  Observer,
   ObservableSubscription,
   Observable
 } from '../utilities/observables/Observable';
@@ -729,22 +728,7 @@ export class QueryManager<TStore> {
 
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
-  public queryListenerForObserver<T>(
-    queryId: string,
-    observer: Observer<ApolloQueryResult<T>>,
-  ): QueryListener {
-    function invoke(method: 'next' | 'error', argument: any) {
-      if (observer[method]) {
-        try {
-          observer[method]!(argument);
-        } catch (e) {
-          invariant.error(e);
-        }
-      } else if (method === 'error') {
-        invariant.error(argument);
-      }
-    }
-
+  public queryListenerForObserver<T>(queryId: string): QueryListener {
     return ({
       document,
       newData,
@@ -756,11 +740,14 @@ export class QueryManager<TStore> {
       networkError,
     }: QueryInfo) => {
       const {
-        fetchPolicy,
-        errorPolicy = 'none',
-        returnPartialData,
-        partialRefetch,
-      } = observableQuery.options;
+        observer,
+        options: {
+          fetchPolicy,
+          errorPolicy = 'none',
+          returnPartialData,
+          partialRefetch,
+        },
+      } = observableQuery;
 
       const loading = isNetworkRequestInFlight(networkStatus);
       const lastResult = observableQuery.getLastResult();
@@ -769,10 +756,11 @@ export class QueryManager<TStore> {
       // If we have either a GraphQL error or a network error, we create
       // an error and tell the observer about it.
       if (errorPolicy === 'none' && hasGraphQLErrors || networkError) {
-        return invoke('error', new ApolloError({
+        observer.error(new ApolloError({
           graphQLErrors,
           networkError,
         }));
+        return;
       }
 
       try {
@@ -835,10 +823,10 @@ export class QueryManager<TStore> {
           resultFromStore.errors = graphQLErrors;
         }
 
-        invoke('next', resultFromStore);
+        observer.next(resultFromStore);
 
       } catch (networkError) {
-        invoke('error', new ApolloError({ networkError }));
+        observer.error(new ApolloError({ networkError }));
       }
     };
   }
@@ -1127,11 +1115,10 @@ export class QueryManager<TStore> {
   public observeQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
-    observer: Observer<ApolloQueryResult<T>>,
   ) {
     this.addQueryListener(
       queryId,
-      this.queryListenerForObserver(queryId, observer),
+      this.queryListenerForObserver(queryId),
     );
     return this.fetchQuery<T>(queryId, options);
   }

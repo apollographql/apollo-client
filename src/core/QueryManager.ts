@@ -809,8 +809,6 @@ export class QueryManager<TStore> {
         },
       } = observableQuery;
 
-      const loading = isNetworkRequestInFlight(networkStatus);
-      const lastResult = observableQuery.getLastResult();
       const hasGraphQLErrors = isNonEmptyArray(graphQLErrors);
 
       // If we have either a GraphQL error or a network error, we create
@@ -823,35 +821,31 @@ export class QueryManager<TStore> {
         return;
       }
 
-      try {
-        const diff = info.getDiff();
+      const diff = info.getDiff();
 
-        // If there is some data missing and the user has told us that they
-        // do not tolerate partial data then we want to return the previous
-        // result and mark it as stale.
-        const stale = !diff.complete && !(
-          returnPartialData ||
-          partialRefetch ||
-          fetchPolicy === 'cache-only'
-        );
+      // If there is some data missing and the user has told us that they
+      // do not tolerate partial data then we want to return the previous
+      // result and mark it as stale.
+      const stale = !diff.complete && !(
+        returnPartialData ||
+        partialRefetch ||
+        fetchPolicy === 'cache-only'
+      );
 
-        const resultFromStore: ApolloQueryResult<T> = {
-          data: stale ? lastResult && lastResult.data : diff.result,
-          loading,
-          networkStatus,
-          stale,
-        };
+      const lastResult = observableQuery.getLastResult();
+      const resultFromStore: ApolloQueryResult<T> = {
+        data: stale ? lastResult && lastResult.data : diff.result,
+        loading: isNetworkRequestInFlight(networkStatus),
+        networkStatus,
+        stale,
+      };
 
-        // if the query wants updates on errors we need to add it to the result
-        if (errorPolicy === 'all' && hasGraphQLErrors) {
-          resultFromStore.errors = graphQLErrors;
-        }
-
-        observer.next(resultFromStore);
-
-      } catch (networkError) {
-        observer.error(new ApolloError({ networkError }));
+      // If the query wants updates on errors, add them to the result.
+      if (errorPolicy === 'all' && hasGraphQLErrors) {
+        resultFromStore.errors = graphQLErrors;
       }
+
+      observer.next(resultFromStore);
     };
   }
 

@@ -84,16 +84,19 @@ export class QueryInfo {
       const oq = this.observableQuery;
       const lastResult = oq && oq.getLastResult();
       const lastError = oq && oq.getLastError();
+      const fetchPolicy = oq && oq.options.fetchPolicy || "cache-first";
       const errorPolicy = this.getErrorPolicy();
       const errorStatusChanged =
         errorPolicy !== 'none' &&
         (lastError && lastError.graphQLErrors) !== this.graphQLErrors;
+
       if (lastResult && lastResult.data && !errorStatusChanged) {
         this.newData = {
           result: lastResult.data,
           complete: true,
         };
-      } else {
+      } else if (fetchPolicy !== "no-cache" &&
+                 fetchPolicy !== "network-only") {
         this.newData = this.cache.diff({
           query: this.document as DocumentNode,
           variables: this.variables,
@@ -102,6 +105,7 @@ export class QueryInfo {
         });
       }
     }
+
     return this.newData;
   }
 

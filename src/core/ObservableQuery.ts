@@ -19,7 +19,7 @@ import {
   SubscribeToMoreOptions,
   ErrorPolicy,
 } from './watchQueryOptions';
-import { QueryStoreValue } from './QueryManager';
+import { QueryStoreValue } from './QueryInfo';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 
 export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {

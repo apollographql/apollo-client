@@ -63,8 +63,46 @@ export class QueryInfo {
 
   constructor(private cache: ApolloCache<any>) {}
 
-  init(info: Partial<QueryInfo>): this {
-    return Object.assign(this, info);
+  public init(query: {
+    document: DocumentNode;
+    variables: Record<string, any>;
+    isPoll: boolean;
+    isRefetch: boolean;
+    observableQuery?: ObservableQuery<any>;
+    lastRequestId?: number;
+  }): this {
+    // TODO break this out into a separate function
+    let networkStatus: NetworkStatus;
+    if (this.variables &&
+        this.networkStatus !== NetworkStatus.loading &&
+        !equal(this.variables, query.variables)) {
+      networkStatus = NetworkStatus.setVariables;
+    } else if (query.isPoll) {
+      networkStatus = NetworkStatus.poll;
+    } else if (query.isRefetch) {
+      networkStatus = NetworkStatus.refetch;
+      // TODO: can we determine setVariables here if it's a refetch and the variables have changed?
+    } else {
+      networkStatus = NetworkStatus.loading;
+    }
+
+    Object.assign(this, {
+      document: query.document,
+      variables: query.variables,
+      networkError: null,
+      graphQLErrors: this && this.graphQLErrors || [],
+      networkStatus,
+    });
+
+    if (query.observableQuery) {
+      this.observableQuery = query.observableQuery;
+    }
+
+    if (query.lastRequestId) {
+      this.lastRequestId = query.lastRequestId;
+    }
+
+    return this;
   }
 
   private dirty: boolean = false;
@@ -559,21 +597,35 @@ export class QueryManager<TStore> {
     const requestId = this.idCounter++;
 
     // Initialize query in store with unique requestId
-    this.getQuery(queryId).init({
+
+    const queryInfo = this.getQuery(queryId);
+
+    queryInfo.init({
       document: query,
+      variables,
+      isPoll: fetchType === FetchType.poll,
+      isRefetch: fetchType === FetchType.refetch,
       lastRequestId: requestId,
-    }).updateWatch(options);
+    });
+
+    queryInfo.updateWatch(options);
 
     this.dirty(queryId);
     this.dirty(fetchMoreForQueryId);
 
-    this.qsInitQuery({
-      queryId,
-      variables,
-      isPoll: fetchType === FetchType.poll,
-      isRefetch: fetchType === FetchType.refetch,
-      fetchMoreForQueryId,
-    });
+    // If the action had a `moreForQueryId` property then we need to set the
+    // network status on that query as well to `fetchMore`.
+    //
+    // We have a complement to this if statement in the query result and query
+    // error action branch, but importantly *not* in the client result branch.
+    // This is because the implementation of `fetchMore` *always* sets
+    // `fetchPolicy` to `network-only` so we would never have a client result.
+    if (fetchMoreForQueryId) {
+      const fetchMoreQueryInfo = this.getQuery(fetchMoreForQueryId);
+      if (fetchMoreQueryInfo) {
+        fetchMoreQueryInfo.networkStatus = NetworkStatus.fetchMore;
+      }
+    }
 
     if (shouldFetch) {
       this.broadcastQueries();
@@ -666,51 +718,6 @@ export class QueryManager<TStore> {
 
   public getQueryStoreValue(queryId: string): QueryStoreValue {
     return queryId && this.queries.get(queryId);
-  }
-
-  private qsInitQuery(query: {
-    queryId: string;
-    variables: Object;
-    isPoll: boolean;
-    isRefetch: boolean;
-    fetchMoreForQueryId?: string;
-  }) {
-    const info = this.getQuery(query.queryId);
-
-    // TODO break this out into a separate function
-    let networkStatus: NetworkStatus;
-    if (info &&
-        info.variables &&
-        info.networkStatus !== NetworkStatus.loading &&
-        !equal(info.variables, query.variables)) {
-      networkStatus = NetworkStatus.setVariables;
-    } else if (query.isPoll) {
-      networkStatus = NetworkStatus.poll;
-    } else if (query.isRefetch) {
-      networkStatus = NetworkStatus.refetch;
-      // TODO: can we determine setVariables here if it's a refetch and the variables have changed?
-    } else {
-      networkStatus = NetworkStatus.loading;
-    }
-
-    info.init({
-      variables: query.variables,
-      networkError: null,
-      graphQLErrors: info && info.graphQLErrors || [],
-      networkStatus,
-    });
-
-    // If the action had a `moreForQueryId` property then we need to set the
-    // network status on that query as well to `fetchMore`.
-    //
-    // We have a complement to this if statement in the query result and query
-    // error action branch, but importantly *not* in the client result branch.
-    // This is because the implementation of `fetchMore` *always* sets
-    // `fetchPolicy` to `network-only` so we would never have a client result.
-    const fetchMoreStoreValue = this.getQueryStoreValue(query.fetchMoreForQueryId);
-    if (fetchMoreStoreValue) {
-      fetchMoreStoreValue.networkStatus = NetworkStatus.fetchMore;
-    }
   }
 
   private qsMarkQueryResult(
@@ -967,10 +974,6 @@ export class QueryManager<TStore> {
     this.getQuery(observable.queryId).init({
       document: options.query,
       observableQuery: observable,
-    });
-
-    this.qsInitQuery({
-      queryId: observable.queryId,
       variables: options.variables,
       // Even if options.pollInterval is a number, we have not started
       // polling this query yet (and we have not yet performed the first

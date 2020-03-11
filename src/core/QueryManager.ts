@@ -285,6 +285,11 @@ export class QueryInfo {
       this.networkStatus = NetworkStatus.ready;
     }
   }
+
+  public markError(error: Error) {
+    this.networkError = error;
+    this.networkStatus = NetworkStatus.error;
+  }
 }
 
 export type QueryStoreValue = Pick<QueryInfo,
@@ -671,7 +676,13 @@ export class QueryManager<TStore> {
           throw error;
         } else {
           if (requestId >= this.getQuery(queryId).lastRequestId) {
-            this.qsMarkQueryError(queryId, error, fetchMoreForQueryId);
+            queryInfo.markError(error);
+
+            // If we have a `fetchMoreForQueryId` then we need to update the network
+            // status for that query. See the branch for query initialization for more
+            // explanation about this process.
+            this.setNetStatus(fetchMoreForQueryId, NetworkStatus.ready);
+
             this.dirty(queryId);
             this.dirty(fetchMoreForQueryId);
             this.broadcastQueries();
@@ -693,7 +704,11 @@ export class QueryManager<TStore> {
 
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
-    this.qsMarkQueryResultClient(queryId, !shouldFetch);
+    this.setNetStatus(
+      queryId,
+      shouldFetch ? queryInfo.networkStatus : NetworkStatus.ready,
+    );
+
     this.dirty(queryId);
     this.dirty(fetchMoreForQueryId);
 
@@ -747,33 +762,8 @@ export class QueryManager<TStore> {
     const queryInfo = queryId && this.getQuery(queryId);
     if (queryInfo) {
       queryInfo.networkStatus = status;
-    }
-  }
-
-  private qsMarkQueryError(
-    queryId: string,
-    error: Error,
-    fetchMoreForQueryId?: string,
-  ) {
-    const storeValue = this.getQueryStoreValue(queryId);
-    if (storeValue) {
-      storeValue.networkError = error;
-      storeValue.networkStatus = NetworkStatus.error;
-      // If we have a `fetchMoreForQueryId` then we need to update the network
-      // status for that query. See the branch for query initialization for more
-      // explanation about this process.
-      if (typeof fetchMoreForQueryId === 'string') {
-        this.qsMarkQueryResultClient(fetchMoreForQueryId, true);
-      }
-    }
-  }
-
-  private qsMarkQueryResultClient(queryId: string, complete: boolean) {
-    const storeValue = this.getQueryStoreValue(queryId);
-    if (storeValue) {
-      storeValue.networkError = null;
-      if (complete) {
-        storeValue.networkStatus = NetworkStatus.ready;
+      if (status === NetworkStatus.ready) {
+        queryInfo.networkError = null;
       }
     }
   }

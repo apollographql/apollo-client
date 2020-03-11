@@ -252,6 +252,39 @@ export class QueryInfo {
       },
     });
   }
+
+  public markResult(
+    result: ExecutionResult,
+    { fetchPolicy,
+      variables,
+      errorPolicy,
+    }: WatchQueryOptions,
+    allowCacheWrite: boolean,
+    makeReady: boolean,
+  ) {
+    if (fetchPolicy === 'no-cache') {
+      this.setDiff({ result: result.data, complete: true });
+    } else if (allowCacheWrite) {
+      const ignoreErrors = errorPolicy === 'ignore' || errorPolicy === 'all';
+      let writeWithErrors = !graphQLResultHasError(result);
+      if (!writeWithErrors && ignoreErrors && result.data) {
+        writeWithErrors = true;
+      }
+      if (writeWithErrors) {
+        this.cache.write({
+          result: result.data,
+          dataId: 'ROOT_QUERY',
+          query: this.document,
+          variables,
+        });
+      }
+    }
+    if (makeReady) {
+      this.networkError = null;
+      this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+      this.networkStatus = NetworkStatus.ready;
+    }
+  }
 }
 
 export type QueryStoreValue = Pick<QueryInfo,
@@ -620,12 +653,7 @@ export class QueryManager<TStore> {
     // error action branch, but importantly *not* in the client result branch.
     // This is because the implementation of `fetchMore` *always* sets
     // `fetchPolicy` to `network-only` so we would never have a client result.
-    if (fetchMoreForQueryId) {
-      const fetchMoreQueryInfo = this.getQuery(fetchMoreForQueryId);
-      if (fetchMoreQueryInfo) {
-        fetchMoreQueryInfo.networkStatus = NetworkStatus.fetchMore;
-      }
-    }
+    this.setNetStatus(fetchMoreForQueryId, NetworkStatus.fetchMore);
 
     if (shouldFetch) {
       this.broadcastQueries();
@@ -677,12 +705,7 @@ export class QueryManager<TStore> {
         variables,
         onlyRunForcedResolvers: true,
       }).then((result: FetchResult<T>) => {
-        this.markQueryResult(
-          queryId,
-          result,
-          options,
-          fetchMoreForQueryId,
-        );
+        queryInfo.markResult(result, options, !fetchMoreForQueryId, false);
         this.broadcastQueries();
         return result;
       });
@@ -720,23 +743,10 @@ export class QueryManager<TStore> {
     return queryId && this.queries.get(queryId);
   }
 
-  private qsMarkQueryResult(
-    queryId: string,
-    result: ExecutionResult,
-    fetchMoreForQueryId?: string,
-  ) {
-    const storeValue = this.getQueryStoreValue(queryId);
-    if (storeValue) {
-      storeValue.networkError = null;
-      storeValue.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
-      storeValue.networkStatus = NetworkStatus.ready;
-      // If we have a `fetchMoreForQueryId` then we need to update the network
-      // status for that query. See the branch for query initialization for more
-      // explanation about this process.
-      const fetchMoreStoreValue = this.getQueryStoreValue(fetchMoreForQueryId)
-      if (fetchMoreStoreValue) {
-        fetchMoreStoreValue.networkStatus = NetworkStatus.ready;
-      }
+  private setNetStatus(queryId: string, status: NetworkStatus) {
+    const queryInfo = queryId && this.getQuery(queryId);
+    if (queryInfo) {
+      queryInfo.networkStatus = status;
     }
   }
 
@@ -780,41 +790,6 @@ export class QueryManager<TStore> {
 
   // </QueryStore>
 
-
-  private markQueryResult(
-    queryId: string,
-    result: ExecutionResult,
-    {
-      fetchPolicy,
-      variables,
-      errorPolicy,
-    }: WatchQueryOptions,
-    fetchMoreForQueryId?: string,
-  ) {
-    if (fetchPolicy === 'no-cache') {
-      this.getQuery(queryId).setDiff({
-        result: result.data,
-        complete: true,
-      });
-    } else {
-      const document = this.getQuery(queryId).document!;
-      const ignoreErrors = errorPolicy === 'ignore' || errorPolicy === 'all';
-
-      let writeWithErrors = !graphQLResultHasError(result);
-      if (ignoreErrors && graphQLResultHasError(result) && result.data) {
-        writeWithErrors = true;
-      }
-
-      if (!fetchMoreForQueryId && writeWithErrors) {
-        this.cache.write({
-          result: result.data,
-          dataId: 'ROOT_QUERY',
-          query: document,
-          variables: variables,
-        });
-      }
-    }
-  }
 
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
@@ -1412,19 +1387,20 @@ export class QueryManager<TStore> {
       };
 
       const subscription = observable.map((result: ExecutionResult) => {
-        if (requestId >= this.getQuery(queryId).lastRequestId) {
-          this.markQueryResult(
-            queryId,
+        const queryInfo = this.getQuery(queryId);
+
+        if (requestId >= queryInfo.lastRequestId) {
+          queryInfo.markResult(
             result,
             options,
-            fetchMoreForQueryId,
+            !fetchMoreForQueryId,
+            true,
           );
 
-          this.qsMarkQueryResult(
-            queryId,
-            result,
-            fetchMoreForQueryId,
-          );
+          // If we have a `fetchMoreForQueryId` then we need to update the
+          // network status for that query. See the branch for query
+          // initialization for more explanation about this process.
+          this.setNetStatus(fetchMoreForQueryId, NetworkStatus.ready);
 
           this.dirty(queryId);
           this.dirty(fetchMoreForQueryId);

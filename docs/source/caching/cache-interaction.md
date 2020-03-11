@@ -558,7 +558,13 @@ const client = new ApolloClient({
   defaults,
 });
 
-client.onResetStore(() => cache.writeData(defaults));
+client.onResetStore(() => 
+  cache.writeQuery({
+    query: gql`{ cachedData}`,
+    data: {
+      cachedData: defaults
+      }
+}));
 ```
 
 You can also call `client.onResetStore` from your React components. This can be useful if you would like to force your UI to rerender after the store has been reset.

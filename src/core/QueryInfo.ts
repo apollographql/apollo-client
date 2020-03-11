@@ -21,6 +21,18 @@ export type QueryStoreValue = Pick<QueryInfo,
   | "graphQLErrors"
   >;
 
+// A QueryInfo object represents a single query managed by the
+// QueryManager, which tracks all QueryInfo objects by queryId in its
+// this.queries Map. QueryInfo objects store the latest results and errors
+// for the given query, and are responsible for reporting those results to
+// the corresponding ObservableQuery, via the QueryInfo.notify method.
+// Results are reported asynchronously whenever setDirty marks the
+// QueryInfo object as dirty, though a call to the QueryManager's
+// broadcastQueries method may trigger the notification before it happens
+// automatically. This class used to be a simple interface type without
+// any field privacy or meaningful methods, which is why it still has so
+// many public fields. The effort to lock down and simplify the QueryInfo
+// interface is ongoing, and further improvements are welcome.
 export class QueryInfo {
   listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;

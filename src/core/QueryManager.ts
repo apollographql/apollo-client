@@ -73,9 +73,9 @@ export class QueryManager<TStore> {
   // let's not start at zero to avoid pain with bad checks
   private idCounter = 1;
 
-  // XXX merge with ObservableQuery but that needs to be expanded to support mutations and
-  // subscriptions as well
-  private queries: Map<string, QueryInfo> = new Map();
+  // All the queries that the QueryManager is currently managing (not
+  // including mutations and subscriptions).
+  private queries = new Map<string, QueryInfo>();
 
   // A map of Promise reject functions for fetchQuery promises that have not
   // yet been resolved, used to keep track of in-flight queries so that we can
@@ -546,6 +546,8 @@ export class QueryManager<TStore> {
         return;
       }
 
+      // This call will always succeed because we do not invoke listener
+      // functions unless there is a DiffResult to broadcast.
       const diff = info.getDiff();
 
       // If there is some data missing and the user has told us that they

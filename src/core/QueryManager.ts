@@ -747,17 +747,12 @@ export class QueryManager<TStore> {
 
   public getQueryStore() {
     const store: Record<string, QueryStoreValue> = Object.create(null);
-    this.queries.forEach(({
-      variables,
-      networkStatus,
-      networkError,
-      graphQLErrors,
-    }, queryId) => {
+    this.queries.forEach((info, queryId) => {
       store[queryId] = {
-        variables,
-        networkStatus,
-        networkError,
-        graphQLErrors,
+        variables: info.variables,
+        networkStatus: info.networkStatus,
+        networkError: info.networkError,
+        graphQLErrors: info.graphQLErrors,
       };
     });
     return store;

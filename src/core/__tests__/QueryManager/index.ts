@@ -1333,52 +1333,6 @@ describe('QueryManager', () => {
     });
   });
 
-  itAsync('should error if we pass fetchPolicy = cache-only on a polling query', (resolve, reject) => {
-    assertWithObserver({
-      reject,
-      observer: {
-        next() {},
-        error(error) {
-          expect(error).toBeInstanceOf(Error);
-          resolve();
-        },
-      },
-      query: gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }
-      `,
-      queryOptions: { pollInterval: 200, fetchPolicy: 'cache-only' },
-    });
-  });
-
-  itAsync('should error if we pass fetchPolicy = cache-first on a polling query', (resolve, reject) => {
-    assertWithObserver({
-      reject,
-      observer: {
-        next() {
-          // reject(new Error('Returned a result when it should not have.'));
-        },
-        error(error) {
-          expect(error).toBeInstanceOf(Error);
-          resolve();
-        },
-      },
-      query: gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }
-      `,
-      queryOptions: { pollInterval: 200, fetchPolicy: 'cache-first' },
-    });
-  });
-
   itAsync('supports cache-only fetchPolicy fetching only cached data', (resolve, reject) => {
     const primeQuery = gql`
       query primeQuery {

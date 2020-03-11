@@ -738,14 +738,6 @@ export class QueryManager<TStore> {
     this.getQuery(queryId).listeners.add(listener);
   }
 
-  // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.
-  public addObservableQuery<T>(
-    queryId: string,
-    observableQuery: ObservableQuery<T>,
-  ) {
-    this.getQuery(queryId).observableQuery = observableQuery;
-  }
-
   public clearStore(): Promise<void> {
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
@@ -815,14 +807,23 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
-  public observeQuery<T>(
-    queryId: string,
-    options: WatchQueryOptions,
-  ) {
+  public observeQuery<T>(observableQuery: ObservableQuery<T>) {
+    const {
+      queryId,
+      options,
+    } = observableQuery;
+
+    this.getQuery(queryId).observableQuery = observableQuery;
+
+    if (options.pollInterval) {
+      this.startPollingQuery(options, queryId);
+    }
+
     this.addQueryListener(
       queryId,
       this.queryListenerForObserver(queryId),
     );
+
     return this.fetchQuery<T>(queryId, options);
   }
 

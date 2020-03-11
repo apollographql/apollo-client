@@ -520,7 +520,6 @@ export class ObservableQuery<
   }
 
   public startPolling(pollInterval: number) {
-    assertNotCacheFirstOrOnly(this);
     this.options.pollInterval = pollInterval;
     this.queryManager.startPollingQuery(this.options, this.queryId);
   }
@@ -562,9 +561,12 @@ export class ObservableQuery<
     if (observer.next && this.lastResult) observer.next(this.lastResult);
     if (observer.error && this.lastError) observer.error(this.lastError);
 
-    // setup the query if it hasn't been done before
+    // Initiate observation of this query if it hasn't been reported to
+    // the QueryManager yet.
     if (first) {
-      this.setUpQuery();
+      this.queryManager
+        .observeQuery<TData>(this)
+        .catch(this.observer.error);
     }
 
     return () => {
@@ -572,22 +574,6 @@ export class ObservableQuery<
         this.tearDownQuery();
       }
     };
-  }
-
-  private setUpQuery() {
-    const { queryManager, queryId } = this;
-
-    if (this.watching) {
-      queryManager.addObservableQuery<TData>(queryId, this);
-    }
-
-    if (this.options.pollInterval) {
-      assertNotCacheFirstOrOnly(this);
-      queryManager.startPollingQuery(this.options, queryId);
-    }
-
-    queryManager.observeQuery<TData>(queryId, this.options)
-      .catch(this.observer.error);
   }
 
   public readonly observer = {
@@ -672,14 +658,4 @@ function iterateObserversSafely<E, A>(
   const observersWithMethod: Observer<E>[] = [];
   observers.forEach(obs => obs[method] && observersWithMethod.push(obs));
   observersWithMethod.forEach(obs => (obs as any)[method](argument));
-}
-
-function assertNotCacheFirstOrOnly<TData, TVariables>(
-  obsQuery: ObservableQuery<TData, TVariables>,
-) {
-  const { fetchPolicy } = obsQuery.options;
-  invariant(
-    fetchPolicy !== 'cache-first' && fetchPolicy !== 'cache-only',
-    'Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.',
-  );
 }

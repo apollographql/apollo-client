@@ -220,9 +220,7 @@ export class QueryInfo {
   // This method can be overridden for a given instance.
   public cancel() {}
 
-  public updateWatch(
-    options: WatchQueryOptions,
-  ) {
+  public updateWatch(options: WatchQueryOptions): this {
     this.cancel();
 
     const previousResult = () => {
@@ -237,7 +235,7 @@ export class QueryInfo {
       return previousResult;
     };
 
-    return this.cancel = this.cache.watch({
+    this.cancel = this.cache.watch({
       query: this.document,
       variables: options.variables,
       optimistic: true,
@@ -246,6 +244,8 @@ export class QueryInfo {
         this.setDiff(diff);
       },
     });
+
+    return this;
   }
 
   public markResult(

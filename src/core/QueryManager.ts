@@ -387,18 +387,13 @@ export class QueryManager<TStore> {
     const requestId = this.idCounter++;
 
     // Initialize query in store with unique requestId
-
-    const queryInfo = this.getQuery(queryId);
-
-    queryInfo.init({
+    const queryInfo = this.getQuery(queryId).init({
       document: query,
       variables,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
       lastRequestId: requestId,
-    });
-
-    queryInfo.updateWatch(options);
+    }).updateWatch(options);
 
     this.dirty(queryId);
     this.dirty(fetchMoreForQueryId);

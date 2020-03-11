@@ -222,6 +222,18 @@ export class QueryInfo {
     return true;
   }
 
+  public stop() {
+    this.cancel();
+    // Revert back to the no-op version of cancel inherited from
+    // QueryInfo.prototype.
+    delete this.cancel;
+
+    this.variables =
+    this.networkStatus =
+    this.networkError =
+    this.graphQLErrors = void 0;
+  }
+
   // This method can be overridden for a given instance.
   public cancel() {}
 
@@ -733,9 +745,6 @@ export class QueryManager<TStore> {
     return { data: storeResult };
   }
 
-
-  // <QueryStore>
-
   public getQueryStore() {
     const store: Record<string, QueryStoreValue> = Object.create(null);
     this.queries.forEach(({
@@ -767,19 +776,6 @@ export class QueryManager<TStore> {
       }
     }
   }
-
-  private qsStopQuery(queryId: string) {
-    const queryInfo: QueryStoreValue = this.queries.get(queryId);
-    if (queryInfo) {
-      queryInfo.variables =
-      queryInfo.networkStatus =
-      queryInfo.networkError =
-      queryInfo.graphQLErrors = void 0;
-    }
-  }
-
-  // </QueryStore>
-
 
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
@@ -1002,11 +998,8 @@ export class QueryManager<TStore> {
 
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
-    if (queryInfo) queryInfo.cancel();
-
+    if (queryInfo) queryInfo.stop();
     this.stopPollingQuery(queryId);
-    this.qsStopQuery(queryId);
-    this.dirty(queryId);
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -1041,7 +1034,7 @@ export class QueryManager<TStore> {
         // results with partial data.
         queryInfo.networkStatus = NetworkStatus.loading;
       } else {
-        this.qsStopQuery(queryId);
+        queryInfo.stop();
       }
     });
 

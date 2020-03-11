@@ -17,7 +17,7 @@ Please note that this documentation is intended to be used to familiarize yourse
 
 ## Updating local state
 
-There are two main ways to perform local state mutations. The first way is to directly write to the cache by calling `cache.writeData`. Direct writes are great for one-off mutations that don't depend on the data that's currently in the cache, such as writing a single value. The second way is by leveraging the `useMutation` hook with a GraphQL mutation that calls a local client-side resolver. We recommend using resolvers if your mutation depends on existing values in the cache, such as adding an item to a list or toggling a boolean.
+There are two main ways to perform local state mutations. The first way is to directly write to the cache by calling `cache.writeQuery`. Direct writes are great for one-off mutations that don't depend on the data that's currently in the cache, such as writing a single value. The second way is by leveraging the `useMutation` hook with a GraphQL mutation that calls a local client-side resolver. We recommend using resolvers if your mutation depends on existing values in the cache, such as adding an item to a list or toggling a boolean.
 
 ### Direct writes
 
@@ -36,7 +36,10 @@ function FilterLink({ filter, children }) {
   const client = useApolloClient();
   return (
     <Link
-      onClick={() => client.writeData({ data: { visibilityFilter: filter } })}
+      onClick={() => client.writeQuery({
+        query: gql`{ visibilityFilter }`,
+        data: { visibilityFilter: filter },
+      })}
     >
       {children}
     </Link>
@@ -57,7 +60,10 @@ const FilterLink = ({ filter, children }) => (
   <ApolloConsumer>
     {client => (
       <Link
-        onClick={() => client.writeData({ data: { visibilityFilter: filter } })}
+        onClick={() => client.writeQuery({
+          query: gql`{ visibilityFilter }`,
+          data: { visibilityFilter: filter },
+        })}
       >
         {children}
       </Link>
@@ -69,7 +75,7 @@ const FilterLink = ({ filter, children }) => (
 </div>
 </MultiCodeBlock>
 
-The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as being similar to the `Consumer` component from the [React context API](https://reactjs.org/docs/context.html). From the client instance, you can directly call `client.writeData` and pass in the data you'd like to write to the cache.
+The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as being similar to the `Consumer` component from the [React context API](https://reactjs.org/docs/context.html). From the client instance, you can directly call `client.writeQuery` and pass in the data you'd like to write to the cache.
 
 What if we want to immediately subscribe to the data we just wrote to the cache? Let's create an `active` property on the link that marks the link's filter as active if it's the same as the current `visibilityFilter` in the cache. To immediately subscribe to a client-side mutation, we can use `useQuery`. The `useQuery` hook also makes the client instance available in its result object.
 
@@ -92,7 +98,10 @@ function FilterLink({ filter, children }) {
   const { data, client } = useQuery(GET_VISIBILITY_FILTER);
   return (
     <Link
-      onClick={() => client.writeData({ data: { visibilityFilter: filter } })}
+      onClick={() => client.writeQuery({
+        query: GET_VISIBILITY_FILTER,
+        data: { visibilityFilter: filter },
+      })}
       active={data.visibilityFilter === filter}
     >
       {children}
@@ -121,7 +130,10 @@ const FilterLink = ({ filter, children }) => (
   <Query query={GET_VISIBILITY_FILTER}>
     {({ data, client }) => (
       <Link
-        onClick={() => client.writeData({ data: { visibilityFilter: filter } })}
+        onClick={() => client.writeQuery({
+          query: GET_VISIBILITY_FILTER,
+          data: { visibilityFilter: filter },
+        })}
         active={data.visibilityFilter === filter}
       >
         {children}
@@ -134,7 +146,7 @@ const FilterLink = ({ filter, children }) => (
 </div>
 </MultiCodeBlock>
 
-You'll notice in our query that we have a `@client` directive next to our `visibilityFilter` field. This tells Apollo Client to fetch the field data locally (either from the cache or using a local resolver), instead of sending it to our GraphQL server. Once you call `client.writeData`, the query result on the render prop function will automatically update. All cache writes and reads are synchronous, so you don't have to worry about loading state.
+You'll notice in our query that we have a `@client` directive next to our `visibilityFilter` field. This tells Apollo Client to fetch the field data locally (either from the cache or using a local resolver), instead of sending it to our GraphQL server. Once you call `client.writeQuery`, the query result on the render prop function will automatically update. All cache writes and reads are synchronous, so you don't have to worry about loading state.
 
 ### Local resolvers
 
@@ -150,7 +162,7 @@ fieldName: (obj, args, context, info) => result;
 2. `args`: An object containing all of the arguments passed into the field. For example, if you called a mutation with `updateNetworkStatus(isConnected: true)`, the `args` object would be `{ isConnected: true }`.
 3. `context`: An object of contextual information shared between your React components and your Apollo Client network stack. In addition to any custom context properties that may be present, local resolvers always receive the following:
     - `context.client`: The Apollo Client instance.
-    - `context.cache`: The Apollo Cache instance, which can be used to manipulate the cache with `context.cache.readQuery`, `.writeQuery`, `.readFragment`, `.writeFragment`, and `.writeData`. You can learn more about these methods in [Managing the cache](#managing-the-cache).
+    - `context.cache`: The Apollo Cache instance, which can be used to manipulate the cache with `context.cache.readQuery`, `.writeQuery`, `.readFragment`, `.writeFragment`, `.modify`, and `.evict`. You can learn more about these methods in [Managing the cache](#managing-the-cache).
     - `context.getCacheKey`: Get a key from the cache using a `__typename` and `id`.
 4. `info`: Information about the execution state of the query. You will probably never have to use this one.
 
@@ -163,26 +175,25 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
   resolvers: {
     Mutation: {
-      toggleTodo: (_root, variables, { cache, getCacheKey }) => {
-        const id = getCacheKey({ __typename: 'TodoItem', id: variables.id })
-        const fragment = gql`
-          fragment completeTodo on TodoItem {
-            completed
-          }
-        `;
-        const todo = cache.readFragment({ fragment, id });
-        const data = { ...todo, completed: !todo.completed };
-        cache.writeData({ id, data });
-        return null;
+      toggleTodo: (_root, variables, { cache }) => {
+        const id = cache.identify({
+          __typename: 'TodoItem',
+          id: variables.id,
+        });
+        cache.modify(id, {
+          completed(value) {
+            return !value;
+          },
+        });
       },
     },
   },
 });
 ```
 
-In order to toggle the todo's completed status, we first need to query the cache to find out what the todo's current completed status is. We do this by reading a fragment from the cache with `cache.readFragment`. This function takes a fragment and an id, which corresponds to the todo item's cache key. We get the cache key by calling the `getCacheKey` that's on the context and passing in the item's `__typename` and `id`.
+In previous versions of Apollo Client, toggling the `completed` status of the `TodoItem` required reading a fragment from the cache, modifying the result by negating the `completed` boolean, and then writing the fragment back into the cache. Apollo Client 3.0 introduced the `cache.modify` method as an easier and faster way to update specific fields within a given entity object. To determine the ID of the entity, we pass the `__typename` and primary key fields of the object to `cache.identify` method.
 
-Once we read the fragment, we toggle the todo's completed status and write the updated data back to the cache. Since we don't plan on using the mutation's return result in our UI, we return null since all GraphQL types are nullable by default.
+Once we toggle the `completed` field, since we don't plan on using the mutation's return result in our UI, we return `null` since all GraphQL types are nullable by default.
 
 Let's learn how to trigger our `toggleTodo` mutation from our component:
 
@@ -328,7 +339,7 @@ Here we create our GraphQL query and add `@client` directives to `todos` and `vi
 
 ### Initializing the cache
 
-Often, you'll need to write an initial state to the cache so any components querying data before a mutation is triggered don't error out. To accomplish this, you can use `cache.writeData` to prep the cache with initial values. The shape of your initial state should match how you plan to query it in your application.
+Often, you'll need to write an initial state to the cache so any components querying data before a mutation is triggered don't error out. To accomplish this, you can use `cache.writeQuery` to prep the cache with initial values.
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -339,7 +350,16 @@ const client = new ApolloClient({
   resolvers: { /* ... */ },
 });
 
-cache.writeData({
+cache.writeQuery({
+  query: gql`
+    query {
+      todos
+      visibilityFilter
+      networkStatus {
+        isConnected
+      }
+    }
+  `,
   data: {
     todos: [],
     visibilityFilter: 'SHOW_ALL',
@@ -351,7 +371,7 @@ cache.writeData({
 });
 ```
 
-Sometimes you may need to [reset the store](../api/core/#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeData` again.
+Sometimes you may need to [reset the store](../api/core/#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeQuery` again.
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -362,18 +382,31 @@ const client = new ApolloClient({
   resolvers: { /* ... */ },
 });
 
-const data = {
-  todos: [],
-  visibilityFilter: 'SHOW_ALL',
-  networkStatus: {
-    __typename: 'NetworkStatus',
-    isConnected: false,
-  },
-};
+function writeInitialData() {
+  cache.writeQuery({
+    query: gql`
+      query {
+        todos
+        visibilityFilter
+        networkStatus {
+          isConnected
+        }
+      }
+    `,
+    data: {
+      todos: [],
+      visibilityFilter: 'SHOW_ALL',
+      networkStatus: {
+        __typename: 'NetworkStatus',
+        isConnected: false,
+      },
+    },
+  });
+}
 
-cache.writeData({ data });
+writeInitialData();
 
-client.onResetStore(() => cache.writeData({ data }));
+client.onResetStore(writeInitialData);
 ```
 
 ### Local data query flow
@@ -418,7 +451,8 @@ const GET_CART_ITEMS = gql`
 `;
 
 const cache = new InMemoryCache();
-cache.writeData({
+cache.writeQuery({
+  query: GET_CART_ITEMS,
   data: {
     cartItems: [],
   },
@@ -642,17 +676,18 @@ const client = new ApolloClient({
   resolvers: {},
 });
 
-cache.writeData({
-  data: {
-    isLoggedIn: !!localStorage.getItem("token"),
-  },
-});
-
 const IS_LOGGED_IN = gql`
   query IsUserLoggedIn {
     isLoggedIn @client
   }
 `;
+
+cache.writeQuery({
+  query: IS_LOGGED_IN,
+  data: {
+    isLoggedIn: !!localStorage.getItem("token"),
+  },
+});
 
 function App() {
   const { data } = useQuery(IS_LOGGED_IN);
@@ -692,17 +727,18 @@ const client = new ApolloClient({
   resolvers: {},
 });
 
-cache.writeData({
-  data: {
-    isLoggedIn: !!localStorage.getItem("token"),
-  },
-});
-
 const IS_LOGGED_IN = gql`
   query IsUserLoggedIn {
     isLoggedIn @client
   }
 `;
+
+cache.writeQuery({
+  query: IS_LOGGED_IN,
+  data: {
+    isLoggedIn: !!localStorage.getItem("token"),
+  },
+});
 
 ReactDOM.render(
   <ApolloProvider client={client}>
@@ -717,7 +753,7 @@ ReactDOM.render(
 </div>
 </MultiCodeBlock>
 
-In the above example, we first prep the cache using `cache.writeData` to store a value for the `isLoggedIn` field. We then run the `IS_LOGGED_IN` query via an Apollo Client `useQuery` hook, which includes an `@client` directive. When Apollo Client executes the `IS_LOGGED_IN` query, it first looks for a local resolver that can be used to handle the `@client` field. When it can't find one, it falls back on trying to pull the specified field out of the cache. So in this case, the `data` value returned by the `useQuery` hook has a `isLoggedIn` property available, which includes the `isLoggedIn` result (`!!localStorage.getItem('token')`) pulled directly from the cache.
+In the above example, we first prep the cache using `cache.writeQuery` to store a value for the `isLoggedIn` field. We then run the `IS_LOGGED_IN` query via an Apollo Client `useQuery` hook, which includes an `@client` directive. When Apollo Client executes the `IS_LOGGED_IN` query, it first looks for a local resolver that can be used to handle the `@client` field. When it can't find one, it falls back on trying to pull the specified field out of the cache. So in this case, the `data` value returned by the `useQuery` hook has a `isLoggedIn` property available, which includes the `isLoggedIn` result (`!!localStorage.getItem('token')`) pulled directly from the cache.
 
 > ⚠️ If you want to use Apollo Client's `@client` support to query the cache without using local resolvers, you must pass an empty object into the `ApolloClient` constructor `resolvers` option. Without this Apollo Client will not enable its integrated `@client` support, which means your `@client` based queries will be passed to the Apollo Client link chain. You can find more details about why this is necessary [here](https://github.com/apollographql/apollo-client/pull/4499).
 
@@ -907,7 +943,8 @@ const client = new ApolloClient({
   resolvers: {},
 });
 
-cache.writeData({
+cache.writeQuery({
+  query: gql`{ currentAuthorId }`,
   data: {
     currentAuthorId: 12345,
   },
@@ -938,7 +975,15 @@ const client = new ApolloClient({
   resolvers: {},
 });
 
-cache.writeData({
+cache.writeQuery({
+  query: gql`
+    query {
+      currentAuthor {
+        name
+        authorId
+      }
+    }
+  `,
   data: {
     currentAuthor: {
       __typename: 'Author',
@@ -975,7 +1020,8 @@ const client = new ApolloClient({
   },
 });
 
-cache.writeData({
+cache.writeQuery({
+  query: gql`{ currentAuthorId }`,
   data: {
     currentAuthorId: 12345,
   },
@@ -1002,9 +1048,9 @@ So here the `currentAuthorId` is loaded from the cache, then passed into the `po
 
 When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data. The [Apollo cache API](../caching/cache-interaction/) has several methods that can assist you with updating and retrieving data. Let's walk through the most relevant methods, and explore some common use cases for each one.
 
-### writeData
+### cache.writeQuery
 
-The easiest way to update the cache is with `cache.writeData`, which allows you to write data directly to the cache without passing in a query. Here's how you use it in your resolver map for a simple update:
+The easiest way to update the cache is with `cache.writeQuery`. Here's how you use it in your resolver map for a simple update:
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -1014,17 +1060,20 @@ const client = new ApolloClient({
   resolvers: {
     Mutation: {
       updateVisibilityFilter: (_, { visibilityFilter }, { cache }) => {
-        const data = { visibilityFilter, __typename: 'Filter' };
-        cache.writeData({ data });
+        cache.writeQuery({
+          query: gql`{ visibilityFilter }`,
+          data: {
+            __typename: 'Filter',
+            visibilityFilter,
+          },
+        });
       },
     },
   },
 };
 ```
 
-`cache.writeData` also allows you to pass in an optional `id` property to write a fragment to an existing object in the cache. This is useful if you want to add some client-side fields to an existing object in the cache.
-
-The `id` should correspond to the object's cache key. If you're using the `InMemoryCache` and not overriding the `dataIdFromObject` config property, your cache key should be `__typename:id`.
+The `cache.writeFragment` method allows you to pass in an optional `id` property to write a fragment to an existing object in the cache. This is useful if you want to add some client-side fields to an existing object in the cache.
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -1034,19 +1083,22 @@ const client = new ApolloClient({
   resolvers: {
     Mutation: {
       updateUserEmail: (_, { id, email }, { cache }) => {
-        const data = { email };
-        cache.writeData({ id: `User:${id}`, data });
+        cache.writeFragment({
+          id: cache.identify({ __typename: "User", id }),
+          fragment: gql`fragment UserEmail on User { email }`,
+          data: { email },
+        });
       },
     },
   },
 };
 ```
 
-`cache.writeData` should cover most of your needs; however, there are some cases where the data you're writing to the cache depends on the data that's already there. In that scenario, you should use `readQuery` or `readFragment`, which allows you to pass in a query or a fragment to read data from the cache. If you'd like to validate the shape of your data that you're writing to the cache, use `writeQuery` or `writeFragment`. We'll explain some of those use cases below.
+The `cache.writeQuery` and `cache.writeFragment` methods should cover most of your needs; however, there are some cases where the data you're writing to the cache depends on the data that's already there. In that scenario, you should use `cache.modify(id, modifiers)` to update specific fields within the entity object identified by `id`.
 
 ### writeQuery and readQuery
 
-Sometimes, the data you're writing to the cache depends on data that's already in the cache; for example, you're adding an item to a list or setting a property based on an existing property value. In that case, you should use `cache.readQuery` to pass in a query and read a value from the cache before you write any data. Let's look at an example where we add a todo to a list:
+Sometimes, the data you're writing to the cache depends on data that's already in the cache; for example, you're adding an item to a list or setting a property based on an existing property value. In that case, you should use `cache.modify` to update specific existing fields. Let's look at an example where we add a todo to a list:
 
 ```js
 import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
@@ -1054,10 +1106,10 @@ import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
 let nextTodoId = 0;
 
 const cache = new InMemoryCache();
-cache.writeData({
-  data: {
-    todos: [],
-  },
+
+cache.writeQuery({
+  query: gql`{ todos }`,
+  data: { todos: [] },
 });
 
 const client = new ApolloClient({
@@ -1080,7 +1132,6 @@ const client = new ApolloClient({
           todos: [...previous.todos, newTodo],
         };
 
-        // you can also do cache.writeData({ data }) here if you prefer
         cache.writeQuery({ query, data });
         return newTodo;
       },
@@ -1089,9 +1140,7 @@ const client = new ApolloClient({
 });
 ```
 
-In order to add our todo to the list, we need the todos that are currently in the cache, which is why we call `cache.readQuery` to retrieve them. `cache.readQuery` will throw an error if the data isn't in the cache, so we need to provide an initial state. This is why we're calling `cache.writeData` with the empty array of todos after creating the `InMemoryCache`.
-
-To write the data to the cache, you can use either `cache.writeQuery` or `cache.writeData`. The only difference between the two is that `cache.writeQuery` requires that you pass in a query to validate that the shape of the data you're writing to the cache is the same as the shape of the data required by the query. Under the hood, `cache.writeData` automatically constructs a query from the `data` object you pass in and calls `cache.writeQuery`.
+In order to add our todo to the list, we need the todos that are currently in the cache, which is why we call `cache.readQuery` to retrieve them. `cache.readQuery` will throw an error if the data isn't in the cache, so we need to provide an initial state. This is why we're calling `cache.writeQuery` with the empty array of todos after creating the `InMemoryCache`.
 
 ### writeFragment and readFragment
 
@@ -1115,7 +1164,6 @@ const client = new ApolloClient({
         const todo = cache.readFragment({ fragment, id });
         const data = { ...todo, completed: !todo.completed };
 
-        // you can also do cache.writeData({ data, id }) here if you prefer
         cache.writeFragment({ fragment, id, data });
         return null;
       },
@@ -1125,8 +1173,6 @@ const client = new ApolloClient({
 ```
 
 In order to toggle our todo, we need the todo and its status from the cache, which is why we call `cache.readFragment` and pass in a fragment to retrieve it. The `id` we're passing into `cache.readFragment` refers to its cache key. If you're using the `InMemoryCache` and not overriding the `dataIdFromObject` config property, your cache key should be `__typename:id`.
-
-To write the data to the cache, you can use either `cache.writeFragment` or `cache.writeData`. The only difference between the two is that `cache.writeFragment` requires that you pass in a fragment to validate that the shape of the data you're writing to the cache node is the same as the shape of the data required by the fragment. Under the hood, `cache.writeData` automatically constructs a fragment from the `data` object and `id` you pass in and calls `cache.writeFragment`.
 
 ## Client-side schema
 
@@ -1315,7 +1361,7 @@ Updating your application to use Apollo Client's local state management features
   });
   ```
 
-3. `defaults` are no longer supported. To prep the cache, use [`cache.writeData`](#writedata) directly instead. So
+3. `defaults` are no longer supported. To prep the cache, use [`cache.writeQuery`](../caching/cache-interaction/#writequery-and-writefragment) directly instead. So
 
   ```js
   const cache = new InMemoryCache();
@@ -1341,10 +1387,9 @@ Updating your application to use Apollo Client's local state management features
     link: new HttpLink({ uri: '...' }),
     resolvers: { ... },
   });
-  cache.writeData({
-    data: {
-      someField: 'some value',
-    },
+  cache.writeQuery({
+    query: gql`{ someField }`,
+    data: { someField: 'some value' },
   });
   ```
 
@@ -1432,7 +1477,11 @@ type FragmentMatcher = (
 import { InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache();
-cache.writeData({
+cache.writeQuery({
+  query: gql`{
+    isLoggedIn,
+    cartItems
+  }`,
   data: {
     isLoggedIn: !!localStorage.getItem('token'),
     cartItems: [],
@@ -1442,8 +1491,7 @@ cache.writeData({
 
 | Method | Description |
 | - | - |
-| `writeData({ id, data })` | Write data directly to the root of the cache without having to pass in a query. Great for prepping the cache with initial data. If you would like to write data to an existing entry in the cache, pass in the entry's cache key to `id`. |
-| `writeQuery({ query, variables, data })` | Similar to `writeData` (writes data to the root of the cache) but uses the specified query to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the query. |
+| `writeQuery({ query, variables, data })` | Writes data to the root of the cache using the specified query to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the query. Great for prepping the cache with initial data. |
 | `readQuery({ query, variables })` | Read data from the cache for the specified query. |
-| `writeFragment({ id, fragment, fragmentName, variables, data })` | Similar to `writeData` (writes data to an existing entry in the cache) but uses the specified fragment to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the fragment. |
+| `writeFragment({ id, fragment, fragmentName, variables, data })` | Similar to `writeQuery` (writes data to the cache) but uses the specified fragment to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the fragment. |
 | `readFragment({ id, fragment, fragmentName, variables })` | Read data from the cache for the specified fragment. |

@@ -1,15 +1,11 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 
 import { FetchResult } from '../link/core/types';
-import { QueryStoreValue } from '../data/queries';
+import { QueryInfo } from './QueryInfo';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';
 
-export type QueryListener = (
-  queryStoreValue: QueryStoreValue,
-  newData?: any,
-  forceResolvers?: boolean,
-) => void;
+export type QueryListener = (queryInfo: QueryInfo) => void;
 
 export type OperationVariables = Record<string, any>;
 

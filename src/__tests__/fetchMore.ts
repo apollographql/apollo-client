@@ -484,7 +484,7 @@ describe('fetchMore on an observable query', () => {
     })
       .then(watchedQuery => {
         beforeQueryCount = Object.keys(
-          client.queryManager.queryStore.getStore(),
+          client.queryManager.getQueryStore(),
         ).length;
         return watchedQuery.fetchMore({
           variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
@@ -500,7 +500,7 @@ describe('fetchMore on an observable query', () => {
       })
       .then(data => {
         var afterQueryCount = Object.keys(
-          client.queryManager.queryStore.getStore(),
+          client.queryManager.getQueryStore(),
         ).length;
         expect(afterQueryCount).toBe(beforeQueryCount);
         unsetup();

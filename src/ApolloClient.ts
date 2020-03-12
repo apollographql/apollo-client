@@ -236,7 +236,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           this.devToolsHookCb({
             action: {},
             state: {
-              queries: this.queryManager.queryStore.getStore(),
+              queries: this.queryManager.getQueryStore(),
               mutations: this.queryManager.mutationStore.getStore(),
             },
             dataWithOptimisticResults: this.cache.extract(true),

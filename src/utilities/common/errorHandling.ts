@@ -10,6 +10,6 @@ export function tryFunctionOrLogError(f: Function) {
   }
 }
 
-export function graphQLResultHasError(result: ExecutionResult) {
-  return result.errors && result.errors.length;
+export function graphQLResultHasError(result: ExecutionResult): boolean {
+  return result.errors && result.errors.length > 0;
 }

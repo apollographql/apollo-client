@@ -565,7 +565,7 @@ export class ObservableQuery<
     // the QueryManager yet.
     if (first) {
       this.queryManager
-        .observeQuery<TData>(this)
+        .observeQuery(this, this.observer)
         .catch(this.observer.error);
     }
 
@@ -576,8 +576,8 @@ export class ObservableQuery<
     };
   }
 
-  public readonly observer = {
-    next: (result: ApolloQueryResult<TData>) => {
+  private observer: Observer<ApolloQueryResult<TData>> = {
+    next: result => {
       if (this.lastError || this.isDifferentFromLastResult(result)) {
         const { queryManager } = this;
         const { query, variables, fetchPolicy } = this.options;
@@ -614,6 +614,7 @@ export class ObservableQuery<
         }
       }
     },
+
     error: (error: ApolloError) => {
       // Since we don't get the current result on errors, only the error, we
       // must mirror the updates that occur in QueryStore.markQueryError here
@@ -623,6 +624,7 @@ export class ObservableQuery<
         networkStatus: NetworkStatus.error,
         loading: false,
       });
+
       iterateObserversSafely(this.observers, 'error', this.lastError = error);
     },
   };

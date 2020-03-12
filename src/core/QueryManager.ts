@@ -24,7 +24,8 @@ import { canUseWeakMap } from '../utilities/common/canUse';
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 import {
   ObservableSubscription,
-  Observable
+  Observable,
+  Observer,
 } from '../utilities/observables/Observable';
 import { MutationStore } from '../data/mutations';
 import {
@@ -509,7 +510,10 @@ export class QueryManager<TStore> {
 
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
-  public queryListenerForObserver<T>(queryId: string): QueryListener {
+  public queryListenerForObserver<T>(
+    queryId: string,
+    observer: Observer<ApolloQueryResult<T>>,
+  ): QueryListener {
     return info => {
       const {
         observableQuery,
@@ -520,14 +524,11 @@ export class QueryManager<TStore> {
       } = info;
 
       const {
-        observer,
-        options: {
-          fetchPolicy,
-          errorPolicy = 'none',
-          returnPartialData,
-          partialRefetch,
-        },
-      } = observableQuery;
+        fetchPolicy,
+        errorPolicy = 'none',
+        returnPartialData,
+        partialRefetch,
+      } = observableQuery.options;
 
       const hasGraphQLErrors = isNonEmptyArray(graphQLErrors);
 
@@ -807,11 +808,13 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
-  public observeQuery<T>(observableQuery: ObservableQuery<T>) {
-    const {
-      queryId,
-      options,
-    } = observableQuery;
+  public observeQuery<T>(
+    observableQuery: ObservableQuery<T>,
+    // The observableQuery.observer object needs to be passed in
+    // separately here because it needs to be kept private.
+    observer: Observer<ApolloQueryResult<T>>,
+  ) {
+    const { queryId, options } = observableQuery;
 
     this.getQuery(queryId).observableQuery = observableQuery;
 
@@ -821,7 +824,7 @@ export class QueryManager<TStore> {
 
     this.addQueryListener(
       queryId,
-      this.queryListenerForObserver(queryId),
+      this.queryListenerForObserver(queryId, observer),
     );
 
     return this.fetchQuery<T>(queryId, options);

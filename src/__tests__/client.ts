@@ -14,6 +14,7 @@ import subscribeAndCount from '../utilities/testing/subscribeAndCount';
 import { withWarning } from '../utilities/testing/wrap';
 import { itAsync } from '../utilities/testing/itAsync';
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
+import { NetworkStatus } from '../core';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -1768,28 +1769,6 @@ describe('client', () => {
   });
 
   describe('standby queries', () => {
-    // XXX queries can only be set to standby by setOptions. This is simply out of caution,
-    // not some fundamental reason. We just want to make sure they're not used in unanticipated ways.
-    // If there's a good use-case, the error and test could be removed.
-    it('cannot be started with watchQuery or query', () => {
-      const client = new ApolloClient({
-        link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
-      });
-      expect(() =>
-        client.watchQuery({
-          query: gql`
-            {
-              abc
-            }
-          `,
-          fetchPolicy: 'standby',
-        }),
-      ).toThrowError(
-        'client.watchQuery cannot be called with fetchPolicy set to "standby"',
-      );
-    });
-
     itAsync('are not watching the store or notifying on updates', (resolve, reject) => {
       const query = gql`
         {
@@ -2925,6 +2904,135 @@ describe('@connection', () => {
       expect(stripSymbols(actualResult.data)).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
+  });
+
+  itAsync('should broadcast changes for reactive variables', async (resolve, reject) => {
+    const cache: InMemoryCache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            a() {
+              return aVar();
+            },
+            b() {
+              return bVar();
+            },
+          },
+        },
+      },
+    });
+
+    const aVar = cache.makeVar(123);
+    const bVar = cache.makeVar("asdf");
+
+    const client = new ApolloClient({ cache });
+
+    const aResults = [];
+    const aSub = client.watchQuery({
+      query: gql`{ a }`,
+      fetchPolicy: "cache-first",
+    }).subscribe({
+      next(result) {
+        aResults.push(result);
+      },
+    });
+
+    const bResults = [];
+    const bSub = client.watchQuery({
+      query: gql`{ b }`,
+      fetchPolicy: "cache-first",
+    }).subscribe({
+      next(result) {
+        bResults.push(result);
+      },
+    });
+
+    const abResults = [];
+    const abSub = client.watchQuery({
+      query: gql`{ a b }`,
+      fetchPolicy: "cache-first",
+    }).subscribe({
+      next(result) {
+        abResults.push(result);
+      },
+    });
+
+    function wait(time = 10) {
+      return new Promise(resolve => setTimeout(resolve, 10));
+    }
+
+    await wait();
+
+    function checkLastResult(
+      results: any[],
+      expectedData: Record<string, any>,
+    ) {
+      const lastResult = results[results.length - 1];
+      expect(lastResult).toEqual({
+        data: expectedData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        stale: false,
+      });
+      return lastResult;
+    }
+
+    checkLastResult(aResults, { a: 123 });
+    const bAsdf = checkLastResult(bResults, { b: "asdf" });
+    checkLastResult(abResults, { a: 123, b: "asdf" });
+
+    aVar(aVar() + 111);
+    await wait();
+
+    const a234 = checkLastResult(aResults, { a: 234 });
+    expect(checkLastResult(bResults, { b: "asdf" })).toBe(bAsdf);
+    checkLastResult(abResults, { a: 234, b: "asdf" });
+
+    bVar(bVar().toUpperCase());
+    await wait();
+
+    expect(checkLastResult(aResults, { a: 234 })).toBe(a234);
+    checkLastResult(bResults, { b: "ASDF" });
+    checkLastResult(abResults, { a: 234, b: "ASDF" });
+
+    aVar(aVar() + 222);
+    bVar("oyez");
+    await wait();
+
+    checkLastResult(aResults, { a: 456 });
+    checkLastResult(bResults, { b: "oyez" });
+    checkLastResult(abResults, { a: 456, b: "oyez" });
+
+    expect(
+      aResults.map(result => result.data)
+    ).toEqual([
+      { a: 123 },
+      { a: 234 },
+      { a: 456 },
+    ]);
+
+    expect(
+      bResults.map(result => result.data)
+    ).toEqual([
+      { b: "asdf" },
+      { b: "ASDF" },
+      { b: "oyez" },
+    ]);
+
+    expect(
+      abResults.map(result => result.data)
+    ).toEqual([
+      { a: 123, b: "asdf" },
+      { a: 234, b: "asdf" },
+      { a: 234, b: "ASDF" },
+      { a: 456, b: "oyez" },
+    ]);
+
+    aSub.unsubscribe();
+    bSub.unsubscribe();
+    abSub.unsubscribe();
+
+    resolve();
   });
 
   describe('default settings', () => {

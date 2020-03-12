@@ -54,33 +54,31 @@ export function observableToPromiseAndSubscription(
       }
     };
 
+    let queue = Promise.resolve();
+
     subscription = observable.subscribe({
       next(result: ApolloQueryResult<any>) {
-        const cb = cbs[cbIndex++];
-        if (cb) {
-          try {
-            results.push(cb(result));
-          } catch (e) {
-            return reject(e);
-          }
-          tryToResolve();
-        } else {
-          reject(new Error(`Observable called more than ${cbs.length} times`));
-        }
+        queue = queue.then(() => {
+          const cb = cbs[cbIndex++];
+          if (cb) return cb(result);
+          reject(new Error(`Observable 'next' method called more than ${cbs.length} times`));
+        }).then(
+          res => {
+            results.push(res);
+            tryToResolve();
+          },
+          reject,
+        );
       },
       error(error: Error) {
-        const errorCb = errorCallbacks[errorIndex++];
-        if (errorCb) {
-          try {
-            // XXX: should we collect these results too?
-            errorCb(error);
-          } catch (e) {
-            return reject(e);
-          }
-          tryToResolve();
-        } else {
-          reject(error);
-        }
+        queue = queue.then(() => {
+          const errorCb = errorCallbacks[errorIndex++];
+          if (errorCb) return errorCb(error);
+          reject(new Error(`Observable 'error' method called more than ${errorCallbacks.length} times`));
+        }).then(
+          tryToResolve,
+          reject,
+        );
       },
     });
   });

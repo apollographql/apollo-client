@@ -159,8 +159,9 @@ export class QueryInfo {
 
     if (this.shouldNotify() && this.getDiff()) {
       this.listeners.forEach(listener => listener(this));
-      this.dirty = false;
     }
+
+    this.dirty = false;
   }
 
   private shouldNotify() {

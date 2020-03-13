@@ -919,21 +919,11 @@ export class QueryManager<TStore> {
   } {
     const { variables, query, fetchPolicy, returnPartialData } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
-    const info = this.getQuery(observableQuery.queryId);
 
-    const isNetworkOnly =
-      fetchPolicy === 'no-cache' ||
-      fetchPolicy === 'network-only';
-
-    if (isNetworkOnly || info.isDirty()) {
-      const diff = info.getDiff();
-      if (diff?.complete) {
-        return { data: diff.result, partial: false };
-      }
-    }
-
-    if (isNetworkOnly) {
-      return { data: undefined, partial: false };
+    if (fetchPolicy === 'no-cache' ||
+        fetchPolicy === 'network-only') {
+      const diff = this.getQuery(observableQuery.queryId).getDiff();
+      return { data: diff?.result, partial: false };
     }
 
     const { result, complete } = this.cache.diff<T>({

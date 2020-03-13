@@ -90,10 +90,6 @@ export class QueryInfo {
 
   private dirty: boolean = false;
 
-  public isDirty() {
-    return this.dirty;
-  }
-
   public setDirty(): this {
     if (!this.dirty) {
       this.dirty = true;

@@ -220,7 +220,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public evict(dataId: string, fieldName?: string): boolean {
     const evicted = this.optimisticData.evict(dataId, fieldName);
-    if (evicted) this.broadcastWatches();
+    this.broadcastWatches();
     return evicted;
   }
 

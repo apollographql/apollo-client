@@ -111,7 +111,7 @@ export class QueryInfo {
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.diff;
     this.diff = diff;
-    if (!this.dirty && !equal(diff, oldDiff)) {
+    if (!this.dirty && diff?.result !== oldDiff?.result) {
       this.setDirty();
     }
   }

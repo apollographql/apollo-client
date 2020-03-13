@@ -2,19 +2,19 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
-import { Observable } from '../utilities/observables/Observable';
+import { Observable, ObservableSubscription } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { PossibleTypesMap } from '../cache/inmemory/types';
 import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { WatchQueryOptions, FetchPolicy } from '../core/watchQueryOptions';
+import { WatchQueryOptions, FetchPolicy, WatchQueryFetchPolicy } from '../core/watchQueryOptions';
 import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';
 import subscribeAndCount from '../utilities/testing/subscribeAndCount';
 import { withWarning } from '../utilities/testing/wrap';
 import { itAsync } from '../utilities/testing/itAsync';
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { NetworkStatus } from '../core';
+import { NetworkStatus, ObservableQuery } from '../core';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -2927,35 +2927,29 @@ describe('@connection', () => {
 
     const client = new ApolloClient({ cache });
 
-    const aResults = [];
-    const aSub = client.watchQuery({
-      query: gql`{ a }`,
-      fetchPolicy: "cache-first",
-    }).subscribe({
-      next(result) {
-        aResults.push(result);
-      },
-    });
+    const obsQueries = new Set<ObservableQuery<any>>();
+    const subs = new Set<ObservableSubscription>();
+    function watch(
+      query: DocumentNode,
+      fetchPolicy: WatchQueryFetchPolicy = "cache-first",
+    ): any[] {
+      const results = [];
+      const obsQuery = client.watchQuery({
+        query,
+        fetchPolicy,
+      });
+      obsQueries.add(obsQuery);
+      subs.add(obsQuery.subscribe({
+        next(result) {
+          results.push(result.data);
+        },
+      }));
+      return results;
+    }
 
-    const bResults = [];
-    const bSub = client.watchQuery({
-      query: gql`{ b }`,
-      fetchPolicy: "cache-first",
-    }).subscribe({
-      next(result) {
-        bResults.push(result);
-      },
-    });
-
-    const abResults = [];
-    const abSub = client.watchQuery({
-      query: gql`{ a b }`,
-      fetchPolicy: "cache-first",
-    }).subscribe({
-      next(result) {
-        abResults.push(result);
-      },
-    });
+    const aResults = watch(gql`{ a }`);
+    const bResults = watch(gql`{ b }`);
+    const abResults = watch(gql`{ a b }`);
 
     function wait(time = 10) {
       return new Promise(resolve => setTimeout(resolve, 10));
@@ -2968,12 +2962,7 @@ describe('@connection', () => {
       expectedData: Record<string, any>,
     ) {
       const lastResult = results[results.length - 1];
-      expect(lastResult).toEqual({
-        data: expectedData,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        stale: false,
-      });
+      expect(lastResult).toEqual(expectedData);
       return lastResult;
     }
 
@@ -2999,38 +2988,106 @@ describe('@connection', () => {
     bVar("oyez");
     await wait();
 
-    checkLastResult(aResults, { a: 456 });
-    checkLastResult(bResults, { b: "oyez" });
-    checkLastResult(abResults, { a: 456, b: "oyez" });
+    const a456 = checkLastResult(aResults, { a: 456 });
+    const bOyez = checkLastResult(bResults, { b: "oyez" });
+    const a456bOyez = checkLastResult(abResults, { a: 456, b: "oyez" });
 
-    expect(
-      aResults.map(result => result.data)
-    ).toEqual([
+    // Since the ObservableQuery skips results that are the same as the
+    // previous result, and nothing is actually changing about the
+    // ROOT_QUERY.a field, clear previous results to give the invalidated
+    // results a chance to be delivered.
+    obsQueries.forEach(obsQuery => obsQuery.resetLastResults());
+    await wait();
+    // Verify that resetting previous results did not trigger the delivery
+    // of any new results, by itself.
+    expect(checkLastResult(aResults, a456)).toBe(a456);
+    expect(checkLastResult(bResults, bOyez)).toBe(bOyez);
+    expect(checkLastResult(abResults, a456bOyez)).toBe(a456bOyez);
+
+    // Now invalidate the ROOT_QUERY.a field.
+    client.cache.evict("ROOT_QUERY", "a");
+    await wait();
+
+    // The results are structurally the same, but the result objects have
+    // been recomputed for queries that involved the ROOT_QUERY.a field.
+    expect(checkLastResult(aResults, a456)).not.toBe(a456);
+    expect(checkLastResult(bResults, bOyez)).toBe(bOyez);
+    expect(checkLastResult(abResults, a456bOyez)).not.toBe(a456bOyez);
+
+    const cQuery = gql`{ c }`;
+    // Passing cache-only as the fetchPolicy allows the { c: "see" }
+    // result to be delivered even though networkStatus is still loading.
+    const cResults = watch(cQuery, "cache-only");
+
+    // Now try writing directly to the cache, rather than calling
+    // client.writeQuery.
+    client.cache.writeQuery({
+      query: cQuery,
+      data: {
+        c: "see",
+      },
+    });
+    await wait();
+
+    checkLastResult(aResults, a456);
+    checkLastResult(bResults, bOyez);
+    checkLastResult(abResults, a456bOyez);
+    const cSee = checkLastResult(cResults, { c: "see" });
+
+    cache.modify("ROOT_QUERY", {
+      c(value) {
+        expect(value).toBe("see");
+        return "saw";
+      },
+    });
+    await wait();
+
+    checkLastResult(aResults, a456);
+    checkLastResult(bResults, bOyez);
+    checkLastResult(abResults, a456bOyez);
+    const cSaw = checkLastResult(cResults, { c: "saw" });
+
+    client.cache.evict("ROOT_QUERY", "c");
+    await wait();
+
+    checkLastResult(aResults, a456);
+    checkLastResult(bResults, bOyez);
+    checkLastResult(abResults, a456bOyez);
+    expect(checkLastResult(cResults, {}));
+
+    expect(aResults).toEqual([
       { a: 123 },
       { a: 234 },
       { a: 456 },
+      // Delivered again because we explicitly called resetLastResults.
+      { a: 456 },
     ]);
 
-    expect(
-      bResults.map(result => result.data)
-    ).toEqual([
+    expect(bResults).toEqual([
       { b: "asdf" },
       { b: "ASDF" },
       { b: "oyez" },
+      // Delivered again because we explicitly called resetLastResults.
+      { b: "oyez" },
     ]);
 
-    expect(
-      abResults.map(result => result.data)
-    ).toEqual([
+    expect(abResults).toEqual([
       { a: 123, b: "asdf" },
       { a: 234, b: "asdf" },
       { a: 234, b: "ASDF" },
       { a: 456, b: "oyez" },
+      // Delivered again because we explicitly called resetLastResults.
+      { a: 456, b: "oyez" },
     ]);
 
-    aSub.unsubscribe();
-    bSub.unsubscribe();
-    abSub.unsubscribe();
+    expect(cResults).toEqual([
+      {},
+      { c: "see" },
+      { c: "saw" },
+      {},
+    ]);
+
+    subs.forEach(sub => sub.unsubscribe());
 
     resolve();
   });

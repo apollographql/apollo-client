@@ -421,7 +421,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.previousData.loading =
       this.previousData.result && this.previousData.result.loading || false;
     this.previousData.result = result;
-    if (result.loading && options.clearPreviousDataOnLoad) {
+    if (result.loading && options.clearPreviousDataOnLoad && !equal(this.currentObservable.query.variables, this.previousOptions.variables)) {
       result.data = undefined;
     }
     return result;

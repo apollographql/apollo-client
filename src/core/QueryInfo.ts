@@ -90,10 +90,6 @@ export class QueryInfo {
 
   private dirty: boolean = false;
 
-  public isDirty() {
-    return this.dirty;
-  }
-
   public setDirty(): this {
     if (!this.dirty) {
       this.dirty = true;
@@ -111,7 +107,7 @@ export class QueryInfo {
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.diff;
     this.diff = diff;
-    if (!this.dirty && !equal(diff, oldDiff)) {
+    if (!this.dirty && diff?.result !== oldDiff?.result) {
       this.setDirty();
     }
   }
@@ -159,8 +155,9 @@ export class QueryInfo {
 
     if (this.shouldNotify() && this.getDiff()) {
       this.listeners.forEach(listener => listener(this));
-      this.dirty = false;
     }
+
+    this.dirty = false;
   }
 
   private shouldNotify() {

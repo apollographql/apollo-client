@@ -191,6 +191,11 @@ export abstract class EntityStore implements NormalizedCache {
     if (this instanceof Layer) {
       evicted = this.parent.evict(dataId, fieldName) || evicted;
     }
+    // Always invalidate the field to trigger rereading of watched
+    // queries, even if no cache data was modified by the eviction,
+    // because queries may depend on computed fields with custom read
+    // functions, whose values are not stored in the EntityStore.
+    this.group.dirty(dataId, fieldName || "__exists");
     return evicted;
   }
 

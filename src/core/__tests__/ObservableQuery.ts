@@ -1126,23 +1126,20 @@ describe('ObservableQuery', () => {
 
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(result.data).toBeUndefined();
-          expect(result.loading).toBe(true);
-        } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(result.loading).toBe(false);
           observable.refetch(variables2);
-        } else if (handleCount === 3) {
+        } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(result.loading).toBe(true);
-        } else if (handleCount === 4) {
+        } else if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(data2);
           expect(result.loading).toBe(false);
           observable.refetch(variables1);
-        } else if (handleCount === 5) {
+        } else if (handleCount === 4) {
           expect(stripSymbols(result.data)).toEqual(data2);
           expect(result.loading).toBe(true);
-        } else if (handleCount === 6) {
+        } else if (handleCount === 5) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(result.loading).toBe(false);
           resolve();

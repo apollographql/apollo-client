@@ -254,9 +254,9 @@ describe('QueryManager', () => {
           resolve();
         },
         error(apolloError) {
-          throw new Error(
-            'Returned a result when it was supposed to error out',
-          );
+          reject(new Error(
+            'Called observer.error instead of passing errors to observer.next',
+          ));
         },
       },
     });
@@ -1616,6 +1616,8 @@ describe('QueryManager', () => {
     const query1 = gql`
       {
         people_one(id: 1) {
+          __typename
+          id
           name
           age
         }
@@ -1624,6 +1626,10 @@ describe('QueryManager', () => {
 
     const data1 = {
       people_one: {
+        // Correctly identifying this entity is necessary so that fields
+        // from query1 and query2 can be safely merged in the cache.
+        __typename: "Human",
+        id: 1,
         name: 'Luke Skywalker',
         age: 50,
       },
@@ -1632,6 +1638,8 @@ describe('QueryManager', () => {
     const query2 = gql`
       {
         people_one(id: 1) {
+          __typename
+          id
           name
           username
         }
@@ -1640,6 +1648,8 @@ describe('QueryManager', () => {
 
     const data2 = {
       people_one: {
+        __typename: "Human",
+        id: 1,
         name: 'Luke Skywalker has a new name',
         username: 'luke',
       },
@@ -1667,7 +1677,9 @@ describe('QueryManager', () => {
       } else if (handleCount === 2) {
         expect(result.data).toEqual({
           people_one: {
-            name: 'Luke Skywalker',
+            __typename: "Human",
+            id: 1,
+            name: 'Luke Skywalker has a new name',
             age: 50,
           },
         });
@@ -2022,7 +2034,7 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync('should return stale data when we orphan a real-id node in the store with a real-id node', (resolve, reject) => {
+  itAsync('should not return stale data when we orphan a real-id node in the store with a real-id node', (resolve, reject) => {
     const query1 = gql`
       query {
         author {
@@ -2095,14 +2107,6 @@ describe('QueryManager', () => {
             loading: false,
             networkStatus: NetworkStatus.ready,
             stale: false,
-          });
-        },
-        result => {
-          expect(stripSymbols(result)).toEqual({
-            data: data1,
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            stale: true,
           });
         },
       ),
@@ -2302,7 +2306,6 @@ describe('QueryManager', () => {
     return Promise.all([
       observableToPromise(
         { observable: observableWithoutId },
-        result => expect(stripSymbols(result.data)).toEqual(dataWithoutId),
         result => expect(stripSymbols(result.data)).toEqual(dataWithoutId),
       ),
       observableToPromise(

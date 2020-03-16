@@ -378,7 +378,6 @@ describe('cache-and-network', function() {
           data: dataWithId(1),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.setVariables({ id: '2' });
       } else if (count === 2) {
@@ -386,14 +385,12 @@ describe('cache-and-network', function() {
           data: dataWithId(1),
           loading: true,
           networkStatus: NetworkStatus.setVariables,
-          stale: false,
         });
       } else if (count === 3) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.refetch();
       } else if (count === 4) {
@@ -401,14 +398,12 @@ describe('cache-and-network', function() {
           data: dataWithId(2),
           loading: true,
           networkStatus: NetworkStatus.refetch,
-          stale: false,
         });
       } else if (count === 5) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.refetch({ id: '3' });
       } else if (count === 6) {
@@ -416,14 +411,12 @@ describe('cache-and-network', function() {
           data: dataWithId(2),
           loading: true,
           networkStatus: NetworkStatus.setVariables,
-          stale: false,
         });
       } else if (count === 7) {
         expect(result).toEqual({
           data: dataWithId(3),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         resolve();
       }

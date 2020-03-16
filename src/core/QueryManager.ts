@@ -562,7 +562,6 @@ export class QueryManager<TStore> {
           data: diff.result,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus: networkStatus!,
-          stale: false,
         };
 
         // If the query wants updates on errors, add them to the result.
@@ -1163,7 +1162,6 @@ export class QueryManager<TStore> {
             errors: errorsFromStore,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            stale: false,
           });
         },
       });

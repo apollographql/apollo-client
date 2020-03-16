@@ -487,7 +487,7 @@ describe('QueryManager', () => {
     observable.pipe(map(result => assign({ fromRx: true }, result))).subscribe({
       next: wrap(reject, newResult => {
         const expectedResult = assign(
-          { fromRx: true, loading: false, networkStatus: 7, stale: false },
+          { fromRx: true, loading: false, networkStatus: 7 },
           expResult,
         );
         expect(stripSymbols(newResult)).toEqual(expectedResult);
@@ -2106,7 +2106,6 @@ describe('QueryManager', () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            stale: false,
           });
         },
       ),
@@ -2120,7 +2119,6 @@ describe('QueryManager', () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            stale: false,
           });
         },
       ),
@@ -2201,7 +2199,6 @@ describe('QueryManager', () => {
             data: {},
             loading: true,
             networkStatus: NetworkStatus.loading,
-            stale: false,
           });
         },
         result => {
@@ -2209,7 +2206,6 @@ describe('QueryManager', () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            stale: false,
           });
         },
         result => {
@@ -2217,7 +2213,6 @@ describe('QueryManager', () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            stale: false,
           });
         },
       ),
@@ -2231,7 +2226,6 @@ describe('QueryManager', () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            stale: false,
           });
         },
       ),

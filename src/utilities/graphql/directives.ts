@@ -8,6 +8,7 @@ import {
   DocumentNode,
   ArgumentNode,
   ValueNode,
+  ASTNode,
 } from 'graphql';
 
 import { visit } from 'graphql/language/visitor';
@@ -42,10 +43,10 @@ export function shouldInclude(
   });
 }
 
-export function getDirectiveNames(doc: DocumentNode) {
+export function getDirectiveNames(root: ASTNode) {
   const names: string[] = [];
 
-  visit(doc, {
+  visit(root, {
     Directive(node) {
       names.push(node.name.value);
     },
@@ -54,8 +55,8 @@ export function getDirectiveNames(doc: DocumentNode) {
   return names;
 }
 
-export function hasDirectives(names: string[], doc: DocumentNode) {
-  return getDirectiveNames(doc).some(
+export function hasDirectives(names: string[], root: ASTNode) {
+  return getDirectiveNames(root).some(
     (name: string) => names.indexOf(name) > -1,
   );
 }

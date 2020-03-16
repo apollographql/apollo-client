@@ -568,10 +568,6 @@ export class ObservableQuery<
 
   private observer: Observer<ApolloQueryResult<TData>> = {
     next: result => {
-      if (result.stale && !(result.errors && result.errors.length > 0)) {
-        return;
-      }
-
       if (this.lastError || this.isDifferentFromLastResult(result)) {
         const { queryManager } = this;
         const { query, variables, fetchPolicy } = this.options;

@@ -1,5 +1,5 @@
 import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
-import { invariant } from 'ts-invariant';
+import { InvariantError } from 'ts-invariant';
 
 import {
   createFragmentMap,
@@ -22,7 +22,7 @@ import {
   StoreObject,
 } from '../../utilities/graphql/storeUtils';
 
-import { shouldInclude } from '../../utilities/graphql/directives';
+import { shouldInclude, hasDirectives } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
 import { Policies, ReadMergeContext } from './policies';
@@ -229,19 +229,10 @@ export class StoreWriter {
 
         } else if (
           policies.usingPossibleTypes &&
-          !(
-            selection.directives &&
-            selection.directives.some(
-              ({ name }) =>
-                name && (name.value === 'defer' || name.value === 'client'),
-            )
-          )
+          !hasDirectives(["defer", "client"], selection)
         ) {
-          // XXX We'd like to throw an error, but for backwards compatibility's sake
-          // we just print a warning for the time being.
-          //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
-          invariant.warn(
-            `Missing field ${resultFieldKey} in ${JSON.stringify(
+          throw new InvariantError(
+            `Missing field '${resultFieldKey}' in ${JSON.stringify(
               result,
               null,
               2,

@@ -6,7 +6,6 @@ import { ApolloLink } from '../link/core/ApolloLink';
 import { HttpLink } from '../link/http/HttpLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { withWarning } from '../utilities/testing/wrap';
 import { ApolloClient } from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
@@ -827,7 +826,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      return withWarning(() => {
+      expect(() => {
         client.writeQuery({
           data: {
             todos: [
@@ -848,7 +847,7 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }, /Missing field description/);
+      }).toThrowError(/Missing field 'description' /);
     });
   });
 
@@ -1109,7 +1108,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      return withWarning(() => {
+      expect(() => {
         client.writeFragment({
           data: { __typename: 'Bar', i: 10 },
           id: 'bar',
@@ -1120,7 +1119,7 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }, /Missing field e/);
+      }).toThrowError(/Missing field 'e' /);
     });
 
     describe('change will call observable next', () => {

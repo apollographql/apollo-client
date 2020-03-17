@@ -11,7 +11,6 @@ import { WatchQueryOptions, FetchPolicy, WatchQueryFetchPolicy } from '../core/w
 import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';
 import subscribeAndCount from '../utilities/testing/subscribeAndCount';
-import { withWarning } from '../utilities/testing/wrap';
 import { itAsync } from '../utilities/testing/itAsync';
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { NetworkStatus, ObservableQuery } from '../core';
@@ -623,41 +622,6 @@ describe('client', () => {
       expect(error.graphQLErrors).toEqual(errors);
       resolve();
     });
-  });
-
-  itAsync.skip('should pass a network error correctly on a query using an observable network interface with a warning', (resolve, reject) => {
-    withWarning(() => {
-      const query = gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
-      const networkError = new Error('Some kind of network error.');
-
-      const link = ApolloLink.from([
-        () => {
-          return new Observable(_ => {
-            throw networkError;
-          });
-        },
-      ]);
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      });
-
-      client.query({ query }).catch((error: ApolloError) => {
-        expect(error.networkError).toBeDefined();
-        expect(error.networkError!.message).toEqual(networkError.message);
-        resolve();
-      });
-    }, /deprecated/);
   });
 
   itAsync('should pass a network error correctly on a query with apollo-link network interface', (resolve, reject) => {
@@ -2620,9 +2584,13 @@ describe('client', () => {
       }),
     });
 
-    return withWarning(
-      () => client.query({ query }),
-      /Missing field description/,
+    return client.query({ query }).then(
+      result => {
+        fail("should have errored");
+      },
+      error => {
+        expect(error.message).toMatch(/Missing field 'description' /);
+      },
     ).then(resolve, reject);
   });
 

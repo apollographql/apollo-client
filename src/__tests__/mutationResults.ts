@@ -6,7 +6,6 @@ import { ApolloLink } from '../link/core/ApolloLink';
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { withWarning } from '../utilities/testing/wrap';
 import { itAsync } from '../utilities/testing/itAsync';
 
 describe('mutation results', () => {
@@ -358,45 +357,50 @@ describe('mutation results', () => {
       },
     };
 
-    return withWarning(() => {
-      const { client, obsQuery } = setupObsQuery(
-        reject,
-        {
-          request: { query: queryTodos },
-          result: queryTodosResult,
-        },
-        {
-          request: { query: mutationTodo },
-          result: mutationTodoResult,
-        },
-      );
+    const { client, obsQuery } = setupObsQuery(
+      reject,
+      {
+        request: { query: queryTodos },
+        result: queryTodosResult,
+      },
+      {
+        request: { query: mutationTodo },
+        result: mutationTodoResult,
+      },
+    );
 
-      return obsQuery.result().then(() => {
-        // we have to actually subscribe to the query to be able to update it
-        return new Promise(resolve => {
-          handle = client.watchQuery({ query: queryTodos });
-          subscriptionHandle = handle.subscribe({
-            next(res: any) {
-              counter++;
-              resolve(res);
-            },
-          });
-        });
-      }).then(() => client.mutate({
-        mutation: mutationTodo,
-        updateQueries: {
-          todos: (prev, { mutationResult }) => {
-            const newTodo = (mutationResult as any).data.createTodo;
-            const newResults = {
-              todos: [...(prev as any).todos, newTodo],
-            };
-            return newResults;
+    return obsQuery.result().then(() => {
+      // we have to actually subscribe to the query to be able to update it
+      return new Promise(resolve => {
+        handle = client.watchQuery({ query: queryTodos });
+        subscriptionHandle = handle.subscribe({
+          next(res: any) {
+            counter++;
+            resolve(res);
           },
+        });
+      });
+    }).then(() => client.mutate({
+      mutation: mutationTodo,
+      updateQueries: {
+        todos: (prev, { mutationResult }) => {
+          const newTodo = (mutationResult as any).data.createTodo;
+          const newResults = {
+            todos: [...(prev as any).todos, newTodo],
+          };
+          return newResults;
         },
-      })).then(
-        () => subscriptionHandle.unsubscribe()
-      ).then(resolve, reject);
-    }, /Missing field description/);
+      },
+    })).then(
+      () => {
+        subscriptionHandle.unsubscribe();
+        fail("should have errored");
+      },
+      error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toMatch(/Missing field 'description' /);
+      },
+    ).then(resolve, reject);
   });
 
   describe('updateQueries', () => {

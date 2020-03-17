@@ -20,21 +20,6 @@ import { defaultNormalizedCacheFactory } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
 import { Policies } from '../policies';
 
-export function withWarning(func: Function, regex?: RegExp) {
-  let message: string = null as never;
-  const oldWarn = console.warn;
-
-  console.warn = (m: string) => (message = m);
-
-  return Promise.resolve(func()).then(val => {
-    if (regex) {
-      expect(message).toMatch(regex);
-    }
-    console.warn = oldWarn;
-    return val;
-  });
-}
-
 const getIdField = ({ id }: { id: string }) => id;
 
 describe('writing to the store', () => {
@@ -1563,14 +1548,12 @@ describe('writing to the store', () => {
         }),
       });
 
-      return withWarning(() => {
-        const newStore = writer.writeQueryToStore({
+      expect(() => {
+        writer.writeQueryToStore({
           query,
           result,
         });
-
-        expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
-      }, /Missing field description/);
+      }).toThrowError(/Missing field 'description' /);
     });
 
     it('should warn when it receives the wrong data inside a fragment', () => {
@@ -1617,14 +1600,12 @@ describe('writing to the store', () => {
         }),
       });
 
-      return withWarning(() => {
-        const newStore = writer.writeQueryToStore({
+      expect(() => {
+        writer.writeQueryToStore({
           query: queryWithInterface,
           result,
         });
-
-        expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
-      }, /Missing field price/);
+      }).toThrowError(/Missing field 'price' /);
     });
 
     it('should warn if a result is missing __typename when required', () => {
@@ -1645,14 +1626,12 @@ describe('writing to the store', () => {
         }),
       });
 
-      return withWarning(() => {
-        const newStore = writer.writeQueryToStore({
+      expect(() => {
+        writer.writeQueryToStore({
           query: addTypenameToDocument(query),
           result,
         });
-
-        expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
-      }, /Missing field __typename/);
+      }).toThrowError(/Missing field '__typename' /);
     });
 
     it('should not warn if a field is null', () => {

@@ -281,7 +281,7 @@ describe("type policies", function () {
           book: theInformationBookData,
         },
       });
-    }).toThrow("Missing field year while computing key fields");
+    }).toThrowError("Missing field 'year' while computing key fields");
   });
 
   describe("field policies", function () {
@@ -1859,7 +1859,7 @@ describe("type policies", function () {
             }
           `
         });
-      }).toThrow("Can't find field secret");
+      }).toThrowError("Can't find field 'secret' ");
 
       expect(secretReadAttempted).toBe(true);
     });

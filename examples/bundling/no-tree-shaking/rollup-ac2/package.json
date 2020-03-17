@@ -34,8 +34,8 @@
     "apollo-link-http": "^1.5.16",
     "graphql": "^14.5.8",
     "graphql-tag": "^2.10.1",
-    "react": "file:../../../../node_modules/react",
-    "react-dom": "file:../../../../node_modules/react-dom"
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.0.0",

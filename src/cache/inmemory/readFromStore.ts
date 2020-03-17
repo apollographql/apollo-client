@@ -242,9 +242,9 @@ export class StoreReader {
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
-            getMissing().push(new InvariantError(`Can't find field ${
+            getMissing().push(new InvariantError(`Can't find field '${
               selection.name.value
-            } on ${
+            }' on ${
               isReference(objectOrReference)
                 ? objectOrReference.__ref + " object"
                 : "object " + JSON.stringify(objectOrReference, null, 2)

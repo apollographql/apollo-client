@@ -847,7 +847,7 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(/Missing field description/);
+      }).toThrowError(/Missing field 'description' /);
     });
   });
 
@@ -1119,7 +1119,7 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }).toThrowError(/Missing field e/);
+      }).toThrowError(/Missing field 'e' /);
     });
 
     describe('change will call observable next', () => {

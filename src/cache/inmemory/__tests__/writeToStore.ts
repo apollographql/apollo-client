@@ -1553,7 +1553,7 @@ describe('writing to the store', () => {
           query,
           result,
         });
-      }).toThrowError(/Missing field description/);
+      }).toThrowError(/Missing field 'description' /);
     });
 
     it('should warn when it receives the wrong data inside a fragment', () => {
@@ -1605,7 +1605,7 @@ describe('writing to the store', () => {
           query: queryWithInterface,
           result,
         });
-      }).toThrowError(/Missing field price/);
+      }).toThrowError(/Missing field 'price' /);
     });
 
     it('should warn if a result is missing __typename when required', () => {
@@ -1631,7 +1631,7 @@ describe('writing to the store', () => {
           query: addTypenameToDocument(query),
           result,
         });
-      }).toThrowError(/Missing field __typename/);
+      }).toThrowError(/Missing field '__typename' /);
     });
 
     it('should not warn if a field is null', () => {

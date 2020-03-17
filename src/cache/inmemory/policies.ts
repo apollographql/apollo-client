@@ -785,7 +785,7 @@ function computeKeyObject(
       invariant(
         hasOwn.call(response, responseName),
         // TODO Make this appropriate for keyArgs as well
-        `Missing field ${responseName} while computing key fields`,
+        `Missing field '${responseName}' while computing key fields`,
       );
       keyObj[prevKey = s] = response[responseName];
     }

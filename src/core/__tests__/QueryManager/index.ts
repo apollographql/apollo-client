@@ -8,6 +8,7 @@ import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { Operation } from '../../../link/core/types';
+import { MissingFieldError } from '../../../cache';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,

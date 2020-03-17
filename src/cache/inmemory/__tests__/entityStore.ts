@@ -6,6 +6,7 @@ import { Policies } from '../policies';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
 import { Reference } from '../../../utilities/graphql/storeUtils';
+import { MissingFieldError } from '../..';
 
 describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
@@ -1065,6 +1066,20 @@ describe('EntityStore', () => {
       result: {
         authorOfBook: tedWithoutHobby,
       },
+      missing: [
+        new MissingFieldError(
+          'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
+          ["authorOfBook", "hobby"],
+          expect.anything(),
+          expect.anything(),
+        ),
+        new MissingFieldError(
+          'Can\'t find field \'publisherOfBook\' on ROOT_QUERY object',
+          ["publisherOfBook"],
+          expect.anything(),
+          expect.anything(),
+        ),
+      ],
     });
 
     cache.evict("ROOT_QUERY", "authorOfBook");
@@ -1296,12 +1311,22 @@ describe('EntityStore', () => {
 
     expect(cache.evict(authorId)).toBe(false);
 
+    const missing = [
+      new MissingFieldError(
+        "Dangling reference to missing Author:2 object",
+        ["book", "author"],
+        expect.anything(),
+        expect.anything(),
+      ),
+    ];
+
     expect(cache.diff({
       query,
       optimistic: true,
       returnPartialData: true,
     })).toEqual({
       complete: false,
+      missing,
       result: {
         book: {
           __typename: "Book",
@@ -1331,6 +1356,7 @@ describe('EntityStore', () => {
       returnPartialData: true,
     })).toEqual({
       complete: false,
+      missing,
       result: {
         book: {
           __typename: "Book",
@@ -1553,6 +1579,14 @@ describe('EntityStore', () => {
           isbn: "031648637X",
         },
       },
+      missing: [
+        new MissingFieldError(
+          'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
+          ["book", "title"],
+          expect.anything(),
+          expect.anything(),
+        ),
+      ],
     });
 
     expect(cache.extract()).toEqual({

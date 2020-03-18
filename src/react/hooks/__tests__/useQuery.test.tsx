@@ -14,7 +14,7 @@ import { useQuery } from '../useQuery';
 import { requireReactLazily } from '../../react';
 
 const React = requireReactLazily();
-const { useState, useReducer } = React;
+const { useState, useReducer, useEffect, useRef } = React;
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -164,6 +164,97 @@ describe('useQuery Hook', () => {
       );
 
       return wait();
+    });
+
+    it('should return result even when it is deeply equivalent', async () => {
+      const carQuery: DocumentNode = gql`
+        query cars($id: Int) {
+          cars(id: $id) {
+            id
+            make
+            model
+            vin
+            __typename
+          }
+        }
+      `;
+
+      const carData1 = {
+        cars: [
+          {
+            id: 1,
+            make: 'Audi',
+            model: 'RS8',
+            vin: 'DOLLADOLLABILL',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const mocks = [
+        {
+          request: { query: carQuery, variables: { id: 1 } },
+          result: { data: carData1 },
+        },
+        {
+          request: { query: carQuery, variables: { id: 2 } },
+          result: { data: carData1 },
+        },
+      ];
+
+      let renderCount = -1;
+      function App() {
+        const [id, setId] = useState(1);
+        const idRef = useRef(null);
+        useEffect(() => {
+          if (id === 0 && idRef.current) {
+            setId(idRef.current);
+            idRef.current = null;
+          }
+        }, [id]);
+        const { loading, data } = useQuery(carQuery, {
+          variables: { id },
+          skip: !id,
+        });
+
+        renderCount += 1;
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeTruthy();
+            break;
+          case 1:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(carData1);
+            setId(0);
+            idRef.current = 2;
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            break;
+          case 3:
+          case 4:
+            expect(loading).toBeTruthy();
+            break;
+          case 5:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(carData1);
+            break;
+          default:
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(5);
+      });
     });
   });
 

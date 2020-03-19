@@ -1,5 +1,6 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
+import equal from '@wry/equality';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -571,8 +572,12 @@ export class QueryManager<TStore> {
 
         observer.next && observer.next(result);
 
-      } else {
-        // TODO Warn in this case, or call observer.error?
+      } else if (process.env.NODE_ENV !== 'production' &&
+                 isNonEmptyArray(diff.missing) &&
+                 !equal(diff.result, {})) {
+        invariant.warn(`Missing cache result fields: ${
+          diff.missing.map(m => m.path.join('.')).join(', ')
+        }`, diff.missing);
       }
     };
   }

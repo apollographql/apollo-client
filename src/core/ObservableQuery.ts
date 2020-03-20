@@ -419,7 +419,6 @@ export class ObservableQuery<
         oldFetchPolicy === 'standby' ||
         fetchPolicy === 'network-only'
       ),
-      opts.fetchResults,
     );
   }
 
@@ -447,13 +446,10 @@ export class ObservableQuery<
    * @param tryFetch: Try and fetch new results even if the variables haven't
    * changed (we may still just hit the store, but if there's nothing in there
    * this will refetch)
-   *
-   * @param fetchResults: Option to ignore fetching results when updating variables
    */
   public setVariables(
     variables: TVariables,
     tryFetch: boolean = false,
-    fetchResults = true,
   ): Promise<ApolloQueryResult<TData> | void> {
     // since setVariables restarts the subscription, we reset the tornDown status
     this.isTornDown = false;
@@ -464,7 +460,7 @@ export class ObservableQuery<
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.observers.size && fetchResults
+      return this.observers.size
         ? this.result()
         : Promise.resolve();
     }

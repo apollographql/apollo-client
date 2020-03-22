@@ -19,6 +19,12 @@ First, let's install the Apollo Client package:
 npm install @apollo/client
 ```
 
+You will also need the graphql package, which is a peer dependency of Apollo Client. If you don't have it yet, install it:
+
+```bash
+npm install graphql
+```
+
 > If you'd like to walk through this tutorial yourself, we recommend either running a new React project locally with [`create-react-app`](https://reactjs.org/docs/create-a-new-react-app.html) or creating a new React sandbox on [CodeSandbox](https://codesandbox.io/). For reference, we will be using [this CodeSandbox](https://codesandbox.io/s/48p1r2roz4) as our GraphQL server for our sample app, which pulls exchange rate data from the Coinbase API. If you'd like to skip ahead and see the app we're about to build, you can view it on [CodeSandbox](https://codesandbox.io/s/nn9y2wzyw4).
 
 ## Create a client

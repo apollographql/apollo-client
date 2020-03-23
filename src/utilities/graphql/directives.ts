@@ -47,7 +47,7 @@ export function getDirectiveNames(root: ASTNode) {
   const names: string[] = [];
 
   visit(root, {
-    Directive(node) {
+    Directive(node: DirectiveNode) {
       names.push(node.name.value);
     },
   });

@@ -22,7 +22,12 @@ export function getTypenameFromStoreObject(
 const FieldNamePattern = /^[_A-Za-z0-9]+/;
 export function fieldNameFromStoreName(storeFieldName: string) {
   const match = storeFieldName.match(FieldNamePattern);
-  return match && match[0];
+
+  if (!match) {
+    throw new Error('cannot find fieldName because storeFieldName has invalid pattern');
+  }
+
+  return match[0];
 }
 
 // Invoking merge functions needs to happen after processSelectionSet has

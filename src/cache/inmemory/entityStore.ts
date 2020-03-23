@@ -65,7 +65,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
+  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined {
     // The has method (above) calls lookup with dependOnExistence = true, so
     // that it can later be invalidated when we add or remove a StoreObject for
     // this dataId. Any consumer who cares about the contents of the StoreObject
@@ -211,7 +211,10 @@ export abstract class EntityStore implements NormalizedCache {
     });
     if (newData) {
       Object.keys(newData).forEach(dataId => {
-        this.merge(dataId, newData[dataId]);
+        const newDatum = newData[dataId];
+        if (newDatum !== void 0) {
+          this.merge(dataId, newDatum);
+        }
       });
     }
   }

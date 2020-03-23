@@ -501,8 +501,8 @@ export class QueryManager<TStore> {
     return store;
   }
 
-  public getQueryStoreValue(queryId: string): QueryStoreValue {
-    return queryId && this.queries.get(queryId);
+  public getQueryStoreValue(queryId: string): QueryStoreValue | undefined {
+    return queryId ? this.queries.get(queryId) : undefined;
   }
 
   private setNetStatus(queryId: string, status: NetworkStatus) {
@@ -551,7 +551,7 @@ export class QueryManager<TStore> {
 
       // This call will always succeed because we do not invoke listener
       // functions unless there is a DiffResult to broadcast.
-      const diff = info.getDiff();
+      const diff = info.getDiff() as Cache.DiffResult<any>;
 
       // If there is some data missing and the user has told us that they
       // do not tolerate partial data then we want to return the previous
@@ -1194,11 +1194,11 @@ export class QueryManager<TStore> {
     };
   }
 
-  public checkInFlight(queryId: string) {
+  public checkInFlight(queryId: string): boolean {
     const query = this.getQueryStoreValue(queryId);
     return (
-      query &&
-      query.networkStatus &&
+      !!query &&
+      !!query.networkStatus &&
       query.networkStatus !== NetworkStatus.ready &&
       query.networkStatus !== NetworkStatus.error
     );

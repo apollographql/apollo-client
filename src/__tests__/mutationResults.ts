@@ -1329,5 +1329,42 @@ describe('mutation results', () => {
         console.error = oldError;
       }).then(resolve, reject);
     });
+
+    itAsync('mutate<MyType>() data should never be `undefined` in case of success', (resolve, reject) => {
+
+      const mutation = gql`
+        mutation Foo {
+          foo {
+            bar
+          }
+        }
+      `;
+
+      const result1 = {
+        data: {
+          foo: {
+            bar: 'a',
+          },
+        },
+      };
+
+      const client = new ApolloClient({
+        link: mockSingleLink({
+          request: {query: mutation} as any,
+          result: result1,
+
+        }).setOnError(reject),
+        cache: new InMemoryCache({addTypename: false}),
+      });
+
+      client.mutate<{ foo: { bar: string; }; }>({
+        mutation: mutation,
+      }).then(result => {
+        // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'."
+        if (result.data.foo.bar) {
+          resolve();
+        }
+      }, reject);
+    })
   });
 });

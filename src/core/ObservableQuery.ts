@@ -245,7 +245,7 @@ export class ObservableQuery<
   public resetQueryStoreErrors() {
     const queryStore = this.queryManager.getQueryStoreValue(this.queryId);
     if (queryStore) {
-      queryStore.networkError = null;
+      queryStore.networkError = undefined;
       queryStore.graphQLErrors = [];
     }
   }

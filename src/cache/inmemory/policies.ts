@@ -42,14 +42,19 @@ export type TypePolicies = {
 // type KeySpecifier = (string | KeySpecifier)[]
 type KeySpecifier = (string | any[])[];
 
+type KeyFieldsContext = {
+  typename: string;
+  selectionSet?: SelectionSetNode;
+  fragmentMap?: FragmentMap;
+  policies: Policies;
+  // May be set by the KeyFieldsFunction to report fields that were involved
+  // in computing the ID. Never passed in by the caller.
+  keyObject?: Record<string, any>;
+};
+
 type KeyFieldsFunction = (
   object: Readonly<StoreObject>,
-  context: {
-    typename: string;
-    selectionSet?: SelectionSetNode;
-    fragmentMap?: FragmentMap;
-    policies: Policies;
-  },
+  context: KeyFieldsContext,
 ) => KeySpecifier | ReturnType<IdGetter>;
 
 export type TypePolicy = {
@@ -237,14 +242,14 @@ export class Policies {
     object: StoreObject,
     selectionSet?: SelectionSetNode,
     fragmentMap?: FragmentMap,
-  ): string | null {
+  ): [string | null, StoreObject?] {
     // TODO Consider subtypes?
     // TODO Use an AliasMap here?
     const typename = selectionSet && fragmentMap
       ? getTypenameFromResult(object, selectionSet, fragmentMap)
       : object.__typename;
 
-    const context = {
+    const context: KeyFieldsContext = {
       typename,
       selectionSet,
       fragmentMap,
@@ -265,7 +270,9 @@ export class Policies {
       }
     }
 
-    return id && String(id);
+    id = id && String(id);
+
+    return context.keyObject ? [id, context.keyObject] : [id];
   }
 
   public addTypePolicies(typePolicies: TypePolicies) {
@@ -718,9 +725,11 @@ function keyFieldsFnFromSpecifier(
         info.aliasMap = makeAliasMap(context.selectionSet, context.fragmentMap)
       );
     }
-    return `${context.typename}:${
-      JSON.stringify(computeKeyObject(object, specifier, aliasMap))
-    }`;
+
+    const keyObject = context.keyObject =
+      computeKeyObject(object, specifier, aliasMap);
+
+    return `${context.typename}:${JSON.stringify(keyObject)}`;
   };
 }
 

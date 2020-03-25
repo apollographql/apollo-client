@@ -55,11 +55,6 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
   errorPolicy?: ErrorPolicy;
 
   /**
-   * Whether or not to fetch results
-   */
-  fetchResults?: boolean;
-
-  /**
    * Context to be passed to link execution chain
    */
   context?: any;

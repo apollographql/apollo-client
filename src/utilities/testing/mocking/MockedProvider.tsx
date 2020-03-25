@@ -16,7 +16,7 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   cache?: ApolloCache<TSerializedCache>;
   resolvers?: Resolvers;
   childProps?: object;
-  children?: React.ReactElement;
+  children?: React.ReactNode;
   link?: ApolloLink;
 }
 

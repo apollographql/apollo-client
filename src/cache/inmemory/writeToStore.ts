@@ -20,6 +20,7 @@ import {
   resultKeyNameFromField,
   StoreValue,
   StoreObject,
+  Reference,
 } from '../../utilities/graphql/storeUtils';
 
 import { shouldInclude, hasDirectives } from '../../utilities/graphql/directives';
@@ -41,12 +42,13 @@ export interface WriteContext extends ReadMergeContext {
 };
 
 interface ProcessSelectionSetOptions {
+  dataId?: string,
   result: Record<string, any>;
   selectionSet: SelectionSetNode;
   context: WriteContext;
-  typename: string;
-  out: {
-    shouldApplyMerges?: boolean;
+  typename?: string;
+  out?: {
+    shouldApplyMerges: boolean;
   };
 }
 
@@ -97,10 +99,17 @@ export class StoreWriter {
 
     const merger = makeProcessedFieldsMerger();
 
-    return this.writeSelectionSetToStore({
+    this.processSelectionSet({
       result: result || Object.create(null),
+      // Since we already know the dataId here, pass it to
+      // processSelectionSet to skip calling policies.identify
+      // unnecessarily.
       dataId,
       selectionSet: operationDefinition.selectionSet,
+      // If dataId is a well-known root ID such as ROOT_QUERY, we can
+      // infer its __typename immediately here. Otherwise, the __typename
+      // will be determined in processSelectionSet, as usual.
+      typename: this.policies.rootTypenamesById[dataId],
       context: {
         store,
         written: Object.create(null),
@@ -116,78 +125,54 @@ export class StoreWriter {
         getFieldValue: store.getFieldValue,
       },
     });
-  }
-
-  private writeSelectionSetToStore({
-    dataId,
-    result,
-    selectionSet,
-    context,
-  }: {
-    dataId: string;
-    result: Record<string, any>;
-    selectionSet: SelectionSetNode;
-    context: WriteContext;
-  }): NormalizedCache {
-    const { policies } = this;
-    const { store, written } = context;
-
-    // Avoid processing the same entity object using the same selection set
-    // more than once. We use an array instead of a Set since most entity IDs
-    // will be written using only one selection set, so the size of this array
-    // is likely to be very small, meaning indexOf is likely to be faster than
-    // Set.prototype.has.
-    const sets = written[dataId] || (written[dataId] = []);
-    if (sets.indexOf(selectionSet) >= 0) return store;
-    sets.push(selectionSet);
-
-    const typename =
-      // If the result has a __typename, trust that.
-      getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
-      // If the entity identified by dataId has a __typename in the store,
-      // fall back to that.
-      store.get(dataId, "__typename") as string;
-
-    const out: ProcessSelectionSetOptions["out"] = Object.create(null);
-
-    let processed = this.processSelectionSet({
-      result,
-      selectionSet,
-      context,
-      typename,
-      out,
-    });
-
-    if (out.shouldApplyMerges) {
-      processed = policies.applyMerges(
-        makeReference(dataId),
-        processed,
-        // Since WriteContext extends ReadMergeContext, we can pass it
-        // here without any modifications.
-        context,
-      );
-    }
-
-    store.merge(dataId, processed);
 
     return store;
   }
 
   private processSelectionSet({
+    dataId,
     result,
     selectionSet,
     context,
     typename,
     // This object allows processSelectionSet to report useful information
     // to its callers without explicitly returning that information.
-    out,
-  }: ProcessSelectionSetOptions): StoreObject {
+    out = {
+      shouldApplyMerges: false,
+    },
+  }: ProcessSelectionSetOptions): StoreObject | Reference {
+    const { policies } = this;
+
+    if (!dataId) {
+      const id = policies.identify(result, selectionSet, context.fragmentMap);
+      if ("string" === typeof id) {
+        dataId = id;
+      }
+    }
+
+    if ("string" === typeof dataId) {
+      // Avoid processing the same entity object using the same selection
+      // set more than once. We use an array instead of a Set since most
+      // entity IDs will be written using only one selection set, so the
+      // size of this array is likely to be very small, meaning indexOf is
+      // likely to be faster than Set.prototype.has.
+      const sets = context.written[dataId] || (context.written[dataId] = []);
+      if (sets.indexOf(selectionSet) >= 0) return makeReference(dataId);
+      sets.push(selectionSet);
+    }
+
+    // If typename was not passed in, infer it. Note that typename is
+    // always passed in for tricky-to-infer cases such as "Query" for
+    // ROOT_QUERY.
+    typename = typename ||
+      getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
+      context.store.get(dataId, "__typename") as string;
+
     let mergedFields: StoreObject = Object.create(null);
-    if (typeof typename === "string") {
+    if ("string" === typeof typename) {
       mergedFields.__typename = typename;
     }
 
-    const { policies } = this;
     const workSet = new Set(selectionSet.selections);
 
     workSet.forEach(selection => {
@@ -252,6 +237,18 @@ export class StoreWriter {
       }
     });
 
+    if ("string" === typeof dataId) {
+      const entityRef = makeReference(dataId);
+
+      if (out.shouldApplyMerges) {
+        mergedFields = policies.applyMerges(entityRef, mergedFields, context);
+      }
+
+      context.store.merge(dataId, mergedFields);
+
+      return entityRef;
+    }
+
     return mergedFields;
   }
 
@@ -273,32 +270,10 @@ export class StoreWriter {
         (item, i) => this.processFieldValue(item, field, context, out));
     }
 
-    if (value) {
-      const dataId = this.policies.identify(
-        value,
-        // Since value is a result object rather than a normalized StoreObject,
-        // we need to consider aliases when computing its key fields.
-        field.selectionSet,
-        context.fragmentMap,
-      );
-
-      if (typeof dataId === 'string') {
-        this.writeSelectionSetToStore({
-          dataId,
-          result: value,
-          selectionSet: field.selectionSet,
-          context,
-        });
-        return makeReference(dataId);
-      }
-    }
-
     return this.processSelectionSet({
       result: value,
       selectionSet: field.selectionSet,
       context,
-      typename: getTypenameFromResult(
-        value, field.selectionSet, context.fragmentMap),
       out,
     });
   }

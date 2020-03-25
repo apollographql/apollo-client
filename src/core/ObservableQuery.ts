@@ -61,10 +61,11 @@ export class ObservableQuery<
   public readonly queryName?: string;
   public readonly watching: boolean;
 
-  /**
-   * The current value of the variables for this query. Can change.
-   */
-  public variables: TVariables;
+  // Computed shorthand for this.options.variables, preserved for
+  // backwards compatibility.
+  public get variables(): TVariables {
+    return this.options.variables;
+  }
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
@@ -93,7 +94,6 @@ export class ObservableQuery<
 
     // query information
     this.options = options;
-    this.variables = options.variables || ({} as TVariables);
     this.queryId = queryManager.generateQueryId();
     this.watching = shouldSubscribe;
 
@@ -188,7 +188,7 @@ export class ObservableQuery<
       // the original `ObservableQuery`. We'll update the observable query
       // variables here to match, so retrieving from the cache doesn't fail.
       if (queryStoreValue.variables) {
-        this.variables = this.options.variables = {
+        this.options.variables = {
           ...this.options.variables,
           ...(queryStoreValue.variables as TVariables),
         };
@@ -274,19 +274,11 @@ export class ObservableQuery<
       fetchPolicy = 'network-only';
     }
 
-    if (!equal(this.variables, variables)) {
-      // update observable variables
-      this.variables = {
-        ...this.variables,
-        ...variables,
-      };
-    }
-
-    if (!equal(this.options.variables, this.variables)) {
+    if (!equal(this.options.variables, variables)) {
       // Update the existing options with new variables
       this.options.variables = {
         ...this.options.variables,
-        ...this.variables,
+        ...variables,
       };
     }
 
@@ -306,7 +298,7 @@ export class ObservableQuery<
         ...this.options,
         ...fetchMoreOptions,
         variables: {
-          ...this.variables,
+          ...this.options.variables,
           ...fetchMoreOptions.variables,
         },
       }),
@@ -396,7 +388,11 @@ export class ObservableQuery<
   public setOptions(
     opts: WatchQueryOptions,
   ): Promise<ApolloQueryResult<TData> | void> {
-    const { fetchPolicy: oldFetchPolicy } = this.options;
+    const {
+      fetchPolicy: oldFetchPolicy,
+      variables: oldVariables,
+    } = this.options;
+
     this.options = {
       ...this.options,
       ...opts,
@@ -408,18 +404,17 @@ export class ObservableQuery<
       this.stopPolling();
     }
 
-    const { fetchPolicy } = opts;
+    // Try to fetch the query if fetchPolicy changed from either cache-only
+    // or standby to something else, or changed to network-only.
+    const fetchPolicyChanged = oldFetchPolicy !== opts.fetchPolicy && (
+      oldFetchPolicy === 'cache-only' ||
+      oldFetchPolicy === 'standby' ||
+      opts.fetchPolicy === 'network-only'
+    );
 
     return this.setVariables(
       this.options.variables as TVariables,
-      // Try to fetch the query if fetchPolicy changed from either cache-only
-      // or standby to something else, or changed to network-only.
-      oldFetchPolicy !== fetchPolicy && (
-        oldFetchPolicy === 'cache-only' ||
-        oldFetchPolicy === 'standby' ||
-        fetchPolicy === 'network-only'
-      ),
-      opts.fetchResults,
+      fetchPolicyChanged || !equal(this.variables, oldVariables),
     );
   }
 
@@ -447,29 +442,24 @@ export class ObservableQuery<
    * @param tryFetch: Try and fetch new results even if the variables haven't
    * changed (we may still just hit the store, but if there's nothing in there
    * this will refetch)
-   *
-   * @param fetchResults: Option to ignore fetching results when updating variables
    */
   public setVariables(
     variables: TVariables,
-    tryFetch: boolean = false,
-    fetchResults = true,
+    tryFetch = !equal(this.variables, variables),
   ): Promise<ApolloQueryResult<TData> | void> {
     // since setVariables restarts the subscription, we reset the tornDown status
     this.isTornDown = false;
 
-    variables = variables || this.variables;
-
-    if (!tryFetch && equal(variables, this.variables)) {
+    if (!tryFetch) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.observers.size && fetchResults
+      return this.observers.size
         ? this.result()
         : Promise.resolve();
     }
 
-    this.variables = this.options.variables = variables;
+    this.options.variables = variables;
 
     // See comment above
     if (!this.observers.size) {
@@ -605,7 +595,7 @@ export class ObservableQuery<
                 iterateObserversSafely(this.observers, 'next', updatedResult);
               });
             } else {
-              this.variables = this.options.variables = variables;
+              this.options.variables = variables;
               iterateObserversSafely(this.observers, 'next', result);
             }
           });

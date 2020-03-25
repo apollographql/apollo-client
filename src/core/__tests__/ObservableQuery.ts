@@ -602,41 +602,12 @@ describe('ObservableQuery', () => {
           return;
         }
         observable
-          .setOptions({ fetchPolicy: 'cache-and-network', fetchResults: true })
+          .setOptions({ fetchPolicy: 'cache-and-network' })
           .then(res => {
             // returns dataOne from cache
             expect(stripSymbols(res.data)).toEqual(dataOne);
             resolve();
           });
-      });
-    });
-
-    itAsync('can bypass looking up results if passed to options', (resolve, reject) => {
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        reject,
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataTwo },
-        },
-      );
-
-      let errored = false;
-      subscribeAndCount(reject, observable, handleCount => {
-        if (handleCount === 1) {
-          observable
-            .setOptions({ fetchResults: false, fetchPolicy: 'standby' })
-            .then(res => {
-              expect(res).toBeUndefined();
-              setTimeout(() => !errored && resolve(), 5);
-            });
-        } else if (handleCount > 1) {
-          errored = true;
-          throw new Error('Handle should not be called twice');
-        }
       });
     });
   });

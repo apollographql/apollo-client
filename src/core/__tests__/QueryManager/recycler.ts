@@ -81,7 +81,6 @@ describe('Subscription lifecycles', () => {
           observable.setOptions({
             fetchPolicy: 'standby',
             pollInterval: 0,
-            fetchResults: false,
           });
 
           observableQueries.push({

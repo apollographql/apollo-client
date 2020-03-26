@@ -239,14 +239,21 @@ export class QueryManager<TStore> {
           self.mutationStore.markMutationResult(mutationId);
 
           if (fetchPolicy !== 'no-cache') {
-            markMutationResult({
-              mutationId,
-              result,
-              document: mutation,
-              variables,
-              queryUpdatersById: generateUpdateQueriesInfo(),
-              update: updateWithProxyFn,
-            }, self.cache);
+            try {
+              markMutationResult({
+                mutationId,
+                result,
+                document: mutation,
+                variables,
+                queryUpdatersById: generateUpdateQueriesInfo(),
+                update: updateWithProxyFn,
+              }, self.cache);
+            } catch (e) {
+              error = new ApolloError({
+                networkError: e,
+              });
+              return;
+            }
           }
 
           storeResult = result as FetchResult<T>;

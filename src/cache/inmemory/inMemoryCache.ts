@@ -215,7 +215,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // to identify entities of that type. If you pass a query result object, be
   // sure that none of the primary key fields have been renamed by aliasing.
   public identify(object: StoreObject): string | null {
-    return this.policies.identify(object);
+    return this.policies.identify(object)[0];
   }
 
   public evict(dataId: string, fieldName?: string): boolean {

@@ -1170,8 +1170,8 @@ describe('EntityStore', () => {
       c: 3,
     })).toBe('ABCs:{"b":2,"a":1,"c":3}');
 
-    expect(() => cache.identify(ABCs)).toThrow(
-      "Missing field b while computing key fields",
+    expect(() => cache.identify(ABCs)).toThrowError(
+      "Missing field 'b' while computing key fields",
     );
 
     expect(cache.readFragment({

@@ -28,10 +28,10 @@
     "analyze": "npm run build && source-map-explorer public/js/app-no-react.min.js"
   },
   "dependencies": {
-    "@apollo/client": "file:../../../../",
+    "@apollo/client": "file:../../../../dist",
     "graphql": "^14.5.8",
-    "react": "file:../../../../node_modules/react",
-    "react-dom": "file:../../../../node_modules/react-dom"
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.0.0",

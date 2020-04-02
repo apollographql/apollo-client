@@ -176,7 +176,7 @@ export class StoreReader {
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
     if (hasMissingFields && !returnPartialData) {
-      throw execResult.missing[0];
+      throw execResult.missing![0];
     }
 
     return {

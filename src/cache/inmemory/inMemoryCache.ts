@@ -340,4 +340,4 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 }
 
-export type ReactiveVar<T> = (newValue?: T) => T;
+export type ReactiveVar<T> = (newValue?: T) => T | undefined;

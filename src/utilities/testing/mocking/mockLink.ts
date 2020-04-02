@@ -102,14 +102,14 @@ export class MockLink extends ApolloLink {
 
     this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
-    const { newData } = response;
+    const { newData } = response!;
 
     if (newData) {
-      response.result = newData();
-      this.mockedResponsesByKey[key].push(response);
+      response!.result = newData();
+      this.mockedResponsesByKey[key].push(response!);
     }
 
-    const { result, error, delay } = response;
+    const { result, error, delay } = response!;
 
     if (!result && !error) {
       this.onError(new Error(
@@ -150,7 +150,7 @@ export class MockLink extends ApolloLink {
         newMockedResponse.request.query
     );
     invariant(queryWithoutConnection, "query is required");
-    newMockedResponse.request.query = queryWithoutConnection;
+    newMockedResponse.request.query = queryWithoutConnection!;
     const query = removeClientSetsFromDocument(newMockedResponse.request.query);
     if (query) {
       newMockedResponse.request.query = query;

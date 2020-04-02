@@ -292,7 +292,7 @@ export abstract class EntityStore implements NormalizedCache {
         if (isReference(obj)) {
           found[obj.__ref] = true;
         } else if (canTraverse(obj)) {
-          Object.values(obj)
+          Object.values(obj!)
             // No need to add primitive values to the workSet, since they cannot
             // contain reference objects.
             .filter(canTraverse)
@@ -329,7 +329,7 @@ export abstract class EntityStore implements NormalizedCache {
     const [id] = this.policies.identify(object);
     const ref = id && makeReference(id);
     if (ref && mergeIntoStore) {
-      this.merge(id, object);
+      this.merge(id!, object);
     }
     return ref;
   }
@@ -391,7 +391,7 @@ export namespace EntityStore {
     // single distinct CacheGroup object. Since this shared object must
     // outlast the Layer instances themselves, it needs to be created and
     // owned by the Root instance.
-    private sharedLayerGroup: CacheGroup = null;
+    private sharedLayerGroup: CacheGroup | null = null;
 
     constructor({
       policies,
@@ -412,7 +412,7 @@ export namespace EntityStore {
       replay: (layer: EntityStore) => any,
     ): EntityStore {
       // The replay function will be called in the Layer constructor.
-      return new Layer(layerId, this, replay, this.sharedLayerGroup);
+      return new Layer(layerId, this, replay, this.sharedLayerGroup!);
     }
 
     public removeLayer(layerId: string): Root {

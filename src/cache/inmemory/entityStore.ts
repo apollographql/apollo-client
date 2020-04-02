@@ -211,10 +211,7 @@ export abstract class EntityStore implements NormalizedCache {
     });
     if (newData) {
       Object.keys(newData).forEach(dataId => {
-        const newDatum = newData[dataId];
-        if (newDatum !== void 0) {
-          this.merge(dataId, newDatum);
-        }
+        this.merge(dataId, newData[dataId] as StoreObject);
       });
     }
   }

@@ -1,4 +1,5 @@
 import { FieldNode } from 'graphql';
+import { invariant } from 'ts-invariant';
 
 import { NormalizedCache } from './types';
 import {
@@ -22,12 +23,12 @@ export function getTypenameFromStoreObject(
 const FieldNamePattern = /^[_A-Za-z0-9]+/;
 export function fieldNameFromStoreName(storeFieldName: string) {
   const match = storeFieldName.match(FieldNamePattern);
-
-  if (!match) {
-    throw new Error('cannot find fieldName because storeFieldName has invalid pattern');
-  }
-
-  return match[0];
+  invariant(
+    match,
+    "Field name pattern cannot be matched against the storeFieldName of " +
+    `"${storeFieldName}"`
+  );
+  return match![0];
 }
 
 // Invoking merge functions needs to happen after processSelectionSet has

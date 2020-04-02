@@ -185,10 +185,9 @@ export function defaultDataIdFromObject(object: StoreObject) {
     if (typeof id !== "undefined") return `${__typename}:${id}`;
     if (typeof _id !== "undefined") return `${__typename}:${_id}`;
   }
-  return null;
 }
 
-const nullKeyFieldsFn: KeyFieldsFunction = () => null;
+const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
 
 export type PossibleTypesMap = {
@@ -242,7 +241,7 @@ export class Policies {
     object: StoreObject,
     selectionSet?: SelectionSetNode,
     fragmentMap?: FragmentMap,
-  ): [string | null, StoreObject?] {
+  ): [string?, StoreObject?] {
     // TODO Consider subtypes?
     // TODO Use an AliasMap here?
     const typename = selectionSet && fragmentMap
@@ -256,7 +255,7 @@ export class Policies {
       policies: this,
     };
 
-    let id: string | null | undefined = null;
+    let id: string | undefined;
 
     const policy = this.getTypePolicy(typename, false);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
@@ -270,7 +269,7 @@ export class Policies {
       }
     }
 
-    id = id && String(id) || null;
+    id = id && String(id);
 
     return context.keyObject ? [id, context.keyObject] : [id];
   }
@@ -376,7 +375,7 @@ export class Policies {
   }
 
   private getFieldPolicy(
-    typename: string,
+    typename: string | undefined,
     fieldName: string,
     createIfMissing: boolean,
   ): {
@@ -397,7 +396,7 @@ export class Policies {
 
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
-    typename: string,
+    typename: string | undefined,
   ): boolean {
     if (!fragment.typeCondition) return true;
 
@@ -430,7 +429,7 @@ export class Policies {
   }
 
   public getStoreFieldName(
-    typename: string,
+    typename: string | undefined,
     field: FieldNode,
     variables: Record<string, any>,
   ): string {
@@ -439,7 +438,7 @@ export class Policies {
     let storeFieldName: string | undefined;
 
     let keyFn = policy && policy.keyFn;
-    if (keyFn) {
+    if (keyFn && typename) {
       const args = argumentsObjectFromField(field, variables);
       const context = { typename, fieldName, field, variables, policies: this };
       while (keyFn) {
@@ -510,7 +509,7 @@ export class Policies {
   }
 
   public hasMergeFunction(
-    typename: string,
+    typename: string | undefined,
     fieldName: string,
   ) {
     const policy = this.getFieldPolicy(typename, fieldName, false);

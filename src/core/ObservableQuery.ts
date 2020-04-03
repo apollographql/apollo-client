@@ -63,7 +63,7 @@ export class ObservableQuery<
 
   // Computed shorthand for this.options.variables, preserved for
   // backwards compatibility.
-  public get variables(): TVariables {
+  public get variables(): TVariables | undefined {
     return this.options.variables;
   }
 
@@ -245,7 +245,7 @@ export class ObservableQuery<
   public resetQueryStoreErrors() {
     const queryStore = this.queryManager.getQueryStoreValue(this.queryId);
     if (queryStore) {
-      queryStore.networkError = null;
+      queryStore.networkError = undefined;
       queryStore.graphQLErrors = [];
     }
   }
@@ -274,7 +274,7 @@ export class ObservableQuery<
       fetchPolicy = 'network-only';
     }
 
-    if (!equal(this.options.variables, variables)) {
+    if (variables && !equal(this.options.variables, variables)) {
       // Update the existing options with new variables
       this.options.variables = {
         ...this.options.variables,

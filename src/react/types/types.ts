@@ -190,7 +190,7 @@ export interface MutationFunctionOptions<
 }
 
 export interface MutationResult<TData = any> {
-  data?: TData;
+  data?: TData | null;
   error?: ApolloError;
   loading: boolean;
   called: boolean;

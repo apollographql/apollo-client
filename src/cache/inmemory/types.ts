@@ -14,7 +14,7 @@ export interface IdGetterObj extends Object {
 
 export declare type IdGetter = (
   value: IdGetterObj,
-) => string | null | undefined;
+) => string | undefined;
 
 /**
  * This is an interface used to access, set and remove

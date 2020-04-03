@@ -43,7 +43,7 @@ export type TypePolicies = {
 type KeySpecifier = (string | any[])[];
 
 type KeyFieldsContext = {
-  typename: string;
+  typename?: string;
   selectionSet?: SelectionSetNode;
   fragmentMap?: FragmentMap;
   policies: Policies;
@@ -77,7 +77,7 @@ export type TypePolicy = {
 };
 
 type KeyArgsFunction = (
-  args: Record<string, any>,
+  args: Record<string, any> | null,
   context: {
     typename: string;
     fieldName: string;
@@ -147,7 +147,7 @@ export interface FieldFunctionOptions<
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
-  storage: StorageType;
+  storage: StorageType | null;
 
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
@@ -155,7 +155,7 @@ export interface FieldFunctionOptions<
   mergeObjects<T extends StoreObject | Reference>(
     existing: T,
     incoming: T,
-  ): T;
+  ): T | undefined;
 }
 
 export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
@@ -182,13 +182,12 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
 export function defaultDataIdFromObject(object: StoreObject) {
   const { __typename, id, _id } = object;
   if (typeof __typename === "string") {
-    if (typeof id !== "undefined") return `${__typename}:${id}`;
-    if (typeof _id !== "undefined") return `${__typename}:${_id}`;
+    if (id !== void 0) return `${__typename}:${id}`;
+    if (_id !== void 0) return `${__typename}:${_id}`;
   }
-  return null;
 }
 
-const nullKeyFieldsFn: KeyFieldsFunction = () => null;
+const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
 
 export type PossibleTypesMap = {
@@ -242,7 +241,7 @@ export class Policies {
     object: StoreObject,
     selectionSet?: SelectionSetNode,
     fragmentMap?: FragmentMap,
-  ): [string | null, StoreObject?] {
+  ): [string?, StoreObject?] {
     // TODO Consider subtypes?
     // TODO Use an AliasMap here?
     const typename = selectionSet && fragmentMap
@@ -256,7 +255,7 @@ export class Policies {
       policies: this,
     };
 
-    let id: string | null = null;
+    let id: string | undefined;
 
     const policy = this.getTypePolicy(typename, false);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
@@ -285,7 +284,7 @@ export class Policies {
       if (incoming.mutationType) this.setRootTypename("Mutation", typename);
       if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
 
-      existing.keyFn =
+      existing!.keyFn =
         // Pass false to disable normalization for this typename.
         keyFields === false ? nullKeyFieldsFn :
         // Pass an array of strings to use those fields to compute a
@@ -296,7 +295,7 @@ export class Policies {
 
       if (fields) {
         Object.keys(fields).forEach(fieldName => {
-          const existing = this.getFieldPolicy(typename, fieldName, true);
+          const existing = this.getFieldPolicy(typename, fieldName, true)!;
           const incoming = fields[fieldName];
 
           if (typeof incoming === "function") {
@@ -350,14 +349,14 @@ export class Policies {
     (this.usingPossibleTypes as boolean) = true;
     Object.keys(possibleTypes).forEach(supertype => {
       const subtypeSet = this.getSubtypeSet(supertype, true);
-      possibleTypes[supertype].forEach(subtypeSet.add, subtypeSet);
+      possibleTypes[supertype].forEach(subtypeSet!.add, subtypeSet);
     });
   }
 
   private getTypePolicy(
-    typename: string,
+    typename: string | undefined,
     createIfMissing: boolean,
-  ): Policies["typePolicies"][string] {
+  ): Policies["typePolicies"][string] | undefined {
     if (typename) {
       return this.typePolicies[typename] || (
         createIfMissing && (this.typePolicies[typename] = Object.create(null)));
@@ -367,19 +366,23 @@ export class Policies {
   private getSubtypeSet(
     supertype: string,
     createIfMissing: boolean,
-  ): Set<string> {
+  ): Set<string> | undefined {
     const policy = this.getTypePolicy(supertype, createIfMissing);
     if (policy) {
       return policy.subtypes || (
-        createIfMissing && (policy.subtypes = new Set<string>()));
+        createIfMissing ? policy.subtypes = new Set<string>() : void 0);
     }
   }
 
   private getFieldPolicy(
-    typename: string,
+    typename: string | undefined,
     fieldName: string,
     createIfMissing: boolean,
-  ): Policies["typePolicies"][string]["fields"][string] {
+  ): {
+    keyFn?: KeyArgsFunction;
+    read?: FieldReadFunction<any>;
+    merge?: FieldMergeFunction<any>;
+  } | undefined {
     const typePolicy = this.getTypePolicy(typename, createIfMissing);
     if (typePolicy) {
       const fieldPolicies = typePolicy.fields || (
@@ -393,7 +396,7 @@ export class Policies {
 
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
-    typename: string,
+    typename: string | undefined,
   ): boolean {
     if (!fragment.typeCondition) return true;
 
@@ -435,7 +438,7 @@ export class Policies {
     let storeFieldName: string | undefined;
 
     let keyFn = policy && policy.keyFn;
-    if (keyFn) {
+    if (keyFn && typename) {
       const args = argumentsObjectFromField(field, variables);
       const context = { typename, fieldName, field, variables, policies: this };
       while (keyFn) {
@@ -506,7 +509,7 @@ export class Policies {
   }
 
   public hasMergeFunction(
-    typename: string,
+    typename: string | undefined,
     fieldName: string,
   ) {
     const policy = this.getFieldPolicy(typename, fieldName, false);
@@ -527,7 +530,7 @@ export class Policies {
       // This policy and its merge function are guaranteed to exist
       // because the incoming value is a FieldValueToBeMerged object.
       const { merge } = policies.getFieldPolicy(
-        incoming.__typename, fieldName, false);
+        incoming.__typename, fieldName, false)!;
 
       // If storage ends up null, that just means no options.storage object
       // has ever been created for a read function for this field before, so
@@ -540,7 +543,7 @@ export class Policies {
         ? policies.storageTrie.lookupArray(storageKeys)
         : null;
 
-      incoming = merge(existing, incoming.__value, makeFieldFunctionOptions(
+      incoming = merge!(existing, incoming.__value, makeFieldFunctionOptions(
         policies,
         incoming.__typename,
         // Unlike options.readField for read functions, we do not fall
@@ -567,7 +570,7 @@ export class Policies {
       }
 
       if (Array.isArray(incoming)) {
-        return incoming.map(item => policies.applyMerges(
+        return incoming!.map(item => policies.applyMerges(
           // Items in the same position in different arrays are not
           // necessarily related to each other, so there is no basis for
           // merging them. Passing void here means any FieldValueToBeMerged
@@ -603,7 +606,7 @@ export class Policies {
           // Avoid enabling storage when firstStorageKey is falsy, which
           // implies no options.storage object has ever been created for a
           // read function for this field.
-          firstStorageKey && [firstStorageKey, storeFieldName],
+          firstStorageKey ? [firstStorageKey, storeFieldName] : void 0,
         );
       });
     }
@@ -621,9 +624,9 @@ export interface ReadMergeContext {
 function makeFieldFunctionOptions(
   policies: Policies,
   typename: string,
-  objectOrReference: StoreObject | Reference,
+  objectOrReference: StoreObject | Reference | null,
   nameOrField: string | FieldNode,
-  storage: StorageType,
+  storage: StorageType | null,
   context: ReadMergeContext,
 ): FieldFunctionOptions {
   const { toReference, getFieldValue, variables } = context;
@@ -691,8 +694,12 @@ function makeFieldFunctionOptions(
 }
 
 function canBeMerged(obj: StoreValue): boolean {
-  return obj && typeof obj === "object" &&
-    !isReference(obj) && !Array.isArray(obj);
+  return !!(
+    obj &&
+    typeof obj === "object" &&
+    !isReference(obj) &&
+    !Array.isArray(obj)
+  );
 }
 
 function keyArgsFnFromSpecifier(
@@ -701,9 +708,9 @@ function keyArgsFnFromSpecifier(
   return (args, context) => {
     const field = context.field;
     const fieldName = field.name.value;
-    return `${fieldName}:${
+    return args ? `${fieldName}:${
       JSON.stringify(computeKeyObject(args, specifier))
-    }`;
+    }` : fieldName;
   };
 }
 
@@ -715,7 +722,7 @@ function keyFieldsFnFromSpecifier(
   }>(canUseWeakMap);
 
   return (object, context) => {
-    let aliasMap: AliasMap;
+    let aliasMap: AliasMap | undefined;
     if (context.selectionSet && context.fragmentMap) {
       const info = trie.lookupArray([
         context.selectionSet,
@@ -767,7 +774,9 @@ function makeAliasMap(
         }
       } else {
         const fragment = getFragmentFromSelection(selection, fragmentMap);
-        workQueue.add(fragment.selectionSet);
+        if (fragment) {
+          workQueue.add(fragment.selectionSet);
+        }
       }
     });
   });

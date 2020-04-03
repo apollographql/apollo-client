@@ -214,7 +214,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // the object must contain a __typename and any primary key fields required
   // to identify entities of that type. If you pass a query result object, be
   // sure that none of the primary key fields have been renamed by aliasing.
-  public identify(object: StoreObject): string | null {
+  public identify(object: StoreObject): string | undefined {
     return this.policies.identify(object)[0];
   }
 
@@ -321,12 +321,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private varDep = dep<ReactiveVar<any>>();
 
-  public makeVar<T>(value?: T): ReactiveVar<T> {
+  public makeVar<T>(value: T): ReactiveVar<T> {
     const cache = this;
     return function rv(newValue) {
       if (arguments.length > 0) {
         if (value !== newValue) {
-          value = newValue;
+          value = newValue!;
           cache.varDep.dirty(rv);
           // In order to perform several ReactiveVar updates without
           // broadcasting each time, use cache.performTransaction.

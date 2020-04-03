@@ -388,7 +388,7 @@ export namespace EntityStore {
     // single distinct CacheGroup object. Since this shared object must
     // outlast the Layer instances themselves, it needs to be created and
     // owned by the Root instance.
-    private sharedLayerGroup: CacheGroup | null = null;
+    private sharedLayerGroup: CacheGroup;
 
     constructor({
       policies,
@@ -409,7 +409,7 @@ export namespace EntityStore {
       replay: (layer: EntityStore) => any,
     ): EntityStore {
       // The replay function will be called in the Layer constructor.
-      return new Layer(layerId, this, replay, this.sharedLayerGroup!);
+      return new Layer(layerId, this, replay, this.sharedLayerGroup);
     }
 
     public removeLayer(layerId: string): Root {

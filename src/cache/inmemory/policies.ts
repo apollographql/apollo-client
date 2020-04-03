@@ -77,7 +77,7 @@ export type TypePolicy = {
 };
 
 type KeyArgsFunction = (
-  args: Record<string, any>,
+  args: Record<string, any> | null,
   context: {
     typename: string;
     fieldName: string;
@@ -182,8 +182,8 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
 export function defaultDataIdFromObject(object: StoreObject) {
   const { __typename, id, _id } = object;
   if (typeof __typename === "string") {
-    if (typeof id !== "undefined") return `${__typename}:${id}`;
-    if (typeof _id !== "undefined") return `${__typename}:${_id}`;
+    if (id !== void 0) return `${__typename}:${id}`;
+    if (_id !== void 0) return `${__typename}:${_id}`;
   }
 }
 
@@ -370,7 +370,7 @@ export class Policies {
     const policy = this.getTypePolicy(supertype, createIfMissing);
     if (policy) {
       return policy.subtypes || (
-        createIfMissing ? policy.subtypes = new Set<string>() : undefined);
+        createIfMissing ? policy.subtypes = new Set<string>() : void 0);
     }
   }
 
@@ -442,7 +442,7 @@ export class Policies {
       const args = argumentsObjectFromField(field, variables);
       const context = { typename, fieldName, field, variables, policies: this };
       while (keyFn) {
-        const specifierOrString = keyFn(args!, context);
+        const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
           keyFn = keyArgsFnFromSpecifier(specifierOrString);
         } else {
@@ -606,7 +606,7 @@ export class Policies {
           // Avoid enabling storage when firstStorageKey is falsy, which
           // implies no options.storage object has ever been created for a
           // read function for this field.
-          firstStorageKey ? [firstStorageKey, storeFieldName] : undefined,
+          firstStorageKey ? [firstStorageKey, storeFieldName] : void 0,
         );
       });
     }
@@ -708,9 +708,9 @@ function keyArgsFnFromSpecifier(
   return (args, context) => {
     const field = context.field;
     const fieldName = field.name.value;
-    return `${fieldName}:${
+    return args ? `${fieldName}:${
       JSON.stringify(computeKeyObject(args, specifier))
-    }`;
+    }` : fieldName;
   };
 }
 
@@ -722,7 +722,7 @@ function keyFieldsFnFromSpecifier(
   }>(canUseWeakMap);
 
   return (object, context) => {
-    let aliasMap: AliasMap | undefined = undefined;
+    let aliasMap: AliasMap | undefined;
     if (context.selectionSet && context.fragmentMap) {
       const info = trie.lookupArray([
         context.selectionSet,
@@ -774,7 +774,9 @@ function makeAliasMap(
         }
       } else {
         const fragment = getFragmentFromSelection(selection, fragmentMap);
-        workQueue.add(fragment!.selectionSet);
+        if (fragment) {
+          workQueue.add(fragment.selectionSet);
+        }
       }
     });
   });

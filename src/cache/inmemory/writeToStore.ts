@@ -242,8 +242,8 @@ export class StoreWriter {
           context.fragmentMap,
         );
 
-        if (policies.fragmentMatches(fragment!, typename)) {
-          fragment!.selectionSet.selections.forEach(workSet.add, workSet);
+        if (fragment && policies.fragmentMatches(fragment, typename)) {
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }
     });

@@ -1972,7 +1972,7 @@ describe('ObservableQuery', () => {
           const queryStore = queryManager.getQueryStoreValue(observable.queryId);
           queryStore.networkError = networkError;
           observable.resetQueryStoreErrors();
-          expect(queryStore.networkError).toBeNull();
+          expect(queryStore.networkError).toBeUndefined();
           resolve();
         }
       });

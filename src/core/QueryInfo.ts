@@ -41,14 +41,14 @@ export class QueryInfo {
   subscriptions = new Set<ObservableSubscription>();
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
-  networkError?: Error;
+  networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
 
   constructor(private cache: ApolloCache<any>) {}
 
   public init(query: {
     document: DocumentNode;
-    variables: Record<string, any>;
+    variables?: Record<string, any>;
     isPoll: boolean;
     isRefetch: boolean;
     observableQuery?: ObservableQuery<any>;
@@ -233,7 +233,7 @@ export class QueryInfo {
     };
 
     this.cancel = this.cache.watch({
-      query: this.document,
+      query: this.document!,
       variables: options.variables,
       optimistic: true,
       previousResult,
@@ -266,7 +266,7 @@ export class QueryInfo {
         this.cache.write({
           result: result.data,
           dataId: 'ROOT_QUERY',
-          query: this.document,
+          query: this.document!,
           variables,
         });
       }

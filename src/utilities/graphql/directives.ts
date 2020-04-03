@@ -47,7 +47,7 @@ export function getDirectiveNames(root: ASTNode) {
   const names: string[] = [];
 
   visit(root, {
-    Directive(node) {
+    Directive(node: DirectiveNode) {
       names.push(node.name.value);
     },
   });
@@ -95,7 +95,7 @@ export function getInclusionDirectives(
         `Incorrect number of arguments for the @${directiveName} directive.`,
       );
 
-      const ifArgument = directiveArguments[0];
+      const ifArgument = directiveArguments![0];
       invariant(
         ifArgument.name && ifArgument.name.value === 'if',
         `Invalid argument for the @${directiveName} directive.`,

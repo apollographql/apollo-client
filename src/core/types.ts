@@ -16,7 +16,7 @@ export type PureQueryOptions = {
 };
 
 export type ApolloQueryResult<T> = {
-  data: T;
+  data?: T;
   errors?: ReadonlyArray<GraphQLError>;
   loading: boolean;
   networkStatus: NetworkStatus;

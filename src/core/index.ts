@@ -45,6 +45,7 @@ export { concat } from '../link/core/concat';
 export { execute } from '../link/core/execute';
 export { ApolloLink } from '../link/core/ApolloLink';
 export * from '../link/core/types';
+export { rewriteURIForGET } from '../link/http/rewriteURIForGET';
 export {
   parseAndCheckHttpResponse,
   ServerParseError

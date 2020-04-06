@@ -1,41 +1,32 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
-import cjs from 'rollup-plugin-commonjs';
 import fs from 'fs';
 
 import packageJson from '../package.json';
 
 const distDir = './dist';
 
-const globals = {
-  'tslib': 'tslib',
-  'ts-invariant': 'invariant',
-  'symbol-observable': '$$observable',
-  'graphql/language/printer': 'print',
-  optimism: 'optimism',
-  'graphql/language/visitor': 'visitor',
-  'graphql/execution/execute': 'execute',
-  'graphql-tag': 'graphqlTag',
-  'fast-json-stable-stringify': 'stringify',
-  '@wry/equality': 'wryEquality',
-  graphql: 'graphql',
-  react: 'React',
-  'zen-observable': 'Observable'
-};
+const external = [
+  'tslib',
+  'ts-invariant',
+  'symbol-observable',
+  'graphql/language/printer',
+  'optimism',
+  'graphql/language/visitor',
+  'graphql-tag',
+  'fast-json-stable-stringify',
+  '@wry/equality',
+  'react',
+  'zen-observable'
+];
 
-const hasOwn = Object.prototype.hasOwnProperty;
-
-function external(id) {
-  return hasOwn.call(globals, id);
-}
-
-function prepareESM() {
+function prepareESM(input, outputDir) {
   return {
-    input: packageJson.module,
+    input,
     external,
     output: {
-      dir: distDir,
+      dir: outputDir,
       format: 'esm',
       sourcemap: true,
     },
@@ -55,42 +46,32 @@ function prepareESM() {
         // errors back to the unminified code where they were thrown,
         // where the full error string can be found. See #4519.
         errorCodes: true,
-      }),
-      cjs({
-        namedExports: {
-          'graphql-tag': ['gql']
-        }
-      }),
-    ]
+      })
+    ],
   };
 }
 
-function prepareCJS() {
+function prepareCJS(input, output) {
   return {
-    input: packageJson.module,
+    input,
     external,
     output: {
-      file: packageJson.main,
+      file: output,
       format: 'cjs',
       sourcemap: true,
-      exports: 'named'
+      exports: 'named',
     },
     plugins: [
       nodeResolve(),
-      cjs({
-        namedExports: {
-          'graphql-tag': ['gql']
-        }
-      }),
-    ]
-  }
+    ],
+  };
 }
 
-function prepareCJSMinified() {
+function prepareCJSMinified(input) {
   return {
-    input: packageJson.main,
+    input,
     output: {
-      file: packageJson.main.replace('.js', '.min.js'),
+      file: input.replace('.js', '.min.js'),
       format: 'cjs',
     },
     plugins: [
@@ -99,11 +80,29 @@ function prepareCJSMinified() {
           toplevel: true,
         },
         compress: {
+          toplevel: true,
           global_defs: {
             '@process.env.NODE_ENV': JSON.stringify('production'),
           },
         },
       }),
+    ],
+  };
+}
+
+function prepareUtilities() {
+  const utilsDistDir = `${distDir}/utilities`;
+  return {
+    input: `${utilsDistDir}/index.js`,
+    external,
+    output: {
+      file: `${utilsDistDir}/utilities.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
     ],
   };
 }
@@ -114,27 +113,8 @@ function prepareCJSMinified() {
 // like:
 //
 // import { MockedProvider } from '@apollo/client/testing';
-//
-// Note: The `ApolloProvider` reference is marked as being global so it can
-// then be replaced with a hard coded path to the `apollo-client.cjs.js`
-// bundle. This is done to ensure that when using this bundle `MockedProvider`
-// always uses the same `ApolloProvider` instance as the rest of the
-// application under test. This means they'll share the exact same React
-// context, and be able to share the same Apollo Client instance stored in that
-// context.
 function prepareTesting() {
   const bundleName = 'testing';
-  const apolloProviderPath = 'react/context/ApolloProvider';
-
-  const testingGlobals = {
-    ...globals,
-    [`../../../${apolloProviderPath}`]: 'ApolloProvider'
-  };
-
-  const output = {
-    file: `${distDir}/${bundleName}.js`,
-    format: 'cjs',
-  };
 
   // Create a type file for the new testing bundle that points to the existing
   // `react/testing` type definitions.
@@ -145,39 +125,26 @@ function prepareTesting() {
 
   return {
     input: `${distDir}/utilities/testing/index.js`,
-    external: (id) => hasOwn.call(testingGlobals, id),
-    output,
+    external,
+    output: {
+      file: `${distDir}/${bundleName}.js`,
+      format: 'cjs',
+    },
     plugins: [
       nodeResolve({
         extensions: ['.js', '.jsx'],
       }),
-      // Update the external ApolloProvider require in the testing bundle
-      // to point to the main Apollo Client CJS bundle, to make sure the
-      // testing bundle uses the exact same ApolloProvider as the main
-      // AC CJS bundle. This helps ensure the same React Context is used
-      // by both React testing utilities and the application under test.
-      (() => {
-        const bundleJs = `${bundleName}.js`;
-        return {
-          generateBundle(_option, bundle) {
-            bundle[bundleJs].code =
-              bundle[bundleJs].code.replace(
-                `../../${apolloProviderPath}`,
-                packageJson.main.replace(distDir, '.')
-              );
-          }
-        }
-      })()
     ],
   };
 }
 
 function rollup() {
   return [
-    prepareESM(),
-    prepareCJS(),
-    prepareCJSMinified(),
-    prepareTesting()
+    prepareESM(packageJson.module, distDir),
+    prepareCJS(packageJson.module, packageJson.main),
+    prepareCJSMinified(packageJson.main),
+    prepareUtilities(),
+    prepareTesting(),
   ];
 }
 

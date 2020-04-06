@@ -1,17 +1,20 @@
-import React, { useState, useReducer } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
-import { MockedProvider } from '../../../utilities/testing';
+import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useQuery } from '../useQuery';
+import { requireReactLazily } from '../../react';
+
+const React = requireReactLazily();
+const { useState, useReducer } = React;
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -79,6 +82,40 @@ describe('useQuery Hook', () => {
       render(
         <MockedProvider mocks={CAR_MOCKS}>
           <Component />
+        </MockedProvider>
+      );
+
+      return wait();
+    });
+
+    it('should return a result upon first call, if data is available', async () => {
+      // This test verifies that the `useQuery` hook returns a result upon its first
+      // invocation if the data is available in the cache. This is essential for SSR
+      // to work properly, since effects are not run during SSR.
+
+      const Component = ({ expectData }: { expectData: boolean }) => {
+        const { data } = useQuery(CAR_QUERY);
+        if (expectData) {
+          expect(data).toEqual(CAR_RESULT_DATA);
+        }
+        return null;
+      };
+
+      // Common cache instance to use across render passes.
+      // The cache will be warmed with the result of the query on the second pass.
+      const cache = new InMemoryCache();
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS} cache={cache}>
+          <Component expectData={false} />
+        </MockedProvider>
+      );
+
+      await wait();
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS} cache={cache}>
+          <Component expectData={true} />
         </MockedProvider>
       );
 
@@ -382,42 +419,39 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache()
       });
 
-      const onErrorMock = jest.fn();
+      let onError;
+      const onErrorPromise = new Promise(resolve => onError = resolve);
 
       let renderCount = 0;
       const Component = () => {
         const { loading, error, refetch, data, networkStatus } = useQuery(
           query,
           {
-            onError: onErrorMock,
+            onError,
             notifyOnNetworkStatusChange: true
           }
         );
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             break;
-          case 1:
+          case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('Network error: Oh no!');
-            setTimeout(() => {
-              expect(onErrorMock.mock.calls.length).toBe(1);
-              refetch();
-            });
-            break;
-          case 2:
-            expect(loading).toBeTruthy();
+            onErrorPromise.then(() => refetch());
             break;
           case 3:
+            expect(loading).toBeTruthy();
+            break;
+          case 4:
             expect(loading).toBeFalsy();
             expect(data).toEqual(resultData);
             break;
           default: // Do nothing
         }
 
-        renderCount += 1;
         return null;
       };
 
@@ -1082,6 +1116,106 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(6);
       });
     });
+  });
+
+  describe('Partial refetching', () => {
+    it(
+      'should attempt a refetch when the query result was marked as being ' +
+        'partial, the returned data was reset to an empty Object by the ' +
+        'Apollo Client QueryManager (due to a cache miss), and the ' +
+        '`partialRefetch` prop is `true`',
+      async () => {
+        const query: DocumentNode = gql`
+          query AllPeople($name: String!) {
+            allPeople(name: $name) {
+              people {
+                name
+              }
+            }
+          }
+        `;
+
+        interface Data {
+          allPeople: {
+            people: Array<{ name: string }>;
+          };
+        }
+
+        const peopleData: Data = {
+          allPeople: { people: [{ name: 'Luke Skywalker' }] }
+        };
+
+        const link = mockSingleLink(
+          {
+            request: {
+              query,
+              variables: {
+                someVar: 'abc123'
+              }
+            },
+            result: {
+              data: undefined
+            }
+          },
+          {
+            request: {
+              query,
+              variables: {
+                someVar: 'abc123'
+              }
+            },
+            result: {
+              data: peopleData
+            }
+          }
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache()
+        });
+
+        let renderCount = 0;
+        const Component = () => {
+          const { loading, data } = useQuery(query, {
+            variables: { someVar: 'abc123' },
+            partialRefetch: true
+          });
+
+          switch (renderCount) {
+            case 0:
+              // Initial loading render
+              expect(loading).toBeTruthy();
+              break;
+            case 1:
+              // `data` is missing and `partialRetch` is true, so a refetch
+              // is triggered and loading is set as true again
+              expect(loading).toBeTruthy();
+              expect(data).toBeUndefined();
+              break;
+            case 2:
+              // Refetch has completed
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(peopleData);
+              break;
+            default:
+          }
+
+          renderCount += 1;
+          return null;
+        };
+
+        render(
+          <ApolloProvider client={client}>
+            <Component />
+          </ApolloProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3);
+        });
+      }
+    );
   });
 
   describe('Callbacks', () => {

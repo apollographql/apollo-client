@@ -4,8 +4,8 @@ import gql from 'graphql-tag';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
-import { makeReference } from '../../../utilities/graphql/storeUtils';
-import { defaultNormalizedCacheFactory } from '../entityCache';
+import { makeReference } from '../../../core';
+import { defaultNormalizedCacheFactory } from '../entityStore';
 import { withError } from './diffAgainstStore';
 import { Policies } from '../policies';
 
@@ -553,7 +553,7 @@ describe('reading from the store', () => {
           }
         `,
       });
-    }).toThrowError(/field missingField on object/);
+    }).toThrowError(/Can't find field 'missingField' on ROOT_QUERY object/);
   });
 
   it('runs a nested query where the reference is null', () => {
@@ -743,7 +743,7 @@ describe('reading from the store', () => {
   it('properly handles the @connection directive', () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        abc: [
+        'books:abc': [
           {
             name: 'efgh',
           },
@@ -778,6 +778,9 @@ describe('reading from the store', () => {
           Query: {
             fields: {
               books: {
+                // Even though we're returning an arbitrary string here,
+                // the InMemoryCache will ensure the actual key begins
+                // with "books".
                 keyArgs: () => "abc",
               },
             },
@@ -788,7 +791,7 @@ describe('reading from the store', () => {
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        abc: [
+        "books:abc": [
           {
             name: 'efgh',
           },

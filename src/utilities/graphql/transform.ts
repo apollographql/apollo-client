@@ -187,7 +187,7 @@ export function removeDirectivesFromDocument(
   // aren't being used elsewhere.
   if (
     modifiedDoc &&
-    filterInPlace(variablesToRemove, v => !variablesInUse[v.name]).length
+    filterInPlace(variablesToRemove, v => !!v.name && !variablesInUse[v.name]).length
   ) {
     modifiedDoc = removeArgumentsFromDocument(variablesToRemove, modifiedDoc);
   }
@@ -197,7 +197,7 @@ export function removeDirectivesFromDocument(
   // document, as long as they aren't being used elsewhere.
   if (
     modifiedDoc &&
-    filterInPlace(fragmentSpreadsToRemove, fs => !fragmentSpreadsInUse[fs.name])
+    filterInPlace(fragmentSpreadsToRemove, fs => !!fs.name && !fragmentSpreadsInUse[fs.name])
       .length
   ) {
     modifiedDoc = removeFragmentSpreadFromDocument(
@@ -261,6 +261,13 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
   });
 }
 
+export interface addTypenameToDocument {
+  added(field: FieldNode): boolean;
+}
+addTypenameToDocument.added = function (field: FieldNode) {
+  return field === TYPENAME_FIELD;
+};
+
 const connectionRemoveConfig = {
   test: (directive: DirectiveNode) => {
     const willRemove = directive.name.value === 'connection';
@@ -289,11 +296,11 @@ export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
 
 function hasDirectivesInSelectionSet(
   directives: GetDirectiveConfig[],
-  selectionSet: SelectionSetNode,
+  selectionSet: SelectionSetNode | undefined,
   nestedCheck = true,
 ): boolean {
   return (
-    selectionSet &&
+    !!selectionSet &&
     selectionSet.selections &&
     selectionSet.selections.some(selection =>
       hasDirectivesInSelection(directives, selection, nestedCheck),
@@ -325,48 +332,6 @@ function hasDirectivesInSelection(
   );
 }
 
-export function getDirectivesFromDocument(
-  directives: GetDirectiveConfig[],
-  doc: DocumentNode,
-): DocumentNode {
-  checkDocument(doc);
-
-  let parentPath: string;
-
-  return nullIfDocIsEmpty(
-    visit(doc, {
-      SelectionSet: {
-        enter(node, _key, _parent, path) {
-          const currentPath = path.join('-');
-
-          if (
-            !parentPath ||
-            currentPath === parentPath ||
-            !currentPath.startsWith(parentPath)
-          ) {
-            if (node.selections) {
-              const selectionsWithDirectives = node.selections.filter(
-                selection => hasDirectivesInSelection(directives, selection),
-              );
-
-              if (hasDirectivesInSelectionSet(directives, node, false)) {
-                parentPath = currentPath;
-              }
-
-              return {
-                ...node,
-                selections: selectionsWithDirectives,
-              };
-            } else {
-              return null;
-            }
-          }
-        },
-      },
-    }),
-  );
-}
-
 function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
   return function argumentMatcher(argument: ArgumentNode) {
     return config.some(
@@ -383,7 +348,7 @@ function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
 export function removeArgumentsFromDocument(
   config: RemoveArgumentsConfig[],
   doc: DocumentNode,
-): DocumentNode {
+): DocumentNode | null {
   const argMatcher = getArgumentMatcher(config);
 
   return nullIfDocIsEmpty(
@@ -393,10 +358,10 @@ export function removeArgumentsFromDocument(
           return {
             ...node,
             // Remove matching top level variables definitions.
-            variableDefinitions: node.variableDefinitions.filter(
+            variableDefinitions: node.variableDefinitions ? node.variableDefinitions.filter(
               varDef =>
                 !config.some(arg => arg.name === varDef.variable.name.value),
-            ),
+            ) : [],
           };
         },
       },
@@ -409,11 +374,14 @@ export function removeArgumentsFromDocument(
 
           if (shouldRemoveField) {
             let argMatchCount = 0;
-            node.arguments.forEach(arg => {
-              if (argMatcher(arg)) {
-                argMatchCount += 1;
-              }
-            });
+            if (node.arguments) {
+              node.arguments.forEach(arg => {
+                if (argMatcher(arg)) {
+                  argMatchCount += 1;
+                }
+              });
+            }
+
             if (argMatchCount === 1) {
               return null;
             }
@@ -436,7 +404,7 @@ export function removeArgumentsFromDocument(
 export function removeFragmentSpreadFromDocument(
   config: RemoveFragmentSpreadConfig[],
   doc: DocumentNode,
-): DocumentNode {
+): DocumentNode | null {
   function enter(
     node: FragmentSpreadNode | FragmentDefinitionNode,
   ): null | void {

@@ -306,11 +306,8 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(data2);
           // go back to first set of variables
-          await observable.setOptions({ variables });
-          const current = observable.getCurrentResult();
+          const current = await observable.setOptions({ variables });
           expect(stripSymbols(current.data)).toEqual(data);
-          const secondCurrent = observable.getCurrentResult();
-          expect(current.data).toEqual(secondCurrent.data);
           resolve();
         }
       });
@@ -472,11 +469,11 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(reject, observable, async (handleCount, result) => {
-        if (handleCount === 2) {
+        if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual({});
           expect(timesFired).toBe(0);
           await observable.setOptions({ fetchPolicy: 'cache-first' });
-        } else if (handleCount === 3) {
+        } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
           resolve();
@@ -605,41 +602,12 @@ describe('ObservableQuery', () => {
           return;
         }
         observable
-          .setOptions({ fetchPolicy: 'cache-and-network', fetchResults: true })
+          .setOptions({ fetchPolicy: 'cache-and-network' })
           .then(res => {
             // returns dataOne from cache
             expect(stripSymbols(res.data)).toEqual(dataOne);
             resolve();
           });
-      });
-    });
-
-    itAsync('can bypass looking up results if passed to options', (resolve, reject) => {
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        reject,
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataTwo },
-        },
-      );
-
-      let errored = false;
-      subscribeAndCount(reject, observable, handleCount => {
-        if (handleCount === 1) {
-          observable
-            .setOptions({ fetchResults: false, fetchPolicy: 'standby' })
-            .then(res => {
-              expect(res).toBeUndefined();
-              setTimeout(() => !errored && resolve(), 5);
-            });
-        } else if (handleCount > 1) {
-          errored = true;
-          throw new Error('Handle should not be called twice');
-        }
       });
     });
   });
@@ -694,18 +662,10 @@ describe('ObservableQuery', () => {
             dataOne,
           );
           await observable.setVariables(differentVariables);
-          expect(observable.getCurrentResult().data).toEqual({});
-          expect(observable.getCurrentResult().loading).toBe(true);
         }
-        // after loading is false and data has returned
-        if (handleCount === 3) {
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-            dataTwo,
-          );
-          expect(observable.getCurrentResult().loading).toBe(false);
-          resolve();
-        }
+        expect(observable.getCurrentResult().data).toEqual(dataTwo);
+        expect(observable.getCurrentResult().loading).toBe(false);
+        resolve();
       });
     });
 
@@ -763,18 +723,10 @@ describe('ObservableQuery', () => {
             dataOne,
           );
           await observable.setVariables(differentVariables);
-          expect(observable.getCurrentResult().data).toEqual({});
-          expect(observable.getCurrentResult().loading).toBe(true);
         }
-        // after loading is false and data has returned
-        if (handleCount === 3) {
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-            dataTwo,
-          );
-          expect(observable.getCurrentResult().loading).toBe(false);
-          resolve();
-        }
+        expect(observable.getCurrentResult().data).toEqual(dataTwo);
+        expect(observable.getCurrentResult().loading).toBe(false);
+        resolve();
       });
     });
 
@@ -1452,6 +1404,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
+          stale: false,
           partial: false,
         });
         resolve();
@@ -1461,6 +1414,7 @@ describe('ObservableQuery', () => {
         loading: true,
         data: undefined,
         networkStatus: 1,
+        stale: false,
         partial: true,
       });
 
@@ -1470,6 +1424,7 @@ describe('ObservableQuery', () => {
             loading: true,
             data: undefined,
             networkStatus: 1,
+            stale: false,
             partial: true,
           });
         }),
@@ -1496,8 +1451,9 @@ describe('ObservableQuery', () => {
         });
         expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: dataOne,
-          loading: false,
-          networkStatus: 7,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          stale: false,
           partial: false,
         });
       }).then(resolve, reject);
@@ -1632,6 +1588,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: true,
           networkStatus: 1,
+          stale: false,
           partial: true,
         });
 
@@ -1689,6 +1646,7 @@ describe('ObservableQuery', () => {
           data: undefined,
           loading: true,
           networkStatus: 1,
+          stale: false,
           partial: false,
         });
 
@@ -1698,14 +1656,16 @@ describe('ObservableQuery', () => {
             loading,
             networkStatus,
           } = observable.getCurrentResult();
-          expect(subResult).toEqual({
-            data,
-            loading,
-            networkStatus,
-            stale: false,
-          });
 
-          if (handleCount === 2) {
+          if (handleCount === 1) {
+            expect(subResult).toEqual({
+              data,
+              loading,
+              networkStatus,
+              stale: false,
+              partial: false,
+            });
+          } else if (handleCount === 2) {
             expect(stripSymbols(subResult)).toEqual({
               data: dataTwo,
               loading: false,
@@ -1741,6 +1701,7 @@ describe('ObservableQuery', () => {
           data: undefined,
           loading: true,
           networkStatus: 1,
+          stale: false,
           partial: false,
         });
 
@@ -1750,14 +1711,16 @@ describe('ObservableQuery', () => {
             loading,
             networkStatus,
           } = observable.getCurrentResult();
-          expect(subResult).toEqual({
-            data,
-            loading,
-            networkStatus,
-            stale: false,
-          });
 
-          if (handleCount === 2) {
+          if (handleCount === 1) {
+            expect(subResult).toEqual({
+              data,
+              loading,
+              networkStatus,
+              stale: false,
+              partial: false,
+            });
+          } else if (handleCount === 2) {
             expect(stripSymbols(subResult)).toEqual({
               data: dataTwo,
               loading: false,
@@ -1864,6 +1827,7 @@ describe('ObservableQuery', () => {
         assumeImmutableResults = true,
         assertFrozenResults = false,
       }) {
+        const cache = new InMemoryCache();
         const client = new ApolloClient({
           link: mockSingleLink(
             { request: queryOptions, result: { data: { value: 1 } } },
@@ -1871,7 +1835,7 @@ describe('ObservableQuery', () => {
             { request: queryOptions, result: { data: { value: 3 } } }
           ).setOnError(error => { throw error }),
           assumeImmutableResults,
-          cache: new InMemoryCache(),
+          cache,
         });
 
         const observable = client.watchQuery(queryOptions);
@@ -1879,24 +1843,21 @@ describe('ObservableQuery', () => {
 
         return new Promise<any[]>((resolve, reject) => {
           observable.subscribe({
-            next(result) {
-              values.push(result.data.value);
+            next({ data }) {
+              values.push(data.value);
               if (assertFrozenResults) {
                 try {
-                  result.data.value = 'oyez';
+                  data.value = 'oyez';
                 } catch (error) {
                   reject(error);
                 }
               } else {
-                result = {
-                  ...result,
-                  data: {
-                    ...result.data,
-                    value: 'oyez',
-                  },
+                data = {
+                  ...data,
+                  value: 'oyez',
                 };
               }
-              client.writeData(result);
+              client.writeQuery({ query, data });
             },
             error(err) {
               expect(err.message).toMatch(/No more mocked responses/);
@@ -1905,20 +1866,6 @@ describe('ObservableQuery', () => {
           });
         });
       }
-
-      // When we do not assume immutable results, the observable must do
-      // extra work to take snapshots of past results, just in case those
-      // results are destructively modified. The benefit of that work is
-      // that such mutations can be detected, which is why "oyez" appears
-      // in the list of values here. This is a somewhat indirect way of
-      // detecting that cloneDeep must have been called, but at least it
-      // doesn't violate any abstractions.
-      expect(
-        await check({
-          assumeImmutableResults: false,
-          assertFrozenResults: false,
-        }),
-      ).toEqual([1, 'oyez', 2, 'oyez', 3, 'oyez']);
 
       async function checkThrows(assumeImmutableResults) {
         try {
@@ -2000,7 +1947,7 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         error() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.queryStore.get(observable.queryId);
+          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
           expect(queryStore.graphQLErrors).toEqual([graphQLError]);
 
           observable.resetQueryStoreErrors();
@@ -2022,10 +1969,10 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         next() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.queryStore.get(observable.queryId);
+          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
           queryStore.networkError = networkError;
           observable.resetQueryStoreErrors();
-          expect(queryStore.networkError).toBeNull();
+          expect(queryStore.networkError).toBeUndefined();
           resolve();
         }
       });

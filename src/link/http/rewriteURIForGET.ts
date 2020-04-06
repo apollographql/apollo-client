@@ -12,7 +12,7 @@ export function rewriteURIForGET(chosenURI: string, body: Body) {
   };
 
   if ('query' in body) {
-    addQueryParam('query', body.query);
+    addQueryParam('query', body.query!);
   }
   if (body.operationName) {
     addQueryParam('operationName', body.operationName);

@@ -17,7 +17,7 @@ The main way to get GraphQL data into your UI components with Apollo is to use a
 Here's what this looks like in the code:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const UPDATE_COMMENT = gql`
@@ -53,7 +53,7 @@ function CommentPageWithData() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const UPDATE_COMMENT = gql`
@@ -103,7 +103,7 @@ In that case we need to specify how to integrate the new data into existing quer
 Here is a concrete example from GitHunt, which inserts a comment into an existing list of comments.
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 const SUBMIT_COMMENT_MUTATION = gql`
@@ -155,7 +155,7 @@ function CommentsPageWithMutations({ currentUser }) {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 const SUBMIT_COMMENT_MUTATION = gql`

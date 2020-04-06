@@ -11,33 +11,26 @@ module.exports = {
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
-        defaultVersion: 3.0,
-        /*
+        localVersion: '3.0 beta',
+        defaultVersion: '2.6',
         versions: {
-          2.6: 'version-2.6',
-          2.5: 'version-2.5',
-          2.4: 'version-2.4',
+          '2.6': 'version-2.6',
+          '2.5': 'version-2.5',
+          '2.4': 'version-2.4',
         },
-        */
         checkLinksOptions: {
           exceptions: [
-            '/api/core/',
-            '/v2.4/api/core/',
-            '/v2.5/api/core/',
-            '/v2.6/api/core/',
-            '/v3.0/api/core/'
+            '/api/apollo-client/',
+            '/v3.0-beta/api/core/',
+            '/v2.5/api/apollo-client/',
+            '/v2.4/api/apollo-client/',
           ],
         },
         typescriptApiBox: {
-          data: require('./docs.json'),
-          filepathPrefix: 'src/',
+          data: require('./docs.json')
         },
         sidebarCategories: {
-          null: [
-            'index',
-            'why-apollo',
-            'get-started',
-          ],
+          null: ['index', 'why-apollo', 'get-started'],
           'Fetching data': [
             'data/queries',
             'data/mutations',
@@ -47,16 +40,15 @@ module.exports = {
             'data/fragments',
             'data/error-handling',
           ],
-          'Caching': [
+          Caching: [
             'caching/cache-configuration',
-            'caching/cache-interaction',
-          ],
+            'caching/cache-field-behavior',
+            'caching/cache-interaction'],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',
             'development-testing/client-schema-mocking',
             'development-testing/developer-tooling',
-            'development-testing/recompose',
           ],
           Performance: [
             'performance/performance',
@@ -71,21 +63,35 @@ module.exports = {
             'integrations/webpack',
           ],
           Networking: [
-            'networking/network-layer',
+            'networking/basic-http-networking',
+            'networking/advanced-http-networking',
             'networking/authentication',
           ],
-          'Apollo Client API': [
-            'api/core',
-            'api/react-hooks',
-            'api/react-testing',
-            'api/react-ssr',
-            'api/react-components',
-            'api/react-hoc'
+          'API - Core': [
+            'api/core/ApolloClient',
+            'api/core/ObservableQuery'
+          ],
+          'API - React': [
+            'api/react/hooks',
+            'api/react/testing',
+            'api/react/ssr',
+            'api/react/components',
+            'api/react/hoc'
+          ],
+          'API - Link': [
+            'api/link/introduction',
+            'api/link/apollo-link-batch-http',
+            'api/link/apollo-link-context',
+            'api/link/apollo-link-error',
+            'api/link/apollo-link-rest',
+            'api/link/apollo-link-retry',
+            'api/link/apollo-link-schema',
+            'api/link/apollo-link-ws'
           ],
           Migrating: [
-            'migrating/hooks-migration',
-            'migrating/boost-migration',
-          ]
+            'migrating/apollo-client-3-migration',
+            'migrating/hooks-migration'
+          ],
         },
       },
     },

@@ -28,9 +28,10 @@ Great, now that you have all the dependencies you need, let's create your Apollo
 In our `index.js` file, let's import `ApolloClient` from `@apollo/client` and add the endpoint for our GraphQL server to the `uri` property of the client config object.
 
 ```js
-import { ApolloClient, HttpLink } from '@apollo/client';
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: new HttpLink({
     uri: 'https://48p1r2roz4.sse.codesandbox.io',
   })
@@ -91,7 +92,7 @@ First, pass your GraphQL query wrapped in the `gql` function into the `useQuery`
 Let's create an `ExchangeRates` component in `index.js` to see the `useQuery` hook in action!
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
+<div data-language="hooks-js">
 
 ```jsx
 import { useQuery, gql } from '@apollo/client';
@@ -122,7 +123,7 @@ function ExchangeRates() {
 ```
 
 </div>
-<div data-language="Render Props (JavaScript)">
+<div data-language="js">
 
 ```jsx
 import { Query } from '@apollo/react-components';

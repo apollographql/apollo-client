@@ -1,12 +1,11 @@
 import gql from 'graphql-tag';
 
 import { Observable } from '../utilities/observables/Observable';
-import { makeReference } from '../utilities/graphql/storeUtils';
+import { makeReference } from '../core';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { HttpLink } from '../link/http/HttpLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { withWarning } from '../utilities/testing/wrap';
 import { ApolloClient } from '../';
 import { DefaultOptions } from '../ApolloClient';
 import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
@@ -22,12 +21,6 @@ describe('ApolloClient', () => {
 
     afterEach(() => {
       window.fetch = oldFetch;
-    });
-
-    it('will throw an error if `uri` or `link` is not passed in', () => {
-      expect(() => {
-        new ApolloClient({ cache: new InMemoryCache() } as any);
-      }).toThrowErrorMatchingSnapshot();
     });
 
     it('will throw an error if cache is not passed in', () => {
@@ -56,6 +49,14 @@ describe('ApolloClient', () => {
         link: new HttpLink({ uri: uri2 })
       });
       expect((client.link as HttpLink).options.uri).toEqual(uri2);
+    });
+
+    it('should create an empty Link if `uri` and `link` are not provided', () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+      });
+      expect(client.link).toBeDefined();
+      expect(client.link instanceof ApolloLink).toBeTruthy();
     });
   });
 
@@ -825,7 +826,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      return withWarning(() => {
+      expect(() => {
         client.writeQuery({
           data: {
             todos: [
@@ -846,7 +847,7 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }, /Missing field description/);
+      }).toThrowError(/Missing field 'description' /);
     });
   });
 
@@ -1107,7 +1108,7 @@ describe('ApolloClient', () => {
         }),
       });
 
-      return withWarning(() => {
+      expect(() => {
         client.writeFragment({
           data: { __typename: 'Bar', i: 10 },
           id: 'bar',
@@ -1118,7 +1119,7 @@ describe('ApolloClient', () => {
             }
           `,
         });
-      }, /Missing field e/);
+      }).toThrowError(/Missing field 'e' /);
     });
 
     describe('change will call observable next', () => {
@@ -1417,171 +1418,6 @@ describe('ApolloClient', () => {
           });
         });
       });
-    });
-  });
-
-  describe('writeData', () => {
-    it('lets you write to the cache by passing in data', () => {
-      const query = gql`
-        {
-          field
-        }
-      `;
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
-      });
-
-      client.writeData({ data: { field: 1 } });
-
-      return client.query({ query }).then(({ data }) => {
-        expect(stripSymbols({ ...data })).toEqual({ field: 1 });
-      });
-    });
-
-    it('lets you write to an existing object in the cache using an ID', () => {
-      const query = gql`
-        {
-          obj {
-            field
-          }
-        }
-      `;
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
-      });
-
-      client.writeQuery({
-        query,
-        data: {
-          obj: { field: 1, id: 'uniqueId', __typename: 'Object' },
-        },
-      });
-
-      client.writeData({ id: 'Object:uniqueId', data: { field: 2 } });
-
-      return client.query({ query }).then(({ data }: any) => {
-        expect(data.obj.field).toEqual(2);
-      });
-    });
-
-    it(`doesn't overwrite __typename when writing to the cache with an id`, () => {
-      const query = gql`
-        {
-          obj {
-            field {
-              field2
-            }
-            id
-          }
-        }
-      `;
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
-      });
-
-      client.writeQuery({
-        query,
-        data: {
-          obj: {
-            field: { field2: 1, __typename: 'Field' },
-            id: 'uniqueId',
-            __typename: 'Object',
-          },
-        },
-      });
-
-      client.writeData({
-        id: 'Object:uniqueId',
-        data: { field: { field2: 2, __typename: 'Field' } },
-      });
-
-      return client
-        .query({ query })
-        .then(({ data }: any) => {
-          expect(data.obj.__typename).toEqual('Object');
-          expect(data.obj.field.__typename).toEqual('Field');
-        })
-        .catch(e => console.log(e));
-    });
-
-    it(`adds a __typename for an object without one when writing to the cache with an id`, () => {
-      const query = gql`
-        {
-          obj {
-            field {
-              field2
-            }
-            id
-          }
-        }
-      `;
-
-      // This would cause a warning to be printed because we don't have
-      // __typename on the obj field. But that's intentional because
-      // that's exactly the situation we're trying to test...
-
-      // Let's swap out console.warn to suppress this one message
-
-      const suppressString = '__typename';
-      const originalWarn = console.warn;
-      console.warn = (...args: any[]) => {
-        if (
-          args.find(element => {
-            if (typeof element === 'string') {
-              return element.indexOf(suppressString) !== -1;
-            }
-            return false;
-          }) != null
-        ) {
-          // Found a thing in the args we told it to exclude
-          return;
-        }
-        originalWarn.apply(console, args);
-      };
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
-      });
-
-      client.writeQuery({
-        query,
-        data: {
-          obj: {
-            __typename: 'Obj',
-            field: {
-              field2: 1,
-              __typename: 'Field',
-            },
-            id: 'uniqueId',
-          },
-        },
-      });
-
-      client.writeData({
-        id: 'Obj:uniqueId',
-        data: {
-          field: {
-            field2: 2,
-            __typename: 'Field',
-          },
-        },
-      });
-
-      return client
-        .query({ query })
-        .then(({ data }: any) => {
-          console.warn = originalWarn;
-          expect(data.obj.__typename).toEqual('Obj');
-          expect(data.obj.field.__typename).toEqual('Field');
-        })
-        .catch(e => console.log(e));
     });
   });
 

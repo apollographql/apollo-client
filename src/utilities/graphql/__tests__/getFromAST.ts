@@ -6,7 +6,6 @@ import {
   checkDocument,
   getFragmentDefinitions,
   getQueryDefinition,
-  getMutationDefinition,
   getDefaultValues,
   getOperationName,
 } from '../getFromAST';
@@ -162,32 +161,6 @@ describe('AST utility functions', () => {
     }).toThrow();
   });
 
-  it('should get the correct mutation definition out of a mutation with multiple fragments', () => {
-    const mutationWithFragments = gql`
-      mutation {
-        createAuthor(firstName: "John", lastName: "Smith") {
-          ...authorDetails
-        }
-      }
-
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-    `;
-    const expectedDoc = gql`
-      mutation {
-        createAuthor(firstName: "John", lastName: "Smith") {
-          ...authorDetails
-        }
-      }
-    `;
-    const expectedResult: OperationDefinitionNode = expectedDoc
-      .definitions[0] as OperationDefinitionNode;
-    const actualResult = getMutationDefinition(mutationWithFragments);
-    expect(print(actualResult)).toEqual(print(expectedResult));
-  });
-
   it('should get the operation name out of a query', () => {
     const query = gql`
       query nameOfQuery {
@@ -268,23 +241,8 @@ describe('AST utility functions', () => {
         }
       `;
 
-      const complexMutation = gql`
-        mutation complexStuff(
-          $test: Input = { key1: ["value", "value2"], key2: { key3: 4 } }
-        ) {
-          complexStuff(test: $test) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
       expect(getDefaultValues(getQueryDefinition(basicQuery))).toEqual({
         first: 1,
-      });
-      expect(getDefaultValues(getMutationDefinition(complexMutation))).toEqual({
-        test: { key1: ['value', 'value2'], key2: { key3: 4 } },
       });
     });
   });

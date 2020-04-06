@@ -19,7 +19,7 @@ meteor/apollo | apollo client | apollo server
 
 ## Usage
 
-```sh
+```shell
 meteor add apollo
 meteor npm install graphql apollo-server-express @apollo/client
 ```

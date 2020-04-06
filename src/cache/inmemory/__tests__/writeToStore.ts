@@ -16,24 +16,9 @@ import {
 import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { StoreWriter } from '../writeToStore';
-import { defaultNormalizedCacheFactory } from '../entityCache';
+import { defaultNormalizedCacheFactory } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
 import { Policies } from '../policies';
-
-export function withWarning(func: Function, regex?: RegExp) {
-  let message: string = null as never;
-  const oldWarn = console.warn;
-
-  console.warn = (m: string) => (message = m);
-
-  return Promise.resolve(func()).then(val => {
-    if (regex) {
-      expect(message).toMatch(regex);
-    }
-    console.warn = oldWarn;
-    return val;
-  });
-}
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -1248,9 +1233,9 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          author: policies.toReference(data.author),
+          author: makeReference(policies.identify(data.author)),
         },
-        [policies.identify(data.author)!]: {
+        [policies.identify(data.author)[0]!]: {
           firstName: data.author.firstName,
           id: data.author.id,
           __typename: data.author.__typename,
@@ -1288,9 +1273,9 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          author: policies.toReference(data.author),
+          author: makeReference(policies.identify(data.author)),
         },
-        [policies.identify(data.author)!]: {
+        [policies.identify(data.author)[0]!]: {
           __typename: data.author.__typename,
           id: data.author.id,
           info: data.author.info,
@@ -1307,7 +1292,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should merge objects when overwriting a generated id with a real id', () => {
+  it('should not merge unidentified data when replacing with ID reference', () => {
     const dataWithoutId = {
       author: {
         firstName: 'John',
@@ -1342,7 +1327,7 @@ describe('writing to the store', () => {
         }
       }
     `;
-    const expStoreWithoutId = defaultNormalizedCacheFactory({
+    const expectedStoreWithoutId = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         __typename: 'Query',
         author: {
@@ -1352,10 +1337,9 @@ describe('writing to the store', () => {
         },
       },
     });
-    const expStoreWithId = defaultNormalizedCacheFactory({
+    const expectedStoreWithId = defaultNormalizedCacheFactory({
       Author__129: {
         firstName: 'John',
-        lastName: 'Smith',
         id: '129',
         __typename: 'Author',
       },
@@ -1364,17 +1348,19 @@ describe('writing to the store', () => {
         author: makeReference('Author__129'),
       },
     });
+
     const storeWithoutId = writer.writeQueryToStore({
       result: dataWithoutId,
       query: queryWithoutId,
     });
-    expect(storeWithoutId.toObject()).toEqual(expStoreWithoutId.toObject());
+    expect(storeWithoutId.toObject()).toEqual(expectedStoreWithoutId.toObject());
+
     const storeWithId = writer.writeQueryToStore({
       result: dataWithId,
       query: queryWithId,
       store: storeWithoutId,
     });
-    expect(storeWithId.toObject()).toEqual(expStoreWithId.toObject());
+    expect(storeWithId.toObject()).toEqual(expectedStoreWithId.toObject());
   });
 
   it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {
@@ -1506,7 +1492,7 @@ describe('writing to the store', () => {
     });
 
     Object.keys(store.toObject()).forEach(field => {
-      expect(store.get(field)).toEqual(newStore.get(field));
+      expect((store as any).lookup(field)).toEqual((newStore as any).lookup(field));
     });
   });
 
@@ -1542,10 +1528,10 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('1')).toEqual(result.todos[0]);
+      expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
     });
 
-    it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
+    it('should warn when it receives the wrong data with non-union fragments', () => {
       const result = {
         todos: [
           {
@@ -1562,17 +1548,15 @@ describe('writing to the store', () => {
         }),
       });
 
-      return withWarning(() => {
-        const newStore = writer.writeQueryToStore({
+      expect(() => {
+        writer.writeQueryToStore({
           query,
           result,
         });
-
-        expect(newStore.get('1')).toEqual(result.todos[0]);
-      }, /Missing field description/);
+      }).toThrowError(/Missing field 'description' /);
     });
 
-    it('should warn when it receives the wrong data inside a fragment (using an introspection matcher)', () => {
+    it('should warn when it receives the wrong data inside a fragment', () => {
       const queryWithInterface = gql`
         query {
           todos {
@@ -1616,17 +1600,15 @@ describe('writing to the store', () => {
         }),
       });
 
-      return withWarning(() => {
-        const newStore = writer.writeQueryToStore({
+      expect(() => {
+        writer.writeQueryToStore({
           query: queryWithInterface,
           result,
         });
-
-        expect(newStore.get('1')).toEqual(result.todos[0]);
-      }, /Missing field price/);
+      }).toThrowError(/Missing field 'price' /);
     });
 
-    it('should warn if a result is missing __typename when required (using an heuristic matcher)', () => {
+    it('should warn if a result is missing __typename when required', () => {
       const result: any = {
         todos: [
           {
@@ -1644,14 +1626,12 @@ describe('writing to the store', () => {
         }),
       });
 
-      return withWarning(() => {
-        const newStore = writer.writeQueryToStore({
+      expect(() => {
+        writer.writeQueryToStore({
           query: addTypenameToDocument(query),
           result,
         });
-
-        expect(newStore.get('1')).toEqual(result.todos[0]);
-      }, /Missing field __typename/);
+      }).toThrowError(/Missing field '__typename' /);
     });
 
     it('should not warn if a field is null', () => {
@@ -1670,7 +1650,7 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('ROOT_QUERY')).toEqual({
+      expect((newStore as any).lookup('ROOT_QUERY')).toEqual({
         __typename: 'Query',
         todos: null,
       });
@@ -1699,68 +1679,10 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect(newStore.get('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
+      expect((newStore as any).lookup('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
       expect(console.warn).not.toBeCalled();
       console.warn = originalWarn;
     });
-  });
-
-  it('throws when trying to write an object without id that was previously queried with id', () => {
-    const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: {
-        __typename: 'Query',
-        item: makeReference('abcd'),
-      },
-      abcd: {
-        id: 'abcd',
-        __typename: 'Item',
-        stringField: 'This is a string!',
-      },
-    });
-
-    const writer = new StoreWriter({
-      policies: new Policies({
-        dataIdFromObject: getIdField,
-      }),
-    });
-
-    expect(() => {
-      writer.writeQueryToStore({
-        store,
-        result: {
-          item: {
-            __typename: 'Item',
-            stringField: 'This is still a string!',
-          },
-        },
-        query: gql`
-          query Failure {
-            item {
-              stringField
-            }
-          }
-        `,
-      });
-    }).toThrowErrorMatchingSnapshot();
-
-    expect(() => {
-      writer.writeQueryToStore({
-        store,
-        query: gql`
-          query {
-            item {
-              stringField
-            }
-          }
-        `,
-        result: {
-          item: {
-            __typename: 'Item',
-            stringField: 'This is still a string!',
-          },
-        },
-      });
-    }).toThrowError(/contains an id of abcd/g);
   });
 
   it('properly handles the @connection directive', () => {
@@ -1805,7 +1727,7 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        abc: [
+        'books:abc': [
           {
             name: 'efgh',
           },
@@ -1851,7 +1773,7 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        abc: [
+        "books:abc": [
           {
             name: 'abcd',
           },
@@ -1880,7 +1802,7 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        abc: [
+        "books:abc": [
           {
             name: 'efgh',
           },

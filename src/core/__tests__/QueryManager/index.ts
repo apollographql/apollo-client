@@ -33,6 +33,7 @@ import wrap from '../../../utilities/testing/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../utilities/testing/observableToPromise';
+import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
 
@@ -1026,27 +1027,30 @@ describe('QueryManager', () => {
     return observableToPromise(
       { observable },
       result => {
-        expect(stripSymbols(result.data)).toEqual(data1);
-        observable.refetch();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data1);
+        return observable.refetch();
       },
       result => {
-        expect(stripSymbols(result.data)).toEqual(data2);
-        observable.refetch(variables1);
-      },
-      result => {
-        expect(result.loading).toBe(true);
-        expect(stripSymbols(result.data)).toEqual(data2);
-      },
-      result => {
-        expect(stripSymbols(result.data)).toEqual(data3);
-        observable.refetch(variables2);
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data2);
+        return observable.refetch(variables1);
       },
       result => {
         expect(result.loading).toBe(true);
-        expect(stripSymbols(result.data)).toEqual(data3);
+        expect(result.data).toEqual(data2);
       },
       result => {
-        expect(stripSymbols(result.data)).toEqual(data4);
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data3);
+        return observable.refetch(variables2);
+      },
+      result => {
+        expect(result.loading).toBe(true);
+        expect(result.data).toEqual(data3);
+      },
+      result => {
+        expect(result.data).toEqual(data4);
       },
     ).then(resolve, reject);
   });
@@ -1329,52 +1333,6 @@ describe('QueryManager', () => {
     });
   });
 
-  itAsync('should error if we pass fetchPolicy = cache-only on a polling query', (resolve, reject) => {
-    assertWithObserver({
-      reject,
-      observer: {
-        next() {},
-        error(error) {
-          expect(error).toBeInstanceOf(Error);
-          resolve();
-        },
-      },
-      query: gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }
-      `,
-      queryOptions: { pollInterval: 200, fetchPolicy: 'cache-only' },
-    });
-  });
-
-  itAsync('should error if we pass fetchPolicy = cache-first on a polling query', (resolve, reject) => {
-    assertWithObserver({
-      reject,
-      observer: {
-        next() {
-          // reject(new Error('Returned a result when it should not have.'));
-        },
-        error(error) {
-          expect(error).toBeInstanceOf(Error);
-          resolve();
-        },
-      },
-      query: gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }
-      `,
-      queryOptions: { pollInterval: 200, fetchPolicy: 'cache-first' },
-    });
-  });
-
   itAsync('supports cache-only fetchPolicy fetching only cached data', (resolve, reject) => {
     const primeQuery = gql`
       query primeQuery {
@@ -1654,7 +1612,7 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync(`updates result of previous query if the result of a new query overlaps`, (resolve, reject) => {
+  itAsync('updates result of previous query if the result of a new query overlaps', (resolve, reject) => {
     const query1 = gql`
       {
         people_one(id: 1) {
@@ -1701,21 +1659,21 @@ describe('QueryManager', () => {
     );
 
     const observable = queryManager.watchQuery<any>({ query: query1 });
-    return observableToPromise(
-      { observable },
-      result => {
-        expect(stripSymbols(result.data)).toEqual(data1);
+
+    subscribeAndCount(reject, observable, (handleCount, result) => {
+      if (handleCount === 1) {
+        expect(result.data).toEqual(data1);
         queryManager.query<any>({ query: query2 });
-      },
-      // 3 because the query init action for the second query causes a callback
-      result =>
-        expect(stripSymbols(result.data)).toEqual({
+      } else if (handleCount === 2) {
+        expect(result.data).toEqual({
           people_one: {
-            name: 'Luke Skywalker has a new name',
+            name: 'Luke Skywalker',
             age: 50,
           },
-        }),
-    ).then(resolve, reject);
+        });
+        resolve();
+      }
+    });
   });
 
   itAsync('warns if you forget the template literal tag', async (resolve, reject) => {
@@ -2064,41 +2022,6 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync('should store metadata with watched queries', (resolve, reject) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-    `;
-
-    const data = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-
-    const queryManager = mockQueryManager(reject, {
-      request: { query },
-      result: { data },
-    });
-
-    const observable = queryManager.watchQuery({
-      query,
-      metadata: { foo: 'bar' },
-    });
-
-    return observableToPromise({ observable }, result => {
-      expect(stripSymbols(result.data)).toEqual(data);
-      expect(queryManager.queryStore.get(observable.queryId).metadata).toEqual({
-        foo: 'bar',
-      });
-    }).then(resolve, reject);
-  });
-
   itAsync('should return stale data when we orphan a real-id node in the store with a real-id node', (resolve, reject) => {
     const query1 = gql`
       query {
@@ -2311,70 +2234,7 @@ describe('QueryManager', () => {
     ]).then(resolve, reject);
   });
 
-  itAsync('should error if we replace a real id node in the store with a generated id node', (resolve, reject) => {
-    const queryWithId = gql`
-      query {
-        author {
-          firstName
-          lastName
-          __typename
-          id
-        }
-      }
-    `;
-    const dataWithId = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-        id: '129',
-        __typename: 'Author',
-      },
-    };
-    const queryWithoutId = gql`
-      query {
-        author {
-          address
-        }
-      }
-    `;
-    const dataWithoutId = {
-      author: {
-        address: 'fake address',
-      },
-    };
-    const reducerConfig = { dataIdFromObject };
-    const queryManager = createQueryManager({
-      link: mockSingleLink({
-        request: { query: queryWithId },
-        result: { data: dataWithId },
-      }, {
-        request: { query: queryWithoutId },
-        result: { data: dataWithoutId },
-      }).setOnError(reject),
-      config: reducerConfig,
-    });
-
-    const observableWithId = queryManager.watchQuery<any>({
-      query: queryWithId,
-    });
-    const observableWithoutId = queryManager.watchQuery<any>({
-      query: queryWithoutId,
-    });
-
-    // I'm not sure the waiting 60 here really is required, but the test used to do it
-    return Promise.all([
-      observableToPromise({ observable: observableWithId, wait: 60 }, result =>
-        expect(stripSymbols(result.data)).toEqual(dataWithId),
-      ),
-      observableToPromise({
-        observable: observableWithoutId,
-        errorCallbacks: [error => expect(error.message).toMatch('Store error')],
-        wait: 60,
-      }),
-    ]).then(resolve, reject);
-  });
-
-  itAsync('should not error when merging a generated id store node  with a real id node', (resolve, reject) => {
+  itAsync('should not error when replacing unidentified data with a normalized ID', (resolve, reject) => {
     const queryWithoutId = gql`
       query {
         author {
@@ -2387,6 +2247,7 @@ describe('QueryManager', () => {
         }
       }
     `;
+
     const queryWithId = gql`
       query {
         author {
@@ -2398,6 +2259,7 @@ describe('QueryManager', () => {
         }
       }
     `;
+
     const dataWithoutId = {
       author: {
         name: {
@@ -2408,6 +2270,7 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
+
     const dataWithId = {
       author: {
         name: {
@@ -2417,16 +2280,7 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
-    const mergedDataWithoutId = {
-      author: {
-        name: {
-          firstName: 'Jane',
-          lastName: 'Smith',
-        },
-        age: '124',
-        __typename: 'Author',
-      },
-    };
+
     const queryManager = createQueryManager({
       link: mockSingleLink({
         request: { query: queryWithoutId },
@@ -2440,20 +2294,20 @@ describe('QueryManager', () => {
     const observableWithId = queryManager.watchQuery<any>({
       query: queryWithId,
     });
+
     const observableWithoutId = queryManager.watchQuery<any>({
       query: queryWithoutId,
     });
 
-    // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
       observableToPromise(
-        { observable: observableWithoutId, wait: 120 },
+        { observable: observableWithoutId },
         result => expect(stripSymbols(result.data)).toEqual(dataWithoutId),
-        result =>
-          expect(stripSymbols(result.data)).toEqual(mergedDataWithoutId),
+        result => expect(stripSymbols(result.data)).toEqual(dataWithoutId),
       ),
-      observableToPromise({ observable: observableWithId, wait: 120 }, result =>
-        expect(stripSymbols(result.data)).toEqual(dataWithId),
+      observableToPromise(
+        { observable: observableWithId },
+        result => expect(stripSymbols(result.data)).toEqual(dataWithId),
       ),
     ]).then(resolve, reject);
   });
@@ -3229,7 +3083,7 @@ describe('QueryManager', () => {
       expect(
         queryManager.cache.extract(),
       ).toEqual({});
-      expect(queryManager.queryStore.getStore()).toEqual({});
+      expect(queryManager.getQueryStore()).toEqual({});
       expect(queryManager.mutationStore.getStore()).toEqual({});
 
       resolve();
@@ -3484,22 +3338,11 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = mockQueryManager(reject);
+      const obs = queryManager.watchQuery<any>({ query });
+      obs.refetch = resolve as any;
 
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          resolve();
-          return null as never;
-        },
-        options: {
-          query: query,
-        },
-        scheduler: queryManager.scheduler,
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
-
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
     });
 
@@ -3512,27 +3355,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'cache-only';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "cache-only",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -3548,27 +3390,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'standby';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "standby",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -3900,22 +3741,12 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = mockQueryManager(reject);
 
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          resolve();
-          return null as never;
-        },
-        options: {
-          query: query,
-        },
-        scheduler: queryManager.scheduler,
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery({ query });
+      obs.refetch = resolve as any;
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.reFetchObservableQueries();
     });
 
@@ -3928,27 +3759,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'cache-only';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "cache-only",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.reFetchObservableQueries();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -3964,27 +3794,26 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'standby';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "standby",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.reFetchObservableQueries();
+
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
         resolve();
@@ -4000,28 +3829,27 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink().setOnError(reject),
       });
-      const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'standby';
-      options.query = query;
+
+      const options = {
+        query,
+        fetchPolicy: "standby",
+      } as WatchQueryOptions;
+
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(_: any): Promise<ExecutionResult> {
-          refetchCount++;
-          return null as never;
-        },
-        options,
-        queryManager: queryManager,
 
-        resetLastResults: jest.fn(() => {}),
-      } as any) as ObservableQuery<any>;
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
 
-      const queryId = 'super-fake-id';
-      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       const includeStandBy = true;
       queryManager.reFetchObservableQueries(includeStandBy);
+
       setTimeout(() => {
         expect(refetchCount).toEqual(1);
         resolve();

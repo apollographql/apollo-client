@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
+import { ApolloClient, ApolloError, NetworkStatus, ObservableQuery } from '../';
 import { itAsync } from '../utilities/testing/itAsync';
 
 describe('updateQuery on a simple query', () => {
@@ -198,7 +198,7 @@ describe('fetchMore on an observable query', () => {
 
   let latestResult: any = null;
 
-  let client: ApolloClient;
+  let client: ApolloClient<any>;
   let link: any;
   let sub: any;
 
@@ -251,7 +251,7 @@ describe('fetchMore on an observable query', () => {
         watchedQuery.fetchMore({
           // Rely on the fact that the original variables had limit: 10
           variables: { start: 10 },
-          updateQuery: (prev, options) => {
+          updateQuery: (prev: any, options: any) => {
             expect(options.variables).toEqual(variablesMore);
 
             const state = cloneDeep(prev) as any;
@@ -289,7 +289,7 @@ describe('fetchMore on an observable query', () => {
       .then(watchedQuery => {
         return watchedQuery.fetchMore({
           variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-          updateQuery: (prev, options) => {
+          updateQuery: (prev: any, options: any) => {
             const state = cloneDeep(prev) as any;
             state.entry.comments = [
               ...state.entry.comments,
@@ -325,7 +325,7 @@ describe('fetchMore on an observable query', () => {
         return watchedQuery.fetchMore({
           query: query2,
           variables: variables2,
-          updateQuery: (prev, options) => {
+          updateQuery: (prev: any, options: any) => {
             const state = cloneDeep(prev) as any;
             state.entry.comments = [
               ...state.entry.comments,
@@ -376,7 +376,7 @@ describe('fetchMore on an observable query', () => {
             expect((data as any).entry.comments.length).toBe(10);
             observable.fetchMore({
               variables: { start: 10 },
-              updateQuery: (prev, options) => {
+              updateQuery: (prev: any, options: any) => {
                 const state = cloneDeep(prev) as any;
                 state.entry.comments = [
                   ...state.entry.comments,
@@ -403,7 +403,7 @@ describe('fetchMore on an observable query', () => {
             reject(new Error('`next` called too many times'));
         }
       },
-      error: error => reject(error),
+      error: (error: any) => reject(error),
       complete: () => reject(new Error('Should not have completed')),
     });
   });
@@ -437,7 +437,7 @@ describe('fetchMore on an observable query', () => {
             observable
               .fetchMore({
                 variables: { start: 10 },
-                updateQuery: (prev, options) => {
+                updateQuery: (prev: any, options: any) => {
                   const state = cloneDeep(prev) as any;
                   state.entry.comments = [
                     ...state.entry.comments,
@@ -446,7 +446,7 @@ describe('fetchMore on an observable query', () => {
                   return state;
                 },
               })
-              .catch(e => {
+              .catch((e: ApolloError) => {
                 expect(e.networkError).toBe(fetchMoreError);
               });
             break;
@@ -474,7 +474,7 @@ describe('fetchMore on an observable query', () => {
 
   itAsync('will not leak fetchMore query', (resolve, reject) => {
     latestResult = null;
-    var beforeQueryCount;
+    let beforeQueryCount: number;
     return setup(reject, {
       request: {
         query,
@@ -484,11 +484,12 @@ describe('fetchMore on an observable query', () => {
     })
       .then(watchedQuery => {
         beforeQueryCount = Object.keys(
-          client.queryManager.getQueryStore(),
+            // @ts-ignore
+            client.queryManager.getQueryStore(),
         ).length;
         return watchedQuery.fetchMore({
           variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-          updateQuery: (prev, options) => {
+          updateQuery: (prev: any, options: any) => {
             const state = cloneDeep(prev) as any;
             state.entry.comments = [
               ...state.entry.comments,
@@ -499,8 +500,9 @@ describe('fetchMore on an observable query', () => {
         });
       })
       .then(data => {
-        var afterQueryCount = Object.keys(
-          client.queryManager.getQueryStore(),
+        let afterQueryCount = Object.keys(
+            // @ts-ignore
+            client.queryManager.getQueryStore(),
         ).length;
         expect(afterQueryCount).toBe(beforeQueryCount);
         unsetup();
@@ -565,7 +567,7 @@ describe('fetchMore on an observable query with connection', () => {
 
   let latestResult: any = null;
 
-  let client: ApolloClient;
+  let client: ApolloClient<any>;
   let link: any;
   let sub: any;
 
@@ -617,7 +619,7 @@ describe('fetchMore on an observable query with connection', () => {
       .then(watchedQuery => {
         return watchedQuery.fetchMore({
           variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-          updateQuery: (prev, options) => {
+          updateQuery: (prev: any, options: any) => {
             const state = cloneDeep(prev) as any;
             state.entry.comments = [
               ...state.entry.comments,
@@ -667,7 +669,7 @@ describe('fetchMore on an observable query with connection', () => {
             expect((data as any).entry.comments.length).toBe(10);
             observable.fetchMore({
               variables: { start: 10 },
-              updateQuery: (prev, options) => {
+              updateQuery: (prev: any, options: any) => {
                 const state = cloneDeep(prev) as any;
                 state.entry.comments = [
                   ...state.entry.comments,
@@ -694,7 +696,7 @@ describe('fetchMore on an observable query with connection', () => {
             reject(new Error('`next` called too many times'));
         }
       },
-      error: error => reject(error),
+      error: (error: any) => reject(error),
       complete: () => reject(new Error('Should not have completed')),
     });
   });
@@ -728,7 +730,7 @@ describe('fetchMore on an observable query with connection', () => {
             observable
               .fetchMore({
                 variables: { start: 10 },
-                updateQuery: (prev, options) => {
+                updateQuery: (prev: any, options: any) => {
                   const state = cloneDeep(prev) as any;
                   state.entry.comments = [
                     ...state.entry.comments,
@@ -737,7 +739,7 @@ describe('fetchMore on an observable query with connection', () => {
                   return state;
                 },
               })
-              .catch(e => {
+              .catch((e: ApolloError) => {
                 expect(e.networkError).toBe(fetchMoreError);
               });
             break;

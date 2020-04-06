@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference, makeReference } from '../../../core';
+import { Reference } from '../../../core';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
@@ -960,14 +960,14 @@ describe('diffing queries against the store', () => {
           Query: {
             fields: {
               person(_, { args, isReference, toReference, readField }) {
-                expect(typeof args.id).toBe('number');
-                const ref = toReference({ __typename: 'Person', id: args.id });
+                expect(typeof args!.id).toBe('number');
+                const ref = toReference({ __typename: 'Person', id: args!.id });
                 expect(isReference(ref)).toBe(true);
                 expect(ref).toEqual({
-                  __ref: `Person:${JSON.stringify({ id: args.id })}`,
+                  __ref: `Person:${JSON.stringify({ id: args!.id })}`,
                 });
                 const found = readField<Reference[]>("people").find(
-                  person => person.__ref === ref.__ref);
+                  person => ref && person.__ref === ref.__ref);
                 expect(found).toBeTruthy();
                 return found;
               },

@@ -271,7 +271,7 @@ describe('mergeDeep', function() {
     };
 
     const shallowContextValues: any[] = [];
-    const shallowMerger = new DeepMerger(
+    const shallowMerger = new DeepMerger<typeof contextObject[]>(
       function(target, source, property, context: typeof contextObject) {
         shallowContextValues.push(context);
         // Deliberately not passing context down to nested levels.
@@ -280,7 +280,7 @@ describe('mergeDeep', function() {
     );
 
     const typicalContextValues: any[] = [];
-    const typicalMerger = new DeepMerger<typeof contextObject>(
+    const typicalMerger = new DeepMerger<typeof contextObject[]>(
       function(target, source, property, context) {
         typicalContextValues.push(context);
         // Passing context down this time.

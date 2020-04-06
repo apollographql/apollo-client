@@ -1,21 +1,66 @@
 import gql from 'graphql-tag';
+import { ApolloCache  } from '../cache';
+import { Cache, DataProxy } from '../..';
 
-import { ApolloCache as Cache } from '../cache';
+class TestCache extends ApolloCache<unknown> {
+  constructor() {
+    super();
+  }
 
-class TestCache extends Cache {}
+  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
+    return {};
+  }
 
+  public evict(dataId: string, fieldName?: string): boolean {
+    return false;
+  }
+
+  public extract(optimistic?: boolean): unknown {
+    return undefined;
+  }
+
+  public performTransaction(transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void): void {
+  }
+
+  public read<T, TVariables = any>(query: Cache.ReadOptions<TVariables>): T | null {
+    return null;
+  }
+
+  public recordOptimisticTransaction(transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void, id: string): void {
+  }
+
+  public removeOptimistic(id: string): void {
+  }
+
+  public reset(): Promise<void> {
+    return new Promise<void>(() => null);
+  }
+
+  public restore(serializedState: unknown): ApolloCache<unknown> {
+    return this;
+  }
+
+  public watch(watch: Cache.WatchOptions): () => void {
+    return function () {
+    };
+  }
+
+  public write<TResult = any, TVariables = any>(write: Cache.WriteOptions<TResult, TVariables>): void {
+  }
+}
+const query = gql`{ a }`;
 describe('abstract cache', () => {
   describe('transformDocument', () => {
     it('returns the document', () => {
       const test = new TestCache();
-      expect(test.transformDocument('a')).toBe('a');
+      expect(test.transformDocument(query)).toBe(query);
     });
   });
 
   describe('transformForLink', () => {
     it('returns the document', () => {
       const test = new TestCache();
-      expect(test.transformForLink('a')).toBe('a');
+      expect(test.transformForLink(query)).toBe(query);
     });
   });
 
@@ -24,16 +69,16 @@ describe('abstract cache', () => {
       const test = new TestCache();
       test.read = jest.fn();
 
-      test.readQuery({});
+      test.readQuery({query});
       expect(test.read).toBeCalled();
     });
 
     it('defaults optimistic to false', () => {
       const test = new TestCache();
-      test.read = ({ optimistic }) => optimistic;
+      test.read = ({ optimistic }) => optimistic as any;
 
-      expect(test.readQuery({})).toBe(false);
-      expect(test.readQuery({}, true)).toBe(true);
+      expect(test.readQuery({query})).toBe(false);
+      expect(test.readQuery({query}, true)).toBe(true);
     });
   });
 
@@ -56,7 +101,7 @@ describe('abstract cache', () => {
 
     it('defaults optimistic to false', () => {
       const test = new TestCache();
-      test.read = ({ optimistic }) => optimistic;
+      test.read = ({ optimistic }) => optimistic as any;
       const fragment = {
         id: 'frag',
         fragment: gql`
@@ -76,7 +121,10 @@ describe('abstract cache', () => {
       const test = new TestCache();
       test.write = jest.fn();
 
-      test.writeQuery({});
+      test.writeQuery({
+        query: query,
+        data: 'foo',
+      });
       expect(test.write).toBeCalled();
     });
   });
@@ -92,6 +140,7 @@ describe('abstract cache', () => {
             name
           }
         `,
+        data: 'foo',
       };
 
       test.writeFragment(fragment);

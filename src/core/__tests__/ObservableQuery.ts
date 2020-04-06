@@ -11,7 +11,7 @@ import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
 import { ObservableQuery } from '../ObservableQuery';
 import { NetworkStatus } from '../networkStatus';
 import { QueryManager } from '../QueryManager';
-import { ApolloClient } from '../../';
+import { ApolloClient, NormalizedCacheObject } from '../../';
 
 import wrap from '../../utilities/testing/wrap';
 import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
@@ -41,10 +41,7 @@ describe('ObservableQuery', () => {
     },
   };
 
-  const error = {
-    name: 'people_one',
-    message: 'is offline.',
-  };
+  const error = new GraphQLError('is offline.', undefined, null, null, ['people_one']);
 
   const createQueryManager = ({ link }: { link: ApolloLink }) => {
     return new QueryManager({
@@ -84,7 +81,7 @@ describe('ObservableQuery', () => {
         subscribeAndCount(reject, observable, (handleCount, result) => {
           if (handleCount === 1) {
             expect(stripSymbols(result.data)).toEqual(dataOne);
-            observable.setOptions({ pollInterval: 10 });
+            observable.setOptions({ query, pollInterval: 10 });
           } else if (handleCount === 2) {
             expect(stripSymbols(result.data)).toEqual(dataTwo);
             observable.stopPolling();
@@ -119,7 +116,7 @@ describe('ObservableQuery', () => {
         subscribeAndCount(reject, observable, (handleCount, result) => {
           if (handleCount === 1) {
             expect(stripSymbols(result.data)).toEqual(dataOne);
-            observable.setOptions({ pollInterval: 0 });
+            observable.setOptions({ query, pollInterval: 0 });
             setTimeout(resolve, 5);
           } else if (handleCount === 2) {
             reject(new Error('Should not get more than one result'));
@@ -154,7 +151,7 @@ describe('ObservableQuery', () => {
         subscribeAndCount(reject, observable, (handleCount, result) => {
           if (handleCount === 1) {
             expect(stripSymbols(result.data)).toEqual(dataOne);
-            observable.setOptions({ pollInterval: 10 });
+            observable.setOptions({ query, pollInterval: 10 });
           } else if (handleCount === 2) {
             expect(stripSymbols(result.data)).toEqual(dataTwo);
             observable.stopPolling();
@@ -299,15 +296,15 @@ describe('ObservableQuery', () => {
       subscribeAndCount(reject, observable, async (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
-          await observable.setOptions({ variables: variables2 });
+          await observable.setOptions({ query, variables: variables2 });
         } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(result.loading).toBe(true);
         } else if (handleCount === 3) {
           expect(stripSymbols(result.data)).toEqual(data2);
           // go back to first set of variables
-          const current = await observable.setOptions({ variables });
-          expect(stripSymbols(current.data)).toEqual(data);
+          const current = await observable.setOptions({ query, variables });
+          expect(stripSymbols(current ? current.data : null)).toEqual(data);
           resolve();
         }
       });
@@ -368,7 +365,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(dataOne);
-          return observable.setOptions({ fetchPolicy: 'network-only' });
+          return observable.setOptions({ query, fetchPolicy: 'network-only' });
         } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(dataTwo);
           resolve();
@@ -377,7 +374,7 @@ describe('ObservableQuery', () => {
     });
 
     itAsync('does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (resolve, reject) => {
-      let queryManager: QueryManager;
+      let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
@@ -415,12 +412,12 @@ describe('ObservableQuery', () => {
             expect(stripSymbols(result.data)).toEqual(data);
             expect(timesFired).toBe(1);
             // set policy to be cache-only but data is found
-            await observable.setOptions({ fetchPolicy: 'cache-only' });
+            await observable.setOptions({ query: testQuery, fetchPolicy: 'cache-only' });
             await queryManager.resetStore();
           } else if (handleCount === 2) {
             expect(stripSymbols(result.data)).toEqual({});
             expect(timesFired).toBe(1);
-            await observable.setOptions({ fetchPolicy: 'cache-first' });
+            await observable.setOptions({ query: testQuery, fetchPolicy: 'cache-first' });
           } else if (handleCount === 3) {
             expect(stripSymbols(result.data)).toEqual(data);
             expect(timesFired).toBe(2);
@@ -433,7 +430,7 @@ describe('ObservableQuery', () => {
     });
 
     itAsync('does a network request if fetchPolicy changes from cache-only', (resolve, reject) => {
-      let queryManager: QueryManager;
+      let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
@@ -472,7 +469,7 @@ describe('ObservableQuery', () => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual({});
           expect(timesFired).toBe(0);
-          await observable.setOptions({ fetchPolicy: 'cache-first' });
+          await observable.setOptions({ query: testQuery, fetchPolicy: 'cache-first' });
         } else if (handleCount === 2) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
@@ -482,7 +479,7 @@ describe('ObservableQuery', () => {
     });
 
     itAsync('can set queries to standby and will not fetch when doing so', (resolve, reject) => {
-      let queryManager: QueryManager;
+      let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
@@ -521,7 +518,7 @@ describe('ObservableQuery', () => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
-          await observable.setOptions({ fetchPolicy: 'standby' });
+          await observable.setOptions({ query, fetchPolicy: 'standby' });
           // make sure the query didn't get fired again.
           expect(timesFired).toBe(1);
           resolve();
@@ -532,7 +529,7 @@ describe('ObservableQuery', () => {
     });
 
     itAsync('will not fetch when setting a cache-only query to standby', (resolve, reject) => {
-      let queryManager: QueryManager;
+      let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
@@ -573,7 +570,7 @@ describe('ObservableQuery', () => {
           if (handleCount === 1) {
             expect(stripSymbols(result.data)).toEqual(data);
             expect(timesFired).toBe(1);
-            await observable.setOptions({ fetchPolicy: 'standby' });
+            await observable.setOptions({ query, fetchPolicy: 'standby' });
             // make sure the query didn't get fired again.
             expect(timesFired).toBe(1);
             resolve();
@@ -602,10 +599,11 @@ describe('ObservableQuery', () => {
           return;
         }
         observable
-          .setOptions({ fetchPolicy: 'cache-and-network' })
+          .setOptions({ query, fetchPolicy: 'cache-and-network' })
           .then(res => {
             // returns dataOne from cache
-            expect(stripSymbols(res.data)).toEqual(dataOne);
+            const data = res ? res.data : null;
+            expect(stripSymbols(data)).toEqual(dataOne);
             resolve();
           });
       });
@@ -959,7 +957,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(dataOne);
-          observable.setVariables(variables, true, false);
+          observable.setVariables(variables, true);
 
           // Nothing should happen, so we'll wait a moment to check that
           setTimeout(() => !errored && resolve(), 10);
@@ -1023,15 +1021,16 @@ describe('ObservableQuery', () => {
       });
 
       const origFetchQuery = queryManager.fetchQuery;
-      queryManager.fetchQuery = jest.fn(() =>
-        origFetchQuery.apply(queryManager, arguments),
+      const mockFetchQuery: jest.Mock<any, any[]> = jest.fn((...args) =>
+          origFetchQuery.apply(queryManager, args)
       );
+      queryManager.fetchQuery = mockFetchQuery;
 
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
           observable.refetch(differentVariables);
         } else if (handleCount === 3) {
-          expect(queryManager.fetchQuery.mock.calls[1][1].fetchPolicy).toEqual(
+          expect(mockFetchQuery.mock.calls[1][1].fetchPolicy).toEqual(
             'network-only',
           );
           resolve();
@@ -1062,16 +1061,17 @@ describe('ObservableQuery', () => {
         });
 
         const origFetchQuery = queryManager.fetchQuery;
-        queryManager.fetchQuery = jest.fn(() =>
-          origFetchQuery.apply(queryManager, arguments),
+        const mockFetchQuery: jest.Mock<any, any[]> = jest.fn((...args) =>
+            origFetchQuery.apply(queryManager, args)
         );
+        queryManager.fetchQuery = mockFetchQuery;
 
         subscribeAndCount(reject, observable, (handleCount, result) => {
           if (handleCount === 1) {
             observable.refetch(differentVariables);
           } else if (handleCount === 2) {
             expect(
-              queryManager.fetchQuery.mock.calls[1][1].fetchPolicy,
+                mockFetchQuery.mock.calls[1][1].fetchPolicy,
             ).toEqual('no-cache');
             resolve();
           }
@@ -1122,7 +1122,7 @@ describe('ObservableQuery', () => {
         },
       );
 
-      observable.setOptions({ fetchPolicy: 'cache-and-network' });
+      observable.setOptions({ query: queryWithVars, fetchPolicy: 'cache-and-network' });
 
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
@@ -1813,7 +1813,7 @@ describe('ObservableQuery', () => {
         });
 
         const observable = client.watchQuery(queryOptions);
-        const values = [];
+        const values: any[] = [];
 
         return new Promise<any[]>((resolve, reject) => {
           observable.subscribe({
@@ -1841,7 +1841,7 @@ describe('ObservableQuery', () => {
         });
       }
 
-      async function checkThrows(assumeImmutableResults) {
+      async function checkThrows(assumeImmutableResults: boolean) {
         try {
           await check({
             assumeImmutableResults,

@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { Observable, Subscription } from '../utilities/observables/Observable';
+import { Observable, ObservableSubscription as Subscription } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { ApolloClient } from '..';
@@ -288,7 +288,7 @@ describe('mutation results', () => {
       next: result => {
         if (count === 0) {
           client.mutate({ mutation, variables: { signature: '1234' } });
-          expect(result.data.mini.cover).toBe('image');
+          expect(result.data!.mini.cover).toBe('image');
 
           setTimeout(() => {
             if (count === 0)
@@ -298,7 +298,7 @@ describe('mutation results', () => {
           }, 250);
         }
         if (count === 1) {
-          expect(result.data.mini.cover).toBe('image2');
+          expect(result.data!.mini.cover).toBe('image2');
           resolve();
         }
         count++;
@@ -310,7 +310,6 @@ describe('mutation results', () => {
   itAsync("should warn when the result fields don't match the query fields", (resolve, reject) => {
     let handle: any;
     let subscriptionHandle: Subscription;
-    let counter = 0;
 
     const queryTodos = gql`
       query todos {
@@ -375,7 +374,6 @@ describe('mutation results', () => {
         handle = client.watchQuery({ query: queryTodos });
         subscriptionHandle = handle.subscribe({
           next(res: any) {
-            counter++;
             resolve(res);
           },
         });
@@ -1360,8 +1358,8 @@ describe('mutation results', () => {
       client.mutate<{ foo: { bar: string; }; }>({
         mutation: mutation,
       }).then(result => {
-        // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'."
-        if (result.data.foo.bar) {
+        // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'.", even without `!` operator
+        if (result.data!.foo.bar) {
           resolve();
         }
       }, reject);

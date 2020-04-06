@@ -1,34 +1,25 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
-import cjs from 'rollup-plugin-commonjs';
 import fs from 'fs';
 
 import packageJson from '../package.json';
 
 const distDir = './dist';
 
-const globals = {
-  tslib: 'tslib',
-  'ts-invariant': 'invariant',
-  'symbol-observable': '$$observable',
-  'graphql/language/printer': 'print',
-  optimism: 'optimism',
-  'graphql/language/visitor': 'visitor',
-  'graphql/execution/execute': 'execute',
-  'graphql-tag': 'graphqlTag',
-  'fast-json-stable-stringify': 'stringify',
-  '@wry/equality': 'wryEquality',
-  graphql: 'graphql',
-  react: 'React',
-  'zen-observable': 'Observable',
-};
-
-const hasOwn = Object.prototype.hasOwnProperty;
-
-function external(id) {
-  return hasOwn.call(globals, id);
-}
+const external = [
+  'tslib',
+  'ts-invariant',
+  'symbol-observable',
+  'graphql/language/printer',
+  'optimism',
+  'graphql/language/visitor',
+  'graphql-tag',
+  'fast-json-stable-stringify',
+  '@wry/equality',
+  'react',
+  'zen-observable'
+];
 
 function prepareESM(input, outputDir) {
   return {
@@ -55,12 +46,7 @@ function prepareESM(input, outputDir) {
         // errors back to the unminified code where they were thrown,
         // where the full error string can be found. See #4519.
         errorCodes: true,
-      }),
-      cjs({
-        namedExports: {
-          'graphql-tag': ['gql'],
-        },
-      }),
+      })
     ],
   };
 }
@@ -77,11 +63,6 @@ function prepareCJS(input, output) {
     },
     plugins: [
       nodeResolve(),
-      cjs({
-        namedExports: {
-          'graphql-tag': ['gql'],
-        },
-      }),
     ],
   };
 }
@@ -99,11 +80,29 @@ function prepareCJSMinified(input) {
           toplevel: true,
         },
         compress: {
+          toplevel: true,
           global_defs: {
             '@process.env.NODE_ENV': JSON.stringify('production'),
           },
         },
       }),
+    ],
+  };
+}
+
+function prepareUtilities() {
+  const utilsDistDir = `${distDir}/utilities`;
+  return {
+    input: `${utilsDistDir}/index.js`,
+    external,
+    output: {
+      file: `${utilsDistDir}/utilities.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
     ],
   };
 }
@@ -144,6 +143,7 @@ function rollup() {
     prepareESM(packageJson.module, distDir),
     prepareCJS(packageJson.module, packageJson.main),
     prepareCJSMinified(packageJson.main),
+    prepareUtilities(),
     prepareTesting(),
   ];
 }

@@ -7,25 +7,7 @@ import {
 
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { assign } from '../common/assign';
-
 import { valueToObjectRepresentation } from './storeUtils';
-
-export function getMutationDefinition(
-  doc: DocumentNode,
-): OperationDefinitionNode {
-  checkDocument(doc);
-
-  let mutationDef: OperationDefinitionNode | null = doc.definitions.filter(
-    definition =>
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'mutation',
-  )[0] as OperationDefinitionNode;
-
-  invariant(mutationDef, 'Must contain a mutation definition.');
-
-  return mutationDef;
-}
 
 // Checks the document for errors and throws an exception if there is an error.
 export function checkDocument(doc: DocumentNode) {
@@ -65,14 +47,6 @@ export function getOperationDefinition(
   )[0] as OperationDefinitionNode;
 }
 
-export function getOperationDefinitionOrDie(
-  document: DocumentNode,
-): OperationDefinitionNode {
-  const def = getOperationDefinition(document);
-  invariant(def, `GraphQL document is missing an operation`);
-  return def;
-}
-
 export function getOperationName(doc: DocumentNode): string | null {
   return (
     doc.definitions
@@ -80,7 +54,7 @@ export function getOperationName(doc: DocumentNode): string | null {
         definition =>
           definition.kind === 'OperationDefinition' && definition.name,
       )
-      .map((x: OperationDefinitionNode) => x.name.value)[0] || null
+      .map((x: OperationDefinitionNode) => x!.name!.value)[0] || null
   );
 }
 
@@ -170,44 +144,18 @@ export function getMainDefinition(
 export function getDefaultValues(
   definition: OperationDefinitionNode | undefined,
 ): Record<string, any> {
-  if (
-    definition &&
-    definition.variableDefinitions &&
-    definition.variableDefinitions.length
-  ) {
-    const defaultValues = definition.variableDefinitions
-      .filter(({ defaultValue }) => defaultValue)
-      .map(
-        ({ variable, defaultValue }): Record<string, any> => {
-          const defaultValueObj: Record<string, any> = {};
-          valueToObjectRepresentation(
-            defaultValueObj,
-            variable.name,
-            defaultValue as ValueNode,
-          );
-
-          return defaultValueObj;
-        },
-      );
-
-    return assign({}, ...defaultValues);
+  const defaultValues = Object.create(null);
+  const defs = definition && definition.variableDefinitions;
+  if (defs && defs.length) {
+    defs.forEach(def => {
+      if (def.defaultValue) {
+        valueToObjectRepresentation(
+          defaultValues,
+          def.variable.name,
+          def.defaultValue as ValueNode,
+        );
+      }
+    });
   }
-
-  return {};
-}
-
-/**
- * Returns the names of all variables declared by the operation.
- */
-export function variablesInOperation(
-  operation: OperationDefinitionNode,
-): Set<string> {
-  const names = new Set<string>();
-  if (operation.variableDefinitions) {
-    for (const definition of operation.variableDefinitions) {
-      names.add(definition.variable.name.value);
-    }
-  }
-
-  return names;
+  return defaultValues;
 }

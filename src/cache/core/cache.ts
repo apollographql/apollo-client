@@ -1,9 +1,11 @@
 import { DocumentNode } from 'graphql';
+import { wrap } from 'optimism';
 
 import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
+import { StoreObject } from '../../utilities/graphql/storeUtils';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
-import { justTypenameQuery, queryFromPojo, fragmentFromPojo } from './utils';
+import { Modifier, Modifiers } from './types/common';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -42,23 +44,45 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    */
   public abstract extract(optimistic?: boolean): TSerialized;
 
-  // optimistic API
+  // Optimistic API
+
   public abstract removeOptimistic(id: string): void;
 
-  // transactional API
+  // Transactional API
+
   public abstract performTransaction(
     transaction: Transaction<TSerialized>,
   ): void;
+
   public abstract recordOptimisticTransaction(
     transaction: Transaction<TSerialized>,
     id: string,
   ): void;
 
-  // optional API
+  // Optional API
+
   public transformDocument(document: DocumentNode): DocumentNode {
     return document;
   }
-  // experimental
+
+  public identify(object: StoreObject): string | undefined {
+    return;
+  }
+
+  public modify(
+    dataId: string,
+    modifiers: Modifier<any> | Modifiers,
+    optimistic = false,
+  ): boolean {
+    return false;
+  }
+  
+  public gc(): string[] {
+    return [];
+  }
+
+  // Experimental API
+
   public transformForLink(document: DocumentNode): DocumentNode {
     return document;
   }
@@ -74,18 +98,23 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic: boolean = false,
   ): QueryType | null {
     return this.read({
+      rootId: options.id || 'ROOT_QUERY',
       query: options.query,
       variables: options.variables,
       optimistic,
     });
   }
 
+  // Make sure we compute the same (===) fragment query document every
+  // time we receive the same fragment in readFragment.
+  private getFragmentDoc = wrap(getFragmentQueryDocument);
+
   public readFragment<FragmentType, TVariables = any>(
     options: DataProxy.Fragment<TVariables>,
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: this.getFragmentDoc(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
       optimistic,
@@ -96,7 +125,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: Cache.WriteQueryOptions<TData, TVariables>,
   ): void {
     this.write({
-      dataId: 'ROOT_QUERY',
+      dataId: options.id || 'ROOT_QUERY',
       result: options.data,
       query: options.query,
       variables: options.variables,
@@ -110,44 +139,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       dataId: options.id,
       result: options.data,
       variables: options.variables,
-      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
+      query: this.getFragmentDoc(options.fragment, options.fragmentName),
     });
-  }
-
-  public writeData<TData = any>({
-    id,
-    data,
-  }: Cache.WriteDataOptions<TData>): void {
-    if (typeof id !== 'undefined') {
-      let typenameResult = null;
-      // Since we can't use fragments without having a typename in the store,
-      // we need to make sure we have one.
-      // To avoid overwriting an existing typename, we need to read it out first
-      // and generate a fake one if none exists.
-      try {
-        typenameResult = this.read<any>({
-          rootId: id,
-          optimistic: false,
-          query: justTypenameQuery,
-        });
-      } catch (e) {
-        // Do nothing, since an error just means no typename exists
-      }
-
-      // tslint:disable-next-line
-      const __typename =
-        (typenameResult && typenameResult.__typename) || '__ClientData';
-
-      // Add a type here to satisfy the inmemory cache
-      const dataToWrite = Object.assign({ __typename }, data);
-
-      this.writeFragment({
-        id,
-        fragment: fragmentFromPojo(dataToWrite, __typename),
-        data: dataToWrite,
-      });
-    } else {
-      this.writeQuery({ query: queryFromPojo(data), data });
-    }
   }
 }

@@ -6,7 +6,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import { wrap } from 'optimism';
-import { invariant } from 'ts-invariant';
+import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   isField,
@@ -15,10 +15,11 @@ import {
   Reference,
   isReference,
   makeReference,
-  StoreValue,
+  StoreObject,
 } from '../../utilities/graphql/storeUtils';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
+import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import {
   getDefaultValues,
   getFragmentDefinitions,
@@ -31,33 +32,28 @@ import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,
   ReadQueryOptions,
-  StoreObject,
   NormalizedCache,
 } from './types';
 import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies } from './policies';
+import { Policies, ReadMergeContext } from './policies';
 
 export type VariableMap = { [name: string]: any };
 
-interface ExecContext {
+interface ExecContext extends ReadMergeContext {
   query: DocumentNode;
   store: NormalizedCache;
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
-};
-
-export type ExecResultMissingField = {
-  object: StoreObject;
-  fieldName: string;
-  tolerable: boolean;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
 };
 
 export type ExecResult<R = any> = {
   result: R;
   // Empty array if no missing fields encountered while computing result.
-  missing?: ExecResultMissingField[];
+  missing?: InvariantError[];
 };
 
 type ExecSelectionSetOptions = {
@@ -97,7 +93,7 @@ export class StoreReader {
         if (supportsResultCaching(context.store)) {
           return context.store.makeCacheKey(
             selectionSet,
-            JSON.stringify(context.variables),
+            context.varString,
             isReference(objectOrReference)
               ? objectOrReference.__ref
               : objectOrReference,
@@ -114,7 +110,7 @@ export class StoreReader {
           return context.store.makeCacheKey(
             field,
             array,
-            JSON.stringify(context.variables),
+            context.varString,
           );
         }
       }
@@ -151,12 +147,16 @@ export class StoreReader {
   public diffQueryAgainstStore<T>({
     store,
     query,
+    rootId = 'ROOT_QUERY',
     variables,
     returnPartialData = true,
-    rootId = 'ROOT_QUERY',
-    config,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const { policies } = this.config;
+
+    variables = {
+      ...getDefaultValues(getQueryDefinition(query)),
+      ...variables,
+    };
 
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
@@ -165,28 +165,18 @@ export class StoreReader {
         store,
         query,
         policies,
-        variables: {
-          ...getDefaultValues(getQueryDefinition(query)),
-          ...variables,
-        },
+        variables,
+        varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        toReference: store.toReference,
+        getFieldValue: store.getFieldValue,
       },
     });
 
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
-
-    if (hasMissingFields && ! returnPartialData) {
-      execResult.missing!.forEach(info => {
-        invariant(
-          info.tolerable,
-          `Can't find field ${info.fieldName} on object ${JSON.stringify(
-            info.object,
-            null,
-            2,
-          )}.`,
-        );
-      });
+    if (hasMissingFields && !returnPartialData) {
+      throw execResult.missing![0];
     }
 
     return {
@@ -200,43 +190,25 @@ export class StoreReader {
     objectOrReference,
     context,
   }: ExecSelectionSetOptions): ExecResult {
-    const { store, fragmentMap, variables, policies } = context;
-    const objectsToMerge: { [key: string]: any }[] = [];
-    const finalResult: ExecResult = { result: null };
-
-    // Provides a uniform interface from reading field values, whether or
-    // not the parent object is a normalized entity object.
-    function getFieldValue(
-      fieldName: string,
-      foreignRef?: Reference,
-    ): StoreValue {
-      let fieldValue: StoreValue;
-      if (foreignRef) objectOrReference = foreignRef;
-      if (isReference(objectOrReference)) {
-        const dataId = objectOrReference.__ref;
-        fieldValue = store.getFieldValue(dataId, fieldName);
-        if (fieldValue === void 0 && fieldName === "__typename") {
-          // We can infer the __typename of singleton root objects like
-          // ROOT_QUERY ("Query") and ROOT_MUTATION ("Mutation"), even if
-          // we have never written that information into the cache.
-          return policies.rootTypenamesById[dataId];
-        }
-      } else {
-        fieldValue = objectOrReference && objectOrReference[fieldName];
-      }
-      if (process.env.NODE_ENV !== "production") {
-        maybeDeepFreeze(fieldValue);
-      }
-      return fieldValue;
+    if (isReference(objectOrReference) &&
+        !context.policies.rootTypenamesById[objectOrReference.__ref] &&
+        !context.store.has(objectOrReference.__ref)) {
+      return {
+        result: {},
+        missing: [new InvariantError(
+          `Dangling reference to missing ${objectOrReference.__ref} object`
+        )],
+      };
     }
 
-    const typename = getFieldValue("__typename") as string;
+    const { fragmentMap, variables, policies, store } = context;
+    const objectsToMerge: { [key: string]: any }[] = [];
+    const finalResult: ExecResult = { result: null };
+    const typename = store.getFieldValue<string>(objectOrReference, "__typename");
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
-        Object.values(
-          policies.rootTypenamesById
-        ).indexOf(typename) < 0) {
+        !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
       // field, if we have one, and this.config.addTypename is true. Note
       // that this field can be overridden by other merged objects.
@@ -252,25 +224,32 @@ export class StoreReader {
       return result.result;
     }
 
-    selectionSet.selections.forEach(selection => {
+    const workSet = new Set(selectionSet.selections);
+
+    workSet.forEach(selection => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
       if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        let fieldValue = policies.readFieldFromStoreObject(
+        let fieldValue = policies.readField(
+          objectOrReference,
           selection,
-          getFieldValue,
-          typename,
-          variables,
+          // Since ExecContext extends ReadMergeContext, we can pass it
+          // here without any modifications.
+          context,
         );
 
         if (fieldValue === void 0) {
-          getMissing().push({
-            object: objectOrReference as StoreObject,
-            fieldName: selection.name.value,
-            tolerable: false,
-          });
+          if (!addTypenameToDocument.added(selection)) {
+            getMissing().push(new InvariantError(`Can't find field '${
+              selection.name.value
+            }' on ${
+              isReference(objectOrReference)
+                ? objectOrReference.__ref + " object"
+                : "object " + JSON.stringify(objectOrReference, null, 2)
+            }`));
+          }
 
         } else if (Array.isArray(fieldValue)) {
           fieldValue = handleMissing(this.executeSubSelectedArray({
@@ -323,25 +302,8 @@ export class StoreReader {
           );
         }
 
-        const match = policies.fragmentMatches(fragment, typename);
-
-        if (match) {
-          let fragmentExecResult = this.executeSelectionSet({
-            selectionSet: fragment.selectionSet,
-            objectOrReference,
-            context,
-          });
-
-          if (match === 'heuristic' && fragmentExecResult.missing) {
-            fragmentExecResult = {
-              ...fragmentExecResult,
-              missing: fragmentExecResult.missing.map(info => {
-                return { ...info, tolerable: true };
-              }),
-            };
-          }
-
-          objectsToMerge.push(handleMissing(fragmentExecResult));
+        if (policies.fragmentMatches(fragment, typename)) {
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }
     });
@@ -362,7 +324,7 @@ export class StoreReader {
     array,
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
-    let missing: ExecResultMissingField[] | undefined;
+    let missing: InvariantError[] | undefined;
 
     function handleMissing<T>(childResult: ExecResult<T>): T {
       if (childResult.missing) {

@@ -132,19 +132,16 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     let { link } = options;
 
     if (!link) {
-      if (uri) {
-        link = new HttpLink({ uri, credentials, headers });
-      } else if (resolvers) {
-        link = ApolloLink.empty();
-      }
+      link = uri
+        ? new HttpLink({ uri, credentials, headers })
+        : ApolloLink.empty();
     }
 
-    if (!link || !cache) {
+    if (!cache) {
       throw new InvariantError(
-        "To initialize Apollo Client, you must specify 'uri' or 'link' and " +
-        "'cache' properties in the options object. \n" +
-        "For more information, please visit: " +
-        "https://www.apollographql.com/docs/react/"
+        "To initialize Apollo Client, you must specify a 'cache' property " +
+        "in the options object. \n" +
+        "For more information, please visit: https://go.apollo.dev/c/docs"
       );
     }
 
@@ -239,7 +236,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           this.devToolsHookCb({
             action: {},
             state: {
-              queries: this.queryManager.queryStore.getStore(),
+              queries: this.queryManager.getQueryStore(),
               mutations: this.queryManager.mutationStore.getStore(),
             },
             dataWithOptimisticResults: this.cache.extract(true),
@@ -426,24 +423,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
   ): void {
     const result = this.cache.writeFragment<TData, TVariables>(options);
-    this.queryManager.broadcastQueries();
-    return result;
-  }
-
-  /**
-   * Sugar for writeQuery & writeFragment
-   * This method will construct a query from the data object passed in.
-   * If no id is supplied, writeData will write the data to the root.
-   * If an id is supplied, writeData will write a fragment to the object
-   * specified by the id in the store.
-   *
-   * Since you aren't passing in a query to check the shape of the data,
-   * you must pass in an object that conforms to the shape of valid GraphQL data.
-   */
-  public writeData<TData = any>(
-    options: DataProxy.WriteDataOptions<TData>,
-  ): void {
-    const result = this.cache.writeData<TData>(options);
     this.queryManager.broadcastQueries();
     return result;
   }

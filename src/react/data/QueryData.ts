@@ -1,4 +1,4 @@
-import { equal as isEqual } from '@wry/equality';
+import { equal } from '@wry/equality';
 
 import { ApolloError } from '../../errors/ApolloError';
 import { NetworkStatus } from '../../core/networkStatus';
@@ -18,7 +18,8 @@ import {
   QueryCurrentObservable,
   QueryTuple,
   QueryLazyOptions,
-  ObservableQueryFields
+  ObservableQueryFields,
+  LazyQueryResult
 } from '../types/types';
 import { OperationData } from './OperationData';
 
@@ -68,7 +69,7 @@ export class QueryData<TData, TVariables> extends OperationData {
             networkStatus: NetworkStatus.ready,
             called: false,
             data: undefined
-          } as QueryResult<TData, TVariables>
+          }
         ]
       : [this.runLazyQuery, this.execute()];
   }
@@ -84,13 +85,13 @@ export class QueryData<TData, TVariables> extends OperationData {
     queryResult,
     lazy = false,
   }: {
-    queryResult: QueryResult<TData, TVariables>;
+    queryResult: QueryResult<TData, TVariables> | LazyQueryResult<TData, TVariables>;
     lazy?: boolean;
   }) {
     this.isMounted = true;
 
     if (!lazy || this.runLazy) {
-      this.handleErrorOrCompleted(queryResult);
+      this.handleErrorOrCompleted(queryResult as QueryResult<TData, TVariables>);
 
       // When the component is done rendering stored query errors, we'll
       // remove those errors from the `ObservableQuery` query store, so they
@@ -198,7 +199,6 @@ export class QueryData<TData, TVariables> extends OperationData {
       ...options,
       displayName,
       context: options.context,
-      metadata: { reactComponent: { displayName } }
     };
   }
 
@@ -245,7 +245,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     };
 
     if (
-      !isEqual(
+      !equal(
         newObservableQueryOptions,
         this.previousData.observableQueryOptions
       )
@@ -280,7 +280,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           previousResult &&
           previousResult.loading === loading &&
           previousResult.networkStatus === networkStatus &&
-          isEqual(previousResult.data, data)
+          equal(previousResult.data, data)
         ) {
           return;
         }
@@ -306,7 +306,7 @@ export class QueryData<TData, TVariables> extends OperationData {
         const previousResult = this.previousData.result;
         if (
           (previousResult && previousResult.loading) ||
-          !isEqual(error, this.previousData.error)
+          !equal(error, this.previousData.error)
         ) {
           this.previousData.error = error;
           onNewData();
@@ -353,7 +353,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     } else {
       // Fetch the current result (if any) from the store.
       const currentResult = this.currentObservable.query!.getCurrentResult();
-      const { loading, networkStatus, errors } = currentResult;
+      const { loading, partial, networkStatus, errors } = currentResult;
       let { error, data } = currentResult;
 
       // Until a set naming convention for networkError and graphQLErrors is
@@ -390,6 +390,7 @@ export class QueryData<TData, TVariables> extends OperationData {
         const { partialRefetch } = options;
         if (
           partialRefetch &&
+          partial &&
           (!data || Object.keys(data).length === 0) &&
           fetchPolicy !== 'cache-only'
         ) {
@@ -433,8 +434,8 @@ export class QueryData<TData, TVariables> extends OperationData {
       if (
         this.previousOptions &&
         !this.previousData.loading &&
-        isEqual(this.previousOptions.query, query) &&
-        isEqual(this.previousOptions.variables, variables)
+        equal(this.previousOptions.query, query) &&
+        equal(this.previousOptions.variables, variables)
       ) {
         return;
       }

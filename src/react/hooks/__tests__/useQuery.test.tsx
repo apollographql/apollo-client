@@ -88,6 +88,40 @@ describe('useQuery Hook', () => {
       return wait();
     });
 
+    it('should return a result upon first call, if data is available', async () => {
+      // This test verifies that the `useQuery` hook returns a result upon its first
+      // invocation if the data is available in the cache. This is essential for SSR
+      // to work properly, since effects are not run during SSR.
+
+      const Component = ({ expectData }: { expectData: boolean }) => {
+        const { data } = useQuery(CAR_QUERY);
+        if (expectData) {
+          expect(data).toEqual(CAR_RESULT_DATA);
+        }
+        return null;
+      };
+
+      // Common cache instance to use across render passes.
+      // The cache will be warmed with the result of the query on the second pass.
+      const cache = new InMemoryCache();
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS} cache={cache}>
+          <Component expectData={false} />
+        </MockedProvider>
+      );
+
+      await wait();
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS} cache={cache}>
+          <Component expectData={true} />
+        </MockedProvider>
+      );
+
+      return wait();
+    });
+
     it('should ensure ObservableQuery fields have a stable identity', async () => {
       let refetchFn: any;
       let fetchMoreFn: any;

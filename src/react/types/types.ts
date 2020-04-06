@@ -113,11 +113,6 @@ export interface QueryPreviousData<TData, TVariables> {
   error?: ApolloError;
 }
 
-export interface QueryCurrentObservable<TData, TVariables> {
-  query?: ObservableQuery<TData, TVariables> | null;
-  subscription?: ZenObservable.Subscription;
-}
-
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;
   context?: Context;

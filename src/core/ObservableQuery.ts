@@ -157,7 +157,6 @@ export class ObservableQuery<
       error: lastError,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-      stale: lastResult ? lastResult.stale : false,
     };
 
     if (this.isTornDown) {
@@ -205,7 +204,6 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      result.stale = false;
       this.updateLastResult(result);
     }
 
@@ -220,7 +218,6 @@ export class ObservableQuery<
       snapshot &&
       newResult &&
       snapshot.networkStatus === newResult.networkStatus &&
-      snapshot.stale === newResult.stale &&
       equal(snapshot.data, newResult.data)
     );
   }

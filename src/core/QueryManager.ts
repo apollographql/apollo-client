@@ -1,5 +1,6 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
+import equal from '@wry/equality';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -553,29 +554,31 @@ export class QueryManager<TStore> {
       // functions unless there is a DiffResult to broadcast.
       const diff = info.getDiff() as Cache.DiffResult<any>;
 
-      // If there is some data missing and the user has told us that they
-      // do not tolerate partial data then we want to return the previous
-      // result and mark it as stale.
-      const stale = !diff.complete && !(
-        returnPartialData ||
-        partialRefetch ||
-        fetchPolicy === 'cache-only'
-      );
+      if (diff.complete ||
+          returnPartialData ||
+          partialRefetch ||
+          hasGraphQLErrors ||
+          fetchPolicy === 'cache-only') {
+        const result: ApolloQueryResult<T> = {
+          data: diff.result,
+          loading: isNetworkRequestInFlight(networkStatus),
+          networkStatus: networkStatus!,
+        };
 
-      const lastResult = observableQuery!.getLastResult();
-      const resultFromStore: ApolloQueryResult<T> = {
-        data: stale ? lastResult && lastResult.data : diff.result,
-        loading: isNetworkRequestInFlight(networkStatus),
-        networkStatus: networkStatus!,
-        stale,
-      };
+        // If the query wants updates on errors, add them to the result.
+        if (errorPolicy === 'all' && hasGraphQLErrors) {
+          result.errors = graphQLErrors;
+        }
 
-      // If the query wants updates on errors, add them to the result.
-      if (errorPolicy === 'all' && hasGraphQLErrors) {
-        resultFromStore.errors = graphQLErrors;
+        observer.next && observer.next(result);
+
+      } else if (process.env.NODE_ENV !== 'production' &&
+                 isNonEmptyArray(diff.missing) &&
+                 !equal(diff.result, {})) {
+        invariant.warn(`Missing cache result fields: ${
+          diff.missing.map(m => m.path.join('.')).join(', ')
+        }`, diff.missing);
       }
-
-      observer.next && observer.next(resultFromStore);
     };
   }
 
@@ -1164,7 +1167,6 @@ export class QueryManager<TStore> {
             errors: errorsFromStore,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            stale: false,
           });
         },
       });

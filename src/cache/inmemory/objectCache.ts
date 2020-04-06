@@ -13,7 +13,7 @@ export class ObjectCache {
     return this.data[dataId]!;
   }
 
-  public set(dataId: string, value: StoreObject) {
+  public set(dataId: string, value: StoreObject | undefined) {
     this.data[dataId] = value;
   }
 

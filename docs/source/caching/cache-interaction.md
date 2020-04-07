@@ -330,9 +330,11 @@ const CommentsPageWithMutations = () => (
               // Read the data from our cache for this query.
               const data = store.readQuery({ query: CommentAppQuery });
               // Add our comment from the mutation to the end.
-              data.comments.push(submitComment);
+              // The cache is readonly, making copies of anything modified.
+              const newData = { ...data }
+              newData.comments = newData.comments.concat(submitComment)
               // Write our data back to the cache.
-              store.writeQuery({ query: CommentAppQuery, data });
+              store.writeQuery({ query: CommentAppQuery, newData });
             }
           })
         }

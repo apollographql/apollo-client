@@ -165,6 +165,161 @@ describe('useQuery Hook', () => {
 
       return wait();
     });
+
+    it('should update result when query result change', async () => {
+      const CAR_QUERY_BY_ID = gql`
+        query($id: Int) {
+          car(id: $id) {
+            make
+            model
+          }
+        }
+      `;
+
+      const CAR_DATA_A4 = {
+        car: {
+          make: 'Audi',
+          model: 'A4',
+          __typename: 'Car',
+        },
+      };
+
+      const CAR_DATA_RS8 = {
+        car: {
+          make: 'Audi',
+          model: 'RS8',
+          __typename: 'Car',
+        },
+      };
+
+      const mocks = [
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 1 } },
+          result: { data: CAR_DATA_A4 },
+        },
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 2 } },
+          result: { data: CAR_DATA_RS8 },
+        },
+      ];
+
+      const hookResponse = jest.fn().mockReturnValue(null);
+
+      function Component({ id, children }) {
+        const { data, loading, error } = useQuery(CAR_QUERY_BY_ID, {
+          variables: { id },
+        });
+
+        return children({ data, loading, error });
+      }
+
+      const { rerender } = render(
+        <MockedProvider mocks={mocks}>
+          <Component id={1}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_A4,
+          loading: false,
+          error: undefined,
+        })
+      );
+
+      rerender(
+        <MockedProvider mocks={mocks}>
+          <Component id={2}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_RS8,
+          loading: false,
+          error: undefined,
+        })
+      );
+    });
+
+    it('should return result when result is equivalent', async () => {
+      const CAR_QUERY_BY_ID = gql`
+        query($id: Int) {
+          car(id: $id) {
+            make
+            model
+          }
+        }
+      `;
+
+      const CAR_DATA_A4 = {
+        car: {
+          make: 'Audi',
+          model: 'A4',
+          __typename: 'Car',
+        },
+      };
+
+      const mocks = [
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 1 } },
+          result: { data: CAR_DATA_A4 },
+        },
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 2 } },
+          result: { data: CAR_DATA_A4 },
+        },
+      ];
+
+      const hookResponse = jest.fn().mockReturnValue(null);
+
+      function Component({ id, children, skip = false }) {
+        const { data, loading, error } = useQuery(CAR_QUERY_BY_ID, {
+          variables: { id },
+          skip,
+        });
+
+        return children({ data, loading, error });
+      }
+
+      const { rerender } = render(
+        <MockedProvider mocks={mocks}>
+          <Component id={1}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_A4,
+          loading: false,
+          error: undefined,
+        })
+      );
+
+      rerender(
+        <MockedProvider mocks={mocks}>
+          <Component id={2} skip>
+            {hookResponse}
+          </Component>
+        </MockedProvider>
+      );
+
+      hookResponse.mockClear();
+
+      rerender(
+        <MockedProvider mocks={mocks}>
+          <Component id={2}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_A4,
+          loading: false,
+          error: undefined,
+        })
+      );
+    });
   });
 
   describe('Polling', () => {

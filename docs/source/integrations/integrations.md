@@ -25,10 +25,7 @@ To use Apollo with the [Angular](https://angular.io) rendering library, see the 
 
 ## Ember
 
-There are two [Ember](http://emberjs.com/) integrations available:
-
-* [ember-apollo-client](https://github.com/bgentry/ember-apollo-client) is maintained by Blake Gentry ([@bgentry](https://github.com/bgentry)).
-* [ember-apollo](https://github.com/jlevycpa/ember-apollo) is maintained by Jeff Levy ([@jlevycpa](https://github.com/jlevycpa)).
+An [Ember](http://emberjs.com/) integration is maintained by Josemar Luedke ([@josemarluedke](https://github.com/josemarluedke)). See Github [repository](https://github.com/ember-graphql/ember-apollo-client) for more details. The creator of the project is Blake Gentry ([@bgentry](https://github.com/bgentry)).
 
 ## Web Components
 

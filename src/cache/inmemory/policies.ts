@@ -52,7 +52,7 @@ type KeyFieldsContext = {
   keyObject?: Record<string, any>;
 };
 
-type KeyFieldsFunction = (
+export type KeyFieldsFunction = (
   object: Readonly<StoreObject>,
   context: KeyFieldsContext,
 ) => KeySpecifier | ReturnType<IdGetter>;
@@ -76,7 +76,7 @@ export type TypePolicy = {
   }
 };
 
-type KeyArgsFunction = (
+export type KeyArgsFunction = (
   args: Record<string, any> | null,
   context: {
     typename: string;

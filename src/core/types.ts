@@ -20,7 +20,6 @@ export type ApolloQueryResult<T> = {
   errors?: ReadonlyArray<GraphQLError>;
   loading: boolean;
   networkStatus: NetworkStatus;
-  stale: boolean;
 };
 
 export enum FetchType {

@@ -1654,14 +1654,10 @@ describe('client', () => {
       });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toBe(undefined);
-          expect(result.loading).toBe(true);
-        } else if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(networkFetch);
-          expect(result.loading).toBe(false);
-          resolve();
-        }
+        expect(handleCount).toBe(1);
+        expect(stripSymbols(result.data)).toEqual(networkFetch);
+        expect(result.loading).toBe(false);
+        resolve();
       });
     });
 
@@ -1677,17 +1673,13 @@ describe('client', () => {
         fetchPolicy: 'cache-and-network',
       });
 
-      let count = 0;
       obs.subscribe({
-        next: result => {
-          expect(result.data).toBe(undefined);
-          expect(result.loading).toBe(true);
-          count++;
-        },
         error: e => {
-          expect(e.message).toMatch(/No more mocked responses/);
-          expect(count).toBe(1); // make sure next was called.
-          setTimeout(resolve, 100);
+          if (!/No more mocked responses/.test(e.message)) {
+            reject(e);
+          } else {
+            resolve();
+          }
         },
       });
     });

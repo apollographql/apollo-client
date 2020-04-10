@@ -157,7 +157,6 @@ export class ObservableQuery<
       error: lastError,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-      stale: lastResult ? lastResult.stale : false,
     };
 
     if (this.isTornDown) {
@@ -205,7 +204,6 @@ export class ObservableQuery<
     }
 
     if (!partial) {
-      result.stale = false;
       this.updateLastResult(result);
     }
 
@@ -215,14 +213,7 @@ export class ObservableQuery<
   // Compares newResult to the snapshot we took of this.lastResult when it was
   // first received.
   public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
-    const { lastResultSnapshot: snapshot } = this;
-    return !(
-      snapshot &&
-      newResult &&
-      snapshot.networkStatus === newResult.networkStatus &&
-      snapshot.stale === newResult.stale &&
-      equal(snapshot.data, newResult.data)
-    );
+    return !equal(this.lastResultSnapshot, newResult);
   }
 
   // Returns the last result that observer.next was called with. This is not the same as

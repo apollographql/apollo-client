@@ -101,7 +101,6 @@ describe('subscribeToMore', () => {
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
-        stale: false,
       });
       resolve();
     }, 15);
@@ -157,7 +156,6 @@ describe('subscribeToMore', () => {
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
-        stale: false,
       });
       expect(counter).toBe(2);
       expect(errorCount).toBe(1);
@@ -217,7 +215,6 @@ describe('subscribeToMore', () => {
         data: { entry: { value: '1' } },
         loading: false,
         networkStatus: 7,
-        stale: false,
       });
       expect(counter).toBe(1);
       expect(errorCount).toBe(1);
@@ -323,7 +320,6 @@ describe('subscribeToMore', () => {
       },
       loading: false,
       networkStatus: 7,
-      stale: false,
     });
     resolve();
   });
@@ -391,7 +387,6 @@ describe('subscribeToMore', () => {
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
-        stale: false,
       });
       resolve();
     }, 15);

@@ -1,4 +1,4 @@
-import { SelectionSetNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 
 import {
   isReference,
@@ -6,7 +6,8 @@ import {
   StoreObject,
   Reference
 } from '../../../utilities/graphql/storeUtils';
-import { FragmentMap } from '../../../utilities/graphql/fragments';
+
+import { ToReferenceFunction } from '../../inmemory/entityStore';
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
@@ -22,11 +23,7 @@ export type Modifier<T> = (value: T, details: {
   fieldName: string;
   storeFieldName: string;
   isReference: typeof isReference;
-  toReference(
-    object: StoreObject,
-    selectionSet?: SelectionSetNode,
-    fragmentMap?: FragmentMap,
-  ): Reference;
+  toReference: ToReferenceFunction;
   readField<V = StoreValue>(
     fieldName: string,
     objOrRef?: StoreObject | Reference,
@@ -35,4 +32,13 @@ export type Modifier<T> = (value: T, details: {
 
 export type Modifiers = {
   [fieldName: string]: Modifier<any>;
+}
+
+export class MissingFieldError {
+  constructor(
+    public readonly message: string,
+    public readonly path: (string | number)[],
+    public readonly query: DocumentNode,
+    public readonly variables: Record<string, any>,
+  ) {}
 }

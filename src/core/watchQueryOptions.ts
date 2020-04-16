@@ -55,17 +55,6 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
   errorPolicy?: ErrorPolicy;
 
   /**
-   * Whether or not to fetch results
-   */
-  fetchResults?: boolean;
-
-  /**
-   * Arbitrary metadata stored in the store with this query.  Designed for debugging,
-   * developer tools, etc.
-   */
-  metadata?: any;
-
-  /**
    * Context to be passed to link execution chain
    */
   context?: any;

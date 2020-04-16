@@ -1,5 +1,7 @@
 import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 
+import { MissingFieldError } from './common';
+
 export namespace DataProxy {
   export interface Query<TVariables> {
     /**
@@ -67,20 +69,11 @@ export namespace DataProxy {
     data: TData;
   }
 
-  export interface WriteDataOptions<TData> {
-    /**
-     * The data you will be writing to the store.
-     * It also takes an optional id property.
-     * The id is used to write a fragment to an existing object in the store.
-     */
-    data: TData;
-    id?: string;
-  }
-
   export type DiffResult<T> = {
     result?: T;
     complete?: boolean;
-  };
+    missing?: MissingFieldError[];
+  }
 }
 
 /**
@@ -123,12 +116,4 @@ export interface DataProxy {
   writeFragment<TData = any, TVariables = any>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
   ): void;
-
-  /**
-   * Sugar for writeQuery & writeFragment.
-   * Writes data to the store without passing in a query.
-   * If you supply an id, the data will be written as a fragment to an existing object.
-   * Otherwise, the data is written to the root of the store.
-   */
-  writeData<TData = any>(options: DataProxy.WriteDataOptions<TData>): void;
 }

@@ -126,6 +126,8 @@ These packages provide the same functionality as their non-`@apollo` counterpart
 
 `apollo-link-rest` has also been updated to use `@apollo/client`, but does not use `@apollo/link-X` naming. It should still be referenced using `apollo-link-rest`, and updated to its `latest` version.
 
+It is important to note that Apollo Client 3 no longer allows `@client` fields to be passed through a Link chain. While Apollo Client 2 made it possible to intercept `@client` fields in Link's like `apollo-link-state` and `@apollo/link-schema`, Apollo Client 3 enforces that `@client` fields are local only. This helps ensure Apollo Client's local state story is easier to understand, and prevents unwanted fields from accidentally ending up in network requests ([PR #5982](https://github.com/apollographql/apollo-client/pull/5982)).
+
 ### graphql-anywhere
 
 The `graphql-anywhere` package’s functionality is no longer included with Apollo Client. You can continue to use the `graphql-anywhere` package, but Apollo no longer uses it and will not actively support it moving forward.
@@ -169,7 +171,7 @@ Apollo Client 3.0 introduces powerful improvements to its caching system. Most o
 * [Configuring the cache](../caching/cache-configuration/)
 * [Interacting with cached data](../caching/cache-interaction/)
 
-### Breaking changes
+### Breaking cache changes
 
 The following cache changes are **not** backward compatible. Take them into consideration before you upgrade to Apollo Client 3.0.
 
@@ -177,3 +179,25 @@ The following cache changes are **not** backward compatible. Take them into cons
 * All cache results are now frozen/immutable, as promised in the [Apollo Client 2.6 blog post](https://blog.apollographql.com/whats-new-in-apollo-client-2-6-b3acf28ecad1) ([PR #5153](https://github.com/apollographql/apollo-client/pull/5153)).
 * `FragmentMatcher`, `HeuristicFragmentMatcher`, and `IntrospectionFragmentMatcher` have all been removed. We recommend using the `InMemoryCache`’s `possibleTypes` option instead. For more information, see [Defining possibleTypes manually](../data/fragments/#defining-possibletypes-manually) ([PR #5073](https://github.com/apollographql/apollo-client/pull/5073)).
 * The internal representation of normalized data in the cache has changed. If you’re using `apollo-cache-inmemory`’s public API, then these changes shouldn’t impact you. If you are manipulating cached data directly instead, review [PR #5146](https://github.com/apollographql/apollo-client/pull/5146) for details.
+* `client|cache.writeData` have been fully removed. `client|cache.writeQuery`, `client|cache.writeFragment`, and/or `cache.modify` can be used to update the cache. For example:
+
+  ```js
+    client.writeData({
+      data: {
+        cartItems: []
+      }
+    });
+  ```
+
+  can be converted to:
+
+  ```js
+    client.writeQuery({
+      query: gql`{ cartItems }`,
+      data: {
+        cartItems: []
+      }
+    });
+  ```
+
+  For more details around why `writeData` has been removed, see [PR #5923](https://github.com/apollographql/apollo-client/pull/5923).

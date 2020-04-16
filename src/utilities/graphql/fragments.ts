@@ -117,7 +117,7 @@ export function createFragmentMap(
 
 export function getFragmentFromSelection(
   selection: SelectionNode,
-  fragmentMap: FragmentMap,
+  fragmentMap?: FragmentMap,
 ): InlineFragmentNode | FragmentDefinitionNode | null {
   switch (selection.kind) {
     case 'InlineFragment':
@@ -125,7 +125,7 @@ export function getFragmentFromSelection(
     case 'FragmentSpread': {
       const fragment = fragmentMap && fragmentMap[selection.name.value];
       invariant(fragment, `No fragment named ${selection.name.value}.`);
-      return fragment;
+      return fragment!;
     }
     default:
       return null;

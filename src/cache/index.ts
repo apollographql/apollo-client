@@ -1,6 +1,7 @@
 export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';
 export { DataProxy } from './core/types/DataProxy';
+export { MissingFieldError } from './core/types/common';
 
 export {
   Reference,
@@ -11,7 +12,7 @@ export {
 export {
   InMemoryCache,
   InMemoryCacheConfig,
-  LocalVar,
+  ReactiveVar,
 } from './inmemory/inMemoryCache';
 
 export {

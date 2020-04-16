@@ -1,8 +1,9 @@
 import gql from "graphql-tag";
-import { InMemoryCache, LocalVar } from "../inMemoryCache";
-import { StoreValue } from "../../../utilities";
-import { FieldPolicy, Policies } from "../policies";
+
+import { InMemoryCache } from "../inMemoryCache";
+import { Policies } from "../policies";
 import { Reference, StoreObject } from "../../../core";
+import { MissingFieldError } from "../..";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -76,6 +77,7 @@ describe("type policies", function () {
       },
       'Book:{"isbn":"1400096235"}': {
         __typename: "Book",
+        isbn: "1400096235",
         title: "The Information",
         author: {
           name: "James Gleick"
@@ -187,6 +189,7 @@ describe("type policies", function () {
       },
       'Book:{"isbn":"1400096235"}': {
         __typename: "Book",
+        isbn: "1400096235",
         title: "The Information",
         author: {
           name: "James Gleick"
@@ -281,7 +284,7 @@ describe("type policies", function () {
           book: theInformationBookData,
         },
       });
-    }).toThrow("Missing field year while computing key fields");
+    }).toThrowError("Missing field 'year' while computing key fields");
   });
 
   describe("field policies", function () {
@@ -925,7 +928,7 @@ describe("type policies", function () {
               result: {
                 read(_, { storage }) {
                   if (!storage.jobName) {
-                    storage.jobName = cache.makeLocalVar<string>();
+                    storage.jobName = cache.makeVar<string>();
                   }
                   return storage.jobName();
                 },
@@ -933,7 +936,7 @@ describe("type policies", function () {
                   if (storage.jobName) {
                     storage.jobName(incoming);
                   } else {
-                    storage.jobName = cache.makeLocalVar(incoming);
+                    storage.jobName = cache.makeVar(incoming);
                   }
                 },
               },
@@ -995,6 +998,15 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual(snapshot1);
 
+      function makeMissingError(jobNumber: number) {
+        return new MissingFieldError(
+          `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
+          ["jobs", jobNumber - 1, "result"],
+          expect.anything(),
+          expect.anything(),
+        );
+      }
+
       expect(cache.diff({
         query,
         optimistic: false,
@@ -1013,6 +1025,11 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        missing: [
+          makeMissingError(1),
+          makeMissingError(2),
+          makeMissingError(3),
+        ],
       });
 
       function setResult(jobNum: number) {
@@ -1028,6 +1045,7 @@ describe("type policies", function () {
           `,
           data: {
             __typename: "Job",
+            name: `Job #${jobNum}`,
             result: `result for job ${jobNum}`,
           },
         });
@@ -1058,6 +1076,10 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        missing: [
+          makeMissingError(1),
+          makeMissingError(3),
+        ],
       });
 
       cache.writeQuery({
@@ -1111,6 +1133,10 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        missing: [
+          makeMissingError(1),
+          makeMissingError(3),
+        ],
       });
 
       setResult(1);
@@ -1439,11 +1465,11 @@ describe("type policies", function () {
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
       const ownTimes = {
-        "parent task": cache.makeLocalVar(2),
-        "child task 1": cache.makeLocalVar(3),
-        "child task 2": cache.makeLocalVar(4),
-        "grandchild task": cache.makeLocalVar(5),
-        "independent task": cache.makeLocalVar(11),
+        "parent task": cache.makeVar(2),
+        "child task 1": cache.makeVar(3),
+        "child task 2": cache.makeVar(4),
+        "grandchild task": cache.makeVar(5),
+        "independent task": cache.makeVar(11),
       };
 
       cache.writeQuery({
@@ -1859,7 +1885,7 @@ describe("type policies", function () {
             }
           `
         });
-      }).toThrow("Can't find field secret");
+      }).toThrowError("Can't find field 'secret' ");
 
       expect(secretReadAttempted).toBe(true);
     });
@@ -1964,10 +1990,12 @@ describe("type policies", function () {
         },
         'Todo:{"id":1}': {
           __typename: "Todo",
+          id: 1,
           text: "Write more merge tests",
         },
         'Todo:{"id":2}': {
           __typename: "Todo",
+          id: 2,
           text: "Write pagination tests",
         },
       });
@@ -2006,18 +2034,22 @@ describe("type policies", function () {
         },
         'Todo:{"id":1}': {
           __typename: "Todo",
+          id: 1,
           text: "Write more merge tests",
         },
         'Todo:{"id":2}': {
           __typename: "Todo",
+          id: 2,
           text: "Write pagination tests",
         },
         'Todo:{"id":5}': {
           __typename: "Todo",
+          id: 5,
           text: "Submit pull request",
         },
         'Todo:{"id":6}': {
           __typename: "Todo",
+          id: 6,
           text: "Merge pull request",
         },
       });
@@ -2056,26 +2088,32 @@ describe("type policies", function () {
         },
         'Todo:{"id":1}': {
           __typename: "Todo",
+          id: 1,
           text: "Write more merge tests",
         },
         'Todo:{"id":2}': {
           __typename: "Todo",
+          id: 2,
           text: "Write pagination tests",
         },
         'Todo:{"id":3}': {
           __typename: "Todo",
+          id: 3,
           text: "Iron out merge API",
         },
         'Todo:{"id":4}': {
           __typename: "Todo",
+          id: 4,
           text: "Take a nap",
         },
         'Todo:{"id":5}': {
           __typename: "Todo",
+          id: 5,
           text: "Submit pull request",
         },
         'Todo:{"id":6}': {
           __typename: "Todo",
+          id: 6,
           text: "Merge pull request",
         },
       });
@@ -2377,11 +2415,13 @@ describe("type policies", function () {
         },
         'Book:{"isbn":"0393354326"}': {
           __typename: "Book",
+          isbn: "0393354326",
           author: "Jared Diamond",
           title: "Guns, Germs, and Steel",
         },
         'Book:{"isbn":"156858217X"}': {
           __typename: "Book",
+          isbn: "156858217X",
           author: "Abbie Hoffman",
           title: "Steal This Book",
         },
@@ -2403,6 +2443,7 @@ describe("type policies", function () {
         },
         'Book:{"isbn":"0393354326"}': {
           __typename: "Book",
+          isbn: "0393354326",
           author: "Jared Diamond",
           title: "Guns, Germs, and Steel",
         },
@@ -2428,11 +2469,13 @@ describe("type policies", function () {
         },
         'Book:{"isbn":"0393354326"}': {
           __typename: "Book",
+          isbn: "0393354326",
           author: "Jared Diamond",
           title: "Guns, Germs, and Steel",
         },
         'Book:{"isbn":"156858217X"}': {
           __typename: "Book",
+          isbn: "156858217X",
           author: "Abbie Hoffman",
           title: "Steal This Book",
         },
@@ -2781,6 +2824,7 @@ describe("type policies", function () {
       },
       'Book:{"isbn":"0525558616"}': {
         __typename: "Book",
+        isbn: "0525558616",
         authors: [{
           __typename: "Author",
           // Note the successful reversal of the Author names.
@@ -2790,6 +2834,7 @@ describe("type policies", function () {
       },
       'Book:{"isbn":"1541698967"}': {
         __typename: "Book",
+        isbn: "1541698967",
         authors: [{
           __typename: "Author",
           name: "lraeP aeduJ",

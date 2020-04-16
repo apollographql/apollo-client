@@ -36,11 +36,12 @@ import {
 } from './types';
 import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies } from './policies';
+import { Policies, ReadMergeContext } from './policies';
+import { MissingFieldError } from '../core/types/common';
 
 export type VariableMap = { [name: string]: any };
 
-interface ExecContext {
+interface ExecContext extends ReadMergeContext {
   query: DocumentNode;
   store: NormalizedCache;
   policies: Policies;
@@ -48,13 +49,25 @@ interface ExecContext {
   variables: VariableMap;
   // A JSON.stringify-serialized version of context.variables.
   varString: string;
+  path: (string | number)[];
 };
 
 export type ExecResult<R = any> = {
   result: R;
-  // Empty array if no missing fields encountered while computing result.
-  missing?: InvariantError[];
+  missing?: MissingFieldError[];
 };
+
+function missingFromInvariant(
+  err: InvariantError,
+  context: ExecContext,
+) {
+  return new MissingFieldError(
+    err.message,
+    context.path.slice(),
+    context.query,
+    context.variables,
+  );
+}
 
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
@@ -168,17 +181,21 @@ export class StoreReader {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        toReference: store.toReference,
+        getFieldValue: store.getFieldValue,
+        path: [],
       },
     });
 
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
     if (hasMissingFields && !returnPartialData) {
-      throw execResult.missing[0];
+      throw execResult.missing![0];
     }
 
     return {
       result: execResult.result,
+      missing: execResult.missing,
       complete: !hasMissingFields,
     };
   }
@@ -193,8 +210,11 @@ export class StoreReader {
         !context.store.has(objectOrReference.__ref)) {
       return {
         result: {},
-        missing: [new InvariantError(
-          `Dangling reference to missing ${objectOrReference.__ref} object`
+        missing: [missingFromInvariant(
+          new InvariantError(
+            `Dangling reference to missing ${objectOrReference.__ref} object`
+          ),
+          context,
         )],
       };
     }
@@ -233,20 +253,28 @@ export class StoreReader {
         let fieldValue = policies.readField(
           objectOrReference,
           selection,
-          store.getFieldValue,
-          variables,
-          typename,
+          // Since ExecContext extends ReadMergeContext, we can pass it
+          // here without any modifications.
+          context,
         );
+
+        const resultName = resultKeyNameFromField(selection);
+        context.path.push(resultName);
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
-            getMissing().push(new InvariantError(`Can't find field ${
-              selection.name.value
-            } on ${
-              isReference(objectOrReference)
-                ? objectOrReference.__ref + " object"
-                : "object " + JSON.stringify(objectOrReference, null, 2)
-            }`));
+            getMissing().push(
+              missingFromInvariant(
+                new InvariantError(`Can't find field '${
+                  selection.name.value
+                }' on ${
+                  isReference(objectOrReference)
+                    ? objectOrReference.__ref + " object"
+                    : "object " + JSON.stringify(objectOrReference, null, 2)
+                }`),
+                context,
+              ),
+            );
           }
 
         } else if (Array.isArray(fieldValue)) {
@@ -282,10 +310,10 @@ export class StoreReader {
         }
 
         if (fieldValue !== void 0) {
-          objectsToMerge.push({
-            [resultKeyNameFromField(selection)]: fieldValue,
-          });
+          objectsToMerge.push({ [resultName]: fieldValue });
         }
+
+        invariant(context.path.pop() === resultName);
 
       } else {
         let fragment: InlineFragmentNode | FragmentDefinitionNode;
@@ -322,22 +350,26 @@ export class StoreReader {
     array,
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
-    let missing: InvariantError[] | undefined;
+    let missing: MissingFieldError[] | undefined;
 
-    function handleMissing<T>(childResult: ExecResult<T>): T {
+    function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
         missing = missing || [];
         missing.push(...childResult.missing);
       }
 
+      invariant(context.path.pop() === i);
+
       return childResult.result;
     }
 
-    array = array.map(item => {
+    array = array.map((item, i) => {
       // null value in array
       if (item === null) {
         return null;
       }
+
+      context.path.push(i);
 
       // This is a nested array, recurse
       if (Array.isArray(item)) {
@@ -345,7 +377,7 @@ export class StoreReader {
           field,
           array: item,
           context,
-        }));
+        }), i);
       }
 
       // This is an object, run the selection set on it
@@ -354,12 +386,14 @@ export class StoreReader {
           selectionSet: field.selectionSet,
           objectOrReference: item,
           context,
-        }));
+        }), i);
       }
 
       if (process.env.NODE_ENV !== 'production') {
         assertSelectionSetForIdValue(context.store, field, item);
       }
+
+      invariant(context.path.pop() === i);
 
       return item;
     });

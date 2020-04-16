@@ -65,7 +65,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
+  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined {
     // The has method (above) calls lookup with dependOnExistence = true, so
     // that it can later be invalidated when we add or remove a StoreObject for
     // this dataId. Any consumer who cares about the contents of the StoreObject
@@ -139,7 +139,7 @@ export abstract class EntityStore implements NormalizedCache {
               fieldName,
               storeFieldName,
               isReference,
-              toReference: this.policies.toReference,
+              toReference: this.toReference,
               readField,
             });
           if (newValue === DELETE) newValue = void 0;
@@ -191,6 +191,11 @@ export abstract class EntityStore implements NormalizedCache {
     if (this instanceof Layer) {
       evicted = this.parent.evict(dataId, fieldName) || evicted;
     }
+    // Always invalidate the field to trigger rereading of watched
+    // queries, even if no cache data was modified by the eviction,
+    // because queries may depend on computed fields with custom read
+    // functions, whose values are not stored in the EntityStore.
+    this.group.dirty(dataId, fieldName || "__exists");
     return evicted;
   }
 
@@ -206,7 +211,7 @@ export abstract class EntityStore implements NormalizedCache {
     });
     if (newData) {
       Object.keys(newData).forEach(dataId => {
-        this.merge(dataId, newData[dataId]);
+        this.merge(dataId, newData[dataId] as StoreObject);
       });
     }
   }
@@ -284,7 +289,7 @@ export abstract class EntityStore implements NormalizedCache {
         if (isReference(obj)) {
           found[obj.__ref] = true;
         } else if (canTraverse(obj)) {
-          Object.values(obj)
+          Object.values(obj!)
             // No need to add primitive values to the workSet, since they cannot
             // contain reference objects.
             .filter(canTraverse)
@@ -310,7 +315,24 @@ export abstract class EntityStore implements NormalizedCache {
       ? this.get(objectOrReference.__ref, storeFieldName)
       : objectOrReference && objectOrReference[storeFieldName]
   ) as SafeReadonly<T>;
+
+  // Bound function that converts an object with a __typename and primary
+  // key fields to a Reference object. Pass true for mergeIntoStore if you
+  // would also like this object to be persisted into the store.
+  public toReference = (
+    object: StoreObject,
+    mergeIntoStore?: boolean,
+  ) => {
+    const [id] = this.policies.identify(object);
+    const ref = id && makeReference(id);
+    if (ref && mergeIntoStore) {
+      this.merge(id!, object);
+    }
+    return ref;
+  }
 }
+
+export type ToReferenceFunction = EntityStore["toReference"];
 
 export type FieldValueGetter = EntityStore["getFieldValue"];
 
@@ -366,7 +388,7 @@ export namespace EntityStore {
     // single distinct CacheGroup object. Since this shared object must
     // outlast the Layer instances themselves, it needs to be created and
     // owned by the Root instance.
-    private sharedLayerGroup: CacheGroup = null;
+    private sharedLayerGroup: CacheGroup;
 
     constructor({
       policies,

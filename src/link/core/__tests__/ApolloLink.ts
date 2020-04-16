@@ -297,7 +297,6 @@ describe('ApolloClient', () => {
           JSON.stringify({
             variables: { id: 1 },
             extensions: { cache: true },
-            operationName: null,
             query: print(operation.query),
           }),
         );
@@ -373,7 +372,7 @@ describe('ApolloClient', () => {
         });
       });
 
-      it('should set a default context, variable, query and operationName on a copy of operation', done => {
+      it('should set a default context, variable, and query on a copy of operation', done => {
         const operation = {
           query: gql`
             {
@@ -386,7 +385,6 @@ describe('ApolloClient', () => {
           expect(operation['variables']).toBeUndefined();
           expect(operation['context']).toBeUndefined();
           expect(operation['extensions']).toBeUndefined();
-          expect(op['operationName']).toBeDefined();
           expect(op['variables']).toBeDefined();
           expect(op['context']).toBeUndefined();
           expect(op['extensions']).toBeDefined();

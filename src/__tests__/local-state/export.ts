@@ -24,7 +24,11 @@ describe('@client @export tests', () => {
         link: ApolloLink.empty(),
         resolvers: {},
       });
-      cache.writeData({ data: { field: 1 } });
+
+      cache.writeQuery({
+        query,
+        data: { field: 1 },
+      });
 
       return client.query({ query }).then(({ data }: any) => {
         expect({ ...data }).toMatchObject({ field: 1 });
@@ -54,7 +58,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           car: {
             engine: {
@@ -106,7 +111,8 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           currentAuthorId: testAuthorId,
         },
@@ -156,7 +162,8 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           currentAuthor: testAuthor,
         },
@@ -206,7 +213,8 @@ describe('@client @export tests', () => {
       resolvers: {},
     });
 
-    cache.writeData({
+    cache.writeQuery({
+      query,
       data: {
         currentAuthor: testAuthor,
       },
@@ -268,7 +276,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           appContainer,
         },
@@ -371,7 +380,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           postRequiringReview: {
             loggedInReviewerId,
@@ -450,7 +460,8 @@ describe('@client @export tests', () => {
         },
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           postRequiringReview: {
             __typename: 'Post',
@@ -560,7 +571,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query: gql`{ topPost }`,
         data: {
           topPost: testPostId,
         },
@@ -685,7 +697,8 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           primaryReviewerId,
           secondaryReviewerId,
@@ -736,7 +749,10 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+      client.writeQuery({
+        query,
+        data: { currentAuthorId: testAuthorId1 },
+      });
 
       const obs = client.watchQuery({ query });
       obs.subscribe({
@@ -746,7 +762,10 @@ describe('@client @export tests', () => {
               currentAuthorId: testAuthorId1,
               postCount: testPostCount1,
             });
-            client.writeData({ data: { currentAuthorId: testAuthorId2 } });
+            client.writeQuery({
+              query,
+              data: { currentAuthorId: testAuthorId2 },
+            });
           } else if (resultCount === 1) {
             expect({ ...data }).toMatchObject({
               currentAuthorId: testAuthorId2,
@@ -754,8 +773,7 @@ describe('@client @export tests', () => {
             });
             done();
           }
-
-          resultCount +=1;
+          resultCount += 1;
         }
       });
     }
@@ -797,7 +815,10 @@ describe('@client @export tests', () => {
         resolvers: {},
       });
 
-      client.writeData({ data: { currentAuthorId: testAuthorId1 } });
+      client.writeQuery({
+        query,
+        data: { currentAuthorId: testAuthorId1 },
+      });
 
       const obs = client.watchQuery({ query });
       obs.subscribe({
@@ -900,6 +921,67 @@ describe('@client @export tests', () => {
           }
 
           resultCount += 1;
+        },
+      });
+    }
+  );
+
+  it(
+    "should update @client @export variables on each broadcast if they've " +
+    "changed",
+    done => {
+      const cache = new InMemoryCache();
+
+      const widgetCountQuery = gql`{ widgetCount @client }`;
+      cache.writeQuery({
+        query: widgetCountQuery,
+        data: {
+          widgetCount: 100
+        }
+      });
+
+      const client = new ApolloClient({
+        cache,
+        resolvers: {
+          Query: {
+            doubleWidgets(_, { widgetCount }) {
+              return widgetCount ? widgetCount * 2 : 0;
+            }
+          }
+        }
+      });
+
+      const doubleWidgetsQuery = gql`
+        query DoubleWidgets($widgetCount: Int!) {
+          widgetCount @client @export(as: "widgetCount")
+          doubleWidgets(widgetCount: $widgetCount) @client
+        }
+      `;
+
+      let count = 0;
+      const obs = client.watchQuery({ query: doubleWidgetsQuery });
+      obs.subscribe({
+        next({ data }) {
+          switch (count) {
+            case 0:
+              expect(data.widgetCount).toEqual(100);
+              expect(data.doubleWidgets).toEqual(200);
+
+              client.writeQuery({
+                query: widgetCountQuery,
+                data: {
+                  widgetCount: 500
+                }
+              });
+              break;
+            case 1:
+              expect(data.widgetCount).toEqual(500);
+              expect(data.doubleWidgets).toEqual(1000);
+              done();
+              break;
+            default:
+          }
+          count += 1;
         },
       });
     }

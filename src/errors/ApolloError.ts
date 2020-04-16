@@ -58,13 +58,7 @@ export class ApolloError extends Error {
     super(errorMessage);
     this.graphQLErrors = graphQLErrors || [];
     this.networkError = networkError || null;
-
-    if (!errorMessage) {
-      this.message = generateErrorMessage(this);
-    } else {
-      this.message = errorMessage;
-    }
-
+    this.message = errorMessage || generateErrorMessage(this);
     this.extraInfo = extraInfo;
 
     // We're not using `Object.setPrototypeOf` here as it isn't fully

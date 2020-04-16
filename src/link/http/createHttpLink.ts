@@ -118,7 +118,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     return new Observable(observer => {
-      fetcher(chosenURI, options)
+      fetcher!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
           return response;

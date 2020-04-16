@@ -37,6 +37,7 @@
     "watch": "tsc-watch --onSuccess \"npm run postbuild\"",
     "clean": "rimraf -r dist coverage lib",
     "test": "jest --config ./config/jest.config.js",
+    "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "bundle": "rollup -c ./config/rollup.config.js",

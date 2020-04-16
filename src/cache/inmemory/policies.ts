@@ -13,6 +13,7 @@ import {
   getFragmentFromSelection,
 } from '../../utilities/graphql/fragments';
 import {
+  fieldNodeFromName,
   isField,
   getTypenameFromResult,
   storeKeyNameFromField,
@@ -430,9 +431,10 @@ export class Policies {
 
   public getStoreFieldName(
     typename: string | undefined,
-    field: FieldNode,
+    nameOrField: string | FieldNode,
     variables: Record<string, any>,
   ): string {
+    const field = typeof nameOrField === 'string' ? fieldNodeFromName(nameOrField, variables) : nameOrField;
     const fieldName = field.name.value;
     const policy = this.getFieldPolicy(typename, fieldName, false);
     let storeFieldName: string | undefined;

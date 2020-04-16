@@ -1095,6 +1095,130 @@ describe('EntityStore', () => {
     });
   });
 
+  it("allows evicting specific fields with specific arguments", () => {
+    const query: DocumentNode = gql`
+      query {
+        authorOfBook(isbn: $isbn) {
+          name
+          hobby
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+
+    const TedChiangData = {
+      __typename: "Author",
+      name: "Ted Chiang",
+      hobby: "video games",
+    };
+
+    const IsaacAsimovData = {
+      __typename: "Author",
+      name: "Isaac Asimov",
+      hobby: "chemistry",
+    };
+
+    const JamesCoreyData = {
+      __typename: "Author",
+      name: "James S.A. Corey",
+      hobby: "tabletop games",
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: TedChiangData,
+      },
+      variables: {
+        isbn: "1",
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: IsaacAsimovData,
+      },
+      variables: {
+        isbn: "2",
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: JamesCoreyData,
+      },
+      variables: {},
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "authorOfBook({\"isbn\":\"1\"})": {
+          __typename: "Author",
+          name: "Ted Chiang",
+          hobby: "video games",
+        },
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+        "authorOfBook({})": {
+          __typename: "Author",
+          name: "James S.A. Corey",
+          hobby: "tabletop games",
+        }
+      },
+    });
+
+    cache.evict('ROOT_QUERY', 'authorOfBook', { isbn: "1" });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+        "authorOfBook({})": {
+          __typename: "Author",
+          name: "James S.A. Corey",
+          hobby: "tabletop games",
+        }
+      },
+    });
+
+    cache.evict('ROOT_QUERY', 'authorOfBook', { isbn: '3' });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+        "authorOfBook({})": {
+          __typename: "Author",
+          name: "James S.A. Corey",
+          hobby: "tabletop games",
+        }
+      },
+    });
+
+    cache.evict('ROOT_QUERY', 'authorOfBook', {});
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+      },
+    });
+  });
+
   it("supports cache.identify(object)", () => {
     const queryWithAliases: DocumentNode = gql`
       query {

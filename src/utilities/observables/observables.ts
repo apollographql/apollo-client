@@ -1,10 +1,10 @@
-import { Observable, Observer, Subscription } from './Observable';
+import { Observable, Observer, ObservableSubscription } from './Observable';
 
 // Returns a normal Observable that can have any number of subscribers,
 // while ensuring the original Observable gets subscribed to at most once.
 export function multiplex<T>(inner: Observable<T>): Observable<T> {
   const observers = new Set<Observer<T>>();
-  let sub: Subscription | null = null;
+  let sub: ObservableSubscription | null = null;
   return new Observable<T>(observer => {
     observers.add(observer);
     sub = sub || inner.subscribe({

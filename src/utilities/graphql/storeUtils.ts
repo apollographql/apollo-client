@@ -44,6 +44,11 @@ export type StoreValue =
   | void
   | Object;
 
+export interface StoreObject {
+  __typename?: string;
+  [storeFieldName: string]: StoreValue;
+}
+
 function isStringValue(value: ValueNode): value is StringValueNode {
   return value.kind === 'StringValue';
 }
@@ -232,7 +237,7 @@ export function getStoreKeyName(
 export function argumentsObjectFromField(
   field: FieldNode | DirectiveNode,
   variables: Object,
-): Object {
+): Object | null {
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
     field.arguments.forEach(({ name, value }) =>
@@ -251,7 +256,7 @@ export function resultKeyNameFromField(field: FieldNode): string {
 export function getTypenameFromResult(
   result: Record<string, any>,
   selectionSet: SelectionSetNode,
-  fragmentMap: FragmentMap,
+  fragmentMap?: FragmentMap,
 ): string | undefined {
   if (typeof result.__typename === 'string') {
     return result.__typename;
@@ -265,7 +270,7 @@ export function getTypenameFromResult(
     } else {
       const typename = getTypenameFromResult(
         result,
-        getFragmentFromSelection(selection, fragmentMap).selectionSet,
+        getFragmentFromSelection(selection, fragmentMap)!.selectionSet,
         fragmentMap,
       );
       if (typeof typename === 'string') {

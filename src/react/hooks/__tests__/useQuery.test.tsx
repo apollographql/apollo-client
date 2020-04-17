@@ -88,6 +88,40 @@ describe('useQuery Hook', () => {
       return wait();
     });
 
+    it('should return a result upon first call, if data is available', async () => {
+      // This test verifies that the `useQuery` hook returns a result upon its first
+      // invocation if the data is available in the cache. This is essential for SSR
+      // to work properly, since effects are not run during SSR.
+
+      const Component = ({ expectData }: { expectData: boolean }) => {
+        const { data } = useQuery(CAR_QUERY);
+        if (expectData) {
+          expect(data).toEqual(CAR_RESULT_DATA);
+        }
+        return null;
+      };
+
+      // Common cache instance to use across render passes.
+      // The cache will be warmed with the result of the query on the second pass.
+      const cache = new InMemoryCache();
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS} cache={cache}>
+          <Component expectData={false} />
+        </MockedProvider>
+      );
+
+      await wait();
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS} cache={cache}>
+          <Component expectData={true} />
+        </MockedProvider>
+      );
+
+      return wait();
+    });
+
     it('should ensure ObservableQuery fields have a stable identity', async () => {
       let refetchFn: any;
       let fetchMoreFn: any;
@@ -130,6 +164,161 @@ describe('useQuery Hook', () => {
       );
 
       return wait();
+    });
+
+    it('should update result when query result change', async () => {
+      const CAR_QUERY_BY_ID = gql`
+        query($id: Int) {
+          car(id: $id) {
+            make
+            model
+          }
+        }
+      `;
+
+      const CAR_DATA_A4 = {
+        car: {
+          make: 'Audi',
+          model: 'A4',
+          __typename: 'Car',
+        },
+      };
+
+      const CAR_DATA_RS8 = {
+        car: {
+          make: 'Audi',
+          model: 'RS8',
+          __typename: 'Car',
+        },
+      };
+
+      const mocks = [
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 1 } },
+          result: { data: CAR_DATA_A4 },
+        },
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 2 } },
+          result: { data: CAR_DATA_RS8 },
+        },
+      ];
+
+      const hookResponse = jest.fn().mockReturnValue(null);
+
+      function Component({ id, children }) {
+        const { data, loading, error } = useQuery(CAR_QUERY_BY_ID, {
+          variables: { id },
+        });
+
+        return children({ data, loading, error });
+      }
+
+      const { rerender } = render(
+        <MockedProvider mocks={mocks}>
+          <Component id={1}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_A4,
+          loading: false,
+          error: undefined,
+        })
+      );
+
+      rerender(
+        <MockedProvider mocks={mocks}>
+          <Component id={2}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_RS8,
+          loading: false,
+          error: undefined,
+        })
+      );
+    });
+
+    it('should return result when result is equivalent', async () => {
+      const CAR_QUERY_BY_ID = gql`
+        query($id: Int) {
+          car(id: $id) {
+            make
+            model
+          }
+        }
+      `;
+
+      const CAR_DATA_A4 = {
+        car: {
+          make: 'Audi',
+          model: 'A4',
+          __typename: 'Car',
+        },
+      };
+
+      const mocks = [
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 1 } },
+          result: { data: CAR_DATA_A4 },
+        },
+        {
+          request: { query: CAR_QUERY_BY_ID, variables: { id: 2 } },
+          result: { data: CAR_DATA_A4 },
+        },
+      ];
+
+      const hookResponse = jest.fn().mockReturnValue(null);
+
+      function Component({ id, children, skip = false }) {
+        const { data, loading, error } = useQuery(CAR_QUERY_BY_ID, {
+          variables: { id },
+          skip,
+        });
+
+        return children({ data, loading, error });
+      }
+
+      const { rerender } = render(
+        <MockedProvider mocks={mocks}>
+          <Component id={1}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_A4,
+          loading: false,
+          error: undefined,
+        })
+      );
+
+      rerender(
+        <MockedProvider mocks={mocks}>
+          <Component id={2} skip>
+            {hookResponse}
+          </Component>
+        </MockedProvider>
+      );
+
+      hookResponse.mockClear();
+
+      rerender(
+        <MockedProvider mocks={mocks}>
+          <Component id={2}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() =>
+        expect(hookResponse).toHaveBeenLastCalledWith({
+          data: CAR_DATA_A4,
+          loading: false,
+          error: undefined,
+        })
+      );
     });
   });
 
@@ -409,9 +598,6 @@ describe('useQuery Hook', () => {
             onErrorPromise.then(() => refetch());
             break;
           case 3:
-            expect(loading).toBeTruthy();
-            break;
-          case 4:
             expect(loading).toBeFalsy();
             expect(data).toEqual(resultData);
             break;
@@ -428,7 +614,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(4);
+        expect(renderCount).toBe(3);
       });
     });
 
@@ -583,12 +769,12 @@ describe('useQuery Hook', () => {
           notifyOnNetworkStatusChange: true
         });
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             expect(error).toBeUndefined();
             break;
-          case 1:
+          case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: an error 1');
@@ -596,9 +782,6 @@ describe('useQuery Hook', () => {
               // catch here to avoid failing due to 'uncaught promise rejection'
               refetch().catch(() => {});
             });
-            break;
-          case 2:
-            expect(loading).toBeTruthy();
             break;
           case 3:
             expect(loading).toBeFalsy();
@@ -608,7 +791,6 @@ describe('useQuery Hook', () => {
           default: // Do nothing
         }
 
-        renderCount += 1;
         return null;
       }
 
@@ -619,11 +801,11 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(4);
+        expect(renderCount).toBe(3);
       });
     });
 
-    it('should render errors (same error messages) with loading done on refetch', async () => {
+    itAsync('should not re-render same error message on refetch', (resolve, reject) => {
       const query = gql`
         query SomeQuery {
           stuff {
@@ -653,32 +835,24 @@ describe('useQuery Hook', () => {
           notifyOnNetworkStatusChange: true
         });
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             expect(error).toBeUndefined();
             break;
-          case 1:
-            expect(loading).toBeFalsy();
-            expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: same error message');
-            setTimeout(() => {
-              // catch here to avoid failing due to 'uncaught promise rejection'
-              refetch().catch(() => {});
-            });
-            break;
           case 2:
-            expect(loading).toBeTruthy();
-            break;
-          case 3:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: same error message');
+            refetch().catch(error => {
+              if (error.message !== 'GraphQL error: same error message') {
+                reject(error);
+              }
+            });
             break;
           default: // Do nothing
         }
 
-        renderCount += 1;
         return null;
       }
 
@@ -689,8 +863,8 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(4);
-      });
+        expect(renderCount).toBe(2);
+      }).then(resolve, reject);
     });
 
     it('should render both success and errors (same error messages) with loading done on refetch', async () => {
@@ -721,12 +895,12 @@ describe('useQuery Hook', () => {
           notifyOnNetworkStatusChange: true
         });
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             expect(error).toBeUndefined();
             break;
-          case 1:
+          case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('GraphQL error: same error message');
@@ -734,9 +908,6 @@ describe('useQuery Hook', () => {
               // catch here to avoid failing due to 'uncaught promise rejection'
               refetch().catch(() => {});
             });
-            break;
-          case 2:
-            expect(loading).toBeTruthy();
             break;
           case 3:
             expect(loading).toBeFalsy();
@@ -758,7 +929,6 @@ describe('useQuery Hook', () => {
           default: // Do nothing
         }
 
-        renderCount += 1;
         return null;
       }
 
@@ -769,7 +939,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(6);
+        expect(renderCount).toBe(5);
       });
     });
   });

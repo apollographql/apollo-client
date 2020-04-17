@@ -1,4 +1,4 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
@@ -38,6 +38,8 @@ describe('useMutation Hook', () => {
       __typename: 'Todo'
     }
   };
+
+  const CREATE_TODO_ERROR = 'Failed to create item';
 
   afterEach(cleanup);
 
@@ -251,6 +253,110 @@ describe('useMutation Hook', () => {
       );
 
       return wait();
+    });
+
+    describe('mutate function upon error', () => {
+      it(`should reject when errorPolicy is 'none'`, async () => {
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables
+            },
+            result: {
+              data: CREATE_TODO_RESULT,
+              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            },
+          }
+        ];
+
+        const Component = () => {
+          const [createTodo] = useMutation<{ createTodo: Todo }>(
+            CREATE_TODO_MUTATION,
+            { errorPolicy: 'none' }
+          );
+
+          async function doIt() {
+            try {
+              await createTodo({ variables });
+            } catch (error) {
+              expect(error.message).toEqual(
+                expect.stringContaining(CREATE_TODO_ERROR)
+              );
+            }
+          }
+
+          useEffect(() => {
+            doIt();
+          }, []);
+
+          return null;
+        };
+
+        render(
+          <MockedProvider mocks={mocks}>
+            <Component />
+          </MockedProvider>
+        );
+
+        return wait();
+      });
+
+      it(`should resolve with 'data' and 'error' properties when errorPolicy is 'all'`, async () => {
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables
+            },
+            result: {
+              data: CREATE_TODO_RESULT,
+              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            },
+          }
+        ];
+
+        const Component = () => {
+          const [createTodo] = useMutation<{ createTodo: Todo }>(
+            CREATE_TODO_MUTATION,
+            { errorPolicy: 'all' }
+          );
+
+          async function doIt() {
+            const { data, errors } = await createTodo({ variables });
+
+            expect(data).toEqual(CREATE_TODO_RESULT);
+            expect(data!.createTodo.description).toEqual(
+              CREATE_TODO_RESULT.createTodo.description
+            );
+            expect(errors[0].message).toEqual(
+              expect.stringContaining(CREATE_TODO_ERROR)
+            );
+          }
+
+          useEffect(() => {
+            doIt();
+          }, []);
+
+          return null;
+        };
+
+        render(
+          <MockedProvider mocks={mocks}>
+            <Component />
+          </MockedProvider>
+        );
+
+        return wait();
+      })
     });
 
     it('should return the current client instance in the result object', async () => {

@@ -2,7 +2,6 @@ import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
 import { withError } from './diffAgainstStore';
-import { withWarning } from './writeToStore';
 import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
@@ -311,7 +310,7 @@ describe('roundtrip', () => {
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
     it('should throw an error on two of the same inline fragment types', () => {
-      return withWarning(() => expect(() => {
+      expect(() => {
         storeRoundtrip(
           gql`
             query {
@@ -337,7 +336,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Can\'t find field rank on object/));
+      }).toThrowError(/Missing field 'rank' /);
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
@@ -451,7 +450,7 @@ describe('roundtrip', () => {
     });
 
     it('should throw on error on two of the same spread fragment types', () => {
-      withWarning(() => expect(() => {
+      expect(() => {
         storeRoundtrip(
           gql`
             fragment jediSide on Jedi {
@@ -481,7 +480,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Can\'t find field rank on object/));
+      }).toThrowError(/Missing field 'rank' /);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

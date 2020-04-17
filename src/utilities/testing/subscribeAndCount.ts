@@ -1,31 +1,32 @@
 import { ObservableQuery } from '../../core/ObservableQuery';
 import { ApolloQueryResult } from '../../core/types';
-import { Subscription } from '../../utilities/observables/Observable';
+import { ObservableSubscription } from '../../utilities/observables/Observable';
 import { asyncMap } from '../../utilities/observables/observables';
 
 export default function subscribeAndCount(
   reject: (reason: any) => any,
   observable: ObservableQuery<any>,
   cb: (handleCount: number, result: ApolloQueryResult<any>) => any,
-): Subscription {
+): ObservableSubscription {
+  // Use a Promise queue to prevent callbacks from being run out of order.
+  let queue = Promise.resolve();
   let handleCount = 0;
+
   const subscription = asyncMap(
     observable,
     (result: ApolloQueryResult<any>) => {
-      try {
+      // All previous asynchronous callbacks must complete before cb can
+      // be invoked with this result.
+      return queue = queue.then(() => {
         return cb(++handleCount, result);
-      } catch (e) {
-        // Wrap in a `setImmediate` so that we will unsubscribe on the next
-        // tick so that we can make sure that the `subscription` has a chance
-        // to be defined.
-        setImmediate(() => {
-          subscription.unsubscribe();
-          reject(e);
-        });
-      }
+      }).catch(error);
     },
-  ).subscribe({
-    error: reject,
-  });
+  ).subscribe({ error });
+
+  function error(e: any) {
+    subscription.unsubscribe();
+    reject(e);
+  }
+
   return subscription;
 }

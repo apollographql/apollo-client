@@ -17,8 +17,8 @@ function deepFreeze(value: any) {
   return value;
 }
 
-export function maybeDeepFreeze(obj: any) {
-  if (isDevelopment() || isTest()) {
+export function maybeDeepFreeze<T>(obj: T): T {
+  if (process.env.NODE_ENV !== "production" && (isDevelopment() || isTest())) {
     deepFreeze(obj);
   }
   return obj;

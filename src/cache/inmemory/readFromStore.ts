@@ -15,9 +15,11 @@ import {
   Reference,
   isReference,
   makeReference,
+  StoreObject,
 } from '../../utilities/graphql/storeUtils';
 import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
 import { shouldInclude } from '../../utilities/graphql/directives';
+import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import {
   getDefaultValues,
   getFragmentDefinitions,
@@ -30,34 +32,42 @@ import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,
   ReadQueryOptions,
-  StoreObject,
   NormalizedCache,
 } from './types';
 import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies, FieldValueGetter } from './policies';
+import { Policies, ReadMergeContext } from './policies';
+import { MissingFieldError } from '../core/types/common';
 
 export type VariableMap = { [name: string]: any };
 
-interface ExecContext {
+interface ExecContext extends ReadMergeContext {
   query: DocumentNode;
   store: NormalizedCache;
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
-  getFieldValue: FieldValueGetter;
-};
-
-export type ExecResultMissingField = {
-  object: StoreObject;
-  fieldName: string;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
+  path: (string | number)[];
 };
 
 export type ExecResult<R = any> = {
   result: R;
-  // Empty array if no missing fields encountered while computing result.
-  missing?: ExecResultMissingField[];
+  missing?: MissingFieldError[];
 };
+
+function missingFromInvariant(
+  err: InvariantError,
+  context: ExecContext,
+) {
+  return new MissingFieldError(
+    err.message,
+    context.path.slice(),
+    context.query,
+    context.variables,
+  );
+}
 
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
@@ -96,7 +106,7 @@ export class StoreReader {
         if (supportsResultCaching(context.store)) {
           return context.store.makeCacheKey(
             selectionSet,
-            JSON.stringify(context.variables),
+            context.varString,
             isReference(objectOrReference)
               ? objectOrReference.__ref
               : objectOrReference,
@@ -113,7 +123,7 @@ export class StoreReader {
           return context.store.makeCacheKey(
             field,
             array,
-            JSON.stringify(context.variables),
+            context.varString,
           );
         }
       }
@@ -150,12 +160,16 @@ export class StoreReader {
   public diffQueryAgainstStore<T>({
     store,
     query,
+    rootId = 'ROOT_QUERY',
     variables,
     returnPartialData = true,
-    rootId = 'ROOT_QUERY',
-    config,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const { policies } = this.config;
+
+    variables = {
+      ...getDefaultValues(getQueryDefinition(query)),
+      ...variables,
+    };
 
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
@@ -164,30 +178,24 @@ export class StoreReader {
         store,
         query,
         policies,
-        variables: {
-          ...getDefaultValues(getQueryDefinition(query)),
-          ...variables,
-        },
+        variables,
+        varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        getFieldValue: policies.makeFieldValueGetter(store),
+        toReference: store.toReference,
+        getFieldValue: store.getFieldValue,
+        path: [],
       },
     });
 
     const hasMissingFields =
       execResult.missing && execResult.missing.length > 0;
-
-    if (hasMissingFields && ! returnPartialData) {
-      execResult.missing!.forEach(info => {
-        throw new InvariantError(`Can't find field ${
-          info.fieldName
-        } on object ${
-          JSON.stringify(info.object, null, 2)
-        }.`);
-      });
+    if (hasMissingFields && !returnPartialData) {
+      throw execResult.missing![0];
     }
 
     return {
       result: execResult.result,
+      missing: execResult.missing,
       complete: !hasMissingFields,
     };
   }
@@ -197,16 +205,28 @@ export class StoreReader {
     objectOrReference,
     context,
   }: ExecSelectionSetOptions): ExecResult {
-    const { fragmentMap, variables, policies, getFieldValue } = context;
+    if (isReference(objectOrReference) &&
+        !context.policies.rootTypenamesById[objectOrReference.__ref] &&
+        !context.store.has(objectOrReference.__ref)) {
+      return {
+        result: {},
+        missing: [missingFromInvariant(
+          new InvariantError(
+            `Dangling reference to missing ${objectOrReference.__ref} object`
+          ),
+          context,
+        )],
+      };
+    }
+
+    const { fragmentMap, variables, policies, store } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
-    const typename = getFieldValue<string>(objectOrReference, "__typename");
+    const typename = store.getFieldValue<string>(objectOrReference, "__typename");
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
-        Object.values(
-          policies.rootTypenamesById
-        ).indexOf(typename) < 0) {
+        !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
       // field, if we have one, and this.config.addTypename is true. Note
       // that this field can be overridden by other merged objects.
@@ -222,7 +242,9 @@ export class StoreReader {
       return result.result;
     }
 
-    selectionSet.selections.forEach(selection => {
+    const workSet = new Set(selectionSet.selections);
+
+    workSet.forEach(selection => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
       if (!shouldInclude(selection, variables)) return;
@@ -231,16 +253,29 @@ export class StoreReader {
         let fieldValue = policies.readField(
           objectOrReference,
           selection,
-          getFieldValue,
-          variables,
-          typename,
+          // Since ExecContext extends ReadMergeContext, we can pass it
+          // here without any modifications.
+          context,
         );
 
+        const resultName = resultKeyNameFromField(selection);
+        context.path.push(resultName);
+
         if (fieldValue === void 0) {
-          getMissing().push({
-            object: objectOrReference as StoreObject,
-            fieldName: selection.name.value,
-          });
+          if (!addTypenameToDocument.added(selection)) {
+            getMissing().push(
+              missingFromInvariant(
+                new InvariantError(`Can't find field '${
+                  selection.name.value
+                }' on ${
+                  isReference(objectOrReference)
+                    ? objectOrReference.__ref + " object"
+                    : "object " + JSON.stringify(objectOrReference, null, 2)
+                }`),
+                context,
+              ),
+            );
+          }
 
         } else if (Array.isArray(fieldValue)) {
           fieldValue = handleMissing(this.executeSubSelectedArray({
@@ -275,10 +310,10 @@ export class StoreReader {
         }
 
         if (fieldValue !== void 0) {
-          objectsToMerge.push({
-            [resultKeyNameFromField(selection)]: fieldValue,
-          });
+          objectsToMerge.push({ [resultName]: fieldValue });
         }
+
+        invariant(context.path.pop() === resultName);
 
       } else {
         let fragment: InlineFragmentNode | FragmentDefinitionNode;
@@ -294,13 +329,7 @@ export class StoreReader {
         }
 
         if (policies.fragmentMatches(fragment, typename)) {
-          objectsToMerge.push(handleMissing(
-            this.executeSelectionSet({
-              selectionSet: fragment.selectionSet,
-              objectOrReference,
-              context,
-            })
-          ));
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }
     });
@@ -321,22 +350,26 @@ export class StoreReader {
     array,
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
-    let missing: ExecResultMissingField[] | undefined;
+    let missing: MissingFieldError[] | undefined;
 
-    function handleMissing<T>(childResult: ExecResult<T>): T {
+    function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
         missing = missing || [];
         missing.push(...childResult.missing);
       }
 
+      invariant(context.path.pop() === i);
+
       return childResult.result;
     }
 
-    array = array.map(item => {
+    array = array.map((item, i) => {
       // null value in array
       if (item === null) {
         return null;
       }
+
+      context.path.push(i);
 
       // This is a nested array, recurse
       if (Array.isArray(item)) {
@@ -344,7 +377,7 @@ export class StoreReader {
           field,
           array: item,
           context,
-        }));
+        }), i);
       }
 
       // This is an object, run the selection set on it
@@ -353,12 +386,14 @@ export class StoreReader {
           selectionSet: field.selectionSet,
           objectOrReference: item,
           context,
-        }));
+        }), i);
       }
 
       if (process.env.NODE_ENV !== 'production') {
         assertSelectionSetForIdValue(context.store, field, item);
       }
+
+      invariant(context.path.pop() === i);
 
       return item;
     });

@@ -80,6 +80,7 @@ object that was stored as part of _any_ query result. Unlike `readQuery`, calls 
 Here's an example:
 
 ```js
+const optimistic = true; // defaults to false, set to true if readFragment should re-run on optimic responses
 const todo = client.readFragment({
   id: ..., // `id` is any id that could be returned by `dataIdFromObject`.
   fragment: gql`
@@ -89,7 +90,7 @@ const todo = client.readFragment({
       completed
     }
   `,
-});
+}, optimistic);
 ```
 
 The first argument, `id`, is the [unique identifier](cache-configuration/#generating-unique-identifiers)
@@ -229,10 +230,16 @@ If the object is unreachable, it will be garbage collected during next call to `
 
 ### `evict`
 
-You can remove any normalized object from the cache with the `evict` method:
+You can remove any normalized object from the cache using the `evict` method:
 
 ```js
-cache.evict('my-object-id');
+cache.evict('my-object-id')
+```
+
+You can pass an optional second parameter to the `evict` method, that is the name of a specific field from a normalized entity that you would like to delete:
+
+```js
+cache.evict('my-object-id', 'yearOfFounding');
 ```
 
 Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
@@ -291,7 +298,7 @@ mutate({
 })
 ```
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-hooks/#usemutation).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react/hooks/#usemutation).
 
 ```jsx
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -538,7 +545,7 @@ export default withApollo(graphql(PROFILE_QUERY, {
 
 To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
 
-In this example, we're using `client.onResetStore` to write our default values to the cache for [`apollo-link-state`](https://www.apollographql.com/docs/link/links/state). This is necessary if you're using `apollo-link-state` for local state management and calling `client.resetStore` anywhere in your application.
+In this example, we're using `client.onResetStore` to write default values to the cache. This is useful when using Apollo Client's [local state management](../data/local-state/) features and calling `client.resetStore` anywhere in your application.
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';

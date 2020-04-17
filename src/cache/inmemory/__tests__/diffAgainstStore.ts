@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference, makeReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference } from '../../../core';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
@@ -179,7 +179,7 @@ describe('diffing queries against the store', () => {
     });
 
     expect(complete).toBeTruthy();
-    expect(store.get('Person:{"id":"1"}')).toEqual({
+    expect((store as any).lookup('Person:{"id":"1"}')).toEqual({
       __typename: 'Person',
       id: '1',
       name: 'Luke Skywalker',
@@ -515,14 +515,14 @@ describe('diffing queries against the store', () => {
     });
 
     expect(result).toEqual(queryResult);
-    expect(policies.identify(result.a[0])).toBe('a:1');
-    expect(policies.identify(result.a[1])).toBe('a:2');
-    expect(policies.identify(result.a[2])).toBe('a:3');
-    expect(policies.identify(result.c.e[0])).toBe('e:1');
-    expect(policies.identify(result.c.e[1])).toBe('e:2');
-    expect(policies.identify(result.c.e[2])).toBe('e:3');
-    expect(policies.identify(result.c.e[3])).toBe('e:4');
-    expect(policies.identify(result.c.e[4])).toBe('e:5');
+    expect(policies.identify(result.a[0])).toEqual(['a:1']);
+    expect(policies.identify(result.a[1])).toEqual(['a:2']);
+    expect(policies.identify(result.a[2])).toEqual(['a:3']);
+    expect(policies.identify(result.c.e[0])).toEqual(['e:1']);
+    expect(policies.identify(result.c.e[1])).toEqual(['e:2']);
+    expect(policies.identify(result.c.e[2])).toEqual(['e:3']);
+    expect(policies.identify(result.c.e[3])).toEqual(['e:4']);
+    expect(policies.identify(result.c.e[4])).toEqual(['e:5']);
   });
 
   describe('referential equality preservation', () => {

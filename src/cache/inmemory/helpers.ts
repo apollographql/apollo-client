@@ -1,6 +1,13 @@
 import { FieldNode } from 'graphql';
-import { NormalizedCache, StoreObject } from './types';
-import { Reference, isReference, StoreValue, isField } from '../../utilities/graphql/storeUtils';
+
+import { NormalizedCache } from './types';
+import {
+  Reference,
+  isReference,
+  StoreValue,
+  StoreObject,
+  isField
+} from '../../utilities/graphql/storeUtils';
 import { DeepMerger, ReconcilerFunction } from '../../utilities/common/mergeDeep';
 
 export function getTypenameFromStoreObject(
@@ -8,14 +15,14 @@ export function getTypenameFromStoreObject(
   objectOrReference: StoreObject | Reference,
 ): string | undefined {
   return isReference(objectOrReference)
-    ? store.getFieldValue(objectOrReference.__ref, "__typename") as string
+    ? store.get(objectOrReference.__ref, "__typename") as string
     : objectOrReference && objectOrReference.__typename;
 }
 
 const FieldNamePattern = /^[_A-Za-z0-9]+/;
-export function fieldNameFromStoreName(storeFieldName: string) {
+export function fieldNameFromStoreName(storeFieldName: string): string {
   const match = storeFieldName.match(FieldNamePattern);
-  return match && match[0];
+  return match ? match[0] : storeFieldName;
 }
 
 // Invoking merge functions needs to happen after processSelectionSet has

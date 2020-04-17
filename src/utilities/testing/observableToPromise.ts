@@ -1,6 +1,6 @@
 import { ObservableQuery } from '../../core/ObservableQuery';
 import { ApolloQueryResult } from '../../core/types';
-import { Subscription } from '../../utilities/observables/Observable';
+import { ObservableSubscription } from '../../utilities/observables/Observable';
 
 /**
  *
@@ -27,8 +27,8 @@ export type ResultCallback = ((result: ApolloQueryResult<any>) => any);
 export function observableToPromiseAndSubscription(
   { observable, shouldResolve = true, wait = -1, errorCallbacks = [] }: Options,
   ...cbs: ResultCallback[]
-): { promise: Promise<any[]>; subscription: Subscription } {
-  let subscription: Subscription = null as never;
+): { promise: Promise<any[]>; subscription: ObservableSubscription } {
+  let subscription: ObservableSubscription = null as never;
   const promise = new Promise<any[]>((resolve, reject) => {
     let errorIndex = 0;
     let cbIndex = 0;
@@ -54,33 +54,31 @@ export function observableToPromiseAndSubscription(
       }
     };
 
+    let queue = Promise.resolve();
+
     subscription = observable.subscribe({
       next(result: ApolloQueryResult<any>) {
-        const cb = cbs[cbIndex++];
-        if (cb) {
-          try {
-            results.push(cb(result));
-          } catch (e) {
-            return reject(e);
-          }
-          tryToResolve();
-        } else {
-          reject(new Error(`Observable called more than ${cbs.length} times`));
-        }
+        queue = queue.then(() => {
+          const cb = cbs[cbIndex++];
+          if (cb) return cb(result);
+          reject(new Error(`Observable 'next' method called more than ${cbs.length} times`));
+        }).then(
+          res => {
+            results.push(res);
+            tryToResolve();
+          },
+          reject,
+        );
       },
       error(error: Error) {
-        const errorCb = errorCallbacks[errorIndex++];
-        if (errorCb) {
-          try {
-            // XXX: should we collect these results too?
-            errorCb(error);
-          } catch (e) {
-            return reject(e);
-          }
-          tryToResolve();
-        } else {
+        queue = queue.then(() => {
+          const errorCb = errorCallbacks[errorIndex++];
+          if (errorCb) return errorCb(error);
           reject(error);
-        }
+        }).then(
+          tryToResolve,
+          reject,
+        );
       },
     });
   });

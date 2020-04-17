@@ -13,7 +13,7 @@ export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   if (!transformedOperation.operationName) {
     transformedOperation.operationName =
       typeof transformedOperation.query !== 'string'
-        ? getOperationName(transformedOperation.query)
+        ? getOperationName(transformedOperation.query) || undefined
         : '';
   }
 

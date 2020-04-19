@@ -94,7 +94,7 @@
     "react-dom": "16.12.0",
     "recast": "0.19.0",
     "rimraf": "3.0.2",
-    "rollup": "1.31.1",
+    "rollup": "1.32.1",
     "rollup-plugin-invariant": "0.5.6",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-terser": "5.1.3",

@@ -55,7 +55,7 @@
     }
   ],
   "peerDependencies": {
-    "graphql": "^14.5.4",
+    "graphql": "^14.5.4 || ^15.0.0",
     "react": "^16.8.0"
   },
   "peerDependenciesMeta": {
@@ -85,7 +85,7 @@
     "bundlesize": "0.18.0",
     "codecov": "3.6.5",
     "fetch-mock": "7.7.3",
-    "graphql": "14.6.0",
+    "graphql": "15.0.0",
     "jest": "24.9.0",
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",

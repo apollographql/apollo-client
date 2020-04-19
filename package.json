@@ -75,7 +75,7 @@
     "zen-observable": "^0.8.14"
   },
   "devDependencies": {
-    "@testing-library/react": "9.4.1",
+    "@testing-library/react": "10.0.2",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/jest": "24.0.25",
     "@types/lodash": "4.14.149",

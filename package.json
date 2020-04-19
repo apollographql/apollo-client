@@ -97,7 +97,7 @@
     "rollup": "1.31.1",
     "rollup-plugin-invariant": "0.5.6",
     "rollup-plugin-node-resolve": "5.2.0",
-    "rollup-plugin-terser": "5.1.3",
+    "rollup-plugin-terser": "5.3.0",
     "rxjs": "6.5.3",
     "ts-jest": "24.0.2",
     "tsc-watch": "3.0.1",

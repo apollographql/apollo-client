@@ -2994,7 +2994,7 @@ describe('@connection', () => {
     checkLastResult(abResults, a456bOyez);
     const cSee = checkLastResult(cResults, { c: "see" });
 
-    cache.modify("ROOT_QUERY", {
+    cache.modify({
       c(value) {
         expect(value).toBe("see");
         return "saw";

@@ -15,6 +15,7 @@ import {
   removeConnectionDirectiveFromDocument,
 } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
+import invariant from 'ts-invariant';
 
 export type ResultFunction<T> = () => T;
 
@@ -71,7 +72,7 @@ export class MockLink extends ApolloLink {
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
-    let responseIndex;
+    let responseIndex: number = 0;
     const response = (this.mockedResponsesByKey[key] || []).find(
       (res, index) => {
         const requestVariables = operation.variables || {};
@@ -97,16 +98,18 @@ export class MockLink extends ApolloLink {
       ));
     }
 
+    invariant(response, "mocked response is required");
+
     this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
-    const { newData } = response;
+    const { newData } = response!;
 
     if (newData) {
-      response.result = newData();
-      this.mockedResponsesByKey[key].push(response);
+      response!.result = newData();
+      this.mockedResponsesByKey[key].push(response!);
     }
 
-    const { result, error, delay } = response;
+    const { result, error, delay } = response!;
 
     if (!result && !error) {
       this.onError(new Error(
@@ -143,9 +146,11 @@ export class MockLink extends ApolloLink {
     mockedResponse: MockedResponse
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
-    newMockedResponse.request.query = removeConnectionDirectiveFromDocument(
-      newMockedResponse.request.query
+    const queryWithoutConnection = removeConnectionDirectiveFromDocument(
+        newMockedResponse.request.query
     );
+    invariant(queryWithoutConnection, "query is required");
+    newMockedResponse.request.query = queryWithoutConnection!;
     const query = removeClientSetsFromDocument(newMockedResponse.request.query);
     if (query) {
       newMockedResponse.request.query = query;

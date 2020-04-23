@@ -422,7 +422,6 @@ describe('Cache manipulation', () => {
           },
           loading: false,
           networkStatus: 7,
-          stale: false,
         });
 
         if (selectedItemId !== 123) {

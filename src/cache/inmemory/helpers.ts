@@ -20,9 +20,9 @@ export function getTypenameFromStoreObject(
 }
 
 const FieldNamePattern = /^[_A-Za-z0-9]+/;
-export function fieldNameFromStoreName(storeFieldName: string) {
+export function fieldNameFromStoreName(storeFieldName: string): string {
   const match = storeFieldName.match(FieldNamePattern);
-  return match && match[0];
+  return match ? match[0] : storeFieldName;
 }
 
 // Invoking merge functions needs to happen after processSelectionSet has

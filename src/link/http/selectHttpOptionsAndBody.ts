@@ -99,7 +99,7 @@ export const selectHttpOptionsAndBody = (
     headers: fallbackConfig.headers,
     credentials: fallbackConfig.credentials,
   };
-  let http: HttpQueryOptions = fallbackConfig.http;
+  let http: HttpQueryOptions = fallbackConfig.http || {};
 
   /*
    * use the rest of the configs to populate the options

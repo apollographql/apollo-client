@@ -25,7 +25,8 @@ export type FetchResult<
   TData = { [key: string]: any },
   C = Record<string, any>,
   E = Record<string, any>
-> = ExecutionResult<TData> & {
+> = ExecutionResult & {
+  data?: TData | null;
   extensions?: E;
   context?: C;
 };

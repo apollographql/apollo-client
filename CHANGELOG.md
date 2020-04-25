@@ -47,6 +47,9 @@
 - **[BREAKING]** Apollo Client will no longer deliver "stale" results to `ObservableQuery` consumers, but will instead log more helpful errors about which cache fields were missing. <br/>
   [@benjamn](https://github.com/benjamn) in [#6058](https://github.com/apollographql/apollo-client/pull/6058)
 
+- **[BREAKING]** `ApolloError`'s thrown by Apollo Client no longer prefix error messages with `GraphQL error:` or `Network error:`. To differentiate between GraphQL/network errors, refer to `ApolloError`'s public `graphQLErrors` and `networkError` properties. <br/>
+  [@lorensr](https://github.com/lorensr) in [#3892](https://github.com/apollographql/apollo-client/pull/3892)
+
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 

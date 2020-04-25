@@ -18,12 +18,12 @@ const generateErrorMessage = (err: ApolloError) => {
       const errorMessage = graphQLError
         ? graphQLError.message
         : 'Error message not found.';
-      message += `GraphQL error: ${errorMessage}\n`;
+      message += `${errorMessage}\n`;
     });
   }
 
   if (err.networkError) {
-    message += 'Network error: ' + err.networkError.message + '\n';
+    message += `${err.networkError.message}\n`;
   }
 
   // strip newline from the end of the message

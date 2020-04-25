@@ -532,7 +532,7 @@ describe('useQuery Hook', () => {
         const { loading, error } = useQuery(query);
         if (!loading) {
           expect(error).toBeDefined();
-          expect(error!.message).toEqual('GraphQL error: forced error');
+          expect(error!.message).toEqual('forced error');
         }
         return null;
       };
@@ -594,7 +594,7 @@ describe('useQuery Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('Network error: Oh no!');
+            expect(error!.message).toEqual('Oh no!');
             onErrorPromise.then(() => refetch());
             break;
           case 3:
@@ -648,14 +648,14 @@ describe('useQuery Hook', () => {
             break;
           case 1:
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: forced error');
+            expect(error!.message).toEqual('forced error');
             setTimeout(() => {
               forceUpdate(0);
             });
             break;
           case 2:
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: forced error');
+            expect(error!.message).toEqual('forced error');
             break;
           default: // Do nothing
         }
@@ -711,14 +711,14 @@ describe('useQuery Hook', () => {
               break;
             case 1:
               expect(error).toBeDefined();
-              expect(error!.message).toEqual('GraphQL error: forced error');
+              expect(error!.message).toEqual('forced error');
               setTimeout(() => {
                 forceUpdate(0);
               });
               break;
             case 2:
               expect(error).toBeDefined();
-              expect(error!.message).toEqual('GraphQL error: forced error');
+              expect(error!.message).toEqual('forced error');
               break;
             default: // Do nothing
           }
@@ -777,7 +777,7 @@ describe('useQuery Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: an error 1');
+            expect(error!.message).toEqual('an error 1');
             setTimeout(() => {
               // catch here to avoid failing due to 'uncaught promise rejection'
               refetch().catch(() => {});
@@ -786,7 +786,7 @@ describe('useQuery Hook', () => {
           case 3:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: an error 2');
+            expect(error!.message).toEqual('an error 2');
             break;
           default: // Do nothing
         }
@@ -843,9 +843,9 @@ describe('useQuery Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: same error message');
+            expect(error!.message).toEqual('same error message');
             refetch().catch(error => {
-              if (error.message !== 'GraphQL error: same error message') {
+              if (error.message !== 'same error message') {
                 reject(error);
               }
             });
@@ -903,7 +903,7 @@ describe('useQuery Hook', () => {
           case 2:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: same error message');
+            expect(error!.message).toEqual('same error message');
             setTimeout(() => {
               // catch here to avoid failing due to 'uncaught promise rejection'
               refetch().catch(() => {});
@@ -924,7 +924,7 @@ describe('useQuery Hook', () => {
           case 5:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
-            expect(error!.message).toEqual('GraphQL error: same error message');
+            expect(error!.message).toEqual('same error message');
             break;
           default: // Do nothing
         }

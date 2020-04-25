@@ -2301,4 +2301,33 @@ describe('ApolloClient', () => {
       expect((client.cache as any).data.data).toEqual({});
     });
   });
+
+  describe('setLink', () => {
+    it('should override default link with newly set link', async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache()
+      });
+      expect(client.link).toBeDefined();
+
+      const newLink = new ApolloLink(operation => {
+        return new Observable(observer => {
+          observer.next({
+            data: {
+              widgets: [
+                { name: 'Widget 1'},
+                { name: 'Widget 2' }
+              ]
+            }
+          });
+          observer.complete();
+        });
+      });
+
+      client.setLink(newLink);
+
+      const { data } = await client.query({ query: gql`{ widgets }` });
+      expect(data.widgets).toBeDefined();
+      expect(data.widgets.length).toBe(2);
+    });
+  });
 });

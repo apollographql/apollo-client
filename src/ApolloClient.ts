@@ -553,4 +553,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
     this.localState.setFragmentMatcher(fragmentMatcher);
   }
+
+  /**
+   * Define a new ApolloLink (or link chain) that Apollo Client will use.
+   */
+  public setLink(newLink: ApolloLink) {
+    this.link = this.queryManager.link = newLink;
+  }
 }

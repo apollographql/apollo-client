@@ -2388,7 +2388,7 @@ describe('client', () => {
 
     handle.subscribe({
       error(error) {
-        expect(error.message).toBe('Network error: Uh oh!');
+        expect(error.message).toBe('Uh oh!');
         resolve();
       },
     });
@@ -2483,7 +2483,7 @@ describe('client', () => {
       },
       error(error) {
         expect(count++).toBe(2);
-        expect(error.message).toBe('Network error: This is an error!');
+        expect(error.message).toBe('This is an error!');
 
         subscription.unsubscribe();
 
@@ -2536,7 +2536,7 @@ describe('client', () => {
 
     return client.query({ query }).catch(err => {
       expect(err.message).toBe(
-        'GraphQL error: Cannot query field "foo" on type "Post".',
+        'Cannot query field "foo" on type "Post".',
       );
     }).then(resolve, reject);
   });

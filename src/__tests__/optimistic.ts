@@ -210,7 +210,7 @@ describe('optimistic mutation results', () => {
           await promise;
         } catch (err) {
           expect(err).toBeInstanceOf(Error);
-          expect(err.message).toBe('Network error: forbidden (test error)');
+          expect(err.message).toBe('forbidden (test error)');
 
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
@@ -254,7 +254,7 @@ describe('optimistic mutation results', () => {
           .catch(err => {
             // it is ok to fail here
             expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe('Network error: forbidden (test error)');
+            expect(err.message).toBe('forbidden (test error)');
             return null;
           });
 
@@ -447,7 +447,7 @@ describe('optimistic mutation results', () => {
           await promise;
         } catch (err) {
           expect(err).toBeInstanceOf(Error);
-          expect(err.message).toBe('Network error: forbidden (test error)');
+          expect(err.message).toBe('forbidden (test error)');
 
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
@@ -491,7 +491,7 @@ describe('optimistic mutation results', () => {
           .catch(err => {
             // it is ok to fail here
             expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe('Network error: forbidden (test error)');
+            expect(err.message).toBe('forbidden (test error)');
             return null;
           });
 
@@ -1193,7 +1193,7 @@ describe('optimistic mutation results', () => {
         .catch(err => {
           // it is ok to fail here
           expect(err).toBeInstanceOf(Error);
-          expect(err.message).toEqual('Network error: forbidden (test error)');
+          expect(err.message).toEqual('forbidden (test error)');
           return null;
         });
 
@@ -1654,7 +1654,7 @@ describe('optimistic mutation results', () => {
         .catch(err => {
           // it is ok to fail here
           expect(err).toBeInstanceOf(Error);
-          expect(err.message).toBe('Network error: forbidden (test error)');
+          expect(err.message).toBe('forbidden (test error)');
           return null;
         });
 

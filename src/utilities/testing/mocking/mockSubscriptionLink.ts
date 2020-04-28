@@ -15,6 +15,7 @@ export interface MockedSubscriptionResult {
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
   public setups: any[] = [];
+  public operation: Operation;
 
   private observer: any;
 
@@ -22,7 +23,8 @@ export class MockSubscriptionLink extends ApolloLink {
     super();
   }
 
-  public request(_req: any) {
+  public request(operation: Operation) {
+    this.operation = operation;
     return new Observable<FetchResult>(observer => {
       this.setups.forEach(x => x());
       this.observer = observer;

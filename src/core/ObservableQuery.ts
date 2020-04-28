@@ -372,6 +372,7 @@ once, rather than every time you call fetchMore.`);
       .startGraphQLSubscription({
         query: options.document,
         variables: options.variables,
+        context: options.context,
       })
       .subscribe({
         next: (subscriptionData: { data: TSubscriptionData }) => {

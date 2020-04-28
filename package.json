@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.0.0-beta.43",
+  "version": "3.0.0-beta.44",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -79,7 +79,7 @@
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/jest": "24.0.25",
     "@types/lodash": "4.14.149",
-    "@types/node": "12.12.22",
+    "@types/node": "12.12.36",
     "@types/react": "16.9.17",
     "@types/react-dom": "16.9.4",
     "bundlesize": "0.18.0",

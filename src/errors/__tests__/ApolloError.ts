@@ -23,7 +23,6 @@ describe('ApolloError', () => {
     const apolloError = new ApolloError({
       networkError,
     });
-    expect(apolloError.message).toMatch('Network error: ');
     expect(apolloError.message).toMatch('this is an error message');
     expect(apolloError.message.split('\n').length).toBe(1);
   });
@@ -33,7 +32,6 @@ describe('ApolloError', () => {
     const apolloError = new ApolloError({
       graphQLErrors,
     });
-    expect(apolloError.message).toMatch('GraphQL error: ');
     expect(apolloError.message).toMatch('this is an error message');
     expect(apolloError.message.split('\n').length).toBe(1);
   });
@@ -45,9 +43,7 @@ describe('ApolloError', () => {
     });
     const messages = apolloError.message.split('\n');
     expect(messages.length).toBe(2);
-    expect(messages[0]).toMatch('GraphQL error');
     expect(messages[0]).toMatch('this is new');
-    expect(messages[1]).toMatch('GraphQL error');
     expect(messages[1]).toMatch('this is old');
   });
 
@@ -60,9 +56,7 @@ describe('ApolloError', () => {
     });
     const messages = apolloError.message.split('\n');
     expect(messages.length).toBe(2);
-    expect(messages[0]).toMatch('GraphQL error');
     expect(messages[0]).toMatch('graphql error message');
-    expect(messages[1]).toMatch('Network error');
     expect(messages[1]).toMatch('network error message');
   });
 

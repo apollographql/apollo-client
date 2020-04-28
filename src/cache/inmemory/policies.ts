@@ -142,7 +142,7 @@ export interface FieldFunctionOptions<
   readField<T = StoreValue>(
     nameOrField: string | FieldNode,
     foreignObjOrRef?: StoreObject | Reference,
-  ): SafeReadonly<T>;
+  ): SafeReadonly<T> | undefined;
 
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,

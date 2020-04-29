@@ -70,9 +70,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   public modify(
-    dataId: string,
     modifiers: Modifier<any> | Modifiers,
-    optimistic = false,
+    dataId?: string,
+    optimistic?: boolean,
   ): boolean {
     return false;
   }

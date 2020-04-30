@@ -24,6 +24,7 @@ import { ApolloError, isApolloError } from '../errors/ApolloError';
 import {
   ObservableSubscription,
   Observable,
+  Observer,
 } from '../utilities/observables/Observable';
 import { MutationStore } from '../data/mutations';
 import {
@@ -51,6 +52,7 @@ import { isNonEmptyArray } from '../utilities/common/arrays';
 import { ApolloCache } from '../cache/core/cache';
 
 import { QueryInfo, QueryStoreValue } from './QueryInfo';
+import { Reobserver } from './Reobserver';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -608,39 +610,34 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
-  public observeQuery(observableQuery: ObservableQuery<any>) {
-    const { queryId, options } = observableQuery;
+  public observeQuery<TData, TVars>(
+    observableQuery: ObservableQuery<TData, TVars>,
+    observer: Observer<ApolloQueryResult<TData>>,
+    // If no options are passed, make a shallow defensive copy of the
+    // ObservableQuery options.
+    options = { ...observableQuery.options },
+  ): Reobserver<TData, TVars> {
+    const { queryId } = observableQuery;
 
-    this.getQuery(queryId).setObservableQuery(observableQuery);
-
-    // These mutableOptions can be updated whenever the function we are
-    // about to return gets called, or inside the fetchQueryObservable
-    // method, which sometimes alters mutableOptions.fetchPolicy.
-    let mutableOptions: WatchQueryOptions<any> = { ...options };
-
-    return <TData, TVars>(
-      newOptions?: Partial<WatchQueryOptions<TVars>>,
-      newNetworkStatus?: NetworkStatus,
-    ): Concast<ApolloQueryResult<TData>> => {
-      // TODO Would this be necessary if we never deleted QueryInfo
-      // objects from this.queries?
+    const setObsQuery = () =>
       this.getQuery(queryId).setObservableQuery(observableQuery);
 
-      if (newOptions) {
-        Object.keys(newOptions).forEach(key => {
-          const value = (newOptions as any)[key];
-          if (value !== void 0) {
-            (mutableOptions as any)[key] = value;
-          }
-        });
-      }
+    setObsQuery();
 
-      return this.fetchQueryObservable<TData, TVars>(
-        queryId,
-        mutableOptions,
-        newNetworkStatus,
-      );
-    };
+    return new Reobserver<TData, TVars>(
+      observer,
+      options,
+      (currentOptions, newNetworkStatus) => {
+        setObsQuery();
+        return this.fetchQueryObservable(
+          observableQuery.queryId,
+          currentOptions,
+          newNetworkStatus,
+        );
+      },
+      // Avoid polling during SSR and when the query is already in flight.
+      !this.ssrMode && (() => !this.checkInFlight(queryId)),
+    );
   }
 
   public startGraphQLSubscription<T = any>({

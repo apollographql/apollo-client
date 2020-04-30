@@ -10,7 +10,7 @@ import {
   Observer,
   ObservableSubscription
 } from '../utilities/observables/Observable';
-import { iterateObserversSafely, Concast } from '../utilities/observables/observables';
+import { iterateObserversSafely } from '../utilities/observables/observables';
 import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, OperationVariables } from './types';
@@ -22,6 +22,7 @@ import {
 } from './watchQueryOptions';
 import { QueryStoreValue } from './QueryInfo';
 import { isNonEmptyArray } from '../utilities/common/arrays';
+import { Reobserver } from './Reobserver';
 
 export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
   error?: ApolloError;
@@ -57,7 +58,7 @@ export class ObservableQuery<
   TData = any,
   TVariables = OperationVariables
 > extends Observable<ApolloQueryResult<TData>> {
-  public options: WatchQueryOptions<TVariables>;
+  public readonly options: WatchQueryOptions<TVariables>;
   public readonly queryId: string;
   public readonly queryName?: string;
   public readonly watching: boolean;
@@ -274,11 +275,14 @@ export class ObservableQuery<
       };
     }
 
-    return this.reobserveImpl(
-      this.queryManager.observeQuery(this),
-      { fetchPolicy, variables },
-      NetworkStatus.refetch,
-    );
+    return this.queryManager
+      .observeQuery(this, this.observer)
+      .reobserve({
+        fetchPolicy,
+        variables: this.options.variables,
+        // Always disable polling for refetches.
+        pollInterval: 0,
+      }, NetworkStatus.refetch);
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -373,39 +377,10 @@ export class ObservableQuery<
     };
   }
 
-  // Note: if the query is not active (there are no subscribers), the promise
-  // will return null immediately.
   public setOptions(
-    opts: WatchQueryOptions,
+    newOptions: Partial<WatchQueryOptions<TVariables>>,
   ): Promise<ApolloQueryResult<TData> | void> {
-    const {
-      fetchPolicy: oldFetchPolicy,
-      variables: oldVariables,
-    } = this.options;
-
-    this.options = {
-      ...this.options,
-      ...opts,
-    } as WatchQueryOptions<TVariables>;
-
-    if (opts.pollInterval) {
-      this.startPolling(opts.pollInterval);
-    } else if (opts.pollInterval === 0) {
-      this.stopPolling();
-    }
-
-    // Try to fetch the query if fetchPolicy changed from either cache-only
-    // or standby to something else, or changed to network-only.
-    const fetchPolicyChanged = oldFetchPolicy !== opts.fetchPolicy && (
-      oldFetchPolicy === 'cache-only' ||
-      oldFetchPolicy === 'standby' ||
-      opts.fetchPolicy === 'network-only'
-    );
-
-    return this.setVariables(
-      this.options.variables as TVariables,
-      fetchPolicyChanged || !equal(this.variables, oldVariables),
-    );
+    return this.reobserve(newOptions, NetworkStatus.setVariables);
   }
 
   /**
@@ -463,11 +438,10 @@ export class ObservableQuery<
       fetchPolicy = 'cache-and-network';
     }
 
-    return this.reobserveImpl(
-      this.queryManager.observeQuery(this),
-      { variables, fetchPolicy },
-      NetworkStatus.setVariables,
-    );
+    return this.reobserve({
+      fetchPolicy,
+      variables,
+    }, NetworkStatus.setVariables);
   }
 
   public updateQuery<TVars = TVariables>(
@@ -501,87 +475,13 @@ export class ObservableQuery<
   }
 
   public startPolling(pollInterval: number) {
-    this.options.pollInterval = pollInterval;
-    this.updatePolling();
+    this.getReobserver().updateOptions({ pollInterval });
   }
 
   public stopPolling() {
-    delete this.options.pollInterval;
-    this.updatePolling();
-  }
-
-  private pollingInfo?: {
-    interval: number;
-    timeout: NodeJS.Timeout;
-    options: WatchQueryOptions<TVariables>;
-  };
-
-  // Turns polling on or off based on this.options.pollInterval.
-  private updatePolling() {
-    const {
-      pollingInfo,
-      options: {
-        pollInterval,
-      },
-    } = this;
-
-    if (!pollInterval) {
-      delete this.options.pollInterval;
-      if (pollingInfo) {
-        clearTimeout(pollingInfo.timeout);
-        delete this.pollingInfo;
-      }
-      return;
+    if (this.reobserver) {
+      this.reobserver.updateOptions({ pollInterval: 0 });
     }
-
-    if (pollingInfo &&
-        pollingInfo.interval === pollInterval) {
-      return;
-    }
-
-    invariant(
-      pollInterval,
-      'Attempted to start a polling query without a polling interval.',
-    );
-
-    if (this.queryManager.ssrMode) {
-      // Do not poll in SSR mode.
-      return;
-    }
-
-    const info = pollingInfo || (
-      this.pollingInfo = {} as
-      ObservableQuery<TData, TVariables>["pollingInfo"]
-    )!;
-
-    info.interval = pollInterval;
-    info.options = {
-      ...this.options,
-      fetchPolicy: 'network-only',
-    };
-
-    const maybeFetch = () => {
-      if (this.pollingInfo) {
-        if (this.queryManager.checkInFlight(this.queryId)) {
-          poll();
-        } else {
-          this.reobserve(
-            this.pollingInfo.options,
-            NetworkStatus.poll,
-          ).then(poll, poll);
-        }
-      };
-    };
-
-    const poll = () => {
-      const info = this.pollingInfo;
-      if (info) {
-        clearTimeout(info.timeout);
-        info.timeout = setTimeout(maybeFetch, info.interval);
-      }
-    };
-
-    poll();
   }
 
   private updateLastResult(newResult: ApolloQueryResult<TData>) {
@@ -639,45 +539,28 @@ export class ObservableQuery<
     };
   }
 
-  private reobserver?: ReturnType<QueryManager<any>["observeQuery"]>;
-  private activeConcast?: Concast<ApolloQueryResult<TData>>;
+  private reobserver?: Reobserver<TData, TVariables>;
+  private getReobserver(): Reobserver<TData, TVariables> {
+    return this.reobserver || (
+      this.reobserver = this.queryManager.observeQuery(
+        this,
+        this.observer,
+        // Passing this.options explicitly here prevents observeQuery from
+        // making a shallow copy of the options object before passing it
+        // to the constructor of the returned Reobserver object. In other
+        // words, this extra argument allows this.reobserver.options to be
+        // === this.options, so we don't have to worry about synchronizing
+        // the properties of two distinct objects.
+        this.options,
+      )
+    );
+  }
 
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables>>,
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
-    if (!this.reobserver) {
-      if (newOptions && typeof newOptions.pollInterval === "number") {
-        this.startPolling(newOptions.pollInterval);
-      }
-      this.reobserver = this.queryManager.observeQuery(this);
-    }
-    return this.reobserveImpl(this.reobserver, newOptions, newNetworkStatus);
-  }
-
-  private reobserveImpl(
-    reobserver: ReturnType<QueryManager<any>["observeQuery"]>,
-    newOptions?: Partial<WatchQueryOptions<TVariables>>,
-    newNetworkStatus?: NetworkStatus,
-  ): Promise<ApolloQueryResult<TData>> {
-    const newConcast = reobserver<TData, TVariables>(
-      newOptions,
-      newNetworkStatus,
-    );
-
-    if (this.activeConcast) {
-      // We use the {add,remove}Observer methods directly to avoid
-      // wrapping this.observer with an unnecessary SubscriptionObserver
-      // object, in part so that we can remove it here without triggering
-      // any unsubscriptions, because we just want to ignore the old
-      // observable, not prematurely shut it down, since other consumers
-      // may be awaiting this.activeConcast.promise.
-      this.activeConcast.removeObserver(this.observer, true);
-    }
-
-    (this.activeConcast = newConcast).addObserver(this.observer);
-
-    return newConcast.promise;
+    return this.getReobserver().reobserve(newOptions, newNetworkStatus);
   }
 
   private observer: Observer<ApolloQueryResult<TData>> = {
@@ -736,13 +619,12 @@ export class ObservableQuery<
   private tearDownQuery() {
     const { queryManager } = this;
 
-    if (this.activeConcast) {
-      this.activeConcast.removeObserver(this.observer, true);
-      delete this.activeConcast;
+    if (this.reobserver) {
+      this.reobserver.stop();
+      delete this.reobserver;
     }
 
     this.isTornDown = true;
-    this.stopPolling();
 
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());

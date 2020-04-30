@@ -52,7 +52,7 @@ describe('useQuery Hook', () => {
   afterEach(cleanup);
 
   describe('General use', () => {
-    it('should handle a simple query properly', async () => {
+    itAsync('should handle a simple query properly', (resolve, reject) => {
       const Component = () => {
         const { data, loading } = useQuery(CAR_QUERY);
         if (!loading) {
@@ -67,10 +67,10 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      return wait();
+      return wait().then(resolve, reject);
     });
 
-    it('should keep data as undefined until data is actually returned', async () => {
+    itAsync('should keep data as undefined until data is actually returned', (resolve, reject) => {
       const Component = () => {
         const { data, loading } = useQuery(CAR_QUERY);
         if (loading) {
@@ -87,10 +87,10 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      return wait();
+      return wait().then(resolve, reject);
     });
 
-    it('should return a result upon first call, if data is available', async () => {
+    itAsync('should return a result upon first call, if data is available', async (resolve, reject) => {
       // This test verifies that the `useQuery` hook returns a result upon its first
       // invocation if the data is available in the cache. This is essential for SSR
       // to work properly, since effects are not run during SSR.
@@ -121,10 +121,10 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      return wait();
+      return wait().then(resolve, reject);
     });
 
-    it('should ensure ObservableQuery fields have a stable identity', async () => {
+    itAsync('should ensure ObservableQuery fields have a stable identity', (resolve, reject) => {
       let refetchFn: any;
       let fetchMoreFn: any;
       let updateQueryFn: any;
@@ -165,10 +165,10 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      return wait();
+      return wait().then(resolve, reject);
     });
 
-    it('should update result when query result change', async () => {
+    itAsync('should update result when query result change', async (resolve, reject) => {
       const CAR_QUERY_BY_ID = gql`
         query($id: Int) {
           car(id: $id) {
@@ -221,13 +221,13 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() =>
+      await wait(() => {
         expect(hookResponse).toHaveBeenLastCalledWith({
           data: CAR_DATA_A4,
           loading: false,
           error: undefined,
         })
-      );
+      });
 
       rerender(
         <MockedProvider mocks={mocks}>
@@ -235,16 +235,18 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() =>
+      await wait(() => {
         expect(hookResponse).toHaveBeenLastCalledWith({
           data: CAR_DATA_RS8,
           loading: false,
           error: undefined,
-        })
-      );
+        });
+      });
+
+      resolve();
     });
 
-    it('should return result when result is equivalent', async () => {
+    itAsync('should return result when result is equivalent', async (resolve, reject) => {
       const CAR_QUERY_BY_ID = gql`
         query($id: Int) {
           car(id: $id) {
@@ -290,13 +292,13 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() =>
+      await wait(() => {
         expect(hookResponse).toHaveBeenLastCalledWith({
           data: CAR_DATA_A4,
           loading: false,
           error: undefined,
         })
-      );
+      });
 
       rerender(
         <MockedProvider mocks={mocks}>
@@ -314,16 +316,18 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() =>
+      await wait(() => {
         expect(hookResponse).toHaveBeenLastCalledWith({
           data: CAR_DATA_A4,
           loading: false,
           error: undefined,
         })
-      );
+      });
+
+      resolve();
     });
 
-    it('should not error when forcing an update with React >= 16.13.0', async () => {
+    itAsync('should not error when forcing an update with React >= 16.13.0', (resolve, reject) => {
       let wasUpdateErrorLogged = false;
       const consoleError = console.error;
       console.error = (msg: string) => {
@@ -347,10 +351,10 @@ describe('useQuery Hook', () => {
           fetchPolicy: 'network-only',
           variables: { something }
         });
+        renderCount += 1;
         if (loading) return null;
         expect(wasUpdateErrorLogged).toBeFalsy();
         expect(data).toEqual(CAR_RESULT_DATA);
-        renderCount += 1;
         return null;
       };
 
@@ -362,7 +366,7 @@ describe('useQuery Hook', () => {
       }
 
       render(
-        <MockedProvider mocks={CAR_MOCKS}>
+        <MockedProvider link={new MockLink(CAR_MOCKS).setOnError(reject)}>
           <Fragment>
             <WrapperComponent something={1} />
             <WrapperComponent something={3} />
@@ -371,16 +375,16 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => {
+      wait(() => {
         expect(renderCount).toBe(3);
       }).finally(() => {
         console.error = consoleError;
-      });
+      }).then(resolve, reject);
     });
   });
 
   describe('Polling', () => {
-    it('should support polling', async () => {
+    itAsync('should support polling', (resolve, reject) => {
       let renderCount = 0;
       const Component = () => {
         let { data, loading, networkStatus, stopPolling } = useQuery(CAR_QUERY, {
@@ -413,7 +417,7 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(2);
-      });
+      }).then(resolve, reject);
     });
 
     itAsync('should stop polling when skip is true', (resolve, reject) => {
@@ -506,11 +510,11 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
-    it(
+    itAsync(
       'should not throw an error if `stopPolling` is called manually after ' +
         'a component has unmounted (even though polling has already been ' +
         'stopped automatically)',
-      async () => {
+      (resolve, reject) => {
         let unmount: any;
         let renderCount = 0;
         const Component = () => {
@@ -545,7 +549,7 @@ describe('useQuery Hook', () => {
 
         return wait(() => {
           expect(renderCount).toBe(2);
-        });
+        }).then(resolve, reject);
       }
     );
 
@@ -566,7 +570,7 @@ describe('useQuery Hook', () => {
   });
 
   describe('Error handling', () => {
-    it("should render GraphQLError's", async () => {
+    itAsync("should render GraphQLError's", (resolve, reject) => {
       const query = gql`
         query TestQuery {
           rates(currency: "USD") {
@@ -599,7 +603,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      return wait();
+      return wait().then(resolve, reject);
     });
 
     itAsync('should only call onError callbacks once', (resolve, reject) => {
@@ -942,7 +946,7 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
-    it('should render both success and errors (same error messages) with loading done on refetch', async () => {
+    itAsync('should render both success and errors (same error messages) with loading done on refetch', (resolve, reject) => {
       const mocks = [
         {
           request: { query: CAR_QUERY },
@@ -1018,15 +1022,15 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(6);
-      });
+      }).then(resolve, reject);
     });
   });
 
   describe('Pagination', () => {
-    it(
+    itAsync(
       'should render `fetchMore.updateQuery` updated results with proper ' +
         'loading status, when `notifyOnNetworkStatusChange` is true',
-      async () => {
+      (resolve, reject) => {
         const carQuery: DocumentNode = gql`
           query cars($limit: Int) {
             cars(limit: $limit) {
@@ -1123,14 +1127,14 @@ describe('useQuery Hook', () => {
 
         return wait(() => {
           expect(renderCount).toBe(3);
-        });
+        }).then(resolve, reject);
       }
     );
 
-    it(
+    itAsync(
       'should render `fetchMore.updateQuery` updated results with no ' +
         'loading status, when `notifyOnNetworkStatusChange` is false',
-      async () => {
+      (resolve, reject) => {
         const carQuery: DocumentNode = gql`
           query cars($limit: Int) {
             cars(limit: $limit) {
@@ -1222,7 +1226,7 @@ describe('useQuery Hook', () => {
 
         return wait(() => {
           expect(renderCount).toBe(3);
-        });
+        }).then(resolve, reject);
       }
     );
   });
@@ -1440,10 +1444,10 @@ describe('useQuery Hook', () => {
   });
 
   describe('Callbacks', () => {
-    it(
+    itAsync(
       'should pass loaded data to onCompleted when using the cache-only ' +
         'fetch policy',
-      async () => {
+      (resolve, reject) => {
         const cache = new InMemoryCache();
         const client = new ApolloClient({
           cache,
@@ -1478,11 +1482,11 @@ describe('useQuery Hook', () => {
 
         return wait(() => {
           expect(onCompletedCalled).toBeTruthy();
-        });
+        }).then(resolve, reject);
       }
     );
 
-    it('should only call onCompleted once per query run', async () => {
+    itAsync('should only call onCompleted once per query run', (resolve, reject) => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -1516,7 +1520,7 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(onCompletedCount).toBe(1);
-      });
+      }).then(resolve, reject);
     });
   });
 });

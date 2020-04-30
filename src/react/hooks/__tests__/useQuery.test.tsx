@@ -13,6 +13,7 @@ import { ApolloProvider } from '../../context/ApolloProvider';
 import { useQuery } from '../useQuery';
 import { requireReactLazily } from '../../react';
 import { QueryFunctionOptions } from '../..';
+import { NetworkStatus } from '../../../core/networkStatus';
 
 const React = requireReactLazily();
 const { useState, useReducer, Fragment } = React;
@@ -382,28 +383,25 @@ describe('useQuery Hook', () => {
     it('should support polling', async () => {
       let renderCount = 0;
       const Component = () => {
-        let { data, loading, stopPolling } = useQuery(CAR_QUERY, {
+        let { data, loading, networkStatus, stopPolling } = useQuery(CAR_QUERY, {
           pollInterval: 10
         });
-        switch (renderCount) {
-          case 0:
-            expect(loading).toBeTruthy();
-            break;
+
+        switch (++renderCount) {
           case 1:
-            expect(loading).toBeFalsy();
-            expect(data).toEqual(CAR_RESULT_DATA);
+            expect(loading).toBeTruthy();
+            expect(networkStatus).toBe(NetworkStatus.loading);
             break;
           case 2:
             expect(loading).toBeFalsy();
             expect(data).toEqual(CAR_RESULT_DATA);
+            expect(networkStatus).toBe(NetworkStatus.ready);
             stopPolling();
             break;
-          case 3:
-            throw new Error('Uh oh - we should have stopped polling!');
           default:
-          // Do nothing
+            throw new Error('Uh oh - we should have stopped polling!');
         }
-        renderCount += 1;
+
         return null;
       };
 
@@ -414,7 +412,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(3);
+        expect(renderCount).toBe(2);
       });
     });
 
@@ -423,7 +421,7 @@ describe('useQuery Hook', () => {
       const Component = () => {
         const [shouldSkip, setShouldSkip] = useState(false);
         let { data, loading } = useQuery(CAR_QUERY, {
-          pollInterval: 10,
+          pollInterval: 100,
           skip: shouldSkip
         });
 
@@ -449,17 +447,8 @@ describe('useQuery Hook', () => {
         return null;
       };
 
-      const mocks = [
-        // Repeat the same mock request/response a few times, so we don't
-        // run out of mocked responses.
-        ...CAR_MOCKS,
-        ...CAR_MOCKS,
-        ...CAR_MOCKS,
-        ...CAR_MOCKS,
-      ];
-
       render(
-        <MockedProvider link={new MockLink(mocks).setOnError(reject)}>
+        <MockedProvider link={new MockLink(CAR_MOCKS).setOnError(reject)}>
           <Component />
         </MockedProvider>
       );
@@ -546,8 +535,10 @@ describe('useQuery Hook', () => {
           return null;
         };
 
+        const mocks = [...CAR_MOCKS, ...CAR_MOCKS];
+
         unmount = render(
-          <MockedProvider mocks={CAR_MOCKS}>
+          <MockedProvider link={new MockLink(mocks).setOnError(reject)}>
             <Component />
           </MockedProvider>
         ).unmount;
@@ -611,7 +602,7 @@ describe('useQuery Hook', () => {
       return wait();
     });
 
-    it('should only call onError callbacks once', async () => {
+    itAsync('should only call onError callbacks once', (resolve, reject) => {
       const query = gql`
         query SomeQuery {
           stuff {
@@ -644,7 +635,7 @@ describe('useQuery Hook', () => {
 
       let renderCount = 0;
       const Component = () => {
-        const { loading, error, refetch, data } = useQuery(
+        const { loading, error, refetch, data, networkStatus } = useQuery(
           query,
           {
             onError,
@@ -663,6 +654,10 @@ describe('useQuery Hook', () => {
             onErrorPromise.then(() => refetch());
             break;
           case 3:
+            expect(loading).toBeTruthy();
+            expect(networkStatus).toBe(NetworkStatus.refetch);
+            break;
+          case 4:
             expect(loading).toBeFalsy();
             expect(data).toEqual(resultData);
             break;
@@ -679,11 +674,11 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(3);
-      });
+        expect(renderCount).toBe(4);
+      }).then(resolve, reject);
     });
 
-    it('should persist errors on re-render if they are still valid', async () => {
+    itAsync('should persist errors on re-render if they are still valid', (resolve, reject) => {
       const query = gql`
         query SomeQuery {
           stuff {
@@ -706,26 +701,25 @@ describe('useQuery Hook', () => {
         const [, forceUpdate] = useReducer(x => x + 1, 0);
         const { loading, error } = useQuery(query);
 
-        switch (renderCount) {
-          case 0:
+        switch (++renderCount) {
+          case 1:
             expect(loading).toBeTruthy();
             expect(error).toBeUndefined();
             break;
-          case 1:
+          case 2:
             expect(error).toBeDefined();
             expect(error!.message).toEqual('forced error');
             setTimeout(() => {
               forceUpdate();
             });
             break;
-          case 2:
+          case 3:
             expect(error).toBeDefined();
             expect(error!.message).toEqual('forced error');
             break;
           default: // Do nothing
         }
 
-        renderCount += 1;
         return null;
       }
 
@@ -737,7 +731,7 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(3);
-      });
+      }).then(resolve, reject);
     });
 
     itAsync(
@@ -807,7 +801,7 @@ describe('useQuery Hook', () => {
       }
     );
 
-    it('should render errors (different error messages) with loading done on refetch', async () => {
+    itAsync('should render errors (different error messages) with loading done on refetch', (resolve, reject) => {
       const query = gql`
         query SomeQuery {
           stuff {
@@ -852,6 +846,10 @@ describe('useQuery Hook', () => {
             });
             break;
           case 3:
+            expect(loading).toBeTruthy();
+            expect(error).toBeUndefined();
+            break;
+          case 4:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('an error 2');
@@ -869,8 +867,8 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(3);
-      });
+        expect(renderCount).toBe(4);
+      }).then(resolve, reject);
     });
 
     itAsync('should not re-render same error message on refetch', (resolve, reject) => {
@@ -918,6 +916,15 @@ describe('useQuery Hook', () => {
               }
             });
             break;
+          case 3:
+            expect(loading).toBeTruthy();
+            expect(error).toBeUndefined();
+            break;
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(error).toBeDefined();
+            expect(error!.message).toEqual('same error message');
+            break;
           default: // Do nothing
         }
 
@@ -931,7 +938,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(2);
+        expect(renderCount).toBe(4);
       }).then(resolve, reject);
     });
 
@@ -978,6 +985,9 @@ describe('useQuery Hook', () => {
             });
             break;
           case 3:
+            expect(loading).toBeTruthy();
+            break;
+          case 4:
             expect(loading).toBeFalsy();
             expect(error).toBeUndefined();
             expect(data).toEqual(CAR_RESULT_DATA);
@@ -986,10 +996,10 @@ describe('useQuery Hook', () => {
               refetch().catch(() => {});
             });
             break;
-          case 4:
+          case 5:
             expect(loading).toBeTruthy();
             break;
-          case 5:
+          case 6:
             expect(loading).toBeFalsy();
             expect(error).toBeDefined();
             expect(error!.message).toEqual('same error message');
@@ -1007,7 +1017,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(renderCount).toBe(5);
+        expect(renderCount).toBe(6);
       });
     });
   });
@@ -1071,11 +1081,11 @@ describe('useQuery Hook', () => {
             notifyOnNetworkStatusChange: true
           });
 
-          switch (renderCount) {
-            case 0:
+          switch (++renderCount) {
+            case 1:
               expect(loading).toBeTruthy();
               break;
-            case 1:
+            case 2:
               expect(loading).toBeFalsy();
               expect(data).toEqual(carResults);
               fetchMore({
@@ -1083,28 +1093,25 @@ describe('useQuery Hook', () => {
                   limit: 1
                 },
                 updateQuery: (prev, { fetchMoreResult }) => ({
-                  cars: [...prev.cars, ...fetchMoreResult.cars]
-                })
+                  cars: [
+                    ...prev.cars,
+                    ...fetchMoreResult.cars,
+                  ],
+                }),
               });
-              break;
-            case 2:
-              expect(loading).toBeTruthy();
               break;
             case 3:
               expect(loading).toBeFalsy();
               expect(data).toEqual({
-                cars: [carResults.cars[0]]
-              });
-              break;
-            case 4:
-              expect(data).toEqual({
-                cars: [carResults.cars[0], moreCarResults.cars[0]]
+                cars: [
+                  carResults.cars[0],
+                  moreCarResults.cars[0],
+                ],
               });
               break;
             default:
           }
 
-          renderCount += 1;
           return null;
         }
 
@@ -1115,7 +1122,7 @@ describe('useQuery Hook', () => {
         );
 
         return wait(() => {
-          expect(renderCount).toBe(5);
+          expect(renderCount).toBe(3);
         });
       }
     );
@@ -1221,7 +1228,7 @@ describe('useQuery Hook', () => {
   });
 
   describe('Refetching', () => {
-    it('should properly handle refetching with different variables', async () => {
+    itAsync('should properly handle refetching with different variables', (resolve, reject) => {
       const carQuery: DocumentNode = gql`
         query cars($id: Int) {
           cars(id: $id) {
@@ -1276,7 +1283,8 @@ describe('useQuery Hook', () => {
       let renderCount = 0;
       function App() {
         const { loading, data, refetch } = useQuery(carQuery, {
-          variables: { id: 1 }
+          variables: { id: 1 },
+          notifyOnNetworkStatusChange: true,
         });
 
         switch (renderCount) {
@@ -1318,17 +1326,17 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(6);
-      });
+      }).then(resolve, reject);
     });
   });
 
   describe('Partial refetching', () => {
-    it(
+    itAsync(
       'should attempt a refetch when the query result was marked as being ' +
         'partial, the returned data was reset to an empty Object by the ' +
         'Apollo Client QueryManager (due to a cache miss), and the ' +
         '`partialRefetch` prop is `true`',
-      async () => {
+      (resolve, reject) => {
         const query: DocumentNode = gql`
           query AllPeople($name: String!) {
             allPeople(name: $name) {
@@ -1381,31 +1389,40 @@ describe('useQuery Hook', () => {
 
         let renderCount = 0;
         const Component = () => {
-          const { loading, data } = useQuery(query, {
+          const { loading, data, networkStatus } = useQuery(query, {
             variables: { someVar: 'abc123' },
-            partialRefetch: true
+            partialRefetch: true,
+            notifyOnNetworkStatusChange: true,
           });
 
-          switch (renderCount) {
-            case 0:
+          switch (++renderCount) {
+            case 1:
               // Initial loading render
               expect(loading).toBeTruthy();
+              expect(data).toBeUndefined();
+              expect(networkStatus).toBe(NetworkStatus.loading);
               break;
-            case 1:
+            case 2:
               // `data` is missing and `partialRetch` is true, so a refetch
               // is triggered and loading is set as true again
               expect(loading).toBeTruthy();
               expect(data).toBeUndefined();
+              expect(networkStatus).toBe(NetworkStatus.loading);
               break;
-            case 2:
+            case 3:
+              expect(loading).toBeTruthy();
+              expect(data).toBeUndefined();
+              expect(networkStatus).toBe(NetworkStatus.refetch);
+              break;
+            case 4:
               // Refetch has completed
               expect(loading).toBeFalsy();
               expect(data).toEqual(peopleData);
+              expect(networkStatus).toBe(NetworkStatus.ready);
               break;
             default:
           }
 
-          renderCount += 1;
           return null;
         };
 
@@ -1416,8 +1433,8 @@ describe('useQuery Hook', () => {
         );
 
         return wait(() => {
-          expect(renderCount).toBe(3);
-        });
+          expect(renderCount).toBe(4);
+        }).then(resolve, reject);
       }
     );
   });

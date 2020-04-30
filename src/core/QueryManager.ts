@@ -610,16 +610,25 @@ export class QueryManager<TStore> {
     // These mutableOptions can be updated whenever the function we are
     // about to return gets called, or inside the fetchQueryObservable
     // method, which sometimes alters mutableOptions.fetchPolicy.
-    let mutableOptions = { ...options };
+    let mutableOptions: WatchQueryOptions<any> = { ...options };
 
     return <TVars>(
       newOptions?: Partial<WatchQueryOptions<TVars>>,
-      networkStatus?: NetworkStatus,
+      newNetworkStatus?: NetworkStatus,
     ) => {
+      if (newOptions) {
+        Object.keys(newOptions).forEach(key => {
+          const value = (newOptions as any)[key];
+          if (value !== void 0) {
+            (mutableOptions as any)[key] = value;
+          }
+        });
+      }
+
       return this.fetchQueryObservable<TData, TVars>(
         queryId,
-        Object.assign(mutableOptions, newOptions),
-        networkStatus,
+        mutableOptions,
+        newNetworkStatus,
       );
     };
   }

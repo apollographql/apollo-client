@@ -46,7 +46,6 @@ import {
   Concast,
   asyncMap,
   multicast,
-  toPromise,
 } from '../utilities/observables/observables';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 import { ApolloCache } from '../cache/core/cache';
@@ -342,16 +341,16 @@ export class QueryManager<TStore> {
     });
   }
 
-  public fetchQuery<T>(
+  public fetchQuery<TData, TVars>(
     queryId: string,
-    options: WatchQueryOptions,
+    options: WatchQueryOptions<TVars>,
     networkStatus?: NetworkStatus,
-  ): Promise<ApolloQueryResult<T>> {
-    return toPromise(this.fetchQueryObservable(
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.fetchQueryObservable<TData, TVars>(
       queryId,
       options,
       networkStatus,
-    ));
+    ).promise;
   }
 
   public getQueryStore() {

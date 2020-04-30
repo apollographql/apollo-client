@@ -1,8 +1,8 @@
 import { WatchQueryOptions } from './watchQueryOptions';
 import { NetworkStatus } from './networkStatus';
 import { ApolloQueryResult } from './types';
-import { Concast } from '../utilities/observables/observables';
 import { Observer } from '../utilities/observables/Observable';
+import { Concast } from '../utilities/observables/Concast';
 import { invariant } from 'ts-invariant';
 
 export class Reobserver<TData, TVars> {

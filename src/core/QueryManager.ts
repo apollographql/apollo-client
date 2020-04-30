@@ -44,10 +44,13 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 import {
-  Concast,
   asyncMap,
   multicast,
 } from '../utilities/observables/observables';
+import {
+  Concast,
+  ConcastSourcesIterable,
+} from '../utilities/observables/Concast';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 import { ApolloCache } from '../cache/core/cache';
 

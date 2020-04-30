@@ -1017,11 +1017,29 @@ export class QueryManager<TStore> {
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
       networkStatus = queryInfo.networkStatus || NetworkStatus.loading,
-    ) => Observable.of({
-      data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
-      loading: isNetworkRequestInFlight(networkStatus),
-      networkStatus,
-    } as ApolloQueryResult<TData>);
+    ) => {
+      const data = (
+        equal(diff.result, {}) ? queryInfo.getDiff() : diff
+      ).result;
+
+      const fromData = (data: FetchResult<TData>) => Observable.of({
+        data,
+        loading: isNetworkRequestInFlight(networkStatus),
+        networkStatus,
+      } as ApolloQueryResult<TData>);
+
+      if (this.transform(query).hasForcedResolvers) {
+        return this.localState.runResolvers({
+          document: query,
+          remoteResult: { data },
+          context,
+          variables,
+          onlyRunForcedResolvers: true,
+        }).then(resolved => fromData(resolved.data));
+      }
+
+      return fromData(data);
+    };
 
     const resultsFromLink = (allowCacheWrite: boolean) =>
       this.getResultsFromLink<TData, TVars>(queryInfo, allowCacheWrite, {

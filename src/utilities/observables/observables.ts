@@ -2,7 +2,7 @@ import { Observable, Observer, ObservableSubscription } from './Observable';
 
 // Returns a normal Observable that can have any number of subscribers,
 // while ensuring the original Observable gets subscribed to at most once.
-export function multiplex<T>(inner: Observable<T>): Observable<T> {
+export function multicast<T>(inner: Observable<T>): Observable<T> {
   const observers = new Set<Observer<T>>();
   let sub: ObservableSubscription | null = null;
   return new Observable<T>(observer => {

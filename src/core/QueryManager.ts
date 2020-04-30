@@ -45,7 +45,7 @@ import {
   MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap, multiplex } from '../utilities/observables/observables';
+import { asyncMap, multicast } from '../utilities/observables/observables';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 import { ApolloCache } from '../cache/core/cache';
 
@@ -1027,7 +1027,7 @@ export class QueryManager<TStore> {
         if (!observable) {
           byVariables.set(
             varJson,
-            observable = multiplex(
+            observable = multicast(
               execute(link, operation) as Observable<FetchResult<T>>
             )
           );
@@ -1046,10 +1046,10 @@ export class QueryManager<TStore> {
         }
 
       } else {
-        observable = multiplex(execute(link, operation) as Observable<FetchResult<T>>);
+        observable = multicast(execute(link, operation) as Observable<FetchResult<T>>);
       }
     } else {
-      observable = Observable.of({ data: {} } as FetchResult<T>);
+      observable = multicast(Observable.of({ data: {} } as FetchResult<T>));
       context = this.prepareContext(context);
     }
 

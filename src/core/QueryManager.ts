@@ -936,16 +936,42 @@ export class QueryManager<TStore> {
   ): Concast<ApolloQueryResult<TData>> {
     const queryInfo = this.getQuery(queryId);
 
-    const concast = new Concast(
-      this.fqoHelper<TData, TVars>(
+    const normalized = this.normalizeWatchQueryOptions(
+      options,
+      queryInfo.networkStatus,
+      networkStatus,
+    );
+
+    const fromVariables = (variables: TVars) => {
+      // Since normalized is always a fresh copy of options, it's safe to
+      // modify its properties here, rather than creating yet another new
+      // WatchQueryOptions object.
+      normalized.variables = variables;
+      return this.fqoHelper<TData, TVars>(
         queryInfo,
-        this.normalizeWatchQueryOptions(
-          options,
-          queryInfo.networkStatus,
-          networkStatus,
-        ),
+        normalized,
         networkStatus,
-      ),
+      );
+    };
+
+    // A Concast<T> can be created either from an Iterable<Observable<T>>
+    // or from a PromiseLike<Iterable<Observable<T>>>, where T in this
+    // case is ApolloQueryResult<TData>.
+    const concast = new Concast(
+      // If the query has @export(as: ...) directives, then we need to
+      // process those directives asynchronously. When there are no
+      // @export directives (the common case), we deliberately avoid
+      // wrapping the result of this.fqoHelper in a Promise, since the
+      // timing of result delivery is (unfortunately) important for
+      // backwards compatibility. TODO This code could be simpler if we
+      // deprecated and removed LocalState.
+      this.transform(normalized.query).hasClientExports
+        ? this.localState.addExportedVariables(
+          normalized.query,
+          normalized.variables,
+          normalized.context,
+        ).then(fromVariables)
+        : fromVariables(normalized.variables!)
     );
 
     this.fetchCancelFns.set(queryId, reason => {
@@ -964,7 +990,7 @@ export class QueryManager<TStore> {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus: NetworkStatus,
-  ): Observable<ApolloQueryResult<TData>>[] {
+  ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
     const {
       query,
       variables,

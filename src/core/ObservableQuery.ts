@@ -452,9 +452,10 @@ export class ObservableQuery<
     }
 
     let { fetchPolicy } = this.options;
-    if (fetchPolicy !== 'no-cache' &&
-        fetchPolicy !== 'cache-and-network') {
-      fetchPolicy = 'network-only';
+    if (fetchPolicy !== 'cache-first' &&
+        fetchPolicy !== 'no-cache' &&
+        fetchPolicy !== 'network-only') {
+      fetchPolicy = 'cache-and-network';
     }
 
     return this.reobserve({

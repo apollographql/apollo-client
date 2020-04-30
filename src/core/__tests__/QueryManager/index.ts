@@ -3179,8 +3179,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it('should not error on queries that are already in the store', () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
+    itAsync('should not error when resetStore called', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3208,7 +3207,9 @@ describe('QueryManager', () => {
             }),
         ),
       ]);
-      queryManager = createQueryManager({ link });
+
+      const queryManager = createQueryManager({ link });
+
       const observable = queryManager.watchQuery<any>({
         query,
         notifyOnNetworkStatusChange: false,
@@ -3218,29 +3219,15 @@ describe('QueryManager', () => {
       return observableToPromise(
         { observable, wait: 20 },
         result => {
-          try {
-            expect(stripSymbols(result.data)).toEqual(data);
-            expect(timesFired).toBe(1);
-          } catch (e) {
-            return fail(e);
-          }
-          setTimeout(async () => {
-            try {
-              await queryManager.resetStore();
-            } catch (e) {
-              fail(e);
-            }
-          }, 10);
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(timesFired).toBe(1);
+          queryManager.resetStore().catch(reject);
         },
         result => {
-          try {
-            expect(stripSymbols(result.data)).toEqual(data);
-            expect(timesFired).toBe(2);
-          } catch (e) {
-            fail(e);
-          }
+          expect(stripSymbols(result.data)).toEqual(data);
+          expect(timesFired).toBe(2);
         },
-      );
+      ).then(resolve, reject);
     });
 
     itAsync('should not error on a stopped query()', (resolve, reject) => {
@@ -3637,8 +3624,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it('should not error on queries that are already in the store', () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
+    itAsync('should not error after reFetchObservableQueries', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3656,14 +3642,15 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const link = ApolloLink.from([
-        () =>
-          new Observable(observer => {
-            timesFired += 1;
-            observer.next({ data });
-            return;
-          }),
+        () => new Observable(observer => {
+          timesFired += 1;
+          observer.next({ data });
+          observer.complete();
+        }),
       ]);
-      queryManager = createQueryManager({ link });
+
+      const queryManager = createQueryManager({ link });
+
       const observable = queryManager.watchQuery<any>({
         query,
         notifyOnNetworkStatusChange: false,
@@ -3675,16 +3662,13 @@ describe('QueryManager', () => {
         result => {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(1);
-          setTimeout(
-            queryManager.reFetchObservableQueries.bind(queryManager),
-            10,
-          );
+          queryManager.reFetchObservableQueries();
         },
         result => {
           expect(stripSymbols(result.data)).toEqual(data);
           expect(timesFired).toBe(2);
         },
-      );
+      ).then(resolve, reject);
     });
 
     itAsync('should NOT throw an error on an inflight fetch query if the observable queries are refetched', (resolve, reject) => {

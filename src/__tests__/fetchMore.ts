@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { ApolloClient, ApolloError, NetworkStatus, ObservableQuery } from '../';
+import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
 import { itAsync } from '../utilities/testing/itAsync';
 
 describe('updateQuery on a simple query', () => {
@@ -42,7 +42,7 @@ describe('updateQuery on a simple query', () => {
       query,
     });
     const sub = obsHandle.subscribe({
-      next(queryResult) {
+      next(queryResult: any) {
         // do nothing
         latestResult = queryResult;
       },
@@ -109,7 +109,7 @@ describe('updateQuery on a query with required and optional variables', () => {
       variables,
     });
     const sub = obsHandle.subscribe({
-      next(queryResult) {
+      next(queryResult: any) {
         // do nothing
         latestResult = queryResult;
       },
@@ -336,69 +336,6 @@ describe('fetchMore on an observable query', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('will set the `network` status to `fetchMore`', (resolve, reject) => {
-    const link = mockSingleLink({
-      request: { query, variables },
-      result,
-      delay: 5,
-    }, {
-      request: { query, variables: variablesMore },
-      result: resultMore,
-      delay: 5,
-    }).setOnError(reject);
-
-    const client = new ApolloClient({
-      link,
-      cache: new InMemoryCache(),
-    });
-
-    const observable = client.watchQuery({
-      query,
-      variables,
-      notifyOnNetworkStatusChange: true,
-    });
-
-    let count = 0;
-    observable.subscribe({
-      next: ({ data, networkStatus }) => {
-        switch (count++) {
-          case 0:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(10);
-            observable.fetchMore({
-              variables: { start: 10 },
-              updateQuery: (prev: any, options: any) => {
-                const state = cloneDeep(prev) as any;
-                state.entry.comments = [
-                  ...state.entry.comments,
-                  ...(options.fetchMoreResult as any).entry.comments,
-                ];
-                return state;
-              },
-            });
-            break;
-          case 1:
-            expect(networkStatus).toBe(NetworkStatus.fetchMore);
-            expect((data as any).entry.comments.length).toBe(10);
-            break;
-          case 2:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(10);
-            break;
-          case 3:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(20);
-            resolve();
-            break;
-          default:
-            reject(new Error('`next` called too many times'));
-        }
-      },
-      error: (error: any) => reject(error),
-      complete: () => reject(new Error('Should not have completed')),
-    });
-  });
-
   itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
     const fetchMoreError = new Error('Uh, oh!');
     const link = mockSingleLink({
@@ -591,7 +528,11 @@ describe('fetchMore on an observable query with connection', () => {
   });
 
   itAsync('will set the network status to `fetchMore`', (resolve, reject) => {
-    const link = mockSingleLink({ request: { query: transformedQuery, variables }, result, delay: 5 }, {
+    const link = mockSingleLink({
+      request: { query: transformedQuery, variables },
+      result,
+      delay: 5,
+    }, {
       request: { query: transformedQuery, variables: variablesMore },
       result: resultMore,
       delay: 5,
@@ -628,14 +569,6 @@ describe('fetchMore on an observable query with connection', () => {
             });
             break;
           case 1:
-            expect(networkStatus).toBe(NetworkStatus.fetchMore);
-            expect((data as any).entry.comments.length).toBe(10);
-            break;
-          case 2:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(10);
-            break;
-          case 3:
             expect(networkStatus).toBe(NetworkStatus.ready);
             expect((data as any).entry.comments.length).toBe(20);
             resolve();
@@ -646,73 +579,6 @@ describe('fetchMore on an observable query with connection', () => {
       },
       error: (error: any) => reject(error),
       complete: () => reject(new Error('Should not have completed')),
-    });
-  });
-
-  itAsync('will not get an error from `fetchMore` if thrown', (resolve, reject) => {
-    const fetchMoreError = new Error('Uh, oh!');
-    const link = mockSingleLink({
-      request: { query: transformedQuery, variables },
-      result,
-      delay: 5,
-    }, {
-      request: { query: transformedQuery, variables: variablesMore },
-      error: fetchMoreError,
-      delay: 5,
-    }).setOnError(reject);
-
-    const client = new ApolloClient({
-      link,
-      cache: new InMemoryCache(),
-    });
-
-    const observable = client.watchQuery({
-      query,
-      variables,
-      notifyOnNetworkStatusChange: true,
-    });
-
-    let count = 0;
-    observable.subscribe({
-      next: ({ data, networkStatus }) => {
-        switch (count++) {
-          case 0:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(10);
-            observable
-              .fetchMore({
-                variables: { start: 10 },
-                updateQuery: (prev: any, options: any) => {
-                  const state = cloneDeep(prev) as any;
-                  state.entry.comments = [
-                    ...state.entry.comments,
-                    ...(options.fetchMoreResult as any).entry.comments,
-                  ];
-                  return state;
-                },
-              })
-              .catch((e: ApolloError) => {
-                expect(e.networkError).toBe(fetchMoreError);
-              });
-            break;
-          case 1:
-            expect(networkStatus).toBe(NetworkStatus.fetchMore);
-            expect((data as any).entry.comments.length).toBe(10);
-            break;
-          default:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(10);
-            resolve();
-        }
-      },
-      error: () => {
-        reject(new Error('`error` called when it wasn’t supposed to be.'));
-      },
-      complete: () => {
-        reject(
-          new Error('`complete` called when it wasn’t supposed to be.'),
-        );
-      },
     });
   });
 });

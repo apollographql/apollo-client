@@ -418,7 +418,7 @@ describe('useQuery Hook', () => {
       });
     });
 
-    it('should stop polling when skip is true', async () => {
+    itAsync('should stop polling when skip is true', (resolve, reject) => {
       let renderCount = 0;
       const Component = () => {
         const [shouldSkip, setShouldSkip] = useState(false);
@@ -427,13 +427,9 @@ describe('useQuery Hook', () => {
           skip: shouldSkip
         });
 
-        switch (renderCount) {
-          case 0:
-            expect(loading).toBeTruthy();
-            break;
+        switch (++renderCount) {
           case 1:
-            expect(loading).toBeFalsy();
-            expect(data).toEqual(CAR_RESULT_DATA);
+            expect(loading).toBeTruthy();
             break;
           case 2:
             expect(loading).toBeFalsy();
@@ -447,47 +443,60 @@ describe('useQuery Hook', () => {
           case 4:
             throw new Error('Uh oh - we should have stopped polling!');
           default:
-          // Do nothing
+            // Do nothing
         }
-        renderCount += 1;
+
         return null;
       };
 
+      const mocks = [
+        // Repeat the same mock request/response a few times, so we don't
+        // run out of mocked responses.
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+      ];
+
       render(
-        <MockedProvider mocks={CAR_MOCKS}>
+        <MockedProvider link={new MockLink(mocks).setOnError(reject)}>
           <Component />
         </MockedProvider>
       );
 
       return wait(() => {
-        expect(renderCount).toBe(4);
-      });
+        expect(renderCount).toBe(3);
+      }).then(resolve, reject);
     });
 
     itAsync('should stop polling when the component is unmounted', async (resolve, reject) => {
-      const mockLink = new MockLink(CAR_MOCKS);
+      const mocks = [
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+      ];
+
+      const mockLink = new MockLink(mocks).setOnError(reject);
+
       const linkRequestSpy = jest.spyOn(mockLink, 'request');
+
       let renderCount = 0;
       const QueryComponent = ({ unmount }: { unmount: () => void }) => {
         const { data, loading } = useQuery(CAR_QUERY, { pollInterval: 10 });
-        switch (renderCount) {
-          case 0:
-            expect(loading).toBeTruthy();
-            break;
+        switch (++renderCount) {
           case 1:
-            expect(loading).toBeFalsy();
-            expect(data).toEqual(CAR_RESULT_DATA);
-            expect(linkRequestSpy).toHaveBeenCalledTimes(1);
+            expect(loading).toBeTruthy();
             break;
           case 2:
             expect(loading).toBeFalsy();
             expect(data).toEqual(CAR_RESULT_DATA);
-            expect(linkRequestSpy).toHaveBeenCalledTimes(2);
+            expect(linkRequestSpy).toHaveBeenCalledTimes(1);
             unmount();
             break;
           default:
+            reject("unreached");
         }
-        renderCount += 1;
         return null;
       };
 
@@ -504,7 +513,7 @@ describe('useQuery Hook', () => {
       );
 
       return wait(() => {
-        expect(linkRequestSpy).toHaveBeenCalledTimes(2);
+        expect(linkRequestSpy).toHaveBeenCalledTimes(1);
       }).then(resolve, reject);
     });
 
@@ -731,10 +740,10 @@ describe('useQuery Hook', () => {
       });
     });
 
-    it(
+    itAsync(
       'should persist errors on re-render when inlining onError and/or ' +
         'onCompleted callbacks',
-      async () => {
+      (resolve, reject) => {
         const query = gql`
           query SomeQuery {
             stuff {
@@ -751,6 +760,10 @@ describe('useQuery Hook', () => {
             }
           }
         ];
+        mocks.push(...mocks);
+        mocks.push(...mocks);
+
+        const link = new MockLink(mocks).setOnError(reject);
 
         let renderCount = 0;
         function App() {
@@ -760,38 +773,37 @@ describe('useQuery Hook', () => {
             onCompleted: () => {}
           });
 
-          switch (renderCount) {
-            case 0:
+          switch (++renderCount) {
+            case 1:
               expect(loading).toBeTruthy();
               expect(error).toBeUndefined();
               break;
-            case 1:
+            case 2:
               expect(error).toBeDefined();
               expect(error!.message).toEqual('forced error');
               setTimeout(() => {
                 forceUpdate();
               });
               break;
-            case 2:
+            case 3:
               expect(error).toBeDefined();
               expect(error!.message).toEqual('forced error');
               break;
             default: // Do nothing
           }
 
-          renderCount += 1;
           return null;
         }
 
         render(
-          <MockedProvider mocks={mocks}>
+          <MockedProvider link={link}>
             <App />
           </MockedProvider>
         );
 
         return wait(() => {
           expect(renderCount).toBe(3);
-        });
+        }).then(resolve, reject);
       }
     );
 

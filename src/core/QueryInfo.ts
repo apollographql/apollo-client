@@ -106,36 +106,6 @@ export class QueryInfo {
     }
   }
 
-  getDiff() {
-    if (!this.diff) {
-      const oq = this.observableQuery;
-      const lastResult = oq && oq.getLastResult();
-      const lastError = oq && oq.getLastError();
-      const fetchPolicy = oq && oq.options.fetchPolicy || "cache-first";
-      const errorPolicy = this.getErrorPolicy();
-      const errorStatusChanged =
-        errorPolicy !== 'none' &&
-        (lastError && lastError.graphQLErrors) !== this.graphQLErrors;
-
-      if (lastResult && lastResult.data && !errorStatusChanged) {
-        this.diff = {
-          result: lastResult.data,
-          complete: true,
-        };
-      } else if (fetchPolicy !== "no-cache" &&
-                 fetchPolicy !== "network-only") {
-        this.diff = this.cache.diff({
-          query: this.document as DocumentNode,
-          variables: this.variables,
-          returnPartialData: true,
-          optimistic: true,
-        });
-      }
-    }
-
-    return this.diff!;
-  }
-
   public readonly observableQuery: ObservableQuery<any> | null = null;
   private oqListener?: QueryListener;
 
@@ -155,18 +125,13 @@ export class QueryInfo {
     }
   }
 
-  private getErrorPolicy() {
-    const oq = this.observableQuery;
-    return oq && oq.options.errorPolicy || "none";
-  }
-
   notify() {
     if (this.notifyTimeout) {
       clearTimeout(this.notifyTimeout);
       this.notifyTimeout = void 0;
     }
 
-    if (this.shouldNotify() && this.getDiff()) {
+    if (this.shouldNotify()) {
       this.listeners.forEach(listener => listener(this));
     }
 

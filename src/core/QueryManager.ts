@@ -991,9 +991,9 @@ export class QueryManager<TStore> {
       diff: Cache.DiffResult<TData>,
       networkStatus = queryInfo.networkStatus || NetworkStatus.loading,
     ) => {
-      const data = (
-        equal(diff.result, {}) ? queryInfo.getDiff() : diff
-      ).result;
+      const data = equal(diff.result, {})
+        && queryInfo.observableQuery?.getLastResult()?.data
+        || diff.result;
 
       const fromData = (data: FetchResult<TData>) => Observable.of({
         data,

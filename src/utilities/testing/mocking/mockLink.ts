@@ -1,5 +1,4 @@
 import { print } from 'graphql/language/printer';
-import stringify from 'fast-json-stable-stringify';
 import { equal } from '@wry/equality';
 
 import { Observable } from '../../../utilities/observables/Observable';
@@ -77,16 +76,11 @@ export class MockLink extends ApolloLink {
       (res, index) => {
         const requestVariables = operation.variables || {};
         const mockedResponseVariables = res.request.variables || {};
-        if (
-          !equal(
-            stringify(requestVariables),
-            stringify(mockedResponseVariables)
-          )
-        ) {
-          return false;
+        if (equal(requestVariables, mockedResponseVariables)) {
+          responseIndex = index;
+          return true;
         }
-        responseIndex = index;
-        return true;
+        return false;
       }
     );
 

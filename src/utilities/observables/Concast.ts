@@ -1,5 +1,5 @@
 import { Observable, Observer, ObservableSubscription } from "./Observable";
-import { iterateObserversSafely } from "./observables";
+import { iterateObserversSafely } from "./iteration";
 
 type MaybeAsync<T> = T | PromiseLike<T>;
 

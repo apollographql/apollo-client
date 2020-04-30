@@ -10,7 +10,7 @@ import {
   Observer,
   ObservableSubscription
 } from '../utilities/observables/Observable';
-import { iterateObserversSafely } from '../utilities/observables/observables';
+import { iterateObserversSafely } from '../utilities/observables/iteration';
 import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, OperationVariables } from './types';

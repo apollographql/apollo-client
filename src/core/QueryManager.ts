@@ -935,6 +935,36 @@ export class QueryManager<TStore> {
     networkStatus = NetworkStatus.loading,
   ): Concast<ApolloQueryResult<TData>> {
     const queryInfo = this.getQuery(queryId);
+
+    const concast = new Concast(
+      this.fqoHelper<TData, TVars>(
+        queryInfo,
+        this.normalizeWatchQueryOptions(
+          options,
+          queryInfo.networkStatus,
+          networkStatus,
+        ),
+        networkStatus,
+      ),
+    );
+
+    this.fetchCancelFns.set(queryId, reason => {
+      Promise.resolve().then(() => concast.cancel(reason));
+    });
+
+    concast.cleanup(() => this.fetchCancelFns.delete(queryId));
+
+    return concast;
+  }
+
+  private fqoHelper<TData, TVars>(
+    queryInfo: QueryInfo,
+    options: WatchQueryOptions<TVars>,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus: NetworkStatus,
+  ): Observable<ApolloQueryResult<TData>>[] {
     const {
       query,
       variables,
@@ -942,11 +972,7 @@ export class QueryManager<TStore> {
       errorPolicy,
       returnPartialData,
       context,
-    } = this.normalizeWatchQueryOptions(
-      options,
-      queryInfo.networkStatus,
-      networkStatus,
-    );
+    } = options;
 
     queryInfo.init({
       document: query,
@@ -979,61 +1005,56 @@ export class QueryManager<TStore> {
         errorPolicy,
       });
 
-    const finish = (...obs: Observable<ApolloQueryResult<TData>>[]) => {
-      const cc = new Concast(obs);
-      this.fetchCancelFns.set(queryId, reason => {
-        Promise.resolve().then(() => cc.cancel(reason));
-      });
-      cc.cleanup(() => this.fetchCancelFns.delete(queryId));
-      return cc;
-    };
-
     switch (fetchPolicy) {
     default: case "cache-first": {
       const diff = readCache();
 
       if (diff.complete) {
-        return finish(
+        return [
           resultsFromCache(diff, queryInfo.markReady()),
-        );
+        ];
       }
 
       if (returnPartialData) {
-        return finish(
+        return [
           resultsFromCache(diff),
           resultsFromLink(true),
-        );
+        ];
       }
 
-      return finish(resultsFromLink(true));
+      return [
+        resultsFromLink(true),
+      ];
     }
 
     case "cache-and-network": {
       const diff = readCache();
 
       if (diff.complete || returnPartialData) {
-        return finish(
+        return [
           resultsFromCache(diff),
           resultsFromLink(true),
-        );
+        ];
       }
 
-      return finish(resultsFromLink(true));
+      return [
+        resultsFromLink(true),
+      ];
     }
 
     case "cache-only":
-      return finish(
+      return [
         resultsFromCache(readCache(), queryInfo.markReady()),
-      );
+      ];
 
     case "network-only":
-      return finish(resultsFromLink(true));
+      return [resultsFromLink(true)];
 
     case "no-cache":
-      return finish(resultsFromLink(false));
+      return [resultsFromLink(false)];
 
     case "standby":
-      return finish();
+      return [];
     }
   }
 

@@ -31,9 +31,10 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
+  WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
-import { NetworkStatus } from './networkStatus';
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   QueryListener,
   ApolloQueryResult,
@@ -879,19 +880,41 @@ export class QueryManager<TStore> {
     const variables = this.getVariables(query, mutableOptions.variables);
     const {
       context = {},
-      fetchPolicy = "cache-first",
       errorPolicy = "none",
       returnPartialData = false,
     } = mutableOptions;
 
     const requestId = this.generateRequestId();
+    const queryInfo = this.getQuery(queryId);
+    const lastNetworkStatus = queryInfo.networkStatus;
 
-    const queryInfo = this.getQuery(queryId).init({
+    queryInfo.init({
       document: query,
       variables,
       lastRequestId: requestId,
       networkStatus,
     }).updateWatch(mutableOptions);
+
+    let fetchPolicy: WatchQueryFetchPolicy =
+      mutableOptions.fetchPolicy || "cache-first";
+
+    const mightUseNetwork =
+      fetchPolicy === "cache-first" ||
+      fetchPolicy === "cache-and-network" ||
+      fetchPolicy === "network-only" ||
+      fetchPolicy === "no-cache";
+
+    let shouldNotify = false;
+    if (mightUseNetwork &&
+        isNetworkRequestInFlight(networkStatus) &&
+        typeof lastNetworkStatus === "number" &&
+        lastNetworkStatus !== networkStatus &&
+        mutableOptions.notifyOnNetworkStatusChange) {
+      if (fetchPolicy !== "cache-first") {
+        fetchPolicy = "cache-and-network";
+      }
+      shouldNotify = true;
+    }
 
     const readFromCache = () => this.cache.diff<any>({
       query,
@@ -964,30 +987,29 @@ export class QueryManager<TStore> {
         });
       }
 
-      const linkObs = readFromLink(true);
-
-      if (returnPartialData) {
+      if (returnPartialData || shouldNotify) {
         return Observable.of({
           data: diff.result,
-          errors: diff.missing,
+          errors: diff.missing as any[],
           loading: true,
           networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
-        }).concat(linkObs);
+        }).concat(readFromLink(true));
       }
 
-      return linkObs;
+      return readFromLink(true);
     }
 
     case "cache-and-network": {
       const diff = readFromCache();
       const linkObs = readFromLink(true);
 
-      mutableOptions.fetchPolicy = "cache-first";
+      if (mutableOptions.fetchPolicy === "cache-and-network") {
+        mutableOptions.fetchPolicy = "cache-first";
+      }
 
-      if (diff.complete || returnPartialData) {
+      if (diff.complete || returnPartialData || shouldNotify) {
         return Observable.of({
           data: diff.result,
-          errors: diff.missing as any[],
           loading: true,
           networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
         }).concat(linkObs);

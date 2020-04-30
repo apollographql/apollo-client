@@ -1,6 +1,5 @@
 import { DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
-import { equal } from "@wry/equality";
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -991,11 +990,8 @@ export class QueryManager<TStore> {
       diff: Cache.DiffResult<TData>,
       networkStatus = queryInfo.networkStatus || NetworkStatus.loading,
     ) => {
-      const data = equal(diff.result, {})
-        && queryInfo.observableQuery?.getLastResult()?.data
-        || diff.result;
-
-      const fromData = (data: FetchResult<TData>) => Observable.of({
+      const data = diff.result as TData;
+      const fromData = (data: TData) => Observable.of({
         data,
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
@@ -1008,7 +1004,7 @@ export class QueryManager<TStore> {
           context,
           variables,
           onlyRunForcedResolvers: true,
-        }).then(resolved => fromData(resolved.data));
+        }).then(resolved => fromData(resolved.data!));
       }
 
       return fromData(data);

@@ -10,7 +10,7 @@ import {
   Observer,
   ObservableSubscription
 } from '../utilities/observables/Observable';
-import { iterateObserversSafely } from '../utilities/observables/observables';
+import { iterateObserversSafely, Concast } from '../utilities/observables/observables';
 import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, OperationVariables } from './types';
@@ -566,7 +566,7 @@ export class ObservableQuery<
   }
 
   private reobserver?: ReturnType<QueryManager<any>["observeQuery"]>;
-  private activeSub?: ObservableSubscription;
+  private activeConcast?: Concast<ApolloQueryResult<TData>>;
 
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables>>,
@@ -583,15 +583,24 @@ export class ObservableQuery<
     newOptions?: Partial<WatchQueryOptions<TVariables>>,
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
-    const observable = reobserver<TData, TVariables>(
+    const newConcast = reobserver<TData, TVariables>(
       newOptions,
       newNetworkStatus,
     );
 
-    if (this.activeSub) this.activeSub.unsubscribe();
-    this.activeSub = observable.subscribe(this.observer);
+    if (this.activeConcast) {
+      // We use the {add,remove}Observer methods directly to avoid
+      // wrapping this.observer with an unnecessary SubscriptionObserver
+      // object, in part so that we can remove it here without triggering
+      // any unsubscriptions, because we just want to ignore the old
+      // observable, not prematurely shut it down, since other consumers
+      // may be awaiting this.activeConcast.promise.
+      this.activeConcast.removeObserver(this.observer, true);
+    }
 
-    return observable.promise;
+    (this.activeConcast = newConcast).addObserver(this.observer);
+
+    return newConcast.promise;
   }
 
   private observer: Observer<ApolloQueryResult<TData>> = {
@@ -650,9 +659,9 @@ export class ObservableQuery<
   private tearDownQuery() {
     const { queryManager } = this;
 
-    if (this.activeSub) {
-      this.activeSub.unsubscribe();
-      delete this.activeSub;
+    if (this.activeConcast) {
+      this.activeConcast.removeObserver(this.observer, true);
+      delete this.activeConcast;
     }
 
     this.isTornDown = true;

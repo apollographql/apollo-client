@@ -978,8 +978,14 @@ export class QueryManager<TStore> {
       },
     );
 
-    const finish = (...obs: Observable<ApolloQueryResult<TData>>[]) =>
-      new Concast(obs);
+    const finish = (...obs: Observable<ApolloQueryResult<TData>>[]) => {
+      const cc = new Concast(obs);
+      this.fetchCancelFns.set(queryId, reason => {
+        Promise.resolve().then(() => cc.cancel(reason));
+      });
+      cc.cleanup(() => this.fetchCancelFns.delete(queryId));
+      return cc;
+    };
 
     switch (fetchPolicy) {
     case "cache-first": {

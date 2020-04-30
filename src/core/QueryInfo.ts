@@ -37,7 +37,6 @@ export class QueryInfo {
   listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;
   lastRequestId = 1;
-  observableQuery: ObservableQuery<any> | null = null;
   subscriptions = new Set<ObservableSubscription>();
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
@@ -48,25 +47,19 @@ export class QueryInfo {
 
   public init(query: {
     document: DocumentNode;
-    variables?: Record<string, any>;
-    isPoll: boolean;
-    isRefetch: boolean;
+    variables: Record<string, any> | undefined,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus?: NetworkStatus,
     observableQuery?: ObservableQuery<any>;
     lastRequestId?: number;
   }): this {
-    // TODO break this out into a separate function
-    let networkStatus: NetworkStatus;
+    let networkStatus = query.networkStatus || NetworkStatus.loading;
     if (this.variables &&
         this.networkStatus !== NetworkStatus.loading &&
         !equal(this.variables, query.variables)) {
       networkStatus = NetworkStatus.setVariables;
-    } else if (query.isPoll) {
-      networkStatus = NetworkStatus.poll;
-    } else if (query.isRefetch) {
-      networkStatus = NetworkStatus.refetch;
-      // TODO: can we determine setVariables here if it's a refetch and the variables have changed?
-    } else {
-      networkStatus = NetworkStatus.loading;
     }
 
     Object.assign(this, {
@@ -78,7 +71,7 @@ export class QueryInfo {
     });
 
     if (query.observableQuery) {
-      this.observableQuery = query.observableQuery;
+      this.setObservableQuery(query.observableQuery);
     }
 
     if (query.lastRequestId) {
@@ -139,7 +132,26 @@ export class QueryInfo {
       }
     }
 
-    return this.diff;
+    return this.diff!;
+  }
+
+  public readonly observableQuery: ObservableQuery<any> | null = null;
+  private oqListener?: QueryListener;
+
+  setObservableQuery(oq: ObservableQuery<any> | null) {
+    if (oq === this.observableQuery) return;
+
+    if (this.oqListener) {
+      this.listeners.delete(this.oqListener);
+    }
+
+    (this as any).observableQuery = oq;
+
+    if (oq) {
+      this.listeners.add(this.oqListener = () => oq.reobserve());
+    } else {
+      delete this.oqListener;
+    }
   }
 
   private getErrorPolicy() {
@@ -218,68 +230,84 @@ export class QueryInfo {
   public cancel() {}
 
   public updateWatch(options: WatchQueryOptions): this {
+    // TODO Always cancelling here may be bad because it disrupts
+    // cache.watch continuity.
     this.cancel();
-
-    const previousResult = () => {
-      let previousResult = null;
-      const { observableQuery } = this;
-      if (observableQuery) {
-        const lastResult = observableQuery.getLastResult();
-        if (lastResult) {
-          previousResult = lastResult.data;
-        }
-      }
-      return previousResult;
-    };
 
     this.cancel = this.cache.watch({
       query: this.document!,
       variables: options.variables,
       optimistic: true,
-      previousResult,
-      callback: diff => {
-        this.setDiff(diff);
-      },
+      callback: diff => this.setDiff(diff),
     });
 
     return this;
   }
 
-  public markResult(
-    result: ExecutionResult,
-    { fetchPolicy,
-      variables,
+  public markResult<T>(
+    result: ExecutionResult<T>,
+    { variables,
+      fetchPolicy,
       errorPolicy,
-    }: WatchQueryOptions,
+    }: Pick<WatchQueryOptions,
+      | "variables"
+      | "fetchPolicy"
+      | "errorPolicy"
+      >,
     allowCacheWrite: boolean,
-    makeReady: boolean,
   ) {
     if (fetchPolicy === 'no-cache') {
-      this.setDiff({ result: result.data, complete: true });
+      this.diff = { result: result.data, complete: true };
+
     } else if (allowCacheWrite) {
       const ignoreErrors = errorPolicy === 'ignore' || errorPolicy === 'all';
       let writeWithErrors = !graphQLResultHasError(result);
       if (!writeWithErrors && ignoreErrors && result.data) {
         writeWithErrors = true;
       }
+
       if (writeWithErrors) {
-        this.cache.write({
-          result: result.data,
-          dataId: 'ROOT_QUERY',
-          query: this.document!,
-          variables,
+        // Using a transaction here so we have a chance to read the result
+        // back from the cache before the watch callback fires as a result
+        // of writeQuery, so we can store the new diff quietly and ignore
+        // it when we receive it redundantly from the watch callback.
+        this.cache.performTransaction(cache => {
+          cache.writeQuery({
+            query: this.document!,
+            data: result.data as T,
+            variables,
+          });
+
+          const diff = cache.diff<T>({
+            query: this.document!,
+            variables,
+            returnPartialData: true,
+            optimistic: true,
+          });
+
+          // If we're allowed to write to the cache, and we can read a
+          // complete result from the cache, update result.data to be the
+          // result from the cache, rather than the raw network result.
+          // Set without setDiff to avoid triggering a notify call, since
+          // we have other ways of notifying for this result.
+          this.diff = diff;
+          if (diff.complete) {
+            result.data = diff.result;
+          }
         });
       }
     }
-    if (makeReady) {
-      this.networkError = null;
-      this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
-      this.networkStatus = NetworkStatus.ready;
-    }
+
+    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+  }
+
+  public markReady() {
+    this.networkError = null;
+    return this.networkStatus = NetworkStatus.ready;
   }
 
   public markError(error: Error) {
-    this.networkError = error;
     this.networkStatus = NetworkStatus.error;
+    return this.networkError = error;
   }
 }

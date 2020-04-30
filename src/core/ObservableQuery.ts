@@ -13,7 +13,7 @@ import {
 import { iterateObserversSafely } from '../utilities/observables/observables';
 import { ApolloError } from '../errors/ApolloError';
 import { QueryManager } from './QueryManager';
-import { ApolloQueryResult, FetchType, OperationVariables } from './types';
+import { ApolloQueryResult, OperationVariables } from './types';
 import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
@@ -22,6 +22,7 @@ import {
 } from './watchQueryOptions';
 import { QueryStoreValue } from './QueryInfo';
 import { isNonEmptyArray } from '../utilities/common/arrays';
+import { toPromise } from '../utilities/observables/observables';
 
 export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
   error?: ApolloError;
@@ -274,11 +275,10 @@ export class ObservableQuery<
       };
     }
 
-    return this.queryManager.fetchQuery(
-      this.queryId,
-      { ...this.options, fetchPolicy },
-      FetchType.refetch,
-    ) as Promise<ApolloQueryResult<TData>>;
+    return this.reobserve({
+      fetchPolicy,
+      variables,
+    });
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -294,36 +294,29 @@ export class ObservableQuery<
           ...fetchMoreOptions.variables,
         },
       }),
-      fetchPolicy: 'network-only',
+      // The fetchMore request goes immediately to the network and does
+      // not automatically write its result to the cache (hence no-cache
+      // instead of network-only), because we allow the caller of
+      // fetchMore to provide an updateQuery callback that determines how
+      // the data gets written to the cache.
+      fetchPolicy: "no-cache",
     } as WatchQueryOptions;
 
-    const qid = this.queryManager.generateQueryId();
-
-    return this.queryManager
-      .fetchQuery(
-        qid,
-        combinedOptions,
-        FetchType.normal,
-        this.queryId,
-      )
-      .then(
-        fetchMoreResult => {
-          this.updateQuery((previousResult: any) => {
-            const data = fetchMoreResult.data as TData;
-            const { updateQuery } = fetchMoreOptions;
-            return updateQuery ? updateQuery(previousResult, {
-              fetchMoreResult: data,
-              variables: combinedOptions.variables as TVariables,
-            }) : data;
-          });
-          this.queryManager.stopQuery(qid);
-          return fetchMoreResult as ApolloQueryResult<TData>;
-        },
-        error => {
-          this.queryManager.stopQuery(qid);
-          throw error;
-        },
-      );
+    return this.queryManager.fetchQuery(
+      this.queryId,
+      combinedOptions,
+      NetworkStatus.fetchMore,
+    ).then(fetchMoreResult => {
+      this.updateQuery((previousResult: any) => {
+        const data = fetchMoreResult.data as TData;
+        const { updateQuery } = fetchMoreOptions;
+        return updateQuery ? updateQuery(previousResult, {
+          fetchMoreResult: data,
+          variables: combinedOptions.variables as TVariables,
+        }) : data;
+      });
+      return fetchMoreResult as ApolloQueryResult<TData>;
+    });
   }
 
   // XXX the subscription variables are separate from the query variables.
@@ -458,11 +451,7 @@ export class ObservableQuery<
       return Promise.resolve();
     }
 
-    // Use the same options as before, but with new variables
-    return this.queryManager.fetchQuery(
-      this.queryId,
-      this.options,
-    ) as Promise<ApolloQueryResult<TData>>;
+    return this.reobserve({ variables });
   }
 
   public updateQuery<TVars = TVariables>(
@@ -485,10 +474,9 @@ export class ObservableQuery<
     );
 
     if (newResult) {
-      queryManager.cache.write({
+      queryManager.cache.writeQuery({
         query: document,
-        result: newResult,
-        dataId: 'ROOT_QUERY',
+        data: newResult,
         variables,
       });
 
@@ -546,9 +534,7 @@ export class ObservableQuery<
     // Initiate observation of this query if it hasn't been reported to
     // the QueryManager yet.
     if (first) {
-      this.queryManager
-        .observeQuery(this, this.observer)
-        .catch(this.observer.error);
+      this.reobserve();
     }
 
     return () => {
@@ -556,6 +542,26 @@ export class ObservableQuery<
         this.tearDownQuery();
       }
     };
+  }
+
+  private reobserver?: (
+    options?: Partial<WatchQueryOptions>,
+  ) => Observable<ApolloQueryResult<TData>>;
+
+  private reObsSub?: ObservableSubscription;
+
+  public reobserve(options?: Partial<WatchQueryOptions>) {
+    if (!this.reobserver) {
+      this.reobserver = this.queryManager.observeQuery(this);
+    }
+
+    const observable = this.reobserver(options);
+    const promise = toPromise(observable);
+
+    if (this.reObsSub) this.reObsSub.unsubscribe();
+    this.reObsSub = observable.subscribe(this.observer);
+
+    return promise;
   }
 
   private observer: Observer<ApolloQueryResult<TData>> = {
@@ -613,6 +619,11 @@ export class ObservableQuery<
 
   private tearDownQuery() {
     const { queryManager } = this;
+
+    if (this.reObsSub) {
+      this.reObsSub.unsubscribe();
+      delete this.reObsSub;
+    }
 
     this.isTornDown = true;
     queryManager.stopPollingQuery(this.queryId);

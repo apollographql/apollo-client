@@ -22,12 +22,6 @@ export type ApolloQueryResult<T> = {
   networkStatus: NetworkStatus;
 };
 
-export enum FetchType {
-  normal = 1,
-  refetch = 2,
-  poll = 3,
-}
-
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,

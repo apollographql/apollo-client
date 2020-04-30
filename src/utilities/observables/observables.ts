@@ -208,7 +208,7 @@ export class Concast<T> extends Observable<T> {
     },
   };
 
-  cleanup(callback: () => any) {
+  public cleanup(callback: () => any) {
     let called = false;
     const once = () => {
       if (!called) {
@@ -308,4 +308,23 @@ export function iterateObserversSafely<E, A>(
   const observersWithMethod: Observer<E>[] = [];
   observers.forEach(obs => obs[method] && observersWithMethod.push(obs));
   observersWithMethod.forEach(obs => (obs as any)[method](argument));
+}
+
+export function toPromise<T>(observable: Observable<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    let lastResult: T | undefined;
+    const sub = observable.subscribe({
+      next(result) {
+        lastResult = result;
+      },
+      error(err) {
+        sub.unsubscribe();
+        reject(err);
+      },
+      complete() {
+        sub.unsubscribe();
+        resolve(lastResult);
+      },
+    });
+  });
 }

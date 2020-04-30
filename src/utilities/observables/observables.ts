@@ -1,30 +1,154 @@
 import { Observable, Observer, ObservableSubscription } from './Observable';
 
-// Returns a normal Observable that can have any number of subscribers,
-// while ensuring the original Observable gets subscribed to at most once.
-export function multicast<T>(inner: Observable<T>): Observable<T> {
-  const observers = new Set<Observer<T>>();
-  let sub: ObservableSubscription | null = null;
-  return new Observable<T>(observer => {
-    observers.add(observer);
-    sub = sub || inner.subscribe({
-      next(value) {
-        observers.forEach(obs => obs.next && obs.next(value));
-      },
-      error(error) {
-        observers.forEach(obs => obs.error && obs.error(error));
-      },
-      complete() {
-        observers.forEach(obs => obs.complete && obs.complete());
-      },
+// A Concast observable concatenates the given sources into a single
+// non-overlapping sequence, and broadcasts the elements of that sequence
+// to any number of subscribers. Even though any number of observers can
+// subscribe to the Concast, the source observables are guaranteed to
+// receive at most one subscription each. In addition to broadcasting
+// every next/error message to this.observers, the Concast stores the most
+// recent message using this.latest, so any new observers can immediately
+// obtain the most recent message, even if it was originally delivered in
+// the past. This behavior means we can assume every active observer in
+// this.observers has received the same most recent message.
+export class Concast<T> extends Observable<T> {
+  // Active observers receiving broadcast messages. Thanks to this.latest,
+  // we can assume all observers in this Set have received the same most
+  // recent message, though possibly at different times in the past.
+  private observers = new Set<Observer<T>>();
+
+  // This property starts off undefined to indicate the initial
+  // subscription has not yet begun, then points to each source
+  // subscription in turn, and finally becomes null after the sources have
+  // been exhausted. After that, it stays null.
+  private sub?: ObservableSubscription | null;
+
+  // A consumable iterator of source observables, incrementally consumed
+  // each time this.handlers.complete is called.
+  private sources: Iterator<Observable<T>>;
+
+  constructor(sources: Iterable<Observable<T>>) {
+    super(observer => {
+      this.addObserver(observer);
+      return () => this.removeObserver(observer);
     });
-    return () => {
-      if (observers.delete(observer) && !observers.size && sub) {
-        sub.unsubscribe();
-        sub = null;
+
+    // Since sources is required only to be iterable, the source
+    // observables could in principle be generated lazily, and the
+    // sequence could be infinite. In practice, sources is most often a
+    // finite array of observables.
+    this.sources = sources[Symbol.iterator]();
+
+    // Suppress rejection warnings for this.promise, since it's perfectly
+    // acceptable to pay no attention to this.promise if you're consuming
+    // the results through the normal observable API.
+    this.promise.catch(ignored => {});
+
+    // Calling this.handlers.complete() kicks off consumption of the first
+    // source observable. It's tempting to do this step lazily in
+    // addObserver, but this.promise can be accessed without calling
+    // addObserver, so consumption needs to begin eagerly.
+    this.handlers.complete!();
+  }
+
+  // Generic implementations of Observable.prototype methods like map and
+  // filter need to know how to create a new Observable from a Concast.
+  // Those methods assume (perhaps unwisely?) that they can call the
+  // subtype's constructor with an observer registration function, but the
+  // Concast constructor uses a different signature. Defining this
+  // Symbol.species getter function on the Concast constructor function is
+  // a hint to generic Observable code to use the default constructor
+  // instead of trying to do `new Concast(observer => ...)`.
+  static get [Symbol.species]() {
+    return Observable;
+  }
+
+  private addObserver(observer: Observer<T>) {
+    if (!this.observers.has(observer)) {
+      // Immediately deliver the most recent message, so we can always
+      // be sure all observers have the latest information.
+      if (this.latest) {
+        const method = observer[this.latest[0]];
+        if (method) {
+          method.call(observer, this.latest[1]);
+        }
       }
-    };
+      this.observers.add(observer);
+    }
+  }
+
+  private removeObserver(observer: Observer<T>) {
+    if (this.observers.delete(observer) &&
+        this.observers.size < 1) {
+      if (this.sub) {
+        this.sub.unsubscribe();
+        // In case anyone happens to be listening to this.promise, after
+        // this.observers has become empty.
+        this.reject(new Error("Observable cancelled prematurely"));
+      }
+      this.sub = null;
+    }
+  }
+
+  // Any Concast object can be trivially converted to a Promise, without
+  // having to create a new wrapper Observable. This promise provides an
+  // easy way to observe the final state of the Concast.
+  private resolve: (result?: T) => void;
+  private reject: (reason: any) => void;
+  public readonly promise = new Promise<T>((resolve, reject) => {
+    this.resolve = resolve;
+    this.reject = reject;
   });
+
+  // Name and argument of the most recently invoked observer method, used
+  // to deliver latest results immediately to new observers.
+  private latest?: ["next" | "error" | "complete", any?];
+
+  // Bound handler functions that can be reused for every internal
+  // subscription.
+  private handlers: Observer<T> = {
+    next: result => {
+      if (this.sub !== null) {
+        this.latest = ["next", result];
+        iterateObserversSafely(this.observers, "next", result);
+      }
+    },
+
+    error: error => {
+      if (this.sub !== null) {
+        if (this.sub) this.sub.unsubscribe();
+        this.sub = null;
+        this.latest = ["error", error];
+        this.reject(error);
+        iterateObserversSafely(this.observers, "error", error);
+      }
+    },
+
+    complete: () => {
+      if (this.sub !== null) {
+        const { done, value } = this.sources.next();
+        if (done) {
+          this.sub = null;
+          if (this.latest &&
+              this.latest[0] === "next") {
+            this.resolve(this.latest[1]);
+          } else {
+            this.resolve();
+          }
+          this.latest = ["complete"];
+          iterateObserversSafely(this.observers, "complete");
+        } else {
+          this.sub = value.subscribe(this.handlers);
+        }
+      }
+    },
+  };
+
+  // A public way to abort observation and broadcast.
+  public cancel = this.handlers.error!;
+}
+
+export function multicast<T>(...sources: Observable<T>[]) {
+  return new Concast(sources);
 }
 
 // Like Observable.prototype.map, except that the mapping function can

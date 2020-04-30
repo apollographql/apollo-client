@@ -627,7 +627,7 @@ export class QueryManager<TStore> {
     return <TData, TVars>(
       newOptions?: Partial<WatchQueryOptions<TVars>>,
       newNetworkStatus?: NetworkStatus,
-    ): Observable<ApolloQueryResult<TData>> => {
+    ): Concast<ApolloQueryResult<TData>> => {
       // TODO Would this be necessary if we never deleted QueryInfo
       // objects from this.queries?
       this.getQuery(queryId).setObservableQuery(observableQuery);

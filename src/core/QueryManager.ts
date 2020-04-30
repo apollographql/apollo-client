@@ -64,14 +64,13 @@ export class QueryManager<TStore> {
   public link: ApolloLink;
   public mutationStore: MutationStore = new MutationStore();
   public readonly assumeImmutableResults: boolean;
+  public readonly ssrMode: boolean;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TStore>;
 
   private onBroadcast: () => void;
-
-  private ssrMode: boolean;
 
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
@@ -537,7 +536,6 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) queryInfo.stop();
-    this.stopPollingQuery(queryId);
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -614,10 +612,6 @@ export class QueryManager<TStore> {
     const { queryId, options } = observableQuery;
 
     this.getQuery(queryId).setObservableQuery(observableQuery);
-
-    if (options.pollInterval) {
-      this.startPollingQuery(options, queryId);
-    }
 
     // These mutableOptions can be updated whenever the function we are
     // about to return gets called, or inside the fetchQueryObservable
@@ -1085,81 +1079,6 @@ export class QueryManager<TStore> {
       query.networkStatus !== NetworkStatus.ready &&
       query.networkStatus !== NetworkStatus.error
     );
-  }
-
-  // Map from client ID to { interval, options }.
-  private pollingInfoByQueryId = new Map<string, {
-    interval: number;
-    timeout: NodeJS.Timeout;
-    options: WatchQueryOptions;
-  }>();
-
-  public startPollingQuery(
-    options: WatchQueryOptions,
-    queryId: string,
-  ): string {
-    const { pollInterval } = options;
-
-    invariant(
-      pollInterval,
-      'Attempted to start a polling query without a polling interval.',
-    );
-
-    // Do not poll in SSR mode
-    if (!this.ssrMode) {
-      let info = this.pollingInfoByQueryId.get(queryId)!;
-      if (!info) {
-        this.pollingInfoByQueryId.set(queryId, (info = {} as any));
-      }
-
-      info.interval = pollInterval!;
-      info.options = {
-        ...options,
-        fetchPolicy: 'network-only',
-      };
-
-      const maybeFetch = () => {
-        const info = this.pollingInfoByQueryId.get(queryId);
-        if (info) {
-          if (this.checkInFlight(queryId)) {
-            poll();
-          } else {
-            const queryInfo = this.getQuery(queryId);
-            if (queryInfo.observableQuery) {
-              queryInfo.observableQuery.reobserve(
-                info.options,
-                NetworkStatus.poll,
-              ).then(poll, poll);
-            } else {
-              this.fetchQueryObservable(
-                queryId,
-                info.options,
-                NetworkStatus.poll,
-              ).promise.then(() => {
-                queryInfo.setDirty();
-                poll();
-              }, poll);
-            }
-          }
-        }
-      };
-
-      const poll = () => {
-        const info = this.pollingInfoByQueryId.get(queryId);
-        if (info) {
-          clearTimeout(info.timeout);
-          info.timeout = setTimeout(maybeFetch, info.interval);
-        }
-      };
-
-      poll();
-    }
-
-    return queryId;
-  }
-
-  public stopPollingQuery(queryId: string) {
-    this.pollingInfoByQueryId.delete(queryId);
   }
 }
 

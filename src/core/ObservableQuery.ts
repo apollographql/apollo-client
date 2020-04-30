@@ -500,14 +500,88 @@ export class ObservableQuery<
     }
   }
 
-  public stopPolling() {
-    this.queryManager.stopPollingQuery(this.queryId);
-    this.options.pollInterval = undefined;
-  }
-
   public startPolling(pollInterval: number) {
     this.options.pollInterval = pollInterval;
-    this.queryManager.startPollingQuery(this.options, this.queryId);
+    this.updatePolling();
+  }
+
+  public stopPolling() {
+    delete this.options.pollInterval;
+    this.updatePolling();
+  }
+
+  private pollingInfo?: {
+    interval: number;
+    timeout: NodeJS.Timeout;
+    options: WatchQueryOptions<TVariables>;
+  };
+
+  // Turns polling on or off based on this.options.pollInterval.
+  private updatePolling() {
+    const {
+      pollingInfo,
+      options: {
+        pollInterval,
+      },
+    } = this;
+
+    if (!pollInterval) {
+      delete this.options.pollInterval;
+      if (pollingInfo) {
+        clearTimeout(pollingInfo.timeout);
+        delete this.pollingInfo;
+      }
+      return;
+    }
+
+    if (pollingInfo &&
+        pollingInfo.interval === pollInterval) {
+      return;
+    }
+
+    invariant(
+      pollInterval,
+      'Attempted to start a polling query without a polling interval.',
+    );
+
+    if (this.queryManager.ssrMode) {
+      // Do not poll in SSR mode.
+      return;
+    }
+
+    const info = pollingInfo || (
+      this.pollingInfo = {} as
+      ObservableQuery<TData, TVariables>["pollingInfo"]
+    )!;
+
+    info.interval = pollInterval;
+    info.options = {
+      ...this.options,
+      fetchPolicy: 'network-only',
+    };
+
+    const maybeFetch = () => {
+      if (this.pollingInfo) {
+        if (this.queryManager.checkInFlight(this.queryId)) {
+          poll();
+        } else {
+          this.reobserve(
+            this.pollingInfo.options,
+            NetworkStatus.poll,
+          ).then(poll, poll);
+        }
+      };
+    };
+
+    const poll = () => {
+      const info = this.pollingInfo;
+      if (info) {
+        clearTimeout(info.timeout);
+        info.timeout = setTimeout(maybeFetch, info.interval);
+      }
+    };
+
+    poll();
   }
 
   private updateLastResult(newResult: ApolloQueryResult<TData>) {
@@ -573,6 +647,9 @@ export class ObservableQuery<
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     if (!this.reobserver) {
+      if (newOptions && typeof newOptions.pollInterval === "number") {
+        this.startPolling(newOptions.pollInterval);
+      }
       this.reobserver = this.queryManager.observeQuery(this);
     }
     return this.reobserveImpl(this.reobserver, newOptions, newNetworkStatus);
@@ -665,7 +742,7 @@ export class ObservableQuery<
     }
 
     this.isTornDown = true;
-    queryManager.stopPollingQuery(this.queryId);
+    this.stopPolling();
 
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());

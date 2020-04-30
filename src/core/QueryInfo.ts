@@ -225,6 +225,9 @@ export class QueryInfo {
     this.networkStatus =
     this.networkError =
     this.graphQLErrors = void 0;
+
+    const oq = this.observableQuery;
+    if (oq) oq.stopPolling();
   }
 
   // This method can be overridden for a given instance.

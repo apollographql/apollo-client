@@ -261,9 +261,12 @@ export interface MutationOptions<
   context?: any;
 
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query
+   * Specifies the {@link FetchPolicy} to be used for this query. Mutations only
+   * support a 'no-cache' fetchPolicy. If you don't want to disable the cache,
+   * remove your fetchPolicy setting to proceed with the default mutation
+   * behavior.
    */
-  fetchPolicy?: FetchPolicy;
+  fetchPolicy?: Extract<FetchPolicy, 'no-cache'>;
 }
 
 // Add a level of indirection for `typedoc`.

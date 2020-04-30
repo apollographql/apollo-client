@@ -303,8 +303,10 @@ export class ObservableQuery<
       fetchPolicy: "no-cache",
     } as WatchQueryOptions;
 
+    const qid = this.queryManager.generateQueryId();
+
     return this.queryManager.fetchQuery(
-      this.queryId,
+      qid,
       combinedOptions,
       NetworkStatus.fetchMore,
     ).then(fetchMoreResult => {
@@ -317,6 +319,9 @@ export class ObservableQuery<
         }) : data;
       });
       return fetchMoreResult as ApolloQueryResult<TData>;
+    }).finally(() => {
+      this.queryManager.stopQuery(qid);
+      this.reobserve();
     });
   }
 

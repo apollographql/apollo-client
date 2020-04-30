@@ -955,12 +955,21 @@ export class QueryManager<TStore> {
       networkStatus,
     }).updateWatch(options);
 
-    const readFromCache = () => this.cache.diff<any>({
+    const readCache = () => this.cache.diff<any>({
       query,
       variables,
       returnPartialData: true,
       optimistic: true,
     });
+
+    const resultsFromCache = (
+      diff: Cache.DiffResult<TData>,
+      networkStatus = queryInfo.networkStatus || NetworkStatus.loading,
+    ) => Observable.of({
+      data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
+      loading: isNetworkRequestInFlight(networkStatus),
+      networkStatus,
+    } as ApolloQueryResult<TData>);
 
     const resultsFromLink = (allowCacheWrite: boolean) =>
       this.getResultsFromLink<TData, TVars>(queryInfo, allowCacheWrite, {
@@ -981,26 +990,17 @@ export class QueryManager<TStore> {
 
     switch (fetchPolicy) {
     default: case "cache-first": {
-      const diff = readFromCache();
+      const diff = readCache();
 
       if (diff.complete) {
         return finish(
-          Observable.of({
-            data: diff.result,
-            loading: false,
-            networkStatus: queryInfo.markReady(),
-          }),
+          resultsFromCache(diff, queryInfo.markReady()),
         );
       }
 
       if (returnPartialData) {
         return finish(
-          Observable.of({
-            data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
-            errors: diff.missing as any[],
-            loading: true,
-            networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
-          }),
+          resultsFromCache(diff),
           resultsFromLink(true),
         );
       }
@@ -1009,15 +1009,11 @@ export class QueryManager<TStore> {
     }
 
     case "cache-and-network": {
-      const diff = readFromCache();
+      const diff = readCache();
 
       if (diff.complete || returnPartialData) {
         return finish(
-          Observable.of({
-            data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
-            loading: true,
-            networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
-          }),
+          resultsFromCache(diff),
           resultsFromLink(true),
         );
       }
@@ -1025,19 +1021,10 @@ export class QueryManager<TStore> {
       return finish(resultsFromLink(true));
     }
 
-    case "cache-only": {
-      const diff = readFromCache();
-
+    case "cache-only":
       return finish(
-        Observable.of({
-          data: diff.result,
-          // TODO Is this abuse of the type system justified?
-          errors: diff.missing as any[],
-          loading: false,
-          networkStatus: queryInfo.markReady(),
-        }),
+        resultsFromCache(readCache(), queryInfo.markReady()),
       );
-    }
 
     case "network-only":
       return finish(resultsFromLink(true));

@@ -425,35 +425,21 @@ describe('fetchMore on an observable query', () => {
     let count = 0;
     observable.subscribe({
       next: ({ data, networkStatus }) => {
-        switch (count++) {
-          case 0:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(10);
-            observable
-              .fetchMore({
-                variables: { start: 10 },
-                updateQuery: (prev: any, options: any) => {
-                  const state = cloneDeep(prev) as any;
-                  state.entry.comments = [
-                    ...state.entry.comments,
-                    ...(options.fetchMoreResult as any).entry.comments,
-                  ];
-                  return state;
-                },
-              })
-              .catch((e: ApolloError) => {
-                expect(e.networkError).toBe(fetchMoreError);
-              });
-            break;
-          case 1:
-            expect(networkStatus).toBe(NetworkStatus.fetchMore);
-            expect((data as any).entry.comments.length).toBe(10);
-            break;
-          default:
-            expect(networkStatus).toBe(NetworkStatus.ready);
-            expect((data as any).entry.comments.length).toBe(10);
+        switch (++count) {
+        case 1:
+          expect(networkStatus).toBe(NetworkStatus.ready);
+          expect((data as any).entry.comments.length).toBe(10);
+          observable.fetchMore({
+            variables: { start: 10 },
+            updateQuery: prev => {
+              reject(new Error("should not have called updateQuery"));
+              return prev;
+            },
+          }).catch(e => {
+            expect(e.networkError).toBe(fetchMoreError);
             resolve();
-            break;
+          });
+          break;
         }
       },
       error: () => {

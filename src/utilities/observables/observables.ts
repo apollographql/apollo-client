@@ -6,21 +6,40 @@ function isPromiseLike<T>(value: MaybeAsync<T>): value is PromiseLike<T> {
   return value && typeof (value as any).then === "function";
 }
 
-// Any individual Source can be an Observable<T> or a promise for one.
+// Any individual Source<T> can be an Observable<T> or a promise for one.
 type Source<T> = MaybeAsync<Observable<T>>;
 
 export type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
-// A Concast observable concatenates the given sources into a single
-// non-overlapping sequence, and broadcasts the elements of that sequence
-// to any number of subscribers. Even though any number of observers can
-// subscribe to the Concast, the source observables are guaranteed to
-// receive at most one subscription each. In addition to broadcasting
-// every next/error message to this.observers, the Concast stores the most
-// recent message using this.latest, so any new observers can immediately
-// obtain the most recent message, even if it was originally delivered in
-// the past. This behavior means we can assume every active observer in
-// this.observers has received the same most recent message.
+// A Concast<T> observable concatenates the given sources into a single
+// non-overlapping sequence of Ts, automatically unwrapping any promises,
+// and broadcasts the T elements of that sequence to any number of
+// subscribers, all without creating a bunch of intermediary Observable
+// wrapper objects.
+//
+// Even though any number of observers can subscribe to the Concast, each
+// source observable is guaranteed to receive at most one subscribe call,
+// and the results are multicast to all observers.
+//
+// In addition to broadcasting every next/error message to this.observers,
+// the Concast stores the most recent message using this.latest, so any
+// new observers can immediately receive the latest message, even if it
+// was originally delivered in the past. This behavior means we can assume
+// every active observer in this.observers has received the same most
+// recent message.
+//
+// With the exception of this.latest replay, a Concast is a "hot"
+// observable in the sense that it does not replay past results from the
+// beginning of time for each new observer.
+//
+// Could we have used some existing RxJS class instead? Concast<T> is
+// similar to a BehaviorSubject<T>, because it is multicast and redelivers
+// the latest next/error message to new subscribers. Unlike Subject<T>,
+// Concast<T> does not expose an Observer<T> interface (this.handlers is
+// intentionally private), since Concast<T> gets its inputs from the
+// concatenated sources. If we ever switch to RxJS, there may be some
+// value in reusing their code, but for now we use zen-observable, which
+// does not contain any Subject implementations.
 export class Concast<T> extends Observable<T> {
   // Active observers receiving broadcast messages. Thanks to this.latest,
   // we can assume all observers in this Set have received the same most

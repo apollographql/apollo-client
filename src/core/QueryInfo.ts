@@ -250,21 +250,19 @@ export class QueryInfo {
 
   public markResult<T>(
     result: ExecutionResult<T>,
-    { variables,
-      fetchPolicy,
-      errorPolicy,
-    }: Pick<WatchQueryOptions,
+    options: Pick<WatchQueryOptions,
       | "variables"
       | "fetchPolicy"
-      | "errorPolicy"
-      >,
+      | "errorPolicy">,
     allowCacheWrite: boolean,
   ) {
-    if (fetchPolicy === 'no-cache') {
+    if (options.fetchPolicy === 'no-cache') {
       this.diff = { result: result.data, complete: true };
 
     } else if (allowCacheWrite) {
-      const ignoreErrors = errorPolicy === 'ignore' || errorPolicy === 'all';
+      const ignoreErrors =
+        options.errorPolicy === 'ignore' ||
+        options.errorPolicy === 'all';
       let writeWithErrors = !graphQLResultHasError(result);
       if (!writeWithErrors && ignoreErrors && result.data) {
         writeWithErrors = true;
@@ -279,12 +277,12 @@ export class QueryInfo {
           cache.writeQuery({
             query: this.document!,
             data: result.data as T,
-            variables,
+            variables: options.variables,
           });
 
           const diff = cache.diff<T>({
             query: this.document!,
-            variables,
+            variables: options.variables,
             returnPartialData: true,
             optimistic: true,
           });

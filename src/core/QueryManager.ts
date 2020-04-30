@@ -870,43 +870,32 @@ export class QueryManager<TStore> {
   private getResultsFromLink<TData, TVars>(
     queryInfo: QueryInfo,
     allowCacheWrite: boolean,
-    { variables,
-      context,
-      fetchPolicy,
-      errorPolicy,
-    }: Pick<WatchQueryOptions<TVars>,
+    options: Pick<WatchQueryOptions<TVars>,
       | "variables"
       | "context"
       | "fetchPolicy"
-      | "errorPolicy"
-      >,
+      | "errorPolicy">,
   ): Observable<ApolloQueryResult<TData>> {
     const { lastRequestId } = queryInfo;
 
     return asyncMap(
       this.getObservableFromLink(
         queryInfo.document!,
-        context,
-        variables,
+        options.context,
+        options.variables,
       ),
 
       result => {
         const hasErrors = isNonEmptyArray(result.errors);
 
         if (lastRequestId >= queryInfo.lastRequestId) {
-          if (hasErrors && errorPolicy === "none") {
+          if (hasErrors && options.errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
               graphQLErrors: result.errors,
             }));
           }
-
-          queryInfo.markResult(result, {
-            variables,
-            fetchPolicy,
-            errorPolicy,
-          }, allowCacheWrite);
-
+          queryInfo.markResult(result, options, allowCacheWrite);
           queryInfo.markReady();
         }
 
@@ -916,7 +905,7 @@ export class QueryManager<TStore> {
           networkStatus: queryInfo.networkStatus || NetworkStatus.ready,
         };
 
-        if (hasErrors && errorPolicy !== "ignore") {
+        if (hasErrors && options.errorPolicy !== "ignore") {
           aqr.errors = result.errors;
         }
 
@@ -1101,8 +1090,7 @@ export class QueryManager<TStore> {
       returnPartialData = true;
     }
 
-    return {
-      ...options,
+    return Object.assign({}, options, {
       query,
       variables,
       fetchPolicy,
@@ -1110,7 +1098,7 @@ export class QueryManager<TStore> {
       returnPartialData,
       notifyOnNetworkStatusChange,
       context,
-    };
+    });
   }
 
   private getQuery(queryId: string): QueryInfo {

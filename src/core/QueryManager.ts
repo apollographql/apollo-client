@@ -867,54 +867,33 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  private fetchQueryObservable<TData, TVars>(
-    queryId: string,
-    options: WatchQueryOptions<TVars>,
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus = NetworkStatus.loading,
-  ): Concast<ApolloQueryResult<TData>> {
-    const queryInfo = this.getQuery(queryId);
-    const {
-      query,
-      variables,
+  private getResultsFromLink<TData, TVars>(
+    queryInfo: QueryInfo,
+    allowCacheWrite: boolean,
+    { variables,
+      context,
       fetchPolicy,
       errorPolicy,
-      returnPartialData,
-      context,
-    } = this.normalizeWatchQueryOptions(
-      options,
-      queryInfo.networkStatus,
-      networkStatus,
-    );
+    }: Pick<WatchQueryOptions<TVars>,
+      | "variables"
+      | "context"
+      | "fetchPolicy"
+      | "errorPolicy"
+      >,
+  ): Observable<ApolloQueryResult<TData>> {
+    const { lastRequestId } = queryInfo;
 
-    const requestId = this.generateRequestId();
-
-    queryInfo.init({
-      document: query,
-      variables,
-      lastRequestId: requestId,
-      networkStatus,
-    }).updateWatch(options);
-
-    const readFromCache = () => this.cache.diff<any>({
-      query,
-      variables,
-      returnPartialData: true,
-      optimistic: true,
-    });
-
-    const readFromLink = (
-      allowCacheWrite: boolean,
-    ): Observable<ApolloQueryResult<TData>> => asyncMap(
-      // TODO Move this asyncMap logic into getObservableFromLink?
-      this.getObservableFromLink(query, context, variables),
+    return asyncMap(
+      this.getObservableFromLink(
+        queryInfo.document!,
+        context,
+        variables,
+      ),
 
       result => {
         const hasErrors = isNonEmptyArray(result.errors);
 
-        if (requestId >= queryInfo.lastRequestId) {
+        if (lastRequestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
@@ -949,13 +928,58 @@ export class QueryManager<TStore> {
           ? networkError
           : new ApolloError({ networkError });
 
-        if (requestId >= queryInfo.lastRequestId) {
+        if (lastRequestId >= queryInfo.lastRequestId) {
           queryInfo.markError(error);
         }
 
         throw error;
       },
     );
+  }
+
+  private fetchQueryObservable<TData, TVars>(
+    queryId: string,
+    options: WatchQueryOptions<TVars>,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus = NetworkStatus.loading,
+  ): Concast<ApolloQueryResult<TData>> {
+    const queryInfo = this.getQuery(queryId);
+    const {
+      query,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      returnPartialData,
+      context,
+    } = this.normalizeWatchQueryOptions(
+      options,
+      queryInfo.networkStatus,
+      networkStatus,
+    );
+
+    queryInfo.init({
+      document: query,
+      variables,
+      lastRequestId: this.generateRequestId(),
+      networkStatus,
+    }).updateWatch(options);
+
+    const readFromCache = () => this.cache.diff<any>({
+      query,
+      variables,
+      returnPartialData: true,
+      optimistic: true,
+    });
+
+    const resultsFromLink = (allowCacheWrite: boolean) =>
+      this.getResultsFromLink<TData, TVars>(queryInfo, allowCacheWrite, {
+        variables,
+        context,
+        fetchPolicy,
+        errorPolicy,
+      });
 
     const finish = (...obs: Observable<ApolloQueryResult<TData>>[]) => {
       const cc = new Concast(obs);
@@ -988,11 +1012,11 @@ export class QueryManager<TStore> {
             loading: true,
             networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
           }),
-          readFromLink(true),
+          resultsFromLink(true),
         );
       }
 
-      return finish(readFromLink(true));
+      return finish(resultsFromLink(true));
     }
 
     case "cache-and-network": {
@@ -1009,11 +1033,11 @@ export class QueryManager<TStore> {
             loading: true,
             networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
           }),
-          readFromLink(true),
+          resultsFromLink(true),
         );
       }
 
-      return finish(readFromLink(true));
+      return finish(resultsFromLink(true));
     }
 
     case "cache-only": {
@@ -1031,10 +1055,10 @@ export class QueryManager<TStore> {
     }
 
     case "network-only":
-      return finish(readFromLink(true));
+      return finish(resultsFromLink(true));
 
     case "no-cache":
-      return finish(readFromLink(false));
+      return finish(resultsFromLink(false));
 
     case "standby":
       return finish();

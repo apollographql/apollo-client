@@ -1011,10 +1011,6 @@ export class QueryManager<TStore> {
     case "cache-and-network": {
       const diff = readFromCache();
 
-      if (options.fetchPolicy === "cache-and-network") {
-        options.fetchPolicy = "cache-first";
-      }
-
       if (diff.complete || returnPartialData) {
         return finish(
           Observable.of({

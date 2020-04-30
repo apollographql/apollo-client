@@ -13,6 +13,7 @@ import {
   NetworkStatus,
   isNetworkRequestInFlight,
 } from './networkStatus';
+import { ApolloError } from '../errors/ApolloError';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -66,7 +67,7 @@ export class QueryInfo {
       document: query.document,
       variables: query.variables,
       networkError: null,
-      graphQLErrors: this && this.graphQLErrors || [],
+      graphQLErrors: this.graphQLErrors || [],
       networkStatus,
     });
 
@@ -306,8 +307,17 @@ export class QueryInfo {
     return this.networkStatus = NetworkStatus.ready;
   }
 
-  public markError(error: Error) {
+  public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
-    return this.networkError = error;
+
+    if (error.graphQLErrors) {
+      this.graphQLErrors = error.graphQLErrors;
+    }
+
+    if (error.networkError) {
+      this.networkError = error.networkError;
+    }
+
+    return error;
   }
 }

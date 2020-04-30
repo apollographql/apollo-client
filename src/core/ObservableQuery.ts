@@ -534,7 +534,12 @@ export class ObservableQuery<
     // Initiate observation of this query if it hasn't been reported to
     // the QueryManager yet.
     if (first) {
-      this.reobserve();
+      this.reobserve().catch(_ => {
+        // Blindly catching here prevents unhandled promise rejections,
+        // and is safe because the ObservableQuery handles this error with
+        // this.observer.error, so we're not just swallowing the error by
+        // ignoring it here.
+      });
     }
 
     return () => {

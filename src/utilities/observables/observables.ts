@@ -107,7 +107,7 @@ export class Concast<T> extends Observable<T> {
     return Observable;
   }
 
-  private addObserver(observer: Observer<T>) {
+  public addObserver(observer: Observer<T>) {
     if (!this.observers.has(observer)) {
       // Immediately deliver the most recent message, so we can always
       // be sure all observers have the latest information.
@@ -130,14 +130,22 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
-  private removeObserver(observer: Observer<T>) {
+  public removeObserver(
+    observer: Observer<T>,
+    quietly?: boolean,
+  ) {
     if (this.observers.delete(observer) &&
         this.observers.size < 1) {
+      if (quietly) return;
       if (this.sub) {
         this.sub.unsubscribe();
         // In case anyone happens to be listening to this.promise, after
         // this.observers has become empty.
-        this.reject(new Error("Observable cancelled prematurely"));
+        const error = new Error("Observable cancelled prematurely");
+        // If a "complete" message hasn't happened yet but might happen
+        // soon, it would be a pity to reject before we have a chance to
+        // call this.resolve.
+        setTimeout(() => this.reject(error), 10);
       }
       this.sub = null;
     }

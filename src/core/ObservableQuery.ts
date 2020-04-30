@@ -451,7 +451,16 @@ export class ObservableQuery<
       return Promise.resolve();
     }
 
-    return this.reobserve({ variables }, NetworkStatus.setVariables);
+    let { fetchPolicy } = this.options;
+    if (fetchPolicy !== 'no-cache' &&
+        fetchPolicy !== 'cache-and-network') {
+      fetchPolicy = 'network-only';
+    }
+
+    return this.reobserve({
+      variables,
+      fetchPolicy,
+    }, NetworkStatus.setVariables);
   }
 
   public updateQuery<TVars = TVariables>(

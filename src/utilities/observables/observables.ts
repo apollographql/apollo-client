@@ -67,9 +67,18 @@ export class Concast<T> extends Observable<T> {
       // Immediately deliver the most recent message, so we can always
       // be sure all observers have the latest information.
       if (this.latest) {
-        const method = observer[this.latest[0]];
+        const nextOrError = this.latest[0];
+        const method = observer[nextOrError];
         if (method) {
           method.call(observer, this.latest[1]);
+        }
+        // If the subscription is already closed, and the last message was
+        // a 'next' message, simulate delivery of the final 'complete'
+        // message again.
+        if (this.sub === null &&
+            nextOrError === "next" &&
+            observer.complete) {
+          observer.complete();
         }
       }
       this.observers.add(observer);
@@ -101,7 +110,7 @@ export class Concast<T> extends Observable<T> {
 
   // Name and argument of the most recently invoked observer method, used
   // to deliver latest results immediately to new observers.
-  private latest?: ["next" | "error" | "complete", any?];
+  private latest?: ["next" | "error", any];
 
   // Bound handler functions that can be reused for every internal
   // subscription.
@@ -134,7 +143,12 @@ export class Concast<T> extends Observable<T> {
           } else {
             this.resolve();
           }
-          this.latest = ["complete"];
+          // We do not store this.latest = ["complete"], because doing so
+          // discards useful information about the previous next (or
+          // error) message. Instead, if new observers subscribe after
+          // this Concast has completed, they will receive the final
+          // 'next' message (unless there was an error) immediately
+          // followed by a 'complete' message (see addObserver).
           iterateObserversSafely(this.observers, "complete");
         } else {
           this.sub = value.subscribe(this.handlers);

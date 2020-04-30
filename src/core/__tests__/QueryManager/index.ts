@@ -870,7 +870,7 @@ describe('QueryManager', () => {
   });
 
   itAsync('sets networkStatus to `refetch` when refetching', (resolve, reject) => {
-    const request = {
+    const request: WatchQueryOptions = {
       query: gql`
         query fetchLuke($id: String) {
           people_one(id: $id) {
@@ -882,6 +882,9 @@ describe('QueryManager', () => {
         id: '1',
       },
       notifyOnNetworkStatusChange: true,
+      // This causes a loading:true result to be delivered from the cache
+      // before the final data2 result is delivered.
+      fetchPolicy: "cache-and-network",
     };
     const data1 = {
       people_one: {
@@ -1033,19 +1036,12 @@ describe('QueryManager', () => {
         return observable.refetch(variables1);
       },
       result => {
-        expect(result.loading).toBe(true);
-        expect(result.data).toEqual(data2);
-      },
-      result => {
         expect(result.loading).toBe(false);
         expect(result.data).toEqual(data3);
         return observable.refetch(variables2);
       },
       result => {
-        expect(result.loading).toBe(true);
-        expect(result.data).toEqual(data3);
-      },
-      result => {
+        expect(result.loading).toBe(false);
         expect(result.data).toEqual(data4);
       },
     ).then(resolve, reject);
@@ -1231,78 +1227,6 @@ describe('QueryManager', () => {
         }
       },
     });
-  });
-
-  itAsync('supports returnPartialData #193', (resolve, reject) => {
-    const primeQuery = gql`
-      query primeQuery {
-        people_one(id: 1) {
-          name
-        }
-      }
-    `;
-
-    const complexQuery = gql`
-      query complexQuery {
-        luke: people_one(id: 1) {
-          name
-        }
-        vader: people_one(id: 4) {
-          name
-        }
-      }
-    `;
-
-    const diffedQuery = gql`
-      query complexQuery {
-        vader: people_one(id: 4) {
-          name
-        }
-      }
-    `;
-
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const data2 = {
-      vader: {
-        name: 'Darth Vader',
-      },
-    };
-
-    const queryManager = mockQueryManager(
-      error => { throw error },
-      {
-        request: { query: primeQuery },
-        result: { data: data1 },
-      },
-      {
-        request: { query: diffedQuery },
-        result: { data: data2 },
-        delay: 5,
-      },
-    );
-
-    // First, prime the store so that query diffing removes the query
-    return queryManager
-      .query<any>({
-        query: primeQuery,
-      })
-      .then(() => {
-        const handle = queryManager.watchQuery<any>({
-          query: complexQuery,
-          returnPartialData: true,
-        });
-
-        return handle.result().then(result => {
-          expect(result.data['luke'].name).toBe('Luke Skywalker');
-          expect(result.data).not.toHaveProperty('vader');
-        });
-      })
-      .then(resolve, reject);
   });
 
   itAsync('can handle null values in arrays (#1551)', (resolve, reject) => {
@@ -2088,6 +2012,9 @@ describe('QueryManager', () => {
       }, {
         request: { query: query2 },
         result: { data: data2 },
+      }, {
+        request: { query: query1 },
+        result: { data: data1 },
       }).setOnError(reject),
       config: reducerConfig,
     });
@@ -2118,6 +2045,19 @@ describe('QueryManager', () => {
         result => {
           expect(stripSymbols(result)).toEqual({
             data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+          });
+        },
+        result => {
+          expect(stripSymbols(result)).toEqual({
+            data: {
+              ...data2,
+              author: {
+                ...data2.author,
+                id: data1.author.id,
+              },
+            },
             loading: false,
             networkStatus: NetworkStatus.ready,
           });
@@ -2188,12 +2128,10 @@ describe('QueryManager', () => {
     });
     const observable2 = queryManager.watchQuery<any>({ query: query2 });
 
-    // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
       observableToPromise(
         {
           observable: observable1,
-          wait: 60,
         },
         result => {
           expect(result).toEqual({
@@ -2209,18 +2147,10 @@ describe('QueryManager', () => {
             networkStatus: NetworkStatus.ready,
           });
         },
-        result => {
-          expect(result).toEqual({
-            data: data2,
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-          });
-        },
       ),
       observableToPromise(
         {
           observable: observable2,
-          wait: 60,
         },
         result => {
           expect(result).toEqual({
@@ -2947,29 +2877,30 @@ describe('QueryManager', () => {
           result: { data: data2 },
         },
       );
+
       const observable = queryManager.watchQuery({
         query,
         variables,
         pollInterval: 50,
       });
 
-      let timeout: Function;
-      return Promise.race([
+      return Promise.all([
         observableToPromise(
           { observable },
           result => {
             expect(stripSymbols(result.data)).toEqual(data1);
-            queryManager
-              .query({ query, variables, fetchPolicy: 'network-only' })
-              .then(() => timeout(new Error('Should have two results by now')));
+            queryManager.query({
+              query,
+              variables,
+              fetchPolicy: 'network-only',
+            }).then(result => {
+              expect(result.data).toEqual(data2);
+            }).catch(reject);
           },
-          result => expect(stripSymbols(result.data)).toEqual(data2),
+          result => {
+            expect(stripSymbols(result.data)).toEqual(data2);
+          },
         ),
-        // Ensure that the observable has recieved 2 results *before*
-        // the rejection triggered above
-        new Promise((_, reject) => {
-          timeout = (error: Error) => reject(error);
-        }),
       ]).then(resolve, reject);
     });
   });

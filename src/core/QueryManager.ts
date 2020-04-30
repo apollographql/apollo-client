@@ -34,6 +34,7 @@ import {
   SubscriptionOptions,
   MutationOptions,
   WatchQueryFetchPolicy,
+  ErrorPolicy,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -866,53 +867,36 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  private fetchQueryObservable<TData, TVariables>(
+  private fetchQueryObservable<TData, TVars>(
     queryId: string,
-    mutableOptions: WatchQueryOptions<TVariables>,
+    options: WatchQueryOptions<TVars>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
   ): Concast<ApolloQueryResult<TData>> {
-    const query = this.transform(mutableOptions.query).document;
-    const variables = this.getVariables(query, mutableOptions.variables);
+    const queryInfo = this.getQuery(queryId);
     const {
-      context = {},
-      errorPolicy = "none",
-      returnPartialData = false,
-    } = mutableOptions;
+      query,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      returnPartialData,
+      context,
+    } = this.normalizeWatchQueryOptions(
+      options,
+      queryInfo.networkStatus,
+      networkStatus,
+    );
 
     const requestId = this.generateRequestId();
-    const queryInfo = this.getQuery(queryId);
-    const lastNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
       document: query,
       variables,
       lastRequestId: requestId,
       networkStatus,
-    }).updateWatch(mutableOptions);
-
-    let fetchPolicy: WatchQueryFetchPolicy =
-      mutableOptions.fetchPolicy || "cache-first";
-
-    const mightUseNetwork =
-      fetchPolicy === "cache-first" ||
-      fetchPolicy === "cache-and-network" ||
-      fetchPolicy === "network-only" ||
-      fetchPolicy === "no-cache";
-
-    let shouldNotify = false;
-    if (mightUseNetwork &&
-        isNetworkRequestInFlight(networkStatus) &&
-        typeof lastNetworkStatus === "number" &&
-        lastNetworkStatus !== networkStatus &&
-        mutableOptions.notifyOnNetworkStatusChange) {
-      if (fetchPolicy !== "cache-first") {
-        fetchPolicy = "cache-and-network";
-      }
-      shouldNotify = true;
-    }
+    }).updateWatch(options);
 
     const readFromCache = () => this.cache.diff<any>({
       query,
@@ -983,7 +967,7 @@ export class QueryManager<TStore> {
     };
 
     switch (fetchPolicy) {
-    case "cache-first": {
+    default: case "cache-first": {
       const diff = readFromCache();
 
       if (diff.complete) {
@@ -996,7 +980,7 @@ export class QueryManager<TStore> {
         );
       }
 
-      if (returnPartialData || shouldNotify) {
+      if (returnPartialData) {
         return finish(
           Observable.of({
             data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
@@ -1014,11 +998,11 @@ export class QueryManager<TStore> {
     case "cache-and-network": {
       const diff = readFromCache();
 
-      if (mutableOptions.fetchPolicy === "cache-and-network") {
-        mutableOptions.fetchPolicy = "cache-first";
+      if (options.fetchPolicy === "cache-and-network") {
+        options.fetchPolicy = "cache-first";
       }
 
-      if (diff.complete || returnPartialData || shouldNotify) {
+      if (diff.complete || returnPartialData) {
         return finish(
           Observable.of({
             data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
@@ -1055,6 +1039,54 @@ export class QueryManager<TStore> {
     case "standby":
       return finish();
     }
+  }
+
+  // Returns a copy of options with default values filled in, and other
+  // slight adjustments. Does not modify the given options object.
+  // TODO Make sure we provide defaults for everything here.
+  private normalizeWatchQueryOptions<TVars>(
+    options: WatchQueryOptions<TVars>,
+    oldNetworkStatus: NetworkStatus | undefined,
+    newNetworkStatus: NetworkStatus,
+  ): WatchQueryOptions<TVars> {
+    const query = this.transform(options.query).document;
+    const variables = this.getVariables(query, options.variables) as TVars;
+
+    let {
+      fetchPolicy = "cache-first" as WatchQueryFetchPolicy,
+      errorPolicy = "none" as ErrorPolicy,
+      returnPartialData = false,
+      notifyOnNetworkStatusChange = false,
+      context = {},
+    } = options;
+
+    const mightUseNetwork =
+      fetchPolicy === "cache-first" ||
+      fetchPolicy === "cache-and-network" ||
+      fetchPolicy === "network-only" ||
+      fetchPolicy === "no-cache";
+
+    if (mightUseNetwork &&
+        notifyOnNetworkStatusChange &&
+        typeof oldNetworkStatus === "number" &&
+        oldNetworkStatus !== newNetworkStatus &&
+        isNetworkRequestInFlight(newNetworkStatus)) {
+      if (fetchPolicy !== "cache-first") {
+        fetchPolicy = "cache-and-network";
+      }
+      returnPartialData = true;
+    }
+
+    return {
+      ...options,
+      query,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      returnPartialData,
+      notifyOnNetworkStatusChange,
+      context,
+    };
   }
 
   private getQuery(queryId: string): QueryInfo {

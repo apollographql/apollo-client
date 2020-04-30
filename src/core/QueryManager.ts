@@ -1025,23 +1025,17 @@ export class QueryManager<TStore> {
         observable = byVariables.get(varJson);
 
         if (!observable) {
-          byVariables.set(
-            varJson,
-            observable = multicast(
-              execute(link, operation) as Observable<FetchResult<T>>
-            )
+          const cc = multicast(
+            execute(link, operation) as Observable<FetchResult<T>>
           );
 
-          const cleanup = () => {
-            byVariables.delete(varJson);
-            if (!byVariables.size) inFlightLinkObservables.delete(serverQuery);
-            cleanupSub.unsubscribe();
-          };
+          byVariables.set(varJson, observable = cc);
 
-          const cleanupSub = observable.subscribe({
-            next: cleanup,
-            error: cleanup,
-            complete: cleanup,
+          cc.cleanup(() => {
+            if (byVariables.delete(varJson) &&
+                byVariables.size < 1) {
+              inFlightLinkObservables.delete(serverQuery);
+            }
           });
         }
 

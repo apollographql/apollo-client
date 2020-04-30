@@ -7,6 +7,7 @@ import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { ApolloClient } from '..';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { itAsync } from '../utilities/testing/itAsync';
+import subscribeAndCount from '../utilities/testing/subscribeAndCount';
 
 describe('mutation results', () => {
   const query = gql`
@@ -761,28 +762,23 @@ describe('mutation results', () => {
     // Cancel the query right away!
     firstSubs.unsubscribe();
 
-    let yieldCount = 0;
-    watchedQuery.subscribe({
-      next: ({ data }: any) => {
-        yieldCount += 1;
-        if (yieldCount === 1) {
-          expect(data.echo).toBe('b');
-          client.mutate({
-            mutation: resetMutation,
-            updateQueries: {
-              Echo: () => {
-                return { echo: '0' };
-              },
+    subscribeAndCount(reject, watchedQuery, (count, result) => {
+      if (count === 1) {
+        expect(result.data).toEqual({ echo: "a" });
+      } else if (count === 2) {
+        expect(result.data).toEqual({ echo: "b" });
+        client.mutate({
+          mutation: resetMutation,
+          updateQueries: {
+            Echo: () => {
+              return { echo: "0" };
             },
-          });
-        } else if (yieldCount === 2) {
-          expect(data.echo).toBe('0');
-          resolve();
-        }
-      },
-      error: () => {
-        // Do nothing, but quash unhandled error
-      },
+          },
+        });
+      } else if (count === 3) {
+        expect(result.data).toEqual({ echo: "0" });
+        resolve();
+      }
     });
 
     watchedQuery.refetch(variables2);

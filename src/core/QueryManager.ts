@@ -755,35 +755,6 @@ export class QueryManager<TStore> {
     };
   }
 
-  public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(
-    queryIdOrObservable: string | ObservableQuery<TData, TVariables>,
-  ): {
-    previousResult: any;
-    variables: TVariables | undefined;
-    document: DocumentNode;
-  } {
-    let observableQuery: ObservableQuery<TData, any>;
-    if (typeof queryIdOrObservable === 'string') {
-      const { observableQuery: foundObservableQuery } = this.getQuery(
-        queryIdOrObservable,
-      );
-      invariant(
-        foundObservableQuery,
-        `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`
-      );
-      observableQuery = foundObservableQuery!;
-    } else {
-      observableQuery = queryIdOrObservable;
-    }
-
-    const { variables, query } = observableQuery.options;
-    return {
-      previousResult: this.getCurrentQueryResult(observableQuery, false).data,
-      variables,
-      document: query,
-    };
-  }
-
   public broadcastQueries() {
     this.onBroadcast();
     this.queries.forEach(info => info.notify());

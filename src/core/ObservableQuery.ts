@@ -447,27 +447,22 @@ export class ObservableQuery<
   public updateQuery<TVars = TVariables>(
     mapFn: (
       previousQueryResult: TData,
-      options: UpdateQueryOptions<TVars>,
+      options: Pick<WatchQueryOptions<TVars>, "variables">,
     ) => TData,
   ): void {
     const { queryManager } = this;
-    const {
-      previousResult,
-      variables,
-      document,
-    } = queryManager.getQueryWithPreviousResult<TData, TVars>(
-      this.queryId,
-    );
-
-    const newResult = tryFunctionOrLogError(() =>
-      mapFn(previousResult, { variables }),
+    const previousResult = queryManager.getCurrentQueryResult(this, false).data;
+    const newResult = tryFunctionOrLogError(
+      () => mapFn(previousResult!, {
+        variables: (this as any).variables,
+      }),
     );
 
     if (newResult) {
       queryManager.cache.writeQuery({
-        query: document,
+        query: this.options.query,
         data: newResult,
-        variables,
+        variables: this.variables,
       });
 
       queryManager.broadcastQueries();

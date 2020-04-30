@@ -68,9 +68,6 @@ export class QueryManager<TStore> {
 
   private ssrMode: boolean;
 
-  // let's not start at zero to avoid pain with bad checks
-  private idCounter = 1;
-
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
   private queries = new Map<string, QueryInfo>();
@@ -149,7 +146,7 @@ export class QueryManager<TStore> {
       "Mutations only support a 'no-cache' fetchPolicy. If you don't want to disable the cache, remove your fetchPolicy setting to proceed with the default mutation behavior."
     );
 
-    const mutationId = this.generateQueryId();
+    const mutationId = this.generateMutationId();
     mutation = this.transform(mutation).document;
 
     variables = this.getVariables(mutation, variables);
@@ -510,8 +507,19 @@ export class QueryManager<TStore> {
     });
   }
 
+  private queryIdCounter = 1;
   public generateQueryId() {
-    return String(this.idCounter++);
+    return String(this.queryIdCounter++);
+  }
+
+  private requestIdCounter = 1;
+  public generateRequestId() {
+    return this.requestIdCounter++;
+  }
+
+  private mutationIdCounter = 1;
+  public generateMutationId() {
+    return String(this.mutationIdCounter++);
   }
 
   public stopQueryInStore(queryId: string) {
@@ -876,7 +884,7 @@ export class QueryManager<TStore> {
       returnPartialData = false,
     } = mutableOptions;
 
-    const requestId = this.idCounter++;
+    const requestId = this.generateRequestId();
 
     const queryInfo = this.getQuery(queryId).init({
       document: query,

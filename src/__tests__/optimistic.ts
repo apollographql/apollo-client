@@ -348,8 +348,8 @@ describe('optimistic mutation results', () => {
 
             // @ts-ignore
             const latestState = queryManager.mutationStore;
-            expect(latestState.get('5').loading).toBe(false);
-            expect(latestState.get('6').loading).toBe(true);
+            expect(latestState.get('1').loading).toBe(false);
+            expect(latestState.get('2').loading).toBe(true);
 
             return res;
           });
@@ -368,16 +368,16 @@ describe('optimistic mutation results', () => {
 
             // @ts-ignore
             const latestState = queryManager.mutationStore;
-            expect(latestState.get('5').loading).toBe(false);
-            expect(latestState.get('6').loading).toBe(false);
+            expect(latestState.get('1').loading).toBe(false);
+            expect(latestState.get('2').loading).toBe(false);
 
             return res;
           });
 
         // @ts-ignore
         const mutationsState = queryManager.mutationStore;
-        expect(mutationsState.get('5').loading).toBe(true);
-        expect(mutationsState.get('6').loading).toBe(true);
+        expect(mutationsState.get('1').loading).toBe(true);
+        expect(mutationsState.get('2').loading).toBe(true);
 
         checkBothMutationsAreApplied(
           'Optimistically generated',
@@ -592,8 +592,8 @@ describe('optimistic mutation results', () => {
 
             // @ts-ignore
             const latestState = client.queryManager.mutationStore;
-            expect(latestState.get('5').loading).toBe(false);
-            expect(latestState.get('6').loading).toBe(true);
+            expect(latestState.get('1').loading).toBe(false);
+            expect(latestState.get('2').loading).toBe(true);
 
             return res;
           });
@@ -612,16 +612,16 @@ describe('optimistic mutation results', () => {
 
             // @ts-ignore
             const latestState = client.queryManager.mutationStore;
-            expect(latestState.get('5').loading).toBe(false);
-            expect(latestState.get('6').loading).toBe(false);
+            expect(latestState.get('1').loading).toBe(false);
+            expect(latestState.get('2').loading).toBe(false);
 
             return res;
           });
 
         // @ts-ignore
         const mutationsState = client.queryManager.mutationStore;
-        expect(mutationsState.get('5').loading).toBe(true);
-        expect(mutationsState.get('6').loading).toBe(true);
+        expect(mutationsState.get('1').loading).toBe(true);
+        expect(mutationsState.get('2').loading).toBe(true);
 
         checkBothMutationsAreApplied(
           'Optimistically generated',

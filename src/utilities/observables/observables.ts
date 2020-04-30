@@ -143,6 +143,23 @@ export class Concast<T> extends Observable<T> {
     },
   };
 
+  cleanup(callback: () => any) {
+    let called = false;
+    const once = () => {
+      if (!called) {
+        called = true;
+        this.observers.delete(observer);
+        callback();
+      }
+    }
+    const observer = {
+      next: once,
+      error: once,
+      complete: once,
+    };
+    this.addObserver(observer);
+  }
+
   // A public way to abort observation and broadcast.
   public cancel = this.handlers.error!;
 }

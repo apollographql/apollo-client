@@ -979,7 +979,7 @@ export class QueryManager<TStore> {
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
       normalized.variables = variables;
-      return this.fqoHelper<TData, TVars>(
+      return this.fetchQueryHelper<TData, TVars>(
         queryInfo,
         normalized,
         networkStatus,
@@ -993,8 +993,8 @@ export class QueryManager<TStore> {
       // If the query has @export(as: ...) directives, then we need to
       // process those directives asynchronously. When there are no
       // @export directives (the common case), we deliberately avoid
-      // wrapping the result of this.fqoHelper in a Promise, since the
-      // timing of result delivery is (unfortunately) important for
+      // wrapping the result of this.fetchQueryHelper in a Promise, since
+      // the timing of result delivery is (unfortunately) important for
       // backwards compatibility. TODO This code could be simpler if we
       // deprecated and removed LocalState.
       this.transform(normalized.query).hasClientExports
@@ -1015,7 +1015,7 @@ export class QueryManager<TStore> {
     return concast;
   }
 
-  private fqoHelper<TData, TVars>(
+  private fetchQueryHelper<TData, TVars>(
     queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars>,
     // The initial networkStatus for this fetch, most often

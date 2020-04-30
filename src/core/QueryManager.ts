@@ -1,5 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
+import { equal } from "@wry/equality";
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -998,7 +999,7 @@ export class QueryManager<TStore> {
       if (returnPartialData || shouldNotify) {
         return finish(
           Observable.of({
-            data: diff.result,
+            data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
             errors: diff.missing as any[],
             loading: true,
             networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
@@ -1020,7 +1021,7 @@ export class QueryManager<TStore> {
       if (diff.complete || returnPartialData || shouldNotify) {
         return finish(
           Observable.of({
-            data: diff.result,
+            data: (equal(diff.result, {}) ? queryInfo.getDiff() : diff).result,
             loading: true,
             networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
           }),

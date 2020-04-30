@@ -42,7 +42,12 @@ import {
   MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap, multicast, toPromise } from '../utilities/observables/observables';
+import {
+  Concast,
+  asyncMap,
+  multicast,
+  toPromise,
+} from '../utilities/observables/observables';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 import { ApolloCache } from '../cache/core/cache';
 
@@ -875,7 +880,7 @@ export class QueryManager<TStore> {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-  ): Observable<ApolloQueryResult<TData>> {
+  ): Concast<ApolloQueryResult<TData>> {
     const query = this.transform(mutableOptions.query).document;
     const variables = this.getVariables(query, mutableOptions.variables);
     const {
@@ -975,69 +980,81 @@ export class QueryManager<TStore> {
       },
     );
 
+    const finish = (...obs: Observable<ApolloQueryResult<TData>>[]) =>
+      new Concast(obs);
+
     switch (fetchPolicy) {
     case "cache-first": {
       const diff = readFromCache();
 
       if (diff.complete) {
-        return Observable.of({
-          data: diff.result,
-          loading: false,
-          networkStatus: queryInfo.markReady(),
-        });
+        return finish(
+          Observable.of({
+            data: diff.result,
+            loading: false,
+            networkStatus: queryInfo.markReady(),
+          }),
+        );
       }
 
       if (returnPartialData || shouldNotify) {
-        return Observable.of({
-          data: diff.result,
-          errors: diff.missing as any[],
-          loading: true,
-          networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
-        }).concat(readFromLink(true));
+        return finish(
+          Observable.of({
+            data: diff.result,
+            errors: diff.missing as any[],
+            loading: true,
+            networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
+          }),
+          readFromLink(true),
+        );
       }
 
-      return readFromLink(true);
+      return finish(readFromLink(true));
     }
 
     case "cache-and-network": {
       const diff = readFromCache();
-      const linkObs = readFromLink(true);
 
       if (mutableOptions.fetchPolicy === "cache-and-network") {
         mutableOptions.fetchPolicy = "cache-first";
       }
 
       if (diff.complete || returnPartialData || shouldNotify) {
-        return Observable.of({
-          data: diff.result,
-          loading: true,
-          networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
-        }).concat(linkObs);
+        return finish(
+          Observable.of({
+            data: diff.result,
+            loading: true,
+            networkStatus: queryInfo.networkStatus || NetworkStatus.loading,
+          }),
+          readFromLink(true),
+        );
       }
 
-      return linkObs;
+      return finish(readFromLink(true));
     }
 
     case "cache-only": {
       const diff = readFromCache();
 
-      return Observable.of({
-        data: diff.result,
-        // TODO Is this abuse of the type system justified?
-        errors: diff.missing as any[],
-        loading: false,
-        networkStatus: queryInfo.markReady(),
-      });
+      return finish(
+        Observable.of({
+          data: diff.result,
+          // TODO Is this abuse of the type system justified?
+          errors: diff.missing as any[],
+          loading: false,
+          networkStatus: queryInfo.markReady(),
+        }),
+      );
     }
 
     case "network-only":
-      return readFromLink(true);
+      return finish(readFromLink(true));
 
     case "no-cache":
-      return readFromLink(false);
+      return finish(readFromLink(false));
 
     case "standby":
-      return Observable.of();
+      return finish();
     }
   }
 

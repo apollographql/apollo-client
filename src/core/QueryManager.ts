@@ -899,8 +899,10 @@ export class QueryManager<TStore> {
       this.getObservableFromLink(query, context, variables),
 
       result => {
+        const hasErrors = isNonEmptyArray(result.errors);
+
         if (requestId >= queryInfo.lastRequestId) {
-          if (errorPolicy === "none" && isNonEmptyArray(result.errors)) {
+          if (hasErrors && errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
               graphQLErrors: result.errors,
@@ -916,12 +918,17 @@ export class QueryManager<TStore> {
           queryInfo.markReady();
         }
 
-        return {
+        const aqr: ApolloQueryResult<TData> = {
           data: result.data,
-          errors: result.errors,
           loading: false,
           networkStatus: queryInfo.networkStatus || NetworkStatus.ready,
         };
+
+        if (hasErrors && errorPolicy !== "ignore") {
+          aqr.errors = result.errors;
+        }
+
+        return aqr;
       },
 
       networkError => {

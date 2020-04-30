@@ -161,8 +161,18 @@ export class Concast<T> extends Observable<T> {
   }
 
   // A public way to abort observation and broadcast.
-  public cancel = this.handlers.error!;
+  public cancel = (reason: any) => {
+    this.reject(reason);
+    this.sources = emptyIter;
+    this.handlers.complete!();
+  }
 }
+
+const emptyIter: Iterator<any> = {
+  next() {
+    return { value: void 0, done: true };
+  },
+};
 
 export function multicast<T>(...sources: Observable<T>[]) {
   return new Concast(sources);

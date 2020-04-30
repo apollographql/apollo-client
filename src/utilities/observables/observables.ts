@@ -1,5 +1,16 @@
 import { Observable, Observer, ObservableSubscription } from './Observable';
 
+type MaybeAsync<T> = T | PromiseLike<T>;
+
+function isPromiseLike<T>(value: MaybeAsync<T>): value is PromiseLike<T> {
+  return value && typeof (value as any).then === "function";
+}
+
+// Any individual Source can be an Observable<T> or a promise for one.
+type Source<T> = MaybeAsync<Observable<T>>;
+
+export type ConcastSourcesIterable<T> = Iterable<Source<T>>;
+
 // A Concast observable concatenates the given sources into a single
 // non-overlapping sequence, and broadcasts the elements of that sequence
 // to any number of subscribers. Even though any number of observers can
@@ -24,24 +35,39 @@ export class Concast<T> extends Observable<T> {
 
   // A consumable iterator of source observables, incrementally consumed
   // each time this.handlers.complete is called.
-  private sources: Iterator<Observable<T>>;
+  private sources: Iterator<Source<T>>;
 
-  constructor(sources: Iterable<Observable<T>>) {
+  // Not only can the individual elements of the iterable be promises, but
+  // also the iterable itself can be wrapped in a promise.
+  constructor(sources: MaybeAsync<ConcastSourcesIterable<T>>) {
     super(observer => {
       this.addObserver(observer);
       return () => this.removeObserver(observer);
     });
+
+    // Suppress rejection warnings for this.promise, since it's perfectly
+    // acceptable to pay no attention to this.promise if you're consuming
+    // the results through the normal observable API.
+    this.promise.catch(_ => {});
+
+    if (isPromiseLike(sources)) {
+      sources.then(
+        iterable => this.start(iterable),
+        this.handlers.error,
+      );
+    } else {
+      this.start(sources);
+    }
+  }
+
+  private start(sources: ConcastSourcesIterable<T>) {
+    if (this.sub !== void 0) return;
 
     // Since sources is required only to be iterable, the source
     // observables could in principle be generated lazily, and the
     // sequence could be infinite. In practice, sources is most often a
     // finite array of observables.
     this.sources = sources[Symbol.iterator]();
-
-    // Suppress rejection warnings for this.promise, since it's perfectly
-    // acceptable to pay no attention to this.promise if you're consuming
-    // the results through the normal observable API.
-    this.promise.catch(ignored => {});
 
     // Calling this.handlers.complete() kicks off consumption of the first
     // source observable. It's tempting to do this step lazily in
@@ -134,7 +160,11 @@ export class Concast<T> extends Observable<T> {
 
     complete: () => {
       if (this.sub !== null) {
-        const { done, value } = this.sources.next();
+        const { done, value } = this.sources.next() as {
+          done: boolean;
+          value: Source<T>;
+        };
+
         if (done) {
           this.sub = null;
           if (this.latest &&
@@ -150,6 +180,8 @@ export class Concast<T> extends Observable<T> {
           // 'next' message (unless there was an error) immediately
           // followed by a 'complete' message (see addObserver).
           iterateObserversSafely(this.observers, "complete");
+        } else if (isPromiseLike(value)) {
+          value.then(obs => this.sub = obs.subscribe(this.handlers));
         } else {
           this.sub = value.subscribe(this.handlers);
         }

@@ -598,7 +598,7 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
-  public observeQuery<TData>(observableQuery: ObservableQuery<TData>) {
+  public observeQuery(observableQuery: ObservableQuery<any>) {
     const { queryId, options } = observableQuery;
 
     this.getQuery(queryId).setObservableQuery(observableQuery);
@@ -612,10 +612,10 @@ export class QueryManager<TStore> {
     // method, which sometimes alters mutableOptions.fetchPolicy.
     let mutableOptions: WatchQueryOptions<any> = { ...options };
 
-    return <TVars>(
+    return <TData, TVars>(
       newOptions?: Partial<WatchQueryOptions<TVars>>,
       newNetworkStatus?: NetworkStatus,
-    ) => {
+    ): Observable<ApolloQueryResult<TData>> => {
       if (newOptions) {
         Object.keys(newOptions).forEach(key => {
           const value = (newOptions as any)[key];

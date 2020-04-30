@@ -278,7 +278,7 @@ export class ObservableQuery<
     return this.reobserve({
       fetchPolicy,
       variables,
-    });
+    }, NetworkStatus.refetch);
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -451,7 +451,7 @@ export class ObservableQuery<
       return Promise.resolve();
     }
 
-    return this.reobserve({ variables });
+    return this.reobserve({ variables }, NetworkStatus.setVariables);
   }
 
   public updateQuery<TVars = TVariables>(
@@ -549,18 +549,22 @@ export class ObservableQuery<
     };
   }
 
-  private reobserver?: (
-    options?: Partial<WatchQueryOptions>,
-  ) => Observable<ApolloQueryResult<TData>>;
-
+  private reobserver?: ReturnType<QueryManager<any>["observeQuery"]>;
   private reObsSub?: ObservableSubscription;
 
-  public reobserve(options?: Partial<WatchQueryOptions>) {
+  public reobserve(
+    newOptions?: Partial<WatchQueryOptions<TVariables>>,
+    newNetworkStatus?: NetworkStatus,
+  ): Promise<ApolloQueryResult<TData>> {
     if (!this.reobserver) {
       this.reobserver = this.queryManager.observeQuery(this);
     }
 
-    const observable = this.reobserver(options);
+    const observable = this.reobserver<TData, TVariables>(
+      newOptions,
+      newNetworkStatus,
+    );
+
     const promise = toPromise(observable);
 
     if (this.reObsSub) this.reObsSub.unsubscribe();

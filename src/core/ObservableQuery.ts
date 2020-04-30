@@ -275,10 +275,11 @@ export class ObservableQuery<
       };
     }
 
-    return this.reobserve({
-      fetchPolicy,
-      variables,
-    }, NetworkStatus.refetch);
+    return this.reobserveImpl(
+      this.queryManager.observeQuery(this),
+      { fetchPolicy, variables },
+      NetworkStatus.refetch,
+    );
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -458,10 +459,11 @@ export class ObservableQuery<
       fetchPolicy = 'cache-and-network';
     }
 
-    return this.reobserve({
-      variables,
-      fetchPolicy,
-    }, NetworkStatus.setVariables);
+    return this.reobserveImpl(
+      this.queryManager.observeQuery(this),
+      { variables, fetchPolicy },
+      NetworkStatus.setVariables,
+    );
   }
 
   public updateQuery<TVars = TVariables>(
@@ -560,7 +562,7 @@ export class ObservableQuery<
   }
 
   private reobserver?: ReturnType<QueryManager<any>["observeQuery"]>;
-  private reObsSub?: ObservableSubscription;
+  private activeSub?: ObservableSubscription;
 
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables>>,
@@ -569,16 +571,23 @@ export class ObservableQuery<
     if (!this.reobserver) {
       this.reobserver = this.queryManager.observeQuery(this);
     }
+    return this.reobserveImpl(this.reobserver, newOptions, newNetworkStatus);
+  }
 
-    const observable = this.reobserver<TData, TVariables>(
+  private reobserveImpl(
+    reobserver: ReturnType<QueryManager<any>["observeQuery"]>,
+    newOptions?: Partial<WatchQueryOptions<TVariables>>,
+    newNetworkStatus?: NetworkStatus,
+  ): Promise<ApolloQueryResult<TData>> {
+    const observable = reobserver<TData, TVariables>(
       newOptions,
       newNetworkStatus,
     );
 
     const promise = toPromise(observable);
 
-    if (this.reObsSub) this.reObsSub.unsubscribe();
-    this.reObsSub = observable.subscribe(this.observer);
+    if (this.activeSub) this.activeSub.unsubscribe();
+    this.activeSub = observable.subscribe(this.observer);
 
     return promise;
   }
@@ -639,9 +648,9 @@ export class ObservableQuery<
   private tearDownQuery() {
     const { queryManager } = this;
 
-    if (this.reObsSub) {
-      this.reObsSub.unsubscribe();
-      delete this.reObsSub;
+    if (this.activeSub) {
+      this.activeSub.unsubscribe();
+      delete this.activeSub;
     }
 
     this.isTornDown = true;

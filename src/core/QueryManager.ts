@@ -725,36 +725,6 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  public getCurrentQueryResult<T>(
-    observableQuery: ObservableQuery<T>,
-    optimistic: boolean = true,
-  ): {
-    data: T | undefined;
-    partial: boolean;
-  } {
-    const { variables, query, fetchPolicy, returnPartialData } = observableQuery.options;
-    const lastResult = observableQuery.getLastResult();
-
-    if (fetchPolicy === 'no-cache' ||
-        fetchPolicy === 'network-only') {
-      const diff = this.getQuery(observableQuery.queryId).getDiff();
-      return { data: diff?.result, partial: false };
-    }
-
-    const { result, complete } = this.cache.diff<T>({
-      query,
-      variables,
-      previousResult: lastResult ? lastResult.data : undefined,
-      returnPartialData: true,
-      optimistic,
-    });
-
-    return {
-      data: (complete || returnPartialData) ? result : void 0,
-      partial: !complete,
-    };
-  }
-
   public broadcastQueries() {
     this.onBroadcast();
     this.queries.forEach(info => info.notify());

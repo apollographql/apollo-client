@@ -165,7 +165,7 @@ export class ObservableQuery<
       return result;
     }
 
-    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
+    const { data, partial } = this.getCurrentQueryResult();
     Object.assign(result, { data, partial });
 
     const queryStoreValue = this.queryManager.getQueryStoreValue(this.queryId);
@@ -451,7 +451,7 @@ export class ObservableQuery<
     ) => TData,
   ): void {
     const { queryManager } = this;
-    const previousResult = queryManager.getCurrentQueryResult(this, false).data;
+    const previousResult = this.getCurrentQueryResult(false).data;
     const newResult = tryFunctionOrLogError(
       () => mapFn(previousResult!, {
         variables: (this as any).variables,
@@ -467,6 +467,35 @@ export class ObservableQuery<
 
       queryManager.broadcastQueries();
     }
+  }
+
+  private getCurrentQueryResult(
+    optimistic: boolean = true,
+  ): {
+    data?: TData;
+    partial: boolean;
+  } {
+    const { fetchPolicy } = this.options;
+    if (fetchPolicy === 'no-cache' ||
+        fetchPolicy === 'network-only') {
+      return {
+        data: this.lastResult?.data,
+        partial: false,
+      };
+    }
+
+    const { result, complete } = this.queryManager.cache.diff<TData>({
+      query: this.options.query,
+      variables: this.variables,
+      previousResult: this.lastResult?.data,
+      returnPartialData: true,
+      optimistic,
+    });
+
+    return {
+      data: (complete || this.options.returnPartialData) ? result : void 0,
+      partial: !complete,
+    };
   }
 
   public startPolling(pollInterval: number) {

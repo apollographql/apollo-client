@@ -77,12 +77,10 @@ export class QueryManager<TStore> {
   // including mutations and subscriptions).
   private queries = new Map<string, QueryInfo>();
 
-  // A map of Promise reject functions for fetchQuery promises that have not
-  // yet been resolved, used to keep track of in-flight queries so that we can
-  // reject them in case a destabilizing event occurs (e.g. Apollo store reset).
-  // The key is in the format of `query:${queryId}` or `fetchRequest:${queryId}`,
-  // depending on where the promise's rejection function was created from.
-  private fetchQueryRejectFns = new Map<string, Function>();
+  // Maps from queryId strings to Promise rejection functions for
+  // currently active queries and fetches.
+  private queryCancelFns = new Map<string, (error: any) => any>();
+  private fetchCancelFns = new Map<string, (error: any) => any>();
 
   constructor({
     cache,
@@ -122,11 +120,16 @@ export class QueryManager<TStore> {
       this.stopQueryNoBroadcast(queryId);
     });
 
-    this.fetchQueryRejectFns.forEach(reject => {
-      reject(
-        new InvariantError('QueryManager stopped while query was in flight'),
-      );
-    });
+    this.cancelPendingFetches(
+      new InvariantError('QueryManager stopped while query was in flight'),
+    );
+  }
+
+  private cancelPendingFetches(error: Error) {
+    this.queryCancelFns.forEach(cancel => cancel(error));
+    this.fetchCancelFns.forEach(cancel => cancel(error));
+    this.queryCancelFns.clear();
+    this.fetchCancelFns.clear();
   }
 
   public async mutate<T>({
@@ -496,19 +499,18 @@ export class QueryManager<TStore> {
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       const watchedQuery = this.watchQuery<T>(options, false);
-      this.fetchQueryRejectFns.set(`query:${watchedQuery.queryId}`, reject);
+      const { queryId } = watchedQuery;
+      this.queryCancelFns.set(queryId, reject);
       watchedQuery
         .result()
         .then(resolve, reject)
         // Since neither resolve nor reject throw or return a value, this .then
         // handler is guaranteed to execute. Note that it doesn't really matter
-        // when we remove the reject function from this.fetchQueryRejectFns,
+        // when we remove the reject function from this.fetchCancelFns,
         // since resolve and reject are mutually idempotent. In fact, it would
         // not be incorrect to let reject functions accumulate over time; it's
         // just a waste of memory.
-        .then(() =>
-          this.fetchQueryRejectFns.delete(`query:${watchedQuery.queryId}`),
-        );
+        .then(() => this.queryCancelFns.delete(queryId));
     });
   }
 
@@ -543,17 +545,14 @@ export class QueryManager<TStore> {
   }
 
   public clearStore(): Promise<void> {
-    // Before we have sent the reset action to the store,
-    // we can no longer rely on the results returned by in-flight
-    // requests since these may depend on values that previously existed
-    // in the data portion of the store. So, we cancel the promises and observers
-    // that we have issued so far and not yet resolved (in the case of
-    // queries).
-    this.fetchQueryRejectFns.forEach(reject => {
-      reject(new InvariantError(
-        'Store reset while query was in flight (not completed in link chain)',
-      ));
-    });
+    // Before we have sent the reset action to the store, we can no longer
+    // rely on the results returned by in-flight requests since these may
+    // depend on values that previously existed in the data portion of the
+    // store. So, we cancel the promises and observers that we have issued
+    // so far and not yet resolved (in the case of queries).
+    this.cancelPendingFetches(new InvariantError(
+      'Store reset while query was in flight (not completed in link chain)',
+    ));
 
     this.queries.forEach(queryInfo => {
       if (queryInfo.observableQuery &&
@@ -721,11 +720,11 @@ export class QueryManager<TStore> {
   public removeQuery(queryId: string) {
     // teardown all links
     // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
-    // that each add their reject functions to fetchQueryRejectFns.
+    // that each add their reject functions to fetchCancelFns.
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
-    this.fetchQueryRejectFns.delete(`query:${queryId}`);
-    this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
+    this.queryCancelFns.delete(queryId);
+    this.fetchCancelFns.delete(queryId);
     this.getQuery(queryId).subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
   }

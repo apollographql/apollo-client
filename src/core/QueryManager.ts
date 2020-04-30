@@ -1119,11 +1119,22 @@ export class QueryManager<TStore> {
           if (this.checkInFlight(queryId)) {
             poll();
           } else {
-            this.fetchQuery(
-              queryId,
-              info.options,
-              NetworkStatus.poll,
-            ).then(poll, poll);
+            const queryInfo = this.getQuery(queryId);
+            if (queryInfo.observableQuery) {
+              queryInfo.observableQuery.reobserve(
+                info.options,
+                NetworkStatus.poll,
+              ).then(poll, poll);
+            } else {
+              this.fetchQueryObservable(
+                queryId,
+                info.options,
+                NetworkStatus.poll,
+              ).promise.then(() => {
+                queryInfo.setDirty();
+                poll();
+              }, poll);
+            }
           }
         }
       };

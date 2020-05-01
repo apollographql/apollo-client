@@ -90,9 +90,8 @@ export class MockLink extends ApolloLink {
           operation.query
         )}, variables: ${JSON.stringify(operation.variables)}`
       ));
+      return null;
     }
-
-    invariant(response, "mocked response is required");
 
     this.mockedResponsesByKey[key].splice(responseIndex, 1);
 

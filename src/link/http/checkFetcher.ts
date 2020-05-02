@@ -13,7 +13,7 @@ export const checkFetcher = (fetcher: WindowOrWorkerGlobalScope['fetch'] | undef
       `import fetch from '${library}';\n` +
       "import { ApolloClient, HttpLink } from '@apollo/client';\n" +
       'const client = new ApolloClient({\n' +
-      "  link: new HttpLink({ uri: '/graphq', fetch })\n" +
+      "  link: new HttpLink({ uri: '/graphql', fetch })\n" +
       '});'
     );
   }

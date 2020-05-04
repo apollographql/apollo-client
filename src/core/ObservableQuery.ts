@@ -275,14 +275,12 @@ export class ObservableQuery<
       };
     }
 
-    return this.queryManager
-      .observeQuery(this, this.observer)
-      .reobserve({
-        fetchPolicy,
-        variables: this.options.variables,
-        // Always disable polling for refetches.
-        pollInterval: 0,
-      }, NetworkStatus.refetch);
+    return this.newReobserver(false).reobserve({
+      fetchPolicy,
+      variables: this.options.variables,
+      // Always disable polling for refetches.
+      pollInterval: 0,
+    }, NetworkStatus.refetch);
   }
 
   public fetchMore<K extends keyof TVariables>(
@@ -564,19 +562,30 @@ export class ObservableQuery<
   }
 
   private reobserver?: Reobserver<TData, TVariables>;
+
   private getReobserver(): Reobserver<TData, TVariables> {
-    return this.reobserver || (
-      this.reobserver = this.queryManager.observeQuery(
-        this,
-        this.observer,
-        // Passing this.options explicitly here prevents observeQuery from
-        // making a shallow copy of the options object before passing it
-        // to the constructor of the returned Reobserver object. In other
-        // words, this extra argument allows this.reobserver.options to be
-        // === this.options, so we don't have to worry about synchronizing
-        // the properties of two distinct objects.
-        this.options,
-      )
+    return this.reobserver || (this.reobserver = this.newReobserver(true));
+  }
+
+  private newReobserver(shareOptions: boolean) {
+    const { queryManager, queryId } = this;
+    queryManager.setObservableQuery(this);
+    return new Reobserver<TData, TVariables>(
+      this.observer,
+      // Sharing options allows this.reobserver.options to be ===
+      // this.options, so we don't have to worry about synchronizing the
+      // properties of two distinct objects.
+      shareOptions ? this.options : { ...this.options },
+      (currentOptions, newNetworkStatus) => {
+        queryManager.setObservableQuery(this);
+        return queryManager.fetchQueryObservable(
+          queryId,
+          currentOptions,
+          newNetworkStatus,
+        );
+      },
+      // Avoid polling during SSR and when the query is already in flight.
+      !queryManager.ssrMode && (() => !queryManager.checkInFlight(queryId)),
     );
   }
 

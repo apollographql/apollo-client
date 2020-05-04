@@ -24,7 +24,6 @@ import { ApolloError, isApolloError } from '../errors/ApolloError';
 import {
   ObservableSubscription,
   Observable,
-  Observer,
 } from '../utilities/observables/Observable';
 import { MutationStore } from '../data/mutations';
 import {
@@ -56,7 +55,6 @@ import { isNonEmptyArray } from '../utilities/common/arrays';
 import { ApolloCache } from '../cache/core/cache';
 
 import { QueryInfo, QueryStoreValue } from './QueryInfo';
-import { Reobserver } from './Reobserver';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -614,34 +612,8 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
-  public observeQuery<TData, TVars>(
-    observableQuery: ObservableQuery<TData, TVars>,
-    observer: Observer<ApolloQueryResult<TData>>,
-    // If no options are passed, make a shallow defensive copy of the
-    // ObservableQuery options.
-    options = { ...observableQuery.options },
-  ): Reobserver<TData, TVars> {
-    const { queryId } = observableQuery;
-
-    const setObsQuery = () =>
-      this.getQuery(queryId).setObservableQuery(observableQuery);
-
-    setObsQuery();
-
-    return new Reobserver<TData, TVars>(
-      observer,
-      options,
-      (currentOptions, newNetworkStatus) => {
-        setObsQuery();
-        return this.fetchQueryObservable(
-          observableQuery.queryId,
-          currentOptions,
-          newNetworkStatus,
-        );
-      },
-      // Avoid polling during SSR and when the query is already in flight.
-      !this.ssrMode && (() => !this.checkInFlight(queryId)),
-    );
+  public setObservableQuery(observableQuery: ObservableQuery<any, any>) {
+    this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
   }
 
   public startGraphQLSubscription<T = any>({
@@ -866,7 +838,7 @@ export class QueryManager<TStore> {
     );
   }
 
-  private fetchQueryObservable<TData, TVars>(
+  public fetchQueryObservable<TData, TVars>(
     queryId: string,
     options: WatchQueryOptions<TVars>,
     // The initial networkStatus for this fetch, most often

@@ -142,11 +142,7 @@ export class Concast<T> extends Observable<T> {
         this.sub.unsubscribe();
         // In case anyone happens to be listening to this.promise, after
         // this.observers has become empty.
-        const error = new Error("Observable cancelled prematurely");
-        // If a "complete" message hasn't happened yet but might happen
-        // soon, it would be a pity to reject before we have a chance to
-        // call this.resolve.
-        setTimeout(() => this.reject(error), 10);
+        this.reject(new Error("Observable cancelled prematurely"));
       }
       this.sub = null;
     }

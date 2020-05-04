@@ -377,8 +377,8 @@ export class ObservableQuery<
 
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables>>,
-  ): Promise<ApolloQueryResult<TData> | void> {
-    return this.reobserve(newOptions, NetworkStatus.setVariables);
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.reobserve(newOptions);
   }
 
   /**
@@ -408,12 +408,8 @@ export class ObservableQuery<
    */
   public setVariables(
     variables: TVariables,
-    tryFetch = !equal(this.variables, variables),
   ): Promise<ApolloQueryResult<TData> | void> {
-    // since setVariables restarts the subscription, we reset the tornDown status
-    this.isTornDown = false;
-
-    if (!tryFetch) {
+    if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
@@ -593,6 +589,7 @@ export class ObservableQuery<
     newOptions?: Partial<WatchQueryOptions<TVariables>>,
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
+    this.isTornDown = false;
     return this.getReobserver().reobserve(newOptions, newNetworkStatus);
   }
 

@@ -596,39 +596,8 @@ export class ObservableQuery<
   private observer: Observer<ApolloQueryResult<TData>> = {
     next: result => {
       if (this.lastError || this.isDifferentFromLastResult(result)) {
-        const { queryManager } = this;
-        const { query, variables, fetchPolicy } = this.options;
-        const { hasClientExports } = queryManager.transform(query);
-        const previousResult = this.updateLastResult(result);
-
-        // Before calling `next` on each observer, we need to first see if
-        // the query is using `@client @export` directives, and update
-        // any variables that might have changed. If `@export` variables have
-        // changed, `setVariables` is used to query the cache first, followed
-        // by the network if needed.
-        if (hasClientExports) {
-          queryManager.getLocalState().addExportedVariables(
-            query,
-            variables,
-          ).then((variables: TVariables) => {
-            const previousVariables = this.variables;
-            if (
-              !result.loading &&
-              previousResult &&
-              fetchPolicy !== 'cache-only' &&
-              !equal(previousVariables, variables)
-            ) {
-              this.setVariables(variables).then(updatedResult => {
-                iterateObserversSafely(this.observers, 'next', updatedResult);
-              });
-            } else {
-              this.options.variables = variables;
-              iterateObserversSafely(this.observers, 'next', result);
-            }
-          });
-        } else {
-          iterateObserversSafely(this.observers, 'next', result);
-        }
+        this.updateLastResult(result);
+        iterateObserversSafely(this.observers, 'next', result);
       }
     },
 

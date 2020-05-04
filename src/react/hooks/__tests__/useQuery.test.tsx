@@ -14,7 +14,7 @@ import { useQuery } from '../useQuery';
 import { requireReactLazily } from '../../react';
 
 const React = requireReactLazily();
-const { useState, useReducer } = React;
+const { useState, useReducer, Fragment } = React;
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -319,6 +319,61 @@ describe('useQuery Hook', () => {
           error: undefined,
         })
       );
+    });
+
+    it('should not error when forcing an update with React >= 16.13.0', async () => {
+      let wasUpdateErrorLogged = false;
+      const consoleError = console.error;
+      console.error = (msg: string) => {
+        console.log(msg);
+        wasUpdateErrorLogged = msg.indexOf('Cannot update a component') > -1;
+      };
+
+      const CAR_MOCKS = [1, 2, 3, 4, 5, 6].map(something => ({
+        request: {
+          query: CAR_QUERY,
+          variables: { something }
+        },
+        result: { data: CAR_RESULT_DATA },
+        delay: 1000
+      }));
+
+      let renderCount = 0;
+
+      const InnerComponent = ({ something }: any) => {
+        const { loading, data } = useQuery(CAR_QUERY, {
+          fetchPolicy: 'network-only',
+          variables: { something }
+        });
+        if (loading) return null;
+        expect(wasUpdateErrorLogged).toBeFalsy();
+        expect(data).toEqual(CAR_RESULT_DATA);
+        renderCount += 1;
+        return null;
+      };
+
+      function WrapperComponent({ something }: any) {
+        const { loading } = useQuery(CAR_QUERY, {
+          variables: { something }
+        });
+        return loading ? null : <InnerComponent something={something + 1} />;
+      }
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS}>
+          <Fragment>
+            <WrapperComponent something={1} />
+            <WrapperComponent something={3} />
+            <WrapperComponent something={5} />
+          </Fragment>
+        </MockedProvider>
+      );
+
+      await wait(() => {
+        expect(renderCount).toBe(3);
+      }).finally(() => {
+        console.error = consoleError;
+      });
     });
   });
 
@@ -650,7 +705,7 @@ describe('useQuery Hook', () => {
             expect(error).toBeDefined();
             expect(error!.message).toEqual('forced error');
             setTimeout(() => {
-              forceUpdate(0);
+              forceUpdate();
             });
             break;
           case 2:
@@ -713,7 +768,7 @@ describe('useQuery Hook', () => {
               expect(error).toBeDefined();
               expect(error!.message).toEqual('forced error');
               setTimeout(() => {
-                forceUpdate(0);
+                forceUpdate();
               });
               break;
             case 2:

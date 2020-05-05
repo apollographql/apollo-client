@@ -553,12 +553,12 @@ describe('Writing cache data from resolvers', () => {
               },
             });
 
-            cache.modify('Object:uniqueId', {
+            cache.modify({
               field(value) {
                 expect(value).toBe(1);
                 return 2;
               },
-            })
+            }, 'Object:uniqueId');
 
             return { start: true };
           },

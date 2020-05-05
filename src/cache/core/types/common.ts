@@ -1,3 +1,5 @@
+import { DocumentNode } from 'graphql';
+
 import {
   isReference,
   StoreValue,
@@ -30,4 +32,13 @@ export type Modifier<T> = (value: T, details: {
 
 export type Modifiers = {
   [fieldName: string]: Modifier<any>;
+}
+
+export class MissingFieldError {
+  constructor(
+    public readonly message: string,
+    public readonly path: (string | number)[],
+    public readonly query: DocumentNode,
+    public readonly variables: Record<string, any>,
+  ) {}
 }

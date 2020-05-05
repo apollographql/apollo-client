@@ -1654,14 +1654,10 @@ describe('client', () => {
       });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toBe(undefined);
-          expect(result.loading).toBe(true);
-        } else if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(networkFetch);
-          expect(result.loading).toBe(false);
-          resolve();
-        }
+        expect(handleCount).toBe(1);
+        expect(stripSymbols(result.data)).toEqual(networkFetch);
+        expect(result.loading).toBe(false);
+        resolve();
       });
     });
 
@@ -1677,17 +1673,13 @@ describe('client', () => {
         fetchPolicy: 'cache-and-network',
       });
 
-      let count = 0;
       obs.subscribe({
-        next: result => {
-          expect(result.data).toBe(undefined);
-          expect(result.loading).toBe(true);
-          count++;
-        },
         error: e => {
-          expect(e.message).toMatch(/No more mocked responses/);
-          expect(count).toBe(1); // make sure next was called.
-          setTimeout(resolve, 100);
+          if (!/No more mocked responses/.test(e.message)) {
+            reject(e);
+          } else {
+            resolve();
+          }
         },
       });
     });
@@ -2396,7 +2388,7 @@ describe('client', () => {
 
     handle.subscribe({
       error(error) {
-        expect(error.message).toBe('Network error: Uh oh!');
+        expect(error.message).toBe('Uh oh!');
         resolve();
       },
     });
@@ -2491,7 +2483,7 @@ describe('client', () => {
       },
       error(error) {
         expect(count++).toBe(2);
-        expect(error.message).toBe('Network error: This is an error!');
+        expect(error.message).toBe('This is an error!');
 
         subscription.unsubscribe();
 
@@ -2544,7 +2536,7 @@ describe('client', () => {
 
     return client.query({ query }).catch(err => {
       expect(err.message).toBe(
-        'GraphQL error: Cannot query field "foo" on type "Post".',
+        'Cannot query field "foo" on type "Post".',
       );
     }).then(resolve, reject);
   });
@@ -3002,7 +2994,7 @@ describe('@connection', () => {
     checkLastResult(abResults, a456bOyez);
     const cSee = checkLastResult(cResults, { c: "see" });
 
-    cache.modify("ROOT_QUERY", {
+    cache.modify({
       c(value) {
         expect(value).toBe("see");
         return "saw";

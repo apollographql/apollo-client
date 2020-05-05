@@ -44,6 +44,12 @@
 - **[BREAKING]** `client|cache.writeData` have been fully removed. `writeData` usage is one of the easiest ways to turn faulty assumptions about how the cache represents data internally, into cache inconsistency and corruption. `client|cache.writeQuery`, `client|cache.writeFragment`, and/or `cache.modify` can be used to update the cache.  <br/>
   [@benjamn](https://github.com/benjamn) in [#5923](https://github.com/apollographql/apollo-client/pull/5923)
 
+- **[BREAKING]** Apollo Client will no longer deliver "stale" results to `ObservableQuery` consumers, but will instead log more helpful errors about which cache fields were missing. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6058](https://github.com/apollographql/apollo-client/pull/6058)
+
+- **[BREAKING]** `ApolloError`'s thrown by Apollo Client no longer prefix error messages with `GraphQL error:` or `Network error:`. To differentiate between GraphQL/network errors, refer to `ApolloError`'s public `graphQLErrors` and `networkError` properties. <br/>
+  [@lorensr](https://github.com/lorensr) in [#3892](https://github.com/apollographql/apollo-client/pull/3892)
+
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 
@@ -70,14 +76,15 @@
 
 - `InMemoryCache` now has a method called `modify` which can be used to update the value of a specific field within a specific entity object:
   ```ts
-  cache.modify(cache.identify(post), {
+  cache.modify({
     comments(comments: Reference[], { readField }) {
       return comments.filter(comment => idToRemove !== readField("id", comment));
     },
-  });
+  }, cache.identify(post));
   ```
   This API gracefully handles cases where multiple field values are associated with a single field name, and also removes the need for updating the cache by reading a query or fragment, modifying the result, and writing the modified result back into the cache. Behind the scenes, the `cache.evict` method is now implemented in terms of `cache.modify`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5909](https://github.com/apollographql/apollo-client/pull/5909)
+  and [#6178](https://github.com/apollographql/apollo-client/pull/6178)
 
 - `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
   ```ts
@@ -156,6 +163,9 @@
 
 - Ensure `useMutation` passes a defined `errorPolicy` option into its underlying `ApolloClient.mutate()` call.  <br/>
   [@jamesreggio](https://github.com/jamesreggio) in [#5863](https://github.com/apollographql/apollo-client/pull/5863)
+
+- `useQuery`: Prevent new data re-render attempts during an existing render. This helps avoid React 16.13.0's "Cannot update a component from inside the function body of a different component" warning (https://github.com/facebook/react/pull/17099). <br/>
+  [@hwillson](https://github.com/hwillson) in [#6107](https://github.com/apollographql/apollo-client/pull/6107)
 
 ## Apollo Client 2.6.8
 

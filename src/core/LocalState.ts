@@ -1,5 +1,4 @@
 import {
-  ExecutionResult,
   DocumentNode,
   OperationDefinitionNode,
   SelectionSetNode,
@@ -33,6 +32,7 @@ import {
 } from '../utilities/graphql/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
+import { FetchResult } from '../link/core/types';
 
 export type Resolver = (
   rootValue?: any,
@@ -128,11 +128,11 @@ export class LocalState<TCacheShape> {
     onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
-    remoteResult: ExecutionResult<TData>;
+    remoteResult: FetchResult<TData>;
     context?: Record<string, any>;
     variables?: Record<string, any>;
     onlyRunForcedResolvers?: boolean;
-  }): Promise<ExecutionResult<TData>> {
+  }): Promise<FetchResult<TData>> {
     if (document) {
       return this.resolveDocument(
         document,

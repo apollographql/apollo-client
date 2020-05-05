@@ -450,7 +450,7 @@ Note that because we are only using the `type` argument in the store key, we don
 
 ### Cache redirects with `cacheRedirects`
 
-*WARNING*: `cacheRedirects` is removed in v3. See [this issue](https://github.com/apollographql/apollo-client/issues/5983) for details. This documentation section should be removed and rewritten before v3 is released
+*WARNING*: `cacheRedirects` is removed in Apollo Client v3. New documentation that outlines how to replace `cacheRedirects` with the [new cache policies API](./cache-field-behavior) is coming soon.
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 

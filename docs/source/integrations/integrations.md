@@ -17,7 +17,7 @@ A [Vue.js](https://vuejs.org/) integration is maintained by Guillaume Chau ([@Ak
 
 ## Svelte
 
-A [Svelte](https://svelte.dev) integration is maintained by Tim Hall ([@timhall](https://github.com/timhall)). See Github [repository](https://github.com/timhall/svelte-apollo) for more details.
+A [Svelte](https://svelte.dev) integration is maintained by Tim Hall ([@timhall](https://github.com/timhall)). See the Github [repository](https://github.com/timhall/svelte-apollo) for more details.
 
 ## Angular
 
@@ -25,7 +25,7 @@ To use Apollo with the [Angular](https://angular.io) rendering library, see the 
 
 ## Ember
 
-An [Ember](http://emberjs.com/) integration is maintained by Josemar Luedke ([@josemarluedke](https://github.com/josemarluedke)). See Github [repository](https://github.com/ember-graphql/ember-apollo-client) for more details. The creator of the project is Blake Gentry ([@bgentry](https://github.com/bgentry)).
+An [Ember](http://emberjs.com/) integration is maintained by Josemar Luedke ([@josemarluedke](https://github.com/josemarluedke)). See the Github [repository](https://github.com/ember-graphql/ember-apollo-client) for more details. The creator of the project is Blake Gentry ([@bgentry](https://github.com/bgentry)).
 
 ## Web Components
 

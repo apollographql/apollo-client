@@ -107,7 +107,7 @@ export interface QueryPreviousData<TData, TVariables> {
   client?: ApolloClient<object>;
   query?: DocumentNode;
   observableQueryOptions?: {};
-  result?: ApolloQueryResult<TData> | null;
+  result?: QueryResult<TData, TVariables> | null;
   loading?: boolean;
   options?: QueryDataOptions<TData, TVariables>;
   error?: ApolloError;

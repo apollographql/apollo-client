@@ -164,6 +164,9 @@
 - Ensure `useMutation` passes a defined `errorPolicy` option into its underlying `ApolloClient.mutate()` call.  <br/>
   [@jamesreggio](https://github.com/jamesreggio) in [#5863](https://github.com/apollographql/apollo-client/pull/5863)
 
+- `useQuery`: Prevent new data re-render attempts during an existing render. This helps avoid React 16.13.0's "Cannot update a component from inside the function body of a different component" warning (https://github.com/facebook/react/pull/17099). <br/>
+  [@hwillson](https://github.com/hwillson) in [#6107](https://github.com/apollographql/apollo-client/pull/6107)
+
 ## Apollo Client 2.6.8
 
 ### Apollo Client (2.6.8)

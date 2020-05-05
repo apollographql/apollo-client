@@ -360,7 +360,7 @@ describe('QueryManager', () => {
         },
         error(error) {
           expect((error as any).graphQLErrors).toEqual([null]);
-          expect(error.message).toBe('GraphQL error: Error message not found.');
+          expect(error.message).toBe('Error message not found.');
           resolve();
         },
       },

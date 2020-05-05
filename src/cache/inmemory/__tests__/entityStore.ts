@@ -1623,7 +1623,7 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.modify(cuckoosCallingId, {
+    cache.modify({
       title(title: string, {
         isReference,
         toReference,
@@ -1656,7 +1656,7 @@ describe('EntityStore', () => {
         // Typography matters!
         return title.split("'").join("’");
       },
-    });
+    }, cuckoosCallingId);
 
     expect(cache.extract()).toEqual({
       ...threeBookSnapshot,

@@ -151,10 +151,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public modify(
-    dataId: string,
     modifiers: Modifier<any> | Modifiers,
+    dataId = "ROOT_QUERY",
     optimistic = false,
   ): boolean {
+    if (typeof modifiers === "string") {
+      // In beta testing of Apollo Client 3, the dataId parameter used to
+      // come before the modifiers. The type system should complain about
+      // this, but it doesn't have to be fatal if we fix it here.
+      [modifiers, dataId] = [dataId as any, modifiers];
+    }
     const store = optimistic ? this.optimisticData : this.data;
     if (store.modify(dataId, modifiers)) {
       this.broadcastWatches();

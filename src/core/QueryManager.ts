@@ -1,4 +1,4 @@
-import { ExecutionResult, DocumentNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 import equal from '@wry/equality';
 
@@ -229,7 +229,7 @@ export class QueryManager<TStore> {
         variables,
         false,
       ).subscribe({
-        next(result: ExecutionResult) {
+        next(result: FetchResult<T>) {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
             error = new ApolloError({
               graphQLErrors: result.errors,
@@ -257,7 +257,7 @@ export class QueryManager<TStore> {
             }
           }
 
-          storeResult = result as FetchResult<T>;
+          storeResult = result;
         },
 
         error(err: Error) {
@@ -292,7 +292,7 @@ export class QueryManager<TStore> {
           // allow for conditional refetches
           // XXX do we want to make this the only API one day?
           if (typeof refetchQueries === 'function') {
-            refetchQueries = refetchQueries(storeResult as ExecutionResult);
+            refetchQueries = refetchQueries(storeResult!);
           }
 
           const refetchQueryPromises: Promise<
@@ -1088,7 +1088,7 @@ export class QueryManager<TStore> {
     let resultFromStore: any;
     let errorsFromStore: any;
 
-    return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
+    return new Promise<FetchResult<T>>((resolve, reject) => {
       const observable = this.getObservableFromLink(
         document,
         options.context,
@@ -1105,7 +1105,7 @@ export class QueryManager<TStore> {
         subs.delete(subscription);
       };
 
-      const subscription = observable.map((result: ExecutionResult) => {
+      const subscription = observable.map((result: FetchResult<T>) => {
         const queryInfo = this.getQuery(queryId);
 
         if (requestId >= queryInfo.lastRequestId) {
@@ -1165,9 +1165,12 @@ export class QueryManager<TStore> {
           resolve({
             data: resultFromStore,
             errors: errorsFromStore,
+            // These properties are not part of the FetchResult<T> type,
+            // so the typecast below is a bit forced, but these sins will
+            // be washed away by PR #6221.
             loading: false,
             networkStatus: NetworkStatus.ready,
-          });
+          } as FetchResult<T>);
         },
       });
 
@@ -1270,10 +1273,10 @@ export class QueryManager<TStore> {
   }
 }
 
-function markMutationResult<TStore>(
+function markMutationResult<TStore, TData>(
   mutation: {
     mutationId: string;
-    result: ExecutionResult;
+    result: FetchResult<TData>;
     document: DocumentNode;
     variables: any;
     queryUpdatersById: Record<string, QueryWithUpdater>;

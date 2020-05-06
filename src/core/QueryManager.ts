@@ -687,8 +687,8 @@ export class QueryManager<TStore> {
 
     // Set default deduplication value if arg was not passed
     if(typeof deduplication === 'undefined') {
-      if(typeof context === 'object' && 'forceFetch' in context) {
-        deduplication = !context.forceFetch
+      if(typeof context === 'object' && 'queryDeduplication' in context) {
+        deduplication = context.queryDeduplication
       } else {
         deduplication = this.queryDeduplication
       }

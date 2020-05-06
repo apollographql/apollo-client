@@ -1,6 +1,6 @@
 import gql from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
+import { InMemoryCache, ReactiveVar } from "../inMemoryCache";
 import { Policies } from "../policies";
 import { Reference, StoreObject } from "../../../core";
 import { MissingFieldError } from "../..";
@@ -1224,7 +1224,7 @@ describe("type policies", function () {
                       const aTitle = readField<string>("title", a);
                       const bTitle = readField<string>("title", b);
                       if (aTitle === bTitle) return 0;
-                      if (aTitle < bTitle) return -1;
+                      if (aTitle! < bTitle!) return -1;
                       return 1;
                     });
                   }
@@ -1393,7 +1393,7 @@ describe("type policies", function () {
           Agenda: {
             fields: {
               taskCount(_, { readField }) {
-                return readField<Reference[]>("tasks").length;
+                return readField<Reference[]>("tasks")!.length;
               },
 
               tasks: {
@@ -1417,7 +1417,8 @@ describe("type policies", function () {
           Task: {
             fields: {
               ownTime(_, { readField }) {
-                return ownTimes[readField<string>("description")]() || 0;
+                const description = readField<string>("description");
+                return ownTimes[description!]() || 0;
               },
 
               totalTime(_, { readField, toReference }) {
@@ -1429,7 +1430,7 @@ describe("type policies", function () {
                   blockers.forEach(blocker => {
                     if (!seen.has(blocker.__ref)) {
                       seen.add(blocker.__ref);
-                      time += readField<number>("ownTime", blocker);
+                      time += readField<number>("ownTime", blocker)!;
                       time += total(
                         readField<Reference[]>("blockers", blocker),
                         seen,
@@ -1466,7 +1467,7 @@ describe("type policies", function () {
 
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
-      const ownTimes: any = {
+      const ownTimes: { [key: string]: ReactiveVar<number>} = {
         "parent task": cache.makeVar(2),
         "child task 1": cache.makeVar(3),
         "child task 2": cache.makeVar(4),
@@ -2895,9 +2896,9 @@ describe("type policies", function () {
               bookRefs.forEach(bookRef => {
                 expect(isReference(bookRef)).toBe(true);
                 const year = readField<number>("year", bookRef);
-                if (firstYear === void 0 || year < firstYear) {
+                if (firstYear === void 0 || year! < firstYear) {
                   firstBook = bookRef;
-                  firstYear = year;
+                  firstYear = year!;
                 }
               });
               // Return a Book Reference, which can have a nested
@@ -2913,7 +2914,14 @@ describe("type policies", function () {
       },
     });
 
-    function addBook(bookData: { __typename: 'Book'; isbn: string; title: string; year: number; }) {
+    interface BookData {
+      __typename: 'Book'
+      isbn: string
+      title: string
+      year: number
+    }
+
+    function addBook(bookData: BookData) {
       cache.writeQuery({
         query: gql`
           query {

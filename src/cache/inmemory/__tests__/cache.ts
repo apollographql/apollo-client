@@ -2076,8 +2076,8 @@ describe("InMemoryCache#modify", () => {
     expect(aResults).toEqual([a123]);
     expect(bResults).toEqual([b321]);
 
-    const aId = cache.identify({ __typename: "A", id: 1 })!;
-    const bId = cache.identify({ __typename: "B", id: 1 })!;
+    const aId = cache.identify({ __typename: "A", id: 1 });
+    const bId = cache.identify({ __typename: "B", id: 1 });
 
     cache.modify({
       value(x: number) {

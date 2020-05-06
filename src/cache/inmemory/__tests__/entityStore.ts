@@ -972,11 +972,11 @@ describe('EntityStore', () => {
 
     cache.evict("ROOT_QUERY", "publisherOfBook");
 
-    function withoutPublisherOfBook(obj: object) {
+    function withoutPublisherOfBook(obj: {[key: string]: any}) {
       const clean = { ...obj };
       Object.keys(obj).forEach(key => {
         if (key.startsWith("publisherOfBook")) {
-          delete (clean as any)[key];
+          delete clean[key];
         }
       });
       return clean;
@@ -1403,7 +1403,7 @@ describe('EntityStore', () => {
               expect(readField("__typename", ref)).toEqual("Book");
               const isbn = readField<string>("isbn", ref);
               expect(isbn).toEqual(args!.isbn);
-              expect(readField("title", ref)).toBe(titlesByISBN.get(isbn));
+              expect(readField("title", ref)).toBe(titlesByISBN.get(isbn!));
 
               return ref;
             },

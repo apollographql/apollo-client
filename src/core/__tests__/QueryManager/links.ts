@@ -339,7 +339,7 @@ describe('Link interactions', () => {
                 }
 
                 expect(ref).toEqual({ __ref: `Book:${args.id}` });
-                const found = readField<Reference[]>("books").find(
+                const found = readField<Reference[]>("books")!.find(
                   book => book.__ref === ref.__ref);
                 expect(found).toBeTruthy();
                 return found;

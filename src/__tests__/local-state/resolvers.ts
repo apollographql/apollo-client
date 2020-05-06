@@ -610,12 +610,12 @@ describe('Writing cache data from resolvers', () => {
                 },
               },
             });
-            cache.modify('Object:uniqueId', {
-              field(value) {
+            cache.modify({
+              field(value: { field2: number }) {
                 expect(value.field2).toBe(1);
                 return { ...value, field2: 2 };
               },
-            });
+            }, 'Object:uniqueId');
             return { start: true };
           },
         },

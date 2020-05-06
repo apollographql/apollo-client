@@ -25,7 +25,7 @@ export class Reobserver<TData, TVars> {
     if (newOptions) {
       this.updateOptions(newOptions);
     } else {
-      // When we call this.updatePolling(newOptions) in the branch above,
+      // When we call this.updateOptions(newOptions) in the branch above,
       // it takes care of calling this.updatePolling(). In this branch, we
       // still need to update polling, even if there were no newOptions.
       this.updatePolling();

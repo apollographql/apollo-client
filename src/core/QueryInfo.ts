@@ -170,21 +170,24 @@ export class QueryInfo {
     if (oq) oq.stopPolling();
   }
 
-  // This method can be overridden for a given instance.
-  public cancel() {}
+  // This method is a no-op by default, until/unless overridden by the
+  // updateWatch method.
+  private cancel() {}
 
-  public updateWatch(options: WatchQueryOptions): this {
-    // TODO Always cancelling here may be bad because it disrupts
-    // cache.watch continuity.
-    this.cancel();
+  private lastWatch?: Cache.WatchOptions;
 
-    this.cancel = this.cache.watch({
-      query: this.document!,
-      variables: options.variables,
-      optimistic: true,
-      callback: diff => this.setDiff(diff),
-    });
-
+  public updateWatch<TVars = Record<string, any>>(variables: TVars): this {
+    if (!this.lastWatch ||
+        this.lastWatch.query !== this.document ||
+        !equal(variables, this.lastWatch.variables)) {
+      this.cancel();
+      this.cancel = this.cache.watch(this.lastWatch = {
+        query: this.document!,
+        variables,
+        optimistic: true,
+        callback: diff => this.setDiff(diff),
+      });
+    }
     return this;
   }
 

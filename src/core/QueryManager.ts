@@ -953,7 +953,7 @@ export class QueryManager<TStore> {
       variables,
       lastRequestId: this.generateRequestId(),
       networkStatus,
-    }).updateWatch(options);
+    }).updateWatch(variables);
 
     const readCache = () => this.cache.diff<any>({
       query,

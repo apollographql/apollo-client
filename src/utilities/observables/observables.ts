@@ -1,9 +1,4 @@
 import { Observable, Observer } from "./Observable";
-import { Concast } from "./Concast";
-
-export function multicast<T>(...sources: Observable<T>[]) {
-  return new Concast(sources);
-}
 
 // Like Observable.prototype.map, except that the mapping function can
 // optionally return a Promise (or be async).

@@ -43,10 +43,7 @@ import {
   MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
-import {
-  asyncMap,
-  multicast,
-} from '../utilities/observables/observables';
+import { asyncMap } from '../utilities/observables/observables';
 import {
   Concast,
   ConcastSourcesIterable,
@@ -742,13 +739,13 @@ export class QueryManager<TStore> {
         observable = byVariables.get(varJson);
 
         if (!observable) {
-          const cc = multicast(
+          const concast = new Concast([
             execute(link, operation) as Observable<FetchResult<T>>
-          );
+          ]);
 
-          byVariables.set(varJson, observable = cc);
+          byVariables.set(varJson, observable = concast);
 
-          cc.cleanup(() => {
+          concast.cleanup(() => {
             if (byVariables.delete(varJson) &&
                 byVariables.size < 1) {
               inFlightLinkObservables.delete(serverQuery);
@@ -757,10 +754,14 @@ export class QueryManager<TStore> {
         }
 
       } else {
-        observable = multicast(execute(link, operation) as Observable<FetchResult<T>>);
+        observable = new Concast([
+          execute(link, operation) as Observable<FetchResult<T>>
+        ]);
       }
     } else {
-      observable = multicast(Observable.of({ data: {} } as FetchResult<T>));
+      observable = new Concast([
+        Observable.of({ data: {} } as FetchResult<T>)
+      ]);
       context = this.prepareContext(context);
     }
 

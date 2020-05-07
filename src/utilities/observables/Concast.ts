@@ -96,18 +96,6 @@ export class Concast<T> extends Observable<T> {
     this.handlers.complete!();
   }
 
-  // Generic implementations of Observable.prototype methods like map and
-  // filter need to know how to create a new Observable from a Concast.
-  // Those methods assume (perhaps unwisely?) that they can call the
-  // subtype's constructor with an observer registration function, but the
-  // Concast constructor uses a different signature. Defining this
-  // Symbol.species getter function on the Concast constructor function is
-  // a hint to generic Observable code to use the default constructor
-  // instead of trying to do `new Concast(observer => ...)`.
-  static get [Symbol.species]() {
-    return Observable;
-  }
-
   public addObserver(observer: Observer<T>) {
     if (!this.observers.has(observer)) {
       // Immediately deliver the most recent message, so we can always
@@ -236,6 +224,20 @@ export class Concast<T> extends Observable<T> {
     this.sources = emptyIter;
     this.handlers.complete!();
   }
+}
+
+// Generic implementations of Observable.prototype methods like map and
+// filter need to know how to create a new Observable from a Concast.
+// Those methods assume (perhaps unwisely?) that they can call the
+// subtype's constructor with an observer registration function, but the
+// Concast constructor uses a different signature. Defining this
+// Symbol.species getter function on the Concast constructor function is
+// a hint to generic Observable code to use the default constructor
+// instead of trying to do `new Concast(observer => ...)`.
+if (typeof Symbol === "function" && Symbol.species) {
+  Object.defineProperty(Concast, Symbol.species, {
+    value: Observable,
+  });
 }
 
 const emptyIter: Iterator<any> = {

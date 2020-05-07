@@ -1,5 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
+import { equal } from '@wry/equality';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -967,6 +968,15 @@ export class QueryManager<TStore> {
       networkStatus = queryInfo.networkStatus || NetworkStatus.loading,
     ) => {
       const data = diff.result as TData;
+
+      if (process.env.NODE_ENV !== 'production' &&
+          isNonEmptyArray(diff.missing) &&
+          !equal(data, {})) {
+        invariant.warn(`Missing cache result fields: ${
+          diff.missing.map(m => m.path.join('.')).join(', ')
+        }`, diff.missing);
+      }
+
       const fromData = (data: TData) => Observable.of({
         data,
         loading: isNetworkRequestInFlight(networkStatus),

@@ -972,7 +972,7 @@ describe('EntityStore', () => {
 
     cache.evict("ROOT_QUERY", "publisherOfBook");
 
-    function withoutPublisherOfBook(obj: {[key: string]: any}) {
+    function withoutPublisherOfBook(obj: Record<string, any>) {
       const clean = { ...obj };
       Object.keys(obj).forEach(key => {
         if (key.startsWith("publisherOfBook")) {

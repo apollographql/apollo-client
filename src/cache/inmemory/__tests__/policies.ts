@@ -1467,7 +1467,7 @@ describe("type policies", function () {
 
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
-      const ownTimes: { [key: string]: ReactiveVar<number>} = {
+      const ownTimes: Record<string, ReactiveVar<number>> = {
         "parent task": cache.makeVar(2),
         "child task 1": cache.makeVar(3),
         "child task 2": cache.makeVar(4),

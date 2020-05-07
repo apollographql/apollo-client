@@ -5,15 +5,34 @@ import { Observer } from '../utilities/observables/Observable';
 import { Concast } from '../utilities/observables/Concast';
 import { invariant } from 'ts-invariant';
 
+// Given that QueryManager#fetchQueryObservable returns only a single
+// query's worth of results, other code must be responsible for repeatedly
+// calling fetchQueryObservable, while ensuring that the ObservableQuery
+// consuming those results remains subscribed to the concatenation of all
+// the observables returned by fetchQueryObservable. That responsibility
+// falls to this Reobserver class. As a bonus, the Reobserver class is
+// perfectly poised to handle polling logic, since polling is essentially
+// repeated reobservation. In principle, this code could have remained in
+// the ObservableQuery class, but I felt it would be easier to explain and
+// understand reobservation if it was confined to a separate class.
 export class Reobserver<TData, TVars> {
   constructor(
     private observer: Observer<ApolloQueryResult<TData>>,
     private options: WatchQueryOptions<TVars>,
+    // Almost certainly just a wrapper function around
+    // QueryManager#fetchQueryObservable, but this small dose of
+    // indirection means the Reobserver doesn't have to know/assume
+    // anything about the QueryManager class.
     private fetch: (
       options: WatchQueryOptions<TVars>,
       newNetworkStatus?: NetworkStatus,
     ) => Concast<ApolloQueryResult<TData>>,
-    private shouldFetch: (() => boolean) | false,
+    // If we're polling, there may be times when we should avoid fetching,
+    // such as when the query is already in flight, or polling has been
+    // completely disabled for server-side rendering. Passing false for
+    // this parameter disables polling completely, and passing a boolean
+    // function allows determining fetch safety dynamically.
+    private shouldFetch: false | (() => boolean),
   ) {}
 
   private concast?: Concast<ApolloQueryResult<TData>>;

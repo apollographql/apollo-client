@@ -870,6 +870,9 @@ export class QueryManager<TStore> {
         typeof oldNetworkStatus === "number" &&
         oldNetworkStatus !== networkStatus &&
         isNetworkRequestInFlight(networkStatus)) {
+      // In order to force delivery of an incomplete cache result with
+      // loading:true, we tweak the fetchPolicy to include the cache, and
+      // pretend that returnPartialData was enabled.
       if (fetchPolicy !== "cache-first") {
         fetchPolicy = "cache-and-network";
       }

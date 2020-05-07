@@ -76,7 +76,7 @@ export class Reobserver<TData, TVars> {
 
   private pollingInfo?: {
     interval: number;
-    timeout: NodeJS.Timeout;
+    timeout: ReturnType<typeof setTimeout>;
   };
 
   // Turns polling on or off based on this.options.pollInterval.

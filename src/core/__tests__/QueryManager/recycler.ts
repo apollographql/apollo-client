@@ -64,37 +64,34 @@ describe('Subscription lifecycles', () => {
     };
 
     const sub = observable.subscribe({
-      next: result => {
-          expect(result.loading).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(initialData);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-            initialData,
-          );
+      next(result: any) {
+        expect(result.loading).toBe(false);
+        expect(stripSymbols(result.data)).toEqual(initialData);
+        expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+          initialData,
+        );
 
-          // step 2, recycle it
-          observable.setOptions({
-            query,
-            fetchPolicy: 'standby',
-            pollInterval: 0,
-          });
+        // step 2, recycle it
+        observable.setOptions({
+          fetchPolicy: 'standby',
+          pollInterval: 0,
+        });
 
-          observableQueries.push({
-            observableQuery: observable,
-            subscription: observable.subscribe({}),
-          });
+        observableQueries.push({
+          observableQuery: observable,
+          subscription: observable.subscribe({}),
+        });
 
-          // step 3, unsubscribe from observable
-          sub.unsubscribe();
+        // step 3, unsubscribe from observable
+        sub.unsubscribe();
 
-          setTimeout(() => {
-            // step 4, start new Subscription;
-            const recyled = resubscribe();
-            const currentResult = recyled.getCurrentResult();
-            // @ts-ignore
-            expect(recyled.isTornDown).toEqual(false);
-            expect(stripSymbols(currentResult.data)).toEqual(initialData);
-            done();
-          }, 10);
+        setTimeout(() => {
+          // step 4, start new Subscription;
+          const recycled = resubscribe();
+          const currentResult = recycled.getCurrentResult();
+          expect(stripSymbols(currentResult.data)).toEqual(initialData);
+          done();
+        }, 10);
       },
     });
 

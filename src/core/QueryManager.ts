@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
-import equal from '@wry/equality';
+import { equal } from '@wry/equality';
 
 import { ApolloLink } from '../link/core/ApolloLink';
 import { execute } from '../link/core/execute';
@@ -13,7 +13,6 @@ import {
   getOperationName,
 } from '../utilities/graphql/getFromAST';
 import {
-  hasDirectives,
   hasClientExports,
 } from '../utilities/graphql/directives';
 import {
@@ -22,11 +21,10 @@ import {
 } from '../utilities/common/errorHandling';
 import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
 import { canUseWeakMap } from '../utilities/common/canUse';
-import { isApolloError, ApolloError } from '../errors/ApolloError';
+import { ApolloError, isApolloError } from '../errors/ApolloError';
 import {
   ObservableSubscription,
   Observable,
-  Observer,
 } from '../utilities/observables/Observable';
 import { MutationStore } from '../data/mutations';
 import {
@@ -34,18 +32,23 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
+  WatchQueryFetchPolicy,
+  ErrorPolicy,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   QueryListener,
   ApolloQueryResult,
-  FetchType,
   OperationVariables,
   MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap, multiplex } from '../utilities/observables/observables';
+import { asyncMap } from '../utilities/observables/asyncMap';
+import {
+  Concast,
+  ConcastSourcesIterable,
+} from '../utilities/observables/Concast';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 import { ApolloCache } from '../cache/core/cache';
 
@@ -63,6 +66,7 @@ export class QueryManager<TStore> {
   public link: ApolloLink;
   public mutationStore: MutationStore = new MutationStore();
   public readonly assumeImmutableResults: boolean;
+  public readonly ssrMode: boolean;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
@@ -70,21 +74,14 @@ export class QueryManager<TStore> {
 
   private onBroadcast: () => void;
 
-  private ssrMode: boolean;
-
-  // let's not start at zero to avoid pain with bad checks
-  private idCounter = 1;
-
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
   private queries = new Map<string, QueryInfo>();
 
-  // A map of Promise reject functions for fetchQuery promises that have not
-  // yet been resolved, used to keep track of in-flight queries so that we can
-  // reject them in case a destabilizing event occurs (e.g. Apollo store reset).
-  // The key is in the format of `query:${queryId}` or `fetchRequest:${queryId}`,
-  // depending on where the promise's rejection function was created from.
-  private fetchQueryRejectFns = new Map<string, Function>();
+  // Maps from queryId strings to Promise rejection functions for
+  // currently active queries and fetches.
+  private queryCancelFns = new Map<string, (error: any) => any>();
+  private fetchCancelFns = new Map<string, (error: any) => any>();
 
   constructor({
     cache,
@@ -124,11 +121,16 @@ export class QueryManager<TStore> {
       this.stopQueryNoBroadcast(queryId);
     });
 
-    this.fetchQueryRejectFns.forEach(reject => {
-      reject(
-        new InvariantError('QueryManager stopped while query was in flight'),
-      );
-    });
+    this.cancelPendingFetches(
+      new InvariantError('QueryManager stopped while query was in flight'),
+    );
+  }
+
+  private cancelPendingFetches(error: Error) {
+    this.queryCancelFns.forEach(cancel => cancel(error));
+    this.fetchCancelFns.forEach(cancel => cancel(error));
+    this.queryCancelFns.clear();
+    this.fetchCancelFns.clear();
   }
 
   public async mutate<T>({
@@ -153,7 +155,7 @@ export class QueryManager<TStore> {
       "Mutations only support a 'no-cache' fetchPolicy. If you don't want to disable the cache, remove your fetchPolicy setting to proceed with the default mutation behavior."
     );
 
-    const mutationId = this.generateQueryId();
+    const mutationId = this.generateMutationId();
     mutation = this.transform(mutation).document;
 
     variables = this.getVariables(mutation, variables);
@@ -343,150 +345,16 @@ export class QueryManager<TStore> {
     });
   }
 
-  public async fetchQuery<T>(
+  public fetchQuery<TData, TVars>(
     queryId: string,
-    options: WatchQueryOptions,
-    fetchType?: FetchType,
-    // This allows us to track if this is a query spawned by a `fetchMore`
-    // call for another query. We need this data to compute the `fetchMore`
-    // network status for the query this is fetching for.
-    fetchMoreForQueryId?: string,
-  ): Promise<FetchResult<T>> {
-    const {
-      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
-      context = {},
-    } = options;
-
-    const query = this.transform(options.query).document;
-
-    let variables = this.getVariables(query, options.variables);
-
-    if (this.transform(query).hasClientExports) {
-      variables = await this.localState.addExportedVariables(query, variables, context);
-    }
-
-    options = { ...options, variables };
-
-    let storeResult: any;
-    const isNetworkOnly =
-      fetchPolicy === 'network-only' || fetchPolicy === 'no-cache';
-    let needToFetch = isNetworkOnly;
-
-    // Unless we are completely skipping the cache, we want to diff the query
-    // against the cache before we fetch it from the network interface.
-    if (!isNetworkOnly) {
-      const { complete, result } = this.cache.diff({
-        query,
-        variables,
-        returnPartialData: true,
-        optimistic: false,
-      });
-
-      // If we're in here, only fetch if we have missing fields
-      needToFetch = !complete || fetchPolicy === 'cache-and-network';
-      storeResult = result;
-    }
-
-    let shouldFetch =
-      needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
-
-    // we need to check to see if this is an operation that uses the @live directive
-    if (hasDirectives(['live'], query)) shouldFetch = true;
-
-    const requestId = this.idCounter++;
-
-    // Initialize query in store with unique requestId
-    const queryInfo = this.getQuery(queryId).init({
-      document: query,
-      variables,
-      isPoll: fetchType === FetchType.poll,
-      isRefetch: fetchType === FetchType.refetch,
-      lastRequestId: requestId,
-    }).updateWatch(options);
-
-    this.dirty(queryId);
-    this.dirty(fetchMoreForQueryId);
-
-    // If the action had a `moreForQueryId` property then we need to set the
-    // network status on that query as well to `fetchMore`.
-    //
-    // We have a complement to this if statement in the query result and query
-    // error action branch, but importantly *not* in the client result branch.
-    // This is because the implementation of `fetchMore` *always* sets
-    // `fetchPolicy` to `network-only` so we would never have a client result.
-    this.setNetStatus(fetchMoreForQueryId, NetworkStatus.fetchMore);
-
-    if (shouldFetch) {
-      this.broadcastQueries();
-
-      const networkResult = this.fetchRequest<T>({
-        requestId,
-        queryId,
-        document: query,
-        options,
-        fetchMoreForQueryId,
-      }).catch(error => {
-        // This is for the benefit of `refetch` promises, which currently don't get their errors
-        // through the store like watchQuery observers do
-        if (isApolloError(error)) {
-          throw error;
-        } else {
-          if (requestId >= this.getQuery(queryId).lastRequestId) {
-            queryInfo.markError(error);
-
-            // If we have a `fetchMoreForQueryId` then we need to update the network
-            // status for that query. See the branch for query initialization for more
-            // explanation about this process.
-            this.setNetStatus(fetchMoreForQueryId, NetworkStatus.ready);
-
-            this.dirty(queryId);
-            this.dirty(fetchMoreForQueryId);
-            this.broadcastQueries();
-          }
-          throw new ApolloError({ networkError: error });
-        }
-      });
-
-      // we don't return the promise for cache-and-network since it is already
-      // returned below from the cache
-      if (fetchPolicy !== 'cache-and-network') {
-        return networkResult;
-      }
-
-      // however we need to catch the error so it isn't unhandled in case of
-      // network error
-      networkResult.catch(() => {});
-    }
-
-    // If there is no part of the query we need to fetch from the server (or,
-    // fetchPolicy is cache-only), we just write the store result as the final result.
-    this.setNetStatus(
+    options: WatchQueryOptions<TVars>,
+    networkStatus?: NetworkStatus,
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.fetchQueryObservable<TData, TVars>(
       queryId,
-      shouldFetch ? queryInfo.networkStatus : NetworkStatus.ready,
-    );
-
-    this.dirty(queryId);
-    this.dirty(fetchMoreForQueryId);
-
-    if (this.transform(query).hasForcedResolvers) {
-      return this.localState.runResolvers({
-        document: query,
-        remoteResult: { data: storeResult },
-        context,
-        variables,
-        onlyRunForcedResolvers: true,
-      }).then((result: FetchResult<T>) => {
-        queryInfo.markResult(result, options, !fetchMoreForQueryId, false);
-        this.broadcastQueries();
-        return result;
-      });
-    }
-
-    this.broadcastQueries();
-
-    // If we have no query to send to the server, we should return the result
-    // found within the store.
-    return { data: storeResult };
+      options,
+      networkStatus,
+    ).promise;
   }
 
   public getQueryStore() {
@@ -504,82 +372,6 @@ export class QueryManager<TStore> {
 
   public getQueryStoreValue(queryId: string): QueryStoreValue | undefined {
     return queryId ? this.queries.get(queryId) : undefined;
-  }
-
-  private setNetStatus(queryId?: string, status?: NetworkStatus) {
-    const queryInfo = queryId && this.getQuery(queryId);
-    if (queryInfo) {
-      queryInfo.networkStatus = status;
-      if (status === NetworkStatus.ready) {
-        queryInfo.networkError = null;
-      }
-    }
-  }
-
-  // Returns a query listener that will update the given observer based on the
-  // results (or lack thereof) for a particular query.
-  public queryListenerForObserver<T>(
-    queryId: string,
-    observer: Observer<ApolloQueryResult<T>>,
-  ): QueryListener {
-    return info => {
-      const {
-        observableQuery,
-        // QueryStoreValue properties:
-        networkStatus,
-        networkError,
-        graphQLErrors,
-      } = info;
-
-      const {
-        fetchPolicy,
-        errorPolicy = 'none',
-        returnPartialData,
-        partialRefetch,
-      } = observableQuery!.options;
-
-      const hasGraphQLErrors = isNonEmptyArray(graphQLErrors);
-
-      // If we have either a GraphQL error or a network error, we create
-      // an error and tell the observer about it.
-      if (errorPolicy === 'none' && hasGraphQLErrors || networkError) {
-        observer.error && observer.error(new ApolloError({
-          graphQLErrors,
-          networkError,
-        }));
-        return;
-      }
-
-      // This call will always succeed because we do not invoke listener
-      // functions unless there is a DiffResult to broadcast.
-      const diff = info.getDiff() as Cache.DiffResult<any>;
-
-      if (diff.complete ||
-          returnPartialData ||
-          partialRefetch ||
-          hasGraphQLErrors ||
-          fetchPolicy === 'cache-only') {
-        const result: ApolloQueryResult<T> = {
-          data: diff.result,
-          loading: isNetworkRequestInFlight(networkStatus),
-          networkStatus: networkStatus!,
-        };
-
-        // If the query wants updates on errors, add them to the result.
-        if (errorPolicy === 'all' && hasGraphQLErrors) {
-          result.errors = graphQLErrors;
-        }
-
-        observer.next && observer.next(result);
-
-      } else if (process.env.NODE_ENV !== 'production' &&
-                 isNonEmptyArray(diff.missing) &&
-                 !equal(diff.result, {})) {
-        invariant.warn(`Missing cache result fields: ${
-          diff.missing.map(m => m.path.join('.')).join(', ')
-        }`, diff.missing);
-      }
-    };
   }
 
   private transformCache = new (canUseWeakMap ? WeakMap : Map)<
@@ -679,12 +471,6 @@ export class QueryManager<TStore> {
       document: options.query,
       observableQuery: observable,
       variables: options.variables,
-      // Even if options.pollInterval is a number, we have not started
-      // polling this query yet (and we have not yet performed the first
-      // fetch), so NetworkStatus.loading (not NetworkStatus.poll or
-      // NetworkStatus.refetch) is the appropriate status for now.
-      isPoll: false,
-      isRefetch: false,
     });
 
     return observable;
@@ -714,24 +500,34 @@ export class QueryManager<TStore> {
 
     return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       const watchedQuery = this.watchQuery<T>(options, false);
-      this.fetchQueryRejectFns.set(`query:${watchedQuery.queryId}`, reject);
+      const { queryId } = watchedQuery;
+      this.queryCancelFns.set(queryId, reject);
       watchedQuery
         .result()
         .then(resolve, reject)
         // Since neither resolve nor reject throw or return a value, this .then
         // handler is guaranteed to execute. Note that it doesn't really matter
-        // when we remove the reject function from this.fetchQueryRejectFns,
+        // when we remove the reject function from this.fetchCancelFns,
         // since resolve and reject are mutually idempotent. In fact, it would
         // not be incorrect to let reject functions accumulate over time; it's
         // just a waste of memory.
-        .then(() =>
-          this.fetchQueryRejectFns.delete(`query:${watchedQuery.queryId}`),
-        );
+        .then(() => this.queryCancelFns.delete(queryId));
     });
   }
 
+  private queryIdCounter = 1;
   public generateQueryId() {
-    return String(this.idCounter++);
+    return String(this.queryIdCounter++);
+  }
+
+  private requestIdCounter = 1;
+  public generateRequestId() {
+    return this.requestIdCounter++;
+  }
+
+  private mutationIdCounter = 1;
+  public generateMutationId() {
+    return String(this.mutationIdCounter++);
   }
 
   public stopQueryInStore(queryId: string) {
@@ -742,7 +538,6 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) queryInfo.stop();
-    this.stopPollingQuery(queryId);
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -750,19 +545,16 @@ export class QueryManager<TStore> {
   }
 
   public clearStore(): Promise<void> {
-    // Before we have sent the reset action to the store,
-    // we can no longer rely on the results returned by in-flight
-    // requests since these may depend on values that previously existed
-    // in the data portion of the store. So, we cancel the promises and observers
-    // that we have issued so far and not yet resolved (in the case of
-    // queries).
-    this.fetchQueryRejectFns.forEach(reject => {
-      reject(new InvariantError(
-        'Store reset while query was in flight (not completed in link chain)',
-      ));
-    });
+    // Before we have sent the reset action to the store, we can no longer
+    // rely on the results returned by in-flight requests since these may
+    // depend on values that previously existed in the data portion of the
+    // store. So, we cancel the promises and observers that we have issued
+    // so far and not yet resolved (in the case of queries).
+    this.cancelPendingFetches(new InvariantError(
+      'Store reset while query was in flight (not completed in link chain)',
+    ));
 
-    this.queries.forEach((queryInfo, queryId) => {
+    this.queries.forEach(queryInfo => {
       if (queryInfo.observableQuery &&
           queryInfo.observableQuery.watching) {
         // Set loading to true so listeners don't trigger unless they want
@@ -818,26 +610,8 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
-  public observeQuery<T>(
-    observableQuery: ObservableQuery<T>,
-    // The observableQuery.observer object needs to be passed in
-    // separately here because it needs to be kept private.
-    observer: Observer<ApolloQueryResult<T>>,
-  ) {
-    const { queryId, options } = observableQuery;
-
-    this.getQuery(queryId).observableQuery = observableQuery;
-
-    if (options.pollInterval) {
-      this.startPollingQuery(options, queryId);
-    }
-
-    this.addQueryListener(
-      queryId,
-      this.queryListenerForObserver(queryId, observer),
-    );
-
-    return this.fetchQuery<T>(queryId, options);
+  public setObservableQuery(observableQuery: ObservableQuery<any, any>) {
+    this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
   }
 
   public startGraphQLSubscription<T = any>({
@@ -911,72 +685,13 @@ export class QueryManager<TStore> {
   public removeQuery(queryId: string) {
     // teardown all links
     // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
-    // that each add their reject functions to fetchQueryRejectFns.
+    // that each add their reject functions to fetchCancelFns.
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
-    this.fetchQueryRejectFns.delete(`query:${queryId}`);
-    this.fetchQueryRejectFns.delete(`fetchRequest:${queryId}`);
+    this.queryCancelFns.delete(queryId);
+    this.fetchCancelFns.delete(queryId);
     this.getQuery(queryId).subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
-  }
-
-  public getCurrentQueryResult<T>(
-    observableQuery: ObservableQuery<T>,
-    optimistic: boolean = true,
-  ): {
-    data: T | undefined;
-    partial: boolean;
-  } {
-    const { variables, query, fetchPolicy, returnPartialData } = observableQuery.options;
-    const lastResult = observableQuery.getLastResult();
-
-    if (fetchPolicy === 'no-cache' ||
-        fetchPolicy === 'network-only') {
-      const diff = this.getQuery(observableQuery.queryId).getDiff();
-      return { data: diff?.result, partial: false };
-    }
-
-    const { result, complete } = this.cache.diff<T>({
-      query,
-      variables,
-      previousResult: lastResult ? lastResult.data : undefined,
-      returnPartialData: true,
-      optimistic,
-    });
-
-    return {
-      data: (complete || returnPartialData) ? result : void 0,
-      partial: !complete,
-    };
-  }
-
-  public getQueryWithPreviousResult<TData, TVariables = OperationVariables>(
-    queryIdOrObservable: string | ObservableQuery<TData, TVariables>,
-  ): {
-    previousResult: any;
-    variables: TVariables | undefined;
-    document: DocumentNode;
-  } {
-    let observableQuery: ObservableQuery<TData, any>;
-    if (typeof queryIdOrObservable === 'string') {
-      const { observableQuery: foundObservableQuery } = this.getQuery(
-        queryIdOrObservable,
-      );
-      invariant(
-        foundObservableQuery,
-        `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`
-      );
-      observableQuery = foundObservableQuery!;
-    } else {
-      observableQuery = queryIdOrObservable;
-    }
-
-    const { variables, query } = observableQuery.options;
-    return {
-      previousResult: this.getCurrentQueryResult(observableQuery, false).data,
-      variables,
-      document: query,
-    };
   }
 
   public broadcastQueries() {
@@ -1025,31 +740,29 @@ export class QueryManager<TStore> {
         observable = byVariables.get(varJson);
 
         if (!observable) {
-          byVariables.set(
-            varJson,
-            observable = multiplex(
-              execute(link, operation) as Observable<FetchResult<T>>
-            )
-          );
+          const concast = new Concast([
+            execute(link, operation) as Observable<FetchResult<T>>
+          ]);
 
-          const cleanup = () => {
-            byVariables.delete(varJson);
-            if (!byVariables.size) inFlightLinkObservables.delete(serverQuery);
-            cleanupSub.unsubscribe();
-          };
+          byVariables.set(varJson, observable = concast);
 
-          const cleanupSub = observable.subscribe({
-            next: cleanup,
-            error: cleanup,
-            complete: cleanup,
+          concast.cleanup(() => {
+            if (byVariables.delete(varJson) &&
+                byVariables.size < 1) {
+              inFlightLinkObservables.delete(serverQuery);
+            }
           });
         }
 
       } else {
-        observable = multiplex(execute(link, operation) as Observable<FetchResult<T>>);
+        observable = new Concast([
+          execute(link, operation) as Observable<FetchResult<T>>
+        ]);
       }
     } else {
-      observable = Observable.of({ data: {} } as FetchResult<T>);
+      observable = new Concast([
+        Observable.of({ data: {} } as FetchResult<T>)
+      ]);
       context = this.prepareContext(context);
     }
 
@@ -1068,114 +781,280 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  // Takes a request id, query id, a query document and information associated with the query
-  // and send it to the network interface. Returns
-  // a promise for the result associated with that request.
-  private fetchRequest<T>({
-    requestId,
-    queryId,
-    document,
-    options,
-    fetchMoreForQueryId,
-  }: {
-    requestId: number;
-    queryId: string;
-    document: DocumentNode;
-    options: WatchQueryOptions;
-    fetchMoreForQueryId?: string;
-  }): Promise<FetchResult<T>> {
-    const { variables, errorPolicy = 'none', fetchPolicy } = options;
-    let resultFromStore: any;
-    let errorsFromStore: any;
+  private getResultsFromLink<TData, TVars>(
+    queryInfo: QueryInfo,
+    allowCacheWrite: boolean,
+    options: Pick<WatchQueryOptions<TVars>,
+      | "variables"
+      | "context"
+      | "fetchPolicy"
+      | "errorPolicy">,
+  ): Observable<ApolloQueryResult<TData>> {
+    const { lastRequestId } = queryInfo;
 
-    return new Promise<FetchResult<T>>((resolve, reject) => {
-      const observable = this.getObservableFromLink(
-        document,
+    return asyncMap(
+      this.getObservableFromLink(
+        queryInfo.document!,
         options.context,
-        variables,
-      );
+        options.variables,
+      ),
 
-      const subs = this.getQuery(queryId).subscriptions;
+      result => {
+        const hasErrors = isNonEmptyArray(result.errors);
 
-      const fqrfId = `fetchRequest:${queryId}`;
-      this.fetchQueryRejectFns.set(fqrfId, reject);
-
-      const cleanup = () => {
-        this.fetchQueryRejectFns.delete(fqrfId);
-        subs.delete(subscription);
-      };
-
-      const subscription = observable.map((result: FetchResult<T>) => {
-        const queryInfo = this.getQuery(queryId);
-
-        if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markResult(
-            result,
-            options,
-            !fetchMoreForQueryId,
-            true,
-          );
-
-          // If we have a `fetchMoreForQueryId` then we need to update the
-          // network status for that query. See the branch for query
-          // initialization for more explanation about this process.
-          this.setNetStatus(fetchMoreForQueryId, NetworkStatus.ready);
-
-          this.dirty(queryId);
-          this.dirty(fetchMoreForQueryId);
-
-          this.broadcastQueries();
-        }
-
-        if (errorPolicy === 'none' && isNonEmptyArray(result.errors)) {
-          return reject(new ApolloError({
-            graphQLErrors: result.errors,
-          }));
-        }
-
-        if (errorPolicy === 'all') {
-          errorsFromStore = result.errors;
-        }
-
-        if (fetchMoreForQueryId || fetchPolicy === 'no-cache') {
-          // We don't write fetchMore results to the store because this would overwrite
-          // the original result in case an @connection directive is used.
-          resultFromStore = result.data;
-        } else {
-          // ensure result is combined with data already in store
-          const { result, complete } = this.cache.diff<T>({
-            variables,
-            query: document,
-            optimistic: false,
-            returnPartialData: true,
-          });
-
-          if (complete || options.returnPartialData) {
-            resultFromStore = result;
+        if (lastRequestId >= queryInfo.lastRequestId) {
+          if (hasErrors && options.errorPolicy === "none") {
+            // Throwing here effectively calls observer.error.
+            throw queryInfo.markError(new ApolloError({
+              graphQLErrors: result.errors,
+            }));
           }
+          queryInfo.markResult(result, options, allowCacheWrite);
+          queryInfo.markReady();
         }
-      }).subscribe({
-        error(error: ApolloError) {
-          cleanup();
-          reject(error);
-        },
 
-        complete() {
-          cleanup();
-          resolve({
-            data: resultFromStore,
-            errors: errorsFromStore,
-            // These properties are not part of the FetchResult<T> type,
-            // so the typecast below is a bit forced, but these sins will
-            // be washed away by PR #6221.
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-          } as FetchResult<T>);
-        },
+        const aqr: ApolloQueryResult<TData> = {
+          data: result.data,
+          loading: false,
+          networkStatus: queryInfo.networkStatus || NetworkStatus.ready,
+        };
+
+        if (hasErrors && options.errorPolicy !== "ignore") {
+          aqr.errors = result.errors;
+        }
+
+        return aqr;
+      },
+
+      networkError => {
+        const error = isApolloError(networkError)
+          ? networkError
+          : new ApolloError({ networkError });
+
+        if (lastRequestId >= queryInfo.lastRequestId) {
+          queryInfo.markError(error);
+        }
+
+        throw error;
+      },
+    );
+  }
+
+  public fetchQueryObservable<TData, TVars>(
+    queryId: string,
+    options: WatchQueryOptions<TVars>,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus = NetworkStatus.loading,
+  ): Concast<ApolloQueryResult<TData>> {
+    const query = this.transform(options.query).document;
+    const variables = this.getVariables(query, options.variables) as TVars;
+    const queryInfo = this.getQuery(queryId);
+    const oldNetworkStatus = queryInfo.networkStatus;
+
+    let {
+      fetchPolicy = "cache-first" as WatchQueryFetchPolicy,
+      errorPolicy = "none" as ErrorPolicy,
+      returnPartialData = false,
+      notifyOnNetworkStatusChange = false,
+      context = {},
+    } = options;
+
+    const mightUseNetwork =
+      fetchPolicy === "cache-first" ||
+      fetchPolicy === "cache-and-network" ||
+      fetchPolicy === "network-only" ||
+      fetchPolicy === "no-cache";
+
+    if (mightUseNetwork &&
+        notifyOnNetworkStatusChange &&
+        typeof oldNetworkStatus === "number" &&
+        oldNetworkStatus !== networkStatus &&
+        isNetworkRequestInFlight(networkStatus)) {
+      // In order to force delivery of an incomplete cache result with
+      // loading:true, we tweak the fetchPolicy to include the cache, and
+      // pretend that returnPartialData was enabled.
+      if (fetchPolicy !== "cache-first") {
+        fetchPolicy = "cache-and-network";
+      }
+      returnPartialData = true;
+    }
+
+    const normalized = Object.assign({}, options, {
+      query,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      returnPartialData,
+      notifyOnNetworkStatusChange,
+      context,
+    });
+
+    const fromVariables = (variables: TVars) => {
+      // Since normalized is always a fresh copy of options, it's safe to
+      // modify its properties here, rather than creating yet another new
+      // WatchQueryOptions object.
+      normalized.variables = variables;
+      return this.fetchQueryByPolicy<TData, TVars>(
+        queryInfo,
+        normalized,
+        networkStatus,
+      );
+    };
+
+    // A Concast<T> can be created either from an Iterable<Observable<T>>
+    // or from a PromiseLike<Iterable<Observable<T>>>, where T in this
+    // case is ApolloQueryResult<TData>.
+    const concast = new Concast(
+      // If the query has @export(as: ...) directives, then we need to
+      // process those directives asynchronously. When there are no
+      // @export directives (the common case), we deliberately avoid
+      // wrapping the result of this.fetchQueryByPolicy in a Promise,
+      // since the timing of result delivery is (unfortunately) important
+      // for backwards compatibility. TODO This code could be simpler if
+      // we deprecated and removed LocalState.
+      this.transform(normalized.query).hasClientExports
+        ? this.localState.addExportedVariables(
+          normalized.query,
+          normalized.variables,
+          normalized.context,
+        ).then(fromVariables)
+        : fromVariables(normalized.variables!)
+    );
+
+    this.fetchCancelFns.set(queryId, reason => {
+      Promise.resolve().then(() => concast.cancel(reason));
+    });
+
+    concast.cleanup(() => this.fetchCancelFns.delete(queryId));
+
+    return concast;
+  }
+
+  private fetchQueryByPolicy<TData, TVars>(
+    queryInfo: QueryInfo,
+    options: WatchQueryOptions<TVars>,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus: NetworkStatus,
+  ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
+    const {
+      query,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      returnPartialData,
+      context,
+    } = options;
+
+    queryInfo.init({
+      document: query,
+      variables,
+      lastRequestId: this.generateRequestId(),
+      networkStatus,
+    }).updateWatch(variables);
+
+    const readCache = () => this.cache.diff<any>({
+      query,
+      variables,
+      returnPartialData: true,
+      optimistic: true,
+    });
+
+    const resultsFromCache = (
+      diff: Cache.DiffResult<TData>,
+      networkStatus = queryInfo.networkStatus || NetworkStatus.loading,
+    ) => {
+      const data = diff.result as TData;
+
+      if (process.env.NODE_ENV !== 'production' &&
+          isNonEmptyArray(diff.missing) &&
+          !equal(data, {})) {
+        invariant.warn(`Missing cache result fields: ${
+          diff.missing.map(m => m.path.join('.')).join(', ')
+        }`, diff.missing);
+      }
+
+      const fromData = (data: TData) => Observable.of({
+        data,
+        loading: isNetworkRequestInFlight(networkStatus),
+        networkStatus,
+      } as ApolloQueryResult<TData>);
+
+      if (this.transform(query).hasForcedResolvers) {
+        return this.localState.runResolvers({
+          document: query,
+          remoteResult: { data },
+          context,
+          variables,
+          onlyRunForcedResolvers: true,
+        }).then(resolved => fromData(resolved.data!));
+      }
+
+      return fromData(data);
+    };
+
+    const resultsFromLink = (allowCacheWrite: boolean) =>
+      this.getResultsFromLink<TData, TVars>(queryInfo, allowCacheWrite, {
+        variables,
+        context,
+        fetchPolicy,
+        errorPolicy,
       });
 
-      subs.add(subscription);
-    });
+    switch (fetchPolicy) {
+    default: case "cache-first": {
+      const diff = readCache();
+
+      if (diff.complete) {
+        return [
+          resultsFromCache(diff, queryInfo.markReady()),
+        ];
+      }
+
+      if (returnPartialData) {
+        return [
+          resultsFromCache(diff),
+          resultsFromLink(true),
+        ];
+      }
+
+      return [
+        resultsFromLink(true),
+      ];
+    }
+
+    case "cache-and-network": {
+      const diff = readCache();
+
+      if (diff.complete || returnPartialData) {
+        return [
+          resultsFromCache(diff),
+          resultsFromLink(true),
+        ];
+      }
+
+      return [
+        resultsFromLink(true),
+      ];
+    }
+
+    case "cache-only":
+      return [
+        resultsFromCache(readCache(), queryInfo.markReady()),
+      ];
+
+    case "network-only":
+      return [resultsFromLink(true)];
+
+    case "no-cache":
+      return [resultsFromLink(false)];
+
+    case "standby":
+      return [];
+    }
   }
 
   private getQuery(queryId: string): QueryInfo {
@@ -1183,12 +1062,6 @@ export class QueryManager<TStore> {
       this.queries.set(queryId, new QueryInfo(this.cache));
     }
     return this.queries.get(queryId)!;
-  }
-
-  private dirty(queryId?: string) {
-    if (queryId) {
-      this.getQuery(queryId).setDirty();
-    }
   }
 
   private prepareContext(context = {}) {
@@ -1207,69 +1080,6 @@ export class QueryManager<TStore> {
       query.networkStatus !== NetworkStatus.ready &&
       query.networkStatus !== NetworkStatus.error
     );
-  }
-
-  // Map from client ID to { interval, options }.
-  private pollingInfoByQueryId = new Map<string, {
-    interval: number;
-    timeout: NodeJS.Timeout;
-    options: WatchQueryOptions;
-  }>();
-
-  public startPollingQuery(
-    options: WatchQueryOptions,
-    queryId: string,
-  ): string {
-    const { pollInterval } = options;
-
-    invariant(
-      pollInterval,
-      'Attempted to start a polling query without a polling interval.',
-    );
-
-    // Do not poll in SSR mode
-    if (!this.ssrMode) {
-      let info = this.pollingInfoByQueryId.get(queryId)!;
-      if (!info) {
-        this.pollingInfoByQueryId.set(queryId, (info = {} as any));
-      }
-
-      info.interval = pollInterval!;
-      info.options = {
-        ...options,
-        fetchPolicy: 'network-only',
-      };
-
-      const maybeFetch = () => {
-        const info = this.pollingInfoByQueryId.get(queryId);
-        if (info) {
-          if (this.checkInFlight(queryId)) {
-            poll();
-          } else {
-            this.fetchQuery(queryId, info.options, FetchType.poll).then(
-              poll,
-              poll,
-            );
-          }
-        }
-      };
-
-      const poll = () => {
-        const info = this.pollingInfoByQueryId.get(queryId);
-        if (info) {
-          clearTimeout(info.timeout);
-          info.timeout = setTimeout(maybeFetch, info.interval);
-        }
-      };
-
-      poll();
-    }
-
-    return queryId;
-  }
-
-  public stopPollingQuery(queryId: string) {
-    this.pollingInfoByQueryId.delete(queryId);
   }
 }
 

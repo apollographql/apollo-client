@@ -376,7 +376,7 @@ describe('cache-and-network', function() {
         return observable.setVariables({ id: '2' });
       } else if (count === 2) {
         expect(result).toEqual({
-          data: dataWithId(1),
+          data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
         });
@@ -402,7 +402,7 @@ describe('cache-and-network', function() {
         return observable.refetch({ id: '3' });
       } else if (count === 6) {
         expect(result).toEqual({
-          data: dataWithId(2),
+          data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
         });

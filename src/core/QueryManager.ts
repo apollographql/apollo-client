@@ -43,7 +43,7 @@ import {
   MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap } from '../utilities/observables/observables';
+import { asyncMap } from '../utilities/observables/asyncMap';
 import {
   Concast,
   ConcastSourcesIterable,

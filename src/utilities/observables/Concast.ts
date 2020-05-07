@@ -53,10 +53,6 @@ export class Concast<T> extends Observable<T> {
   // been exhausted. After that, it stays null.
   private sub?: ObservableSubscription | null;
 
-  // A consumable iterator of source observables, incrementally consumed
-  // each time this.handlers.complete is called.
-  private sources: Iterator<Source<T>>;
-
   // Not only can the individual elements of the iterable be promises, but
   // also the iterable itself can be wrapped in a promise.
   constructor(sources: MaybeAsync<ConcastSourcesIterable<T>>) {
@@ -80,14 +76,17 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
+  // A consumable array of source observables, incrementally consumed
+  // each time this.handlers.complete is called.
+  private sources: Source<T>[];
+
   private start(sources: ConcastSourcesIterable<T>) {
     if (this.sub !== void 0) return;
 
-    // Since sources is required only to be iterable, the source
-    // observables could in principle be generated lazily, and the
-    // sequence could be infinite. In practice, sources is most often a
-    // finite array of observables.
-    this.sources = sources[Symbol.iterator]();
+    // In practice, sources is most often simply an Array of observables.
+    // TODO Consider using sources[Symbol.iterator]() to take advantage
+    // of the laziness of non-Array iterables.
+    this.sources = Array.from(sources);
 
     // Calling this.handlers.complete() kicks off consumption of the first
     // source observable. It's tempting to do this step lazily in
@@ -172,12 +171,8 @@ export class Concast<T> extends Observable<T> {
 
     complete: () => {
       if (this.sub !== null) {
-        const { done, value } = this.sources.next() as {
-          done: boolean;
-          value: Source<T>;
-        };
-
-        if (done) {
+        const value = this.sources.shift();
+        if (!value) {
           this.sub = null;
           if (this.latest &&
               this.latest[0] === "next") {
@@ -221,7 +216,7 @@ export class Concast<T> extends Observable<T> {
   // A public way to abort observation and broadcast.
   public cancel = (reason: any) => {
     this.reject(reason);
-    this.sources = emptyIter;
+    this.sources = [];
     this.handlers.complete!();
   }
 }
@@ -239,9 +234,3 @@ if (typeof Symbol === "function" && Symbol.species) {
     value: Observable,
   });
 }
-
-const emptyIter: Iterator<any> = {
-  next() {
-    return { value: void 0, done: true };
-  },
-};

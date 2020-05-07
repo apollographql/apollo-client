@@ -119,7 +119,7 @@ describe('Live queries', () => {
       });
 
       // Observable => subscribe
-      const sub = observable.subscribe(result => {
+      observable.subscribe(result => {
         count++;
         if (count === 2) {
           expect(stripSymbols(result.data)).toEqual(laterData);

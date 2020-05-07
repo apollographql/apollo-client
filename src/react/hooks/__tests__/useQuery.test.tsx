@@ -12,6 +12,7 @@ import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useQuery } from '../useQuery';
 import { requireReactLazily } from '../../react';
+import { QueryFunctionOptions } from '../..';
 
 const React = requireReactLazily();
 const { useState, useReducer, Fragment } = React;
@@ -205,7 +206,7 @@ describe('useQuery Hook', () => {
 
       const hookResponse = jest.fn().mockReturnValue(null);
 
-      function Component({ id, children }) {
+      function Component({ id, children }: any) {
         const { data, loading, error } = useQuery(CAR_QUERY_BY_ID, {
           variables: { id },
         });
@@ -273,7 +274,7 @@ describe('useQuery Hook', () => {
 
       const hookResponse = jest.fn().mockReturnValue(null);
 
-      function Component({ id, children, skip = false }) {
+      function Component({ id, children, skip = false }: any) {
         const { data, loading, error } = useQuery(CAR_QUERY_BY_ID, {
           variables: { id },
           skip,
@@ -629,12 +630,12 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache()
       });
 
-      let onError;
+      let onError: QueryFunctionOptions['onError'];
       const onErrorPromise = new Promise(resolve => onError = resolve);
 
       let renderCount = 0;
       const Component = () => {
-        const { loading, error, refetch, data, networkStatus } = useQuery(
+        const { loading, error, refetch, data } = useQuery(
           query,
           {
             onError,
@@ -693,7 +694,7 @@ describe('useQuery Hook', () => {
 
       let renderCount = 0;
       function App() {
-        const [_, forceUpdate] = useReducer(x => x + 1, 0);
+        const [, forceUpdate] = useReducer(x => x + 1, 0);
         const { loading, error } = useQuery(query);
 
         switch (renderCount) {
@@ -753,7 +754,7 @@ describe('useQuery Hook', () => {
 
         let renderCount = 0;
         function App() {
-          const [_, forceUpdate] = useReducer(x => x + 1, 0);
+          const [, forceUpdate] = useReducer(x => x + 1, 0);
           const { loading, error } = useQuery(query, {
             onError: () => {},
             onCompleted: () => {}

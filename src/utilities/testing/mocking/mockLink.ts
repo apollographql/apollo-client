@@ -159,7 +159,7 @@ export class MockLink extends ApolloLink {
   }
 }
 
-interface MockApolloLink extends ApolloLink {
+export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
 }
 

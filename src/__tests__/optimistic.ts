@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { MutationQueryReducersMap } from '../core/types';
-import { Subscription } from '../utilities/observables/Observable';
+import { ObservableSubscription as Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
 import { makeReference } from '../core';
@@ -97,7 +97,7 @@ describe('optimistic mutation results', () => {
     },
   };
 
-  let client: ApolloClient;
+  let client: ApolloClient<any>;
   let link: any;
 
   function setup(
@@ -239,7 +239,7 @@ describe('optimistic mutation results', () => {
         await new Promise(resolve => {
           const handle = client.watchQuery({ query });
           subscriptionHandle = handle.subscribe({
-            next(res) {
+            next(res: any) {
               resolve(res);
             },
           });
@@ -251,7 +251,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse,
             updateQueries,
           })
-          .catch(err => {
+          .catch((err: any) => {
             // it is ok to fail here
             expect(err).toBeInstanceOf(Error);
             expect(err.message).toBe('forbidden (test error)');
@@ -275,7 +275,7 @@ describe('optimistic mutation results', () => {
 
         await Promise.all([promise, promise2]);
 
-        subscriptionHandle.unsubscribe();
+        subscriptionHandle!.unsubscribe();
         {
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
@@ -329,7 +329,7 @@ describe('optimistic mutation results', () => {
         await new Promise(resolve => {
           const handle = client.watchQuery({ query });
           subscriptionHandle = handle.subscribe({
-            next(res) {
+            next(res: any) {
               resolve(res);
             },
           });
@@ -341,11 +341,13 @@ describe('optimistic mutation results', () => {
             optimisticResponse,
             updateQueries,
           })
-          .then(res => {
+          .then((res: any) => {
             checkBothMutationsAreApplied(
               'This one was created with a mutation.',
               'Optimistically generated 2',
             );
+
+            // @ts-ignore
             const latestState = client.queryManager.mutationStore;
             expect(latestState.get('5').loading).toBe(false);
             expect(latestState.get('6').loading).toBe(true);
@@ -359,11 +361,13 @@ describe('optimistic mutation results', () => {
             optimisticResponse: optimisticResponse2,
             updateQueries,
           })
-          .then(res => {
+          .then((res: any) => {
             checkBothMutationsAreApplied(
               'This one was created with a mutation.',
               'Second mutation.',
             );
+
+            // @ts-ignore
             const latestState = client.queryManager.mutationStore;
             expect(latestState.get('5').loading).toBe(false);
             expect(latestState.get('6').loading).toBe(false);
@@ -371,6 +375,7 @@ describe('optimistic mutation results', () => {
             return res;
           });
 
+        // @ts-ignore
         const mutationsState = client.queryManager.mutationStore;
         expect(mutationsState.get('5').loading).toBe(true);
         expect(mutationsState.get('6').loading).toBe(true);
@@ -382,7 +387,7 @@ describe('optimistic mutation results', () => {
 
         await Promise.all([promise, promise2]);
 
-        subscriptionHandle.unsubscribe();
+        subscriptionHandle!.unsubscribe();
         checkBothMutationsAreApplied(
           'This one was created with a mutation.',
           'Second mutation.',
@@ -476,7 +481,7 @@ describe('optimistic mutation results', () => {
         await new Promise(resolve => {
           const handle = client.watchQuery({ query });
           subscriptionHandle = handle.subscribe({
-            next(res) {
+            next(res: any) {
               resolve(res);
             },
           });
@@ -488,7 +493,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse,
             update,
           })
-          .catch(err => {
+          .catch((err: any) => {
             // it is ok to fail here
             expect(err).toBeInstanceOf(Error);
             expect(err.message).toBe('forbidden (test error)');
@@ -512,7 +517,7 @@ describe('optimistic mutation results', () => {
 
         await Promise.all([promise, promise2]);
 
-        subscriptionHandle.unsubscribe();
+        subscriptionHandle!.unsubscribe();
         {
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
@@ -565,7 +570,7 @@ describe('optimistic mutation results', () => {
           return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
-              next(res) {
+              next(res: any) {
                 resolve(res);
               },
             });
@@ -578,11 +583,13 @@ describe('optimistic mutation results', () => {
             optimisticResponse,
             update,
           })
-          .then(res => {
+          .then((res: any) => {
             checkBothMutationsAreApplied(
               'This one was created with a mutation.',
               'Optimistically generated 2',
             );
+
+            // @ts-ignore
             const latestState = client.queryManager.mutationStore;
             expect(latestState.get('5').loading).toBe(false);
             expect(latestState.get('6').loading).toBe(true);
@@ -596,11 +603,13 @@ describe('optimistic mutation results', () => {
             optimisticResponse: optimisticResponse2,
             update,
           })
-          .then(res => {
+          .then((res: any) => {
             checkBothMutationsAreApplied(
               'This one was created with a mutation.',
               'Second mutation.',
             );
+
+            // @ts-ignore
             const latestState = client.queryManager.mutationStore;
             expect(latestState.get('5').loading).toBe(false);
             expect(latestState.get('6').loading).toBe(false);
@@ -608,6 +617,7 @@ describe('optimistic mutation results', () => {
             return res;
           });
 
+        // @ts-ignore
         const mutationsState = client.queryManager.mutationStore;
         expect(mutationsState.get('5').loading).toBe(true);
         expect(mutationsState.get('6').loading).toBe(true);
@@ -619,7 +629,7 @@ describe('optimistic mutation results', () => {
 
         await Promise.all([promise, promise2]);
 
-        subscriptionHandle.unsubscribe();
+        subscriptionHandle!.unsubscribe();
         checkBothMutationsAreApplied(
           'This one was created with a mutation.',
           'Second mutation.',
@@ -708,7 +718,7 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            update: (proxy, mResult: any) => {
+            update: (proxy: any, mResult: any) => {
               const data = proxy.readQuery({ query: todoListQuery }, true);
               expect(data.todoList.todos[0].text).toEqual(
                 todoListOptimisticResponse.createTodo.todos[0].text,
@@ -731,7 +741,7 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            update: (proxy, mResult: any) => {
+            update: (proxy: any, mResult: any) => {
               const incomingText = mResult.data.createTodo.todos[0].text;
               const data = proxy.readQuery({ query: todoListQuery }, false);
               expect(data.todoList.todos[0].text).toEqual(incomingText);
@@ -764,7 +774,7 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            update: (proxy, mResult: any) => {
+            update: (proxy: any, mResult: any) => {
               const data: any = proxy.readFragment(
                 {
                   id: 'TodoList5',
@@ -793,7 +803,7 @@ describe('optimistic mutation results', () => {
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
-            update: (proxy, mResult: any) => {
+            update: (proxy: any, mResult: any) => {
               const incomingText = mResult.data.createTodo.todos[0].text;
               const data: any = proxy.readFragment(
                 {
@@ -859,7 +869,7 @@ describe('optimistic mutation results', () => {
       await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
-          next(res) {
+          next(res: any) {
             resolve(res);
           },
         });
@@ -869,7 +879,7 @@ describe('optimistic mutation results', () => {
         mutation,
         variables,
         optimisticResponse,
-        update: (proxy, mResult: any) => {
+        update: (proxy: any, mResult: any) => {
           expect(mResult.data.createTodo.id).toBe('99');
 
           const id = 'TodoList5';
@@ -907,7 +917,7 @@ describe('optimistic mutation results', () => {
 
       const newResult: any = await client.query({ query });
 
-      subscriptionHandle.unsubscribe();
+      subscriptionHandle!.unsubscribe();
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toEqual(4);
 
@@ -997,7 +1007,7 @@ describe('optimistic mutation results', () => {
       await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
-          next(res) {
+          next(res: any) {
             resolve(res);
           },
         });
@@ -1007,7 +1017,7 @@ describe('optimistic mutation results', () => {
         mutation,
         optimisticResponse,
         updateQueries: {
-          todoList(prev, options) {
+          todoList(prev: any, options: any) {
             const mResult = options.mutationResult as any;
             expect(mResult.data.createTodo.id).toEqual('99');
             return {
@@ -1034,7 +1044,7 @@ describe('optimistic mutation results', () => {
 
       const newResult: any = await client.query({ query });
 
-      subscriptionHandle.unsubscribe();
+      subscriptionHandle!.unsubscribe();
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toEqual(4);
 
@@ -1066,7 +1076,7 @@ describe('optimistic mutation results', () => {
       await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
-          next(res) {
+          next(res: any) {
             resolve(res);
           },
         });
@@ -1091,7 +1101,7 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           updateQueries,
         })
-        .then(res => {
+        .then((res: any) => {
           const currentDataInStore = (client.cache as InMemoryCache).extract(
             true,
           );
@@ -1126,7 +1136,7 @@ describe('optimistic mutation results', () => {
 
       const newResult: any = await client.query({ query });
 
-      subscriptionHandle.unsubscribe();
+      subscriptionHandle!.unsubscribe();
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toEqual(5);
 
@@ -1165,7 +1175,7 @@ describe('optimistic mutation results', () => {
       await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
-          next(res) {
+          next(res: any) {
             resolve(res);
           },
         });
@@ -1190,7 +1200,7 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           updateQueries,
         })
-        .catch(err => {
+        .catch((err: any) => {
           // it is ok to fail here
           expect(err).toBeInstanceOf(Error);
           expect(err.message).toEqual('forbidden (test error)');
@@ -1214,7 +1224,7 @@ describe('optimistic mutation results', () => {
 
       await Promise.all([promise, promise2]);
 
-      subscriptionHandle.unsubscribe();
+      subscriptionHandle!.unsubscribe();
       {
         const dataInStore = (client.cache as InMemoryCache).extract(true);
         expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
@@ -1292,9 +1302,9 @@ describe('optimistic mutation results', () => {
       });
 
       // wrap the QueryObservable with an rxjs observable
-      const promise = from(client.watchQuery({ query }))
+      const promise = from(client.watchQuery({ query }) as any)
         .pipe(
-          map(value => stripSymbols(value.data.todoList.todos)),
+          map((value: any) => stripSymbols(value.data.todoList.todos)),
           take(5),
           toArray(),
         )
@@ -1303,7 +1313,7 @@ describe('optimistic mutation results', () => {
       // Mutations will not trigger a watchQuery with the results of an optimistic response
       // if set in the same tick of the event loop.
       // https://github.com/apollographql/apollo-client/issues/3723
-      await new Promise(setTimeout);
+      await new Promise(resolve => setTimeout(resolve));
 
       client.mutate({
         mutation,
@@ -1411,7 +1421,7 @@ describe('optimistic mutation results', () => {
       await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
-          next(res) {
+          next(res: any) {
             resolve(res);
           },
         });
@@ -1422,7 +1432,7 @@ describe('optimistic mutation results', () => {
       const promise = client.mutate({
         mutation,
         optimisticResponse,
-        update: (proxy, mResult: any) => {
+        update: (proxy: any, mResult: any) => {
           const after = Date.now();
           const duration = after - before;
           if (firstTime) {
@@ -1456,7 +1466,7 @@ describe('optimistic mutation results', () => {
       );
       await promise;
       await client.query({ query }).then((newResult: any) => {
-        subscriptionHandle.unsubscribe();
+        subscriptionHandle!.unsubscribe();
         // There should be one more todo item than before
         expect(newResult.data.todoList.todos.length).toBe(4);
 
@@ -1489,7 +1499,7 @@ describe('optimistic mutation results', () => {
       await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
-          next(res) {
+          next(res: any) {
             resolve(res);
           },
         });
@@ -1534,7 +1544,7 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           update,
         })
-        .then(res => {
+        .then((res: any) => {
           const currentDataInStore = (client.cache as InMemoryCache).extract(
             true,
           );
@@ -1567,7 +1577,7 @@ describe('optimistic mutation results', () => {
 
       const newResult: any = await client.query({ query });
 
-      subscriptionHandle.unsubscribe();
+      subscriptionHandle!.unsubscribe();
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toBe(5);
 
@@ -1606,7 +1616,7 @@ describe('optimistic mutation results', () => {
       await new Promise(resolve => {
         const handle = client.watchQuery({ query });
         subscriptionHandle = handle.subscribe({
-          next(res) {
+          next(res: any) {
             resolve(res);
           },
         });
@@ -1651,7 +1661,7 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           update,
         })
-        .catch(err => {
+        .catch((err: any) => {
           // it is ok to fail here
           expect(err).toBeInstanceOf(Error);
           expect(err.message).toBe('forbidden (test error)');
@@ -1675,7 +1685,7 @@ describe('optimistic mutation results', () => {
 
       await Promise.all([promise, promise2]);
 
-      subscriptionHandle.unsubscribe();
+      subscriptionHandle!.unsubscribe();
       {
         const dataInStore = (client.cache as InMemoryCache).extract(true);
         expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
@@ -1769,17 +1779,15 @@ describe('optimistic mutation results', () => {
         }),
       });
 
-      let count = 0;
-
-      const promise = from(client.watchQuery({ query }))
+      const promise = from(client.watchQuery({ query }) as any)
         .pipe(
-          map(value => stripSymbols(value.data.todoList.todos)),
+          map((value: any) => stripSymbols(value.data.todoList.todos)),
           take(5),
           toArray(),
         )
         .toPromise();
 
-      await new Promise(setTimeout);
+      await new Promise(resolve => setTimeout(resolve));
 
       client.mutate({
         mutation,
@@ -1873,7 +1881,7 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
 
-  let client: ApolloClient;
+  let client: ApolloClient<any>;
   let link: any;
 
   function setup(
@@ -1988,7 +1996,7 @@ describe('optimistic mutation - githunt comments', () => {
     await new Promise(resolve => {
       const handle = client.watchQuery({ query, variables });
       subscriptionHandle = handle.subscribe({
-        next(res) {
+        next(res: any) {
           resolve(res);
         },
       });
@@ -2003,7 +2011,7 @@ describe('optimistic mutation - githunt comments', () => {
 
     const newResult: any = await client.query({ query, variables });
 
-    subscriptionHandle.unsubscribe();
+    subscriptionHandle!.unsubscribe();
     expect(newResult.data.entry.comments.length).toBe(2);
 
     resolve();

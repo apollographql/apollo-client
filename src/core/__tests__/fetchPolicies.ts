@@ -168,11 +168,8 @@ describe('network-only', () => {
   });
 
   itAsync('updates the cache on a mutation', (resolve, reject) => {
-    let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
-      called++;
       return forward(operation).map(result => {
-        called++;
         return result;
       });
     });
@@ -302,11 +299,8 @@ describe('no-cache', () => {
   });
 
   itAsync('does not update the cache on a mutation', (resolve, reject) => {
-    let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
-      called++;
       return forward(operation).map(result => {
-        called++;
         return result;
       });
     });

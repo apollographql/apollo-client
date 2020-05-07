@@ -89,9 +89,7 @@ describe('QueryScheduler', () => {
       link: link,
     });
     let timesFired = 0;
-    queryManager.startPollingQuery(queryOptions, 'fake-id', () => {
-      timesFired += 1;
-    });
+    queryManager.startPollingQuery(queryOptions, 'fake-id');
     setTimeout(() => {
       expect(timesFired).toBeGreaterThanOrEqual(0);
       queryManager.stop();

@@ -5,15 +5,14 @@ import gql from 'graphql-tag';
 import { Observable, ObservableSubscription } from '../utilities/observables/Observable';
 import { ApolloLink } from '../link/core/ApolloLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { PossibleTypesMap } from '../cache/inmemory/types';
 import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { WatchQueryOptions, FetchPolicy, WatchQueryFetchPolicy } from '../core/watchQueryOptions';
+import { FetchPolicy, WatchQueryFetchPolicy, QueryOptions } from '../core/watchQueryOptions';
 import { ApolloError } from '../errors/ApolloError';
 import { ApolloClient } from '..';
 import subscribeAndCount from '../utilities/testing/subscribeAndCount';
 import { itAsync } from '../utilities/testing/itAsync';
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { NetworkStatus, ObservableQuery } from '../core';
+import { ObservableQuery, PossibleTypesMap } from '../core';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -556,10 +555,7 @@ describe('client', () => {
     `;
 
     const errors: GraphQLError[] = [
-      {
-        name: 'test',
-        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
-      },
+      new GraphQLError('Syntax Error GraphQL request (8:9) Expected Name, found EOF')
     ];
 
     const link = mockSingleLink({
@@ -599,10 +595,7 @@ describe('client', () => {
     };
 
     const errors: GraphQLError[] = [
-      {
-        name: 'test',
-        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
-      },
+      new GraphQLError('Syntax Error GraphQL request (8:9) Expected Name, found EOF'),
     ];
 
     const link = ApolloLink.from([
@@ -1483,7 +1476,7 @@ describe('client', () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        client.query({ query, returnPartialData: true } as WatchQueryOptions);
+        client.query({ query, returnPartialData: true } as QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
 
@@ -1493,7 +1486,7 @@ describe('client', () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        client.query({ query, returnPartialData: true } as WatchQueryOptions);
+        client.query({ query, returnPartialData: true } as QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
   });
@@ -1747,7 +1740,7 @@ describe('client', () => {
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
+          obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
           });
@@ -1784,20 +1777,18 @@ describe('client', () => {
 
       const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
 
-      let handleCalled = false;
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
+          obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
             setTimeout(() => {
-              obs.setOptions({ fetchPolicy: 'cache-first' });
+              obs.setOptions({ query, fetchPolicy: 'cache-first' });
             }, 10);
           });
         }
         if (handleCount === 2) {
-          handleCalled = true;
           expect(stripSymbols(result.data)).toEqual(data2);
           resolve();
         }
@@ -1859,7 +1850,7 @@ describe('client', () => {
         cache: new InMemoryCache({ addTypename: false }),
       });
 
-      const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
+      const options: QueryOptions = { query, fetchPolicy: 'network-only' };
 
       // Run a query first to initialize the store
       return client
@@ -2006,8 +1997,8 @@ describe('client', () => {
       .mutate({ mutation, errorPolicy: 'all' })
       .then(result => {
         expect(result.errors).toBeDefined();
-        expect(result.errors.length).toBe(1);
-        expect(result.errors[0].message).toBe(errors[0].message);
+        expect(result.errors!.length).toBe(1);
+        expect(result.errors![0].message).toBe(errors[0].message);
         expect(result.data).toEqual(data);
         resolve();
       })
@@ -2114,6 +2105,8 @@ describe('client', () => {
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
+
+    // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'clearStore');
     await client.clearStore();
     expect(spy).toHaveBeenCalled();
@@ -2153,6 +2146,8 @@ describe('client', () => {
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
+
+    // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'clearStore');
     await client.resetStore();
     expect(spy).toHaveBeenCalled();
@@ -2188,7 +2183,7 @@ describe('client', () => {
   });
 
   it('resetStore waits until all onResetStore callbacks are called', async () => {
-    const delay = time => new Promise(r => setTimeout(r, time));
+    const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const client = new ApolloClient({
       link: ApolloLink.empty(),
@@ -2217,7 +2212,7 @@ describe('client', () => {
   });
 
   it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
-    const delay = time => new Promise(r => setTimeout(r, time));
+    const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const query = gql`
       query {
@@ -2244,12 +2239,10 @@ describe('client', () => {
       },
     };
 
-    let timesFired = 0;
     const link = ApolloLink.from([
       new ApolloLink(
         () =>
           new Observable(observer => {
-            timesFired += 1;
             observer.next({ data });
             observer.complete();
             return;
@@ -2290,7 +2283,7 @@ describe('client', () => {
       }
     });
 
-    const observable = client
+    client
       .watchQuery<any>({
         query,
         notifyOnNetworkStatusChange: false,
@@ -2313,53 +2306,11 @@ describe('client', () => {
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
+
+    // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'reFetchObservableQueries');
     await client.reFetchObservableQueries();
     expect(spy).toHaveBeenCalled();
-  });
-
-  it('should enable dev tools logging', () => {
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
-    };
-
-    // it('with self-made store', () => {
-    //   const link = mockSingleLink(reject, {
-    //     request: { query: cloneDeep(query) },
-    //     result: { data },
-    //   });
-    //
-    //   const client = new ApolloClient({
-    //     link,
-    //     cache: new InMemoryCache({ addTypename: false }),
-    //   });
-    //
-    //   const log: any[] = [];
-    //   client.__actionHookForDevTools((entry: any) => {
-    //     log.push(entry);
-    //   });
-    //
-    //   return client.query({ query }).then(() => {
-    //     expect(log.length).toBe(2);
-    //     expect(log[1].state.queries['0'].loading).toBe(false);
-    //   });
-    // });
   });
 
   itAsync('should propagate errors from network interface to observers', (resolve, reject) => {
@@ -2481,7 +2432,7 @@ describe('client', () => {
           reject(e);
         }
       },
-      error(error) {
+      error(error: Error) {
         expect(count++).toBe(2);
         expect(error.message).toBe('This is an error!');
 
@@ -2520,10 +2471,7 @@ describe('client', () => {
       }
     `;
     const errors: GraphQLError[] = [
-      {
-        name: 'test',
-        message: 'Cannot query field "foo" on type "Post".',
-      },
+        new GraphQLError('Cannot query field "foo" on type "Post".')
     ];
     const link = mockSingleLink({
       request: { query },
@@ -2893,7 +2841,7 @@ describe('@connection', () => {
       query: DocumentNode,
       fetchPolicy: WatchQueryFetchPolicy = "cache-first",
     ): any[] {
-      const results = [];
+      const results: any[] = [];
       const obsQuery = client.watchQuery({
         query,
         fetchPolicy,
@@ -2992,7 +2940,7 @@ describe('@connection', () => {
     checkLastResult(aResults, a456);
     checkLastResult(bResults, bOyez);
     checkLastResult(abResults, a456bOyez);
-    const cSee = checkLastResult(cResults, { c: "see" });
+    checkLastResult(cResults, { c: "see" });
 
     cache.modify({
       c(value) {
@@ -3005,7 +2953,7 @@ describe('@connection', () => {
     checkLastResult(aResults, a456);
     checkLastResult(bResults, bOyez);
     checkLastResult(abResults, a456bOyez);
-    const cSaw = checkLastResult(cResults, { c: "saw" });
+    checkLastResult(cResults, { c: "saw" });
 
     client.cache.evict("ROOT_QUERY", "c");
     await wait();

@@ -7,8 +7,7 @@ import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
-import { Operation } from '../../../link/core/types';
-import { MissingFieldError } from '../../../cache';
+import { GraphQLRequest } from '../../../link/core/types';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,
@@ -18,13 +17,13 @@ import {
 // mocks
 import mockQueryManager from '../../../utilities/testing/mocking/mockQueryManager';
 import mockWatchQuery from '../../../utilities/testing/mocking/mockWatchQuery';
-import { mockSingleLink } from '../../../utilities/testing/mocking/mockLink';
+import { MockApolloLink, mockSingleLink } from '../../../utilities/testing/mocking/mockLink';
 
 // core
 import { ApolloQueryResult } from '../../types';
 import { NetworkStatus } from '../../networkStatus';
 import { ObservableQuery } from '../../ObservableQuery';
-import { WatchQueryOptions } from '../../watchQueryOptions';
+import { MutationBaseOptions, MutationOptions, WatchQueryOptions } from '../../watchQueryOptions';
 import { QueryManager } from '../../QueryManager';
 
 import { ApolloError } from '../../../errors/ApolloError';
@@ -37,6 +36,15 @@ import observableToPromise, {
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
+
+interface MockedMutation {
+  reject: (reason: any) => any;
+  mutation: DocumentNode;
+  data?: Object;
+  errors?: GraphQLError[];
+  variables?: Object;
+  config?: ApolloReducerConfig;
+}
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.
@@ -110,29 +118,24 @@ describe('QueryManager', () => {
     errors,
     variables = {},
     config = {},
-  }: {
-    reject: (reason: any) => any;
-    mutation: DocumentNode;
-    data?: Object;
-    errors?: GraphQLError[];
-    variables?: Object;
-    config?: ApolloReducerConfig;
-  }) => {
+  }: MockedMutation) => {
     const link = mockSingleLink({
       request: { query: mutation, variables },
       result: { data, errors },
     }).setOnError(reject);
+
     const queryManager = createQueryManager({
       link,
       config,
     });
+
     return new Promise<{
       result: ExecutionResult;
       queryManager: QueryManager<NormalizedCacheObject>;
     }>((resolve, reject) => {
       queryManager
         .mutate({ mutation, variables })
-        .then(result => {
+        .then((result: any) => {
           resolve({ result, queryManager });
         })
         .catch(error => {
@@ -141,14 +144,10 @@ describe('QueryManager', () => {
     });
   };
 
-  const assertMutationRoundtrip = (opts: {
-    resolve: (result: any) => any;
-    reject: (reason: any) => any;
-    mutation: DocumentNode;
-    data: Object;
-    variables?: Object;
-  }) => {
-    const { resolve, reject } = opts;
+  const assertMutationRoundtrip = (
+      resolve: (result: any) => any,
+      opts: MockedMutation) => {
+    const { reject } = opts;
     return mockMutation(opts).then(({ result }) => {
       expect(stripSymbols(result.data)).toEqual(opts.data);
     }).then(resolve, reject);
@@ -164,7 +163,7 @@ describe('QueryManager', () => {
     thirdResult,
   }: {
     reject: (reason: any) => any;
-    request: Operation;
+    request: GraphQLRequest;
     firstResult: ExecutionResult;
     secondResult: ExecutionResult;
     thirdResult?: ExecutionResult;
@@ -202,10 +201,7 @@ describe('QueryManager', () => {
       variables: {},
       result: {
         errors: [
-          {
-            name: 'Name',
-            message: 'This is an error message.',
-          },
+          new GraphQLError('This is an error message.'),
         ],
       },
       observer: {
@@ -241,17 +237,13 @@ describe('QueryManager', () => {
       },
       result: {
         errors: [
-          {
-            name: 'Name',
-            message: 'This is an error message.',
-          },
+          new GraphQLError('This is an error message.'),
         ],
       },
       observer: {
         next({ errors }) {
           expect(errors).toBeDefined();
-          expect(errors[0].name).toBe('Name');
-          expect(errors[0].message).toBe('This is an error message.');
+          expect(errors![0].message).toBe('This is an error message.');
           resolve();
         },
         error(apolloError) {
@@ -284,10 +276,7 @@ describe('QueryManager', () => {
           },
         },
         errors: [
-          {
-            name: 'Name',
-            message: 'This is an error message.',
-          },
+          new GraphQLError('This is an error message.'),
         ],
       },
       observer: {
@@ -483,7 +472,7 @@ describe('QueryManager', () => {
       result: expResult,
     });
 
-    const observable = from(handle);
+    const observable = from(handle as any);
 
     observable.pipe(map(result => assign({ fromRx: true }, result))).subscribe({
       next: wrap(reject, newResult => {
@@ -1385,8 +1374,9 @@ describe('QueryManager', () => {
   });
 
   itAsync('runs a mutation', (resolve, reject) => {
-    return assertMutationRoundtrip({
+    return assertMutationRoundtrip(
       resolve,
+        {
       reject,
       mutation: gql`
         mutation makeListPrivate {
@@ -1394,22 +1384,24 @@ describe('QueryManager', () => {
         }
       `,
       data: { makeListPrivate: true },
-    });
+        }
+    );
   });
 
   itAsync('runs a mutation even when errors is empty array #2912', (resolve, reject) => {
-    const errors = [];
-    return assertMutationRoundtrip({
+    return assertMutationRoundtrip(
       resolve,
+        {
       reject,
       mutation: gql`
         mutation makeListPrivate {
           makeListPrivate(id: "5")
         }
       `,
-      errors,
+          errors: [],
       data: { makeListPrivate: true },
-    });
+        }
+    );
   });
 
   itAsync('runs a mutation with default errorPolicy equal to "none"', (resolve, reject) => {
@@ -1436,8 +1428,9 @@ describe('QueryManager', () => {
   });
 
   itAsync('runs a mutation with variables', (resolve, reject) => {
-    return assertMutationRoundtrip({
+    return assertMutationRoundtrip(
       resolve,
+        {
       reject,
       mutation: gql`
         mutation makeListPrivate($listId: ID!) {
@@ -1446,7 +1439,8 @@ describe('QueryManager', () => {
       `,
       variables: { listId: '1' },
       data: { makeListPrivate: true },
-    });
+        },
+    );
   });
 
   const getIdField = ({ id }: { id: string }) => id;
@@ -1837,7 +1831,7 @@ describe('QueryManager', () => {
         }
       }
     `;
-    const graphQLErrors = [new Error('GraphQL error')];
+    const graphQLErrors = [new GraphQLError('GraphQL error')];
     return mockQueryManager(reject, {
       request: { query },
       result: { errors: graphQLErrors },
@@ -1897,7 +1891,7 @@ describe('QueryManager', () => {
           .catch(() => {
             // make that the error thrown doesn't empty the state
             expect(
-              queryManager.cache.extract().ROOT_QUERY.author,
+              queryManager.cache.extract().ROOT_QUERY!.author,
             ).toEqual(data.author);
             resolve();
           });
@@ -1980,7 +1974,7 @@ describe('QueryManager', () => {
         errorCallbacks: [
           () => {
             expect(
-              queryManager.cache.extract().ROOT_QUERY.author,
+              queryManager.cache.extract().ROOT_QUERY!.author,
             ).toEqual(data.author);
           },
         ],
@@ -1988,7 +1982,7 @@ describe('QueryManager', () => {
       result => {
         expect(stripSymbols(result.data)).toEqual(data);
         expect(
-          queryManager.cache.extract().ROOT_QUERY.author
+          queryManager.cache.extract().ROOT_QUERY!.author
         ).toEqual(data.author);
       },
     ).then(resolve, reject);
@@ -2329,10 +2323,7 @@ describe('QueryManager', () => {
     };
     const secondResult = {
       errors: [
-        {
-          name: 'PeopleError',
-          message: 'This is not the person you are looking for.',
-        },
+        new GraphQLError('This is not the person you are looking for.'),
       ],
     };
 
@@ -2345,13 +2336,8 @@ describe('QueryManager', () => {
 
     const handle = queryManager.watchQuery<any>(request);
 
-    const checkError = error => {
-      expect(error.graphQLErrors).toEqual([
-        {
-          name: 'PeopleError',
-          message: 'This is not the person you are looking for.',
-        },
-      ]);
+    const checkError = (error: ApolloError) => {
+      expect(error.graphQLErrors[0].message).toEqual('This is not the person you are looking for.')
     };
 
     handle.subscribe({
@@ -2793,7 +2779,7 @@ describe('QueryManager', () => {
         notifyOnNetworkStatusChange: false,
       });
 
-      let isFinished;
+      let isFinished = false;
       process.once('unhandledRejection', () => {
         if (!isFinished) reject('unhandledRejection from network');
       });
@@ -4127,16 +4113,13 @@ describe('QueryManager', () => {
 
   describe('refetchQueries', () => {
     const oldWarn = console.warn;
-    let warned: any;
     let timesWarned = 0;
 
     beforeEach(() => {
       // clear warnings
-      warned = null;
       timesWarned = 0;
       // mock warn method
       console.warn = (...args: any[]) => {
-        warned = args;
         timesWarned++;
       };
     });
@@ -4484,9 +4467,9 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = result => {
+      const conditional = (result: ExecutionResult<any>) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
-        return false;
+        return [];
       };
 
       return observableToPromise({ observable }, result => {
@@ -4546,7 +4529,7 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = result => {
+      const conditional = (result: ExecutionResult<any>) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
         return [{ query }];
       };
@@ -4634,7 +4617,7 @@ describe('QueryManager', () => {
           });
         },
         result => {
-          const context = queryManager.link.operation.getContext();
+          const context = (queryManager.link as MockApolloLink).operation!.getContext();
           expect(context.headers).not.toBeUndefined();
           expect(context.headers.someHeader).toEqual(headers.someHeader);
         },
@@ -4720,7 +4703,7 @@ describe('QueryManager', () => {
           });
         },
         result => {
-          const context = queryManager.link.operation.getContext();
+          const context = (queryManager.link as MockApolloLink).operation!.getContext();
           expect(context.headers).not.toBeUndefined();
           expect(context.headers.someHeader).toEqual(headers.someHeader);
         },
@@ -4733,7 +4716,7 @@ describe('QueryManager', () => {
   });
 
   describe('awaitRefetchQueries', () => {
-    const awaitRefetchTest = ({ awaitRefetchQueries }) => new Promise((resolve, reject) => {
+    const awaitRefetchTest = ({ awaitRefetchQueries }: MutationBaseOptions) => new Promise((resolve, reject) => {
       const query = gql`
         query getAuthors($id: ID!) {
           author(id: $id) {
@@ -4802,7 +4785,7 @@ describe('QueryManager', () => {
         { observable },
         result => {
           expect(stripSymbols(result.data)).toEqual(queryData);
-          const mutateOptions = {
+          const mutateOptions: MutationOptions = {
             mutation,
             refetchQueries: ['getAuthors'],
           };
@@ -4899,6 +4882,7 @@ describe('QueryManager', () => {
           });
         })
         .then(() => {
+          // @ts-ignore
           expect(cache.watches.size).toBe(0);
         })
         .then(resolve, reject);
@@ -4985,7 +4969,7 @@ describe('QueryManager', () => {
       });
 
       observableToPromise({ observable }, result => {
-        const context = link.operation.getContext();
+        const context = link.operation!.getContext();
         expect(context.clientAwareness).toBeDefined();
         expect(context.clientAwareness).toEqual(clientAwareness);
         resolve();

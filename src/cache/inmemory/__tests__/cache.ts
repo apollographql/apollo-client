@@ -727,7 +727,7 @@ describe('Cache', () => {
         lastName: "Willson",
       };
 
-      const id = cache.identify(data);
+      const id = cache.identify(data)!;
 
       cache.recordOptimisticTransaction(proxy => {
         proxy.writeFragment({ id, fragment, data });
@@ -1410,7 +1410,7 @@ describe("InMemoryCache#broadcastWatches", function () {
     const receivedCallbackResults: [string, number, any][] = [];
 
     let nextWatchId = 1;
-    function watch(arg) {
+    function watch(arg: number) {
       const watchId = `id${nextWatchId++}`;
       cache.watch({
         query,
@@ -1690,7 +1690,7 @@ describe("InMemoryCache#modify", () => {
       },
     });
 
-    const authorId = cache.identify(currentlyReading.author);
+    const authorId = cache.identify(currentlyReading.author)!;
     expect(authorId).toBe('Author:{"name":"Ezra Klein"}');
 
     cache.modify({
@@ -1709,7 +1709,7 @@ describe("InMemoryCache#modify", () => {
       yearOfBirth: 1984,
     });
 
-    const bookId = cache.identify(currentlyReading);
+    const bookId = cache.identify(currentlyReading)!;
 
     // Modifying the Book in order to modify the Author is fancier than
     // necessary, but we want fancy use cases to work, too.
@@ -1731,8 +1731,8 @@ describe("InMemoryCache#modify", () => {
     }, bookId);
 
     const snapshotWithoutYOB = cache.extract();
-    expect(snapshotWithoutYOB[authorId].yearOfBirth).toBeUndefined();
-    expect("yearOfBirth" in snapshotWithoutYOB[authorId]).toBe(false);
+    expect(snapshotWithoutYOB[authorId]!.yearOfBirth).toBeUndefined();
+    expect("yearOfBirth" in snapshotWithoutYOB[authorId]!).toBe(false);
     expect(snapshotWithoutYOB).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
@@ -1806,17 +1806,17 @@ describe("InMemoryCache#modify", () => {
             comments: {
               merge(existing: Reference[], incoming: Reference[], { args, mergeObjects }) {
                 const merged = existing ? existing.slice(0) : [];
-                const end = args.offset + Math.min(args.limit, incoming.length);
-                for (let i = args.offset; i < end; ++i) {
-                  merged[i] = mergeObjects(merged[i], incoming[i - args.offset]);
+                const end = args!.offset + Math.min(args!.limit, incoming.length);
+                for (let i = args!.offset; i < end; ++i) {
+                  merged[i] = mergeObjects(merged[i], incoming[i - args!.offset]) as Reference;
                 }
                 return merged;
               },
 
               read(existing: Reference[], { args }) {
                 const page = existing && existing.slice(
-                  args.offset,
-                  args.offset + args.limit,
+                  args!.offset,
+                  args!.offset + args!.limit,
                 );
                 if (page && page.length > 0) {
                   return page;
@@ -2034,7 +2034,7 @@ describe("InMemoryCache#modify", () => {
       },
     });
 
-    let aResults = [];
+    let aResults: any[] = [];
     cache.watch({
       query: queryA,
       optimistic: true,
@@ -2044,7 +2044,7 @@ describe("InMemoryCache#modify", () => {
       },
     });
 
-    let bResults = [];
+    let bResults: any[] = [];
     cache.watch({
       query: queryB,
       optimistic: true,

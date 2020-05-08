@@ -337,7 +337,7 @@ describe('useMutation Hook', () => {
             expect(data!.createTodo.description).toEqual(
               CREATE_TODO_RESULT.createTodo.description
             );
-            expect(errors[0].message).toEqual(
+            expect(errors![0].message).toEqual(
               expect.stringContaining(CREATE_TODO_ERROR)
             );
           }

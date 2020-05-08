@@ -1,5 +1,6 @@
 import { NormalizedCacheObject, StoreObject } from '../types';
 import { EntityStore } from '../entityStore';
+import { Policies } from '../policies';
 
 describe('Optimistic EntityStore layering', () => {
   function makeLayer(root: EntityStore) {
@@ -20,7 +21,7 @@ describe('Optimistic EntityStore layering', () => {
       Human: { __typename: 'Human', name: 'John' },
     };
 
-    const underlyingStore = new EntityStore.Root({ seed: data });
+    const underlyingStore = new EntityStore.Root({ seed: data, policies: new Policies() });
 
     let store = makeLayer(underlyingStore);
     beforeEach(() => {
@@ -58,7 +59,7 @@ describe('Optimistic EntityStore layering', () => {
       Human: { __typename: 'Human', name: 'John' },
     };
 
-    const underlyingStore = new EntityStore.Root({ seed: data });
+    const underlyingStore = new EntityStore.Root({ seed: data, policies: new Policies() });
     let store = makeLayer(underlyingStore);
     let recording: NormalizedCacheObject;
 

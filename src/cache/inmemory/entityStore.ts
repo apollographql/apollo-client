@@ -179,21 +179,30 @@ export abstract class EntityStore implements NormalizedCache {
   // fieldNameFromStoreName helper function. If called with a fieldName
   // and variables, removes all fields of that entity whose names match fieldName
   // and whose arguments when cached exactly match the variables passed.
-  public delete(dataId: string, fieldName?: string, variables?: Record<string, any>) {
-    const storeFieldName = fieldName && variables ?
-      this.policies.getStoreFieldName(dataId, fieldName, variables) : fieldName;
+  public delete(
+    dataId: string,
+    fieldName?: string,
+    args?: Record<string, any>,
+  ) {
+    const storeFieldName = fieldName && args
+      ? this.policies.getStoreFieldName(dataId, fieldName, args)
+      : fieldName;
     return this.modify(dataId, storeFieldName ? {
       [storeFieldName]: delModifier,
     } : delModifier);
   }
 
-  public evict(dataId: string, fieldName?: string, variables?: Record<string, any>): boolean {
+  public evict(
+    dataId: string,
+    fieldName?: string,
+    args?: Record<string, any>,
+  ): boolean {
     let evicted = false;
     if (hasOwn.call(this.data, dataId)) {
-      evicted = this.delete(dataId, fieldName, variables);
+      evicted = this.delete(dataId, fieldName, args);
     }
     if (this instanceof Layer) {
-      evicted = this.parent.evict(dataId, fieldName, variables) || evicted;
+      evicted = this.parent.evict(dataId, fieldName, args) || evicted;
     }
     // Always invalidate the field to trigger rereading of watched
     // queries, even if no cache data was modified by the eviction,

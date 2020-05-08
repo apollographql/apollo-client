@@ -291,30 +291,3 @@ export function isInlineFragment(
 }
 
 export type VariableValue = (node: VariableNode) => any;
-
-export function fieldNodeFromName(fieldName: string, variables: Record<string, any>): FieldNode {
-  return {
-    kind: 'Field',
-    name: {
-      kind: "Name",
-      value: fieldName,
-    },
-    arguments: Object.keys(variables).reduce((args, key) => ([
-      ...args,
-      {
-        kind: 'Argument',
-        name: {
-          kind: 'Name',
-          value: key,
-        },
-        value: {
-          kind: 'Variable',
-          name: {
-            kind: 'Name',
-            value: key,
-          }
-        }
-      }
-    ]), [])
-  };
-}

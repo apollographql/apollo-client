@@ -1215,6 +1215,19 @@ describe('EntityStore', () => {
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+      },
+    });
+
+    cache.evict('ROOT_QUERY', 'authorOfBook');;
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
       },
     });
   });

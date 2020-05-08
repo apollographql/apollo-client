@@ -1,4 +1,4 @@
-import { render, cleanup, wait } from '@testing-library/react';
+import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { MockSubscriptionLink } from '../mockSubscriptionLink';
@@ -35,7 +35,7 @@ describe('mockSubscriptionLink', () => {
 
     let renderCountB = 0;
     const ComponentB = () => {
-      const { loading, data, error } = useSubscription(subscription);
+      useSubscription(subscription);
       renderCountB += 1;
       return null;
     };

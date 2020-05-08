@@ -79,7 +79,7 @@
     "fetch-mock": "7.7.3",
     "flow-bin": "0.114.0",
     "fsevents": "2.1.2",
-    "graphql": "14.5.8",
+    "graphql": "15.0.0",
     "graphql-tag": "2.10.1",
     "isomorphic-fetch": "2.2.1",
     "jest": "24.9.0",

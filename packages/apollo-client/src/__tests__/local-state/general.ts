@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
-import { introspectionQuery } from 'graphql/utilities';
+import { getIntrospectionQuery } from 'graphql/utilities';
 
 import ApolloClient from '../..';
 import { ApolloCache } from 'apollo-cache';
@@ -71,7 +71,7 @@ describe('General functionality', () => {
 
   it('should not interfere with server introspection queries', () => {
     const query = gql`
-      ${introspectionQuery}
+      ${getIntrospectionQuery()}
     `;
 
     const error = new GraphQLError('no introspection result found');

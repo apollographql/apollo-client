@@ -1,5 +1,4 @@
 import {
-  ExecutionResult,
   DocumentNode,
   OperationDefinitionNode,
   SelectionSetNode,
@@ -28,6 +27,7 @@ import {
   isField,
   isInlineFragment,
 } from 'apollo-utilities';
+import { FetchResult } from 'apollo-link';
 
 import { invariant } from 'ts-invariant';
 
@@ -129,11 +129,11 @@ export class LocalState<TCacheShape> {
     onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
-    remoteResult: ExecutionResult<TData>;
+    remoteResult: FetchResult<TData>;
     context?: Record<string, any>;
     variables?: Record<string, any>;
     onlyRunForcedResolvers?: boolean;
-  }): Promise<ExecutionResult<TData>> {
+  }): Promise<FetchResult<TData>> {
     if (document) {
       return this.resolveDocument(
         document,

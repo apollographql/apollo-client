@@ -593,15 +593,16 @@ describe("type policies", function () {
                 keyArgs(args, context) {
                   expect(context.typename).toBe("Thread");
                   expect(context.fieldName).toBe("comments");
-                  expect(context.field.name.value).toBe("comments");
-                  expect(context.variables).toEqual({});
+                  expect(context.field!.name.value).toBe("comments");
                   expect(context.policies).toBeInstanceOf(Policies);
 
                   if (typeof args!.limit === "number") {
                     if (typeof args!.offset === "number") {
+                      expect(args).toEqual({ offset: 0, limit: 2 });
                       return ["offset", "limit"];
                     }
                     if (args!.beforeId) {
+                      expect(args).toEqual({ beforeId: "asdf", limit: 2 });
                       return ["beforeId", "limit"];
                     }
                   }

@@ -21,6 +21,7 @@ import {
   argumentsObjectFromField,
   Reference,
   isReference,
+  getStoreKeyName,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { IdGetter } from "./types";
@@ -81,8 +82,7 @@ export type KeyArgsFunction = (
   context: {
     typename: string;
     fieldName: string;
-    field: FieldNode;
-    variables: Record<string, any>;
+    field: FieldNode | null;
     policies: Policies;
   },
 ) => KeySpecifier | ReturnType<IdGetter>;
@@ -430,17 +430,28 @@ export class Policies {
 
   public getStoreFieldName(
     typename: string | undefined,
-    field: FieldNode,
-    variables: Record<string, any>,
+    nameOrField: string | FieldNode,
+    // If nameOrField is a string, argsOrVars should be an object of
+    // arguments. If nameOrField is a FieldNode, argsOrVars should be the
+    // variables to use when computing the arguments of the field.
+    argsOrVars: Record<string, any>,
   ): string {
-    const fieldName = field.name.value;
+    let field: FieldNode | null;
+    let fieldName: string;
+    if (typeof nameOrField === "string") {
+      field = null;
+      fieldName = nameOrField;
+    } else {
+      field = nameOrField;
+      fieldName = field.name.value;
+    }
     const policy = this.getFieldPolicy(typename, fieldName, false);
     let storeFieldName: string | undefined;
 
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
-      const args = argumentsObjectFromField(field, variables);
-      const context = { typename, fieldName, field, variables, policies: this };
+      const args = field ? argumentsObjectFromField(field, argsOrVars) : argsOrVars;
+      const context = { typename, fieldName, field, policies: this };
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
@@ -455,7 +466,9 @@ export class Policies {
     }
 
     if (storeFieldName === void 0) {
-      storeFieldName = storeKeyNameFromField(field, variables);
+      storeFieldName = field
+        ? storeKeyNameFromField(field, argsOrVars)
+        : getStoreKeyName(fieldName, argsOrVars);
     }
 
     // Make sure custom field names start with the actual field.name.value
@@ -706,11 +719,9 @@ function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,
 ): KeyArgsFunction {
   return (args, context) => {
-    const field = context.field;
-    const fieldName = field.name.value;
-    return args ? `${fieldName}:${
+    return args ? `${context.fieldName}:${
       JSON.stringify(computeKeyObject(args, specifier))
-    }` : fieldName;
+    }` : context.fieldName;
   };
 }
 

@@ -167,7 +167,7 @@ export interface BaseMutationOptions<
   context?: Context;
   onCompleted?: (data: TData) => void;
   onError?: (error: ApolloError) => void;
-  fetchPolicy?: WatchQueryFetchPolicy;
+  fetchPolicy?: Extract<WatchQueryFetchPolicy, 'no-cache'>;
   ignoreResults?: boolean;
 }
 

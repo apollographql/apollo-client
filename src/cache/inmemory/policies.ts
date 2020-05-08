@@ -276,7 +276,7 @@ export class Policies {
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const existing = this.getTypePolicy(typename, true);
+      const existing = this.getTypePolicy(typename, true)!;
       const incoming = typePolicies[typename];
       const { keyFields, fields } = incoming;
 
@@ -284,14 +284,16 @@ export class Policies {
       if (incoming.mutationType) this.setRootTypename("Mutation", typename);
       if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
 
-      existing!.keyFn =
+      existing.keyFn =
         // Pass false to disable normalization for this typename.
         keyFields === false ? nullKeyFieldsFn :
         // Pass an array of strings to use those fields to compute a
         // composite ID for objects of this typename.
         Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
         // Pass a function to take full control over identification.
-        typeof keyFields === "function" ? keyFields : void 0;
+        typeof keyFields === "function" ? keyFields :
+        // Leave existing.keyFn unchanged if above cases fail.
+        existing.keyFn;
 
       if (fields) {
         Object.keys(fields).forEach(fieldName => {
@@ -312,7 +314,7 @@ export class Policies {
               Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
               // Pass a function to take full control over field identity.
               typeof keyArgs === "function" ? keyArgs :
-              // Leave existing.keyFn unchanged if all above cases fail.
+              // Leave existing.keyFn unchanged if above cases fail.
               existing.keyFn;
 
             if (typeof read === "function") existing.read = read;

@@ -287,6 +287,33 @@ describe("type policies", function () {
     }).toThrowError("Missing field 'year' while computing key fields");
   });
 
+  it("does not clobber previous keyFields with undefined", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Movie: {
+          keyFields(incoming) {
+            return `MotionPicture::${incoming.id}`;
+          },
+        },
+      },
+    });
+
+    cache.policies.addTypePolicies({
+      Movie: {
+        fields: {
+          isPurchased() {
+            return false;
+          },
+        },
+      },
+    });
+
+    expect(cache.identify({
+      __typename: "Movie",
+      id: "3993d4118143",
+    })).toBe("MotionPicture::3993d4118143");
+  });
+
   describe("field policies", function () {
     it("can filter key arguments", function () {
       const cache = new InMemoryCache({

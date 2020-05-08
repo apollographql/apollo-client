@@ -1117,14 +1117,14 @@ function markMutationResult<TStore, TData>(
         }= queryUpdatersById[id];
 
         // Read the current query result from the store.
-        const { result: currentQueryResult, complete } = cache.diff({
+        const { result: currentQueryResult, complete } = cache.diff<TData>({
           query: document!,
           variables,
           returnPartialData: true,
           optimistic: false,
         });
 
-        if (complete) {
+        if (complete && currentQueryResult) {
           // Run our reducer using the current query result and the mutation result.
           const nextQueryResult = tryFunctionOrLogError(
             () => updater(currentQueryResult, {

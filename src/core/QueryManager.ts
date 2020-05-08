@@ -169,8 +169,7 @@ export class QueryManager<TStore> {
 
       if (updateQueriesByName) {
         this.queries.forEach(({ observableQuery }, queryId) => {
-          if (observableQuery &&
-              observableQuery.watching) {
+          if (observableQuery) {
             const { queryName } = observableQuery;
             if (
               queryName &&
@@ -303,7 +302,6 @@ export class QueryManager<TStore> {
               if (typeof refetchQuery === 'string') {
                 self.queries.forEach(({ observableQuery }) => {
                   if (observableQuery &&
-                      observableQuery.watching &&
                       observableQuery.queryName === refetchQuery) {
                     refetchQueryPromises.push(observableQuery.refetch());
                   }
@@ -434,16 +432,8 @@ export class QueryManager<TStore> {
     };
   }
 
-  // The shouldSubscribe option is a temporary fix that tells us whether watchQuery was called
-  // directly (i.e. through ApolloClient) or through the query method within QueryManager.
-  // Currently, the query method uses watchQuery in order to handle non-network errors correctly
-  // but we don't want to keep track observables issued for the query method since those aren't
-  // supposed to be refetched in the event of a store reset. Once we unify error handling for
-  // network errors and non-network errors, the shouldSubscribe option will go away.
-
   public watchQuery<T, TVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables>,
-    shouldSubscribe = true,
   ): ObservableQuery<T, TVariables> {
     // assign variable default values if supplied
     options = {
@@ -461,7 +451,6 @@ export class QueryManager<TStore> {
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
       options,
-      shouldSubscribe: shouldSubscribe,
     });
 
     this.getQuery(observable.queryId).init({
@@ -544,8 +533,7 @@ export class QueryManager<TStore> {
     ));
 
     this.queries.forEach(queryInfo => {
-      if (queryInfo.observableQuery &&
-          queryInfo.observableQuery.watching) {
+      if (queryInfo.observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
         queryInfo.networkStatus = NetworkStatus.loading;
@@ -578,8 +566,7 @@ export class QueryManager<TStore> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
 
     this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery &&
-          observableQuery.watching) {
+      if (observableQuery) {
         const fetchPolicy = observableQuery.options.fetchPolicy;
 
         observableQuery.resetLastResults();

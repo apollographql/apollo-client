@@ -80,7 +80,6 @@ export class QueryManager<TStore> {
 
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
-  private queryCancelFns = new Map<string, (error: any) => any>();
   private fetchCancelFns = new Map<string, (error: any) => any>();
 
   constructor({
@@ -127,9 +126,7 @@ export class QueryManager<TStore> {
   }
 
   private cancelPendingFetches(error: Error) {
-    this.queryCancelFns.forEach(cancel => cancel(error));
     this.fetchCancelFns.forEach(cancel => cancel(error));
-    this.queryCancelFns.clear();
     this.fetchCancelFns.clear();
   }
 
@@ -476,7 +473,9 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {
+  public query<TData, TVars = OperationVariables>(
+    options: QueryOptions<TVars>,
+  ): Promise<ApolloQueryResult<TData>> {
     invariant(
       options.query,
       'query option is required. You must specify your GraphQL document ' +
@@ -498,21 +497,11 @@ export class QueryManager<TStore> {
       'pollInterval option only supported on watchQuery.',
     );
 
-    return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      const watchedQuery = this.watchQuery<T>(options, false);
-      const { queryId } = watchedQuery;
-      this.queryCancelFns.set(queryId, reject);
-      watchedQuery
-        .result()
-        .then(resolve, reject)
-        // Since neither resolve nor reject throw or return a value, this .then
-        // handler is guaranteed to execute. Note that it doesn't really matter
-        // when we remove the reject function from this.fetchCancelFns,
-        // since resolve and reject are mutually idempotent. In fact, it would
-        // not be incorrect to let reject functions accumulate over time; it's
-        // just a waste of memory.
-        .then(() => this.queryCancelFns.delete(queryId));
-    });
+    const queryId = this.generateQueryId();
+    return this.fetchQuery<TData, TVars>(
+      queryId,
+      options,
+    ).finally(() => this.stopQuery(queryId));
   }
 
   private queryIdCounter = 1;
@@ -688,7 +677,6 @@ export class QueryManager<TStore> {
     // that each add their reject functions to fetchCancelFns.
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
-    this.queryCancelFns.delete(queryId);
     this.fetchCancelFns.delete(queryId);
     this.getQuery(queryId).subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
@@ -903,6 +891,14 @@ export class QueryManager<TStore> {
       );
     };
 
+    // This cancel function needs to be set before the concast is created,
+    // in case concast creation synchronously cancels the request.
+    this.fetchCancelFns.set(queryId, reason => {
+      // Delaying the cancellation using a Promise ensures that the
+      // concast variable has been initialized.
+      Promise.resolve().then(() => concast.cancel(reason));
+    });
+
     // A Concast<T> can be created either from an Iterable<Observable<T>>
     // or from a PromiseLike<Iterable<Observable<T>>>, where T in this
     // case is ApolloQueryResult<TData>.
@@ -922,10 +918,6 @@ export class QueryManager<TStore> {
         ).then(fromVariables)
         : fromVariables(normalized.variables!)
     );
-
-    this.fetchCancelFns.set(queryId, reason => {
-      Promise.resolve().then(() => concast.cancel(reason));
-    });
 
     concast.cleanup(() => this.fetchCancelFns.delete(queryId));
 

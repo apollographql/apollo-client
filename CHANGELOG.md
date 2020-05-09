@@ -1,5 +1,13 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client 2.6.9
+
+### Apollo Client (2.6.9)
+
+- Changes to accommodate `graphql@15.0.0`.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6258](https://github.com/apollographql/apollo-client/pull/6258)
+
+
 ## Apollo Client 2.6.8
 
 ### Apollo Client (2.6.8)

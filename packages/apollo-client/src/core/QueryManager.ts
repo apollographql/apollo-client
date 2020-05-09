@@ -1,5 +1,5 @@
 import { execute, ApolloLink, FetchResult } from 'apollo-link';
-import { ExecutionResult, DocumentNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { Cache } from 'apollo-cache';
 import {
   getDefaultValues,
@@ -220,7 +220,7 @@ export class QueryManager<TStore> {
         variables,
         false,
       ).subscribe({
-        next(result: ExecutionResult) {
+        next(result: FetchResult<T>) {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
             error = new ApolloError({
               graphQLErrors: result.errors,
@@ -241,7 +241,7 @@ export class QueryManager<TStore> {
             });
           }
 
-          storeResult = result as FetchResult<T>;
+          storeResult = result;
         },
 
         error(err: Error) {
@@ -279,7 +279,7 @@ export class QueryManager<TStore> {
           // allow for conditional refetches
           // XXX do we want to make this the only API one day?
           if (typeof refetchQueries === 'function') {
-            refetchQueries = refetchQueries(storeResult as ExecutionResult);
+            refetchQueries = refetchQueries(storeResult!);
           }
 
           const refetchQueryPromises: Promise<
@@ -480,9 +480,9 @@ export class QueryManager<TStore> {
     return { data: storeResult };
   }
 
-  private markQueryResult(
+  private markQueryResult<TData>(
     queryId: string,
-    result: ExecutionResult,
+    result: FetchResult<TData>,
     {
       fetchPolicy,
       variables,
@@ -1216,7 +1216,7 @@ export class QueryManager<TStore> {
         });
       };
 
-      const subscription = observable.map((result: ExecutionResult) => {
+      const subscription = observable.map((result: FetchResult<T>) => {
         if (requestId >= this.getQuery(queryId).lastRequestId) {
           this.markQueryResult(
             queryId,

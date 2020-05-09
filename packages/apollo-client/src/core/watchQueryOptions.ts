@@ -1,4 +1,4 @@
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { FetchResult } from 'apollo-link';
 import { DataProxy } from 'apollo-cache';
 
@@ -198,7 +198,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: ExecutionResult<T>) => RefetchQueryDescription)
+    | ((result: FetchResult<T>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**

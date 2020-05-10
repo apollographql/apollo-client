@@ -5039,4 +5039,46 @@ describe('QueryManager', () => {
       });
     });
   });
+
+  describe('queryDeduplication', () => {
+    it('should be true when context is true, default is false and agrument not provided', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+      });
+
+      queryManager.getObservableFromLink(query, { queryDeduplication: true })
+
+      expect(queryManager.inFlightLinkObservables.size).toBe(1)
+    });
+    it('should be false when context is false, default is true and agrument not provided', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+      });
+      queryManager.queryDeduplication = true
+
+      queryManager.getObservableFromLink(query, { queryDeduplication: false })
+
+      expect(queryManager.inFlightLinkObservables.size).toBe(0)
+    });
+  })
 });

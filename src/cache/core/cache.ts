@@ -139,6 +139,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       result: options.data,
       query: options.query,
       variables: options.variables,
+      broadcast: options.broadcast,
     });
   }
 
@@ -150,6 +151,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       result: options.data,
       variables: options.variables,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
+      broadcast: options.broadcast,
     });
   }
 }

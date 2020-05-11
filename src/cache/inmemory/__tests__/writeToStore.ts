@@ -15,6 +15,7 @@ import {
 } from '../../../utilities/graphql/storeUtils';
 import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
+import { itAsync } from '../../../utilities/testing/itAsync';
 import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
@@ -2084,5 +2085,123 @@ describe('writing to the store', () => {
     });
 
     expect(mergeCounts).toEqual({ first: 1, second: 1, third: 1, fourth: 1 });
+  });
+
+  itAsync("should allow silencing broadcast of cache updates", function (resolve, reject) {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Counter: {
+          // Counter is a singleton, but we want to be able to test
+          // writing to it with writeFragment, so it needs to have an ID.
+          keyFields: [],
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        counter {
+          count
+        }
+      }
+    `;
+
+    const results: number[] = [];
+
+    cache.watch({
+      query,
+      optimistic: true,
+      callback(diff) {
+        results.push(diff.result);
+        expect(diff.result).toEqual({
+          counter: {
+            __typename: "Counter",
+            count: 3,
+          },
+        });
+        resolve();
+      },
+    });
+
+    let count = 0;
+
+    cache.writeQuery({
+      query,
+      data: {
+        counter: {
+          __typename: "Counter",
+          count: ++count,
+        },
+      },
+      broadcast: false,
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        counter: { __ref: "Counter:{}" },
+      },
+      "Counter:{}": {
+        __typename: "Counter",
+        count: 1,
+      },
+    });
+
+    expect(results).toEqual([]);
+
+    const counterId = cache.identify({
+      __typename: "Counter",
+    })!;
+
+    cache.writeFragment({
+      id: counterId,
+      fragment: gql`fragment Count on Counter { count }`,
+      data: {
+        count: ++count,
+      },
+      broadcast: false,
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        counter: { __ref: "Counter:{}" },
+      },
+      "Counter:{}": {
+        __typename: "Counter",
+        count: 2,
+      },
+    });
+
+    expect(results).toEqual([]);
+
+    expect(cache.evict({
+      id: counterId,
+      fieldName: "count",
+      broadcast: false,
+    })).toBe(true);
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        counter: { __ref: "Counter:{}" },
+      },
+      "Counter:{}": {
+        __typename: "Counter",
+      },
+    });
+
+    expect(results).toEqual([]);
+
+    // Only this write should trigger a broadcast.
+    cache.writeQuery({
+      query,
+      data: {
+        counter: {
+          __typename: "Counter",
+          count: 3,
+        },
+      },
+    });
   });
 });

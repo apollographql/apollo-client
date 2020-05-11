@@ -146,7 +146,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       variables: options.variables,
     });
 
-    this.broadcastWatches();
+    if (options.broadcast !== false) {
+      this.broadcastWatches();
+    }
   }
 
   public modify(
@@ -235,7 +237,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         args,
       } : idOrOptions,
     );
-    this.broadcastWatches();
+    if (typeof idOrOptions === "string" ||
+        idOrOptions.broadcast !== false) {
+      this.broadcastWatches();
+    }
     return evicted;
   }
 

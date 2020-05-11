@@ -1,7 +1,7 @@
 import { DataProxy } from './DataProxy';
 
 export namespace Cache {
-  export type WatchCallback = (newData: any) => void;
+  export type WatchCallback = (diff: Cache.DiffResult<any>) => void;
 
   export interface ReadOptions<TVariables = any>
     extends DataProxy.Query<TVariables> {
@@ -14,6 +14,7 @@ export namespace Cache {
     extends DataProxy.Query<TVariables> {
     dataId: string;
     result: TResult;
+    broadcast?: boolean;
   }
 
   export interface DiffOptions extends ReadOptions {
@@ -29,6 +30,7 @@ export namespace Cache {
     id: string;
     fieldName?: string;
     args?: Record<string, any>;
+    broadcast?: boolean;
   }
 
   export import DiffResult = DataProxy.DiffResult;

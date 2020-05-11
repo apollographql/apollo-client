@@ -72,14 +72,20 @@ describe('subscribeToMore', () => {
       link,
     });
 
-    const obsHandle = client.watchQuery<typeof req1['result']['data']>({
-      query,
-    });
+    const obsHandle = client.watchQuery({ query });
 
     const sub = obsHandle.subscribe({
-      next(queryResult) {
+      next(queryResult: any) {
         latestResult = queryResult;
-        counter++;
+        if (++counter === 3) {
+          sub.unsubscribe();
+          expect(latestResult).toEqual({
+            data: { entry: { value: 'Amanda Liu' } },
+            loading: false,
+            networkStatus: 7,
+          });
+          resolve();
+        }
       },
     });
 
@@ -94,21 +100,15 @@ describe('subscribeToMore', () => {
       },
     });
 
-    setTimeout(() => {
-      sub.unsubscribe();
-      expect(counter).toBe(3);
-      expect(stripSymbols(latestResult)).toEqual({
-        data: { entry: { value: 'Amanda Liu' } },
-        loading: false,
-        networkStatus: 7,
-        stale: false,
-      });
-      resolve();
-    }, 15);
-
-    for (let i = 0; i < 2; i++) {
-      wSLink.simulateResult(results[i]);
+    let i = 0;
+    function simulate() {
+      const result = results[i++];
+      if (result) {
+        wSLink.simulateResult(result);
+        setTimeout(simulate, 10);
+      }
     }
+    simulate();
   });
 
   itAsync('calls error callback on error', (resolve, reject) => {
@@ -129,7 +129,7 @@ describe('subscribeToMore', () => {
       query,
     });
     const sub = obsHandle.subscribe({
-      next(queryResult) {
+      next(queryResult: any) {
         latestResult = queryResult;
         counter++;
       },
@@ -157,7 +157,6 @@ describe('subscribeToMore', () => {
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
-        stale: false,
       });
       expect(counter).toBe(2);
       expect(errorCount).toBe(1);
@@ -188,7 +187,7 @@ describe('subscribeToMore', () => {
       query,
     });
     const sub = obsHandle.subscribe({
-      next(queryResult) {
+      next(queryResult: any) {
         latestResult = queryResult;
         counter++;
       },
@@ -217,7 +216,6 @@ describe('subscribeToMore', () => {
         data: { entry: { value: '1' } },
         loading: false,
         networkStatus: 7,
-        stale: false,
       });
       expect(counter).toBe(1);
       expect(errorCount).toBe(1);
@@ -259,7 +257,7 @@ describe('subscribeToMore', () => {
     });
 
     const sub = obsHandle.subscribe({
-      next(queryResult) {
+      next(queryResult: any) {
         latestResult = queryResult;
         counter++;
       },
@@ -323,7 +321,6 @@ describe('subscribeToMore', () => {
       },
       loading: false,
       networkStatus: 7,
-      stale: false,
     });
     resolve();
   });
@@ -355,18 +352,25 @@ describe('subscribeToMore', () => {
       link,
     });
 
-    const obsHandle = client.watchQuery<
-      typeof typedReq['result']['data'],
-      typeof typedReq['request']['variables']
-    >({
+    type TData = typeof typedReq['result']['data'];
+    type TVars = typeof typedReq['request']['variables'];
+    const obsHandle = client.watchQuery<TData, TVars>({
       query,
       variables: { someNumber: 1 },
     });
 
     const sub = obsHandle.subscribe({
-      next(queryResult) {
+      next(queryResult: any) {
         latestResult = queryResult;
-        counter++;
+        if (++counter === 3) {
+          sub.unsubscribe();
+          expect(latestResult).toEqual({
+            data: { entry: { value: 'Amanda Liu' } },
+            loading: false,
+            networkStatus: 7,
+          });
+          resolve();
+        }
       },
     });
 
@@ -384,20 +388,14 @@ describe('subscribeToMore', () => {
       },
     });
 
-    setTimeout(() => {
-      sub.unsubscribe();
-      expect(counter).toBe(3);
-      expect(stripSymbols(latestResult)).toEqual({
-        data: { entry: { value: 'Amanda Liu' } },
-        loading: false,
-        networkStatus: 7,
-        stale: false,
-      });
-      resolve();
-    }, 15);
-
-    for (let i = 0; i < 2; i++) {
-      wSLink.simulateResult(results[i]);
+    let i = 0;
+    function simulate() {
+      const result = results[i++];
+      if (result) {
+        wSLink.simulateResult(result);
+        setTimeout(simulate, 10);
+      }
     }
+    simulate();
   });
 });

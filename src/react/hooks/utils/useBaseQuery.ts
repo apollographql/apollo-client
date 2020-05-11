@@ -24,18 +24,35 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   const updatedOptions = options ? { ...options, query } : { query };
 
   const queryDataRef = useRef<QueryData<TData, TVariables>>();
-
-  if (!queryDataRef.current) {
-    queryDataRef.current = new QueryData<TData, TVariables>({
+  const queryData =
+    queryDataRef.current ||
+    new QueryData<TData, TVariables>({
       options: updatedOptions as QueryDataOptions<TData, TVariables>,
       context,
-      forceUpdate
+      onNewData() {
+        if (!queryData.ssrInitiated()) {
+          // When new data is received from the `QueryData` object, we want to
+          // force a re-render to make sure the new data is displayed. We can't
+          // force that re-render if we're already rendering however so to be
+          // safe we'll trigger the re-render in a microtask.
+          Promise.resolve().then(forceUpdate);
+        } else {
+          // If we're rendering on the server side we can force an update at
+          // any point.
+          forceUpdate();
+        }
+      }
     });
-  }
 
-  const queryData = queryDataRef.current;
   queryData.setOptions(updatedOptions);
   queryData.context = context;
+
+  // SSR won't trigger the effect hook below that stores the current
+  // `QueryData` instance for future renders, so we'll handle that here if
+  // the current render is happening server side.
+  if (queryData.ssrInitiated() && !queryDataRef.current) {
+    queryDataRef.current = queryData;
+  }
 
   // `onError` and `onCompleted` callback functions will not always have a
   // stable identity, so we'll exclude them from the memoization key to
@@ -59,16 +76,22 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     ? (result as QueryTuple<TData, TVariables>)[1]
     : (result as QueryResult<TData, TVariables>);
 
-  useEffect(() => queryData.afterExecute({ queryResult, lazy }), [
+  useEffect(() => {
+    // We only need one instance of the `QueryData` class, so we'll store it
+    // as a ref to make it available on subsequent renders.
+    if (!queryDataRef.current) {
+      queryDataRef.current = queryData;
+    }
+
+    return () => queryData.cleanup();
+  }, []);
+
+  useEffect(() => queryData.afterExecute({ lazy }), [
     queryResult.loading,
     queryResult.networkStatus,
     queryResult.error,
-    queryResult.data
+    queryResult.data,
   ]);
-
-  useEffect(() => {
-    return () => queryData.cleanup();
-  }, []);
 
   return result;
 }

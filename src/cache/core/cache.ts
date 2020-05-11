@@ -65,14 +65,14 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return document;
   }
 
-  public identify(object: StoreObject): string | null {
-    return null;
+  public identify(object: StoreObject): string | undefined {
+    return;
   }
 
   public modify(
-    dataId: string,
     modifiers: Modifier<any> | Modifiers,
-    optimistic = false,
+    dataId?: string,
+    optimistic?: boolean,
   ): boolean {
     return false;
   }

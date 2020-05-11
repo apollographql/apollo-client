@@ -8,6 +8,7 @@ import {
   DocumentNode,
   ArgumentNode,
   ValueNode,
+  ASTNode,
 } from 'graphql';
 
 import { visit } from 'graphql/language/visitor';
@@ -42,11 +43,11 @@ export function shouldInclude(
   });
 }
 
-export function getDirectiveNames(doc: DocumentNode) {
+export function getDirectiveNames(root: ASTNode) {
   const names: string[] = [];
 
-  visit(doc, {
-    Directive(node) {
+  visit(root, {
+    Directive(node: DirectiveNode) {
       names.push(node.name.value);
     },
   });
@@ -54,8 +55,8 @@ export function getDirectiveNames(doc: DocumentNode) {
   return names;
 }
 
-export function hasDirectives(names: string[], doc: DocumentNode) {
-  return getDirectiveNames(doc).some(
+export function hasDirectives(names: string[], root: ASTNode) {
+  return getDirectiveNames(root).some(
     (name: string) => names.indexOf(name) > -1,
   );
 }
@@ -94,7 +95,7 @@ export function getInclusionDirectives(
         `Incorrect number of arguments for the @${directiveName} directive.`,
       );
 
-      const ifArgument = directiveArguments[0];
+      const ifArgument = directiveArguments![0];
       invariant(
         ifArgument.name && ifArgument.name.value === 'if',
         `Invalid argument for the @${directiveName} directive.`,

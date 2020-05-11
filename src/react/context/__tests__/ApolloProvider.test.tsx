@@ -18,43 +18,6 @@ describe('<ApolloProvider /> Component', () => {
     link: new ApolloLink((o, f) => (f ? f(o) : null))
   });
 
-  class Child extends React.Component<any, { store: any; client: any }> {
-    static contextType = getApolloContext();
-
-    componentDidUpdate() {
-      if (this.props.data) this.props.data.refetch();
-    }
-
-    render() {
-      return null;
-    }
-  }
-
-  interface Props {
-    client: ApolloClient<any>;
-  }
-
-  class Container extends React.Component<Props, any> {
-    constructor(props: Props) {
-      super(props);
-      this.state = {};
-    }
-
-    componentDidMount() {
-      this.setState({
-        client: this.props.client
-      });
-    }
-
-    render() {
-      return (
-        <ApolloProvider client={this.state.client || this.props.client}>
-          <Child />
-        </ApolloProvider>
-      );
-    }
-  }
-
   it('should render children components', () => {
     const { getByText } = render(
       <ApolloProvider client={client}>

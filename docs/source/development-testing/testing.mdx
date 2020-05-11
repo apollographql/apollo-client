@@ -218,8 +218,6 @@ This shows a basic example test that tests the loading state of a component by c
 Loading state, while important, isn't the only thing to test. To test the final state of the component after receiving data, we can just wait for it to update and test the final state.
 
 ```jsx
-const wait = require('waait');
-
 it('should render dog', async () => {
   const dogMock = {
     request: {
@@ -237,16 +235,16 @@ it('should render dog', async () => {
     </MockedProvider>,
   );
 
-  await wait(0); // wait for response
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   const p = component.root.findByType('p');
   expect(p.children).toContain('Buck is a poodle');
 });
 ```
 
-Here, you can see the `await wait(0)` line. This is a utility function from the [`waait`](https://npm.im/waait) npm package. It delays until the next "tick" of the event loop, and allows time for that `Promise` returned from `MockedProvider` to be fulfilled. After that `Promise` resolves (or rejects), the component can be checked to ensure it displays the correct information — in this case, "Buck is a poodle".
+The Promise below `renderer.create` delays until the next "tick" of the event loop, and allows time for that `Promise` returned from `MockedProvider` to be fulfilled. After that `Promise` resolves (or rejects), the component can be checked to ensure it displays the correct information — in this case, "Buck is a poodle".
 
-For more complex UI with heavy calculations, or delays added into its render logic, the `wait(0)` will not be long enough. In these cases, you could either increase the wait time or use a package like [`wait-for-expect`](https://npm.im/wait-for-expect) to delay until the render has happened. The risk of using a package like this everywhere by default is that _every_ test could take up to five seconds to execute (or longer if the default timeout has been increased).
+For more complex UI with heavy calculations, or delays added into its render logic, you may want to increase the wait time. You could also use a package like [`wait-for-expect`](https://npm.im/wait-for-expect) to delay until the render has happened. The risk of using a package like this everywhere by default is that _every_ test could take up to five seconds to execute (or longer if the default timeout has been increased).
 
 ## Testing error states
 
@@ -272,7 +270,7 @@ it('should show error UI', async () => {
     </MockedProvider>,
   );
 
-  await wait(0); // wait for response
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   const tree = component.toJSON();
   expect(tree.children).toContain('Error!');
@@ -436,7 +434,7 @@ it('should delete and give visual feedback', async () => {
   const button = component.root.findByType('button');
   button.props.onClick(); // fires the mutation
 
-  await wait(0);
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   const tree = component.toJSON();
   expect(tree.children).toContain('Deleted!');
@@ -472,7 +470,7 @@ it('should delete and give visual feedback', async () => {
   const button = component.root.findByType('button');
   button.props.onClick(); // fires the mutation
 
-  await wait(0);
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   expect(deleteMutationCalled).toBe(true);
 

@@ -4,6 +4,7 @@ import { print } from 'graphql/language/printer';
 import { Observable } from '../../../utilities/observables/Observable';
 import { FetchResult, Operation, NextLink, GraphQLRequest } from '../types';
 import { ApolloLink } from '../ApolloLink';
+import { DocumentNode } from 'graphql';
 
 export class SetContextLink extends ApolloLink {
   constructor(
@@ -39,7 +40,7 @@ function checkCalls<T>(calls: any[] = [], results: Array<T>) {
 interface TestResultType {
   link: ApolloLink;
   results?: any[];
-  query?: string;
+  query?: DocumentNode;
   done?: () => void;
   context?: any;
   variables?: any;
@@ -54,7 +55,7 @@ export function testLinkResults(params: TestResultType) {
   const spy = jest.fn();
   ApolloLink.execute(link, { query, context, variables }).subscribe({
     next: spy,
-    error: error => {
+    error: (error: any) => {
       expect(error).toEqual(results.pop());
       checkCalls(spy.mock.calls[0], results);
       if (done) {
@@ -77,7 +78,7 @@ describe('ApolloClient', () => {
     it('should merge context when using a function', done => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) => {
-        op.setContext(({ add }) => ({ add: add + 2 }));
+        op.setContext((context: { add: number; }) => ({ add: context.add + 2 }));
         op.setContext(() => ({ substract: 1 }));
 
         return forward(op);
@@ -171,7 +172,7 @@ describe('ApolloClient', () => {
     it('should concat a Link and function', done => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) => {
-        op.setContext(({ add }) => ({ add: add + 2 }));
+        op.setContext((context: { add: number; }) => ({ add: context.add + 2 }));
         return forward(op);
       });
       const link = returnOne.concat(mock).concat(op => {
@@ -297,7 +298,6 @@ describe('ApolloClient', () => {
           JSON.stringify({
             variables: { id: 1 },
             extensions: { cache: true },
-            operationName: null,
             query: print(operation.query),
           }),
         );
@@ -373,7 +373,7 @@ describe('ApolloClient', () => {
         });
       });
 
-      it('should set a default context, variable, query and operationName on a copy of operation', done => {
+      it('should set a default context, variable, and query on a copy of operation', done => {
         const operation = {
           query: gql`
             {
@@ -381,14 +381,13 @@ describe('ApolloClient', () => {
             }
           `,
         };
-        const link = new ApolloLink(op => {
-          expect(operation['operationName']).toBeUndefined();
-          expect(operation['variables']).toBeUndefined();
-          expect(operation['context']).toBeUndefined();
-          expect(operation['extensions']).toBeUndefined();
-          expect(op['operationName']).toBeDefined();
+        const link = new ApolloLink((op: Operation) => {
+          expect((operation as any)['operationName']).toBeUndefined();
+          expect((operation as any)['variables']).toBeUndefined();
+          expect((operation as any)['context']).toBeUndefined();
+          expect((operation as any)['extensions']).toBeUndefined();
           expect(op['variables']).toBeDefined();
-          expect(op['context']).toBeUndefined();
+          expect((op as any)['context']).toBeUndefined();
           expect(op['extensions']).toBeDefined();
           return Observable.of();
         });
@@ -566,11 +565,11 @@ describe('ApolloClient', () => {
 
     it('should chain together a function with links', done => {
       const add1 = new ApolloLink((operation: Operation, forward: NextLink) => {
-        operation.setContext(({ num }) => ({ num: num + 1 }));
+        operation.setContext((context: { num: number; }) => ({ num: context.num + 1 }));
         return forward(operation);
       });
       const add1Link = new ApolloLink((operation, forward) => {
-        operation.setContext(({ num }) => ({ num: num + 1 }));
+        operation.setContext((context: { num: number; }) => ({ num: context.num + 1 }));
         return forward(operation);
       });
 
@@ -694,11 +693,11 @@ describe('ApolloClient', () => {
         .split(
           operation => operation.getContext().test,
           (operation, forward) => {
-            operation.setContext(({ add }) => ({ add: add + 1 }));
+            operation.setContext((context: { add: number; }) => ({ add: context.add + 1 }));
             return forward(operation);
           },
           (operation, forward) => {
-            operation.setContext(({ add }) => ({ add: add + 2 }));
+            operation.setContext((context: { add: number; }) => ({ add: context.add + 2 }));
             return forward(operation);
           },
         )
@@ -870,7 +869,7 @@ describe('ApolloClient', () => {
         operation => operation.getContext().test,
         (operation, forward) =>
           forward(operation).map(data => ({
-            data: { count: data.data.count + 1 },
+            data: { count: data.data!.count + 1 },
           })),
       ).concat(() => Observable.of({ data: { count: 1 } }));
 

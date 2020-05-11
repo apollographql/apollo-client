@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference, makeReference } from '../../../core';
+import { Reference } from '../../../core';
 import { defaultNormalizedCacheFactory } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
@@ -509,20 +509,20 @@ describe('diffing queries against the store', () => {
       result: queryResult,
     });
 
-    const { result } = reader.diffQueryAgainstStore({
+    const { result } = reader.diffQueryAgainstStore<any>({
       store,
       query,
     });
 
     expect(result).toEqual(queryResult);
-    expect(policies.identify(result.a[0])).toBe('a:1');
-    expect(policies.identify(result.a[1])).toBe('a:2');
-    expect(policies.identify(result.a[2])).toBe('a:3');
-    expect(policies.identify(result.c.e[0])).toBe('e:1');
-    expect(policies.identify(result.c.e[1])).toBe('e:2');
-    expect(policies.identify(result.c.e[2])).toBe('e:3');
-    expect(policies.identify(result.c.e[3])).toBe('e:4');
-    expect(policies.identify(result.c.e[4])).toBe('e:5');
+    expect(policies.identify(result.a[0])).toEqual(['a:1']);
+    expect(policies.identify(result.a[1])).toEqual(['a:2']);
+    expect(policies.identify(result.a[2])).toEqual(['a:3']);
+    expect(policies.identify(result.c.e[0])).toEqual(['e:1']);
+    expect(policies.identify(result.c.e[1])).toEqual(['e:2']);
+    expect(policies.identify(result.c.e[2])).toEqual(['e:3']);
+    expect(policies.identify(result.c.e[3])).toEqual(['e:4']);
+    expect(policies.identify(result.c.e[4])).toEqual(['e:5']);
   });
 
   describe('referential equality preservation', () => {
@@ -596,7 +596,7 @@ describe('diffing queries against the store', () => {
         c: { d: 20, e: { f: 3 } },
       };
 
-      const { result } = reader.diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore<any>({
         store,
         query,
         previousResult,
@@ -677,7 +677,7 @@ describe('diffing queries against the store', () => {
         a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
       };
 
-      const { result } = reader.diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore<any>({
         store,
         query,
         previousResult,
@@ -770,7 +770,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const { result } = reader.diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore<any>({
         store,
         query,
         previousResult,
@@ -860,7 +860,7 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const { result } = reader.diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore<any>({
         store,
         query,
         previousResult,
@@ -911,7 +911,7 @@ describe('diffing queries against the store', () => {
         d: { e: 50, f: { x: 6, y: 7, z: 8 } },
       };
 
-      const { result } = reader.diffQueryAgainstStore({
+      const { result } = reader.diffQueryAgainstStore<any>({
         store,
         query,
         previousResult,
@@ -960,14 +960,14 @@ describe('diffing queries against the store', () => {
           Query: {
             fields: {
               person(_, { args, isReference, toReference, readField }) {
-                expect(typeof args.id).toBe('number');
-                const ref = toReference({ __typename: 'Person', id: args.id });
+                expect(typeof args!.id).toBe('number');
+                const ref = toReference({ __typename: 'Person', id: args!.id });
                 expect(isReference(ref)).toBe(true);
                 expect(ref).toEqual({
-                  __ref: `Person:${JSON.stringify({ id: args.id })}`,
+                  __ref: `Person:${JSON.stringify({ id: args!.id })}`,
                 });
-                const found = readField<Reference[]>("people").find(
-                  person => person.__ref === ref.__ref);
+                const found = readField<Reference[]>("people")!.find(
+                  person => ref && person.__ref === ref.__ref);
                 expect(found).toBeTruthy();
                 return found;
               },

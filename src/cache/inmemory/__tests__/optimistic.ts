@@ -65,7 +65,7 @@ describe('optimistic cache layers', () => {
     expect(result1984).toBe(readOptimistic(cache));
     expect(result1984).toBe(readRealistic(cache));
 
-    let result2666InTransaction: ReturnType<typeof readOptimistic>;
+    let result2666InTransaction: ReturnType<typeof readOptimistic> | null = null;
     cache.performTransaction(proxy => {
       expect(readOptimistic(cache)).toEqual(result1984);
 
@@ -101,7 +101,7 @@ describe('optimistic cache layers', () => {
 
     expect(result1984).toBe(readRealistic(cache));
 
-    let resultCatch22: ReturnType<typeof readOptimistic>;
+    let resultCatch22: ReturnType<typeof readOptimistic> | null = null;
     cache.performTransaction(proxy => {
       proxy.writeQuery({
         query,
@@ -118,7 +118,8 @@ describe('optimistic cache layers', () => {
         },
       });
 
-      expect((resultCatch22 = readOptimistic(proxy))).toEqual({
+      resultCatch22 = readOptimistic(proxy);
+      expect(resultCatch22).toEqual({
         book: {
           __typename: 'Book',
           title: 'Catch-22',
@@ -273,7 +274,7 @@ describe('optimistic cache layers', () => {
     });
 
     function read() {
-      return cache.readQuery<Q>({ query }, true);
+      return cache.readQuery<Q>({ query }, true)!;
     }
 
     const result = read();
@@ -344,7 +345,7 @@ describe('optimistic cache layers', () => {
     function readWithAuthors(optimistic = true) {
       return cache.readQuery<Q>({
         query: queryWithAuthors,
-      }, optimistic);
+      }, optimistic)!;
     }
 
     function withoutISBN(data: any) {

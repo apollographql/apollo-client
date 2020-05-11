@@ -35,8 +35,8 @@
     "apollo-link-http": "^1.5.16",
     "graphql": "^14.5.8",
     "graphql-tag": "^2.10.1",
-    "react": "file:../../../../node_modules/react",
-    "react-dom": "file:../../../../node_modules/react-dom"
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.0.0",
@@ -45,10 +45,9 @@
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-gzip": "^2.2.0",
-    "rollup-plugin-jsx": "^1.0.3",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-replace": "^2.2.0",
-    "rollup-plugin-terser": "^5.1.2",
+    "rollup-plugin-terser": "^5.3.0",
     "serve": "^11.2.0",
     "source-map-explorer": "^2.1.0"
   }

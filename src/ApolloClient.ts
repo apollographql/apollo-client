@@ -236,7 +236,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           this.devToolsHookCb({
             action: {},
             state: {
-              queries: this.queryManager.queryStore.getStore(),
+              queries: this.queryManager.getQueryStore(),
               mutations: this.queryManager.mutationStore.getStore(),
             },
             dataWithOptimisticResults: this.cache.extract(true),
@@ -325,7 +325,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.queryManager.query<T>(options);
+    return this.queryManager.query<T, TVariables>(options);
   }
 
   /**

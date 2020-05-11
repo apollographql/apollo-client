@@ -1,5 +1,4 @@
 import { print } from 'graphql/language/printer';
-import stringify from 'fast-json-stable-stringify';
 import { equal } from '@wry/equality';
 
 import { Observable } from '../../../utilities/observables/Observable';
@@ -15,6 +14,7 @@ import {
   removeConnectionDirectiveFromDocument,
 } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
+import invariant from 'ts-invariant';
 
 export type ResultFunction<T> = () => T;
 
@@ -71,21 +71,16 @@ export class MockLink extends ApolloLink {
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
-    let responseIndex;
+    let responseIndex: number = 0;
     const response = (this.mockedResponsesByKey[key] || []).find(
       (res, index) => {
         const requestVariables = operation.variables || {};
         const mockedResponseVariables = res.request.variables || {};
-        if (
-          !equal(
-            stringify(requestVariables),
-            stringify(mockedResponseVariables)
-          )
-        ) {
-          return false;
+        if (equal(requestVariables, mockedResponseVariables)) {
+          responseIndex = index;
+          return true;
         }
-        responseIndex = index;
-        return true;
+        return false;
       }
     );
 
@@ -95,18 +90,19 @@ export class MockLink extends ApolloLink {
           operation.query
         )}, variables: ${JSON.stringify(operation.variables)}`
       ));
+      return null;
     }
 
     this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
-    const { newData } = response;
+    const { newData } = response!;
 
     if (newData) {
-      response.result = newData();
-      this.mockedResponsesByKey[key].push(response);
+      response!.result = newData();
+      this.mockedResponsesByKey[key].push(response!);
     }
 
-    const { result, error, delay } = response;
+    const { result, error, delay } = response!;
 
     if (!result && !error) {
       this.onError(new Error(
@@ -143,9 +139,11 @@ export class MockLink extends ApolloLink {
     mockedResponse: MockedResponse
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
-    newMockedResponse.request.query = removeConnectionDirectiveFromDocument(
-      newMockedResponse.request.query
+    const queryWithoutConnection = removeConnectionDirectiveFromDocument(
+        newMockedResponse.request.query
     );
+    invariant(queryWithoutConnection, "query is required");
+    newMockedResponse.request.query = queryWithoutConnection!;
     const query = removeClientSetsFromDocument(newMockedResponse.request.query);
     if (query) {
       newMockedResponse.request.query = query;
@@ -154,7 +152,7 @@ export class MockLink extends ApolloLink {
   }
 }
 
-interface MockApolloLink extends ApolloLink {
+export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
 }
 

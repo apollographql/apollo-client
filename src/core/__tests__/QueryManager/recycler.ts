@@ -14,6 +14,7 @@ import {
 
 // core
 import { QueryManager } from '../../QueryManager';
+import { ObservableQuery } from '../../ObservableQuery';
 
 describe('Subscription lifecycles', () => {
   it('cleans up and reuses data like QueryRecycler wants', done => {
@@ -48,10 +49,10 @@ describe('Subscription lifecycles', () => {
       fetchPolicy: 'cache-and-network',
     });
 
-    const observableQueries = [];
+    const observableQueries: { observableQuery: ObservableQuery, subscription: ZenObservable.Subscription; }[] = [];
 
     const resubscribe = () => {
-      const { observableQuery, subscription } = observableQueries.pop();
+      const { observableQuery, subscription } = observableQueries.pop()!;
       subscription.unsubscribe();
 
       observableQuery.setOptions({
@@ -63,7 +64,7 @@ describe('Subscription lifecycles', () => {
     };
 
     const sub = observable.subscribe({
-      next: result => {
+      next(result: any) {
         expect(result.loading).toBe(false);
         expect(stripSymbols(result.data)).toEqual(initialData);
         expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
@@ -86,9 +87,8 @@ describe('Subscription lifecycles', () => {
 
         setTimeout(() => {
           // step 4, start new Subscription;
-          const recyled = resubscribe();
-          const currentResult = recyled.getCurrentResult();
-          expect(recyled.isTornDown).toEqual(false);
+          const recycled = resubscribe();
+          const currentResult = recycled.getCurrentResult();
           expect(stripSymbols(currentResult.data)).toEqual(initialData);
           done();
         }, 10);

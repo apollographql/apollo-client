@@ -24,29 +24,29 @@ import {
   QueryTuple,
   QueryLazyOptions,
   ObservableQueryFields,
-  LazyQueryResult
 } from '../types/types';
 import { OperationData } from './OperationData';
 
 export class QueryData<TData, TVariables> extends OperationData {
+  public onNewData: () => void;
+
   private previousData: QueryPreviousData<TData, TVariables> = {};
   private currentObservable?: ObservableQuery<TData, TVariables>;
   private currentSubscription?: ObservableSubscription;
-  private forceUpdate: any;
   private runLazy: boolean = false;
   private lazyOptions?: QueryLazyOptions<TVariables>;
 
   constructor({
     options,
     context,
-    forceUpdate
+    onNewData
   }: {
     options: QueryDataOptions<TData, TVariables>;
     context: any;
-    forceUpdate: any;
+    onNewData: () => void;
   }) {
     super(options, context);
-    this.forceUpdate = forceUpdate;
+    this.onNewData = onNewData;
   }
 
   public execute(): QueryResult<TData, TVariables> {
@@ -86,25 +86,11 @@ export class QueryData<TData, TVariables> extends OperationData {
     return new Promise(resolve => this.startQuerySubscription(resolve));
   }
 
-  public afterExecute({
-    queryResult,
-    lazy = false,
-  }: {
-    queryResult: QueryResult<TData, TVariables> | LazyQueryResult<TData, TVariables>;
-    lazy?: boolean;
-  }) {
+  public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
     this.isMounted = true;
 
     if (!lazy || this.runLazy) {
-      this.handleErrorOrCompleted(queryResult as QueryResult<TData, TVariables>);
-
-      // When the component is done rendering stored query errors, we'll
-      // remove those errors from the `ObservableQuery` query store, so they
-      // aren't re-displayed on subsequent (potentially error free)
-      // requests/responses.
-      setTimeout(() => {
-        this.currentObservable?.resetQueryStoreErrors();
-      });
+      this.handleErrorOrCompleted();
     }
 
     this.previousOptions = this.getOptions();
@@ -139,12 +125,15 @@ export class QueryData<TData, TVariables> extends OperationData {
     return options;
   }
 
+  public ssrInitiated() {
+    return this.context && this.context.renderPromises;
+  }
+
   private runLazyQuery = (options?: QueryLazyOptions<TVariables>) => {
     this.cleanup();
-
     this.runLazy = true;
     this.lazyOptions = options;
-    this.forceUpdate();
+    this.onNewData();
   };
 
   private getExecuteResult(): QueryResult<TData, TVariables> {
@@ -154,7 +143,6 @@ export class QueryData<TData, TVariables> extends OperationData {
   };
 
   private getExecuteSsrResult() {
-    const treeRenderingInitiated = this.context && this.context.renderPromises;
     const ssrDisabled = this.getOptions().ssr === false;
     const fetchDisabled = this.refreshClient().client.disableNetworkFetches;
 
@@ -162,17 +150,21 @@ export class QueryData<TData, TVariables> extends OperationData {
       loading: true,
       networkStatus: NetworkStatus.loading,
       called: true,
-      data: undefined
+      data: undefined,
+      stale: false,
+      client: this.client,
+      ...this.observableQueryFields(),
     } as QueryResult<TData, TVariables>;
 
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    if (ssrDisabled && (treeRenderingInitiated || fetchDisabled)) {
+    if (ssrDisabled && (this.ssrInitiated() || fetchDisabled)) {
+      this.previousData.result = ssrLoading;
       return ssrLoading;
     }
 
     let result;
-    if (treeRenderingInitiated) {
+    if (this.ssrInitiated()) {
       result =
         this.context.renderPromises!.addQueryPromise(
           this,
@@ -191,8 +183,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     // Set the fetchPolicy to cache-first for network-only and cache-and-network
     // fetches for server side renders.
     if (
-      this.context &&
-      this.context.renderPromises &&
+      this.ssrInitiated() &&
       (options.fetchPolicy === 'network-only' ||
         options.fetchPolicy === 'cache-and-network')
     ) {
@@ -210,8 +201,8 @@ export class QueryData<TData, TVariables> extends OperationData {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
-    if (this.context && this.context.renderPromises) {
-      this.currentObservable = this.context.renderPromises.getSSRObservable(
+    if (this.ssrInitiated()) {
+      this.currentObservable = this.context!.renderPromises!.getSSRObservable(
         this.getOptions()
       );
     }
@@ -227,8 +218,8 @@ export class QueryData<TData, TVariables> extends OperationData {
         ...observableQueryOptions
       });
 
-      if (this.context && this.context.renderPromises) {
-        this.context.renderPromises.registerSSRObservable(
+      if (this.ssrInitiated()) {
+        this.context!.renderPromises!.registerSSRObservable(
           this.currentObservable,
           observableQueryOptions
         );
@@ -269,10 +260,11 @@ export class QueryData<TData, TVariables> extends OperationData {
   // When new data is received, and it doesn't match the data that was used
   // during the last `QueryData.execute` call (and ultimately the last query
   // component render), trigger the `onNewData` callback. If not specified,
-  // `onNewData` will trigger the `forceUpdate` function, which leads to a
-  // query component re-render.
-  private startQuerySubscription(onNewData: () => void = this.forceUpdate) {
+  // `onNewData` will fallback to the default `QueryData.onNewData` function
+  // (which usually leads to a query component re-render).
+  private startQuerySubscription(onNewData: () => void = this.onNewData) {
     if (this.currentSubscription || this.getOptions().skip) return;
+
     this.currentSubscription = this.currentObservable!.subscribe({
       next: ({ loading, networkStatus, data }) => {
         const previousResult = this.previousData.result;
@@ -424,14 +416,22 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.setOptions(options, true);
     this.previousData.loading =
       this.previousData.result && this.previousData.result.loading || false;
-    return this.previousData.result = result;
+    this.previousData.result = result;
+
+    // Any query errors that exist are now available in `result`, so we'll
+    // remove the original errors from the `ObservableQuery` query store to
+    // make sure they aren't re-displayed on subsequent (potentially error
+    // free) requests/responses.
+    this.currentObservable && this.currentObservable.resetQueryStoreErrors();
+
+    return result;
   }
 
-  private handleErrorOrCompleted({
-    data,
-    loading,
-    error,
-  }: QueryResult<TData, TVariables>) {
+  private handleErrorOrCompleted() {
+    if (!this.currentObservable || !this.previousData.result) return;
+
+    const { data, loading, error } = this.previousData.result;
+
     if (!loading) {
       const { query, variables, onCompleted, onError } = this.getOptions();
 

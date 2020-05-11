@@ -3784,7 +3784,7 @@ describe('QueryManager', () => {
             // refetch observed queries as soon as we hear about the query
             queryManager.reFetchObservableQueries();
             observer.next({ data });
-            return;
+            observer.complete();
           }),
       );
 

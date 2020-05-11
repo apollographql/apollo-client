@@ -801,6 +801,9 @@ function computeKeyObject(
   specifier: KeySpecifier,
   aliasMap?: AliasMap,
 ): Record<string, any> {
+  // The order of adding properties to keyObj affects its JSON serialization,
+  // so we are careful to build keyObj in the order of keys given in
+  // specifier.
   const keyObj = Object.create(null);
   let prevKey: string | undefined;
   specifier.forEach(s => {

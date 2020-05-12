@@ -47,8 +47,6 @@ interface ExecContext extends ReadMergeContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   variables: VariableMap;
-  // A JSON.stringify-serialized version of context.variables.
-  varString: string;
   path: (string | number)[];
 };
 

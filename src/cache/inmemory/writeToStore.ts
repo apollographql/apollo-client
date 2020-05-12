@@ -97,6 +97,11 @@ export class StoreWriter {
 
     const merger = makeProcessedFieldsMerger();
 
+    variables = {
+      ...getDefaultValues(operationDefinition),
+      ...variables,
+    };
+
     this.processSelectionSet({
       result: result || Object.create(null),
       // Since we already know the dataId here, pass it to
@@ -114,10 +119,8 @@ export class StoreWriter {
         merge<T>(existing: T, incoming: T) {
           return merger.merge(existing, incoming) as T;
         },
-        variables: {
-          ...getDefaultValues(operationDefinition),
-          ...variables,
-        },
+        variables,
+        varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         toReference: store.toReference,
         getFieldValue: store.getFieldValue,
@@ -176,8 +179,7 @@ export class StoreWriter {
         context.store,
         ref,
         selectionSet,
-        // TODO Precompute this.
-        JSON.stringify(context.variables),
+        context.varString,
       )) {
         return ref;
       }

@@ -89,45 +89,6 @@ export interface StoreReaderConfig {
 export class StoreReader {
   constructor(private config: StoreReaderConfig) {
     this.config = { addTypename: true, ...config };
-
-    const {
-      executeSelectionSet,
-      executeSubSelectedArray,
-    } = this;
-
-    this.executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
-      return executeSelectionSet.call(this, options);
-    }, {
-      makeCacheKey({
-        selectionSet,
-        objectOrReference,
-        context,
-      }: ExecSelectionSetOptions) {
-        if (supportsResultCaching(context.store)) {
-          return context.store.makeCacheKey(
-            selectionSet,
-            context.varString,
-            isReference(objectOrReference)
-              ? objectOrReference.__ref
-              : objectOrReference,
-          );
-        }
-      }
-    });
-
-    this.executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
-      return executeSubSelectedArray.call(this, options);
-    }, {
-      makeCacheKey({ field, array, context }) {
-        if (supportsResultCaching(context.store)) {
-          return context.store.makeCacheKey(
-            field,
-            array,
-            context.varString,
-          );
-        }
-      }
-    });
   }
 
   /**
@@ -200,7 +161,29 @@ export class StoreReader {
     };
   }
 
-  private executeSelectionSet({
+  // Cached version of execSelectionSetImpl.
+  private executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
+    return this.execSelectionSetImpl(options);
+  }, {
+    makeCacheKey({
+      selectionSet,
+      objectOrReference,
+      context,
+    }: ExecSelectionSetOptions) {
+      if (supportsResultCaching(context.store)) {
+        return context.store.makeCacheKey(
+          selectionSet,
+          context.varString,
+          isReference(objectOrReference)
+            ? objectOrReference.__ref
+            : objectOrReference,
+        );
+      }
+    }
+  });
+
+  // Uncached version of executeSelectionSet.
+  private execSelectionSetImpl({
     selectionSet,
     objectOrReference,
     context,
@@ -345,7 +328,23 @@ export class StoreReader {
     return finalResult;
   }
 
-  private executeSubSelectedArray({
+  // Cached version of execSubSelectedArrayImpl.
+  private executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
+    return this.execSubSelectedArrayImpl(options);
+  }, {
+    makeCacheKey({ field, array, context }) {
+      if (supportsResultCaching(context.store)) {
+        return context.store.makeCacheKey(
+          field,
+          array,
+          context.varString,
+        );
+      }
+    }
+  });
+
+  // Uncached version of executeSubSelectedArray.
+  private execSubSelectedArrayImpl({
     field,
     array,
     context,

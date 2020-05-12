@@ -30,6 +30,7 @@ import { Policies, ReadMergeContext } from './policies';
 import { EntityStore } from './entityStore';
 import { NormalizedCache } from './types';
 import { makeProcessedFieldsMerger, FieldValueToBeMerged } from './helpers';
+import { StoreReader } from './readFromStore';
 
 export interface WriteContext extends ReadMergeContext {
   readonly store: NormalizedCache;
@@ -53,15 +54,12 @@ interface ProcessSelectionSetOptions {
 }
 
 export interface StoreWriterConfig {
+  reader?: StoreReader;
   policies: Policies;
 };
 
 export class StoreWriter {
-  private policies: Policies;
-
-  constructor(config: StoreWriterConfig) {
-    this.policies = config.policies;
-  }
+  constructor(private config: StoreWriterConfig) {}
 
   /**
    * Writes the result of a query to the store.
@@ -80,7 +78,7 @@ export class StoreWriter {
     result,
     dataId = 'ROOT_QUERY',
     store = new EntityStore.Root({
-      policies: this.policies,
+      policies: this.config.policies,
     }),
     variables,
   }: {
@@ -109,7 +107,7 @@ export class StoreWriter {
       // If dataId is a well-known root ID such as ROOT_QUERY, we can
       // infer its __typename immediately here. Otherwise, the __typename
       // will be determined in processSelectionSet, as usual.
-      typename: this.policies.rootTypenamesById[dataId],
+      typename: this.config.policies.rootTypenamesById[dataId],
       context: {
         store,
         written: Object.create(null),
@@ -141,7 +139,7 @@ export class StoreWriter {
       shouldApplyMerges: false,
     },
   }: ProcessSelectionSetOptions): StoreObject | Reference {
-    const { policies } = this;
+    const { policies, reader } = this.config;
 
     // This mergedFields variable will be repeatedly updated using context.merge
     // to accumulate all fields that need to be written into the store.
@@ -169,8 +167,20 @@ export class StoreWriter {
       // size of this array is likely to be very small, meaning indexOf is
       // likely to be faster than Set.prototype.has.
       const sets = context.written[dataId] || (context.written[dataId] = []);
-      if (sets.indexOf(selectionSet) >= 0) return makeReference(dataId);
+      const ref = makeReference(dataId);
+      if (sets.indexOf(selectionSet) >= 0) return ref;
       sets.push(selectionSet);
+
+      if (reader && reader.isFresh(
+        result,
+        context.store,
+        ref,
+        selectionSet,
+        // TODO Precompute this.
+        JSON.stringify(context.variables),
+      )) {
+        return ref;
+      }
     }
 
     // If typename was not passed in, infer it. Note that typename is

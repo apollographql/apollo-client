@@ -161,6 +161,23 @@ export class StoreReader {
     };
   }
 
+  public isFresh(
+    result: Record<string, any>,
+    store: NormalizedCache,
+    parent: StoreObject | Reference,
+    selectionSet: SelectionSetNode,
+    varString: string,
+  ): boolean {
+    if (supportsResultCaching(store)) {
+      const latest = this.executeSelectionSet.peek(
+        store, selectionSet, parent, varString);
+      if (latest && result === latest.result) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Cached version of execSelectionSetImpl.
   private executeSelectionSet: OptimisticWrapperFunction<
     [ExecSelectionSetOptions], // Actual arguments tuple type.

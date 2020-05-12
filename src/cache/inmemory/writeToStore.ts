@@ -277,8 +277,7 @@ export class StoreWriter {
     }
 
     if (Array.isArray(value)) {
-      return value.map(
-        (item, i) => this.processFieldValue(item, field, context, out));
+      return value.map(item => this.processFieldValue(item, field, context, out));
     }
 
     return this.processSelectionSet({

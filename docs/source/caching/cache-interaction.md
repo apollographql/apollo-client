@@ -330,9 +330,9 @@ const CommentsPageWithMutations = () => (
               // Read the data from our cache for this query.
               const data = store.readQuery({ query: CommentAppQuery });
               // Add our comment from the mutation to the end.
-              data.comments.push(submitComment);
+              const comments = [...data.comments, submitComment];
               // Write our data back to the cache.
-              store.writeQuery({ query: CommentAppQuery, data });
+              store.writeQuery({ query: CommentAppQuery, { comments }  });
             }
           })
         }
@@ -449,6 +449,8 @@ client.writeQuery({
 Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
 
 ### Cache redirects with `cacheRedirects`
+
+*WARNING*: `cacheRedirects` is removed in Apollo Client v3. New documentation that outlines how to replace `cacheRedirects` with the [new cache policies API](./cache-field-behavior) is coming soon.
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 

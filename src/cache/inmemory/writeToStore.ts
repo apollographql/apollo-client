@@ -178,7 +178,7 @@ export class StoreWriter {
     // ROOT_QUERY.
     typename = typename ||
       getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
-      context.store.get(dataId, "__typename") as string;
+      (dataId && context.store.get(dataId, "__typename") as string);
 
     if ("string" === typeof typename) {
       mergedFields.__typename = typename;
@@ -242,7 +242,7 @@ export class StoreWriter {
           context.fragmentMap,
         );
 
-        if (policies.fragmentMatches(fragment, typename)) {
+        if (fragment && policies.fragmentMatches(fragment, typename)) {
           fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }

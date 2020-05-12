@@ -13,7 +13,7 @@ import { createOperation } from '../utils/createOperation';
 import { transformOperation } from '../utils/transformOperation';
 
 function passthrough(op: Operation, forward: NextLink) {
-  return forward ? forward(op) : Observable.of();
+  return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
 }
 
 function toLink(handler: RequestHandler | ApolloLink) {
@@ -25,7 +25,7 @@ function isTerminating(link: ApolloLink): boolean {
 }
 
 class LinkError extends Error {
-  public link: ApolloLink;
+  public link?: ApolloLink;
   constructor(message?: string, link?: ApolloLink) {
     super(message);
     this.link = link;
@@ -37,7 +37,7 @@ export class ApolloLink {
     return new ApolloLink(() => Observable.of());
   }
 
-  public static from(links: ApolloLink[]): ApolloLink {
+  public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
     return links.map(toLink).reduce((x, y) => x.concat(y)) as ApolloLink;
   }

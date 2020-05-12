@@ -1,6 +1,6 @@
 import { InvariantError } from 'ts-invariant';
 
-export const checkFetcher = (fetcher: WindowOrWorkerGlobalScope['fetch']) => {
+export const checkFetcher = (fetcher: WindowOrWorkerGlobalScope['fetch'] | undefined) => {
   if (!fetcher && typeof fetch === 'undefined') {
     let library: string = 'unfetch';
     if (typeof window === 'undefined') library = 'node-fetch';

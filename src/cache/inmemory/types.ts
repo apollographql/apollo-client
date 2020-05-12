@@ -4,6 +4,7 @@ import { Transaction } from '../core/cache';
 import { Modifier, Modifiers } from '../core/types/common';
 import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
+import { KeyFieldsFunction } from './policies';
 export { StoreObject, StoreValue }
 
 export interface IdGetterObj extends Object {
@@ -14,7 +15,7 @@ export interface IdGetterObj extends Object {
 
 export declare type IdGetter = (
   value: IdGetterObj,
-) => string | null | undefined;
+) => string | undefined;
 
 /**
  * This is an interface used to access, set and remove
@@ -81,7 +82,7 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 };
 
 export type ApolloReducerConfig = {
-  dataIdFromObject?: IdGetter;
+  dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
 };
 

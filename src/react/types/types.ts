@@ -107,15 +107,10 @@ export interface QueryPreviousData<TData, TVariables> {
   client?: ApolloClient<object>;
   query?: DocumentNode;
   observableQueryOptions?: {};
-  result?: ApolloQueryResult<TData> | null;
+  result?: QueryResult<TData, TVariables> | null;
   loading?: boolean;
   options?: QueryDataOptions<TData, TVariables>;
   error?: ApolloError;
-}
-
-export interface QueryCurrentObservable<TData, TVariables> {
-  query?: ObservableQuery<TData, TVariables> | null;
-  subscription?: ZenObservable.Subscription;
 }
 
 export interface QueryLazyOptions<TVariables> {
@@ -172,7 +167,7 @@ export interface BaseMutationOptions<
   context?: Context;
   onCompleted?: (data: TData) => void;
   onError?: (error: ApolloError) => void;
-  fetchPolicy?: WatchQueryFetchPolicy;
+  fetchPolicy?: Extract<WatchQueryFetchPolicy, 'no-cache'>;
   ignoreResults?: boolean;
 }
 
@@ -190,7 +185,7 @@ export interface MutationFunctionOptions<
 }
 
 export interface MutationResult<TData = any> {
-  data?: TData;
+  data?: TData | null;
   error?: ApolloError;
   loading: boolean;
   called: boolean;

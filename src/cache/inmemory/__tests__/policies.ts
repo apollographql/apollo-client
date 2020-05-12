@@ -1,8 +1,9 @@
 import gql from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
+import { InMemoryCache, ReactiveVar } from "../inMemoryCache";
 import { Policies } from "../policies";
 import { Reference, StoreObject } from "../../../core";
+import { MissingFieldError } from "../..";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -163,7 +164,7 @@ describe("type policies", function () {
         Book: {
           keyFields(book, context) {
             expect(context.typename).toBe("Book");
-            expect(context.selectionSet.kind).toBe("SelectionSet");
+            expect(context.selectionSet!.kind).toBe("SelectionSet");
             expect(context.fragmentMap).toEqual({});
             expect(context.policies).toBeInstanceOf(Policies);
             return ["isbn"];
@@ -284,6 +285,33 @@ describe("type policies", function () {
         },
       });
     }).toThrowError("Missing field 'year' while computing key fields");
+  });
+
+  it("does not clobber previous keyFields with undefined", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Movie: {
+          keyFields(incoming) {
+            return `MotionPicture::${incoming.id}`;
+          },
+        },
+      },
+    });
+
+    cache.policies.addTypePolicies({
+      Movie: {
+        fields: {
+          isPurchased() {
+            return false;
+          },
+        },
+      },
+    });
+
+    expect(cache.identify({
+      __typename: "Movie",
+      id: "3993d4118143",
+    })).toBe("MotionPicture::3993d4118143");
   });
 
   describe("field policies", function () {
@@ -473,8 +501,8 @@ describe("type policies", function () {
           Query: {
             fields: {
               types(existing: any[], { args }) {
-                const fromCode = args.from.charCodeAt(0);
-                const toCode = args.to.charCodeAt(0);
+                const fromCode = args!.from.charCodeAt(0);
+                const toCode = args!.to.charCodeAt(0);
                 let e = 0;
                 for (let code = fromCode; code <= toCode; ++code) {
                   const upper = String.fromCharCode(code).toUpperCase();
@@ -592,15 +620,16 @@ describe("type policies", function () {
                 keyArgs(args, context) {
                   expect(context.typename).toBe("Thread");
                   expect(context.fieldName).toBe("comments");
-                  expect(context.field.name.value).toBe("comments");
-                  expect(context.variables).toEqual({});
+                  expect(context.field!.name.value).toBe("comments");
                   expect(context.policies).toBeInstanceOf(Policies);
 
-                  if (typeof args.limit === "number") {
-                    if (typeof args.offset === "number") {
+                  if (typeof args!.limit === "number") {
+                    if (typeof args!.offset === "number") {
+                      expect(args).toEqual({ offset: 0, limit: 2 });
                       return ["offset", "limit"];
                     }
-                    if (args.beforeId) {
+                    if (args!.beforeId) {
+                      expect(args).toEqual({ beforeId: "asdf", limit: 2 });
                       return ["beforeId", "limit"];
                     }
                   }
@@ -700,7 +729,7 @@ describe("type policies", function () {
     });
 
     it("can use stable storage in read functions", function () {
-      const storageSet = new Set<Record<string, any>>();
+      const storageSet = new Set<Record<string, any> | null>();
 
       const cache = new InMemoryCache({
         typePolicies: {
@@ -708,8 +737,8 @@ describe("type policies", function () {
             fields: {
               result(existing, { args, storage }) {
                 storageSet.add(storage);
-                if (storage.result) return storage.result;
-                return storage.result = compute(args);
+                if (storage?.result) return storage.result;
+                return storage!.result = compute();
               },
             },
           },
@@ -717,7 +746,7 @@ describe("type policies", function () {
       });
 
       let computeCount = 0;
-      function compute(args) {
+      function compute() {
         return `expensive result ${++computeCount}`;
       }
 
@@ -803,7 +832,9 @@ describe("type policies", function () {
 
       // Clear the cached results.
       storageSet.forEach(storage => {
-        delete storage.result;
+        if (storage) {
+          delete storage.result;
+        }
       });
 
       const result3 = cache.readQuery({
@@ -926,16 +957,16 @@ describe("type policies", function () {
             fields: {
               result: {
                 read(_, { storage }) {
-                  if (!storage.jobName) {
-                    storage.jobName = cache.makeVar<string>();
+                  if (!storage!.jobName) {
+                    storage!.jobName = cache.makeVar(undefined);
                   }
-                  return storage.jobName();
+                  return storage!.jobName();
                 },
                 merge(_, incoming: string, { storage }) {
-                  if (storage.jobName) {
-                    storage.jobName(incoming);
+                  if (storage!.jobName) {
+                    storage!.jobName(incoming);
                   } else {
-                    storage.jobName = cache.makeVar(incoming);
+                    storage!.jobName = cache.makeVar(incoming);
                   }
                 },
               },
@@ -997,6 +1028,15 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual(snapshot1);
 
+      function makeMissingError(jobNumber: number) {
+        return new MissingFieldError(
+          `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
+          ["jobs", jobNumber - 1, "result"],
+          expect.anything(),
+          expect.anything(),
+        );
+      }
+
       expect(cache.diff({
         query,
         optimistic: false,
@@ -1015,6 +1055,11 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        missing: [
+          makeMissingError(1),
+          makeMissingError(2),
+          makeMissingError(3),
+        ],
       });
 
       function setResult(jobNum: number) {
@@ -1022,7 +1067,7 @@ describe("type policies", function () {
           id: cache.identify({
             __typename: "Job",
             name: `Job #${jobNum}`,
-          }),
+          })!,
           fragment: gql`
             fragment JobResult on Job {
               result
@@ -1061,6 +1106,10 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        missing: [
+          makeMissingError(1),
+          makeMissingError(3),
+        ],
       });
 
       cache.writeQuery({
@@ -1114,6 +1163,10 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        missing: [
+          makeMissingError(1),
+          makeMissingError(3),
+        ],
       });
 
       setResult(1);
@@ -1199,7 +1252,7 @@ describe("type policies", function () {
                       const aTitle = readField<string>("title", a);
                       const bTitle = readField<string>("title", b);
                       if (aTitle === bTitle) return 0;
-                      if (aTitle < bTitle) return -1;
+                      if (aTitle! < bTitle!) return -1;
                       return 1;
                     });
                   }
@@ -1368,7 +1421,7 @@ describe("type policies", function () {
           Agenda: {
             fields: {
               taskCount(_, { readField }) {
-                return readField<Reference[]>("tasks").length;
+                return readField<Reference[]>("tasks")!.length;
               },
 
               tasks: {
@@ -1392,7 +1445,8 @@ describe("type policies", function () {
           Task: {
             fields: {
               ownTime(_, { readField }) {
-                return ownTimes[readField<string>("description")]() || 0;
+                const description = readField<string>("description");
+                return ownTimes[description!]() || 0;
               },
 
               totalTime(_, { readField, toReference }) {
@@ -1404,7 +1458,7 @@ describe("type policies", function () {
                   blockers.forEach(blocker => {
                     if (!seen.has(blocker.__ref)) {
                       seen.add(blocker.__ref);
-                      time += readField<number>("ownTime", blocker);
+                      time += readField<number>("ownTime", blocker)!;
                       time += total(
                         readField<Reference[]>("blockers", blocker),
                         seen,
@@ -1417,7 +1471,7 @@ describe("type policies", function () {
                   toReference({
                     __typename: "Task",
                     id: readField("id"),
-                  }),
+                  }) as Reference,
                 ]);
               },
 
@@ -1441,7 +1495,7 @@ describe("type policies", function () {
 
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
-      const ownTimes = {
+      const ownTimes: Record<string, ReactiveVar<number>> = {
         "parent task": cache.makeVar(2),
         "child task 1": cache.makeVar(3),
         "child task 2": cache.makeVar(4),
@@ -1564,8 +1618,8 @@ describe("type policies", function () {
         }
       `;
 
-      function read() {
-        return cache.readQuery<{ agenda: any }>({ query });
+      function read(): { agenda: any } | null {
+        return cache.readQuery({ query });
       }
 
       const firstResult = read();
@@ -1631,10 +1685,10 @@ describe("type policies", function () {
           }],
         },
       });
-      expect(secondResult.agenda.tasks[0]).not.toBe(firstResult.agenda.tasks[0]);
-      expect(secondResult.agenda.tasks[1]).toBe(firstResult.agenda.tasks[1]);
-      expect(secondResult.agenda.tasks[2]).not.toBe(firstResult.agenda.tasks[2]);
-      expect(secondResult.agenda.tasks[3]).toBe(firstResult.agenda.tasks[3]);
+      expect(secondResult!.agenda.tasks[0]).not.toBe(firstResult!.agenda.tasks[0]);
+      expect(secondResult!.agenda.tasks[1]).toBe(firstResult!.agenda.tasks[1]);
+      expect(secondResult!.agenda.tasks[2]).not.toBe(firstResult!.agenda.tasks[2]);
+      expect(secondResult!.agenda.tasks[3]).toBe(firstResult!.agenda.tasks[3]);
 
       ownTimes["grandchild task"](7);
 
@@ -1783,7 +1837,7 @@ describe("type policies", function () {
 
       function checkFirstFourIdentical(result: ReturnType<typeof read>) {
         for (let i = 0; i < 4; ++i) {
-          expect(result.agenda.tasks[i]).toBe(thirdResult.agenda.tasks[i]);
+          expect(result!.agenda.tasks[i]).toBe(thirdResult!.agenda.tasks[i]);
         }
       }
       // The four original task results should not have been altered by
@@ -1800,10 +1854,10 @@ describe("type policies", function () {
           __typename: "Agenda",
           taskCount: 5,
           tasks: [
-            fourthResult.agenda.tasks[0],
-            fourthResult.agenda.tasks[1],
-            fourthResult.agenda.tasks[2],
-            fourthResult.agenda.tasks[3],
+            fourthResult!.agenda.tasks[0],
+            fourthResult!.agenda.tasks[1],
+            fourthResult!.agenda.tasks[2],
+            fourthResult!.agenda.tasks[3],
             {
               __typename: "Task",
               description: "independent task",
@@ -1892,8 +1946,8 @@ describe("type policies", function () {
                   expect(typeof toReference).toBe("function");
                   expect(policies).toBeInstanceOf(Policies);
                   const slice = existing.slice(
-                    args.offset,
-                    args.offset + args.limit,
+                    args!.offset,
+                    args!.offset + args!.limit,
                   );
                   slice.forEach(ref => expect(isReference(ref)).toBe(true));
                   return slice;
@@ -1909,9 +1963,9 @@ describe("type policies", function () {
                   expect(typeof toReference).toBe("function");
                   expect(policies).toBeInstanceOf(Policies);
                   const copy = existing ? existing.slice(0) : [];
-                  const limit = args.offset + args.limit;
-                  for (let i = args.offset; i < limit; ++i) {
-                    copy[i] = incoming[i - args.offset];
+                  const limit = args!.offset + args!.limit;
+                  for (let i = args!.offset; i < limit; ++i) {
+                    copy[i] = incoming[i - args!.offset];
                   }
                   copy.forEach(todo => expect(isReference(todo)).toBe(true));
                   return copy;
@@ -2299,7 +2353,7 @@ describe("type policies", function () {
                 read(existing, { args, toReference }) {
                   return existing || toReference({
                     __typename: "Book",
-                    isbn: args.isbn,
+                    isbn: args!.isbn,
                   });
                 },
               },
@@ -2354,7 +2408,7 @@ describe("type policies", function () {
         author: "Abbie Hoffman",
       };
 
-      const stealThisID = cache.identify(stealThisData);
+      const stealThisID = cache.identify(stealThisData)!;
 
       cache.writeFragment({
         id: stealThisID,
@@ -2490,7 +2544,7 @@ describe("type policies", function () {
             fields: {
               author: {
                 merge(existing: StoreObject, incoming: StoreObject, { mergeObjects }) {
-                  expect(mergeObjects(void 0, null)).toBe(null);
+                  expect(mergeObjects(void 0 as any, null)).toBe(null);
 
                   expect(() => {
                     // The type system does a pretty good job of defending
@@ -2864,15 +2918,15 @@ describe("type policies", function () {
             // Reference with the earliest year, which requires reading
             // fields from foreign references.
             firstBook(_, { isReference, readField }) {
-              let firstBook: Reference;
+              let firstBook: Reference | null = null;
               let firstYear: number;
               const bookRefs = readField<Reference[]>("books") || [];
               bookRefs.forEach(bookRef => {
                 expect(isReference(bookRef)).toBe(true);
                 const year = readField<number>("year", bookRef);
-                if (firstYear === void 0 || year < firstYear) {
+                if (firstYear === void 0 || year! < firstYear) {
                   firstBook = bookRef;
-                  firstYear = year;
+                  firstYear = year!;
                 }
               });
               // Return a Book Reference, which can have a nested
@@ -2888,7 +2942,14 @@ describe("type policies", function () {
       },
     });
 
-    function addBook(bookData) {
+    interface BookData {
+      __typename: 'Book'
+      isbn: string
+      title: string
+      year: number
+    }
+
+    function addBook(bookData: BookData) {
       cache.writeQuery({
         query: gql`
           query {
@@ -2987,7 +3048,7 @@ describe("type policies", function () {
     function readFirstBookResult() {
       return cache.readQuery<{ author: any }>({
         query: firstBookQuery,
-      });
+      })!;
     }
 
     const firstBookResult = readFirstBookResult();
@@ -3007,6 +3068,7 @@ describe("type policies", function () {
 
     // Add an even earlier book.
     addBook({
+      __typename: "Book",
       isbn: "1420959719",
       title: "The Voyage Out",
       year: 1915,
@@ -3043,7 +3105,7 @@ describe("type policies", function () {
       id: cache.identify({
         __typename: "Author",
         name: "Virginia Woolf",
-      }),
+      })!,
       fragment: gql`
         fragment AfraidFragment on Author {
           name
@@ -3062,6 +3124,7 @@ describe("type policies", function () {
 
     // Add another book, not published first.
     addBook({
+      __typename: "Book",
       isbn: "9780156949606",
       title: "The Waves",
       year: 1931,

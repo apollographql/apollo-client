@@ -16,7 +16,7 @@ describe('ApolloClient', () => {
 
     beforeEach(() => {
       oldFetch = window.fetch;
-      window.fetch = () => null;
+      window.fetch = () => null as any;
     })
 
     afterEach(() => {
@@ -1175,7 +1175,6 @@ describe('ApolloClient', () => {
               if (result.id && result.__typename) {
                 return result.__typename + result.id;
               }
-              return null;
             },
             addTypename: true,
           }),
@@ -1202,7 +1201,7 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(readData)).toEqual(data);
 
                 // modify readData and writeQuery
-                const bestFriends = readData.people.friends.filter(
+                const bestFriends = readData!.people.friends.filter(
                   x => x.type === 'best',
                 );
                 // this should re call next
@@ -1254,7 +1253,7 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(readData)).toEqual(data);
 
                 // modify readData and writeQuery
-                const friends = readData.people.friends;
+                const friends = readData!.people.friends;
                 friends[0].type = 'okayest';
                 friends[1].type = 'okayest';
 
@@ -1290,13 +1289,13 @@ describe('ApolloClient', () => {
                   type: 'okayest',
                 };
                 const nextFriends = stripSymbols(
-                  nextResult.data.people.friends,
+                  nextResult.data!.people.friends,
                 );
                 expect(nextFriends[0]).toEqual(expectation0);
                 expect(nextFriends[1]).toEqual(expectation1);
 
                 const readFriends = stripSymbols(
-                  client.readQuery<Data>({ query }).people.friends,
+                  client.readQuery<Data>({ query })!.people.friends,
                 );
                 expect(readFriends[0]).toEqual(expectation0);
                 expect(readFriends[1]).toEqual(expectation1);
@@ -1319,12 +1318,12 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
-                const bestFriends = result.data.people.friends.filter(
+                const bestFriends = result.data!.people.friends.filter(
                   x => x.type === 'best',
                 );
                 // this should re call next
                 client.writeFragment({
-                  id: `Person${result.data.people.id}`,
+                  id: `Person${result.data!.people.id}`,
                   fragment: gql`
                     fragment bestFriends on Person {
                       friends {
@@ -1349,7 +1348,7 @@ describe('ApolloClient', () => {
               }
 
               if (count === 2) {
-                expect(stripSymbols(result.data.people.friends)).toEqual([
+                expect(stripSymbols(result.data!.people.friends)).toEqual([
                   bestFriend,
                 ]);
                 done();
@@ -1370,11 +1369,11 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
-                const friends = result.data.people.friends;
+                const friends = result.data!.people.friends;
 
                 // this should re call next
                 client.writeFragment({
-                  id: `Person${result.data.people.id}`,
+                  id: `Person${result.data!.people.id}`,
                   fragment: gql`
                     fragment bestFriends on Person {
                       friends {
@@ -1403,7 +1402,7 @@ describe('ApolloClient', () => {
               }
 
               if (count === 2) {
-                const nextFriends = stripSymbols(result.data.people.friends);
+                const nextFriends = stripSymbols(result.data!.people.friends);
                 expect(nextFriends[0]).toEqual({
                   ...bestFriend,
                   type: 'okayest',
@@ -2216,8 +2215,11 @@ describe('ApolloClient', () => {
           }
         `,
       };
-      const _query = client.queryManager!.query;
-      client.queryManager!.query = options => {
+
+      // @ts-ignore
+      const queryManager = client.queryManager;
+      const _query = queryManager.query;
+      queryManager.query = options => {
         queryOptions = options;
         return _query(options);
       };

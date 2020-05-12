@@ -5,7 +5,7 @@ import {
   InlineFragmentNode,
   SelectionSetNode,
 } from 'graphql';
-import { wrap } from 'optimism';
+import { wrap, OptimisticWrapperFunction } from 'optimism';
 import { invariant, InvariantError } from 'ts-invariant';
 
 import {
@@ -162,21 +162,28 @@ export class StoreReader {
   }
 
   // Cached version of execSelectionSetImpl.
-  private executeSelectionSet = wrap((options: ExecSelectionSetOptions) => {
-    return this.execSelectionSetImpl(options);
-  }, {
-    makeCacheKey({
-      selectionSet,
-      objectOrReference,
-      context,
-    }: ExecSelectionSetOptions) {
-      if (supportsResultCaching(context.store)) {
-        return context.store.makeCacheKey(
+  private executeSelectionSet: OptimisticWrapperFunction<
+    [ExecSelectionSetOptions], // Actual arguments tuple type.
+    ExecResult, // Actual return type.
+    // Arguments type after keyArgs translation.
+    [NormalizedCache, SelectionSetNode, StoreObject | Reference, string]
+  > = wrap(options => this.execSelectionSetImpl(options), {
+    keyArgs(options) {
+      return [
+        options.context.store,
+        options.selectionSet,
+        options.objectOrReference,
+        options.context.varString,
+      ];
+    },
+    // Note that the parameters of makeCacheKey are determined by the
+    // array returned by keyArgs.
+    makeCacheKey(store, selectionSet, parent, varString) {
+      if (supportsResultCaching(store)) {
+        return store.makeCacheKey(
           selectionSet,
-          context.varString,
-          isReference(objectOrReference)
-            ? objectOrReference.__ref
-            : objectOrReference,
+          isReference(parent) ? parent.__ref : parent,
+          varString,
         );
       }
     }

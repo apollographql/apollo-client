@@ -640,6 +640,8 @@ export class Policies {
 
 export interface ReadMergeContext {
   variables: Record<string, any>;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
 }

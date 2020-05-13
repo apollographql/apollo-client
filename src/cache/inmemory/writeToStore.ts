@@ -174,6 +174,11 @@ export class StoreWriter {
       if (sets.indexOf(selectionSet) >= 0) return ref;
       sets.push(selectionSet);
 
+      // If we're about to write a result object into the store, but we
+      // happen to know that the exact same (===) result object would be
+      // returned if we were to reread the result with the same inputs,
+      // then we can skip the rest of the processSelectionSet work for
+      // this object, and immediately return a Reference to it.
       if (reader && reader.isFresh(
         result,
         context.store,

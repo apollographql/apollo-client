@@ -29,6 +29,7 @@ import {
   fieldNameFromStoreName,
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
+  storeValueIsStoreObject,
 } from './helpers';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { SafeReadonly } from '../core/types/common';
@@ -579,28 +580,24 @@ export class Policies {
       )) as T;
     }
 
-    if (incoming && typeof incoming === "object") {
-      if (isReference(incoming)) {
-        return incoming;
-      }
+    if (Array.isArray(incoming)) {
+      return incoming!.map(item => policies.applyMerges(
+        // Items in the same position in different arrays are not
+        // necessarily related to each other, so there is no basis for
+        // merging them. Passing void here means any FieldValueToBeMerged
+        // objects within item will be handled as if there was no existing
+        // data. Also, we do not pass storageKeys because the array itself
+        // is never an entity with a __typename, so its indices can never
+        // have custom read or merge functions.
+        void 0,
+        item,
+        context,
+      )) as T;
+    }
 
-      if (Array.isArray(incoming)) {
-        return incoming!.map(item => policies.applyMerges(
-          // Items in the same position in different arrays are not
-          // necessarily related to each other, so there is no basis for
-          // merging them. Passing void here means any FieldValueToBeMerged
-          // objects within item will be handled as if there was no existing
-          // data. Also, we do not pass storageKeys because the array itself
-          // is never an entity with a __typename, so its indices can never
-          // have custom read or merge functions.
-          void 0,
-          item,
-          context,
-        )) as T;
-      }
-
+    if (storeValueIsStoreObject(incoming)) {
       const e = existing as StoreObject | Reference;
-      const i = incoming as object as StoreObject;
+      const i = incoming as StoreObject;
 
       // If the existing object is a { __ref } object, e.__ref provides a
       // stable key for looking up the storage object associated with
@@ -613,17 +610,28 @@ export class Policies {
         ? e.__ref
         : typeof e === "object" && e;
 
+      let newFields: StoreObject | undefined;
+
       Object.keys(i).forEach(storeFieldName => {
-        i[storeFieldName] = policies.applyMerges(
+        const incomingValue = i[storeFieldName];
+        const appliedValue = policies.applyMerges(
           context.getFieldValue(e, storeFieldName),
-          i[storeFieldName],
+          incomingValue,
           context,
-          // Avoid enabling storage when firstStorageKey is falsy, which
-          // implies no options.storage object has ever been created for a
-          // read function for this field.
+          // Avoid enabling options.storage when firstStorageKey is falsy,
+          // which implies no options.storage object has ever been created
+          // for a read/merge function for this field.
           firstStorageKey ? [firstStorageKey, storeFieldName] : void 0,
         );
+        if (appliedValue !== incomingValue) {
+          newFields = newFields || Object.create(null);
+          newFields![storeFieldName] = appliedValue;
+        }
       });
+
+      if (newFields) {
+        return { ...i, ...newFields } as typeof incoming;
+      }
     }
 
     return incoming;
@@ -694,8 +702,8 @@ function makeFieldFunctionOptions(
 
         if (
           typesDiffer ||
-          !canBeMerged(existing) ||
-          !canBeMerged(applied)
+          !storeValueIsStoreObject(existing) ||
+          !storeValueIsStoreObject(applied)
         ) {
           return applied;
         }
@@ -706,15 +714,6 @@ function makeFieldFunctionOptions(
       return incoming;
     }
   };
-}
-
-function canBeMerged(obj: StoreValue): boolean {
-  return !!(
-    obj &&
-    typeof obj === "object" &&
-    !isReference(obj) &&
-    !Array.isArray(obj)
-  );
 }
 
 function keyArgsFnFromSpecifier(

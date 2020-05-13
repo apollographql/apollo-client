@@ -36,6 +36,15 @@ export interface FieldValueToBeMerged {
   __value: StoreValue;
 }
 
+export function storeValueIsStoreObject(
+  value: StoreValue,
+): value is StoreObject {
+  return value !== null &&
+    typeof value === "object" &&
+    !isReference(value) &&
+    !Array.isArray(value);
+}
+
 export function isFieldValueToBeMerged(
   value: any,
 ): value is FieldValueToBeMerged {

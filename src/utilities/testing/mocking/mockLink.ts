@@ -18,7 +18,7 @@ import invariant from 'ts-invariant';
 
 export type ResultFunction<T> = () => T;
 
-export interface MockedResponse<TData = { [key: string]: any; }> {
+export interface MockedResponse<TData = Record<string, any>> {
   request: GraphQLRequest;
   result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
   error?: Error;

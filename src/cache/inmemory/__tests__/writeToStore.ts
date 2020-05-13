@@ -2002,4 +2002,87 @@ describe('writing to the store', () => {
     expect(Object.isFrozen(result.scalarFieldWithObjectValue.b)).toBe(true);
     expect(Object.isFrozen(result.scalarFieldWithObjectValue.c)).toBe(true);
   });
+
+  it("should skip writing still-fresh result objects", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Todo: {
+          fields: {
+            text: {
+              merge(_, text: string) {
+                mergeCounts[text] = ~~mergeCounts[text] + 1;
+                return text;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const mergeCounts: Record<string, number> = Object.create(null);
+
+    const query = gql`
+      query {
+        todos {
+          id
+          text
+        }
+      }
+    `;
+
+    expect(mergeCounts).toEqual({});
+
+    cache.writeQuery({
+      query,
+      data: {
+        todos: [
+          { __typename: "Todo", id: 1, text: "first" },
+          { __typename: "Todo", id: 2, text: "second" },
+        ],
+      },
+    });
+
+    expect(mergeCounts).toEqual({ first: 1, second: 1 });
+
+    function read() {
+      return cache.readQuery<{ todos: any[] }>({ query })!.todos;
+    }
+
+    const twoTodos = read();
+
+    expect(mergeCounts).toEqual({ first: 1, second: 1 });
+
+    const threeTodos = [
+      ...twoTodos,
+      { __typename: "Todo", id: 3, text: "third" },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: {
+        todos: threeTodos,
+      },
+    });
+
+    expect(mergeCounts).toEqual({ first: 1, second: 1, third: 1 });
+
+    const threeTodosAgain = read();
+    twoTodos.forEach((todo, i) => expect(todo).toBe(threeTodosAgain[i]));
+
+    const fourTodos = [
+      threeTodosAgain[2],
+      threeTodosAgain[0],
+      { __typename: "Todo", id: 4, text: "fourth" },
+      threeTodosAgain[1],
+    ];
+
+    cache.writeQuery({
+      query,
+      data: {
+        todos: fourTodos,
+      },
+    });
+
+    expect(mergeCounts).toEqual({ first: 1, second: 1, third: 1, fourth: 1 });
+  });
 });

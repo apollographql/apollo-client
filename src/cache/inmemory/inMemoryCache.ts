@@ -81,11 +81,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.storeWriter = new StoreWriter({
       policies: this.policies,
-    });
-
-    this.storeReader = new StoreReader({
-      addTypename: this.addTypename,
-      policies: this.policies,
+      reader: this.storeReader = new StoreReader({
+        addTypename: this.addTypename,
+        policies: this.policies,
+      }),
     });
 
     const cache = this;

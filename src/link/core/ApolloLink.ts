@@ -37,7 +37,7 @@ export class ApolloLink {
     return new ApolloLink(() => Observable.of());
   }
 
-  public static from(links: ApolloLink[]): ApolloLink {
+  public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
     return links.map(toLink).reduce((x, y) => x.concat(y)) as ApolloLink;
   }

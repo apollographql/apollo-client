@@ -610,12 +610,12 @@ describe('Writing cache data from resolvers', () => {
                 },
               },
             });
-            cache.modify('Object:uniqueId', {
-              field(value) {
+            cache.modify({
+              field(value: { field2: number }) {
                 expect(value.field2).toBe(1);
                 return { ...value, field2: 2 };
               },
-            });
+            }, 'Object:uniqueId');
             return { start: true };
           },
         },
@@ -1109,7 +1109,7 @@ describe('Async resolvers', () => {
       },
     });
 
-    const { data: { isLoggedIn } } = await client.query({ query });
+    const { data: { isLoggedIn } } = await client.query({ query })!;
     expect(isLoggedIn).toBe(true);
     return resolve();
   });
@@ -1159,7 +1159,7 @@ describe('Async resolvers', () => {
         },
       });
 
-      const { data: { member } } = await client.query({ query });
+      const { data: { member } } = await client.query({ query })!;
       expect(member.name).toBe(testMember.name);
       expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
       expect(member.sessionCount).toBe(testMember.sessionCount);

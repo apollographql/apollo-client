@@ -18,7 +18,7 @@ describe('toPromise', () => {
 
   it('return error call as Promise rejection', () => {
     return toPromise(fromError(error))
-      .then(expect.fail)
+      .then(fail)
       .catch(actualError => expect(error).toEqual(actualError));
   });
 

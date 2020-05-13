@@ -325,7 +325,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.queryManager.query<T>(options);
+    return this.queryManager.query<T, TVariables>(options);
   }
 
   /**

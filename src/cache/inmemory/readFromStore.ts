@@ -166,7 +166,8 @@ export class StoreReader {
     selectionSet: SelectionSetNode,
     varString: string,
   ): boolean {
-    if (supportsResultCaching(store)) {
+    if (supportsResultCaching(store) &&
+        this.knownResults.get(result) === selectionSet) {
       const latest = this.executeSelectionSet.peek(
         store, selectionSet, parent, varString);
       if (latest && result === latest.result) {
@@ -347,8 +348,14 @@ export class StoreReader {
       Object.freeze(finalResult.result);
     }
 
+    // Store this result with its selection set so that we can quickly
+    // recognize it again in the StoreReader#isFresh method.
+    this.knownResults.set(finalResult.result, selectionSet);
+
     return finalResult;
   }
+
+  private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
   // Cached version of execSubSelectedArrayImpl.
   private executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {

@@ -153,6 +153,9 @@
 - Add a default `gc` implementation to `ApolloCache`.  <br/>
   [@justinwaite](https://github.com/justinwaite) in [#5974](https://github.com/apollographql/apollo-client/pull/5974)
 
+- Updated to work with `graphql@15`.  <br/>
+  [@durchanek](https://github.com/durchanek) in [#6194](https://github.com/apollographql/apollo-client/pull/6194) and [#6279](https://github.com/apollographql/apollo-client/pull/6279)
+
 ### Bug Fixes
 
 - `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>

@@ -1,5 +1,12 @@
 **Note:** This is a cumulative changelog that outlines all of the Apollo Client project child package changes that were bundled into a specific `apollo-client` release.
 
+## Apollo Client 2.6.10
+
+### Apollo Client (2.6.10)
+
+- Fix broken 2.6.9 deployment.  <br/>
+  [@hwillson](https://github.com/hwillson) in [48718ca9](https://github.com/apollographql/apollo-client/commit/48718ca9f1775263767cff7f26a592fd5518ccce)
+
 ## Apollo Client 2.6.9
 
 ### Apollo Client (2.6.9)

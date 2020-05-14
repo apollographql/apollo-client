@@ -1,5 +1,6 @@
 {
   "name": "apollo-client",
+  "private": true,
   "version": "2.6.10-test.0",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/bundle.cjs.js",

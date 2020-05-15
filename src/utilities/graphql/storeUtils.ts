@@ -291,4 +291,3 @@ export function isInlineFragment(
 }
 
 export type VariableValue = (node: VariableNode) => any;
-

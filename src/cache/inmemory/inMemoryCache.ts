@@ -81,11 +81,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.storeWriter = new StoreWriter({
       policies: this.policies,
-    });
-
-    this.storeReader = new StoreReader({
-      addTypename: this.addTypename,
-      policies: this.policies,
+      reader: this.storeReader = new StoreReader({
+        addTypename: this.addTypename,
+        policies: this.policies,
+      }),
     });
 
     const cache = this;
@@ -224,8 +223,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.policies.identify(object)[0];
   }
 
-  public evict(dataId: string, fieldName?: string): boolean {
-    const evicted = this.optimisticData.evict(dataId, fieldName);
+  public evict(
+    dataId: string,
+    fieldName?: string,
+    args?: Record<string, any>,
+  ): boolean {
+    const evicted = this.optimisticData.evict(dataId, fieldName, args);
     this.broadcastWatches();
     return evicted;
   }

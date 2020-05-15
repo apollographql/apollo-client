@@ -21,6 +21,7 @@ import {
   argumentsObjectFromField,
   Reference,
   isReference,
+  getStoreKeyName,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { IdGetter } from "./types";
@@ -28,6 +29,7 @@ import {
   fieldNameFromStoreName,
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
+  storeValueIsStoreObject,
 } from './helpers';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { SafeReadonly } from '../core/types/common';
@@ -81,8 +83,7 @@ export type KeyArgsFunction = (
   context: {
     typename: string;
     fieldName: string;
-    field: FieldNode;
-    variables: Record<string, any>;
+    field: FieldNode | null;
     policies: Policies;
   },
 ) => KeySpecifier | ReturnType<IdGetter>;
@@ -276,7 +277,7 @@ export class Policies {
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const existing = this.getTypePolicy(typename, true);
+      const existing = this.getTypePolicy(typename, true)!;
       const incoming = typePolicies[typename];
       const { keyFields, fields } = incoming;
 
@@ -284,14 +285,16 @@ export class Policies {
       if (incoming.mutationType) this.setRootTypename("Mutation", typename);
       if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
 
-      existing!.keyFn =
+      existing.keyFn =
         // Pass false to disable normalization for this typename.
         keyFields === false ? nullKeyFieldsFn :
         // Pass an array of strings to use those fields to compute a
         // composite ID for objects of this typename.
         Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
         // Pass a function to take full control over identification.
-        typeof keyFields === "function" ? keyFields : void 0;
+        typeof keyFields === "function" ? keyFields :
+        // Leave existing.keyFn unchanged if above cases fail.
+        existing.keyFn;
 
       if (fields) {
         Object.keys(fields).forEach(fieldName => {
@@ -312,7 +315,7 @@ export class Policies {
               Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
               // Pass a function to take full control over field identity.
               typeof keyArgs === "function" ? keyArgs :
-              // Leave existing.keyFn unchanged if all above cases fail.
+              // Leave existing.keyFn unchanged if above cases fail.
               existing.keyFn;
 
             if (typeof read === "function") existing.read = read;
@@ -430,17 +433,28 @@ export class Policies {
 
   public getStoreFieldName(
     typename: string | undefined,
-    field: FieldNode,
-    variables: Record<string, any>,
+    nameOrField: string | FieldNode,
+    // If nameOrField is a string, argsOrVars should be an object of
+    // arguments. If nameOrField is a FieldNode, argsOrVars should be the
+    // variables to use when computing the arguments of the field.
+    argsOrVars: Record<string, any>,
   ): string {
-    const fieldName = field.name.value;
+    let field: FieldNode | null;
+    let fieldName: string;
+    if (typeof nameOrField === "string") {
+      field = null;
+      fieldName = nameOrField;
+    } else {
+      field = nameOrField;
+      fieldName = field.name.value;
+    }
     const policy = this.getFieldPolicy(typename, fieldName, false);
     let storeFieldName: string | undefined;
 
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
-      const args = argumentsObjectFromField(field, variables);
-      const context = { typename, fieldName, field, variables, policies: this };
+      const args = field ? argumentsObjectFromField(field, argsOrVars) : argsOrVars;
+      const context = { typename, fieldName, field, policies: this };
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
@@ -455,7 +469,9 @@ export class Policies {
     }
 
     if (storeFieldName === void 0) {
-      storeFieldName = storeKeyNameFromField(field, variables);
+      storeFieldName = field
+        ? storeKeyNameFromField(field, argsOrVars)
+        : getStoreKeyName(fieldName, argsOrVars);
     }
 
     // Make sure custom field names start with the actual field.name.value
@@ -564,28 +580,24 @@ export class Policies {
       )) as T;
     }
 
-    if (incoming && typeof incoming === "object") {
-      if (isReference(incoming)) {
-        return incoming;
-      }
+    if (Array.isArray(incoming)) {
+      return incoming!.map(item => policies.applyMerges(
+        // Items in the same position in different arrays are not
+        // necessarily related to each other, so there is no basis for
+        // merging them. Passing void here means any FieldValueToBeMerged
+        // objects within item will be handled as if there was no existing
+        // data. Also, we do not pass storageKeys because the array itself
+        // is never an entity with a __typename, so its indices can never
+        // have custom read or merge functions.
+        void 0,
+        item,
+        context,
+      )) as T;
+    }
 
-      if (Array.isArray(incoming)) {
-        return incoming!.map(item => policies.applyMerges(
-          // Items in the same position in different arrays are not
-          // necessarily related to each other, so there is no basis for
-          // merging them. Passing void here means any FieldValueToBeMerged
-          // objects within item will be handled as if there was no existing
-          // data. Also, we do not pass storageKeys because the array itself
-          // is never an entity with a __typename, so its indices can never
-          // have custom read or merge functions.
-          void 0,
-          item,
-          context,
-        )) as T;
-      }
-
+    if (storeValueIsStoreObject(incoming)) {
       const e = existing as StoreObject | Reference;
-      const i = incoming as object as StoreObject;
+      const i = incoming as StoreObject;
 
       // If the existing object is a { __ref } object, e.__ref provides a
       // stable key for looking up the storage object associated with
@@ -598,17 +610,28 @@ export class Policies {
         ? e.__ref
         : typeof e === "object" && e;
 
+      let newFields: StoreObject | undefined;
+
       Object.keys(i).forEach(storeFieldName => {
-        i[storeFieldName] = policies.applyMerges(
+        const incomingValue = i[storeFieldName];
+        const appliedValue = policies.applyMerges(
           context.getFieldValue(e, storeFieldName),
-          i[storeFieldName],
+          incomingValue,
           context,
-          // Avoid enabling storage when firstStorageKey is falsy, which
-          // implies no options.storage object has ever been created for a
-          // read function for this field.
+          // Avoid enabling options.storage when firstStorageKey is falsy,
+          // which implies no options.storage object has ever been created
+          // for a read/merge function for this field.
           firstStorageKey ? [firstStorageKey, storeFieldName] : void 0,
         );
+        if (appliedValue !== incomingValue) {
+          newFields = newFields || Object.create(null);
+          newFields![storeFieldName] = appliedValue;
+        }
       });
+
+      if (newFields) {
+        return { ...i, ...newFields } as typeof incoming;
+      }
     }
 
     return incoming;
@@ -617,6 +640,8 @@ export class Policies {
 
 export interface ReadMergeContext {
   variables: Record<string, any>;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
 }
@@ -679,8 +704,8 @@ function makeFieldFunctionOptions(
 
         if (
           typesDiffer ||
-          !canBeMerged(existing) ||
-          !canBeMerged(applied)
+          !storeValueIsStoreObject(existing) ||
+          !storeValueIsStoreObject(applied)
         ) {
           return applied;
         }
@@ -693,24 +718,13 @@ function makeFieldFunctionOptions(
   };
 }
 
-function canBeMerged(obj: StoreValue): boolean {
-  return !!(
-    obj &&
-    typeof obj === "object" &&
-    !isReference(obj) &&
-    !Array.isArray(obj)
-  );
-}
-
 function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,
 ): KeyArgsFunction {
   return (args, context) => {
-    const field = context.field;
-    const fieldName = field.name.value;
-    return args ? `${fieldName}:${
+    return args ? `${context.fieldName}:${
       JSON.stringify(computeKeyObject(args, specifier))
-    }` : fieldName;
+    }` : context.fieldName;
   };
 }
 
@@ -788,6 +802,9 @@ function computeKeyObject(
   specifier: KeySpecifier,
   aliasMap?: AliasMap,
 ): Record<string, any> {
+  // The order of adding properties to keyObj affects its JSON serialization,
+  // so we are careful to build keyObj in the order of keys given in
+  // specifier.
   const keyObj = Object.create(null);
   let prevKey: string | undefined;
   specifier.forEach(s => {

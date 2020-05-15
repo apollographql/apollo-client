@@ -59,6 +59,9 @@
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 
+- The `cache.evict` method can optionally take an arguments object as its third parameter (following the entity ID and field name), to delete only those field values with specific arguments. <br/>
+  [@danReynolds](https://github.com/danReynolds) in [#6141](https://github.com/apollographql/apollo-client/pull/6141)
+
 - The contents of the `@apollo/react-hooks` package have been merged into `@apollo/client`, enabling the following all-in-one `import`:
   ```ts
   import { ApolloClient, ApolloProvider, useQuery } from '@apollo/client';
@@ -149,6 +152,9 @@
 
 - Add a default `gc` implementation to `ApolloCache`.  <br/>
   [@justinwaite](https://github.com/justinwaite) in [#5974](https://github.com/apollographql/apollo-client/pull/5974)
+
+- Updated to work with `graphql@15`.  <br/>
+  [@durchanek](https://github.com/durchanek) in [#6194](https://github.com/apollographql/apollo-client/pull/6194) and [#6279](https://github.com/apollographql/apollo-client/pull/6279)
 
 ### Bug Fixes
 

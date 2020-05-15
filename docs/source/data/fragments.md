@@ -166,7 +166,7 @@ You can define fragments on [unions and interfaces](https://www.apollographql.co
 Here's an example of a query that includes three in-line fragments:
 
 ```graphql
-query {
+query AllCharacters {
   all_characters {
 
     ... on Character {

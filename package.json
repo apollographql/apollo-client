@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.0.0-beta.46",
+  "version": "3.0.0-beta.48",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -37,11 +37,11 @@
     "watch": "tsc-watch --onSuccess \"npm run postbuild\"",
     "clean": "rimraf -r dist coverage lib",
     "test": "jest --config ./config/jest.config.js",
+    "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "bundle": "rollup -c ./config/rollup.config.js",
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
-    "coverage:upload": "codecov",
     "bundlesize": "npm run build && bundlesize",
     "prepdist": "node ./config/prepareDist.js",
     "predeploy": "npm run build",
@@ -68,7 +68,7 @@
     "@wry/equality": "^0.1.9",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-tag": "^2.10.2",
-    "optimism": "^0.11.5",
+    "optimism": "^0.12.1",
     "symbol-observable": "^1.2.0",
     "ts-invariant": "^0.4.4",
     "tslib": "^1.10.0",
@@ -84,12 +84,12 @@
     "@types/react": "^16.9.32",
     "@types/react-dom": "^16.9.6",
     "bundlesize": "0.18.0",
-    "codecov": "3.6.5",
     "fetch-mock": "7.7.3",
     "graphql": "14.6.0",
     "jest": "24.9.0",
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",
+    "node-fetch": "2.6.0",
     "prop-types": "15.7.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -102,7 +102,7 @@
     "rxjs": "6.5.3",
     "ts-jest": "24.0.2",
     "tsc-watch": "3.0.1",
-    "typescript": "3.7.4"
+    "typescript": "3.8.3"
   },
   "publishConfig": {
     "access": "public"

@@ -48,7 +48,7 @@ You may also define an intermediate function and hook up your component with the
 
 ```js
 // Create our enhancer function.
-const withTodoAppQuery = graphql(gql`query { ... }`);
+const withTodoAppQuery = graphql(gql`query TodoAppQuery { ... }`);
 
 // Enhance our component.
 const TodoAppWithData = withTodoAppQuery(TodoApp);
@@ -65,7 +65,7 @@ Before we look into the specific behaviors of each operation, let us look at the
 
 ```js
 export default graphql(
-  gql`{ ... }`,
+  gql`query MyQuery { ... }`,
   config, // <- The `config` object.
 )(MyComponent);
 ```
@@ -83,7 +83,7 @@ You can define `config.options` as a plain object, or you can compute your optio
 **Example:**
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: {
     // Options go here.
   },
@@ -91,7 +91,7 @@ export default graphql(gql`{ ... }`, {
 ```
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: props => ({
     // Options are computed from `props` here.
   }),
@@ -113,7 +113,7 @@ Another benefit of `config.props` is that it also allows you to decouple your pu
 This example uses [`props.data.fetchMore`](#datafetchmoreoptions).
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   props: ({ data: { fetchMore } }) => ({
     onLoadMore: () => {
       fetchMore({ ... });
@@ -133,7 +133,7 @@ function MyComponent({ onLoadMore }) {
 To access props that are not added by the `graphql()` function, use the `ownProps` keyword. For example:
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   props: ({ data: { liveImage }, ownProps: { loadingImage } }) => ({
     image: liveImage || loadingImage,
   }),
@@ -143,7 +143,7 @@ export default graphql(gql`{ ... }`, {
 To access `lastProps`, use the second argument of `config.props`. For example:
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   props: ({ data: { liveImage } }, lastProps) => ({
     image: liveImage,
     lastImage: lastProps.data.liveImage,
@@ -162,7 +162,7 @@ Instead of passing a boolean to `config.skip`, you may also pass a function to `
 **Example:**
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   skip: props => !!props.skip,
 })(MyComponent);
 ```
@@ -192,9 +192,9 @@ This example uses the [`compose`](https://github.com/acdlite/recompose/blob/mast
 
 ```js
 export default compose(
-  graphql(gql`mutation (...) { ... }`, { name: 'createTodo' }),
-  graphql(gql`mutation (...) { ... }`, { name: 'updateTodo' }),
-  graphql(gql`mutation (...) { ... }`, { name: 'deleteTodo' }),
+  graphql(gql`mutation CreateTodoMutation (...) { ... }`, { name: 'createTodo' }),
+  graphql(gql`mutation UpdateTodoMutation (...) { ... }`, { name: 'updateTodo' }),
+  graphql(gql`mutation DeleteTodoMutation (...) { ... }`, { name: 'deleteTodo' }),
 )(MyComponent);
 
 function MyComponent(props) {
@@ -231,7 +231,7 @@ class MyComponent extends Component {
   }
 }
 
-const MyGraphQLComponent = graphql(gql`{ ... }`, { withRef: true })(
+const MyGraphQLComponent = graphql(gql`query MyQuery { ... }`, { withRef: true })(
   MyComponent,
 );
 
@@ -263,8 +263,8 @@ This example uses the [`compose`](https://github.com/acdlite/recompose/blob/mast
 
 ```js
 export default compose(
-  graphql(gql`{ ... }`, { alias: 'withCurrentUser' }),
-  graphql(gql`{ ... }`, { alias: 'withList' }),
+  graphql(gql`query MyQuery { ... }`, { alias: 'withCurrentUser' }),
+  graphql(gql`query MyQuery { ... }`, { alias: 'withList' }),
 )(MyComponent);
 ```
 
@@ -283,7 +283,7 @@ render() {
 The `data` prop contains the data fetched from your query in addition to some other useful information and functions to control the lifecycle of your GraphQL-connected component. So for example, if we had a query that looked like:
 
 ```graphql
-{
+query ViewerAndTodos {
   viewer {
     name
   }
@@ -346,7 +346,7 @@ function MyComponent({ data: { loading } }) {
   }
 }
 
-export default graphql(gql`query { ... }`)(MyComponent);
+export default graphql(gql`query MyQuery { ... }`)(MyComponent);
 ```
 
 ### `data.error`
@@ -364,7 +364,7 @@ function MyComponent({ data: { error } }) {
   }
 }
 
-export default graphql(gql`query { ... }`)(MyComponent);
+export default graphql(gql`query MyComponentQuery  { ... }`)(MyComponent);
 ```
 
 ### `data.networkStatus`
@@ -395,7 +395,7 @@ function MyComponent({ data: { networkStatus } }) {
   }
 }
 
-export default graphql(gql`query { ... }`)(MyComponent);
+export default graphql(gql`query MyComponentQuery  { ... }`)(MyComponent);
 ```
 
 ### `data.variables`
@@ -414,7 +414,7 @@ function MyComponent({ data: { variables } }) {
   );
 }
 
-export default graphql(gql`query { ... }`)(MyComponent);
+export default graphql(gql`query MyComponentQuery  { ... }`)(MyComponent);
 ```
 
 ### `data.refetch(variables)`
@@ -432,7 +432,7 @@ function MyComponent({ data: { refetch } }) {
   return <button onClick={() => refetch()}>Reload</button>;
 }
 
-export default graphql(gql`query { ... }`)(MyComponent);
+export default graphql(gql`query MyComponentQuery  { ... }`)(MyComponent);
 ```
 
 ### `data.fetchMore(options)`
@@ -499,7 +499,7 @@ class SubscriptionComponent extends Component {
       return {
         // Subscribe
         unsubscribe: nextProps.data.subscribeToMore({
-          document: gql`subscription {...}`,
+          document: gql`subscription MySubscription {...}`,
           variables: {
             param: nextProps.subscriptionParam,
           },
@@ -548,7 +548,7 @@ class MyComponent extends Component {
   }
 }
 
-export default graphql(gql`query { ... }`)(MyComponent);
+export default graphql(gql`query MyComponentQuery { ... }`)(MyComponent);
 ```
 
 ### `data.stopPolling()`
@@ -581,7 +581,7 @@ class MyComponent extends Component {
   }
 }
 
-export default graphql(gql`query { ... }`)(MyComponent);
+export default graphql(gql`query MyComponentQuery  { ... }`)(MyComponent);
 ```
 
 ### `data.updateQuery(updaterFn)`
@@ -618,7 +618,7 @@ The options available for use in this object depend on the operation type you pa
 **Example:**
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: {
     // Options go here.
   },
@@ -626,7 +626,7 @@ export default graphql(gql`{ ... }`, {
 ```
 
 ```js
-export default graphql(gql`{ ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: props => ({
     // Options are computed from `props` here.
   }),
@@ -642,7 +642,7 @@ The variables that will be used when executing the query operation. These variab
 ```js
 export default graphql(
   gql`
-  query ($width: Int!, $height: Int!) {
+  query MyQuery ($width: Int!, $height: Int!) {
     ...
   }
 `,
@@ -672,7 +672,7 @@ Valid `fetchPolicy` values are:
 **Example:**
 
 ```js
-export default graphql(gql`query { ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: { fetchPolicy: 'cache-and-network' },
 })(MyComponent);
 ```
@@ -690,7 +690,7 @@ Valid `errorPolicy` values are:
 **Example:**
 
 ```js
-export default graphql(gql`query { ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: { errorPolicy: 'all' },
 })(MyComponent);
 ```
@@ -706,7 +706,7 @@ If you set `options.pollInterval` to 0 then that means no polling instead of exe
 **Example:**
 
 ```js
-export default graphql(gql`query { ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: { pollInterval: 5000 },
 })(MyComponent);
 ```
@@ -720,7 +720,7 @@ The default value is `false`.
 **Example:**
 
 ```js
-export default graphql(gql`query { ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: { notifyOnNetworkStatusChange: true },
 })(MyComponent);
 ```
@@ -738,7 +738,7 @@ The default value is `false` for backwards-compatibility's sake, but should be c
 **Example:**
 
 ```js
-export default graphql(gql`query { ... }`, {
+export default graphql(gql`query MyQuery { ... }`, {
   options: { partialRefetch: true },
 })(MyComponent);
 ```
@@ -774,7 +774,7 @@ function MyComponent({ mutate }) {
   );
 }
 
-export default graphql(gql`mutation { ... }`)(MyComponent);
+export default graphql(gql`mutation MyMutation { ... }`)(MyComponent);
 ```
 
 ### `config.options`
@@ -790,7 +790,7 @@ The properties accepted in this options object may also be accepted by the [`pro
 **Example:**
 
 ```js
-export default graphql(gql`mutation { ... }`, {
+export default graphql(gql`mutation MyMutation { ... }`, {
   options: {
     // Options go here.
   },
@@ -798,7 +798,7 @@ export default graphql(gql`mutation { ... }`, {
 ```
 
 ```js
-export default graphql(gql`mutation { ... }`, {
+export default graphql(gql`mutation MyMutation { ... }`, {
   options: props => ({
     // Options are computed from `props` here.
   }),
@@ -820,7 +820,7 @@ function MyComponent({ mutate }) {
   );
 }
 
-export default graphql(gql`mutation { ... }`)(MyComponent);
+export default graphql(gql`mutation MyMutation { ... }`)(MyComponent);
 ```
 
 ### `options.variables`
@@ -832,7 +832,7 @@ The variables which will be used to execute the mutation operation. These variab
 ```js
 export default graphql(
   gql`
-  mutation ($foo: String!, $bar: String!) {
+  mutation MyMutation ($foo: String!, $bar: String!) {
     ...
   }
 `,
@@ -884,7 +884,7 @@ function MyComponent({ newText, mutate }) {
 }
 
 export default graphql(gql`
-  mutation($text: String!) {
+  mutation CreateTodo ($text: String!) {
     createTodo(text: $text) {
       id
       text
@@ -909,11 +909,11 @@ For more information on updating your cache after a mutation with the `options.u
 **Example:**
 
 ```js
-const query = gql`{ todos { ... } }`;
+const query = gql`query GetAllTodos { todos { ... } }`;
 
 export default graphql(
   gql`
-  mutation ($text: String!) {
+  mutation CreateTodo ($text: String!) {
     createTodo(text: $text) { ... }
   }
 `,
@@ -949,7 +949,7 @@ If an array of objects with this shape is specified then Apollo Client will refe
 **Example:**
 
 ```js
-export default graphql(gql`mutation { ... }`, {
+export default graphql(gql`mutation MyMutation { ... }`, {
   options: {
     refetchQueries: ['CommentList', 'PostList'],
   },
@@ -959,7 +959,7 @@ export default graphql(gql`mutation { ... }`, {
 ```js
 import { COMMENT_LIST_QUERY } from '../components/CommentList';
 
-export default graphql(gql`mutation { ... }`, {
+export default graphql(gql`mutation MyMutation { ... }`, {
   options: props => ({
     refetchQueries: [
       {
@@ -967,7 +967,7 @@ export default graphql(gql`mutation { ... }`, {
       },
       {
         query: gql`
-          query($id: ID!) {
+          query GetPostById ($id: ID!) {
             post(id: $id) {
               commentCount
             }
@@ -983,7 +983,7 @@ export default graphql(gql`mutation { ... }`, {
 ```
 
 ```js
-export default graphql(gql`mutation { ... }`, {
+export default graphql(gql`mutation MyMutation { ... }`, {
   options: {
     refetchQueries: mutationResult => ['CommentList', 'PostList'],
   },
@@ -1039,7 +1039,7 @@ The return value of your `options.updateQueries` functions _must_ have the same 
 ```js
 export default graphql(
   gql`
-  mutation ($text: String!) {
+  mutation SubmitComment ($text: String!) {
     submitComment(text: $text) { ... }
   }
 `,

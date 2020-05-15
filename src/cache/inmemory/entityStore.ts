@@ -131,7 +131,7 @@ export abstract class EntityStore implements NormalizedCache {
         if (fieldValue === void 0) return;
         const modify: Modifier<StoreValue> = typeof modifiers === "function"
           ? modifiers
-          : modifiers[fieldName];
+          : modifiers[storeFieldName] || modifiers[fieldName];
         if (modify) {
           let newValue = modify === delModifier ? DELETE :
             modify(maybeDeepFreeze(fieldValue), {
@@ -176,20 +176,33 @@ export abstract class EntityStore implements NormalizedCache {
   // If called with only one argument, removes the entire entity
   // identified by dataId. If called with a fieldName as well, removes all
   // fields of that entity whose names match fieldName according to the
-  // fieldNameFromStoreName helper function.
-  public delete(dataId: string, fieldName?: string) {
-    return this.modify(dataId, fieldName ? {
-      [fieldName]: delModifier,
+  // fieldNameFromStoreName helper function. If called with a fieldName
+  // and variables, removes all fields of that entity whose names match fieldName
+  // and whose arguments when cached exactly match the variables passed.
+  public delete(
+    dataId: string,
+    fieldName?: string,
+    args?: Record<string, any>,
+  ) {
+    const storeFieldName = fieldName && args
+      ? this.policies.getStoreFieldName(dataId, fieldName, args)
+      : fieldName;
+    return this.modify(dataId, storeFieldName ? {
+      [storeFieldName]: delModifier,
     } : delModifier);
   }
 
-  public evict(dataId: string, fieldName?: string): boolean {
+  public evict(
+    dataId: string,
+    fieldName?: string,
+    args?: Record<string, any>,
+  ): boolean {
     let evicted = false;
     if (hasOwn.call(this.data, dataId)) {
-      evicted = this.delete(dataId, fieldName);
+      evicted = this.delete(dataId, fieldName, args);
     }
     if (this instanceof Layer) {
-      evicted = this.parent.evict(dataId, fieldName) || evicted;
+      evicted = this.parent.evict(dataId, fieldName, args) || evicted;
     }
     // Always invalidate the field to trigger rereading of watched
     // queries, even if no cache data was modified by the eviction,

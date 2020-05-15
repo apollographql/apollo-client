@@ -1,4 +1,4 @@
-import { ExecutionResult, DocumentNode, GraphQLError } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache } from '../cache/core/types/Cache';
@@ -6,6 +6,7 @@ import { ApolloCache } from '../cache/core/cache';
 import { WatchQueryOptions } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { QueryListener } from './types';
+import { FetchResult } from '../link/core/types';
 import { ObservableSubscription } from '../utilities/observables/Observable';
 import { isNonEmptyArray } from '../utilities/common/arrays';
 import { graphQLResultHasError } from '../utilities/common/errorHandling';
@@ -192,7 +193,7 @@ export class QueryInfo {
   }
 
   public markResult<T>(
-    result: ExecutionResult<T>,
+    result: FetchResult<T>,
     options: Pick<WatchQueryOptions,
       | "variables"
       | "fetchPolicy"

@@ -287,6 +287,33 @@ describe("type policies", function () {
     }).toThrowError("Missing field 'year' while computing key fields");
   });
 
+  it("does not clobber previous keyFields with undefined", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Movie: {
+          keyFields(incoming) {
+            return `MotionPicture::${incoming.id}`;
+          },
+        },
+      },
+    });
+
+    cache.policies.addTypePolicies({
+      Movie: {
+        fields: {
+          isPurchased() {
+            return false;
+          },
+        },
+      },
+    });
+
+    expect(cache.identify({
+      __typename: "Movie",
+      id: "3993d4118143",
+    })).toBe("MotionPicture::3993d4118143");
+  });
+
   describe("field policies", function () {
     it("can filter key arguments", function () {
       const cache = new InMemoryCache({
@@ -593,15 +620,16 @@ describe("type policies", function () {
                 keyArgs(args, context) {
                   expect(context.typename).toBe("Thread");
                   expect(context.fieldName).toBe("comments");
-                  expect(context.field.name.value).toBe("comments");
-                  expect(context.variables).toEqual({});
+                  expect(context.field!.name.value).toBe("comments");
                   expect(context.policies).toBeInstanceOf(Policies);
 
                   if (typeof args!.limit === "number") {
                     if (typeof args!.offset === "number") {
+                      expect(args).toEqual({ offset: 0, limit: 2 });
                       return ["offset", "limit"];
                     }
                     if (args!.beforeId) {
+                      expect(args).toEqual({ beforeId: "asdf", limit: 2 });
                       return ["beforeId", "limit"];
                     }
                   }
@@ -3116,5 +3144,86 @@ describe("type policies", function () {
     expect(thirdFirstBookResult.author.firstBook).toBe(
       secondFirstBookResult.author.firstBook,
     );
+  });
+
+  it("can return existing object from merge function (issue #6245)", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Person: {
+          fields: {
+            currentTask: {
+              merge(existing, incoming) {
+                // Not a very reasonable merge strategy, but returning
+                // existing here triggers issue #6245, persumably because
+                // the existing data is frozen.
+                return existing || incoming;
+              },
+            },
+          },
+        },
+        Task: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        person {
+          currentTask {
+            __typename
+            description
+          }
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          id: 1234,
+          currentTask: {
+            __typename: "Task",
+            description: "writing tests",
+          },
+        },
+      },
+    });
+
+    const snapshot = cache.extract();
+    expect(snapshot).toEqual({
+      "Person:1234": {
+        __typename: "Person",
+        currentTask: {
+          __typename: "Task",
+          description: "writing tests",
+        },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        person: {
+          __ref: "Person:1234",
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          id: 1234,
+          currentTask: {
+            __typename: "Task",
+            description: "polishing knives",
+          },
+        },
+      },
+    });
+
+    // Unchanged because the merge function prefers the existing object.
+    expect(cache.extract()).toEqual(snapshot);
   });
 });

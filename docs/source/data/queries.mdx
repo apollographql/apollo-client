@@ -34,7 +34,7 @@ Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. 
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
-  {
+  query GetDogs {
     dogs {
       id
       breed
@@ -51,7 +51,7 @@ import { gql } from '@apollo/client';
 import { Query } from '@apollo/react-components';
 
 const GET_DOGS = gql`
-  {
+  query GetDogs {
     dogs {
       id
       breed

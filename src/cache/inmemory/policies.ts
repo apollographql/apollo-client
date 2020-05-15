@@ -98,6 +98,23 @@ export type FieldPolicy<
 
 type StorageType = Record<string, any>;
 
+interface FieldSpecifier {
+  typename?: string;
+  fieldName: string;
+  field?: FieldNode;
+  args?: Record<string, any>;
+  variables?: Record<string, any>;
+}
+
+function argsFromFieldSpecifier(spec: FieldSpecifier) {
+  return spec.args !== void 0 ? spec.args :
+    spec.field ? argumentsObjectFromField(spec.field, spec.variables) : null;
+}
+
+export interface ReadFieldOptions extends FieldSpecifier {
+  from?: StoreObject | Reference;
+}
+
 export interface FieldFunctionOptions<
   TArgs = Record<string, any>,
   TVars = Record<string, any>,
@@ -133,9 +150,10 @@ export interface FieldFunctionOptions<
   // to compute the argument values. Note that this function will invoke
   // custom read functions for other fields, if defined. Always returns
   // immutable data (enforced with Object.freeze in development).
+  readField<T = StoreValue>(options: ReadFieldOptions): SafeReadonly<T> | undefined;
   readField<T = StoreValue>(
-    nameOrField: string | FieldNode,
-    foreignObjOrRef?: StoreObject | Reference,
+    fieldName: string,
+    from?: StoreObject | Reference,
   ): SafeReadonly<T> | undefined;
 
   // A handy place to put field-specific data that you want to survive
@@ -436,30 +454,19 @@ export class Policies {
     return false;
   }
 
-  public getStoreFieldName(
-    typename: string | undefined,
-    nameOrField: string | FieldNode,
-    // If nameOrField is a string, argsOrVars should be an object of
-    // arguments. If nameOrField is a FieldNode, argsOrVars should be the
-    // variables to use when computing the arguments of the field.
-    argsOrVars: Record<string, any>,
-  ): string {
-    let field: FieldNode | null;
-    let fieldName: string;
-    if (typeof nameOrField === "string") {
-      field = null;
-      fieldName = nameOrField;
-    } else {
-      field = nameOrField;
-      fieldName = field.name.value;
-    }
+  public getStoreFieldName(fieldSpec: FieldSpecifier): string {
+    const { typename, fieldName } = fieldSpec;
     const policy = this.getFieldPolicy(typename, fieldName, false);
     let storeFieldName: string | undefined;
 
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
-      const args = field ? argumentsObjectFromField(field, argsOrVars) : argsOrVars;
-      const context: Parameters<KeyArgsFunction>[1] = { typename, fieldName, field };
+      const context: Parameters<KeyArgsFunction>[1] = {
+        typename,
+        fieldName,
+        field: fieldSpec.field || null,
+      };
+      const args = argsFromFieldSpecifier(fieldSpec);
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
@@ -474,9 +481,9 @@ export class Policies {
     }
 
     if (storeFieldName === void 0) {
-      storeFieldName = field
-        ? storeKeyNameFromField(field, argsOrVars)
-        : getStoreKeyName(fieldName, argsOrVars);
+      storeFieldName = fieldSpec.field
+        ? storeKeyNameFromField(fieldSpec.field, fieldSpec.variables)
+        : getStoreKeyName(fieldName, argsFromFieldSpecifier(fieldSpec));
     }
 
     // Make sure custom field names start with the actual field.name.value
@@ -490,26 +497,29 @@ export class Policies {
   private storageTrie = new KeyTrie<StorageType>(true);
 
   public readField<V = StoreValue>(
-    objectOrReference: StoreObject | Reference,
-    nameOrField: string | FieldNode,
+    options: ReadFieldOptions,
     context: ReadMergeContext,
-    typename = context.getFieldValue<string>(objectOrReference, "__typename"),
-  ): SafeReadonly<V> {
-    invariant(
-      objectOrReference,
-      "Must provide an object or Reference when calling Policies#readField",
-    );
+  ): SafeReadonly<V> | undefined {
+    const objectOrReference = options.from;
+    if (!objectOrReference) return;
 
-    const policies = this;
-    const storeFieldName = typeof nameOrField === "string" ? nameOrField
-      : policies.getStoreFieldName(typename, nameOrField, context.variables);
+    const nameOrField = options.field || options.fieldName;
+    if (!nameOrField) return;
+
+    if (options.typename === void 0) {
+      const typename = context.getFieldValue<string>(
+        objectOrReference, "__typename");
+      if (typename) options.typename = typename;
+    }
+
+    const storeFieldName = this.getStoreFieldName(options);
     const fieldName = fieldNameFromStoreName(storeFieldName);
     const existing = context.getFieldValue<V>(objectOrReference, storeFieldName);
-    const policy = policies.getFieldPolicy(typename, fieldName, false);
+    const policy = this.getFieldPolicy(options.typename, fieldName, false);
     const read = policy && policy.read;
 
     if (read) {
-      const storage = policies.storageTrie.lookup(
+      const storage = this.storageTrie.lookup(
         isReference(objectOrReference)
           ? objectOrReference.__ref
           : objectOrReference,
@@ -517,10 +527,9 @@ export class Policies {
       );
 
       return read(existing, makeFieldFunctionOptions(
-        policies,
-        typename,
+        this,
         objectOrReference,
-        nameOrField,
+        options,
         storage,
         context,
       )) as SafeReadonly<V>;
@@ -543,14 +552,12 @@ export class Policies {
     context: ReadMergeContext,
     storageKeys?: [string | StoreObject, string],
   ): T {
-    const policies = this;
-
     if (isFieldValueToBeMerged(incoming)) {
       const field = incoming.__field;
       const fieldName = field.name.value;
       // This policy and its merge function are guaranteed to exist
       // because the incoming value is a FieldValueToBeMerged object.
-      const { merge } = policies.getFieldPolicy(
+      const { merge } = this.getFieldPolicy(
         incoming.__typename, fieldName, false)!;
 
       // If storage ends up null, that just means no options.storage object
@@ -561,12 +568,11 @@ export class Policies {
       // this comment then you probably have good reasons for wanting to know
       // esoteric details like these, you wizard, you.
       const storage = storageKeys
-        ? policies.storageTrie.lookupArray(storageKeys)
+        ? this.storageTrie.lookupArray(storageKeys)
         : null;
 
       incoming = merge!(existing, incoming.__value, makeFieldFunctionOptions(
-        policies,
-        incoming.__typename,
+        this,
         // Unlike options.readField for read functions, we do not fall
         // back to the current object if no foreignObjOrRef is provided,
         // because it's not clear what the current object should be for
@@ -578,15 +584,18 @@ export class Policies {
         // to the order in which fields are written into the cache.
         // However, readField(name, ref) is useful for merge functions
         // that need to deduplicate child objects and references.
-        null,
-        field,
+        void 0,
+        { typename: incoming.__typename,
+          fieldName,
+          field,
+          variables: context.variables },
         storage,
         context,
       )) as T;
     }
 
     if (Array.isArray(incoming)) {
-      return incoming!.map(item => policies.applyMerges(
+      return incoming!.map(item => this.applyMerges(
         // Items in the same position in different arrays are not
         // necessarily related to each other, so there is no basis for
         // merging them. Passing void here means any FieldValueToBeMerged
@@ -619,7 +628,7 @@ export class Policies {
 
       Object.keys(i).forEach(storeFieldName => {
         const incomingValue = i[storeFieldName];
-        const appliedValue = policies.applyMerges(
+        const appliedValue = this.applyMerges(
           context.getFieldValue(e, storeFieldName),
           incomingValue,
           context,
@@ -653,20 +662,17 @@ export interface ReadMergeContext {
 
 function makeFieldFunctionOptions(
   policies: Policies,
-  typename: string,
-  objectOrReference: StoreObject | Reference | null,
-  nameOrField: string | FieldNode,
+  objectOrReference: StoreObject | Reference | undefined,
+  fieldSpec: FieldSpecifier,
   storage: StorageType | null,
   context: ReadMergeContext,
 ): FieldFunctionOptions {
   const { toReference, getFieldValue, variables } = context;
-  const storeFieldName = typeof nameOrField === "string" ? nameOrField :
-    policies.getStoreFieldName(typename, nameOrField, variables);
+  const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
   return {
-    args: typeof nameOrField === "string" ? null :
-      argumentsObjectFromField(nameOrField, variables),
-    field: typeof nameOrField === "string" ? null : nameOrField,
+    args: argsFromFieldSpecifier(fieldSpec),
+    field: fieldSpec.field || null,
     fieldName,
     storeFieldName,
     variables,
@@ -675,14 +681,19 @@ function makeFieldFunctionOptions(
     storage,
 
     readField<T>(
-      nameOrField: string | FieldNode,
-      foreignObjOrRef: StoreObject | Reference,
+      fieldNameOrOptions: string | ReadFieldOptions,
+      from?: StoreObject | Reference,
     ) {
-      return policies.readField<T>(
-        foreignObjOrRef || objectOrReference,
-        nameOrField,
-        context,
-      );
+      const options: ReadFieldOptions =
+        typeof fieldNameOrOptions === "string" ? {
+          fieldName: fieldNameOrOptions,
+          from,
+        } : fieldNameOrOptions;
+
+      return policies.readField<T>(options.from ? options : {
+        ...options,
+        from: objectOrReference,
+      }, context);
     },
 
     mergeObjects(existing, incoming) {

@@ -179,10 +179,11 @@ const KNOWN_DIRECTIVES: string[] = [
 
 export function getStoreKeyName(
   fieldName: string,
-  args?: Object,
+  args?: Record<string, any> | null,
   directives?: Directives,
 ): string {
   if (
+    args &&
     directives &&
     directives['connection'] &&
     directives['connection']['key']
@@ -196,10 +197,9 @@ export function getStoreKeyName(
         : [];
       filterKeys.sort();
 
-      const queryArgs = args as { [key: string]: any };
       const filteredArgs = {} as { [key: string]: any };
       filterKeys.forEach(key => {
-        filteredArgs[key] = queryArgs[key];
+        filteredArgs[key] = args[key];
       });
 
       return `${directives['connection']['key']}(${JSON.stringify(
@@ -236,7 +236,7 @@ export function getStoreKeyName(
 
 export function argumentsObjectFromField(
   field: FieldNode | DirectiveNode,
-  variables: Object,
+  variables?: Record<string, any>,
 ): Object | null {
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
@@ -245,7 +245,6 @@ export function argumentsObjectFromField(
     );
     return argObj;
   }
-
   return null;
 }
 

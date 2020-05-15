@@ -11,7 +11,7 @@ class TestCache extends ApolloCache<unknown> {
     return {};
   }
 
-  public evict(dataId: string, fieldName?: string): boolean {
+  public evict(): boolean {
     return false;
   }
 

@@ -14,7 +14,8 @@ import { canUseWeakMap } from '../../utilities/common/canUse';
 import { NormalizedCache, NormalizedCacheObject } from './types';
 import { fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';
-import  { Modifier, Modifiers, SafeReadonly } from '../core/types/common';
+import { Modifier, Modifiers, SafeReadonly } from '../core/types/common';
+import { Cache } from '../core/types/Cache';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -197,23 +198,19 @@ export abstract class EntityStore implements NormalizedCache {
     return false;
   }
 
-  public evict(
-    dataId: string,
-    fieldName?: string,
-    args?: Record<string, any>,
-  ): boolean {
+  public evict(options: Cache.EvictOptions): boolean {
     let evicted = false;
-    if (hasOwn.call(this.data, dataId)) {
-      evicted = this.delete(dataId, fieldName, args);
+    if (hasOwn.call(this.data, options.id)) {
+      evicted = this.delete(options.id, options.fieldName, options.args);
     }
     if (this instanceof Layer) {
-      evicted = this.parent.evict(dataId, fieldName, args) || evicted;
+      evicted = this.parent.evict(options) || evicted;
     }
     // Always invalidate the field to trigger rereading of watched
     // queries, even if no cache data was modified by the eviction,
     // because queries may depend on computed fields with custom read
     // functions, whose values are not stored in the EntityStore.
-    this.group.dirty(dataId, fieldName || "__exists");
+    this.group.dirty(options.id, options.fieldName || "__exists");
     return evicted;
   }
 

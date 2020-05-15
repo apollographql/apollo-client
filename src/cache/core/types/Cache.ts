@@ -25,6 +25,12 @@ export namespace Cache {
     callback: WatchCallback;
   }
 
+  export interface EvictOptions {
+    id: string;
+    fieldName?: string;
+    args?: Record<string, any>;
+  }
+
   export import DiffResult = DataProxy.DiffResult;
   export import WriteQueryOptions = DataProxy.WriteQueryOptions;
   export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;

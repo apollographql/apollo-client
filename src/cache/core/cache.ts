@@ -22,10 +22,20 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public abstract watch(watch: Cache.WatchOptions): () => void;
   public abstract reset(): Promise<void>;
 
-  // If called with only one argument, removes the entire entity
-  // identified by dataId. If called with a fieldName as well, removes all
-  // fields of the identified entity whose store names match fieldName.
-  public abstract evict(dataId: string, fieldName?: string): boolean;
+  // Remove whole objects from the cache by passing just options.id, or
+  // specific fields by passing options.field and/or options.args. If no
+  // options.args are provided, all fields matching options.field (even
+  // those with arguments) will be removed. Returns true iff any data was
+  // removed from the cache.
+  public abstract evict(options: Cache.EvictOptions): boolean;
+
+  // For backwards compatibility, evict can also take positional
+  // arguments. Please prefer the Cache.EvictOptions style (above).
+  public abstract evict(
+    id: string,
+    field?: string,
+    args?: Record<string, any>,
+  ): boolean;
 
   // intializer / offline / ssr API
   /**

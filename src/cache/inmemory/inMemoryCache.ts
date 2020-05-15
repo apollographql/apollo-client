@@ -224,11 +224,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(
-    dataId: string,
+    idOrOptions: string | Cache.EvictOptions,
     fieldName?: string,
     args?: Record<string, any>,
   ): boolean {
-    const evicted = this.optimisticData.evict(dataId, fieldName, args);
+    const evicted = this.optimisticData.evict(
+      typeof idOrOptions === "string" ? {
+        id: idOrOptions,
+        fieldName,
+        args,
+      } : idOrOptions,
+    );
     this.broadcastWatches();
     return evicted;
   }

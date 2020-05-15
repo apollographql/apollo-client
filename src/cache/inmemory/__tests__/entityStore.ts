@@ -1416,10 +1416,12 @@ describe('EntityStore', () => {
     expect(cache.extract(true)).toEqual({
       "Author:2": {
         __typename: "Author",
+        id: 2,
         name: "Geoffrey Chaucer",
       },
       "Book:1": {
         __typename: "Book",
+        id: 1,
         author: { __ref: "Author:2" },
       },
       ROOT_QUERY: {
@@ -1438,6 +1440,7 @@ describe('EntityStore', () => {
     expect(cache.extract(true)).toEqual({
       "Book:1": {
         __typename: "Book",
+        id: 1,
         author: { __ref: "Author:2" },
       },
       ROOT_QUERY: {
@@ -1479,6 +1482,7 @@ describe('EntityStore', () => {
     expect(cache.extract(true)).toEqual({
       "Book:1": {
         __typename: "Book",
+        id: 1,
         author: { __ref: "Author:2" },
       },
       ROOT_QUERY: {

@@ -131,7 +131,7 @@ The `HttpLink` constructor accepts the following options:
 
 #### Providing a `fetch` replacement for certain environments
 
-`HttpLink` requires that `fetch` is present in your runtime environment. This is the case for React Native and most modern browsers. If you're targeting an environment that _doesn't_ include `fetch` (such as older browsers or the server), you need to pass your own `fetch` to `HttpLink` via its [constructor options](#constructor-options). We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for Node.js.
+`HttpLink` requires that `fetch` is present in your runtime environment. This is the case for React Native and most modern browsers. If you're targeting an environment that _doesn't_ include `fetch` (such as older browsers or the server), you need to pass your own `fetch` to `HttpLink` via its [constructor options](#constructor-options). We recommend using [`cross-fetch`](https://www.npmjs.com/package/cross-fetch) for older browsers and Node.
 
 ### Overriding options
 

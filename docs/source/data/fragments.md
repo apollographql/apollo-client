@@ -215,7 +215,7 @@ If your schema includes only a few unions and interfaces, you can probably speci
 The following example script translates a GraphQL introspection query into a `possibleTypes` configuration object:
 
 ```js
-const fetch = require('node-fetch');
+const fetch = require('cross-fetch');
 const fs = require('fs');
 
 fetch(`${YOUR_API_HOST}/graphql`, {

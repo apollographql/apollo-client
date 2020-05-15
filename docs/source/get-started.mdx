@@ -51,7 +51,7 @@ import { gql } from '@apollo/client';
 client
   .query({
     query: gql`
-      {
+      query GetRates {
         rates(currency: "USD") {
           currency
         }
@@ -101,7 +101,7 @@ Let's create an `ExchangeRates` component in `index.js` to see the `useQuery` ho
 import { useQuery, gql } from '@apollo/client';
 
 const EXCHANGE_RATES = gql`
-  {
+  query GetExchangeRates {
     rates(currency: "USD") {
       currency
       rate
@@ -133,7 +133,7 @@ import { Query } from '@apollo/react-components';
 import { gql } from '@apollo/client';
 
 const EXCHANGE_RATES = gql`
-  {
+  query GetExchangeRates {
     rates(currency: "USD") {
       currency
       rate

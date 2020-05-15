@@ -37,7 +37,7 @@ function FilterLink({ filter, children }) {
   return (
     <Link
       onClick={() => client.writeQuery({
-        query: gql`{ visibilityFilter }`,
+        query: gql`query GetVisibilityFilter { visibilityFilter }`,
         data: { visibilityFilter: filter },
       })}
     >
@@ -61,7 +61,7 @@ const FilterLink = ({ filter, children }) => (
     {client => (
       <Link
         onClick={() => client.writeQuery({
-          query: gql`{ visibilityFilter }`,
+          query: gql`query GetVisibilityFilter { visibilityFilter }`,
           data: { visibilityFilter: filter },
         })}
       >
@@ -89,7 +89,7 @@ import { gql, useQuery } from "@apollo/client";
 import Link from "./Link";
 
 const GET_VISIBILITY_FILTER = gql`
-  {
+  query GetVisibilityFilter {
     visibilityFilter @client
   }
 `;
@@ -121,7 +121,7 @@ import { gql } from "@apollo/client";
 import Link from "./Link";
 
 const GET_VISIBILITY_FILTER = gql`
-  {
+  query GetVisibilityFilter {
     visibilityFilter @client
   }
 `;
@@ -275,7 +275,7 @@ import { gql, useQuery } from "@apollo/client";
 import Todo from "./Todo";
 
 const GET_TODOS = gql`
-  {
+  query GetTodos {
     todos @client {
       id
       completed
@@ -308,7 +308,7 @@ import { gql } from "@apollo/client";
 import Todo from "./Todo";
 
 const GET_TODOS = gql`
-  {
+  query GetTodos {
     todos @client {
       id
       completed
@@ -353,7 +353,7 @@ const client = new ApolloClient({
 
 cache.writeQuery({
   query: gql`
-    query {
+    query GetTodosNetworkStatusAndFilter {
       todos
       visibilityFilter
       networkStatus {
@@ -386,7 +386,7 @@ const client = new ApolloClient({
 function writeInitialData() {
   cache.writeQuery({
     query: gql`
-      query {
+      query GetTodosNetworkStatusAndFilter {
         todos
         visibilityFilter
         networkStatus {
@@ -627,7 +627,7 @@ const client = new ApolloClient({
 import { gql } from "@apollo/client";
 
 const GET_PHOTOS = gql`
-  query getPhotos($assetType: String!) {
+  query GetPhotos($assetType: String!) {
     cameraRoll(assetType: $assetType) @client {
       id
       edges {
@@ -931,7 +931,7 @@ Apollo Client provides a way to use an `@client` field result as a variable for 
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const query = gql`
-  query currentAuthorPostCount($authorId: Int!) {
+  query CurrentAuthorPostCount($authorId: Int!) {
     currentAuthorId @client @export(as: "authorId")
     postCount(authorId: $authorId)
   }
@@ -945,7 +945,7 @@ const client = new ApolloClient({
 });
 
 cache.writeQuery({
-  query: gql`{ currentAuthorId }`,
+  query: gql`query GetCurrentAuthorId { currentAuthorId }`,
   data: {
     currentAuthorId: 12345,
   },
@@ -960,7 +960,7 @@ In the example above, `currentAuthorId` is first loaded from the cache, then pas
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const query = gql`
-  query currentAuthorPostCount($authorId: Int!) {
+  query CurrentAuthorPostCount($authorId: Int!) {
     currentAuthor @client {
       name
       authorId @export(as: "authorId")
@@ -978,7 +978,7 @@ const client = new ApolloClient({
 
 cache.writeQuery({
   query: gql`
-    query {
+    query GetCurrentAuthor {
       currentAuthor {
         name
         authorId
@@ -1003,7 +1003,7 @@ Here the `authorId` variable is set from the `authorId` field loaded from the ca
 import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 
 const query = gql`
-  query currentAuthorPostCount($authorId: Int!) {
+  query CurrentAuthorPostCount($authorId: Int!) {
     currentAuthorId @client @export(as: "authorId")
     postCount(authorId: $authorId) @client
   }
@@ -1062,7 +1062,7 @@ const client = new ApolloClient({
     Mutation: {
       updateVisibilityFilter: (_, { visibilityFilter }, { cache }) => {
         cache.writeQuery({
-          query: gql`{ visibilityFilter }`,
+          query: gql`query GetVisibilityFilter { visibilityFilter }`,
           data: {
             __typename: 'Filter',
             visibilityFilter,
@@ -1109,7 +1109,7 @@ let nextTodoId = 0;
 const cache = new InMemoryCache();
 
 cache.writeQuery({
-  query: gql`{ todos }`,
+  query: gql`query GetTodos { todos { ... } }`,
   data: { todos: [] },
 });
 
@@ -1158,7 +1158,7 @@ const client = new ApolloClient({
       toggleTodo: (_, variables, { cache }) => {
         const id = `TodoItem:${variables.id}`;
         const fragment = gql`
-          fragment completeTodo on TodoItem {
+          fragment CompleteTodo on TodoItem {
             completed
           }
         `;
@@ -1239,7 +1239,7 @@ import React from "react";
 import { ApolloConsumer, useApolloClient, useQuery, gql } from "@apollo/client";
 
 const GET_MESSAGE_COUNT = gql`
-  {
+  query GetMessageCount {
     messageCount @client {
       total
     }
@@ -1284,7 +1284,7 @@ import { ApolloConsumer, Query } from "@apollo/react-components";
 import { gql } from "@apollo/client";
 
 const GET_MESSAGE_COUNT = gql`
-  {
+  query GetMessageCount {
     messageCount @client {
       total
     }
@@ -1389,7 +1389,7 @@ Updating your application to use Apollo Client's local state management features
     resolvers: { ... },
   });
   cache.writeQuery({
-    query: gql`{ someField }`,
+    query: gql`query GetSomeField { someField }`,
     data: { someField: 'some value' },
   });
   ```
@@ -1479,7 +1479,7 @@ import { InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache();
 cache.writeQuery({
-  query: gql`{
+  query: gql`query MyQuery {
     isLoggedIn,
     cartItems
   }`,

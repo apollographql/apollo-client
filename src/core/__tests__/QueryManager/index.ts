@@ -3,11 +3,11 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
-import { GraphQLRequest } from '../../../link/core/types';
+import { GraphQLRequest, FetchResult } from '../../../link/core/types';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,
@@ -91,7 +91,7 @@ describe('QueryManager', () => {
     variables?: Object;
     queryOptions?: Object;
     error?: Error;
-    result?: ExecutionResult;
+    result?: FetchResult;
     delay?: number;
     observer: Observer<ApolloQueryResult<any>>;
   }) => {
@@ -130,7 +130,7 @@ describe('QueryManager', () => {
     });
 
     return new Promise<{
-      result: ExecutionResult;
+      result: FetchResult;
       queryManager: QueryManager<NormalizedCacheObject>;
     }>((resolve, reject) => {
       queryManager
@@ -164,9 +164,9 @@ describe('QueryManager', () => {
   }: {
     reject: (reason: any) => any;
     request: GraphQLRequest;
-    firstResult: ExecutionResult;
-    secondResult: ExecutionResult;
-    thirdResult?: ExecutionResult;
+    firstResult: FetchResult;
+    secondResult: FetchResult;
+    thirdResult?: FetchResult;
   }) => {
     const args = [
       {
@@ -4388,7 +4388,7 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = (result: ExecutionResult<any>) => {
+      const conditional = (result: FetchResult<any>) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
         return [];
       };
@@ -4450,7 +4450,7 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = (result: ExecutionResult<any>) => {
+      const conditional = (result: FetchResult<any>) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
         return [{ query }];
       };

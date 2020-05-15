@@ -1,7 +1,6 @@
 import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { Modifier, Modifiers } from '../core/types/common';
 import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { KeyFieldsFunction } from './policies';
@@ -24,9 +23,7 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
-  merge(dataId: string, incoming: StoreObject): void;
-  modify(dataId: string, modifiers: Modifier<any> | Modifiers): boolean;
-  delete(dataId: string, fieldName?: string): boolean;
+  merge(dataId: string, incoming: StoreObject): StoreObject;
   clear(): void;
 
   // non-Map elements:

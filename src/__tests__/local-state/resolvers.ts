@@ -546,19 +546,22 @@ describe('Writing cache data from resolvers', () => {
       resolvers: {
         Mutation: {
           start() {
+            const obj = {
+              __typename: 'Object',
+              id: 'uniqueId',
+              field: 1,
+            };
+
             cache.writeQuery({
               query,
-              data: {
-                obj: { field: 1, id: 'uniqueId', __typename: 'Object' },
-              },
+              data: { obj },
             });
 
-            cache.modify({
-              field(value) {
-                expect(value).toBe(1);
-                return 2;
-              },
-            }, 'Object:uniqueId');
+            cache.writeFragment({
+              id: cache.identify(obj)!,
+              fragment: gql`fragment Field on Object { field }`,
+              data: { field: 2 },
+            });
 
             return { start: true };
           },
@@ -574,7 +577,7 @@ describe('Writing cache data from resolvers', () => {
       });
   });
 
-  it('should not overwrite __typename when writing to the cache with an id', () => {
+  itAsync('should not overwrite __typename when writing to the cache with an id', (resolve, reject) => {
     const query = gql`
       {
         obj @client {
@@ -600,22 +603,35 @@ describe('Writing cache data from resolvers', () => {
       resolvers: {
         Mutation: {
           start() {
+            const obj = {
+              __typename: 'Object',
+              id: 'uniqueId',
+              field: {
+                __typename: 'Field',
+                field2: 1,
+              },
+            };
+
             cache.writeQuery({
               query,
+              data: { obj },
+            });
+
+            cache.writeFragment({
+              id: cache.identify(obj)!,
+              fragment: gql`fragment FieldField2 on Object {
+                field {
+                  field2
+                }
+              }`,
               data: {
-                obj: {
-                  field: { field2: 1, __typename: 'Field' },
-                  id: 'uniqueId',
-                  __typename: 'Object',
+                field: {
+                  __typename: 'Field',
+                  field2: 2,
                 },
               },
             });
-            cache.modify({
-              field(value: { field2: number }) {
-                expect(value.field2).toBe(1);
-                return { ...value, field2: 2 };
-              },
-            }, 'Object:uniqueId');
+
             return { start: true };
           },
         },
@@ -628,8 +644,7 @@ describe('Writing cache data from resolvers', () => {
       .then(({ data }: any) => {
         expect(data.obj.__typename).toEqual('Object');
         expect(data.obj.field.__typename).toEqual('Field');
-      })
-      .catch(e => console.log(e));
+      }).then(resolve, reject);
   });
 });
 

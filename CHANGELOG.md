@@ -56,6 +56,9 @@
 - **[BREAKING?]** Refactor `QueryManager` to make better use of observables and enforce `fetchPolicy` more reliably. <br/>
   [@benjamn](https://github.com/benjamn) in [#6221](https://github.com/apollographql/apollo-client/pull/6221)
 
+- **[beta-BREAKING]** The experimental `cache.modify` method, first introduced in [PR #5909](https://github.com/apollographql/apollo-client/pull/5909), has been removed. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6289](https://github.com/apollographql/apollo-client/pull/6289)
+
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 

@@ -28,7 +28,7 @@ import { gql, useQuery } from '@apollo/client';
 
 // Make sure the query is also exported -- not just the component
 export const GET_DOG_QUERY = gql`
-  query getDog($name: String) {
+  query GetDog($name: String) {
     dog(name: $name) {
       id
       name
@@ -63,7 +63,7 @@ import { Query } from '@apollo/react-components';
 
 // Make sure the query is also exported -- not just the component
 export const GET_DOG_QUERY = gql`
-  query getDog($name: String) {
+  query GetDog($name: String) {
     dog(name: $name) {
       id
       name

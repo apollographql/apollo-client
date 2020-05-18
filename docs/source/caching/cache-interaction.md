@@ -84,7 +84,7 @@ const optimistic = true; // defaults to false, set to true if readFragment shoul
 const todo = client.readFragment({
   id: ..., // `id` is any id that could be returned by `dataIdFromObject`.
   fragment: gql`
-    fragment myTodo on Todo {
+    fragment MyTodo on Todo {
       id
       text
       completed
@@ -117,7 +117,7 @@ read that object from your cache with the following `readFragment` call:
 const todo = client.readFragment({
   id: '5',
   fragment: gql`
-    fragment myTodo on Todo {
+    fragment MyTodo on Todo {
       id
       text
       completed
@@ -150,7 +150,7 @@ flag for a `Todo` object with an `id` of `5`:
 client.writeFragment({
   id: '5',
   fragment: gql`
-    fragment myTodo on Todo {
+    fragment MyTodo on Todo {
       completed
     }
   `,

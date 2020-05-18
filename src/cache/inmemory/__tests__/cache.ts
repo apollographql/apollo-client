@@ -624,6 +624,7 @@ describe('Cache', () => {
       expect(cache.extract()).toEqual({
         "Person:123": {
           __typename: "Person",
+          id: 123,
           firstName: "Ben",
         },
       });
@@ -647,6 +648,7 @@ describe('Cache', () => {
       expect(cache.extract()).toEqual({
         "Person:123": {
           __typename: "Person",
+          id: 123,
           firstName: "Ben",
           lastName: "Newman",
         },
@@ -681,6 +683,7 @@ describe('Cache', () => {
       expect(cache.extract()).toEqual({
         "Person:123": {
           __typename: "Person",
+          id: 123,
           firstName: "Benjamin",
           lastName: "Newman",
         },
@@ -737,6 +740,7 @@ describe('Cache', () => {
       expect(cache.extract(true)).toEqual({
         "Person:321": {
           __typename: "Person",
+          id: 321,
           firstName: "Hugh",
           lastName: "Willson",
         },
@@ -2026,10 +2030,12 @@ describe("InMemoryCache#modify", () => {
       },
       "A:1": {
         __typename: "A",
+        id: 1,
         value: 123,
       },
       "B:1": {
         __typename: "B",
+        id: 1,
         value: 321,
       },
     });

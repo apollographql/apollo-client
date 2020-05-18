@@ -180,13 +180,26 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   options: FieldFunctionOptions,
 ) => TExisting;
 
-export function defaultDataIdFromObject(object: StoreObject) {
-  const { __typename, id, _id } = object;
+export const defaultDataIdFromObject: KeyFieldsFunction = (
+  { __typename, id, _id },
+  context,
+) => {
   if (typeof __typename === "string") {
-    if (id !== void 0) return `${__typename}:${id}`;
-    if (_id !== void 0) return `${__typename}:${_id}`;
+    if (context) {
+      context.keyObject =
+         id !== void 0 ? {  id } :
+        _id !== void 0 ? { _id } :
+        void 0;
+    }
+    const idValue = id || _id;
+    if (idValue !== void 0) {
+      return `${__typename}:${(
+        typeof idValue === "number" ||
+        typeof idValue === "string"
+      ) ? idValue : JSON.stringify(idValue)}`;
+    }
   }
-}
+};
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;

@@ -196,7 +196,7 @@ const cache = new InMemoryCache({
 
 const result = cache.readQuery({
   query: gql`
-    query {
+    query MyQuery {
       ...RootQueryFragment
     }
     fragment RootQueryFragment on UnconventionalRootQuery {
@@ -210,7 +210,7 @@ const result = cache.readQuery({
 
 const equivalentResult = cache.readQuery({
   query: gql`
-    query {
+    query MyQuery {
       field1
       field2 {
         subfield

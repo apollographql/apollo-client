@@ -45,7 +45,7 @@ Now it's time to write our first query. Defining a query is straightforward:
 import { gql } from '@apollo/client';
 
 const query = gql`
-  query luke {
+  query Luke {
     person @rest(type: "Person", path: "people/1/") {
       name
     }
@@ -92,7 +92,7 @@ You then need to specify the endpoint you want to use, in the rest directive:
 
 ```js
 const postTitleQuery1 = gql`
-  query postTitle {
+  query PostTitle {
     post @rest(type: "Post", path: "/post", endpoint: "v1") {
       id
       title
@@ -100,7 +100,7 @@ const postTitleQuery1 = gql`
   }
 `;
 const postTitleQuery2 = gql`
-  query postTitle {
+  query PostTitle {
     post @rest(type: "[Tag]", path: "/tags", endpoint: "v2") {
       id
       tags

@@ -44,7 +44,7 @@ const WithApolloClient = () => (
 import { gql, useQuery } from '@apollo/client';
 
 const GET_GREETING = gql`
-  query getGreeting($language: String!) {
+  query GetGreeting($language: String!) {
     greeting(language: $language) {
       message
     }
@@ -95,7 +95,7 @@ function useQuery<TData = any, TVariables = OperationVariables>(
 import { gql, useLazyQuery } from "@apollo/client";
 
 const GET_GREETING = gql`
-  query getGreeting($language: String!) {
+  query GetGreeting($language: String!) {
     greeting(language: $language) {
       message
     }
@@ -227,7 +227,7 @@ function useMutation<TData = any, TVariables = OperationVariables>(
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($repoFullName: String!) {
+  subscription OnCommentAdded($repoFullName: String!) {
     commentAdded(repoFullName: $repoFullName) {
       id
       content

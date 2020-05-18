@@ -2249,6 +2249,7 @@ describe("type policies", function () {
         },
         "Event:123": {
           __typename: "Event",
+          id: 123,
           name: "One-person party",
           attendees: [
             { __ref: "Attendee:234" },
@@ -2256,6 +2257,7 @@ describe("type policies", function () {
         },
         "Attendee:234": {
           __typename: "Attendee",
+          id: 234,
           name: "Ben Newman",
           events: [
             { __ref: "Event:123" },
@@ -2314,6 +2316,7 @@ describe("type policies", function () {
         },
         "Event:123": {
           __typename: "Event",
+          id: 123,
           name: "One-person party",
           attendees: [
             { __ref: "Attendee:234" },
@@ -2321,6 +2324,7 @@ describe("type policies", function () {
         },
         "Event:345": {
           __typename: "Event",
+          id: 345,
           attendees: [
             { __ref: "Attendee:456" },
             { __ref: "Attendee:234" },
@@ -2328,6 +2332,7 @@ describe("type policies", function () {
         },
         "Attendee:234": {
           __typename: "Attendee",
+          id: 234,
           name: "Ben Newman",
           events: [
             { __ref: "Event:123" },
@@ -2336,6 +2341,7 @@ describe("type policies", function () {
         },
         "Attendee:456": {
           __typename: "Attendee",
+          id: 456,
           name: "Inspector Beckett",
         },
       });
@@ -3196,6 +3202,7 @@ describe("type policies", function () {
     expect(snapshot).toEqual({
       "Person:1234": {
         __typename: "Person",
+        id: 1234,
         currentTask: {
           __typename: "Task",
           description: "writing tests",

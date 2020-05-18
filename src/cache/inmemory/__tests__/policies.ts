@@ -1,7 +1,6 @@
 import gql from "graphql-tag";
 
 import { InMemoryCache, ReactiveVar } from "../inMemoryCache";
-import { Policies } from "../policies";
 import { Reference, StoreObject } from "../../../core";
 import { MissingFieldError } from "../..";
 
@@ -166,7 +165,6 @@ describe("type policies", function () {
             expect(context.typename).toBe("Book");
             expect(context.selectionSet!.kind).toBe("SelectionSet");
             expect(context.fragmentMap).toEqual({});
-            expect(context.policies).toBeInstanceOf(Policies);
             return ["isbn"];
           },
         },
@@ -621,7 +619,6 @@ describe("type policies", function () {
                   expect(context.typename).toBe("Thread");
                   expect(context.fieldName).toBe("comments");
                   expect(context.field!.name.value).toBe("comments");
-                  expect(context.policies).toBeInstanceOf(Policies);
 
                   if (typeof args!.limit === "number") {
                     if (typeof args!.offset === "number") {
@@ -1940,11 +1937,9 @@ describe("type policies", function () {
                   args,
                   toReference,
                   isReference,
-                  policies,
                 }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
-                  expect(policies).toBeInstanceOf(Policies);
                   const slice = existing.slice(
                     args!.offset,
                     args!.offset + args!.limit,
@@ -1957,11 +1952,9 @@ describe("type policies", function () {
                   args,
                   toReference,
                   isReference,
-                  policies,
                 }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
-                  expect(policies).toBeInstanceOf(Policies);
                   const copy = existing ? existing.slice(0) : [];
                   const limit = args!.offset + args!.limit;
                   for (let i = args!.offset; i < limit; ++i) {

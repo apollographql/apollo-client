@@ -48,7 +48,6 @@ type KeyFieldsContext = {
   typename?: string;
   selectionSet?: SelectionSetNode;
   fragmentMap?: FragmentMap;
-  policies: Policies;
   // May be set by the KeyFieldsFunction to report fields that were involved
   // in computing the ID. Never passed in by the caller.
   keyObject?: Record<string, any>;
@@ -84,7 +83,6 @@ export type KeyArgsFunction = (
     typename: string;
     fieldName: string;
     field: FieldNode | null;
-    policies: Policies;
   },
 ) => KeySpecifier | ReturnType<IdGetter>;
 
@@ -121,11 +119,6 @@ export interface FieldFunctionOptions<
   field: FieldNode | null;
 
   variables?: TVars;
-
-  // In rare advanced use cases, a read or merge function may wish to
-  // consult the current Policies object, for example to call
-  // getStoreFieldName manually.
-  policies: Policies;
 
   // Utilities for dealing with { __ref } objects.
   isReference: typeof isReference;
@@ -266,7 +259,6 @@ export class Policies {
       typename,
       selectionSet,
       fragmentMap,
-      policies: this,
     };
 
     let id: string | undefined;
@@ -467,7 +459,7 @@ export class Policies {
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
       const args = field ? argumentsObjectFromField(field, argsOrVars) : argsOrVars;
-      const context = { typename, fieldName, field, policies: this };
+      const context: Parameters<KeyArgsFunction>[1] = { typename, fieldName, field };
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
@@ -678,7 +670,6 @@ function makeFieldFunctionOptions(
     fieldName,
     storeFieldName,
     variables,
-    policies,
     isReference,
     toReference,
     storage,

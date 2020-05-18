@@ -3145,6 +3145,80 @@ describe("type policies", function () {
     );
   });
 
+  it("readField can read fields with arguments", function () {
+    const enum Style { UPPER, LOWER, TITLE };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Word: {
+          keyFields: ["text"],
+
+          fields: {
+            style(_, { args, readField }) {
+              const text = readField<string>("text");
+              switch (args?.style) {
+                case Style.UPPER: return text?.toUpperCase();
+                case Style.LOWER: return text?.toLowerCase();
+                case Style.TITLE:
+                  return text && (
+                    text.charAt(0).toUpperCase() +
+                    text.slice(1).toLowerCase()
+                  );
+              }
+            },
+            upperCase(_, { readField }) {
+              return readField<string>({
+                fieldName: "style",
+                args: { style: Style.UPPER },
+              });
+            },
+            lowerCase(_, { readField }) {
+              return readField<string>({
+                fieldName: "style",
+                args: { style: Style.LOWER },
+              });
+            },
+            titleCase(_, { readField }) {
+              return readField<string>({
+                fieldName: "style",
+                args: { style: Style.TITLE },
+              });
+            },
+          },
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query: gql`query { wordOfTheDay { text } }`,
+      data: {
+        wordOfTheDay: {
+          __typename: "Word",
+          text: "inveigle",
+        },
+      },
+    });
+
+    expect(cache.readQuery({
+      query: gql`
+        query {
+          wordOfTheDay {
+            upperCase
+            lowerCase
+            titleCase
+          }
+        }
+      `,
+    })).toEqual({
+      wordOfTheDay: {
+        __typename: "Word",
+        upperCase: "INVEIGLE",
+        lowerCase: "inveigle",
+        titleCase: "Inveigle",
+      },
+    });
+  });
+
   it("can return existing object from merge function (issue #6245)", function () {
     const cache = new InMemoryCache({
       typePolicies: {

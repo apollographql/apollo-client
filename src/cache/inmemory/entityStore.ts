@@ -184,12 +184,17 @@ export abstract class EntityStore implements NormalizedCache {
     fieldName?: string,
     args?: Record<string, any>,
   ) {
-    const storeFieldName = fieldName && args
-      ? this.policies.getStoreFieldName(dataId, fieldName, args)
-      : fieldName;
-    return this.modify(dataId, storeFieldName ? {
-      [storeFieldName]: delModifier,
-    } : delModifier);
+    const storeObject = this.lookup(dataId);
+    if (storeObject) {
+      const typename = this.getFieldValue<string>(storeObject, "__typename");
+      const storeFieldName = fieldName && args
+        ? this.policies.getStoreFieldName({ typename, fieldName, args })
+        : fieldName;
+      return this.modify(dataId, storeFieldName ? {
+        [storeFieldName]: delModifier,
+      } : delModifier);
+    }
+    return false;
   }
 
   public evict(

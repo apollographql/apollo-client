@@ -59,6 +59,10 @@ export namespace DataProxy {
      * The data you will be writing to the store.
      */
     data: TData;
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
   }
 
   export interface WriteFragmentOptions<TData, TVariables>
@@ -67,6 +71,10 @@ export namespace DataProxy {
      * The data you will be writing to the store.
      */
     data: TData;
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
   }
 
   export type DiffResult<T> = {

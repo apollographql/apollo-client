@@ -146,7 +146,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       variables: options.variables,
     });
 
-    this.broadcastWatches();
+    if (options.broadcast !== false) {
+      this.broadcastWatches();
+    }
   }
 
   public modify(
@@ -224,12 +226,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(
-    dataId: string,
+    idOrOptions: string | Cache.EvictOptions,
     fieldName?: string,
     args?: Record<string, any>,
   ): boolean {
-    const evicted = this.optimisticData.evict(dataId, fieldName, args);
-    this.broadcastWatches();
+    const evicted = this.optimisticData.evict(
+      typeof idOrOptions === "string" ? {
+        id: idOrOptions,
+        fieldName,
+        args,
+      } : idOrOptions,
+    );
+    if (typeof idOrOptions === "string" ||
+        idOrOptions.broadcast !== false) {
+      this.broadcastWatches();
+    }
     return evicted;
   }
 

@@ -2966,10 +2966,7 @@ describe("type policies", function () {
           author: {
             __typename: "Author",
             name: "Virginia Woolf",
-            books: [{
-              __typename: "Book",
-              ...bookData,
-            }],
+            books: [bookData],
           },
         },
       });

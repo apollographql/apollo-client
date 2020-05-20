@@ -4,7 +4,7 @@ import type { Transaction } from '../core/cache';
 import type { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
 import type { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import type { KeyFieldsFunction } from './policies';
-export { StoreObject, StoreValue }
+export type { StoreObject, StoreValue }
 
 export interface IdGetterObj extends Object {
   __typename?: string;

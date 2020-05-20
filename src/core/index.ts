@@ -2,16 +2,20 @@
 
 export {
   ApolloClient,
+} from '../ApolloClient';
+export type {
   ApolloClientOptions,
   DefaultOptions
 } from '../ApolloClient';
 export {
   ObservableQuery,
+} from '../core/ObservableQuery';
+export type {
   FetchMoreOptions,
   UpdateQueryOptions,
   ApolloCurrentQueryResult,
 } from '../core/ObservableQuery';
-export {
+export type {
   QueryBaseOptions,
   QueryOptions,
   WatchQueryOptions,
@@ -26,7 +30,7 @@ export {
 } from '../core/watchQueryOptions';
 export { NetworkStatus } from '../core/networkStatus';
 export * from '../core/types';
-export {
+export type {
   Resolver,
   FragmentMatcher as LocalStateFragmentMatcher,
 } from '../core/LocalState';
@@ -45,18 +49,16 @@ export { concat } from '../link/core/concat';
 export { execute } from '../link/core/execute';
 export { ApolloLink } from '../link/core/ApolloLink';
 export * from '../link/core/types';
+export { parseAndCheckHttpResponse } from '../link/http/parseAndCheckHttpResponse';
+export type { ServerParseError } from '../link/http/parseAndCheckHttpResponse';
+export { serializeFetchParameter } from '../link/http/serializeFetchParameter';
+export type { ClientParseError } from '../link/http/serializeFetchParameter';
 export {
-  parseAndCheckHttpResponse,
-  ServerParseError
-} from '../link/http/parseAndCheckHttpResponse';
-export {
-  serializeFetchParameter,
-  ClientParseError
-} from '../link/http/serializeFetchParameter';
-export {
-  HttpOptions,
   fallbackHttpConfig,
   selectHttpOptionsAndBody,
+} from '../link/http/selectHttpOptionsAndBody';
+export type {
+  HttpOptions,
   UriFunction
 } from '../link/http/selectHttpOptionsAndBody';
 export { checkFetcher } from '../link/http/checkFetcher';
@@ -67,9 +69,10 @@ export { HttpLink } from '../link/http/HttpLink';
 export { fromError } from '../link/utils/fromError';
 export { toPromise } from '../link/utils/toPromise';
 export { fromPromise } from '../link/utils/fromPromise';
-export { ServerError, throwServerError } from '../link/utils/throwServerError';
-export {
-  Observable,
+export { throwServerError } from '../link/utils/throwServerError';
+export type { ServerError } from '../link/utils/throwServerError';
+export { Observable } from '../utilities/observables/Observable';
+export type {
   Observer,
   ObservableSubscription
 } from '../utilities/observables/Observable';

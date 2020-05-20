@@ -6,3 +6,5 @@
 // to work around problems with Map and Set polyfills in older versions of
 // React Native (which should have been fixed in react-native@0.59.0):
 // https://github.com/apollographql/apollo-client/pull/5962
+
+export {}

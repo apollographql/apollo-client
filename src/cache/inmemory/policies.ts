@@ -24,7 +24,12 @@ import {
   getStoreKeyName,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { IdGetter } from "./types";
+import {
+  IdGetter,
+  FieldSpecifier,
+  ReadFieldOptions,
+  ReadFieldFunction,
+} from "./types";
 import {
   fieldNameFromStoreName,
   FieldValueToBeMerged,
@@ -98,21 +103,9 @@ export type FieldPolicy<
 
 type StorageType = Record<string, any>;
 
-interface FieldSpecifier {
-  typename?: string;
-  fieldName: string;
-  field?: FieldNode;
-  args?: Record<string, any>;
-  variables?: Record<string, any>;
-}
-
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0 ? spec.args :
     spec.field ? argumentsObjectFromField(spec.field, spec.variables) : null;
-}
-
-export interface ReadFieldOptions extends FieldSpecifier {
-  from?: StoreObject | Reference;
 }
 
 export interface FieldFunctionOptions<
@@ -150,11 +143,7 @@ export interface FieldFunctionOptions<
   // to compute the argument values. Note that this function will invoke
   // custom read functions for other fields, if defined. Always returns
   // immutable data (enforced with Object.freeze in development).
-  readField<T = StoreValue>(options: ReadFieldOptions): SafeReadonly<T> | undefined;
-  readField<T = StoreValue>(
-    fieldName: string,
-    from?: StoreObject | Reference,
-  ): SafeReadonly<T> | undefined;
+  readField: ReadFieldFunction;
 
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
@@ -653,9 +642,7 @@ export class Policies {
 }
 
 export interface ReadMergeContext {
-  variables: Record<string, any>;
-  // A JSON.stringify-serialized version of context.variables.
-  varString: string;
+  variables?: Record<string, any>;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
 }

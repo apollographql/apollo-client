@@ -1,10 +1,15 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { Modifier, Modifiers } from '../core/types/common';
-import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
+import {
+  StoreObject,
+  StoreValue,
+  isReference,
+  Reference,
+} from '../../utilities/graphql/storeUtils';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { KeyFieldsFunction } from './policies';
+import { SafeReadonly } from '../core/types/common';
 export { StoreObject, StoreValue }
 
 export interface IdGetterObj extends Object {
@@ -101,3 +106,36 @@ export type CacheResolverMap = {
 // backwards compat
 export type CustomResolver = CacheResolver;
 export type CustomResolverMap = CacheResolverMap;
+
+export interface FieldSpecifier {
+  typename?: string;
+  fieldName: string;
+  field?: FieldNode;
+  args?: Record<string, any>;
+  variables?: Record<string, any>;
+}
+
+export interface ReadFieldOptions extends FieldSpecifier {
+  from?: StoreObject | Reference;
+}
+
+export interface ReadFieldFunction {
+  <V = StoreValue>(options: ReadFieldOptions): SafeReadonly<V> | undefined;
+  <V = StoreValue>(
+    fieldName: string,
+    from?: StoreObject | Reference,
+  ): SafeReadonly<V> | undefined;
+}
+
+export type Modifier<T> = (value: T, details: {
+  DELETE: any;
+  fieldName: string;
+  storeFieldName: string;
+  isReference: typeof isReference;
+  toReference: ToReferenceFunction;
+  readField: ReadFieldFunction;
+}) => T;
+
+export type Modifiers = {
+  [fieldName: string]: Modifier<any>;
+}

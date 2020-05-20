@@ -11,10 +11,10 @@ import {
 import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { NormalizedCache, NormalizedCacheObject } from './types';
+import { NormalizedCache, NormalizedCacheObject, Modifiers, Modifier, ReadFieldFunction, ReadFieldOptions } from './types';
 import { fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';
-import { Modifier, Modifiers, SafeReadonly } from '../core/types/common';
+import { SafeReadonly } from '../core/types/common';
 import { Cache } from '../core/types/Cache';
 
 const hasOwn = Object.prototype.hasOwnProperty;
@@ -121,10 +121,19 @@ export abstract class EntityStore implements NormalizedCache {
       let needToMerge = false;
       let allDeleted = true;
 
-      const readField = <V = StoreValue>(
-        fieldName: string,
-        objOrRef?: StoreObject | Reference,
-      ) => this.getFieldValue<V>(objOrRef || makeReference(dataId), fieldName);
+      const readField: ReadFieldFunction = <V = StoreValue>(
+        fieldNameOrOptions: string | ReadFieldOptions,
+        from?: StoreObject | Reference,
+      ) => this.policies.readField<V>(
+        typeof fieldNameOrOptions === "string" ? {
+          fieldName: fieldNameOrOptions,
+          from: from || makeReference(dataId),
+        } : fieldNameOrOptions,
+        {
+          toReference: this.toReference,
+          getFieldValue: this.getFieldValue,
+        },
+      );
 
       Object.keys(storeObject).forEach(storeFieldName => {
         const fieldName = fieldNameFromStoreName(storeFieldName);

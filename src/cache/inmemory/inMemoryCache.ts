@@ -6,12 +6,13 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
-import { Modifier, Modifiers } from '../core/types/common';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import { StoreObject }  from '../../utilities/graphql/storeUtils';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
+  Modifiers,
+  Modifier,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';

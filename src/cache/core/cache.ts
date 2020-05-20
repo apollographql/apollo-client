@@ -5,7 +5,6 @@ import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
 import { StoreObject } from '../../utilities/graphql/storeUtils';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
-import { Modifier, Modifiers } from './types/common';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -77,14 +76,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public identify(object: StoreObject): string | undefined {
     return;
-  }
-
-  public modify(
-    modifiers: Modifier<any> | Modifiers,
-    dataId?: string,
-    optimistic?: boolean,
-  ): boolean {
-    return false;
   }
   
   public gc(): string[] {

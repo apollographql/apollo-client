@@ -45,8 +45,9 @@ interface ExecContext extends ReadMergeContext {
   query: DocumentNode;
   store: NormalizedCache;
   policies: Policies;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
   fragmentMap: FragmentMap;
-  variables: VariableMap;
   path: (string | number)[];
 };
 

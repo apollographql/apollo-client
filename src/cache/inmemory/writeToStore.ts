@@ -40,6 +40,8 @@ export interface WriteContext extends ReadMergeContext {
   readonly fragmentMap?: FragmentMap;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
 };
 
 interface ProcessSelectionSetOptions {

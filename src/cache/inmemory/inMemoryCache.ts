@@ -6,6 +6,7 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
+import { Modifier, Modifiers } from '../core/types/common';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import { StoreObject }  from '../../utilities/graphql/storeUtils';
 import {
@@ -148,6 +149,25 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (options.broadcast !== false) {
       this.broadcastWatches();
     }
+  }
+
+  public modify(
+    modifiers: Modifier<any> | Modifiers,
+    dataId = "ROOT_QUERY",
+    optimistic = false,
+  ): boolean {
+    if (typeof modifiers === "string") {
+      // In beta testing of Apollo Client 3, the dataId parameter used to
+      // come before the modifiers. The type system should complain about
+      // this, but it doesn't have to be fatal if we fix it here.
+      [modifiers, dataId] = [dataId as any, modifiers];
+    }
+    const store = optimistic ? this.optimisticData : this.data;
+    if (store.modify(dataId, modifiers)) {
+      this.broadcastWatches();
+      return true;
+    }
+    return false;
   }
 
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {

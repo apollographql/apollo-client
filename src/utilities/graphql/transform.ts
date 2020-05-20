@@ -98,12 +98,16 @@ function getDirectiveMatcher(
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
+  {removeTypenameOnlyFragment}: {removeTypenameOnlyFragment: boolean} = {removeTypenameOnlyFragment: false}
 ): DocumentNode | null {
   const variablesInUse: Record<string, boolean> = Object.create(null);
   let variablesToRemove: RemoveArgumentsConfig[] = [];
 
   const fragmentSpreadsInUse: Record<string, boolean> = Object.create(null);
   let fragmentSpreadsToRemove: RemoveFragmentSpreadConfig[] = [];
+
+  const modifiedFragmentNames: string[] = [];
+  let currentFragmentName: string | undefined;
 
   let modifiedDoc = nullIfDocIsEmpty(
     visit(doc, {
@@ -122,6 +126,15 @@ export function removeDirectivesFromDocument(
         },
       },
 
+      FragmentDefinition: {
+        enter(node) {
+          currentFragmentName = node.name.value;
+        },
+        leave() {
+          currentFragmentName = undefined;
+        }
+      },
+
       Field: {
         enter(node) {
           if (directives && node.directives) {
@@ -136,6 +149,10 @@ export function removeDirectivesFromDocument(
               node.directives &&
               node.directives.some(getDirectiveMatcher(directives))
             ) {
+              if(currentFragmentName) {
+                modifiedFragmentNames.push(currentFragmentName);
+              }
+
               if (node.arguments) {
                 // Store field argument variables so they can be removed
                 // from the operation definition.
@@ -185,6 +202,27 @@ export function removeDirectivesFromDocument(
       },
     }),
   );
+
+  if (modifiedDoc && removeTypenameOnlyFragment && modifiedFragmentNames.length > 0) {
+    modifiedDoc = visit(modifiedDoc, {
+      FragmentDefinition: {
+        enter(node) {
+          if (node.selectionSet) {
+            const isTypenameOnly = node.selectionSet.selections.every(
+              selection =>
+                isField(selection) && selection.name.value === '__typename',
+            );
+            const name = node.name.value;
+            if (isTypenameOnly && modifiedFragmentNames.includes(name)) {
+              fragmentSpreadsToRemove.push({name});
+              fragmentSpreadsInUse[name] = false;
+              return null;
+            }
+          }
+        },
+      },
+    });
+  }
 
   // If we've removed fields with arguments, make sure the associated
   // variables are also removed from the rest of the document, as long as they
@@ -489,29 +527,12 @@ export function removeClientSetsFromDocument(
       },
     ],
     document,
+    // After a fragment definition has had its @client related document
+    // sets removed, if the only field it has left is a __typename field,
+    // remove the entire fragment operation to prevent it from being fired
+    // on the server.
+    {removeTypenameOnlyFragment: true}
   );
-
-  // After a fragment definition has had its @client related document
-  // sets removed, if the only field it has left is a __typename field,
-  // remove the entire fragment operation to prevent it from being fired
-  // on the server.
-  if (modifiedDoc) {
-    modifiedDoc = visit(modifiedDoc, {
-      FragmentDefinition: {
-        enter(node) {
-          if (node.selectionSet) {
-            const isTypenameOnly = node.selectionSet.selections.every(
-              selection =>
-                isField(selection) && selection.name.value === '__typename',
-            );
-            if (isTypenameOnly) {
-              return null;
-            }
-          }
-        },
-      },
-    });
-  }
 
   return modifiedDoc;
 }

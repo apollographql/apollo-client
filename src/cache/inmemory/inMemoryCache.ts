@@ -139,16 +139,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public write(options: Cache.WriteOptions): void {
-    this.storeWriter.writeQueryToStore({
-      store: this.data,
-      query: options.query,
-      result: options.result,
-      dataId: options.dataId,
-      variables: options.variables,
-    });
-
-    if (options.broadcast !== false) {
-      this.broadcastWatches();
+    try {
+      ++this.txCount;
+      this.storeWriter.writeQueryToStore({
+        store: this.data,
+        query: options.query,
+        result: options.result,
+        dataId: options.dataId,
+        variables: options.variables,
+      });
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
     }
   }
 

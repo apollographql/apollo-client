@@ -49,7 +49,6 @@ interface ProcessSelectionSetOptions {
   result: Record<string, any>;
   selectionSet: SelectionSetNode;
   context: WriteContext;
-  typename?: string;
   out?: {
     shouldApplyMerges: boolean;
   };
@@ -111,10 +110,6 @@ export class StoreWriter {
       // unnecessarily.
       dataId,
       selectionSet: operationDefinition.selectionSet,
-      // If dataId is a well-known root ID such as ROOT_QUERY, we can
-      // infer its __typename immediately here. Otherwise, the __typename
-      // will be determined in processSelectionSet, as usual.
-      typename: this.config.policies.rootTypenamesById[dataId],
       context: {
         store,
         written: Object.create(null),
@@ -137,7 +132,6 @@ export class StoreWriter {
     result,
     selectionSet,
     context,
-    typename,
     // This object allows processSelectionSet to report useful information
     // to its callers without explicitly returning that information.
     out = {
@@ -195,7 +189,8 @@ export class StoreWriter {
     // If typename was not passed in, infer it. Note that typename is
     // always passed in for tricky-to-infer cases such as "Query" for
     // ROOT_QUERY.
-    typename = typename ||
+    const typename =
+      (dataId && this.config.policies.rootTypenamesById[dataId]) ||
       getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
       (dataId && context.store.get(dataId, "__typename") as string);
 

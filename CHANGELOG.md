@@ -173,6 +173,9 @@
 - `useQuery`: Prevent new data re-render attempts during an existing render. This helps avoid React 16.13.0's "Cannot update a component from inside the function body of a different component" warning (https://github.com/facebook/react/pull/17099). <br/>
   [@hwillson](https://github.com/hwillson) in [#6107](https://github.com/apollographql/apollo-client/pull/6107)
 
+- Expand `ApolloError` typings to include `ServerError` and `ServerParseError`.  <br/>
+  [@dmarkow](https://github.com/dmarkow) in [#6319](https://github.com/apollographql/apollo-client/pull/6319)
+
 ## Apollo Client 2.6.8
 
 ### Apollo Client (2.6.8)

@@ -167,11 +167,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       [modifiers, dataId] = [dataId as any, modifiers];
     }
     const store = optimistic ? this.optimisticData : this.data;
-    if (store.modify(dataId, modifiers)) {
+    try {
+      ++this.txCount;
+      return store.modify(dataId, modifiers);
+    } finally {
+      --this.txCount;
       this.broadcastWatches();
-      return true;
     }
-    return false;
   }
 
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {

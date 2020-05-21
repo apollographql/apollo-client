@@ -211,11 +211,12 @@ export class StoreWriter {
         const value = result[resultFieldKey];
 
         if (typeof value !== 'undefined') {
-          const storeFieldName = policies.getStoreFieldName(
+          const storeFieldName = policies.getStoreFieldName({
             typename,
-            selection,
-            context.variables,
-          );
+            fieldName: selection.name.value,
+            field: selection,
+            variables: context.variables,
+          });
 
           let incomingValue =
             this.processFieldValue(value, selection, context, out);

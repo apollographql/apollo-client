@@ -362,7 +362,7 @@ const link = new RestLink({
 Here is one way you might customize `RestLink`:
 
 ```js
-import fetch from 'node-fetch';
+import fetch from 'cross-fetch';
 import * as camelCase from 'camelcase';
 import * as snake_case from 'snake-case';
 

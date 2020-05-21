@@ -4,6 +4,7 @@ import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference } from '../../../core';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
+import { fieldNameFromStoreName } from '../helpers';
 
 disableFragmentWarnings();
 
@@ -624,6 +625,7 @@ describe('Cache', () => {
       expect(cache.extract()).toEqual({
         "Person:123": {
           __typename: "Person",
+          id: 123,
           firstName: "Ben",
         },
       });
@@ -647,6 +649,7 @@ describe('Cache', () => {
       expect(cache.extract()).toEqual({
         "Person:123": {
           __typename: "Person",
+          id: 123,
           firstName: "Ben",
           lastName: "Newman",
         },
@@ -681,6 +684,7 @@ describe('Cache', () => {
       expect(cache.extract()).toEqual({
         "Person:123": {
           __typename: "Person",
+          id: 123,
           firstName: "Benjamin",
           lastName: "Newman",
         },
@@ -737,6 +741,7 @@ describe('Cache', () => {
       expect(cache.extract(true)).toEqual({
         "Person:321": {
           __typename: "Person",
+          id: 321,
           firstName: "Hugh",
           lastName: "Willson",
         },
@@ -1534,268 +1539,6 @@ describe("InMemoryCache#broadcastWatches", function () {
 });
 
 describe("InMemoryCache#modify", () => {
-  it("should work with single modifier function", () => {
-    const cache = new InMemoryCache;
-    const query = gql`
-      query {
-        a
-        b
-        c
-      }
-    `;
-
-    cache.writeQuery({
-      query,
-      data: {
-        a: 0,
-        b: 0,
-        c: 0,
-      },
-    });
-
-    const resultBeforeModify = cache.readQuery({ query });
-    expect(resultBeforeModify).toEqual({ a: 0, b: 0, c: 0 });
-
-    cache.modify((value, { fieldName }) => {
-      switch (fieldName) {
-        case "a": return value + 1;
-        case "b": return value - 1;
-        default: return value;
-      }
-    });
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        a: 1,
-        b: -1,
-        c: 0,
-      },
-    });
-
-    const resultAfterModify = cache.readQuery({ query });
-    expect(resultAfterModify).toEqual({ a: 1, b: -1, c: 0 });
-  });
-
-  it("should work with multiple modifier functions", () => {
-    const cache = new InMemoryCache;
-    const query = gql`
-      query {
-        a
-        b
-        c
-      }
-    `;
-
-    cache.writeQuery({
-      query,
-      data: {
-        a: 0,
-        b: 0,
-        c: 0,
-      },
-    });
-
-    const resultBeforeModify = cache.readQuery({ query });
-    expect(resultBeforeModify).toEqual({ a: 0, b: 0, c: 0 });
-
-    let checkedTypename = false;
-    cache.modify({
-      a(value) { return value + 1 },
-      b(value) { return value - 1 },
-      __typename(t: string, { readField }) {
-        expect(t).toBe("Query");
-        expect(readField("c")).toBe(0);
-        checkedTypename = true;
-        return t;
-      },
-    });
-    expect(checkedTypename).toBe(true);
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        a: 1,
-        b: -1,
-        c: 0,
-      },
-    });
-
-    const resultAfterModify = cache.readQuery({ query });
-    expect(resultAfterModify).toEqual({ a: 1, b: -1, c: 0 });
-  });
-
-  it("should allow deletion using details.DELETE", () => {
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Book: {
-          keyFields: ["isbn"],
-        },
-        Author: {
-          keyFields: ["name"],
-        },
-      },
-    });
-
-    const query = gql`
-      query {
-        currentlyReading {
-          title
-          isbn
-          author {
-            name
-            yearOfBirth
-          }
-        }
-      }
-    `;
-
-    const currentlyReading = {
-      __typename: "Book",
-      isbn: "147670032X",
-      title: "Why We're Polarized",
-      author: {
-        __typename: "Author",
-        name: "Ezra Klein",
-        yearOfBirth: 1983,
-      },
-    };
-
-    cache.writeQuery({
-      query,
-      data: {
-        currentlyReading,
-      }
-    });
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        currentlyReading: {
-          __ref: 'Book:{"isbn":"147670032X"}',
-        },
-      },
-      'Book:{"isbn":"147670032X"}': {
-        __typename: "Book",
-        isbn: "147670032X",
-        author: {
-          __ref: 'Author:{"name":"Ezra Klein"}',
-        },
-        title: "Why We're Polarized",
-      },
-      'Author:{"name":"Ezra Klein"}': {
-        __typename: "Author",
-        name: "Ezra Klein",
-        yearOfBirth: 1983,
-      },
-    });
-
-    const authorId = cache.identify(currentlyReading.author)!;
-    expect(authorId).toBe('Author:{"name":"Ezra Klein"}');
-
-    cache.modify({
-      yearOfBirth(yob) {
-        return yob + 1;
-      },
-    }, authorId);
-
-    const yobResult = cache.readFragment({
-      id: authorId,
-      fragment: gql`fragment YOB on Author { yearOfBirth }`,
-    });
-
-    expect(yobResult).toEqual({
-      __typename: "Author",
-      yearOfBirth: 1984,
-    });
-
-    const bookId = cache.identify(currentlyReading)!;
-
-    // Modifying the Book in order to modify the Author is fancier than
-    // necessary, but we want fancy use cases to work, too.
-    cache.modify({
-      author(author: Reference, { readField }) {
-        expect(readField("title")).toBe("Why We're Polarized");
-        expect(readField("name", author)).toBe("Ezra Klein");
-        cache.modify({
-          yearOfBirth(yob, { DELETE }) {
-            expect(yob).toBe(1984);
-            return DELETE;
-          },
-        }, cache.identify({
-          __typename: readField("__typename", author),
-          name: readField("name", author),
-        }));
-        return author;
-      }
-    }, bookId);
-
-    const snapshotWithoutYOB = cache.extract();
-    expect(snapshotWithoutYOB[authorId]!.yearOfBirth).toBeUndefined();
-    expect("yearOfBirth" in snapshotWithoutYOB[authorId]!).toBe(false);
-    expect(snapshotWithoutYOB).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        currentlyReading: {
-          __ref: 'Book:{"isbn":"147670032X"}',
-        },
-      },
-      'Book:{"isbn":"147670032X"}': {
-        __typename: "Book",
-        isbn: "147670032X",
-        author: {
-          __ref: 'Author:{"name":"Ezra Klein"}',
-        },
-        title: "Why We're Polarized",
-      },
-      'Author:{"name":"Ezra Klein"}': {
-        __typename: "Author",
-        name: "Ezra Klein",
-        // yearOfBirth is gone now
-      },
-    });
-
-    // Delete the whole Book.
-    cache.modify((_, { DELETE }) => DELETE, bookId);
-
-    const snapshotWithoutBook = cache.extract();
-    expect(snapshotWithoutBook[bookId]).toBeUndefined();
-    expect(bookId in snapshotWithoutBook).toBe(false);
-    expect(snapshotWithoutBook).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        currentlyReading: {
-          __ref: 'Book:{"isbn":"147670032X"}',
-        },
-      },
-      'Author:{"name":"Ezra Klein"}': {
-        __typename: "Author",
-        name: "Ezra Klein",
-      },
-    });
-
-    // Delete all fields of the Author, which also removes the object.
-    cache.modify({
-      __typename(_, { DELETE }) { return DELETE },
-      name(_, { DELETE }) { return DELETE },
-    }, authorId);
-
-    const snapshotWithoutAuthor = cache.extract();
-    expect(snapshotWithoutAuthor[authorId]).toBeUndefined();
-    expect(authorId in snapshotWithoutAuthor).toBe(false);
-    expect(snapshotWithoutAuthor).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        currentlyReading: {
-          __ref: 'Book:{"isbn":"147670032X"}',
-        },
-      },
-    });
-
-    cache.modify((_, { DELETE }) => DELETE);
-    expect(cache.extract()).toEqual({});
-  });
-
   it("can remove specific items from paginated lists", () => {
     const cache = new InMemoryCache({
       typePolicies: {
@@ -1904,21 +1647,59 @@ describe("InMemoryCache#modify", () => {
       },
     });
 
-    cache.modify({
-      comments(comments: Reference[], { readField }) {
-        debugger;
-        expect(Object.isFrozen(comments)).toBe(true);
-        expect(comments.length).toBe(3);
-        const filtered = comments.filter(comment => {
-          return readField("id", comment) !== "c1";
-        });
-        expect(filtered.length).toBe(2);
-        return filtered;
-      },
-    }, cache.identify({
+    const threadId = cache.identify({
       __typename: "Thread",
       tid: 123,
-    }));
+    })!;
+
+    const threadCommentsFragment = gql`
+      fragment Comments on Thread {
+        comments(offset: $offset, limit: $limit) {
+          id
+          text
+        }
+      }
+    `;
+
+    const threadWithComments = cache.readFragment<{
+      comments: any[],
+    }>({
+      id: threadId,
+      fragment: threadCommentsFragment,
+      variables: {
+        offset: 0,
+        // There are only three comments at this point, but let's pretend
+        // we don't know that.
+        limit: 10,
+      },
+    })!;
+
+    // First evict the comments field, so the Thread.comments merge
+    // function does not try to combine the existing (unfiltered) comments
+    // list with the incoming (filtered) comments list when we call
+    // writeFragment below.
+    expect(cache.evict({
+      id: threadId,
+      fieldName: "comments",
+      broadcast: false,
+    })).toBe(true);
+
+    const commentsWithoutC1 =
+      threadWithComments.comments.filter(comment => {
+        return comment.id !== "c1";
+      });
+
+    cache.writeFragment({
+      id: threadId,
+      fragment: threadCommentsFragment,
+      data: {
+        comments: commentsWithoutC1,
+      },
+      variables: {
+        offset: 0,
+        limit: commentsWithoutC1.length,
+      },
+    });
 
     expect(cache.gc()).toEqual(['Comment:{"id":"c1"}']);
 
@@ -1948,47 +1729,6 @@ describe("InMemoryCache#modify", () => {
         text: "friendly ping",
       },
     });
-  });
-
-  it("should not revisit deleted fields", () => {
-    const cache = new InMemoryCache;
-    const query = gql`query { a b c }`;
-
-    cache.recordOptimisticTransaction(cache => {
-      cache.writeQuery({
-        query,
-        data: {
-          a: 1,
-          b: 2,
-          c: 3,
-        },
-      })
-    }, "transaction");
-
-    cache.modify({
-      b(value, { DELETE }) {
-        expect(value).toBe(2);
-        return DELETE;
-      },
-    }, "ROOT_QUERY", true);
-
-    expect(cache.extract(true)).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        a: 1,
-        c: 3,
-      },
-    });
-
-    cache.modify((value, { fieldName }) => {
-      expect(fieldName).not.toBe("b");
-      if (fieldName === "a") expect(value).toBe(1);
-      if (fieldName === "c") expect(value).toBe(3);
-    }, "ROOT_QUERY", true);
-
-    cache.removeOptimistic("transaction");
-
-    expect(cache.extract(true)).toEqual({});
   });
 
   it("should broadcast watches for queries with changed fields", () => {
@@ -2026,10 +1766,12 @@ describe("InMemoryCache#modify", () => {
       },
       "A:1": {
         __typename: "A",
+        id: 1,
         value: 123,
       },
       "B:1": {
         __typename: "B",
+        id: 1,
         value: 321,
       },
     });
@@ -2076,25 +1818,28 @@ describe("InMemoryCache#modify", () => {
     expect(aResults).toEqual([a123]);
     expect(bResults).toEqual([b321]);
 
-    const aId = cache.identify({ __typename: "A", id: 1 });
-    const bId = cache.identify({ __typename: "B", id: 1 });
+    const aId = cache.identify({ __typename: "A", id: 1 })!;
+    expect(aId).toBe("A:1");
 
-    cache.modify({
-      value(x: number) {
-        return x + 1;
-      },
-    }, aId);
+    const bId = cache.identify({ __typename: "B", id: 1 })!;
+    expect(bId).toBe("B:1");
+
+    cache.writeFragment({
+      id: aId,
+      fragment: gql`fragment AValue on A { value }`,
+      data: { value: a123.result.a.value + 1 },
+    });
 
     const a124 = makeResult("A", 124);
 
     expect(aResults).toEqual([a123, a124]);
     expect(bResults).toEqual([b321]);
 
-    cache.modify({
-      value(x: number) {
-        return x + 1;
-      },
-    }, bId);
+    cache.writeFragment({
+      id: bId,
+      fragment: gql`fragment BValue on B { value }`,
+      data: { value: b321.result.b.value + 1 },
+    });
 
     const b322 = makeResult("B", 322);
 
@@ -2178,40 +1923,22 @@ describe("InMemoryCache#modify", () => {
     expect(cache.extract()).toEqual(fullSnapshot);
 
     function check(isbnToDelete?: string) {
-      let bookCount = 0;
+      if (isbnToDelete) {
+        cache.evict({
+          id: "ROOT_QUERY",
+          fieldName: "book",
+          args: { isbn: isbnToDelete },
+        });
+      }
 
-      cache.modify({
-        book(book: Reference, {
-          fieldName,
-          storeFieldName,
-          isReference,
-          readField,
-          DELETE,
-        }) {
-          expect(fieldName).toBe("book");
-          expect(isReference(book)).toBe(true);
-          expect(typeof readField("title", book)).toBe("string");
-          expect(readField("__typename", book)).toBe("Book");
-
-          const parts = storeFieldName.split(":");
-          expect(parts.shift()).toBe("book");
-          const keyArgs = JSON.parse(parts.join(":"));
-          expect(typeof keyArgs.isbn).toBe("string");
-          expect(Object.keys(keyArgs)).toEqual(["isbn"]);
-
-          expect(readField("isbn", book)).toBe(keyArgs.isbn);
-
-          if (isbnToDelete === keyArgs.isbn) {
-            return DELETE;
-          }
-
-          ++bookCount;
-
-          return book;
-        },
-      });
-
-      return bookCount;
+      return Object.keys(
+        cache.extract().ROOT_QUERY!
+      ).reduce((count: number, storeFieldName: string) => {
+        if ("book" === fieldNameFromStoreName(storeFieldName)) {
+          ++count;
+        }
+        return count;
+      }, 0);
     }
 
     // No change from repeatedly calling check().

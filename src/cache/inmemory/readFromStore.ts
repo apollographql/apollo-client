@@ -256,13 +256,12 @@ export class StoreReader {
       if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        let fieldValue = policies.readField(
-          objectOrReference,
-          selection,
-          // Since ExecContext extends ReadMergeContext, we can pass it
-          // here without any modifications.
-          context,
-        );
+        let fieldValue = policies.readField({
+          fieldName: selection.name.value,
+          field: selection,
+          variables: context.variables,
+          from: objectOrReference,
+        }, context);
 
         const resultName = resultKeyNameFromField(selection);
         context.path.push(resultName);

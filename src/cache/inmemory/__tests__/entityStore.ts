@@ -925,13 +925,13 @@ describe('EntityStore', () => {
       publisherOfBook: MelvilleData,
     });
 
-    cache.evict(
-      cache.identify({
+    cache.evict({
+      id: cache.identify({
         __typename: "Publisher",
         name: "Alfred A. Knopf",
       })!,
-      "yearOfFounding",
-    );
+      fieldName: "yearOfFounding",
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -951,10 +951,12 @@ describe('EntityStore', () => {
     // Nothing to garbage collect yet.
     expect(cache.gc()).toEqual([]);
 
-    cache.evict(cache.identify({
-      __typename: "Publisher",
-      name: "Melville House",
-    })!);
+    cache.evict({
+      id: cache.identify({
+        __typename: "Publisher",
+        name: "Melville House",
+      })!,
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -970,7 +972,7 @@ describe('EntityStore', () => {
       // Melville House has been removed
     });
 
-    cache.evict("ROOT_QUERY", "publisherOfBook");
+    cache.evict({ id: "ROOT_QUERY", fieldName: "publisherOfBook" });
 
     function withoutPublisherOfBook(obj: Record<string, any>) {
       const clean = { ...obj };
@@ -1049,10 +1051,10 @@ describe('EntityStore', () => {
       name: "Ted Chiang",
     };
 
-    cache.evict(
-      cache.identify(tedWithoutHobby)!,
-      "hobby",
-    );
+    cache.evict({
+      id: cache.identify(tedWithoutHobby)!,
+      fieldName: "hobby",
+    });
 
     expect(cache.diff<any>({
       query,
@@ -1082,7 +1084,7 @@ describe('EntityStore', () => {
       ],
     });
 
-    cache.evict("ROOT_QUERY", "authorOfBook");
+    cache.evict({ id: "ROOT_QUERY", fieldName: "authorOfBook"});
     expect(cache.gc().sort()).toEqual([
       'Author:{"name":"Jenny Odell"}',
       'Author:{"name":"Ted Chiang"}',
@@ -1224,6 +1226,158 @@ describe('EntityStore', () => {
     });
 
     cache.evict('ROOT_QUERY', 'authorOfBook');;
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+      },
+    });
+  });
+
+  it("allows evicting specific fields with specific arguments using EvictOptions", () => {
+    const query: DocumentNode = gql`
+      query {
+        authorOfBook(isbn: $isbn) {
+          name
+          hobby
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+
+    const TedChiangData = {
+      __typename: "Author",
+      name: "Ted Chiang",
+      hobby: "video games",
+    };
+
+    const IsaacAsimovData = {
+      __typename: "Author",
+      name: "Isaac Asimov",
+      hobby: "chemistry",
+    };
+
+    const JamesCoreyData = {
+      __typename: "Author",
+      name: "James S.A. Corey",
+      hobby: "tabletop games",
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: TedChiangData,
+      },
+      variables: {
+        isbn: "1",
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: IsaacAsimovData,
+      },
+      variables: {
+        isbn: "2",
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        authorOfBook: JamesCoreyData,
+      },
+      variables: {},
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "authorOfBook({\"isbn\":\"1\"})": {
+          __typename: "Author",
+          name: "Ted Chiang",
+          hobby: "video games",
+        },
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+        "authorOfBook({})": {
+          __typename: "Author",
+          name: "James S.A. Corey",
+          hobby: "tabletop games",
+        }
+      },
+    });
+
+    cache.evict({
+      id: 'ROOT_QUERY',
+      fieldName: 'authorOfBook',
+      args: { isbn: "1" },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+        "authorOfBook({})": {
+          __typename: "Author",
+          name: "James S.A. Corey",
+          hobby: "tabletop games",
+        }
+      },
+    });
+
+    cache.evict({
+      id: 'ROOT_QUERY',
+      fieldName: 'authorOfBook',
+      args: { isbn: '3' },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+        "authorOfBook({})": {
+          __typename: "Author",
+          name: "James S.A. Corey",
+          hobby: "tabletop games",
+        }
+      },
+    });
+
+    cache.evict({
+      id: 'ROOT_QUERY',
+      fieldName: 'authorOfBook',
+      args: {},
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "authorOfBook({\"isbn\":\"2\"})": {
+          __typename: "Author",
+          name: "Isaac Asimov",
+          hobby: "chemistry",
+        },
+      },
+    });
+
+    cache.evict({
+      id: 'ROOT_QUERY',
+      fieldName: 'authorOfBook',
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1416,10 +1570,12 @@ describe('EntityStore', () => {
     expect(cache.extract(true)).toEqual({
       "Author:2": {
         __typename: "Author",
+        id: 2,
         name: "Geoffrey Chaucer",
       },
       "Book:1": {
         __typename: "Book",
+        id: 1,
         author: { __ref: "Author:2" },
       },
       ROOT_QUERY: {
@@ -1438,6 +1594,7 @@ describe('EntityStore', () => {
     expect(cache.extract(true)).toEqual({
       "Book:1": {
         __typename: "Book",
+        id: 1,
         author: { __ref: "Author:2" },
       },
       ROOT_QUERY: {
@@ -1479,6 +1636,7 @@ describe('EntityStore', () => {
     expect(cache.extract(true)).toEqual({
       "Book:1": {
         __typename: "Book",
+        id: 1,
         author: { __ref: "Author:2" },
       },
       ROOT_QUERY: {
@@ -1757,52 +1915,6 @@ describe('EntityStore', () => {
         __typename: "Book",
         isbn: "031648637X",
         title: "The Cuckoo's Calling",
-      },
-    });
-
-    cache.modify({
-      title(title: string, {
-        isReference,
-        toReference,
-        readField,
-      }) {
-        const book = {
-          __typename: "Book",
-          isbn: readField("isbn"),
-          author: "J.K. Rowling",
-        };
-
-        // By not passing true as the second argument to toReference, we
-        // get back a Reference object, but the book.author field is not
-        // persisted into the store.
-        const refWithoutAuthor = toReference(book);
-        expect(isReference(refWithoutAuthor)).toBe(true);
-        expect(readField("author", refWithoutAuthor as Reference)).toBeUndefined();
-
-        // Update this very Book entity before we modify its title.
-        // Passing true for the second argument causes the extra
-        // book.author field to be persisted into the store.
-        const ref = toReference(book, true);
-        expect(isReference(ref)).toBe(true);
-        expect(readField("author", ref as Reference)).toBe("J.K. Rowling");
-
-        // In fact, readField doesn't need the ref if we're reading from
-        // the same entity that we're modifying.
-        expect(readField("author")).toBe("J.K. Rowling");
-
-        // Typography matters!
-        return title.split("'").join("’");
-      },
-    }, cuckoosCallingId);
-
-    expect(cache.extract()).toEqual({
-      ...threeBookSnapshot,
-      // This book was added as a side effect of the read function.
-      'Book:{"isbn":"031648637X"}': {
-        __typename: "Book",
-        isbn: "031648637X",
-        title: "The Cuckoo’s Calling",
-        author: "J.K. Rowling",
       },
     });
   });

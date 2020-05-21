@@ -6,7 +6,6 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
-import { Modifier, Modifiers } from '../core/types/common';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import { StoreObject }  from '../../utilities/graphql/storeUtils';
 import {
@@ -146,26 +145,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       variables: options.variables,
     });
 
-    this.broadcastWatches();
-  }
-
-  public modify(
-    modifiers: Modifier<any> | Modifiers,
-    dataId = "ROOT_QUERY",
-    optimistic = false,
-  ): boolean {
-    if (typeof modifiers === "string") {
-      // In beta testing of Apollo Client 3, the dataId parameter used to
-      // come before the modifiers. The type system should complain about
-      // this, but it doesn't have to be fatal if we fix it here.
-      [modifiers, dataId] = [dataId as any, modifiers];
-    }
-    const store = optimistic ? this.optimisticData : this.data;
-    if (store.modify(dataId, modifiers)) {
+    if (options.broadcast !== false) {
       this.broadcastWatches();
-      return true;
     }
-    return false;
   }
 
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
@@ -224,12 +206,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(
-    dataId: string,
+    idOrOptions: string | Cache.EvictOptions,
     fieldName?: string,
     args?: Record<string, any>,
   ): boolean {
-    const evicted = this.optimisticData.evict(dataId, fieldName, args);
-    this.broadcastWatches();
+    const evicted = this.optimisticData.evict(
+      typeof idOrOptions === "string" ? {
+        id: idOrOptions,
+        fieldName,
+        args,
+      } : idOrOptions,
+    );
+    if (typeof idOrOptions === "string" ||
+        idOrOptions.broadcast !== false) {
+      this.broadcastWatches();
+    }
     return evicted;
   }
 

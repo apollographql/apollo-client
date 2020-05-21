@@ -7,7 +7,7 @@ import { dep, wrap } from 'optimism';
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { StoreObject }  from '../../utilities/graphql/storeUtils';
+import { StoreObject, Reference }  from '../../utilities/graphql/storeUtils';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
@@ -138,10 +138,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }) || null;
   }
 
-  public write(options: Cache.WriteOptions): void {
+  public write(options: Cache.WriteOptions): Reference | undefined {
     try {
       ++this.txCount;
-      this.storeWriter.writeQueryToStore({
+      return this.storeWriter.writeToStore({
         store: this.data,
         query: options.query,
         result: options.result,

@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 
 import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
-import { StoreObject } from '../../utilities/graphql/storeUtils';
+import { StoreObject, Reference } from '../../utilities/graphql/storeUtils';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
 
@@ -16,7 +16,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): T | null;
   public abstract write<TResult = any, TVariables = any>(
     write: Cache.WriteOptions<TResult, TVariables>,
-  ): void;
+  ): Reference | undefined;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
   public abstract reset(): Promise<void>;
@@ -124,8 +124,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public writeQuery<TData = any, TVariables = any>(
     options: Cache.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    this.write({
+  ): Reference | undefined {
+    return this.write({
       dataId: options.id || 'ROOT_QUERY',
       result: options.data,
       query: options.query,
@@ -136,8 +136,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public writeFragment<TData = any, TVariables = any>(
     options: Cache.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    this.write({
+  ): Reference | undefined {
+    return this.write({
       dataId: options.id,
       result: options.data,
       variables: options.variables,

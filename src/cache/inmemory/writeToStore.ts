@@ -21,6 +21,7 @@ import {
   StoreValue,
   StoreObject,
   Reference,
+  isReference,
 } from '../../utilities/graphql/storeUtils';
 
 import { shouldInclude, hasDirectives } from '../../utilities/graphql/directives';
@@ -54,6 +55,19 @@ interface ProcessSelectionSetOptions {
   };
 }
 
+interface WriteToStoreOptions {
+  query: DocumentNode;
+  result: Object;
+  dataId?: string;
+  store: NormalizedCache;
+  variables?: Object;
+}
+
+interface WriteQueryToStoreOptions
+extends Omit<WriteToStoreOptions, "store"> {
+  store?: NormalizedCache;
+}
+
 export interface StoreWriterConfig {
   reader?: StoreReader;
   policies: Policies;
@@ -74,28 +88,27 @@ export class StoreWriter {
    * @param variables A map from the name of a variable to its value. These variables can be
    * referenced by the query document.
    */
-  public writeQueryToStore({
+  public writeQueryToStore(
+    options: WriteQueryToStoreOptions,
+  ): NormalizedCache {
+    const {
+      dataId = "ROOT_QUERY",
+      store = new EntityStore.Root({
+        policies: this.config.policies,
+      }),
+    } = options;
+    this.writeToStore({ ...options, dataId, store });
+    return store;
+  }
+
+  public writeToStore({
     query,
     result,
-    dataId = 'ROOT_QUERY',
-    store = new EntityStore.Root({
-      policies: this.config.policies,
-    }),
+    dataId,
+    store,
     variables,
-  }: {
-    query: DocumentNode;
-    result: Object;
-    dataId?: string;
-    store?: NormalizedCache;
-    variables?: Object;
-  }): NormalizedCache {
+  }: WriteToStoreOptions): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
-
-    // Any IDs written explicitly to the cache (including ROOT_QUERY, most
-    // frequently) will be retained as reachable root IDs on behalf of their
-    // owner DocumentNode objects, until/unless evicted for all owners.
-    store.retain(dataId);
-
     const merger = makeProcessedFieldsMerger();
 
     variables = {
@@ -103,11 +116,8 @@ export class StoreWriter {
       ...variables,
     };
 
-    this.processSelectionSet({
+    const objOrRef = this.processSelectionSet({
       result: result || Object.create(null),
-      // Since we already know the dataId here, pass it to
-      // processSelectionSet to skip calling policies.identify
-      // unnecessarily.
       dataId,
       selectionSet: operationDefinition.selectionSet,
       context: {
@@ -124,7 +134,16 @@ export class StoreWriter {
       },
     });
 
-    return store;
+    const ref = isReference(objOrRef) ? objOrRef :
+      dataId && makeReference(dataId) || void 0;
+
+    if (ref) {
+      // Any IDs written explicitly to the cache (including ROOT_QUERY,
+      // most frequently) will be retained as reachable root IDs.
+      store.retain(ref.__ref);
+    }
+
+    return ref;
   }
 
   private processSelectionSet({

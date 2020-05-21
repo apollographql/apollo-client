@@ -77,12 +77,12 @@ Then, initialize a GraphQL subscriptions transport link:
 ```js
 import { WebSocketLink } from 'apollo-link-ws';
 
-const wsLink = new WebSocketLink({
+const wsLink = process.browser ? new WebSocketLink({
   uri: `ws://localhost:5000/`,
   options: {
     reconnect: true
   }
-});
+}):null;
 ```
 
 ```js
@@ -97,16 +97,16 @@ const httpLink = new HttpLink({
 });
 
 // Create a WebSocket link:
-const wsLink = new WebSocketLink({
+const wsLink = process.browser ? new WebSocketLink({
   uri: `ws://localhost:5000/`,
   options: {
     reconnect: true
   }
-});
+}):null;
 
 // using the ability to split links, you can send data to each link
 // depending on what kind of operation is being sent
-const link = split(
+const link = process.browser ? split(
   // split based on operation type
   ({ query }) => {
     const definition = getMainDefinition(query);
@@ -117,7 +117,7 @@ const link = split(
   },
   wsLink,
   httpLink,
-);
+): httpLink;
 ```
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.

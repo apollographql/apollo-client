@@ -15,7 +15,7 @@ export interface ApolloContextValue {
 
 // If Symbol's aren't available, we'll use a fallback string as the context
 // property (we're looking at you, IE11).
-const contextSymbol = typeof Symbol === 'function' ?
+const contextSymbol = typeof Symbol === 'function' && Symbol.for ?
   Symbol.for('__APOLLO_CONTEXT__') :
   '__APOLLO_CONTEXT__';
 

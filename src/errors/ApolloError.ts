@@ -1,6 +1,8 @@
 import { GraphQLError } from 'graphql';
 
 import { isNonEmptyArray } from '../utilities/common/arrays';
+import { ServerParseError } from '../link/http/parseAndCheckHttpResponse';
+import { ServerError } from '../link/utils/throwServerError';
 
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty('graphQLErrors');
@@ -34,7 +36,7 @@ const generateErrorMessage = (err: ApolloError) => {
 export class ApolloError extends Error {
   public message: string;
   public graphQLErrors: ReadonlyArray<GraphQLError>;
-  public networkError: Error | null;
+  public networkError: Error | ServerParseError | ServerError | null;
 
   // An object that can be used to provide some additional information
   // about an error, e.g. specifying the type of error this is. Used
@@ -51,7 +53,7 @@ export class ApolloError extends Error {
     extraInfo,
   }: {
     graphQLErrors?: ReadonlyArray<GraphQLError>;
-    networkError?: Error | null;
+    networkError?: Error | ServerParseError | ServerError | null;
     errorMessage?: string;
     extraInfo?: any;
   }) {

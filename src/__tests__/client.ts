@@ -2943,9 +2943,11 @@ describe('@connection', () => {
     checkLastResult(cResults, { c: "see" });
 
     cache.modify({
-      c(value) {
-        expect(value).toBe("see");
-        return "saw";
+      modifiers: {
+        c(value) {
+          expect(value).toBe("see");
+          return "saw";
+        },
       },
     });
     await wait();

@@ -554,11 +554,14 @@ describe('Writing cache data from resolvers', () => {
             });
 
             cache.modify({
-              field(value) {
-                expect(value).toBe(1);
-                return 2;
+              id: 'Object:uniqueId',
+              modifiers: {
+                field(value) {
+                  expect(value).toBe(1);
+                  return 2;
+                },
               },
-            }, 'Object:uniqueId');
+            });
 
             return { start: true };
           },
@@ -611,11 +614,14 @@ describe('Writing cache data from resolvers', () => {
               },
             });
             cache.modify({
-              field(value: { field2: number }) {
-                expect(value.field2).toBe(1);
-                return { ...value, field2: 2 };
+              id: 'Object:uniqueId',
+              modifiers: {
+                field(value: { field2: number }) {
+                  expect(value.field2).toBe(1);
+                  return { ...value, field2: 2 };
+                },
               },
-            }, 'Object:uniqueId');
+            })
             return { start: true };
           },
         },

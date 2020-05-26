@@ -1919,39 +1919,42 @@ describe('EntityStore', () => {
     });
 
     cache.modify({
-      title(title: string, {
-        isReference,
-        toReference,
-        readField,
-      }) {
-        const book = {
-          __typename: "Book",
-          isbn: readField("isbn"),
-          author: "J.K. Rowling",
-        };
+      id: cuckoosCallingId,
+      modifiers: {
+        title(title: string, {
+          isReference,
+          toReference,
+          readField,
+        }) {
+          const book = {
+            __typename: "Book",
+            isbn: readField("isbn"),
+            author: "J.K. Rowling",
+          };
 
-        // By not passing true as the second argument to toReference, we
-        // get back a Reference object, but the book.author field is not
-        // persisted into the store.
-        const refWithoutAuthor = toReference(book);
-        expect(isReference(refWithoutAuthor)).toBe(true);
-        expect(readField("author", refWithoutAuthor as Reference)).toBeUndefined();
+          // By not passing true as the second argument to toReference, we
+          // get back a Reference object, but the book.author field is not
+          // persisted into the store.
+          const refWithoutAuthor = toReference(book);
+          expect(isReference(refWithoutAuthor)).toBe(true);
+          expect(readField("author", refWithoutAuthor as Reference)).toBeUndefined();
 
-        // Update this very Book entity before we modify its title.
-        // Passing true for the second argument causes the extra
-        // book.author field to be persisted into the store.
-        const ref = toReference(book, true);
-        expect(isReference(ref)).toBe(true);
-        expect(readField("author", ref as Reference)).toBe("J.K. Rowling");
+          // Update this very Book entity before we modify its title.
+          // Passing true for the second argument causes the extra
+          // book.author field to be persisted into the store.
+          const ref = toReference(book, true);
+          expect(isReference(ref)).toBe(true);
+          expect(readField("author", ref as Reference)).toBe("J.K. Rowling");
 
-        // In fact, readField doesn't need the ref if we're reading from
-        // the same entity that we're modifying.
-        expect(readField("author")).toBe("J.K. Rowling");
+          // In fact, readField doesn't need the ref if we're reading from
+          // the same entity that we're modifying.
+          expect(readField("author")).toBe("J.K. Rowling");
 
-        // Typography matters!
-        return title.split("'").join("’");
+          // Typography matters!
+          return title.split("'").join("’");
+        },
       },
-    }, cuckoosCallingId);
+    });
 
     expect(cache.extract()).toEqual({
       ...threeBookSnapshot,

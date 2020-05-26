@@ -127,6 +127,13 @@ export interface ReadFieldFunction {
   ): SafeReadonly<V> | undefined;
 }
 
+export interface ModifyOptions {
+  id?: string;
+  modifiers: Modifiers | Modifier<any>;
+  optimistic?: boolean;
+  broadcast?: boolean;
+}
+
 export type Modifier<T> = (value: T, details: {
   DELETE: any;
   fieldName: string;

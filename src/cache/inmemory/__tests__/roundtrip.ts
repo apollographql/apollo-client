@@ -5,7 +5,7 @@ import { withError } from './diffAgainstStore';
 import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
-import { Policies } from '../policies';
+import { InMemoryCache } from '../inMemoryCache';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
@@ -20,14 +20,14 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
 }
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const policies = new Policies({
+  const cache = new InMemoryCache({
     possibleTypes: {
       Character: ["Jedi", "Droid"],
     },
   });
 
-  const reader = new StoreReader({ policies });
-  const writer = new StoreWriter({ policies });
+  const reader = new StoreReader({ cache });
+  const writer = new StoreWriter(cache);
 
   const store = writer.writeQueryToStore({
     result,

@@ -436,7 +436,7 @@ export namespace EntityStore {
       return new Layer(layerId, this, replay, this.sharedLayerGroup);
     }
 
-    public removeLayer(layerId: string): Root {
+    public removeLayer(): Root {
       // Never remove the root layer.
       return this;
     }
@@ -524,14 +524,4 @@ function storeObjectReconciler(
 export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
   return !!(store instanceof EntityStore && store.group.caching);
-}
-
-export function defaultNormalizedCacheFactory(
-  seed?: NormalizedCacheObject,
-): NormalizedCache {
-  return new EntityStore.Root({
-    policies: new Policies,
-    resultCaching: true,
-    seed,
-  });
 }

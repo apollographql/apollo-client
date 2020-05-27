@@ -2,7 +2,6 @@ import gql from 'graphql-tag';
 import { EntityStore, supportsResultCaching } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
 import { DocumentNode } from 'graphql';
-import { Policies } from '../policies';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
 import { Reference } from '../../../utilities/graphql/storeUtils';
@@ -10,13 +9,15 @@ import { MissingFieldError } from '../..';
 
 describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
+    const cache = new InMemoryCache();
+
     const storeWithResultCaching = new EntityStore.Root({
-      policies: new Policies,
+      policies: cache.policies,
       resultCaching: true,
     });
 
     const storeWithoutResultCaching = new EntityStore.Root({
-      policies: new Policies,
+      policies: cache.policies,
       resultCaching: false,
     });
 

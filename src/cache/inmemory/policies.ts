@@ -37,6 +37,7 @@ import {
   storeValueIsStoreObject,
 } from './helpers';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
+import { InMemoryCache } from './inMemoryCache';
 import { SafeReadonly } from '../core/types/common';
 
 const hasOwn = Object.prototype.hasOwnProperty;
@@ -134,6 +135,13 @@ export interface FieldFunctionOptions<
   isReference: typeof isReference;
   toReference: ToReferenceFunction;
 
+  // A handy place to put field-specific data that you want to survive
+  // across multiple read function calls. Useful for field-level caching,
+  // if your read function does any expensive work.
+  storage: StorageType | null;
+
+  cache: InMemoryCache;
+
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
   // from that object instead of the current object, so this function can
@@ -144,11 +152,6 @@ export interface FieldFunctionOptions<
   // custom read functions for other fields, if defined. Always returns
   // immutable data (enforced with Object.freeze in development).
   readField: ReadFieldFunction;
-
-  // A handy place to put field-specific data that you want to survive
-  // across multiple read function calls. Useful for field-level caching,
-  // if your read function does any expensive work.
-  storage: StorageType | null;
 
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
@@ -223,20 +226,25 @@ export class Policies {
     };
   } = Object.create(null);
 
+  public readonly cache: InMemoryCache;
+
   public readonly rootIdsByTypename: Record<string, string> = Object.create(null);
   public readonly rootTypenamesById: Record<string, string> = Object.create(null);
 
   public readonly usingPossibleTypes = false;
 
   constructor(private config: {
+    cache: InMemoryCache;
     dataIdFromObject?: KeyFieldsFunction;
     possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
-  } = {}) {
+  }) {
     this.config = {
       dataIdFromObject: defaultDataIdFromObject,
       ...config,
     };
+
+    this.cache = this.config.cache;
 
     this.setRootTypename("Query");
     this.setRootTypename("Mutation");
@@ -666,6 +674,7 @@ function makeFieldFunctionOptions(
     isReference,
     toReference,
     storage,
+    cache: policies.cache,
 
     readField<T>(
       fieldNameOrOptions: string | ReadFieldOptions,

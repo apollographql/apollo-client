@@ -59,6 +59,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
+      cache: this,
       dataIdFromObject: this.config.dataIdFromObject,
       possibleTypes: this.config.possibleTypes,
       typePolicies: this.config.typePolicies,
@@ -79,13 +80,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeWriter = new StoreWriter({
-      policies: this.policies,
-      reader: this.storeReader = new StoreReader({
+    this.storeWriter = new StoreWriter(
+      this,
+      this.storeReader = new StoreReader({
+        cache: this,
         addTypename: this.addTypename,
-        policies: this.policies,
       }),
-    });
+    );
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
@@ -160,7 +161,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       : this.data;
     try {
       ++this.txCount;
-      return store.modify(options.id || "ROOT_QUERY", options.modifiers);
+      return store.modify(
+        options.id || "ROOT_QUERY",
+        options.modifiers,
+      );
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();

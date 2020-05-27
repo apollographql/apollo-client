@@ -10,7 +10,7 @@ import {
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { KeyFieldsFunction } from './policies';
 import { SafeReadonly } from '../core/types/common';
-export { StoreObject, StoreValue }
+export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
   __typename?: string;

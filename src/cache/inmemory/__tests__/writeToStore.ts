@@ -17,14 +17,13 @@ import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { StoreWriter } from '../writeToStore';
-import { defaultNormalizedCacheFactory } from '../entityStore';
+import { defaultNormalizedCacheFactory } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
-import { Policies } from '../policies';
 
 const getIdField = ({ id }: { id: string }) => id;
 
 describe('writing to the store', () => {
-  const policies = new Policies({
+  const cache = new InMemoryCache({
     dataIdFromObject(object: any) {
       if (object.__typename && object.id) {
         return object.__typename + '__' + object.id;
@@ -32,7 +31,7 @@ describe('writing to the store', () => {
     },
   });
 
-  const writer = new StoreWriter({ policies });
+  const writer = new StoreWriter(cache);
 
   it('properly normalizes a trivial item', () => {
     const query = gql`
@@ -280,11 +279,11 @@ describe('writing to the store', () => {
       },
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     expect(
       writer
@@ -424,11 +423,11 @@ describe('writing to the store', () => {
       ],
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     expect(
       writer
@@ -481,11 +480,11 @@ describe('writing to the store', () => {
       ],
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     expect(
       writer
@@ -612,11 +611,11 @@ describe('writing to the store', () => {
       simpleArray: ['one', 'two', 'three'],
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     const normalized = writer.writeQueryToStore({
       query,
@@ -690,11 +689,11 @@ describe('writing to the store', () => {
       },
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     const normalized = writer.writeQueryToStore({
       query,
@@ -763,11 +762,11 @@ describe('writing to the store', () => {
       ],
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     const normalized = writer.writeQueryToStore({
       query,
@@ -839,11 +838,11 @@ describe('writing to the store', () => {
       ],
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     const normalized = writer.writeQueryToStore({
       query,
@@ -889,11 +888,11 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         dataIdFromObject: getIdField,
       }),
-    });
+    );
 
     const store = writer.writeQueryToStore({
       query,
@@ -1151,13 +1150,13 @@ describe('writing to the store', () => {
 
     mutation.definitions.map((def: OperationDefinitionNode) => {
       if (isOperationDefinition(def)) {
-        const writer = new StoreWriter({
-          policies: new Policies({
+        const writer = new StoreWriter(
+          new InMemoryCache({
             dataIdFromObject() {
               return '5';
             },
           }),
-        });
+        );
 
         expect(
           writer.writeQueryToStore({
@@ -1234,9 +1233,9 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          author: makeReference(policies.identify(data.author)[0]!),
+          author: makeReference(cache.identify(data.author)!),
         },
-        [policies.identify(data.author)[0]!]: {
+        [cache.identify(data.author)!]: {
           firstName: data.author.firstName,
           id: data.author.id,
           __typename: data.author.__typename,
@@ -1274,9 +1273,9 @@ describe('writing to the store', () => {
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
-          author: makeReference(policies.identify(data.author)[0]!),
+          author: makeReference(cache.identify(data.author)!),
         },
-        [policies.identify(data.author)[0]!]: {
+        [cache.identify(data.author)!]: {
           __typename: data.author.__typename,
           id: data.author.id,
           info: data.author.info,
@@ -1518,11 +1517,11 @@ describe('writing to the store', () => {
         ],
       };
 
-      const writer = new StoreWriter({
-        policies: new Policies({
+      const writer = new StoreWriter(
+        new InMemoryCache({
           dataIdFromObject: getIdField,
         }),
-      });
+      );
 
       const newStore = writer.writeQueryToStore({
         query,
@@ -1542,12 +1541,12 @@ describe('writing to the store', () => {
         ],
       };
 
-      const writer = new StoreWriter({
-        policies: new Policies({
+      const writer = new StoreWriter(
+        new InMemoryCache({
           dataIdFromObject: getIdField,
           possibleTypes: {},
         }),
-      });
+      );
 
       expect(() => {
         writer.writeQueryToStore({
@@ -1592,14 +1591,14 @@ describe('writing to the store', () => {
         ],
       };
 
-      const writer = new StoreWriter({
-        policies: new Policies({
+      const writer = new StoreWriter(
+        new InMemoryCache({
           dataIdFromObject: getIdField,
           possibleTypes: {
             Todo: ["ShoppingCartItem", "TaskItem"],
           },
         }),
-      });
+      );
 
       expect(() => {
         writer.writeQueryToStore({
@@ -1620,12 +1619,12 @@ describe('writing to the store', () => {
         ],
       };
 
-      const writer = new StoreWriter({
-        policies: new Policies({
+      const writer = new StoreWriter(
+        new InMemoryCache({
           dataIdFromObject: getIdField,
           possibleTypes: {},
         }),
-      });
+      );
 
       expect(() => {
         writer.writeQueryToStore({
@@ -1640,11 +1639,11 @@ describe('writing to the store', () => {
         todos: null,
       };
 
-      const writer = new StoreWriter({
-        policies: new Policies({
+      const writer = new StoreWriter(
+        new InMemoryCache({
           dataIdFromObject: getIdField,
         }),
-      });
+      );
 
       const newStore = writer.writeQueryToStore({
         query,
@@ -1669,11 +1668,11 @@ describe('writing to the store', () => {
         id: 1,
       };
 
-      const writer = new StoreWriter({
-        policies: new Policies({
+      const writer = new StoreWriter(
+        new InMemoryCache({
           dataIdFromObject: getIdField,
         }),
-      });
+      );
 
       const newStore = writer.writeQueryToStore({
         query: defered,
@@ -1739,8 +1738,8 @@ describe('writing to the store', () => {
 
   it('can use keyArgs function instead of @connection directive', () => {
     const store = defaultNormalizedCacheFactory();
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         typePolicies: {
           Query: {
             fields: {
@@ -1751,7 +1750,7 @@ describe('writing to the store', () => {
           },
         },
       }),
-    });
+    );
 
     writer.writeQueryToStore({
       query: gql`

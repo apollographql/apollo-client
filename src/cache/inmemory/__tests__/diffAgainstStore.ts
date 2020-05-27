@@ -1,12 +1,11 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { Reference } from '../../../core';
-import { defaultNormalizedCacheFactory } from '../entityStore';
+import { defaultNormalizedCacheFactory } from './helpers';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { defaultDataIdFromObject } from '../policies';
-import { NormalizedCache } from '../types';
-import { Policies } from '../policies';
+import { NormalizedCache, Reference } from '../types';
+import { InMemoryCache } from '../inMemoryCache';
 
 disableFragmentWarnings();
 
@@ -29,11 +28,11 @@ export function withError(func: Function, regex?: RegExp) {
 }
 
 describe('diffing queries against the store', () => {
-  const policies = new Policies({
+  const cache = new InMemoryCache({
     dataIdFromObject: defaultDataIdFromObject,
   })
-  const reader = new StoreReader({ policies });
-  const writer = new StoreWriter({ policies });
+  const reader = new StoreReader({ cache });
+  const writer = new StoreWriter(cache);
 
   it(
     'expects named fragments to return complete as true when diffd against ' +
@@ -134,15 +133,15 @@ describe('diffing queries against the store', () => {
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
-    const writer = new StoreWriter({
-      policies: new Policies({
+    const writer = new StoreWriter(
+      new InMemoryCache({
         typePolicies: {
           Person: {
             keyFields: ["id"],
           },
         },
       }),
-    });
+    );
 
     const store = writer.writeQueryToStore({
       query: gql`
@@ -496,13 +495,13 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    const policies = new Policies({
+    const cache = new InMemoryCache({
       dataIdFromObject({ id }: { id: string }) {
         return id;
       },
     });
 
-    const writer = new StoreWriter({ policies });
+    const writer = new StoreWriter(cache);
 
     const store = writer.writeQueryToStore({
       query,
@@ -515,14 +514,14 @@ describe('diffing queries against the store', () => {
     });
 
     expect(result).toEqual(queryResult);
-    expect(policies.identify(result.a[0])).toEqual(['a:1']);
-    expect(policies.identify(result.a[1])).toEqual(['a:2']);
-    expect(policies.identify(result.a[2])).toEqual(['a:3']);
-    expect(policies.identify(result.c.e[0])).toEqual(['e:1']);
-    expect(policies.identify(result.c.e[1])).toEqual(['e:2']);
-    expect(policies.identify(result.c.e[2])).toEqual(['e:3']);
-    expect(policies.identify(result.c.e[3])).toEqual(['e:4']);
-    expect(policies.identify(result.c.e[4])).toEqual(['e:5']);
+    expect(cache.identify(result.a[0])).toEqual('a:1');
+    expect(cache.identify(result.a[1])).toEqual('a:2');
+    expect(cache.identify(result.a[2])).toEqual('a:3');
+    expect(cache.identify(result.c.e[0])).toEqual('e:1');
+    expect(cache.identify(result.c.e[1])).toEqual('e:2');
+    expect(cache.identify(result.c.e[2])).toEqual('e:3');
+    expect(cache.identify(result.c.e[3])).toEqual('e:4');
+    expect(cache.identify(result.c.e[4])).toEqual('e:5');
   });
 
   describe('referential equality preservation', () => {
@@ -830,11 +829,11 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const writer = new StoreWriter({
-        policies: new Policies({
+      const writer = new StoreWriter(
+        new InMemoryCache({
           dataIdFromObject: ({ id }: { id: string }) => id,
         }),
-      });
+      );
 
       const store = writer.writeQueryToStore({
         query,
@@ -955,7 +954,7 @@ describe('diffing queries against the store', () => {
         }
       `;
 
-      const policies = new Policies({
+      const cache = new InMemoryCache({
         typePolicies: {
           Query: {
             fields: {
@@ -979,8 +978,8 @@ describe('diffing queries against the store', () => {
         },
       });
 
-      const writer = new StoreWriter({ policies });
-      const reader = new StoreReader({ policies });
+      const reader = new StoreReader({ cache });
+      const writer = new StoreWriter(cache, reader);
 
       const store = writer.writeQueryToStore({
         query: listQuery,
@@ -1155,11 +1154,11 @@ describe('diffing queries against the store', () => {
 
       // Check first using generated IDs.
       check(
-        new StoreWriter({
-          policies: new Policies({
+        new StoreWriter(
+          new InMemoryCache({
             dataIdFromObject: void 0,
           })
-        }).writeQueryToStore({
+        ).writeQueryToStore({
           query,
           result: {
             user: company.users[0],
@@ -1169,11 +1168,11 @@ describe('diffing queries against the store', () => {
 
       // Now check with __typename-specific IDs.
       check(
-        new StoreWriter({
-          policies: new Policies({
+        new StoreWriter(
+          new InMemoryCache({
             dataIdFromObject: defaultDataIdFromObject,
           }),
-        }).writeQueryToStore({
+        ).writeQueryToStore({
           query,
           result: {
             user: company.users[0],

@@ -10,6 +10,8 @@ import {
 } from '../../utilities/graphql/storeUtils';
 import { DeepMerger, ReconcilerFunction } from '../../utilities/common/mergeDeep';
 
+export const hasOwn = Object.prototype.hasOwnProperty;
+
 export function getTypenameFromStoreObject(
   store: NormalizedCache,
   objectOrReference: StoreObject | Reference,

@@ -12,12 +12,10 @@ import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { NormalizedCache, NormalizedCacheObject, Modifiers, Modifier, ReadFieldFunction, ReadFieldOptions } from './types';
-import { fieldNameFromStoreName } from './helpers';
+import { hasOwn, fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';
 import { SafeReadonly } from '../core/types/common';
 import { Cache } from '../core/types/Cache';
-
-const hasOwn = Object.prototype.hasOwnProperty;
 
 const DELETE: any = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;

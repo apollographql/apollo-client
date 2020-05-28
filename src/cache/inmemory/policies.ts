@@ -31,6 +31,7 @@ import {
   ReadFieldFunction,
 } from "./types";
 import {
+  hasOwn,
   fieldNameFromStoreName,
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
@@ -39,8 +40,6 @@ import {
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { InMemoryCache } from './inMemoryCache';
 import { SafeReadonly } from '../core/types/common';
-
-const hasOwn = Object.prototype.hasOwnProperty;
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;

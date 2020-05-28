@@ -2341,6 +2341,45 @@ describe("InMemoryCache#modify", () => {
       },
     });
   });
+
+  it("should modify ROOT_QUERY only when options.id absent", function () {
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: gql`query { field }`,
+      data: {
+        field: "oyez",
+      },
+    });
+
+    const snapshot = {
+      ROOT_QUERY: {
+        __typename: "Query",
+        field: "oyez",
+      },
+    };
+
+    expect(cache.extract()).toEqual(snapshot);
+
+    function check(id: any) {
+      expect(cache.modify({
+        id,
+        modifiers: {
+          field(value) {
+            throw new Error(`unexpected value: ${value}`);
+          },
+        },
+      })).toBe(false);
+    }
+
+    check(void 0);
+    check(false);
+    check(null);
+    check("");
+    check("bogus:id");
+
+    expect(cache.extract()).toEqual(snapshot);
+  });
 });
 
 describe("cache.makeVar", () => {

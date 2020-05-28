@@ -22,6 +22,7 @@ import {
   Policies,
   TypePolicies,
 } from './policies';
+import { hasOwn } from './helpers';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
@@ -156,15 +157,24 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public modify(options: ModifyOptions): boolean {
+    if (hasOwn.call(options, "id") && !options.id) {
+      // To my knowledge, TypeScript does not currently provide a way to
+      // enforce that an optional property must *not* be undefined when
+      // present. That ability would be useful here, because we want
+      // options.id to default to ROOT_QUERY only when no options.id was
+      // provided. If the caller attempts to pass options.id with a
+      // falsy/undefined value (perhaps because cache.identify failed to
+      // identity the object), we definitely should not assume they want
+      // to modify the ROOT_QUERY object. We could throw, but it seems
+      // natural to return false to indicate that nothing was modified.
+      return false;
+    }
     const store = options.optimistic // Defaults to false.
       ? this.optimisticData
       : this.data;
     try {
       ++this.txCount;
-      return store.modify(
-        options.id || "ROOT_QUERY",
-        options.modifiers,
-      );
+      return store.modify(options.id || "ROOT_QUERY", options.modifiers);
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();

@@ -24,17 +24,22 @@ import {
   getStoreKeyName,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { IdGetter } from "./types";
 import {
+  IdGetter,
+  FieldSpecifier,
+  ReadFieldOptions,
+  ReadFieldFunction,
+} from "./types";
+import {
+  hasOwn,
   fieldNameFromStoreName,
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
 } from './helpers';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
+import { InMemoryCache } from './inMemoryCache';
 import { SafeReadonly } from '../core/types/common';
-
-const hasOwn = Object.prototype.hasOwnProperty;
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -98,21 +103,9 @@ export type FieldPolicy<
 
 type StorageType = Record<string, any>;
 
-interface FieldSpecifier {
-  typename?: string;
-  fieldName: string;
-  field?: FieldNode;
-  args?: Record<string, any>;
-  variables?: Record<string, any>;
-}
-
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0 ? spec.args :
     spec.field ? argumentsObjectFromField(spec.field, spec.variables) : null;
-}
-
-export interface ReadFieldOptions extends FieldSpecifier {
-  from?: StoreObject | Reference;
 }
 
 export interface FieldFunctionOptions<
@@ -141,6 +134,13 @@ export interface FieldFunctionOptions<
   isReference: typeof isReference;
   toReference: ToReferenceFunction;
 
+  // A handy place to put field-specific data that you want to survive
+  // across multiple read function calls. Useful for field-level caching,
+  // if your read function does any expensive work.
+  storage: StorageType | null;
+
+  cache: InMemoryCache;
+
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
   // from that object instead of the current object, so this function can
@@ -150,16 +150,7 @@ export interface FieldFunctionOptions<
   // to compute the argument values. Note that this function will invoke
   // custom read functions for other fields, if defined. Always returns
   // immutable data (enforced with Object.freeze in development).
-  readField<T = StoreValue>(options: ReadFieldOptions): SafeReadonly<T> | undefined;
-  readField<T = StoreValue>(
-    fieldName: string,
-    from?: StoreObject | Reference,
-  ): SafeReadonly<T> | undefined;
-
-  // A handy place to put field-specific data that you want to survive
-  // across multiple read function calls. Useful for field-level caching,
-  // if your read function does any expensive work.
-  storage: StorageType | null;
+  readField: ReadFieldFunction;
 
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
@@ -234,20 +225,25 @@ export class Policies {
     };
   } = Object.create(null);
 
+  public readonly cache: InMemoryCache;
+
   public readonly rootIdsByTypename: Record<string, string> = Object.create(null);
   public readonly rootTypenamesById: Record<string, string> = Object.create(null);
 
   public readonly usingPossibleTypes = false;
 
   constructor(private config: {
+    cache: InMemoryCache;
     dataIdFromObject?: KeyFieldsFunction;
     possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
-  } = {}) {
+  }) {
     this.config = {
       dataIdFromObject: defaultDataIdFromObject,
       ...config,
     };
+
+    this.cache = this.config.cache;
 
     this.setRootTypename("Query");
     this.setRootTypename("Mutation");
@@ -653,9 +649,7 @@ export class Policies {
 }
 
 export interface ReadMergeContext {
-  variables: Record<string, any>;
-  // A JSON.stringify-serialized version of context.variables.
-  varString: string;
+  variables?: Record<string, any>;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
 }
@@ -679,6 +673,7 @@ function makeFieldFunctionOptions(
     isReference,
     toReference,
     storage,
+    cache: policies.cache,
 
     readField<T>(
       fieldNameOrOptions: string | ReadFieldOptions,

@@ -7,10 +7,11 @@ import { dep, wrap } from 'optimism';
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { StoreObject }  from '../../utilities/graphql/storeUtils';
+import { StoreObject, Reference }  from '../../utilities/graphql/storeUtils';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
+  ModifyOptions,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
@@ -21,6 +22,7 @@ import {
   Policies,
   TypePolicies,
 } from './policies';
+import { hasOwn } from './helpers';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
@@ -58,6 +60,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
+      cache: this,
       dataIdFromObject: this.config.dataIdFromObject,
       possibleTypes: this.config.possibleTypes,
       typePolicies: this.config.typePolicies,
@@ -78,13 +81,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeWriter = new StoreWriter({
-      policies: this.policies,
-      reader: this.storeReader = new StoreReader({
+    this.storeWriter = new StoreWriter(
+      this,
+      this.storeReader = new StoreReader({
+        cache: this,
         addTypename: this.addTypename,
-        policies: this.policies,
       }),
-    });
+    );
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
@@ -136,17 +139,46 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }) || null;
   }
 
-  public write(options: Cache.WriteOptions): void {
-    this.storeWriter.writeQueryToStore({
-      store: this.data,
-      query: options.query,
-      result: options.result,
-      dataId: options.dataId,
-      variables: options.variables,
-    });
+  public write(options: Cache.WriteOptions): Reference | undefined {
+    try {
+      ++this.txCount;
+      return this.storeWriter.writeToStore({
+        store: this.data,
+        query: options.query,
+        result: options.result,
+        dataId: options.dataId,
+        variables: options.variables,
+      });
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
+    }
+  }
 
-    if (options.broadcast !== false) {
-      this.broadcastWatches();
+  public modify(options: ModifyOptions): boolean {
+    if (hasOwn.call(options, "id") && !options.id) {
+      // To my knowledge, TypeScript does not currently provide a way to
+      // enforce that an optional property?:type must *not* be undefined
+      // when present. That ability would be useful here, because we want
+      // options.id to default to ROOT_QUERY only when no options.id was
+      // provided. If the caller attempts to pass options.id with a
+      // falsy/undefined value (perhaps because cache.identify failed), we
+      // should not assume the goal was to modify the ROOT_QUERY object.
+      // We could throw, but it seems natural to return false to indicate
+      // that nothing was modified.
+      return false;
+    }
+    const store = options.optimistic // Defaults to false.
+      ? this.optimisticData
+      : this.data;
+    try {
+      ++this.txCount;
+      return store.modify(options.id || "ROOT_QUERY", options.fields);
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
     }
   }
 
@@ -210,18 +242,26 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     fieldName?: string,
     args?: Record<string, any>,
   ): boolean {
-    const evicted = this.optimisticData.evict(
-      typeof idOrOptions === "string" ? {
-        id: idOrOptions,
-        fieldName,
-        args,
-      } : idOrOptions,
-    );
-    if (typeof idOrOptions === "string" ||
-        idOrOptions.broadcast !== false) {
-      this.broadcastWatches();
+    try {
+      // It's unlikely that the eviction will end up invoking any other
+      // cache update operations while it's running, but {in,de}crementing
+      // this.txCount still seems like a good idea, for uniformity with
+      // the other update methods.
+      ++this.txCount;
+      return this.optimisticData.evict(
+        typeof idOrOptions === "string" ? {
+          id: idOrOptions,
+          fieldName,
+          args,
+        } : idOrOptions,
+      );
+    } finally {
+      if (!--this.txCount &&
+          (typeof idOrOptions === "string" ||
+           idOrOptions.broadcast !== false)) {
+        this.broadcastWatches();
+      }
     }
-    return evicted;
   }
 
   public reset(): Promise<void> {

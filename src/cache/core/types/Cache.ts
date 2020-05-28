@@ -12,7 +12,7 @@ export namespace Cache {
 
   export interface WriteOptions<TResult = any, TVariables = any>
     extends DataProxy.Query<TVariables> {
-    dataId: string;
+    dataId?: string;
     result: TResult;
     broadcast?: boolean;
   }

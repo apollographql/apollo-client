@@ -1,5 +1,3 @@
-import { DocumentNode } from 'graphql';
-
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
 // a generic type parameter like TExisting might be a string or some other
@@ -13,7 +11,7 @@ export class MissingFieldError {
   constructor(
     public readonly message: string,
     public readonly path: (string | number)[],
-    public readonly query: DocumentNode,
-    public readonly variables: Record<string, any>,
+    public readonly query: import('graphql').DocumentNode,
+    public readonly variables?: Record<string, any>,
   ) {}
 }

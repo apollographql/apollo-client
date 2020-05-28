@@ -37,6 +37,7 @@ import {
 import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies, ReadMergeContext } from './policies';
+import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
 
 export type VariableMap = { [name: string]: any };
@@ -45,8 +46,9 @@ interface ExecContext extends ReadMergeContext {
   query: DocumentNode;
   store: NormalizedCache;
   policies: Policies;
+  // A JSON.stringify-serialized version of context.variables.
+  varString: string;
   fragmentMap: FragmentMap;
-  variables: VariableMap;
   path: (string | number)[];
 };
 
@@ -80,8 +82,8 @@ type ExecSubSelectedArrayOptions = {
 };
 
 export interface StoreReaderConfig {
+  cache: InMemoryCache,
   addTypename?: boolean;
-  policies: Policies;
 }
 
 export class StoreReader {
@@ -123,7 +125,7 @@ export class StoreReader {
     variables,
     returnPartialData = true,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
-    const { policies } = this.config;
+    const policies = this.config.cache.policies;
 
     variables = {
       ...getDefaultValues(getQueryDefinition(query)),

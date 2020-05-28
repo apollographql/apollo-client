@@ -2942,6 +2942,21 @@ describe('@connection', () => {
     checkLastResult(abResults, a456bOyez);
     checkLastResult(cResults, { c: "see" });
 
+    cache.modify({
+      fields: {
+        c(value) {
+          expect(value).toBe("see");
+          return "saw";
+        },
+      },
+    });
+    await wait();
+
+    checkLastResult(aResults, a456);
+    checkLastResult(bResults, bOyez);
+    checkLastResult(abResults, a456bOyez);
+    checkLastResult(cResults, { c: "saw" });
+
     client.cache.evict("ROOT_QUERY", "c");
     await wait();
 
@@ -2978,6 +2993,7 @@ describe('@connection', () => {
     expect(cResults).toEqual([
       {},
       { c: "see" },
+      { c: "saw" },
       {},
     ]);
 

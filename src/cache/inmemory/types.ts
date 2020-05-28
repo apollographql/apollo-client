@@ -1,10 +1,16 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
+import {
+  StoreObject,
+  StoreValue,
+  isReference,
+  Reference,
+} from '../../utilities/graphql/storeUtils';
 import { FieldValueGetter, ToReferenceFunction } from './entityStore';
 import { KeyFieldsFunction } from './policies';
-export { StoreObject, StoreValue }
+import { SafeReadonly } from '../core/types/common';
+export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -23,7 +29,9 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
-  merge(dataId: string, incoming: StoreObject): StoreObject;
+  merge(dataId: string, incoming: StoreObject): void;
+  modify(dataId: string, modifiers: Modifier<any> | Modifiers): boolean;
+  delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
   // non-Map elements:
@@ -98,3 +106,43 @@ export type CacheResolverMap = {
 // backwards compat
 export type CustomResolver = CacheResolver;
 export type CustomResolverMap = CacheResolverMap;
+
+export interface FieldSpecifier {
+  typename?: string;
+  fieldName: string;
+  field?: FieldNode;
+  args?: Record<string, any>;
+  variables?: Record<string, any>;
+}
+
+export interface ReadFieldOptions extends FieldSpecifier {
+  from?: StoreObject | Reference;
+}
+
+export interface ReadFieldFunction {
+  <V = StoreValue>(options: ReadFieldOptions): SafeReadonly<V> | undefined;
+  <V = StoreValue>(
+    fieldName: string,
+    from?: StoreObject | Reference,
+  ): SafeReadonly<V> | undefined;
+}
+
+export interface ModifyOptions {
+  id?: string;
+  fields: Modifiers | Modifier<any>;
+  optimistic?: boolean;
+  broadcast?: boolean;
+}
+
+export type Modifier<T> = (value: T, details: {
+  DELETE: any;
+  fieldName: string;
+  storeFieldName: string;
+  isReference: typeof isReference;
+  toReference: ToReferenceFunction;
+  readField: ReadFieldFunction;
+}) => T;
+
+export type Modifiers = {
+  [fieldName: string]: Modifier<any>;
+}

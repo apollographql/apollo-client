@@ -89,10 +89,13 @@
 - `InMemoryCache` now has a method called `modify` which can be used to update the value of a specific field within a specific entity object:
   ```ts
   cache.modify({
-    comments(comments: Reference[], { readField }) {
-      return comments.filter(comment => idToRemove !== readField("id", comment));
+    id: cache.identify(post),
+    modifiers: {
+      comments(comments: Reference[], { readField }) {
+        return comments.filter(comment => idToRemove !== readField("id", comment));
+      },
     },
-  }, cache.identify(post));
+  });
   ```
   This API gracefully handles cases where multiple field values are associated with a single field name, and also removes the need for updating the cache by reading a query or fragment, modifying the result, and writing the modified result back into the cache. Behind the scenes, the `cache.evict` method is now implemented in terms of `cache.modify`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5909](https://github.com/apollographql/apollo-client/pull/5909)

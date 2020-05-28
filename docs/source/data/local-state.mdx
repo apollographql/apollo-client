@@ -176,13 +176,13 @@ const client = new ApolloClient({
   resolvers: {
     Mutation: {
       toggleTodo: (_root, variables, { cache }) => {
-        const id = cache.identify({
-          __typename: 'TodoItem',
-          id: variables.id,
-        });
-        cache.modify(id, {
-          completed(value) {
-            return !value;
+        cache.modify({
+          id: cache.identify({
+            __typename: 'TodoItem',
+            id: variables.id,
+          }),
+          modifiers: {
+            completed: value => !value,
           },
         });
         return null;
@@ -1095,7 +1095,7 @@ const client = new ApolloClient({
 };
 ```
 
-The `cache.writeQuery` and `cache.writeFragment` methods should cover most of your needs; however, there are some cases where the data you're writing to the cache depends on the data that's already there. In that scenario, you should use `cache.modify(id, modifiers)` to update specific fields within the entity object identified by `id`.
+The `cache.writeQuery` and `cache.writeFragment` methods should cover most of your needs; however, there are some cases where the data you're writing to the cache depends on the data that's already there. In that scenario, you can either use a combination of `cache.read{Query,Fragment}` followed by `cache.write{Query,Fragment}`, or use `cache.modify({ id, modifiers })` to update specific fields within the entity object identified by `id`.
 
 ### writeQuery and readQuery
 

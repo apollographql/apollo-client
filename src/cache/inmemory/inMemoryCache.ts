@@ -234,18 +234,26 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     fieldName?: string,
     args?: Record<string, any>,
   ): boolean {
-    const evicted = this.optimisticData.evict(
-      typeof idOrOptions === "string" ? {
-        id: idOrOptions,
-        fieldName,
-        args,
-      } : idOrOptions,
-    );
-    if (typeof idOrOptions === "string" ||
-        idOrOptions.broadcast !== false) {
-      this.broadcastWatches();
+    try {
+      // It's unlikely that the eviction will end up invoking any other
+      // cache update operations while it's running, but {in,de}crementing
+      // this.txCount still seems like a good idea, for uniformity with
+      // the other update methods.
+      ++this.txCount;
+      return this.optimisticData.evict(
+        typeof idOrOptions === "string" ? {
+          id: idOrOptions,
+          fieldName,
+          args,
+        } : idOrOptions,
+      );
+    } finally {
+      if (!--this.txCount &&
+          (typeof idOrOptions === "string" ||
+           idOrOptions.broadcast !== false)) {
+        this.broadcastWatches();
+      }
     }
-    return evicted;
   }
 
   public reset(): Promise<void> {

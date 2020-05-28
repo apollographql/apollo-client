@@ -87,7 +87,7 @@
     "cross-fetch": "3.0.4",
     "fetch-mock": "7.7.3",
     "graphql": "14.6.0",
-    "jest": "24.9.0",
+    "jest": "26.0.1",
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",
     "prop-types": "15.7.2",

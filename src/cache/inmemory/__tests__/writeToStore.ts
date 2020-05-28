@@ -17,7 +17,7 @@ import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { StoreWriter } from '../writeToStore';
-import { defaultNormalizedCacheFactory } from './helpers';
+import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
 
 const getIdField = ({ id }: { id: string }) => id;
@@ -51,12 +51,11 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: {
         __typename: 'Query',
@@ -82,7 +81,8 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       result,
       query,
     });
@@ -117,7 +117,8 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       result,
       query,
     });
@@ -157,7 +158,8 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       result,
       query,
       variables,
@@ -200,7 +202,8 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       result,
       query,
       variables,
@@ -234,7 +237,8 @@ describe('writing to the store', () => {
       birthDate: '20-05-1940',
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       result,
       query,
     });
@@ -286,12 +290,11 @@ describe('writing to the store', () => {
     );
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: {
         __typename: 'Query',
@@ -330,12 +333,11 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: {
         __typename: 'Query',
@@ -372,12 +374,11 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign(omit(result, 'nestedObj'), {
         __typename: "Query",
@@ -430,12 +431,11 @@ describe('writing to the store', () => {
     );
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         __typename: "Query",
@@ -487,12 +487,11 @@ describe('writing to the store', () => {
     );
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         __typename: "Query",
@@ -536,7 +535,8 @@ describe('writing to the store', () => {
       ],
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -579,7 +579,8 @@ describe('writing to the store', () => {
       ],
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -617,7 +618,8 @@ describe('writing to the store', () => {
       }),
     );
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -649,7 +651,8 @@ describe('writing to the store', () => {
       simpleArray: [null, 'two', 'three'],
     };
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -695,7 +698,8 @@ describe('writing to the store', () => {
       }),
     );
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -768,7 +772,8 @@ describe('writing to the store', () => {
       }),
     );
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -844,7 +849,8 @@ describe('writing to the store', () => {
       }),
     );
 
-    const normalized = writer.writeQueryToStore({
+    const normalized = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -894,7 +900,8 @@ describe('writing to the store', () => {
       }),
     );
 
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
@@ -913,7 +920,8 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    const store2 = writer.writeQueryToStore({
+    const store2 = writeQueryToStore({
+      writer,
       store,
       query: query2,
       result: result2,
@@ -953,12 +961,11 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: {
         __typename: 'Query',
@@ -986,12 +993,11 @@ describe('writing to the store', () => {
     };
 
     expect(
-      writer
-        .writeQueryToStore({
-          query,
-          result: cloneDeep(result),
-        })
-        .toObject(),
+      writeQueryToStore({
+        writer,
+        query,
+        result: cloneDeep(result),
+      }).toObject(),
     ).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
@@ -1159,7 +1165,8 @@ describe('writing to the store', () => {
         );
 
         expect(
-          writer.writeQueryToStore({
+          writeQueryToStore({
+            writer,
             query: {
               kind: 'Document',
               definitions: [def],
@@ -1204,12 +1211,11 @@ describe('writing to the store', () => {
         },
       });
       expect(
-        writer
-          .writeQueryToStore({
-            result: data,
-            query,
-          })
-          .toObject(),
+        writeQueryToStore({
+          writer,
+          result: data,
+          query,
+        }).toObject(),
       ).toEqual(expStore.toObject());
     });
 
@@ -1242,12 +1248,11 @@ describe('writing to the store', () => {
         },
       });
       expect(
-        writer
-          .writeQueryToStore({
-            result: data,
-            query,
-          })
-          .toObject(),
+        writeQueryToStore({
+          writer,
+          result: data,
+          query,
+        }).toObject(),
       ).toEqual(expStore.toObject());
     });
 
@@ -1282,12 +1287,11 @@ describe('writing to the store', () => {
         },
       });
       expect(
-        writer
-          .writeQueryToStore({
-            result: data,
-            query,
-          })
-          .toObject(),
+        writeQueryToStore({
+          writer,
+          result: data,
+          query,
+        }).toObject(),
       ).toEqual(expStore.toObject());
     });
   });
@@ -1349,13 +1353,15 @@ describe('writing to the store', () => {
       },
     });
 
-    const storeWithoutId = writer.writeQueryToStore({
+    const storeWithoutId = writeQueryToStore({
+      writer,
       result: dataWithoutId,
       query: queryWithoutId,
     });
     expect(storeWithoutId.toObject()).toEqual(expectedStoreWithoutId.toObject());
 
-    const storeWithId = writer.writeQueryToStore({
+    const storeWithId = writeQueryToStore({
+      writer,
       result: dataWithId,
       query: queryWithId,
       store: storeWithoutId,
@@ -1417,14 +1423,16 @@ describe('writing to the store', () => {
     });
 
     // write the first object, without an ID, placeholder
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       result: dataWithPlaceholder,
       query,
     });
     expect(store.toObject()).toEqual(expStoreWithPlaceholder.toObject());
 
     // replace with another one of different type with ID
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       result: dataWithAuthor,
       query,
       store,
@@ -1432,7 +1440,8 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual(expStoreWithAuthor.toObject());
 
     // and go back to the original:
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       result: dataWithPlaceholder,
       query,
       store,
@@ -1457,7 +1466,8 @@ describe('writing to the store', () => {
       fortuneCookie: 'Star Wars unit tests are boring',
     };
     expect(() => {
-      writer.writeQueryToStore({
+      writeQueryToStore({
+        writer,
         result,
         query,
       });
@@ -1480,12 +1490,14 @@ describe('writing to the store', () => {
       numberField: 5,
       nullField: null,
     };
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
     });
 
-    const newStore = writer.writeQueryToStore({
+    const newStore = writeQueryToStore({
+      writer,
       query,
       result: cloneDeep(result),
       store: defaultNormalizedCacheFactory(store.toObject()),
@@ -1523,7 +1535,8 @@ describe('writing to the store', () => {
         }),
       );
 
-      const newStore = writer.writeQueryToStore({
+      const newStore = writeQueryToStore({
+        writer,
         query,
         result,
       });
@@ -1549,7 +1562,8 @@ describe('writing to the store', () => {
       );
 
       expect(() => {
-        writer.writeQueryToStore({
+        writeQueryToStore({
+          writer,
           query,
           result,
         });
@@ -1601,7 +1615,8 @@ describe('writing to the store', () => {
       );
 
       expect(() => {
-        writer.writeQueryToStore({
+        writeQueryToStore({
+          writer,
           query: queryWithInterface,
           result,
         });
@@ -1627,7 +1642,8 @@ describe('writing to the store', () => {
       );
 
       expect(() => {
-        writer.writeQueryToStore({
+        writeQueryToStore({
+          writer,
           query: addTypenameToDocument(query),
           result,
         });
@@ -1645,7 +1661,8 @@ describe('writing to the store', () => {
         }),
       );
 
-      const newStore = writer.writeQueryToStore({
+      const newStore = writeQueryToStore({
+        writer,
         query,
         result,
       });
@@ -1674,7 +1691,8 @@ describe('writing to the store', () => {
         }),
       );
 
-      const newStore = writer.writeQueryToStore({
+      const newStore = writeQueryToStore({
+        writer,
         query: defered,
         result,
       });
@@ -1688,7 +1706,8 @@ describe('writing to the store', () => {
   it('properly handles the @connection directive', () => {
     const store = defaultNormalizedCacheFactory();
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query: gql`
         {
           books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -1706,7 +1725,8 @@ describe('writing to the store', () => {
       store,
     });
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query: gql`
         {
           books(skip: 2, limit: 4) @connection(key: "abc") {
@@ -1752,7 +1772,8 @@ describe('writing to the store', () => {
       }),
     );
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query: gql`
         {
           books(skip: 0, limit: 2) {
@@ -1781,7 +1802,8 @@ describe('writing to the store', () => {
       },
     });
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query: gql`
         {
           books(skip: 2, limit: 4) {
@@ -1824,7 +1846,8 @@ describe('writing to the store', () => {
       }
     `;
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query,
       result: {
         animals: [
@@ -1855,7 +1878,8 @@ describe('writing to the store', () => {
       },
     });
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query,
       result: {
         animals: [
@@ -1901,7 +1925,8 @@ describe('writing to the store', () => {
       }
     `;
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query,
       result: {
         animals: [
@@ -1932,7 +1957,8 @@ describe('writing to the store', () => {
       },
     });
 
-    writer.writeQueryToStore({
+    writeQueryToStore({
+      writer,
       query,
       result: {
         animals: [

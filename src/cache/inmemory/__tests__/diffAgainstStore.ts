@@ -1,6 +1,6 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { defaultNormalizedCacheFactory } from './helpers';
+import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { defaultDataIdFromObject } from '../policies';
@@ -119,7 +119,8 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       result,
       query,
     });
@@ -143,7 +144,8 @@ describe('diffing queries against the store', () => {
       }),
     );
 
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       query: gql`
         {
           people_one(id: "1") {
@@ -198,7 +200,8 @@ describe('diffing queries against the store', () => {
         powers: 'the force',
       },
     };
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       result: firstResult,
       query: firstQuery,
     });
@@ -233,7 +236,8 @@ describe('diffing queries against the store', () => {
           lastName: 'Smith',
         },
       };
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         result: firstResult,
         query: firstQuery,
       });
@@ -278,7 +282,8 @@ describe('diffing queries against the store', () => {
         lastName: 'Smith',
       },
     };
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       result: firstResult,
       query: firstQuery,
     });
@@ -325,7 +330,8 @@ describe('diffing queries against the store', () => {
         lastName: 'Smith',
       },
     };
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       result: firstResult,
       query: firstQuery,
     });
@@ -375,7 +381,8 @@ describe('diffing queries against the store', () => {
       },
     };
 
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       result: firstResult,
       query: firstQuery,
     });
@@ -503,7 +510,8 @@ describe('diffing queries against the store', () => {
 
     const writer = new StoreWriter(cache);
 
-    const store = writer.writeQueryToStore({
+    const store = writeQueryToStore({
+      writer,
       query,
       result: queryResult,
     });
@@ -545,7 +553,8 @@ describe('diffing queries against the store', () => {
         c: { d: 2, e: { f: 3 } },
       };
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -585,7 +594,8 @@ describe('diffing queries against the store', () => {
         c: { d: 2, e: { f: 3 } },
       };
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -631,7 +641,8 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -667,7 +678,8 @@ describe('diffing queries against the store', () => {
         a: [{ b: 1.1 }, { b: 1.2 }],
       };
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -710,7 +722,8 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -756,7 +769,8 @@ describe('diffing queries against the store', () => {
         },
       };
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -835,7 +849,8 @@ describe('diffing queries against the store', () => {
         }),
       );
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -900,7 +915,8 @@ describe('diffing queries against the store', () => {
         d: { e: 5, f: { x: 6, y: 7, z: 8 } },
       };
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query,
         result: queryResult,
       });
@@ -981,7 +997,8 @@ describe('diffing queries against the store', () => {
       const reader = new StoreReader({ cache });
       const writer = new StoreWriter(cache, reader);
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query: listQuery,
         result: listResult,
       });
@@ -1022,7 +1039,8 @@ describe('diffing queries against the store', () => {
         }
       `;
 
-      const store = writer.writeQueryToStore({
+      const store = writeQueryToStore({
+        writer,
         query: validQuery,
         result: {
           messageList: [
@@ -1154,11 +1172,12 @@ describe('diffing queries against the store', () => {
 
       // Check first using generated IDs.
       check(
-        new StoreWriter(
-          new InMemoryCache({
-            dataIdFromObject: void 0,
-          })
-        ).writeQueryToStore({
+        writeQueryToStore({
+          writer: new StoreWriter(
+            new InMemoryCache({
+              dataIdFromObject: void 0,
+            })
+          ),
           query,
           result: {
             user: company.users[0],
@@ -1168,11 +1187,12 @@ describe('diffing queries against the store', () => {
 
       // Now check with __typename-specific IDs.
       check(
-        new StoreWriter(
-          new InMemoryCache({
-            dataIdFromObject: defaultDataIdFromObject,
-          }),
-        ).writeQueryToStore({
+        writeQueryToStore({
+          writer: new StoreWriter(
+            new InMemoryCache({
+              dataIdFromObject: defaultDataIdFromObject,
+            }),
+          ),
           query,
           result: {
             user: company.users[0],

@@ -1,6 +1,7 @@
 import { NormalizedCache, NormalizedCacheObject } from "../types";
 import { EntityStore } from "../entityStore";
 import { InMemoryCache } from "../inMemoryCache";
+import { StoreWriter, WriteToStoreOptions } from "../writeToStore";
 
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
@@ -11,6 +12,25 @@ export function defaultNormalizedCacheFactory(
     resultCaching: true,
     seed,
   });
+}
+
+interface WriteQueryToStoreOptions
+extends Omit<WriteToStoreOptions, "store"> {
+  writer: StoreWriter;
+  store?: NormalizedCache;
+}
+
+export function writeQueryToStore(
+  options: WriteQueryToStoreOptions,
+): NormalizedCache {
+  const {
+    dataId = "ROOT_QUERY",
+    store = new EntityStore.Root({
+      policies: options.writer.cache.policies,
+    }),
+  } = options;
+  options.writer.writeToStore({ ...options, dataId, store });
+  return store;
 }
 
 describe("defaultNormalizedCacheFactory", function () {

@@ -28,7 +28,6 @@ import { shouldInclude, hasDirectives } from '../../utilities/graphql/directives
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
 import { ReadMergeContext } from './policies';
-import { EntityStore } from './entityStore';
 import { NormalizedCache } from './types';
 import { makeProcessedFieldsMerger, FieldValueToBeMerged } from './helpers';
 import { StoreReader } from './readFromStore';
@@ -56,17 +55,12 @@ interface ProcessSelectionSetOptions {
   };
 }
 
-interface WriteToStoreOptions {
+export interface WriteToStoreOptions {
   query: DocumentNode;
   result: Object;
   dataId?: string;
   store: NormalizedCache;
   variables?: Object;
-}
-
-interface WriteQueryToStoreOptions
-extends Omit<WriteToStoreOptions, "store"> {
-  store?: NormalizedCache;
 }
 
 export class StoreWriter {
@@ -86,20 +80,9 @@ export class StoreWriter {
    *
    * @param variables A map from the name of a variable to its value. These variables can be
    * referenced by the query document.
+   *
+   * @return A `Reference` to the written object.
    */
-  public writeQueryToStore(
-    options: WriteQueryToStoreOptions,
-  ): NormalizedCache {
-    const {
-      dataId = "ROOT_QUERY",
-      store = new EntityStore.Root({
-        policies: this.cache.policies,
-      }),
-    } = options;
-    this.writeToStore({ ...options, dataId, store });
-    return store;
-  }
-
   public writeToStore({
     query,
     result,

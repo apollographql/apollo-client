@@ -2943,7 +2943,7 @@ describe('@connection', () => {
     checkLastResult(cResults, { c: "see" });
 
     cache.modify({
-      modifiers: {
+      fields: {
         c(value) {
           expect(value).toBe("see");
           return "saw";

@@ -129,7 +129,7 @@ export interface ReadFieldFunction {
 
 export interface ModifyOptions {
   id?: string;
-  modifiers: Modifiers | Modifier<any>;
+  fields: Modifiers | Modifier<any>;
   optimistic?: boolean;
   broadcast?: boolean;
 }

@@ -555,7 +555,7 @@ describe('Writing cache data from resolvers', () => {
 
             cache.modify({
               id: 'Object:uniqueId',
-              modifiers: {
+              fields: {
                 field(value) {
                   expect(value).toBe(1);
                   return 2;
@@ -615,7 +615,7 @@ describe('Writing cache data from resolvers', () => {
             });
             cache.modify({
               id: 'Object:uniqueId',
-              modifiers: {
+              fields: {
                 field(value: { field2: number }) {
                   expect(value.field2).toBe(1);
                   return { ...value, field2: 2 };

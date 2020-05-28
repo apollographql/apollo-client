@@ -1561,7 +1561,9 @@ describe("InMemoryCache#modify", () => {
     expect(resultBeforeModify).toEqual({ a: 0, b: 0, c: 0 });
 
     cache.modify({
-      modifiers(value, { fieldName }) {
+      // Passing a function for options.fields is equivalent to invoking
+      // that function for all fields within the object.
+      fields(value, { fieldName }) {
         switch (fieldName) {
           case "a": return value + 1;
           case "b": return value - 1;
@@ -1607,7 +1609,7 @@ describe("InMemoryCache#modify", () => {
 
     let checkedTypename = false;
     cache.modify({
-      modifiers: {
+      fields: {
         a(value) { return value + 1 },
         b(value) { return value - 1 },
         __typename(t: string, { readField }) {
@@ -1703,7 +1705,7 @@ describe("InMemoryCache#modify", () => {
 
     cache.modify({
       id: authorId,
-      modifiers: {
+      fields: {
         yearOfBirth(yob) {
           return yob + 1;
         },
@@ -1726,12 +1728,12 @@ describe("InMemoryCache#modify", () => {
     // necessary, but we want fancy use cases to work, too.
     cache.modify({
       id: bookId,
-      modifiers: {
+      fields: {
         author(author: Reference, { readField }) {
           expect(readField("title")).toBe("Why We're Polarized");
           expect(readField("name", author)).toBe("Ezra Klein");
           cache.modify({
-            modifiers: {
+            fields: {
               yearOfBirth(yob, { DELETE }) {
                 expect(yob).toBe(1984);
                 return DELETE;
@@ -1775,7 +1777,7 @@ describe("InMemoryCache#modify", () => {
     // Delete the whole Book.
     cache.modify({
       id: bookId,
-      modifiers: (_, { DELETE }) => DELETE,
+      fields: (_, { DELETE }) => DELETE,
     });
 
     const snapshotWithoutBook = cache.extract();
@@ -1797,7 +1799,7 @@ describe("InMemoryCache#modify", () => {
     // Delete all fields of the Author, which also removes the object.
     cache.modify({
       id: authorId,
-      modifiers: {
+      fields: {
         __typename(_, { DELETE }) { return DELETE },
         name(_, { DELETE }) { return DELETE },
       },
@@ -1816,7 +1818,7 @@ describe("InMemoryCache#modify", () => {
     });
 
     cache.modify({
-      modifiers: (_, { DELETE }) => DELETE,
+      fields: (_, { DELETE }) => DELETE,
     });
 
     expect(cache.extract()).toEqual({});
@@ -1931,7 +1933,7 @@ describe("InMemoryCache#modify", () => {
     });
 
     cache.modify({
-      modifiers: {
+      fields: {
         comments(comments: Reference[], { readField }) {
           debugger;
           expect(Object.isFrozen(comments)).toBe(true);
@@ -1996,7 +1998,7 @@ describe("InMemoryCache#modify", () => {
     }, "transaction");
 
     cache.modify({
-      modifiers: {
+      fields: {
         b(value, { DELETE }) {
           expect(value).toBe(2);
           return DELETE;
@@ -2014,7 +2016,7 @@ describe("InMemoryCache#modify", () => {
     });
 
     cache.modify({
-      modifiers(value, { fieldName }) {
+      fields(value, { fieldName }) {
         expect(fieldName).not.toBe("b");
         if (fieldName === "a") expect(value).toBe(1);
         if (fieldName === "c") expect(value).toBe(3);
@@ -2119,7 +2121,7 @@ describe("InMemoryCache#modify", () => {
 
     cache.modify({
       id: aId,
-      modifiers: {
+      fields: {
         value(x: number) {
           return x + 1;
         },
@@ -2133,7 +2135,7 @@ describe("InMemoryCache#modify", () => {
 
     cache.modify({
       id: bId,
-      modifiers: {
+      fields: {
         value(x: number) {
           return x + 1;
         },
@@ -2225,7 +2227,7 @@ describe("InMemoryCache#modify", () => {
       let bookCount = 0;
 
       cache.modify({
-        modifiers: {
+        fields: {
           book(book: Reference, {
             fieldName,
             storeFieldName,
@@ -2364,10 +2366,8 @@ describe("InMemoryCache#modify", () => {
     function check(id: any) {
       expect(cache.modify({
         id,
-        modifiers: {
-          field(value) {
-            throw new Error(`unexpected value: ${value}`);
-          },
+        fields(value) {
+          throw new Error(`unexpected value: ${value}`);
         },
       })).toBe(false);
     }

@@ -1921,7 +1921,7 @@ describe('EntityStore', () => {
 
     cache.modify({
       id: cuckoosCallingId,
-      modifiers: {
+      fields: {
         title(title: string, {
           isReference,
           toReference,

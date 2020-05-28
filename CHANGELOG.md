@@ -90,7 +90,7 @@
   ```ts
   cache.modify({
     id: cache.identify(post),
-    modifiers: {
+    fields: {
       comments(comments: Reference[], { readField }) {
         return comments.filter(comment => idToRemove !== readField("id", comment));
       },

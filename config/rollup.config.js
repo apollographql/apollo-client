@@ -76,18 +76,20 @@ function prepareCJS(input, output) {
         const cjsBundle = output.replace(`${distDir}/`, '');
         return {
           generateBundle(_option, bundle) {
-            const { code } = bundle[cjsBundle];
-            const regex = /var React = require\('react'\);/;
-            const matches = code.match(regex);
-            if (matches && matches.length === 1) {
-              bundle[cjsBundle].code =
-                code.replace(
-                  regex,
-                  "try { var React = require('react'); } catch (error) {}"
-                );
+            const parts = bundle[cjsBundle].code.split(
+              /var React = require\('react'\);/);
+            // The React import should appear only once in the CJS bundle,
+            // since we build the CJS bundle using Rollup, which (hopefully!)
+            // deduplicates all external imports.
+            if (parts && parts.length === 2) {
+              bundle[cjsBundle].code = [
+                parts[0],
+                "try { var React = require('react'); } catch (error) {}",
+                parts[1],
+              ].join("\n");
             } else {
               throw new Error(
-                'The CJS bundle could not prepared as a single React ' +
+                'The CJS bundle could not be prepared as a single React ' +
                 'require could not be found.'
               );
             }

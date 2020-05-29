@@ -28,14 +28,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // removed from the cache.
   public abstract evict(options: Cache.EvictOptions): boolean;
 
-  // For backwards compatibility, evict can also take positional
-  // arguments. Please prefer the Cache.EvictOptions style (above).
-  public abstract evict(
-    id: string,
-    field?: string,
-    args?: Record<string, any>,
-  ): boolean;
-
   // intializer / offline / ssr API
   /**
    * Replaces existing state in the cache (if any) with the values expressed by

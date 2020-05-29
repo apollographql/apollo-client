@@ -620,7 +620,7 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(cache.evict("Author:J.K. Rowling")).toBe(false);
+    expect(cache.evict({ id: "Author:J.K. Rowling" })).toBe(false);
 
     const bookAuthorFragment = gql`
       fragment BookAuthor on Book {
@@ -689,7 +689,7 @@ describe('EntityStore', () => {
 
     expect(cache.gc()).toEqual([]);
 
-    expect(cache.evict("Author:Robert Galbraith")).toBe(true);
+    expect(cache.evict({ id: "Author:Robert Galbraith" })).toBe(true);
 
     expect(cache.gc()).toEqual([]);
 
@@ -754,9 +754,27 @@ describe('EntityStore', () => {
 
     expect(cache.gc()).toEqual([]);
 
-    // If you're ever tempted to do this, you probably want to use cache.clear()
-    // instead, but evicting the ROOT_QUERY should work at least.
-    expect(cache.evict("ROOT_QUERY")).toBe(true);
+    function checkFalsyEvictId(id: any) {
+      expect(id).toBeFalsy();
+      expect(cache.evict({
+        // Accidentally passing a falsy/undefined options.id to
+        // cache.evict (perhaps because cache.identify failed) should
+        // *not* cause the ROOT_QUERY object to be evicted! In order for
+        // cache.evict to default to ROOT_QUERY, the options.id property
+        // must be *absent* (not just undefined).
+        id,
+      })).toBe(false);
+    }
+    checkFalsyEvictId(void 0);
+    checkFalsyEvictId(null);
+    checkFalsyEvictId(false);
+    checkFalsyEvictId(0);
+    checkFalsyEvictId("");
+
+    // In other words, this is how you evict the entire ROOT_QUERY
+    // object. If you're ever tempted to do this, you probably want to use
+    // cache.clear() instead, but evicting the ROOT_QUERY should work.
+    expect(cache.evict({})).toBe(true);
 
     expect(cache.extract(true)).toEqual({
       "Book:031648637X": {
@@ -1177,7 +1195,10 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook', { isbn: "1" });
+    cache.evict({
+      fieldName: 'authorOfBook',
+      args: { isbn: "1" },
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1195,7 +1216,10 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook', { isbn: '3' });
+    cache.evict({
+      fieldName: 'authorOfBook',
+      args: { isbn: '3' },
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1213,7 +1237,10 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook', {});
+    cache.evict({
+      fieldName: 'authorOfBook',
+      args: {},
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1226,7 +1253,9 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook');;
+    cache.evict({
+      fieldName: 'authorOfBook',
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1506,12 +1535,14 @@ describe('EntityStore', () => {
       query: queryWithoutAliases,
     })).toBe(resultWithoutAliases);
 
-    cache.evict(cache.identify({
-      __typename: "ABCs",
-      a: "ay",
-      b: "bee",
-      c: "see",
-    })!);
+    cache.evict({
+      id: cache.identify({
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      }),
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1590,7 +1621,7 @@ describe('EntityStore', () => {
       id: 2,
     })!;
 
-    expect(cache.evict(authorId)).toBe(true);
+    expect(cache.evict({ id: authorId })).toBe(true);
 
     expect(cache.extract(true)).toEqual({
       "Book:1": {
@@ -1604,7 +1635,7 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(cache.evict(authorId)).toBe(false);
+    expect(cache.evict({ id: authorId })).toBe(false);
 
     const missing = [
       new MissingFieldError(

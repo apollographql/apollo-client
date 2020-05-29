@@ -27,7 +27,7 @@ export namespace Cache {
   }
 
   export interface EvictOptions {
-    id: string;
+    id?: string;
     fieldName?: string;
     args?: Record<string, any>;
     broadcast?: boolean;

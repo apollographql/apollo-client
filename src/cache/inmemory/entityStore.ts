@@ -344,13 +344,15 @@ export abstract class EntityStore implements NormalizedCache {
   public toReference = (
     object: StoreObject,
     mergeIntoStore?: boolean,
-  ) => {
+  ): Reference | undefined => {
     const [id] = this.policies.identify(object);
-    const ref = id && makeReference(id);
-    if (ref && mergeIntoStore) {
-      this.merge(id!, object);
+    if (id) {
+      const ref = makeReference(id);
+      if (mergeIntoStore) {
+        this.merge(id, object);
+      }
+      return ref;
     }
-    return ref;
   }
 }
 

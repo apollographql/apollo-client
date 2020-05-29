@@ -74,6 +74,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return [];
   }
 
+  public modify(options: Cache.ModifyOptions): boolean {
+    return false;
+  }
+
   // Experimental API
 
   public transformForLink(document: DocumentNode): DocumentNode {

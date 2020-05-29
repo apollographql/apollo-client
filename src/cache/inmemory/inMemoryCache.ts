@@ -11,7 +11,6 @@ import { StoreObject, Reference }  from '../../utilities/graphql/storeUtils';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
-  ModifyOptions,
 } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
@@ -156,7 +155,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public modify(options: ModifyOptions): boolean {
+  public modify(options: Cache.ModifyOptions): boolean {
     if (hasOwn.call(options, "id") && !options.id) {
       // To my knowledge, TypeScript does not currently provide a way to
       // enforce that an optional property?:type must *not* be undefined

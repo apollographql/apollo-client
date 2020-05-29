@@ -63,6 +63,37 @@ function prepareCJS(input, output) {
     },
     plugins: [
       nodeResolve(),
+      // When generating the `dist/core/core.cjs.js` entry point (in
+      // `config/prepareDist.js`), we filter and re-export the exports we
+      // need from the main Apollo Client CJS bundle (to exclude React related
+      // code). This means that consumers of `core.cjs.js` attempt to load the
+      // full AC CJS bundle first (before filtering exports), which then means
+      // the React require in the AC CJS bundle is attempted and not found
+      // (since people using `core.cjs.js` want to use Apollo Client without
+      // React). To address this, we make React an optional require in the CJS
+      // bundle.
+      (() => {
+        const cjsBundle = output.replace(`${distDir}/`, '');
+        return {
+          generateBundle(_option, bundle) {
+            const { code } = bundle[cjsBundle];
+            const regex = /var React = require\('react'\);/;
+            const matches = code.match(regex);
+            if (matches && matches.length === 1) {
+              bundle[cjsBundle].code =
+                code.replace(
+                  regex,
+                  "try { var React = require('react'); } catch (error) {}"
+                );
+            } else {
+              throw new Error(
+                'The CJS bundle could not prepared as a single React ' +
+                'require could not be found.'
+              );
+            }
+          }
+        }
+      })()
     ],
   };
 }

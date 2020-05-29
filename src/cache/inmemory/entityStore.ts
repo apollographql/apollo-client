@@ -214,17 +214,19 @@ export abstract class EntityStore implements NormalizedCache {
 
   public evict(options: Cache.EvictOptions): boolean {
     let evicted = false;
-    if (hasOwn.call(this.data, options.id)) {
-      evicted = this.delete(options.id, options.fieldName, options.args);
+    if (options.id) {
+      if (hasOwn.call(this.data, options.id)) {
+        evicted = this.delete(options.id, options.fieldName, options.args);
+      }
+      if (this instanceof Layer) {
+        evicted = this.parent.evict(options) || evicted;
+      }
+      // Always invalidate the field to trigger rereading of watched
+      // queries, even if no cache data was modified by the eviction,
+      // because queries may depend on computed fields with custom read
+      // functions, whose values are not stored in the EntityStore.
+      this.group.dirty(options.id, options.fieldName || "__exists");
     }
-    if (this instanceof Layer) {
-      evicted = this.parent.evict(options) || evicted;
-    }
-    // Always invalidate the field to trigger rereading of watched
-    // queries, even if no cache data was modified by the eviction,
-    // because queries may depend on computed fields with custom read
-    // functions, whose values are not stored in the EntityStore.
-    this.group.dirty(options.id, options.fieldName || "__exists");
     return evicted;
   }
 

@@ -236,28 +236,24 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.policies.identify(object)[0];
   }
 
-  public evict(
-    idOrOptions: string | Cache.EvictOptions,
-    fieldName?: string,
-    args?: Record<string, any>,
-  ): boolean {
+  public evict(options: Cache.EvictOptions): boolean {
+    if (!options.id) {
+      if (hasOwn.call(options, "id")) {
+        // See comment in modify method about why we return false when
+        // options.id exists but is falsy/undefined.
+        return false;
+      }
+      options = { ...options, id: "ROOT_QUERY" };
+    }
     try {
       // It's unlikely that the eviction will end up invoking any other
       // cache update operations while it's running, but {in,de}crementing
       // this.txCount still seems like a good idea, for uniformity with
       // the other update methods.
       ++this.txCount;
-      return this.optimisticData.evict(
-        typeof idOrOptions === "string" ? {
-          id: idOrOptions,
-          fieldName,
-          args,
-        } : idOrOptions,
-      );
+      return this.optimisticData.evict(options);
     } finally {
-      if (!--this.txCount &&
-          (typeof idOrOptions === "string" ||
-           idOrOptions.broadcast !== false)) {
+      if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();
       }
     }

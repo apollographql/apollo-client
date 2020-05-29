@@ -11,11 +11,18 @@ import {
 import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { NormalizedCache, NormalizedCacheObject, Modifiers, Modifier, ReadFieldFunction, ReadFieldOptions } from './types';
+import { NormalizedCache, NormalizedCacheObject } from './types';
 import { hasOwn, fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';
-import { SafeReadonly } from '../core/types/common';
 import { Cache } from '../core/types/Cache';
+import {
+  SafeReadonly,
+  Modifier,
+  Modifiers,
+  ReadFieldFunction,
+  ReadFieldOptions,
+  ToReferenceFunction,
+} from '../core/types/common';
 
 const DELETE: any = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
@@ -110,7 +117,7 @@ export abstract class EntityStore implements NormalizedCache {
 
   public modify(
     dataId: string,
-    modifiers: Modifier<any> | Modifiers,
+    fields: Modifier<any> | Modifiers,
   ): boolean {
     const storeObject = this.lookup(dataId);
 
@@ -137,9 +144,9 @@ export abstract class EntityStore implements NormalizedCache {
         const fieldName = fieldNameFromStoreName(storeFieldName);
         let fieldValue = storeObject[storeFieldName];
         if (fieldValue === void 0) return;
-        const modify: Modifier<StoreValue> = typeof modifiers === "function"
-          ? modifiers
-          : modifiers[storeFieldName] || modifiers[fieldName];
+        const modify: Modifier<StoreValue> = typeof fields === "function"
+          ? fields
+          : fields[storeFieldName] || fields[fieldName];
         if (modify) {
           let newValue = modify === delModifier ? DELETE :
             modify(maybeDeepFreeze(fieldValue), {
@@ -341,10 +348,7 @@ export abstract class EntityStore implements NormalizedCache {
   // Bound function that converts an object with a __typename and primary
   // key fields to a Reference object. Pass true for mergeIntoStore if you
   // would also like this object to be persisted into the store.
-  public toReference = (
-    object: StoreObject,
-    mergeIntoStore?: boolean,
-  ): Reference | undefined => {
+  public toReference: ToReferenceFunction = (object, mergeIntoStore) => {
     const [id] = this.policies.identify(object);
     if (id) {
       const ref = makeReference(id);
@@ -355,8 +359,6 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 }
-
-export type ToReferenceFunction = EntityStore["toReference"];
 
 export type FieldValueGetter = EntityStore["getFieldValue"];
 

@@ -1,4 +1,5 @@
 import { DataProxy } from './DataProxy';
+import { Modifier, Modifiers } from './common';
 
 export namespace Cache {
   export type WatchCallback = (diff: Cache.DiffResult<any>) => void;
@@ -30,6 +31,13 @@ export namespace Cache {
     id: string;
     fieldName?: string;
     args?: Record<string, any>;
+    broadcast?: boolean;
+  }
+
+  export interface ModifyOptions {
+    id?: string;
+    fields: Modifiers | Modifier<any>;
+    optimistic?: boolean;
     broadcast?: boolean;
   }
 

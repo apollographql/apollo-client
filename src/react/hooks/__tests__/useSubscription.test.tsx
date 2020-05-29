@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, cleanup, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 
@@ -6,9 +7,6 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useSubscription } from '../useSubscription';
-import { requireReactLazily } from '../../react';
-
-const React = requireReactLazily();
 
 describe('useSubscription Hook', () => {
   afterEach(cleanup);

@@ -24,12 +24,7 @@ import {
   getStoreKeyName,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import {
-  IdGetter,
-  FieldSpecifier,
-  ReadFieldOptions,
-  ReadFieldFunction,
-} from "./types";
+import { IdGetter } from "./types";
 import {
   hasOwn,
   fieldNameFromStoreName,
@@ -37,9 +32,15 @@ import {
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
 } from './helpers';
-import { FieldValueGetter, ToReferenceFunction } from './entityStore';
+import { FieldValueGetter } from './entityStore';
 import { InMemoryCache } from './inMemoryCache';
-import { SafeReadonly } from '../core/types/common';
+import {
+  SafeReadonly,
+  FieldSpecifier,
+  ToReferenceFunction,
+  ReadFieldFunction,
+  ReadFieldOptions,
+} from '../core/types/common';
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;

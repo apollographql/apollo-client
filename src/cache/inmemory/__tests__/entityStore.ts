@@ -1555,11 +1555,11 @@ describe('EntityStore', () => {
 
     expect(() => cache.readQuery({
       query: queryWithAliases,
-    })).toThrow(/Dangling reference to missing ABCs:.* object/);
+    })).toThrow(/Can't find field 'a' on ABCs:.* object/);
 
     expect(() => cache.readQuery({
       query: queryWithoutAliases,
-    })).toThrow(/Dangling reference to missing ABCs:.* object/);
+    })).toThrow(/Can't find field 'a' on ABCs:.* object/);
   });
 
   it("gracefully handles eviction amid optimistic updates", () => {
@@ -1639,8 +1639,8 @@ describe('EntityStore', () => {
 
     const missing = [
       new MissingFieldError(
-        "Dangling reference to missing Author:2 object",
-        ["book", "author"],
+        "Can't find field 'name' on Author:2 object",
+        ["book", "author", "name"],
         expect.anything(),
         expect.anything(),
       ),

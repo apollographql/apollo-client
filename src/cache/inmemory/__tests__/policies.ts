@@ -2513,7 +2513,9 @@ describe("type policies", function () {
 
       expect(cache.gc()).toEqual([]);
 
-      expect(cache.evict("ROOT_QUERY", "book")).toBe(true);
+      expect(cache.evict({
+        fieldName: "book",
+      })).toBe(true);
 
       expect(cache.gc().sort()).toEqual([
         'Book:{"isbn":"0393354326"}',

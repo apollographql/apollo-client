@@ -1,3 +1,4 @@
+import React, { useState, useReducer, Fragment } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
@@ -11,12 +12,8 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useQuery } from '../useQuery';
-import { requireReactLazily } from '../../react';
 import { QueryFunctionOptions } from '../..';
 import { NetworkStatus } from '../../../core/networkStatus';
-
-const React = requireReactLazily();
-const { useState, useReducer, Fragment } = React;
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`

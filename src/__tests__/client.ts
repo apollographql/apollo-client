@@ -2913,7 +2913,7 @@ describe('@connection', () => {
     expect(checkLastResult(abResults, a456bOyez)).toBe(a456bOyez);
 
     // Now invalidate the ROOT_QUERY.a field.
-    client.cache.evict("ROOT_QUERY", "a");
+    client.cache.evict({ fieldName: "a" });
     await wait();
 
     // The results are structurally the same, but the result objects have
@@ -2942,7 +2942,22 @@ describe('@connection', () => {
     checkLastResult(abResults, a456bOyez);
     checkLastResult(cResults, { c: "see" });
 
-    client.cache.evict("ROOT_QUERY", "c");
+    cache.modify({
+      fields: {
+        c(value) {
+          expect(value).toBe("see");
+          return "saw";
+        },
+      },
+    });
+    await wait();
+
+    checkLastResult(aResults, a456);
+    checkLastResult(bResults, bOyez);
+    checkLastResult(abResults, a456bOyez);
+    checkLastResult(cResults, { c: "saw" });
+
+    client.cache.evict({ fieldName: "c" });
     await wait();
 
     checkLastResult(aResults, a456);
@@ -2978,6 +2993,7 @@ describe('@connection', () => {
     expect(cResults).toEqual([
       {},
       { c: "see" },
+      { c: "saw" },
       {},
     ]);
 

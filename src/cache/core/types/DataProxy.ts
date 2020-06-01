@@ -30,7 +30,7 @@ export namespace DataProxy {
      * value returned by your `dataIdFromObject` function. If a value with your
      * id does not exist in the store, `null` will be returned.
      */
-    id: string;
+    id?: string;
 
     /**
      * A GraphQL document created using the `gql` template string tag from

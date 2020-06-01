@@ -2,7 +2,6 @@ import gql from 'graphql-tag';
 import { EntityStore, supportsResultCaching } from '../entityStore';
 import { InMemoryCache } from '../inMemoryCache';
 import { DocumentNode } from 'graphql';
-import { Policies } from '../policies';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
 import { Reference } from '../../../utilities/graphql/storeUtils';
@@ -10,13 +9,15 @@ import { MissingFieldError } from '../..';
 
 describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
+    const cache = new InMemoryCache();
+
     const storeWithResultCaching = new EntityStore.Root({
-      policies: new Policies,
+      policies: cache.policies,
       resultCaching: true,
     });
 
     const storeWithoutResultCaching = new EntityStore.Root({
-      policies: new Policies,
+      policies: cache.policies,
       resultCaching: false,
     });
 
@@ -619,7 +620,7 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(cache.evict("Author:J.K. Rowling")).toBe(false);
+    expect(cache.evict({ id: "Author:J.K. Rowling" })).toBe(false);
 
     const bookAuthorFragment = gql`
       fragment BookAuthor on Book {
@@ -688,7 +689,7 @@ describe('EntityStore', () => {
 
     expect(cache.gc()).toEqual([]);
 
-    expect(cache.evict("Author:Robert Galbraith")).toBe(true);
+    expect(cache.evict({ id: "Author:Robert Galbraith" })).toBe(true);
 
     expect(cache.gc()).toEqual([]);
 
@@ -753,9 +754,27 @@ describe('EntityStore', () => {
 
     expect(cache.gc()).toEqual([]);
 
-    // If you're ever tempted to do this, you probably want to use cache.clear()
-    // instead, but evicting the ROOT_QUERY should work at least.
-    expect(cache.evict("ROOT_QUERY")).toBe(true);
+    function checkFalsyEvictId(id: any) {
+      expect(id).toBeFalsy();
+      expect(cache.evict({
+        // Accidentally passing a falsy/undefined options.id to
+        // cache.evict (perhaps because cache.identify failed) should
+        // *not* cause the ROOT_QUERY object to be evicted! In order for
+        // cache.evict to default to ROOT_QUERY, the options.id property
+        // must be *absent* (not just undefined).
+        id,
+      })).toBe(false);
+    }
+    checkFalsyEvictId(void 0);
+    checkFalsyEvictId(null);
+    checkFalsyEvictId(false);
+    checkFalsyEvictId(0);
+    checkFalsyEvictId("");
+
+    // In other words, this is how you evict the entire ROOT_QUERY
+    // object. If you're ever tempted to do this, you probably want to use
+    // cache.clear() instead, but evicting the ROOT_QUERY should work.
+    expect(cache.evict({})).toBe(true);
 
     expect(cache.extract(true)).toEqual({
       "Book:031648637X": {
@@ -1176,7 +1195,10 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook', { isbn: "1" });
+    cache.evict({
+      fieldName: 'authorOfBook',
+      args: { isbn: "1" },
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1194,7 +1216,10 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook', { isbn: '3' });
+    cache.evict({
+      fieldName: 'authorOfBook',
+      args: { isbn: '3' },
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1212,7 +1237,10 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook', {});
+    cache.evict({
+      fieldName: 'authorOfBook',
+      args: {},
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1225,7 +1253,9 @@ describe('EntityStore', () => {
       },
     });
 
-    cache.evict('ROOT_QUERY', 'authorOfBook');;
+    cache.evict({
+      fieldName: 'authorOfBook',
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1505,12 +1535,14 @@ describe('EntityStore', () => {
       query: queryWithoutAliases,
     })).toBe(resultWithoutAliases);
 
-    cache.evict(cache.identify({
-      __typename: "ABCs",
-      a: "ay",
-      b: "bee",
-      c: "see",
-    })!);
+    cache.evict({
+      id: cache.identify({
+        __typename: "ABCs",
+        a: "ay",
+        b: "bee",
+        c: "see",
+      }),
+    });
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -1589,7 +1621,7 @@ describe('EntityStore', () => {
       id: 2,
     })!;
 
-    expect(cache.evict(authorId)).toBe(true);
+    expect(cache.evict({ id: authorId })).toBe(true);
 
     expect(cache.extract(true)).toEqual({
       "Book:1": {
@@ -1603,7 +1635,7 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(cache.evict(authorId)).toBe(false);
+    expect(cache.evict({ id: authorId })).toBe(false);
 
     const missing = [
       new MissingFieldError(
@@ -1915,6 +1947,55 @@ describe('EntityStore', () => {
         __typename: "Book",
         isbn: "031648637X",
         title: "The Cuckoo's Calling",
+      },
+    });
+
+    cache.modify({
+      id: cuckoosCallingId,
+      fields: {
+        title(title: string, {
+          isReference,
+          toReference,
+          readField,
+        }) {
+          const book = {
+            __typename: "Book",
+            isbn: readField("isbn"),
+            author: "J.K. Rowling",
+          };
+
+          // By not passing true as the second argument to toReference, we
+          // get back a Reference object, but the book.author field is not
+          // persisted into the store.
+          const refWithoutAuthor = toReference(book);
+          expect(isReference(refWithoutAuthor)).toBe(true);
+          expect(readField("author", refWithoutAuthor as Reference)).toBeUndefined();
+
+          // Update this very Book entity before we modify its title.
+          // Passing true for the second argument causes the extra
+          // book.author field to be persisted into the store.
+          const ref = toReference(book, true);
+          expect(isReference(ref)).toBe(true);
+          expect(readField("author", ref as Reference)).toBe("J.K. Rowling");
+
+          // In fact, readField doesn't need the ref if we're reading from
+          // the same entity that we're modifying.
+          expect(readField("author")).toBe("J.K. Rowling");
+
+          // Typography matters!
+          return title.split("'").join("’");
+        },
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ...threeBookSnapshot,
+      // This book was added as a side effect of the read function.
+      'Book:{"isbn":"031648637X"}': {
+        __typename: "Book",
+        isbn: "031648637X",
+        title: "The Cuckoo’s Calling",
+        author: "J.K. Rowling",
       },
     });
   });

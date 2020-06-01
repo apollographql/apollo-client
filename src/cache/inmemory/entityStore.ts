@@ -513,7 +513,7 @@ class Layer extends EntityStore {
 function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
-  property: string | number,
+  property: string,
 ): StoreValue {
   const existingValue = existingObject[property];
   const incomingValue = incomingObject[property];

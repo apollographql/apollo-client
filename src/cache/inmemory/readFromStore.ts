@@ -213,6 +213,20 @@ export class StoreReader {
     objectOrReference,
     context,
   }: ExecSelectionSetOptions): ExecResult {
+    if (isReference(objectOrReference) &&
+        !context.policies.rootTypenamesById[objectOrReference.__ref] &&
+        !context.store.has(objectOrReference.__ref)) {
+      return {
+        result: {},
+        missing: [missingFromInvariant(
+          new InvariantError(
+            `Dangling reference to missing ${objectOrReference.__ref} object`
+          ),
+          context,
+        )],
+      };
+    }
+
     const { fragmentMap, variables, policies, store } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };

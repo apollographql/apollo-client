@@ -2397,7 +2397,7 @@ describe("type policies", function () {
       });
 
       expect(read).toThrow(
-        /Can't find field 'title' on Book:{"isbn":"156858217X"} object/
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
       );
 
       const stealThisData = {
@@ -2529,11 +2529,11 @@ describe("type policies", function () {
       });
 
       expect(() => read("0393354326")).toThrow(
-        /Can't find field 'title' on Book:{"isbn":"0393354326"} object/
+        /Dangling reference to missing Book:{"isbn":"0393354326"} object/
       );
 
       expect(() => read("156858217X")).toThrow(
-        /Can't find field 'title' on Book:{"isbn":"156858217X"} object/
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
       );
     });
 

@@ -30,7 +30,7 @@ export function makeReference(id: string): Reference {
 }
 
 export function isReference(obj: any): obj is Reference {
-  return obj && typeof obj === 'object' && typeof obj.__ref === 'string';
+  return Boolean(obj && typeof obj === 'object' && typeof obj.__ref === 'string');
 }
 
 export type StoreValue =

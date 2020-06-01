@@ -1,5 +1,6 @@
 import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
+import { equal } from '@wry/equality';
 
 import {
   createFragmentMap,
@@ -345,6 +346,10 @@ function warnAboutDataLoss(
   // It's always safe to replace a reference, since it refers to data
   // safely stored elsewhere.
   if (isReference(existing)) return;
+
+  // If the values are structurally equivalent, we do not need to worry
+  // about incoming replacing existing.
+  if (equal(existing, incoming)) return;
 
   // If we're replacing every key of the existing object, then the
   // existing data would be overwritten even if the objects were

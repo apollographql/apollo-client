@@ -85,11 +85,8 @@ export abstract class EntityStore implements NormalizedCache {
 
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
-    const merged = new DeepMerger(storeObjectReconciler).merge(
-      existing,
-      incoming,
-      this.getFieldValue,
-    );
+    const merged = new DeepMerger(storeObjectReconciler)
+      .merge(existing, incoming, this);
     // Even if merged === existing, existing may have come from a lower
     // layer, so we always need to set this.data[dataId] on this level.
     this.data[dataId] = merged;
@@ -519,7 +516,7 @@ function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
   property: string,
-  getFieldValue: FieldValueGetter,
+  store: EntityStore,
 ): StoreValue {
   const existingValue = existingObject[property];
   const incomingValue = incomingObject[property];
@@ -534,7 +531,7 @@ function storeObjectReconciler(
   }
 
   if (process.env.NODE_ENV !== "production") {
-    warnAboutDataLoss(existingObject, incomingObject, property, getFieldValue);
+    warnAboutDataLoss(existingObject, incomingObject, property, store);
   }
 
   return incomingValue;
@@ -548,10 +545,10 @@ function warnAboutDataLoss(
   existingObject: StoreObject | Reference,
   incomingObject: StoreObject | Reference,
   storeFieldName: string,
-  getFieldValue: FieldValueGetter,
+  store: EntityStore,
 ) {
   const getChild = (objOrRef: StoreObject | Reference): StoreObject | false => {
-    const child = getFieldValue<StoreObject>(objOrRef, storeFieldName);
+    const child = store.getFieldValue<StoreObject>(objOrRef, storeFieldName);
     return typeof child === "object" && child;
   };
 
@@ -565,19 +562,28 @@ function warnAboutDataLoss(
   // safely stored elsewhere.
   if (isReference(existing)) return;
 
+  const parentType =
+    store.getFieldValue<string>(existingObject, "__typename") ||
+    store.getFieldValue<string>(incomingObject, "__typename");
+
+  const fieldName = fieldNameFromStoreName(storeFieldName);
+
+  if (parentType &&
+      fieldName &&
+      store.policies.hasMergeFunction(parentType, fieldName)) {
+    // If a merge function is defined for this field within this type,
+    // trust it to do the right thing about (not) clobbering data.
+    return;
+  }
+
   // If we're replacing every key of the existing object, then the
   // existing data would be overwritten even if the objects were
   // normalized, so warning would not be helpful here.
   if (Object.keys(existing).every(
-    key => getFieldValue(incoming, key) !== void 0)) {
+    key => store.getFieldValue(incoming, key) !== void 0)) {
     return;
   }
 
-  const parentType =
-    getFieldValue(existingObject, "__typename") ||
-    getFieldValue(incomingObject, "__typename");
-
-  const fieldName = fieldNameFromStoreName(storeFieldName);
   const typeDotName = `${parentType}.${fieldName}`;
 
   if (warnings.has(typeDotName)) return;
@@ -589,7 +595,7 @@ function warnAboutDataLoss(
   if (!Array.isArray(existing) &&
       !Array.isArray(incoming)) {
     [existing, incoming].forEach(child => {
-      const typename = getFieldValue(child, "__typename");
+      const typename = store.getFieldValue(child, "__typename");
       if (typeof typename === "string" &&
           !childTypenames.includes(typename)) {
         childTypenames.push(typename);

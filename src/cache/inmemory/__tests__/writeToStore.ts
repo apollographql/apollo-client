@@ -1331,7 +1331,48 @@ describe('writing to the store', () => {
         }
       }
     `;
-    const expectedStoreWithoutId = defaultNormalizedCacheFactory({
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            author: {
+              // Silence "Cache data may be lost..." warnings by always
+              // preferring the incoming value.
+              merge(existing, incoming, { readField, isReference }) {
+                if (existing) {
+                  expect(isReference(existing)).toBe(false);
+                  expect(readField({
+                    fieldName: "__typename",
+                    from: existing,
+                  })).toBe("Author");
+
+                  expect(isReference(incoming)).toBe(true);
+                  expect(readField({
+                    fieldName: "__typename",
+                    from: incoming,
+                  })).toBe("Author");
+                }
+
+                return incoming;
+              },
+            },
+          },
+        },
+      },
+      dataIdFromObject(object: any) {
+        if (object.__typename && object.id) {
+          return object.__typename + '__' + object.id;
+        }
+      },
+    });
+
+    cache.writeQuery({
+      query: queryWithoutId,
+      data: dataWithoutId,
+    });
+
+    expect(cache.extract()).toEqual({
       ROOT_QUERY: {
         __typename: 'Query',
         author: {
@@ -1341,7 +1382,13 @@ describe('writing to the store', () => {
         },
       },
     });
-    const expectedStoreWithId = defaultNormalizedCacheFactory({
+
+    cache.writeQuery({
+      query: queryWithId,
+      data: dataWithId,
+    });
+
+    expect(cache.extract()).toEqual({
       Author__129: {
         firstName: 'John',
         id: '129',
@@ -1352,21 +1399,6 @@ describe('writing to the store', () => {
         author: makeReference('Author__129'),
       },
     });
-
-    const storeWithoutId = writeQueryToStore({
-      writer,
-      result: dataWithoutId,
-      query: queryWithoutId,
-    });
-    expect(storeWithoutId.toObject()).toEqual(expectedStoreWithoutId.toObject());
-
-    const storeWithId = writeQueryToStore({
-      writer,
-      result: dataWithId,
-      query: queryWithId,
-      store: storeWithoutId,
-    });
-    expect(storeWithId.toObject()).toEqual(expectedStoreWithId.toObject());
   });
 
   it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {
@@ -1400,7 +1432,48 @@ describe('writing to the store', () => {
         }
       }
     `;
-    const expStoreWithPlaceholder = defaultNormalizedCacheFactory({
+
+    let mergeCount = 0;
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            author: {
+              merge(existing, incoming, { isReference, readField }) {
+                switch (++mergeCount) {
+                  case 1:
+                    expect(existing).toBeUndefined();
+                    expect(isReference(incoming)).toBe(false);
+                    expect(incoming).toEqual(dataWithPlaceholder.author);
+                    break;
+                  case 2:
+                    expect(existing).toEqual(dataWithPlaceholder.author);
+                    expect(isReference(incoming)).toBe(true);
+                    expect(readField("__typename", incoming)).toBe("Author");
+                    break;
+                  case 3:
+                    expect(isReference(existing)).toBe(true);
+                    expect(readField("__typename", existing)).toBe("Author");
+                    expect(incoming).toEqual(dataWithPlaceholder.author);
+                    break;
+                  default:
+                    fail("unreached");
+                }
+                return incoming;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // write the first object, without an ID, placeholder
+    cache.writeQuery({
+      query,
+      data: dataWithPlaceholder,
+    });
+
+    expect(cache.extract()).toEqual({
       ROOT_QUERY: {
         __typename: 'Query',
         author: {
@@ -1409,8 +1482,15 @@ describe('writing to the store', () => {
         },
       },
     });
-    const expStoreWithAuthor = defaultNormalizedCacheFactory({
-      Author__129: {
+
+    // replace with another one of different type with ID
+    cache.writeQuery({
+      query,
+      data: dataWithAuthor,
+    });
+
+    expect(cache.extract()).toEqual({
+      "Author:129": {
         firstName: 'John',
         lastName: 'Smith',
         id: '129',
@@ -1418,40 +1498,33 @@ describe('writing to the store', () => {
       },
       ROOT_QUERY: {
         __typename: 'Query',
-        author: makeReference('Author__129'),
+        author: makeReference('Author:129'),
       },
     });
 
-    // write the first object, without an ID, placeholder
-    const store = writeQueryToStore({
-      writer,
-      result: dataWithPlaceholder,
-      query,
-    });
-    expect(store.toObject()).toEqual(expStoreWithPlaceholder.toObject());
-
-    // replace with another one of different type with ID
-    writeQueryToStore({
-      writer,
-      result: dataWithAuthor,
-      query,
-      store,
-    });
-    expect(store.toObject()).toEqual(expStoreWithAuthor.toObject());
-
     // and go back to the original:
-    writeQueryToStore({
-      writer,
-      result: dataWithPlaceholder,
+    cache.writeQuery({
       query,
-      store,
+      data: dataWithPlaceholder,
     });
+
     // Author__129 will remain in the store,
     // but will not be referenced by any of the fields,
     // hence we combine, and in that very order
-    expect(store.toObject()).toEqual({
-      ...expStoreWithAuthor.toObject(),
-      ...expStoreWithPlaceholder.toObject(),
+    expect(cache.extract()).toEqual({
+      "Author:129": {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+      ROOT_QUERY: {
+        __typename: 'Query',
+        author: {
+          hello: 'Foo',
+          __typename: 'Placeholder',
+        },
+      },
     });
   });
 

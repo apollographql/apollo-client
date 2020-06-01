@@ -1,5 +1,6 @@
 import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
 import { equal } from '@wry/equality';
+import { invariant } from 'ts-invariant';
 
 import {
   isReference,
@@ -84,7 +85,11 @@ export abstract class EntityStore implements NormalizedCache {
 
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
-    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming);
+    const merged = new DeepMerger(storeObjectReconciler).merge(
+      existing,
+      incoming,
+      this.getFieldValue,
+    );
     // Even if merged === existing, existing may have come from a lower
     // layer, so we always need to set this.data[dataId] on this level.
     this.data[dataId] = merged;
@@ -513,16 +518,105 @@ class Layer extends EntityStore {
 function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
-  property: string | number,
+  property: string,
+  getFieldValue: FieldValueGetter,
 ): StoreValue {
   const existingValue = existingObject[property];
   const incomingValue = incomingObject[property];
+
   // Wherever there is a key collision, prefer the incoming value, unless
   // it is deeply equal to the existing value. It's worth checking deep
   // equality here (even though blindly returning incoming would be
   // logically correct) because preserving the referential identity of
   // existing data can prevent needless rereading and rerendering.
-  return equal(existingValue, incomingValue) ? existingValue : incomingValue;
+  if (equal(existingValue, incomingValue)) {
+    return existingValue;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    warnAboutDataLoss(existingObject, incomingObject, property, getFieldValue);
+  }
+
+  return incomingValue;
+}
+
+const warnings = new Set<string>();
+
+// Note that this function is unused in production, and thus should be
+// pruned by any well-configured minifier.
+function warnAboutDataLoss(
+  existingObject: StoreObject | Reference,
+  incomingObject: StoreObject | Reference,
+  storeFieldName: string,
+  getFieldValue: FieldValueGetter,
+) {
+  const getChild = (objOrRef: StoreObject | Reference): StoreObject | false => {
+    const child = getFieldValue<StoreObject>(objOrRef, storeFieldName);
+    return typeof child === "object" && child;
+  };
+
+  const existing = getChild(existingObject);
+  if (!existing) return;
+
+  const incoming = getChild(incomingObject);
+  if (!incoming) return;
+
+  // It's always safe to replace a reference, since it refers to data
+  // safely stored elsewhere.
+  if (isReference(existing)) return;
+
+  // If we're replacing every key of the existing object, then the
+  // existing data would be overwritten even if the objects were
+  // normalized, so warning would not be helpful here.
+  if (Object.keys(existing).every(
+    key => getFieldValue(incoming, key) !== void 0)) {
+    return;
+  }
+
+  const parentType =
+    getFieldValue(existingObject, "__typename") ||
+    getFieldValue(incomingObject, "__typename");
+
+  const fieldName = fieldNameFromStoreName(storeFieldName);
+  const typeDotName = `${parentType}.${fieldName}`;
+
+  if (warnings.has(typeDotName)) return;
+  warnings.add(typeDotName);
+
+  const childTypenames: string[] = [];
+  // Arrays do not have __typename fields, and always need a custom merge
+  // function, even if their elements are normalized entities.
+  if (!Array.isArray(existing) &&
+      !Array.isArray(incoming)) {
+    [existing, incoming].forEach(child => {
+      const typename = getFieldValue(child, "__typename");
+      if (typeof typename === "string" &&
+          !childTypenames.includes(typename)) {
+        childTypenames.push(typename);
+      }
+    });
+  }
+
+  invariant.warn(
+`Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
+
+To address this problem (which is not a bug in Apollo Client), ${
+  childTypenames.length
+    ? "either ensure all objects of type " +
+        childTypenames.join(" and ") + " have IDs, or "
+    : ""
+}define a custom merge function for the ${
+  typeDotName
+} field, so InMemoryCache can safely merge these objects:
+
+  existing: ${JSON.stringify(existing).slice(0, 1000)}
+  incoming: ${JSON.stringify(incoming).slice(0, 1000)}
+
+For more information about these options, please refer to the documentation:
+
+  * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
+  * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
+`);
 }
 
 export function supportsResultCaching(store: any): store is EntityStore {

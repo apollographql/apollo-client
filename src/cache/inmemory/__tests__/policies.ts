@@ -1,7 +1,6 @@
 import gql from "graphql-tag";
 
 import { InMemoryCache, ReactiveVar } from "../inMemoryCache";
-import { Policies } from "../policies";
 import { Reference, StoreObject } from "../../../core";
 import { MissingFieldError } from "../..";
 
@@ -166,7 +165,6 @@ describe("type policies", function () {
             expect(context.typename).toBe("Book");
             expect(context.selectionSet!.kind).toBe("SelectionSet");
             expect(context.fragmentMap).toEqual({});
-            expect(context.policies).toBeInstanceOf(Policies);
             return ["isbn"];
           },
         },
@@ -285,6 +283,33 @@ describe("type policies", function () {
         },
       });
     }).toThrowError("Missing field 'year' while computing key fields");
+  });
+
+  it("does not clobber previous keyFields with undefined", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Movie: {
+          keyFields(incoming) {
+            return `MotionPicture::${incoming.id}`;
+          },
+        },
+      },
+    });
+
+    cache.policies.addTypePolicies({
+      Movie: {
+        fields: {
+          isPurchased() {
+            return false;
+          },
+        },
+      },
+    });
+
+    expect(cache.identify({
+      __typename: "Movie",
+      id: "3993d4118143",
+    })).toBe("MotionPicture::3993d4118143");
   });
 
   describe("field policies", function () {
@@ -593,15 +618,15 @@ describe("type policies", function () {
                 keyArgs(args, context) {
                   expect(context.typename).toBe("Thread");
                   expect(context.fieldName).toBe("comments");
-                  expect(context.field.name.value).toBe("comments");
-                  expect(context.variables).toEqual({});
-                  expect(context.policies).toBeInstanceOf(Policies);
+                  expect(context.field!.name.value).toBe("comments");
 
                   if (typeof args!.limit === "number") {
                     if (typeof args!.offset === "number") {
+                      expect(args).toEqual({ offset: 0, limit: 2 });
                       return ["offset", "limit"];
                     }
                     if (args!.beforeId) {
+                      expect(args).toEqual({ beforeId: "asdf", limit: 2 });
                       return ["beforeId", "limit"];
                     }
                   }
@@ -1912,11 +1937,9 @@ describe("type policies", function () {
                   args,
                   toReference,
                   isReference,
-                  policies,
                 }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
-                  expect(policies).toBeInstanceOf(Policies);
                   const slice = existing.slice(
                     args!.offset,
                     args!.offset + args!.limit,
@@ -1929,11 +1952,9 @@ describe("type policies", function () {
                   args,
                   toReference,
                   isReference,
-                  policies,
                 }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
-                  expect(policies).toBeInstanceOf(Policies);
                   const copy = existing ? existing.slice(0) : [];
                   const limit = args!.offset + args!.limit;
                   for (let i = args!.offset; i < limit; ++i) {
@@ -2221,6 +2242,7 @@ describe("type policies", function () {
         },
         "Event:123": {
           __typename: "Event",
+          id: 123,
           name: "One-person party",
           attendees: [
             { __ref: "Attendee:234" },
@@ -2228,6 +2250,7 @@ describe("type policies", function () {
         },
         "Attendee:234": {
           __typename: "Attendee",
+          id: 234,
           name: "Ben Newman",
           events: [
             { __ref: "Event:123" },
@@ -2286,6 +2309,7 @@ describe("type policies", function () {
         },
         "Event:123": {
           __typename: "Event",
+          id: 123,
           name: "One-person party",
           attendees: [
             { __ref: "Attendee:234" },
@@ -2293,6 +2317,7 @@ describe("type policies", function () {
         },
         "Event:345": {
           __typename: "Event",
+          id: 345,
           attendees: [
             { __ref: "Attendee:456" },
             { __ref: "Attendee:234" },
@@ -2300,6 +2325,7 @@ describe("type policies", function () {
         },
         "Attendee:234": {
           __typename: "Attendee",
+          id: 234,
           name: "Ben Newman",
           events: [
             { __ref: "Event:123" },
@@ -2308,6 +2334,7 @@ describe("type policies", function () {
         },
         "Attendee:456": {
           __typename: "Attendee",
+          id: 456,
           name: "Inspector Beckett",
         },
       });
@@ -2486,7 +2513,9 @@ describe("type policies", function () {
 
       expect(cache.gc()).toEqual([]);
 
-      expect(cache.evict("ROOT_QUERY", "book")).toBe(true);
+      expect(cache.evict({
+        fieldName: "book",
+      })).toBe(true);
 
       expect(cache.gc().sort()).toEqual([
         'Book:{"isbn":"0393354326"}',
@@ -2939,10 +2968,7 @@ describe("type policies", function () {
           author: {
             __typename: "Author",
             name: "Virginia Woolf",
-            books: [{
-              __typename: "Book",
-              ...bookData,
-            }],
+            books: [bookData],
           },
         },
       });
@@ -3116,5 +3142,161 @@ describe("type policies", function () {
     expect(thirdFirstBookResult.author.firstBook).toBe(
       secondFirstBookResult.author.firstBook,
     );
+  });
+
+  it("readField can read fields with arguments", function () {
+    const enum Style { UPPER, LOWER, TITLE };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Word: {
+          keyFields: ["text"],
+
+          fields: {
+            style(_, { args, readField }) {
+              const text = readField<string>("text");
+              switch (args?.style) {
+                case Style.UPPER: return text?.toUpperCase();
+                case Style.LOWER: return text?.toLowerCase();
+                case Style.TITLE:
+                  return text && (
+                    text.charAt(0).toUpperCase() +
+                    text.slice(1).toLowerCase()
+                  );
+              }
+            },
+            upperCase(_, { readField }) {
+              return readField<string>({
+                fieldName: "style",
+                args: { style: Style.UPPER },
+              });
+            },
+            lowerCase(_, { readField }) {
+              return readField<string>({
+                fieldName: "style",
+                args: { style: Style.LOWER },
+              });
+            },
+            titleCase(_, { readField }) {
+              return readField<string>({
+                fieldName: "style",
+                args: { style: Style.TITLE },
+              });
+            },
+          },
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query: gql`query { wordOfTheDay { text } }`,
+      data: {
+        wordOfTheDay: {
+          __typename: "Word",
+          text: "inveigle",
+        },
+      },
+    });
+
+    expect(cache.readQuery({
+      query: gql`
+        query {
+          wordOfTheDay {
+            upperCase
+            lowerCase
+            titleCase
+          }
+        }
+      `,
+    })).toEqual({
+      wordOfTheDay: {
+        __typename: "Word",
+        upperCase: "INVEIGLE",
+        lowerCase: "inveigle",
+        titleCase: "Inveigle",
+      },
+    });
+  });
+
+  it("can return existing object from merge function (issue #6245)", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Person: {
+          fields: {
+            currentTask: {
+              merge(existing, incoming) {
+                // Not a very reasonable merge strategy, but returning
+                // existing here triggers issue #6245, persumably because
+                // the existing data is frozen.
+                return existing || incoming;
+              },
+            },
+          },
+        },
+        Task: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        person {
+          currentTask {
+            __typename
+            description
+          }
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          id: 1234,
+          currentTask: {
+            __typename: "Task",
+            description: "writing tests",
+          },
+        },
+      },
+    });
+
+    const snapshot = cache.extract();
+    expect(snapshot).toEqual({
+      "Person:1234": {
+        __typename: "Person",
+        id: 1234,
+        currentTask: {
+          __typename: "Task",
+          description: "writing tests",
+        },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        person: {
+          __ref: "Person:1234",
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          id: 1234,
+          currentTask: {
+            __typename: "Task",
+            description: "polishing knives",
+          },
+        },
+      },
+    });
+
+    // Unchanged because the merge function prefers the existing object.
+    expect(cache.extract()).toEqual(snapshot);
   });
 });

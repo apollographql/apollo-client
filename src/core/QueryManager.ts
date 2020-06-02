@@ -80,7 +80,6 @@ export class QueryManager<TStore> {
 
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
-  private queryCancelFns = new Map<string, (error: any) => any>();
   private fetchCancelFns = new Map<string, (error: any) => any>();
 
   constructor({
@@ -127,9 +126,7 @@ export class QueryManager<TStore> {
   }
 
   private cancelPendingFetches(error: Error) {
-    this.queryCancelFns.forEach(cancel => cancel(error));
     this.fetchCancelFns.forEach(cancel => cancel(error));
-    this.queryCancelFns.clear();
     this.fetchCancelFns.clear();
   }
 
@@ -172,8 +169,7 @@ export class QueryManager<TStore> {
 
       if (updateQueriesByName) {
         this.queries.forEach(({ observableQuery }, queryId) => {
-          if (observableQuery &&
-              observableQuery.watching) {
+          if (observableQuery) {
             const { queryName } = observableQuery;
             if (
               queryName &&
@@ -306,7 +302,6 @@ export class QueryManager<TStore> {
               if (typeof refetchQuery === 'string') {
                 self.queries.forEach(({ observableQuery }) => {
                   if (observableQuery &&
-                      observableQuery.watching &&
                       observableQuery.queryName === refetchQuery) {
                     refetchQueryPromises.push(observableQuery.refetch());
                   }
@@ -437,16 +432,8 @@ export class QueryManager<TStore> {
     };
   }
 
-  // The shouldSubscribe option is a temporary fix that tells us whether watchQuery was called
-  // directly (i.e. through ApolloClient) or through the query method within QueryManager.
-  // Currently, the query method uses watchQuery in order to handle non-network errors correctly
-  // but we don't want to keep track observables issued for the query method since those aren't
-  // supposed to be refetched in the event of a store reset. Once we unify error handling for
-  // network errors and non-network errors, the shouldSubscribe option will go away.
-
   public watchQuery<T, TVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables>,
-    shouldSubscribe = true,
   ): ObservableQuery<T, TVariables> {
     // assign variable default values if supplied
     options = {
@@ -464,7 +451,6 @@ export class QueryManager<TStore> {
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
       options,
-      shouldSubscribe: shouldSubscribe,
     });
 
     this.getQuery(observable.queryId).init({
@@ -476,7 +462,9 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  public query<T>(options: QueryOptions): Promise<ApolloQueryResult<T>> {
+  public query<TData, TVars = OperationVariables>(
+    options: QueryOptions<TVars>,
+  ): Promise<ApolloQueryResult<TData>> {
     invariant(
       options.query,
       'query option is required. You must specify your GraphQL document ' +
@@ -498,21 +486,11 @@ export class QueryManager<TStore> {
       'pollInterval option only supported on watchQuery.',
     );
 
-    return new Promise<ApolloQueryResult<T>>((resolve, reject) => {
-      const watchedQuery = this.watchQuery<T>(options, false);
-      const { queryId } = watchedQuery;
-      this.queryCancelFns.set(queryId, reject);
-      watchedQuery
-        .result()
-        .then(resolve, reject)
-        // Since neither resolve nor reject throw or return a value, this .then
-        // handler is guaranteed to execute. Note that it doesn't really matter
-        // when we remove the reject function from this.fetchCancelFns,
-        // since resolve and reject are mutually idempotent. In fact, it would
-        // not be incorrect to let reject functions accumulate over time; it's
-        // just a waste of memory.
-        .then(() => this.queryCancelFns.delete(queryId));
-    });
+    const queryId = this.generateQueryId();
+    return this.fetchQuery<TData, TVars>(
+      queryId,
+      options,
+    ).finally(() => this.stopQuery(queryId));
   }
 
   private queryIdCounter = 1;
@@ -555,8 +533,7 @@ export class QueryManager<TStore> {
     ));
 
     this.queries.forEach(queryInfo => {
-      if (queryInfo.observableQuery &&
-          queryInfo.observableQuery.watching) {
+      if (queryInfo.observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
         queryInfo.networkStatus = NetworkStatus.loading;
@@ -589,8 +566,7 @@ export class QueryManager<TStore> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
 
     this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery &&
-          observableQuery.watching) {
+      if (observableQuery) {
         const fetchPolicy = observableQuery.options.fetchPolicy;
 
         observableQuery.resetLastResults();
@@ -688,7 +664,6 @@ export class QueryManager<TStore> {
     // that each add their reject functions to fetchCancelFns.
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
-    this.queryCancelFns.delete(queryId);
     this.fetchCancelFns.delete(queryId);
     this.getQuery(queryId).subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
@@ -861,6 +836,24 @@ export class QueryManager<TStore> {
       context = {},
     } = options;
 
+    if (fetchPolicy === "cache-and-network" ||
+        fetchPolicy === "network-only") {
+      // When someone chooses cache-and-network or network-only as their
+      // initial FetchPolicy, they almost certainly do not want future cache
+      // updates to trigger unconditional network requests, which is what
+      // repeatedly applying the cache-and-network or network-only policies
+      // would seem to require. Instead, when the cache reports an update
+      // after the initial network request, subsequent network requests should
+      // be triggered only if the cache result is incomplete. This behavior
+      // corresponds exactly to switching to a cache-first FetchPolicy, so we
+      // modify options.fetchPolicy here for the next fetchQueryObservable
+      // call, using the same options object that the Reobserver always passes
+      // to fetchQueryObservable. Note: if these FetchPolicy transitions get
+      // much more complicated, we might consider using some sort of state
+      // machine to capture the transition rules.
+      options.fetchPolicy = "cache-first";
+    }
+
     const mightUseNetwork =
       fetchPolicy === "cache-first" ||
       fetchPolicy === "cache-and-network" ||
@@ -903,6 +896,14 @@ export class QueryManager<TStore> {
       );
     };
 
+    // This cancel function needs to be set before the concast is created,
+    // in case concast creation synchronously cancels the request.
+    this.fetchCancelFns.set(queryId, reason => {
+      // Delaying the cancellation using a Promise ensures that the
+      // concast variable has been initialized.
+      Promise.resolve().then(() => concast.cancel(reason));
+    });
+
     // A Concast<T> can be created either from an Iterable<Observable<T>>
     // or from a PromiseLike<Iterable<Observable<T>>>, where T in this
     // case is ApolloQueryResult<TData>.
@@ -922,10 +923,6 @@ export class QueryManager<TStore> {
         ).then(fromVariables)
         : fromVariables(normalized.variables!)
     );
-
-    this.fetchCancelFns.set(queryId, reason => {
-      Promise.resolve().then(() => concast.cancel(reason));
-    });
 
     concast.cleanup(() => this.fetchCancelFns.delete(queryId));
 
@@ -1117,14 +1114,14 @@ function markMutationResult<TStore, TData>(
         }= queryUpdatersById[id];
 
         // Read the current query result from the store.
-        const { result: currentQueryResult, complete } = cache.diff({
+        const { result: currentQueryResult, complete } = cache.diff<TData>({
           query: document!,
           variables,
           returnPartialData: true,
           optimistic: false,
         });
 
-        if (complete) {
+        if (complete && currentQueryResult) {
           // Run our reducer using the current query result and the mutation result.
           const nextQueryResult = tryFunctionOrLogError(
             () => updater(currentQueryResult, {

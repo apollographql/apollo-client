@@ -30,7 +30,7 @@ export namespace DataProxy {
      * value returned by your `dataIdFromObject` function. If a value with your
      * id does not exist in the store, `null` will be returned.
      */
-    id: string;
+    id?: string;
 
     /**
      * A GraphQL document created using the `gql` template string tag from
@@ -59,6 +59,10 @@ export namespace DataProxy {
      * The data you will be writing to the store.
      */
     data: TData;
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
   }
 
   export interface WriteFragmentOptions<TData, TVariables>
@@ -67,6 +71,10 @@ export namespace DataProxy {
      * The data you will be writing to the store.
      */
     data: TData;
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
   }
 
   export type DiffResult<T> = {

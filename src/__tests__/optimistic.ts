@@ -110,6 +110,20 @@ describe('optimistic mutation results', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
+        typePolicies: {
+          TodoList: {
+            fields: {
+              todos: {
+                // Deliberately silence "Cache data may be lost..."
+                // warnings by favoring the incoming data, rather than
+                // (say) concatenating the arrays together.
+                merge(_, incoming) {
+                  return incoming;
+                },
+              },
+            },
+          },
+        },
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
             return obj.__typename + obj.id;

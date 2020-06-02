@@ -933,15 +933,29 @@ describe('ObservableQuery', () => {
   });
 
   describe('refetch', () => {
-    type TFQO = QueryManager<any>["fetchQueryObservable"];
     function mockFetchQuery(queryManager: QueryManager<any>) {
-      const origFetchQuery: TFQO = (queryManager as any).fetchQueryObservable;
-      return (queryManager as any).fetchQueryObservable = jest.fn<
-        ReturnType<TFQO>,
-        Parameters<TFQO>
+      const fetchQueryObservable = queryManager.fetchQueryObservable;
+      const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] =
+        (queryManager as any).fetchQueryByPolicy;
+
+      const mock = <T extends
+        | typeof fetchQueryObservable
+        | typeof fetchQueryByPolicy
+      >(original: T) => jest.fn<
+        ReturnType<T>,
+        Parameters<T>
       >(function () {
-        return origFetchQuery.apply(queryManager, arguments);
+        return original.apply(queryManager, arguments);
       });
+
+      const mocks = {
+        fetchQueryObservable: mock(fetchQueryObservable),
+        fetchQueryByPolicy: mock(fetchQueryByPolicy),
+      };
+
+      Object.assign(queryManager, mocks);
+
+      return mocks;
     }
 
     itAsync('calls fetchRequest with fetchPolicy `network-only` when using a non-networked fetch policy', (resolve, reject) => {
@@ -964,15 +978,24 @@ describe('ObservableQuery', () => {
         fetchPolicy: 'cache-first',
       });
 
-      const mocked = mockFetchQuery(queryManager);
+      const mocks = mockFetchQuery(queryManager);
 
       subscribeAndCount(reject, observable, handleCount => {
         if (handleCount === 1) {
           observable.refetch(differentVariables);
         } else if (handleCount === 2) {
-          expect(mocked.mock.calls[1][1].fetchPolicy).toEqual(
-            'network-only',
-          );
+          const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
+          expect(fqbpCalls.length).toBe(2);
+          expect(fqbpCalls[1][1].fetchPolicy).toEqual('network-only');
+          // Although the options.fetchPolicy we passed just now to
+          // fetchQueryByPolicy should have been network-only,
+          // observable.options.fetchPolicy should now be updated to
+          // cache-first, since network-only (and cache-and-network) fetch
+          // policies fall back to cache-first after the first request.
+          expect(observable.options.fetchPolicy).toBe('cache-first');
+          const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+          expect(fqoCalls.length).toBe(2);
+          expect(fqoCalls[1][1].fetchPolicy).toEqual('cache-first');
           resolve();
         }
       });
@@ -1000,15 +1023,24 @@ describe('ObservableQuery', () => {
           fetchPolicy: 'no-cache',
         });
 
-        const mocked = mockFetchQuery(queryManager);
+        const mocks = mockFetchQuery(queryManager);
 
         subscribeAndCount(reject, observable, handleCount => {
           if (handleCount === 1) {
             observable.refetch(differentVariables);
           } else if (handleCount === 2) {
-            expect(
-              mocked.mock.calls[1][1].fetchPolicy,
-            ).toEqual('no-cache');
+            const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
+            expect(fqbpCalls.length).toBe(2);
+            expect(fqbpCalls[1][1].fetchPolicy).toBe('no-cache');
+
+            // Unlike network-only or cache-and-network, the no-cache
+            // FetchPolicy does not switch to cache-first after the first
+            // network request.
+            expect(observable.options.fetchPolicy).toBe('no-cache');
+            const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+            expect(fqoCalls.length).toBe(2);
+            expect(fqoCalls[1][1].fetchPolicy).toBe('no-cache');
+
             resolve();
           }
         });
@@ -1159,34 +1191,35 @@ describe('ObservableQuery', () => {
               networkStatus: NetworkStatus.ready,
             });
 
+            const oldLinkObs = linkObservable;
             // Make the next network request fail.
             linkObservable = errorObservable;
 
             observable.refetch().then(
-              result => {
-                expect(result).toEqual({
-                  data: {
-                    counter: 3,
-                    name: 'Ben',
-                  },
-                });
+              () => {
+                reject(new Error('should have gotten an error'));
               },
+
               error => {
                 expect(error).toBe(intentionalNetworkFailure);
+
+                // Switch back from errorObservable.
+                linkObservable = oldLinkObs;
+
+                observable.refetch().then(result => {
+                  expect(result).toEqual({
+                    data: {
+                      counter: 3,
+                      name: 'Ben',
+                    },
+                    loading: false,
+                    networkStatus: NetworkStatus.ready,
+                  });
+                  resolve();
+                }, reject);
               },
             );
-          } else if (handleCount === 3) {
-            expect(result).toEqual({
-              data: {
-                counter: 3,
-                name: 'Ben',
-              },
-              loading: true,
-              networkStatus: NetworkStatus.refetch,
-            });
-
-            resolve();
-          } else if (handleCount > 4) {
+          } else if (handleCount > 2) {
             reject(new Error('should not get here'));
           }
         },
@@ -1545,38 +1578,38 @@ describe('ObservableQuery', () => {
         },
       );
 
-      queryManager.query({ query, variables }).then(() => {
+      queryManager.query({ query, variables }).then(result => {
+        expect(result).toEqual({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+
         const observable = queryManager.watchQuery({
           query,
           variables,
           fetchPolicy: 'network-only',
         });
-        expect(stripSymbols(observable.getCurrentResult())).toEqual({
-          data: undefined,
+
+        expect(observable.getCurrentResult()).toEqual({
+          data: void 0,
           loading: true,
           networkStatus: 1,
           partial: false,
         });
 
         subscribeAndCount(reject, observable, (handleCount, subResult) => {
-          const {
-            data,
-            loading,
-            networkStatus,
-          } = observable.getCurrentResult();
-
           if (handleCount === 1) {
             expect(subResult).toEqual({
-              data,
-              loading,
-              networkStatus,
+              loading: true,
+              networkStatus: NetworkStatus.loading,
               partial: false,
             });
           } else if (handleCount === 2) {
-            expect(stripSymbols(subResult)).toEqual({
+            expect(subResult).toEqual({
               data: dataTwo,
               loading: false,
-              networkStatus: 7,
+              networkStatus: NetworkStatus.ready,
             });
             resolve();
           }

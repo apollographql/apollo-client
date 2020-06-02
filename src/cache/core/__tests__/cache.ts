@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloCache  } from '../cache';
 import { Cache, DataProxy } from '../..';
+import { Reference } from '../../../utilities/graphql/storeUtils';
 
 class TestCache extends ApolloCache<unknown> {
   constructor() {
@@ -11,7 +12,7 @@ class TestCache extends ApolloCache<unknown> {
     return {};
   }
 
-  public evict(dataId: string, fieldName?: string): boolean {
+  public evict(): boolean {
     return false;
   }
 
@@ -45,7 +46,10 @@ class TestCache extends ApolloCache<unknown> {
     };
   }
 
-  public write<TResult = any, TVariables = any>(write: Cache.WriteOptions<TResult, TVariables>): void {
+  public write<TResult = any, TVariables = any>(
+    _: Cache.WriteOptions<TResult, TVariables>,
+  ): Reference | undefined {
+    return;
   }
 }
 const query = gql`{ a }`;

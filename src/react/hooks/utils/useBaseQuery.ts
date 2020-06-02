@@ -1,3 +1,4 @@
+import { useContext, useEffect, useReducer, useRef } from 'react';
 import { DocumentNode } from 'graphql';
 
 import {
@@ -10,15 +11,12 @@ import { QueryData } from '../../data/QueryData';
 import { useDeepMemo } from './useDeepMemo';
 import { OperationVariables } from '../../../core/types';
 import { getApolloContext } from '../../context/ApolloContext';
-import { requireReactLazily } from '../../react';
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
   options?: QueryHookOptions<TData, TVariables>,
   lazy = false
 ) {
-  const React = requireReactLazily();
-  const { useContext, useEffect, useReducer, useRef } = React;
   const context = useContext(getApolloContext());
   const [tick, forceUpdate] = useReducer(x => x + 1, 0);
   const updatedOptions = options ? { ...options, query } : { query };

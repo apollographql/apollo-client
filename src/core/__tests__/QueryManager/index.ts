@@ -3,12 +3,12 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
-import { GraphQLRequest } from '../../../link/core/types';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
+import { GraphQLRequest, FetchResult } from '../../../link/core/types';
+import { InMemoryCache, InMemoryCacheConfig } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject
@@ -64,7 +64,7 @@ describe('QueryManager', () => {
     clientAwareness = {},
   }: {
     link: ApolloLink;
-    config?: ApolloReducerConfig;
+    config?: Partial<InMemoryCacheConfig>;
     clientAwareness?: { [key: string]: string };
   }) => {
     return new QueryManager({
@@ -91,7 +91,7 @@ describe('QueryManager', () => {
     variables?: Object;
     queryOptions?: Object;
     error?: Error;
-    result?: ExecutionResult;
+    result?: FetchResult;
     delay?: number;
     observer: Observer<ApolloQueryResult<any>>;
   }) => {
@@ -130,7 +130,7 @@ describe('QueryManager', () => {
     });
 
     return new Promise<{
-      result: ExecutionResult;
+      result: FetchResult;
       queryManager: QueryManager<NormalizedCacheObject>;
     }>((resolve, reject) => {
       queryManager
@@ -164,9 +164,9 @@ describe('QueryManager', () => {
   }: {
     reject: (reason: any) => any;
     request: GraphQLRequest;
-    firstResult: ExecutionResult;
-    secondResult: ExecutionResult;
-    thirdResult?: ExecutionResult;
+    firstResult: FetchResult;
+    secondResult: FetchResult;
+    thirdResult?: FetchResult;
   }) => {
     const args = [
       {
@@ -2210,6 +2210,7 @@ describe('QueryManager', () => {
       },
     };
 
+    let mergeCount = 0;
     const queryManager = createQueryManager({
       link: mockSingleLink({
         request: { query: queryWithoutId },
@@ -2218,6 +2219,34 @@ describe('QueryManager', () => {
         request: { query: queryWithId },
         result: { data: dataWithId },
       }).setOnError(reject),
+      config: {
+        typePolicies: {
+          Query: {
+            fields: {
+              author: {
+                merge(existing, incoming, { isReference, readField }) {
+                  switch (++mergeCount) {
+                    case 1:
+                      expect(existing).toBeUndefined();
+                      expect(isReference(incoming)).toBe(false);
+                      expect(incoming).toEqual(dataWithoutId.author);
+                      break;
+                    case 2:
+                      expect(existing).toEqual(dataWithoutId.author);
+                      expect(isReference(incoming)).toBe(true);
+                      expect(readField("id", incoming)).toBe("129");
+                      expect(readField("name", incoming)).toEqual(dataWithId.author.name);
+                      break;
+                    default:
+                      fail("unreached");
+                  }
+                  return incoming;
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const observableWithId = queryManager.watchQuery<any>({
@@ -3784,7 +3813,7 @@ describe('QueryManager', () => {
             // refetch observed queries as soon as we hear about the query
             queryManager.reFetchObservableQueries();
             observer.next({ data });
-            return;
+            observer.complete();
           }),
       );
 
@@ -4388,7 +4417,7 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = (result: ExecutionResult<any>) => {
+      const conditional = (result: FetchResult<any>) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
         return [];
       };
@@ -4450,7 +4479,7 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query });
-      const conditional = (result: ExecutionResult<any>) => {
+      const conditional = (result: FetchResult<any>) => {
         expect(stripSymbols(result.data)).toEqual(mutationData);
         return [{ query }];
       };

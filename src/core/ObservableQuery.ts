@@ -61,7 +61,6 @@ export class ObservableQuery<
   public readonly options: WatchQueryOptions<TVariables>;
   public readonly queryId: string;
   public readonly queryName?: string;
-  public readonly watching: boolean;
 
   // Computed shorthand for this.options.variables, preserved for
   // backwards compatibility.
@@ -81,11 +80,9 @@ export class ObservableQuery<
   constructor({
     queryManager,
     options,
-    shouldSubscribe = true,
   }: {
     queryManager: QueryManager<any>;
     options: WatchQueryOptions<TVariables>;
-    shouldSubscribe?: boolean;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) =>
       this.onSubscribe(observer),
@@ -97,7 +94,6 @@ export class ObservableQuery<
     // query information
     this.options = options;
     this.queryId = queryManager.generateQueryId();
-    this.watching = shouldSubscribe;
 
     const opDef = getOperationDefinition(options.query);
     this.queryName = opDef && opDef.name && opDef.name.value;

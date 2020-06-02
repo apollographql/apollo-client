@@ -35,7 +35,7 @@ interface RocketInventoryVars {
 }
 
 const GET_ROCKET_INVENTORY = gql`
-  query getRocketInventory($year: Int!) {
+  query GetRocketInventory($year: Int!) {
     rocketInventory(year: $year) {
       id
       model

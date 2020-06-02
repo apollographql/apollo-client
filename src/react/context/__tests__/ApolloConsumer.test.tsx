@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 
 import { ApolloLink } from '../../../link/core/ApolloLink';
@@ -6,9 +7,6 @@ import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../ApolloProvider';
 import { ApolloConsumer } from '../ApolloConsumer';
 import { getApolloContext } from '../ApolloContext';
-import { requireReactLazily } from '../../react';
-
-const React = requireReactLazily();
 
 const client = new ApolloClient({
   cache: new Cache(),

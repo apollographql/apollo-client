@@ -34,7 +34,7 @@ Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. 
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
-  {
+  query GetDogs {
     dogs {
       id
       breed
@@ -51,7 +51,7 @@ import { gql } from '@apollo/client';
 import { Query } from '@apollo/react-components';
 
 const GET_DOGS = gql`
-  {
+  query GetDogs {
     dogs {
       id
       breed
@@ -329,6 +329,8 @@ of this information, we need to set the `notifyOnNetworkStatusChange` option to 
 <div data-language="hooks-js">
 
 ```jsx:title=index.js
+import { NetworkStatus } from '@apollo/client';
+
 function DogPhoto({ breed }) {
   const { loading, error, data, refetch, networkStatus } = useQuery(
     GET_DOG_PHOTO,
@@ -339,7 +341,7 @@ function DogPhoto({ breed }) {
     },
   );
 
-  if (networkStatus === 4) return 'Refetching!';
+  if (networkStatus === NetworkStatus.refetch) return 'Refetching!';
   if (loading) return null;
   if (error) return `Error! ${error}`;
 
@@ -356,6 +358,8 @@ function DogPhoto({ breed }) {
 <div data-language="js">
 
 ```jsx:title=index.js
+import { NetworkStatus } from '@apollo/client';
+
 const DogPhoto = ({ breed }) => (
   <Query
     query={GET_DOG_PHOTO}
@@ -364,7 +368,7 @@ const DogPhoto = ({ breed }) => (
     notifyOnNetworkStatusChange
   >
     {({ loading, error, data, refetch, networkStatus }) => {
-      if (networkStatus === 4) return 'Refetching!';
+      if (networkStatus === NetworkStatus.refetch) return 'Refetching!';
       if (loading) return null;
       if (error) return `Error! ${error}`;
 
@@ -385,7 +389,7 @@ const DogPhoto = ({ breed }) => (
 </div>
 </MultiCodeBlock>
 
-The `networkStatus` property is an enum with number values from `1` to `8` that represent different loading states. `4` corresponds to a refetch, but there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/master/src/core/networkStatus.ts).
+The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/master/src/core/networkStatus.ts).
 
 ## Inspecting error states
 

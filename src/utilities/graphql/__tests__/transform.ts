@@ -35,7 +35,7 @@ describe('removeArgumentsFromDocument', () => {
         network
       }
     `;
-    const doc = removeArgumentsFromDocument([{ name: 'variable' }], query);
+    const doc = removeArgumentsFromDocument([{ name: 'variable' }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -57,7 +57,7 @@ describe('removeArgumentsFromDocument', () => {
     const doc = removeArgumentsFromDocument(
       [{ name: 'variable', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 });
@@ -97,7 +97,7 @@ describe('removeFragmentSpreadFromDocument', () => {
     const doc = removeFragmentSpreadFromDocument(
       [{ name: 'FragmentSpread', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 });
@@ -117,7 +117,7 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
 
-    const doc = removeDirectivesFromDocument([{ name: 'client' }], query);
+    const doc = removeDirectivesFromDocument([{ name: 'client' }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -138,7 +138,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'client', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -159,7 +159,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'client', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -187,7 +187,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'client', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -224,7 +224,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'client', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -240,7 +240,7 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query);
+    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -257,7 +257,7 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
     const test = ({ name: { value } }: { name: any }) => value === 'storage';
-    const doc = removeDirectivesFromDocument([{ test }], query);
+    const doc = removeDirectivesFromDocument([{ test }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -275,7 +275,7 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query);
+    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -294,7 +294,7 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
     const test = ({ name: { value } }: { name: any }) => value === 'storage';
-    const doc = removeDirectivesFromDocument([{ test }], query);
+    const doc = removeDirectivesFromDocument([{ test }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -312,7 +312,7 @@ describe('removeDirectivesFromDocument', () => {
         other: field
       }
     `;
-    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query);
+    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -338,7 +338,7 @@ describe('removeDirectivesFromDocument', () => {
         test: (directive: any) => directive.name.value === 'client',
       },
     ];
-    const doc = removeDirectivesFromDocument(removed, query);
+    const doc = removeDirectivesFromDocument(removed, query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -358,7 +358,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'storage', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -376,7 +376,7 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
     const test = ({ name: { value } }: { name: any }) => value === 'storage';
-    const doc = removeDirectivesFromDocument([{ test, remove: true }], query);
+    const doc = removeDirectivesFromDocument([{ test, remove: true }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -421,8 +421,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'storage', remove: true }],
       query,
-    );
-
+    )!;
     expect(print(doc)).toBe(print(query));
   });
 
@@ -481,8 +480,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'storage', remove: true }],
       query,
-    );
-
+    )!;
     expect(print(doc)).toBe(print(expectedQuery));
   });
 
@@ -784,7 +782,7 @@ describe('query transforms', () => {
         }
       }
     `;
-    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery);
+    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery)!;
 
     const expectedQuery = gql`
       query {
@@ -816,7 +814,7 @@ describe('removeClientSetsFromDocument', () => {
         name
       }
     `;
-    const doc = removeClientSetsFromDocument(query);
+    const doc = removeClientSetsFromDocument(query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
@@ -833,7 +831,7 @@ describe('removeClientSetsFromDocument', () => {
         name
       }
     `;
-    const doc = removeClientSetsFromDocument(query);
+    const doc = removeClientSetsFromDocument(query)!;
     expect(print(doc)).toBe(print(expected));
   });
 });

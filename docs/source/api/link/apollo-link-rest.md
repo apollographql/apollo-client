@@ -45,7 +45,7 @@ Now it's time to write our first query. Defining a query is straightforward:
 import { gql } from '@apollo/client';
 
 const query = gql`
-  query luke {
+  query Luke {
     person @rest(type: "Person", path: "people/1/") {
       name
     }
@@ -92,7 +92,7 @@ You then need to specify the endpoint you want to use, in the rest directive:
 
 ```js
 const postTitleQuery1 = gql`
-  query postTitle {
+  query PostTitle {
     post @rest(type: "Post", path: "/post", endpoint: "v1") {
       id
       title
@@ -100,7 +100,7 @@ const postTitleQuery1 = gql`
   }
 `;
 const postTitleQuery2 = gql`
-  query postTitle {
+  query PostTitle {
     post @rest(type: "[Tag]", path: "/tags", endpoint: "v2") {
       id
       tags
@@ -362,7 +362,7 @@ const link = new RestLink({
 Here is one way you might customize `RestLink`:
 
 ```js
-import fetch from 'node-fetch';
+import fetch from 'cross-fetch';
 import * as camelCase from 'camelcase';
 import * as snake_case from 'snake-case';
 
@@ -484,7 +484,7 @@ An `@rest(…)` directive takes two required and several optional arguments:
 You can use query `variables` inside nested queries, or in the the path argument of your directive:
 
 ```graphql
-query postTitle {
+query PostTitle {
   post(id: "1") @rest(type: "Post", path: "/post/{args.id}") {
     id
     title
@@ -497,7 +497,7 @@ query postTitle {
 Additionally, you can also control the query-string:
 
 ```graphql
-query postTitle {
+query PostTitle {
   postSearch(query: "some key words", page_size: 5)
     @rest(type: "Post", path: "/search?{args}&{context.language}") {
     id
@@ -536,7 +536,7 @@ If you need/want to name it something different, you can pass `bodyKey`, and we'
 In this example the publish API accepts a body in the variable `body` instead of input:
 
 ```graphql
-mutation publishPost(
+mutation PublishPost(
   $someApiWithACustomBodyKey: PublishablePostInput!
 ) {
   publishedPost: publish(input: "Foo", body: $someApiWithACustomBodyKey)
@@ -559,7 +559,7 @@ mutation publishPost(
 If you need to structure your data differently, or you need to custom encode your body (say as form-encoded), you can provide `bodyBuilder` instead:
 
 ```graphql
-mutation encryptedPost(
+mutation EncryptedPost(
   $input: PublishablePostInput!
   $encryptor: any
 ) {
@@ -585,7 +585,7 @@ If you need to serialize your data differently (say as form-encoded), you can pr
 `RestLink` will instead use the corresponding serializer from the `bodySerializers` object, that can optionally be passed in during initialization.
 
 ```graphql
-mutation encryptedForm(
+mutation EncryptedForm(
   $input: PublishablePostInput!,
   $formSerializer: any
 ) {
@@ -674,12 +674,12 @@ const QUERY = gql`
 You can write also mutations with the apollo-link-rest, for example:
 
 ```graphql
-  mutation deletePost($id: ID!) {
-    deletePostResponse(id: $id)
-      @rest(type: "Post", path: "/posts/{args.id}", method: "DELETE") {
-      NoResponse
-    }
+mutation DeletePost($id: ID!) {
+  deletePostResponse(id: $id)
+    @rest(type: "Post", path: "/posts/{args.id}", method: "DELETE") {
+    NoResponse
   }
+}
 ```
 
 ## Troubleshooting

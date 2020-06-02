@@ -262,7 +262,7 @@ const logTimeLink = new ApolloLink((operation, forward) => {
 const link = timeStartLink.concat(logTimeLink)
 ```
 
-This example shows defines links, `timeStartLink` and `logTimeLink`. The `timeStartLink` assigns the current time to the context's `start` field. When the operation completes, the `logTimeLink` then subtracts the value of `start` from the current time to determine the total duration of the operation.
+This example defines two links, `timeStartLink` and `logTimeLink`. The `timeStartLink` assigns the current time to the context's `start` field. When the operation completes, the `logTimeLink` then subtracts the value of `start` from the current time to determine the total duration of the operation.
 
 The context's initial value can be set by Apollo Client before the link chain begins its execution. In this example, a call to `client.query` adds a `saveOffline` field to the context, which is then read by the custom link defined at the top:
 

@@ -1,3 +1,4 @@
+import React, { useContext } from 'react';
 import { render, cleanup } from '@testing-library/react';
 
 import { ApolloLink } from '../../../link/core/ApolloLink';
@@ -5,10 +6,6 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../ApolloProvider';
 import { getApolloContext } from '../ApolloContext';
-import { requireReactLazily } from '../../react';
-
-const React = requireReactLazily();
-const { useContext } = React;
 
 describe('<ApolloProvider /> Component', () => {
   afterEach(cleanup);
@@ -17,43 +14,6 @@ describe('<ApolloProvider /> Component', () => {
     cache: new Cache(),
     link: new ApolloLink((o, f) => (f ? f(o) : null))
   });
-
-  class Child extends React.Component<any, { store: any; client: any }> {
-    static contextType = getApolloContext();
-
-    componentDidUpdate() {
-      if (this.props.data) this.props.data.refetch();
-    }
-
-    render() {
-      return null;
-    }
-  }
-
-  interface Props {
-    client: ApolloClient<any>;
-  }
-
-  class Container extends React.Component<Props, any> {
-    constructor(props: Props) {
-      super(props);
-      this.state = {};
-    }
-
-    componentDidMount() {
-      this.setState({
-        client: this.props.client
-      });
-    }
-
-    render() {
-      return (
-        <ApolloProvider client={this.state.client || this.props.client}>
-          <Child />
-        </ApolloProvider>
-      );
-    }
-  }
 
   it('should render children components', () => {
     const { getByText } = render(

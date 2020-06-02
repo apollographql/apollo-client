@@ -133,7 +133,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.cleanup();
     this.runLazy = true;
     this.lazyOptions = options;
-    this.onNewData();
+    if (this.isMounted) this.onNewData();
   };
 
   private getExecuteResult(): QueryResult<TData, TVariables> {
@@ -291,7 +291,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           return;
         }
 
-        onNewData();
+        if (this.isMounted) onNewData();
       },
       error: error => {
         this.resubscribeToQuery();
@@ -303,7 +303,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           !equal(error, this.previousData.error)
         ) {
           this.previousData.error = error;
-          onNewData();
+          if (this.isMounted) onNewData();
         }
       }
     });

@@ -193,7 +193,11 @@ The following cache changes are **not** backward compatible. Take them into cons
 
   ```js
     client.writeQuery({
-      query: gql`{ cartItems }`,
+      query: gql`
+        query GetCartItems {
+          cartItems
+        }
+      `,
       data: {
         cartItems: []
       }

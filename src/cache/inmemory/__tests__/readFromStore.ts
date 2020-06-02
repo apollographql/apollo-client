@@ -4,14 +4,13 @@ import gql from 'graphql-tag';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
-import { makeReference } from '../../../core';
-import { defaultNormalizedCacheFactory } from '../entityStore';
+import { makeReference, InMemoryCache } from '../../../core';
+import { defaultNormalizedCacheFactory } from './helpers';
 import { withError } from './diffAgainstStore';
-import { Policies } from '../policies';
 
 describe('reading from the store', () => {
   const reader = new StoreReader({
-    policies: new Policies(),
+    cache: new InMemoryCache(),
   });
 
   it('runs a nested query with proper fragment fields in arrays', () => {
@@ -773,7 +772,7 @@ describe('reading from the store', () => {
 
   it('can use keyArgs function instead of @connection directive', () => {
     const reader = new StoreReader({
-      policies: new Policies({
+      cache: new InMemoryCache({
         typePolicies: {
           Query: {
             fields: {

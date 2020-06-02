@@ -8,7 +8,6 @@ import { Operation } from '../../link/core/types';
 import { ApolloClient } from '../..';
 import { ApolloCache } from '../../cache/core/cache';
 import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { hasDirectives } from '../../utilities/graphql/directives';
 import { itAsync } from '../../utilities/testing/itAsync';
 
 describe('General functionality', () => {

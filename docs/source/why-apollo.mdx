@@ -64,7 +64,7 @@ Caching a graph is no easy task, but we've spent two years focused on solving it
 
 ```js
 const GET_ALL_DOGS = gql`
-  query {
+  query GetAllDogs {
     dogs {
       id
       breed
@@ -91,7 +91,7 @@ Here's what our query for one dog looks like:
 
 ```js
 const GET_DOG = gql`
-  query {
+  query GetAllDogs {
     dog(id: "abc") {
       id
       breed

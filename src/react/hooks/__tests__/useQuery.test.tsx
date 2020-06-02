@@ -1,3 +1,4 @@
+import React, { useState, useReducer, Fragment } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
@@ -11,12 +12,9 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useQuery } from '../useQuery';
-import { requireReactLazily } from '../../react';
 import { QueryFunctionOptions } from '../..';
 import { NetworkStatus } from '../../../core/networkStatus';
-
-const React = requireReactLazily();
-const { useState, useReducer, Fragment } = React;
+import { FetchResult } from '../../../link/core/types';
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -380,6 +378,48 @@ describe('useQuery Hook', () => {
       }).finally(() => {
         console.error = consoleError;
       }).then(resolve, reject);
+    });
+
+    itAsync('should not log a React warning in StrictMode when unmounted before a query is resolved', async (resolve, reject) => {
+      jest.spyOn(console, 'error');
+
+      const Component = () => {
+        useQuery(CAR_QUERY);
+
+        return null;
+      };
+
+      const observable = new Observable<FetchResult>((observer) => {
+        const timer = setTimeout(() => {
+          observer.next({ data: CAR_RESULT_DATA });
+          observer.complete();
+        }, 0);
+
+        // On unsubscription, cancel the timer
+        return () => clearTimeout(timer);
+      });
+
+      const link = new ApolloLink(() => observable)
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const { unmount } = render(
+        <React.StrictMode>
+          <ApolloProvider client={client}>
+            <Component />
+          </ApolloProvider>
+        </React.StrictMode>
+      );
+
+      unmount();
+      await wait()
+
+      expect(console.error).not.toHaveBeenCalled();
+
+      resolve()
     });
   });
 

@@ -8,7 +8,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core/ApolloLink';
 import { GraphQLRequest, FetchResult } from '../../../link/core/types';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
+import { InMemoryCache, InMemoryCacheConfig } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject
@@ -64,7 +64,7 @@ describe('QueryManager', () => {
     clientAwareness = {},
   }: {
     link: ApolloLink;
-    config?: ApolloReducerConfig;
+    config?: Partial<InMemoryCacheConfig>;
     clientAwareness?: { [key: string]: string };
   }) => {
     return new QueryManager({
@@ -2210,6 +2210,7 @@ describe('QueryManager', () => {
       },
     };
 
+    let mergeCount = 0;
     const queryManager = createQueryManager({
       link: mockSingleLink({
         request: { query: queryWithoutId },
@@ -2218,6 +2219,34 @@ describe('QueryManager', () => {
         request: { query: queryWithId },
         result: { data: dataWithId },
       }).setOnError(reject),
+      config: {
+        typePolicies: {
+          Query: {
+            fields: {
+              author: {
+                merge(existing, incoming, { isReference, readField }) {
+                  switch (++mergeCount) {
+                    case 1:
+                      expect(existing).toBeUndefined();
+                      expect(isReference(incoming)).toBe(false);
+                      expect(incoming).toEqual(dataWithoutId.author);
+                      break;
+                    case 2:
+                      expect(existing).toEqual(dataWithoutId.author);
+                      expect(isReference(incoming)).toBe(true);
+                      expect(readField("id", incoming)).toBe("129");
+                      expect(readField("name", incoming)).toEqual(dataWithId.author.name);
+                      break;
+                    default:
+                      fail("unreached");
+                  }
+                  return incoming;
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const observableWithId = queryManager.watchQuery<any>({

@@ -59,11 +59,15 @@
 - `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
   [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
 
-- The `cache.evict` method can optionally take an arguments object as its third parameter (following the entity ID and field name), to delete only those field values with specific arguments. <br/>
+- **[beta-BREAKING]** Please note that the `cache.evict` method now requires `Cache.EvictOptions`, though it previously supported positional arguments as well. <br/>
   [@danReynolds](https://github.com/danReynolds) in [#6141](https://github.com/apollographql/apollo-client/pull/6141)
+  [@benjamn](https://github.com/benjamn) in [#6364](https://github.com/apollographql/apollo-client/pull/6364)
 
 - Cache methods that would normally trigger a broadcast, like `cache.evict`, `cache.writeQuery`, and `cache.writeFragment`, can now be called with a named options object, which supports a `broadcast: boolean` property that can be used to silence the broadcast, for situations where you want to update the cache multiple times without triggering a broadcast each time. <br/>
   [@benjamn](https://github.com/benjamn) in [#6288](https://github.com/apollographql/apollo-client/pull/6288)
+
+- `InMemoryCache` now `console.warn`s in development whenever non-normalized data is dangerously overwritten, with helpful links to documentation about normalization and custom `merge` functions. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6372](https://github.com/apollographql/apollo-client/pull/6372)
 
 - The contents of the `@apollo/react-hooks` package have been merged into `@apollo/client`, enabling the following all-in-one `import`:
   ```ts
@@ -160,7 +164,11 @@
   [@justinwaite](https://github.com/justinwaite) in [#5974](https://github.com/apollographql/apollo-client/pull/5974)
 
 - Updated to work with `graphql@15`.  <br/>
-  [@durchanek](https://github.com/durchanek) in [#6194](https://github.com/apollographql/apollo-client/pull/6194) and [#6279](https://github.com/apollographql/apollo-client/pull/6279)
+  [@durchanek](https://github.com/durchanek) in [#6194](https://github.com/apollographql/apollo-client/pull/6194) and [#6279](https://github.com/apollographql/apollo-client/pull/6279) <br/>
+  [@hagmic](https://github.com/hagmic) in [#6328](https://github.com/apollographql/apollo-client/pull/6328)
+
+- Apollo Client now supports setting a new `ApolloLink` (or link chain) after `new ApolloClient()` has been called, using the `ApolloClient#setLink` method.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6193](https://github.com/apollographql/apollo-client/pull/6193)
 
 ### Bug Fixes
 

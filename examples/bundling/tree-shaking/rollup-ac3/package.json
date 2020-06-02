@@ -30,8 +30,8 @@
   "dependencies": {
     "@apollo/client": "file:../../../../dist",
     "graphql": "^14.5.8",
-    "react": "^16.13.0",
-    "react-dom": "^16.13.0"
+    "react": "file:../../../../node_modules/react",
+    "react-dom": "file:../../../../node_modules/react-dom"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.0.0",

@@ -1,10 +1,15 @@
 import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
-import { FieldValueGetter, ToReferenceFunction } from './entityStore';
+import {
+  StoreObject,
+  StoreValue,
+  Reference,
+} from '../../utilities/graphql/storeUtils';
+import { FieldValueGetter } from './entityStore';
 import { KeyFieldsFunction } from './policies';
-export { StoreObject, StoreValue }
+import { ToReferenceFunction, Modifier, Modifiers } from '../core/types/common';
+export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -23,7 +28,9 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
-  merge(dataId: string, incoming: StoreObject): StoreObject;
+  merge(dataId: string, incoming: StoreObject): void;
+  modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
+  delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
   // non-Map elements:

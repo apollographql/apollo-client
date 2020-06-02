@@ -28,9 +28,8 @@ describe('Cache', () => {
     ];
 
     cachesList.forEach((caches, i) => {
-      it(message + ` (${i + 1}/${cachesList.length})`, () =>
-        callback(...caches),
-      );
+      it(`${message} (${i + 1}/${cachesList.length})`,
+         () => callback(...caches));
     });
   }
 
@@ -869,106 +868,118 @@ describe('Cache', () => {
       });
     });
 
-    itWithInitialData(
-      'will write some deeply nested data to the store',
-      [{}],
-      proxy => {
-        proxy.writeQuery({
-          data: { a: 1, d: { e: 4 } },
-          query: gql`
-            {
-              a
-              d {
-                e
-              }
-            }
-          `,
-        });
-
-        expect((proxy as InMemoryCache).extract()).toEqual({
-          ROOT_QUERY: {
-            __typename: "Query",
-            a: 1,
-            d: {
-              e: 4,
-            },
-          },
-        });
-
-        proxy.writeQuery({
-          data: { a: 1, d: { h: { i: 7 } } },
-          query: gql`
-            {
-              a
-              d {
-                h {
-                  i
-                }
-              }
-            }
-          `,
-        });
-
-        expect((proxy as InMemoryCache).extract()).toEqual({
-          ROOT_QUERY: {
-            __typename: "Query",
-            a: 1,
-            // The new value for d overwrites the old value, since there
-            // is no custom merge function defined for Query.d.
-            d: {
-              h: {
-                i: 7,
+    it('will write some deeply nested data to the store', () => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              d: {
+                // Deliberately silence "Cache data may be lost..."
+                // warnings by unconditionally favoring the incoming data.
+                merge(_, incoming) {
+                  return incoming;
+                },
               },
             },
           },
-        });
+        },
+      });
 
-        proxy.writeQuery({
-          data: {
-            a: 1,
-            b: 2,
-            c: 3,
-            d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+      cache.writeQuery({
+        data: { a: 1, d: { e: 4 } },
+        query: gql`
+          {
+            a
+            d {
+              e
+            }
+          }
+        `,
+      });
+
+      expect((cache as InMemoryCache).extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          a: 1,
+          d: {
+            e: 4,
           },
-          query: gql`
-            {
-              a
-              b
-              c
-              d {
-                e
-                f
-                g
-                h {
-                  i
-                  j
-                  k
-                }
+        },
+      });
+
+      cache.writeQuery({
+        data: { a: 1, d: { h: { i: 7 } } },
+        query: gql`
+          {
+            a
+            d {
+              h {
+                i
               }
             }
-          `,
-        });
+          }
+        `,
+      });
 
-        expect((proxy as InMemoryCache).extract()).toEqual({
-          ROOT_QUERY: {
-            __typename: "Query",
-            a: 1,
-            b: 2,
-            c: 3,
-            d: {
-              e: 4,
-              f: 5,
-              g: 6,
-              h: {
-                i: 7,
-                j: 8,
-                k: 9,
-              },
+      expect((cache as InMemoryCache).extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          a: 1,
+          // The new value for d overwrites the old value, since there
+          // is no custom merge function defined for Query.d.
+          d: {
+            h: {
+              i: 7,
             },
           },
-        });
-      },
-    );
+        },
+      });
+
+      cache.writeQuery({
+        data: {
+          a: 1,
+          b: 2,
+          c: 3,
+          d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+        },
+        query: gql`
+          {
+            a
+            b
+            c
+            d {
+              e
+              f
+              g
+              h {
+                i
+                j
+                k
+              }
+            }
+          }
+        `,
+      });
+
+      expect((cache as InMemoryCache).extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          a: 1,
+          b: 2,
+          c: 3,
+          d: {
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              i: 7,
+              j: 8,
+              k: 9,
+            },
+          },
+        },
+      });
+    });
 
     itWithInitialData(
       'will write some data to the store with variables',

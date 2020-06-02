@@ -55,7 +55,7 @@
     }
   ],
   "peerDependencies": {
-    "graphql": "^15.0.0",
+    "graphql": "^14.0.0 || ^15.0.0",
     "react": "^16.8.0"
   },
   "peerDependenciesMeta": {

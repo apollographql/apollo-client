@@ -1075,13 +1075,13 @@ export class QueryManager<TStore> {
   }
 }
 
-export function markMutationResult<TStore, T>(
-  mutationResult: FetchResult<T>,
+export function markMutationResult<TStore, TData>(
+  mutationResult: FetchResult<TData>,
   mutation: {
     mutationId: string;
     document: DocumentNode;
     variables: any;
-    updateQueriesByName: MutationQueryReducersMap<T> | undefined;
+    updateQueriesByName: MutationQueryReducersMap<TData> | undefined;
     update:
     ((cache: ApolloCache<TStore>, mutationResult: Object) => void) |
     undefined;

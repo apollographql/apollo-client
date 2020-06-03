@@ -1,7 +1,7 @@
 import { ObservableQuery } from '../../core/ObservableQuery';
 import { ApolloQueryResult } from '../../core/types';
 import { ObservableSubscription } from '../../utilities/observables/Observable';
-import { asyncMap } from '../../utilities/observables/observables';
+import { asyncMap } from '../../utilities/observables/asyncMap';
 
 export default function subscribeAndCount(
   reject: (reason: any) => any,

@@ -9,9 +9,9 @@ import SubscriptionResult from '../../shared/subscription-result.mdx';
 
 In addition to [queries](./queries/) and [mutations](./mutations/), GraphQL supports a third operation type: **subscriptions**.
 
-Like queries, subscriptions enable you to fetch data. _Unlike_ queries, subscriptions maintain an active connection to your GraphQL server (most commonly via WebSocket). This enables your server to push updates to the subscription's result over time. 
+Like queries, subscriptions enable you to fetch data. _Unlike_ queries, subscriptions maintain an active connection to your GraphQL server (most commonly via WebSocket). This enables your server to push updates to the subscription's result over time.
 
-Subscriptions are useful for notifying your client in real time about changes to back-end data, such as the creation of a new object or updates to an important field. 
+Subscriptions are useful for notifying your client in real time about changes to back-end data, such as the creation of a new object or updates to an important field.
 
 ## When to use subscriptions
 
@@ -45,7 +45,7 @@ In your application's client, you define the shape of each subscription you want
 
 ```js
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($repoFullName: String!) {
+  subscription OnCommentAdded($repoFullName: String!) {
     commentAdded(repoFullName: $repoFullName) {
       id
       content
@@ -173,7 +173,7 @@ The following example component uses the subscription we defined earlier to rend
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($postID: ID!) {
+  subscription OnCommentAdded($postID: ID!) {
     commentAdded(postID: $postID) {
       id
       content
@@ -195,7 +195,7 @@ function LatestComment({ postID }) {
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($postID: ID!) {
+  subscription OnCommentAdded($postID: ID!) {
     commentAdded(postID: $postID) {
       id
       content
@@ -222,7 +222,7 @@ const LatestComment = ({ postID }) => (
 
 Whenever a query returns a result in Apollo Client, that result includes a `subscribeToMore` function. You can use this function to execute a followup subscription that pushes updates to the query's original result.
 
-> The `subscribeToMore` function is similar in structure to the [`fetchMore`](../caching/cache-interaction/#incremental-loading-fetchmore) function that's commonly used for handling pagination. The primary difference is that `fetchMore` executes a followup _query_, whereas `subscribeToMore` executes a subscription. 
+> The `subscribeToMore` function is similar in structure to the [`fetchMore`](../caching/cache-interaction/#incremental-loading-fetchmore) function that's commonly used for handling pagination. The primary difference is that `fetchMore` executes a followup _query_, whereas `subscribeToMore` executes a subscription.
 
 As an example, let's start with a standard query that fetches all of the existing comments for a given blog post:
 
@@ -282,7 +282,7 @@ Let's say we want our GraphQL server to push an update to our client as soon as 
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription onCommentAdded($postID: ID!) {
+  subscription OnCommentAdded($postID: ID!) {
     commentAdded(postID: $postID) {
       id
       content

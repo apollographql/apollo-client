@@ -168,11 +168,8 @@ describe('network-only', () => {
   });
 
   itAsync('updates the cache on a mutation', (resolve, reject) => {
-    let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
-      called++;
       return forward(operation).map(result => {
-        called++;
         return result;
       });
     });
@@ -302,11 +299,8 @@ describe('no-cache', () => {
   });
 
   itAsync('does not update the cache on a mutation', (resolve, reject) => {
-    let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
-      called++;
       return forward(operation).map(result => {
-        called++;
         return result;
       });
     });
@@ -375,62 +369,48 @@ describe('cache-and-network', function() {
     subscribeAndCount(reject, observable, (count, result) => {
       if (count === 1) {
         expect(result).toEqual({
-          data: void 0,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          stale: true,
-        });
-      } else if (count === 2) {
-        expect(result).toEqual({
           data: dataWithId(1),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.setVariables({ id: '2' });
-      } else if (count === 3) {
+      } else if (count === 2) {
         expect(result).toEqual({
-          data: dataWithId(1),
+          data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
-          stale: false,
         });
-      } else if (count === 4) {
+      } else if (count === 3) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.refetch();
-      } else if (count === 5) {
+      } else if (count === 4) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: true,
           networkStatus: NetworkStatus.refetch,
-          stale: false,
         });
-      } else if (count === 6) {
+      } else if (count === 5) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.refetch({ id: '3' });
-      } else if (count === 7) {
+      } else if (count === 6) {
         expect(result).toEqual({
-          data: dataWithId(2),
+          data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
-          stale: false,
         });
-      } else if (count === 8) {
+      } else if (count === 7) {
         expect(result).toEqual({
           data: dataWithId(3),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         resolve();
       }

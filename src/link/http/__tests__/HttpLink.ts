@@ -7,6 +7,10 @@ import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
 import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
+import { ClientParseError } from '../serializeFetchParameter';
+import { ServerParseError } from '../parseAndCheckHttpResponse';
+import { ServerError } from '../../..';
+import DoneCallback = jest.DoneCallback;
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -24,8 +28,8 @@ const sampleMutation = gql`
   }
 `;
 
-const makeCallback = (done, body) => {
-  return (...args) => {
+function makeCallback(done: DoneCallback, body: (...args: any[]) => void) {
+  return (...args: any[]) => {
     try {
       body(...args);
       done();
@@ -33,22 +37,22 @@ const makeCallback = (done, body) => {
       done.fail(error);
     }
   };
-};
+}
 
-const convertBatchedBody = body => {
-  const parsed = JSON.parse(body);
-  return parsed;
-};
+function convertBatchedBody(body: BodyInit | null | undefined) {
+  return JSON.parse(body as string);
+}
 
-const makePromise =
-  res => new Promise((resolve) => setTimeout(() => resolve(res)));
+function makePromise(res: any) {
+  return new Promise((resolve) => setTimeout(() => resolve(res)));
+}
 
 describe('HttpLink', () => {
   describe('General', () => {
     const data = { data: { hello: 'world' } };
     const data2 = { data: { hello: 'everyone' } };
     const mockError = { throws: new TypeError('mock me') };
-    let subscriber;
+    let subscriber: ZenObservable.Observer<any>;
 
     beforeEach(() => {
       fetchMock.restore();
@@ -106,9 +110,9 @@ describe('HttpLink', () => {
       });
 
       execute(link, { query: sampleQuery, variables, extensions }).subscribe({
-        next: makeCallback(done, result => {
-          const [uri, options] = fetchMock.lastCall();
-          const { method, body } = options;
+        next: makeCallback(done, () => {
+          const [uri, options] = fetchMock.lastCall()!;
+          const { method, body } = options!;
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
@@ -128,9 +132,9 @@ describe('HttpLink', () => {
       });
 
       execute(link, { query: sampleQuery, variables }).subscribe({
-        next: makeCallback(done, result => {
-          const [uri, options] = fetchMock.lastCall();
-          const { method, body } = options;
+        next: makeCallback(done, () => {
+          const [uri, options] = fetchMock.lastCall()!;
+          const { method, body } = options!;
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
@@ -154,9 +158,9 @@ describe('HttpLink', () => {
           fetchOptions: { method: 'GET' },
         },
       }).subscribe(
-        makeCallback(done, result => {
-          const [uri, options] = fetchMock.lastCall();
-          const { method, body } = options;
+        makeCallback(done, () => {
+          const [uri, options] = fetchMock.lastCall()!;
+          const { method, body } = options!;
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
@@ -177,9 +181,9 @@ describe('HttpLink', () => {
         query: sampleQuery,
         variables,
       }).subscribe(
-        makeCallback(done, result => {
-          const [uri, options] = fetchMock.lastCall();
-          const { method, body } = options;
+        makeCallback(done, () => {
+          const [uri, options] = fetchMock.lastCall()!;
+          const { method, body } = options!;
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
@@ -200,9 +204,9 @@ describe('HttpLink', () => {
         query: sampleMutation,
         variables,
       }).subscribe(
-        makeCallback(done, result => {
-          const [uri, options] = fetchMock.lastCall();
-          const { method, body } = options;
+        makeCallback(done, () => {
+          const [uri, options] = fetchMock.lastCall()!;
+          const { method, body } = options!;
           expect(body).toBeDefined();
           expect(method).toBe('POST');
           expect(uri).toBe('/data');
@@ -228,9 +232,9 @@ describe('HttpLink', () => {
           clientAwareness,
         },
       }).subscribe(
-        makeCallback(done, result => {
-          const [uri, options] = fetchMock.lastCall();
-          const { headers } = options;
+        makeCallback(done, () => {
+          const [, options] = fetchMock.lastCall()!;
+          const { headers } = options as any;
           expect(headers['apollographql-client-name']).toBeDefined();
           expect(headers['apollographql-client-name']).toEqual(
             clientAwareness.name,
@@ -258,9 +262,9 @@ describe('HttpLink', () => {
           clientAwareness,
         },
       }).subscribe(
-        makeCallback(done, result => {
-          const [uri, options] = fetchMock.lastCall();
-          const { headers } = options;
+        makeCallback(done, () => {
+          const [, options] = fetchMock.lastCall()!;
+          const { headers } = options as any;
           expect(hasOwn.call(headers, 'apollographql-client-name')).toBe(false);
           expect(hasOwn.call(headers, 'apollographql-client-version')).toBe(
             false,
@@ -276,7 +280,7 @@ describe('HttpLink', () => {
       });
 
       let b;
-      const a = { b };
+      const a: any = { b };
       b = { a };
       a.b = b;
       const variables = {
@@ -287,7 +291,7 @@ describe('HttpLink', () => {
         result => {
           done.fail('next should have been thrown from the link');
         },
-        makeCallback(done, e => {
+        makeCallback(done, (e: ClientParseError) => {
           expect(e.message).toMatch(/Variables map is not serializable/);
           expect(e.parseError.message).toMatch(
             /Converting circular structure to JSON/,
@@ -304,7 +308,7 @@ describe('HttpLink', () => {
       });
 
       let b;
-      const a = { b };
+      const a: any = { b };
       b = { a };
       a.b = b;
       const extensions = {
@@ -315,7 +319,7 @@ describe('HttpLink', () => {
         result => {
           done.fail('next should have been thrown from the link');
         },
-        makeCallback(done, e => {
+        makeCallback(done, (e: ClientParseError) => {
           expect(e.message).toMatch(/Extensions map is not serializable/);
           expect(e.parseError.message).toMatch(
             /Converting circular structure to JSON/,
@@ -327,7 +331,7 @@ describe('HttpLink', () => {
     it('raises warning if called with concat', () => {
       const link = createHttpLink();
       const _warn = console.warn;
-      console.warn = warning => expect(warning['message']).toBeDefined();
+      console.warn = (warning: any) => expect(warning['message']).toBeDefined();
       expect(link.concat((operation, forward) => forward(operation))).toEqual(
         link,
       );
@@ -360,7 +364,7 @@ describe('HttpLink', () => {
       });
       observable.subscribe(
         result => done.fail('next should not have been called'),
-        makeCallback(done, error => {
+        makeCallback(done, (error: TypeError) => {
           expect(error).toEqual(mockError.throws);
         }),
         () => done.fail('complete should not have been called'),
@@ -374,7 +378,7 @@ describe('HttpLink', () => {
       });
       observable.subscribe(
         result => done.fail('next should not have been called'),
-        makeCallback(done, error => {
+        makeCallback(done, (error: TypeError) => {
           expect(error).toEqual(mockError.throws);
         }),
         () => done.fail('complete should not have been called'),
@@ -416,7 +420,7 @@ describe('HttpLink', () => {
         error: error => done.fail(error),
         complete: () => {
           try {
-            let body = convertBatchedBody(fetchMock.lastCall()[1].body);
+            let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
             expect(body.query).toBe(print(sampleMutation));
             expect(body.variables).toEqual(variables);
             expect(body.context).not.toBeDefined();
@@ -538,8 +542,8 @@ describe('HttpLink', () => {
       const link = middleware.concat(createHttpLink({ uri: 'data' }));
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const headers = fetchMock.lastCall()[1].headers;
+        makeCallback(done, () => {
+          const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
           expect(headers.accept).toBe('*/*');
@@ -555,8 +559,8 @@ describe('HttpLink', () => {
       });
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const headers = fetchMock.lastCall()[1].headers;
+        makeCallback(done, () => {
+          const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
           expect(headers.accept).toBe('*/*');
@@ -577,8 +581,8 @@ describe('HttpLink', () => {
       );
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const headers = fetchMock.lastCall()[1].headers;
+        makeCallback(done, () => {
+          const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
           expect(headers.accept).toBe('*/*');
@@ -598,8 +602,8 @@ describe('HttpLink', () => {
         variables,
         context,
       }).subscribe(
-        makeCallback(done, result => {
-          const headers = fetchMock.lastCall()[1].headers;
+        makeCallback(done, () => {
+          const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
           expect(headers.accept).toBe('*/*');
@@ -618,8 +622,8 @@ describe('HttpLink', () => {
       const link = middleware.concat(createHttpLink({ uri: 'data' }));
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const creds = fetchMock.lastCall()[1].credentials;
+        makeCallback(done, () => {
+          const creds = fetchMock.lastCall()![1]!.credentials;
           expect(creds).toBe('same-team-yo');
         }),
       );
@@ -630,8 +634,8 @@ describe('HttpLink', () => {
       const link = createHttpLink({ uri: 'data', credentials: 'same-team-yo' });
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const creds = fetchMock.lastCall()[1].credentials;
+        makeCallback(done, () => {
+          const creds = fetchMock.lastCall()![1]!.credentials;
           expect(creds).toBe('same-team-yo');
         }),
       );
@@ -650,8 +654,8 @@ describe('HttpLink', () => {
       );
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const creds = fetchMock.lastCall()[1].credentials;
+        makeCallback(done, () => {
+          const creds = fetchMock.lastCall()![1]!.credentials;
           expect(creds).toBe('same-team-yo');
         }),
       );
@@ -668,7 +672,7 @@ describe('HttpLink', () => {
       const link = middleware.concat(createHttpLink());
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
+        makeCallback(done, () => {
           const uri = fetchMock.lastUrl();
           expect(uri).toBe('/data');
         }),
@@ -680,7 +684,7 @@ describe('HttpLink', () => {
       const link = createHttpLink({ uri: 'data' });
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
+        makeCallback(done, () => {
           const uri = fetchMock.lastUrl();
           expect(uri).toBe('/data');
         }),
@@ -700,7 +704,7 @@ describe('HttpLink', () => {
       );
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
+        makeCallback(done, () => {
           const uri = fetchMock.lastUrl();
 
           expect(uri).toBe('/apollo');
@@ -710,8 +714,8 @@ describe('HttpLink', () => {
 
     it('allows uri to be a function', done => {
       const variables = { params: 'stub' };
-      const customFetch = (uri, options) => {
-        const { operationName } = convertBatchedBody(options.body);
+      const customFetch: WindowOrWorkerGlobalScope['fetch'] = (uri, options) => {
+        const { operationName } = convertBatchedBody(options!.body);
         try {
           expect(operationName).toBe('SampleQuery');
         } catch (e) {
@@ -723,8 +727,7 @@ describe('HttpLink', () => {
       const link = createHttpLink({ fetch: customFetch });
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const uri = fetchMock.lastUrl();
+        makeCallback(done, () => {
           expect(fetchMock.lastUrl()).toBe('/dataFunc');
         }),
       );
@@ -738,8 +741,8 @@ describe('HttpLink', () => {
       });
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const { someOption, mode, headers } = fetchMock.lastCall()[1];
+        makeCallback(done, () => {
+          const { someOption, mode, headers } = fetchMock.lastCall()![1] as any;
           expect(someOption).toBe('foo');
           expect(mode).toBe('no-cors');
           expect(headers['content-type']).toBe('application/json');
@@ -760,8 +763,8 @@ describe('HttpLink', () => {
       const link = middleware.concat(createHttpLink({ uri: 'data' }));
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const { someOption } = fetchMock.lastCall()[1];
+        makeCallback(done, () => {
+          const { someOption } = fetchMock.lastCall()![1] as any;
           expect(someOption).toBe('foo');
           done();
         }),
@@ -783,8 +786,8 @@ describe('HttpLink', () => {
       );
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          const { someOption } = fetchMock.lastCall()[1];
+        makeCallback(done, () => {
+          const { someOption } = fetchMock.lastCall()![1] as any;
           expect(someOption).toBe('foo');
         }),
       );
@@ -805,8 +808,8 @@ describe('HttpLink', () => {
       const link = middleware.concat(createHttpLink({ uri: 'data' }));
 
       execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(done, result => {
-          let body = convertBatchedBody(fetchMock.lastCall()[1].body);
+        makeCallback(done, () => {
+          let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
 
           expect(body.query).not.toBeDefined();
           expect(body.extensions).toEqual({ persistedQuery: { hash: '1234' } });
@@ -822,7 +825,7 @@ describe('HttpLink', () => {
           const sub = op.subscribe({
             next: ob.next.bind(ob),
             error: ob.error.bind(ob),
-            complete: makeCallback(done, e => {
+            complete: makeCallback(done, () => {
               expect(operation.getContext().response.headers.toBeDefined);
               ob.complete();
             }),
@@ -846,7 +849,7 @@ describe('HttpLink', () => {
   });
 
   describe('Dev warnings', () => {
-    let oldFetch;
+    let oldFetch: WindowOrWorkerGlobalScope['fetch'];;
     beforeEach(() => {
       oldFetch = window.fetch;
       delete window.fetch;
@@ -858,7 +861,7 @@ describe('HttpLink', () => {
 
     it('warns if fetch is undeclared', done => {
       try {
-        const link = createHttpLink({ uri: 'data' });
+        createHttpLink({ uri: 'data' });
         done.fail("warning wasn't called");
       } catch (e) {
         makeCallback(done, () =>
@@ -868,9 +871,9 @@ describe('HttpLink', () => {
     });
 
     it('warns if fetch is undefined', done => {
-      window.fetch = undefined;
+      window.fetch = undefined as any;
       try {
-        const link = createHttpLink({ uri: 'data' });
+        createHttpLink({ uri: 'data' });
         done.fail("warning wasn't called");
       } catch (e) {
         makeCallback(done, () =>
@@ -881,13 +884,13 @@ describe('HttpLink', () => {
 
     it('does not warn if fetch is undeclared but a fetch is passed', () => {
       expect(() => {
-        const link = createHttpLink({ uri: 'data', fetch: () => {} });
+        createHttpLink({ uri: 'data', fetch: (() => {}) as any });
       }).not.toThrow();
     });
   });
 
   describe('Error handling', () => {
-    let responseBody;
+    let responseBody: any;
     const text = jest.fn(() => {
       const responseBodyText = '{}';
       responseBody = JSON.parse(responseBodyText);
@@ -922,7 +925,7 @@ describe('HttpLink', () => {
           const op = forward(operation);
           const sub = op.subscribe({
             next: ob.next.bind(ob),
-            error: makeCallback(done, e => {
+            error: makeCallback(done, (e: ServerError) => {
               expect(e.message).toMatch(/Received status code 401/);
               expect(e.statusCode).toEqual(401);
               ob.error(e);
@@ -936,7 +939,7 @@ describe('HttpLink', () => {
         });
       });
 
-      const link = middleware.concat(createHttpLink({ uri: 'data', fetch }));
+      const link = middleware.concat(createHttpLink({ uri: 'data', fetch: fetch as any }));
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
@@ -948,13 +951,13 @@ describe('HttpLink', () => {
 
     it('throws an error if response code is > 300', done => {
       fetch.mockReturnValueOnce(Promise.resolve({ status: 400, text }));
-      const link = createHttpLink({ uri: 'data', fetch });
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
           done.fail('next should have been thrown from the network');
         },
-        makeCallback(done, e => {
+        makeCallback(done, (e: ServerError) => {
           expect(e.message).toMatch(/Received status code 400/);
           expect(e.statusCode).toBe(400);
           expect(e.result).toEqual(responseBody);
@@ -966,7 +969,7 @@ describe('HttpLink', () => {
         Promise.resolve({ status: 400, text: textWithData }),
       );
 
-      const link = createHttpLink({ uri: 'data', fetch });
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
       let called = false;
 
@@ -989,9 +992,7 @@ describe('HttpLink', () => {
         Promise.resolve({ status: 400, text: textWithErrors }),
       );
 
-      const link = createHttpLink({ uri: 'data', fetch });
-
-      let called = false;
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
@@ -1008,13 +1009,13 @@ describe('HttpLink', () => {
     it('throws an error if empty response from the server ', done => {
       fetch.mockReturnValueOnce(Promise.resolve({ text }));
       text.mockReturnValueOnce(Promise.resolve('{ "body": "boo" }'));
-      const link = createHttpLink({ uri: 'data', fetch });
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
           done.fail('next should have been thrown from the network');
         },
-        makeCallback(done, e => {
+        makeCallback(done, (e: Error) => {
           expect(e.message).toMatch(
             /Server response was missing for query 'SampleQuery'/,
           );
@@ -1023,10 +1024,10 @@ describe('HttpLink', () => {
     });
     it("throws if the body can't be stringified", done => {
       fetch.mockReturnValueOnce(Promise.resolve({ data: {}, text }));
-      const link = createHttpLink({ uri: 'data', fetch });
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
       let b;
-      const a = { b };
+      const a: any = { b };
       b = { a };
       a.b = b;
       const variables = {
@@ -1037,7 +1038,7 @@ describe('HttpLink', () => {
         result => {
           done.fail('next should have been thrown from the link');
         },
-        makeCallback(done, e => {
+        makeCallback(done, (e: ClientParseError) => {
           expect(e.message).toMatch(/Payload is not serializable/);
           expect(e.parseError.message).toMatch(
             /Converting circular structure to JSON/,
@@ -1046,7 +1047,7 @@ describe('HttpLink', () => {
       );
     });
     it('supports being cancelled and does not throw', done => {
-      let called;
+      let called = false;
       class AbortController {
         signal: {};
         abort = () => {
@@ -1054,14 +1055,14 @@ describe('HttpLink', () => {
         };
       }
 
-      global.AbortController = AbortController;
+      (global as any).AbortController = AbortController;
 
       fetch.mockReturnValueOnce(Promise.resolve({ text }));
       text.mockReturnValueOnce(
         Promise.resolve('{ "data": { "hello": "world" } }'),
       );
 
-      const link = createHttpLink({ uri: 'data', fetch });
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
       const sub = execute(link, { query: sampleQuery }).subscribe({
         next: result => {
@@ -1078,7 +1079,7 @@ describe('HttpLink', () => {
 
       setTimeout(
         makeCallback(done, () => {
-          delete global.AbortController;
+          delete (global as any).AbortController;
           expect(called).toBe(true);
           fetch.mockReset();
           text.mockReset();
@@ -1093,13 +1094,13 @@ describe('HttpLink', () => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: unparsableJson }),
       );
-      const link = createHttpLink({ uri: 'data', fetch });
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
           done.fail('next should have been thrown from the network');
         },
-        makeCallback(done, e => {
+        makeCallback(done, (e: ServerParseError) => {
           expect(e.message).toMatch(/JSON/);
           expect(e.statusCode).toBe(400);
           expect(e.response).toBeDefined();

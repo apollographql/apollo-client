@@ -5,7 +5,7 @@ module.exports = {
   },
   globals: {
     'ts-jest': {
-      diagnostics: false,
+      diagnostics: true,
     },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],

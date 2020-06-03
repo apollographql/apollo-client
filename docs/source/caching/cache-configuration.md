@@ -148,7 +148,8 @@ A `TypePolicy` object can include the following fields:
 ```ts
 type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
-  // array of field names or a function that returns an arbitrary string.
+  // array of field names, a function that returns an arbitrary string, or
+  // false to disable normalization for objects of this type.
   keyFields?: KeySpecifier | KeyFieldsFunction | false;
 
   // If your schema uses a custom __typename for any of the root Query,
@@ -196,7 +197,7 @@ const cache = new InMemoryCache({
 
 const result = cache.readQuery({
   query: gql`
-    query {
+    query MyQuery {
       ...RootQueryFragment
     }
     fragment RootQueryFragment on UnconventionalRootQuery {
@@ -210,7 +211,7 @@ const result = cache.readQuery({
 
 const equivalentResult = cache.readQuery({
   query: gql`
-    query {
+    query MyQuery {
       field1
       field2 {
         subfield

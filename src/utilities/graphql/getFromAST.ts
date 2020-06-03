@@ -54,7 +54,7 @@ export function getOperationName(doc: DocumentNode): string | null {
         definition =>
           definition.kind === 'OperationDefinition' && definition.name,
       )
-      .map((x: OperationDefinitionNode) => x.name.value)[0] || null
+      .map((x: OperationDefinitionNode) => x!.name!.value)[0] || null
   );
 }
 

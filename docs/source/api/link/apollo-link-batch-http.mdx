@@ -39,7 +39,7 @@ The batching options indicate how operations are batched together, the size of b
 
 ## Fetch polyfill
 
-The batch HTTP link relies on having `fetch` present in your runtime environment. If you are running on react-native, or modern browsers, this should not be a problem. If you are targeting an environment without `fetch` such as older browsers or the server however, you will need to pass your own `fetch` to the link through its options. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for Node.
+The batch HTTP link relies on having `fetch` present in your runtime environment. If you are running on react-native, or modern browsers, this should not be a problem. If you are targeting an environment without `fetch` such as older browsers or the server however, you will need to pass your own `fetch` to the link through its options. We recommend using [`cross-fetch`](https://www.npmjs.com/package/cross-fetch) for older browsers and Node.
 
 ## Context
 

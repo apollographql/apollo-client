@@ -10,6 +10,8 @@ import {
 } from '../../utilities/graphql/storeUtils';
 import { DeepMerger, ReconcilerFunction } from '../../utilities/common/mergeDeep';
 
+export const hasOwn = Object.prototype.hasOwnProperty;
+
 export function getTypenameFromStoreObject(
   store: NormalizedCache,
   objectOrReference: StoreObject | Reference,
@@ -20,9 +22,9 @@ export function getTypenameFromStoreObject(
 }
 
 const FieldNamePattern = /^[_A-Za-z0-9]+/;
-export function fieldNameFromStoreName(storeFieldName: string) {
+export function fieldNameFromStoreName(storeFieldName: string): string {
   const match = storeFieldName.match(FieldNamePattern);
-  return match && match[0];
+  return match ? match[0] : storeFieldName;
 }
 
 // Invoking merge functions needs to happen after processSelectionSet has
@@ -34,6 +36,15 @@ export interface FieldValueToBeMerged {
   __field: FieldNode;
   __typename: string;
   __value: StoreValue;
+}
+
+export function storeValueIsStoreObject(
+  value: StoreValue,
+): value is StoreObject {
+  return value !== null &&
+    typeof value === "object" &&
+    !isReference(value) &&
+    !Array.isArray(value);
 }
 
 export function isFieldValueToBeMerged(

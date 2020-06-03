@@ -1,10 +1,15 @@
 import { DocumentNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { Modifier, Modifiers } from '../core/types/common';
-import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
-import { FieldValueGetter, ToReferenceFunction } from './entityStore';
-export { StoreObject, StoreValue }
+import {
+  StoreObject,
+  StoreValue,
+  Reference,
+} from '../../utilities/graphql/storeUtils';
+import { FieldValueGetter } from './entityStore';
+import { KeyFieldsFunction } from './policies';
+import { ToReferenceFunction, Modifier, Modifiers } from '../core/types/common';
+export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -14,7 +19,7 @@ export interface IdGetterObj extends Object {
 
 export declare type IdGetter = (
   value: IdGetterObj,
-) => string | null | undefined;
+) => string | undefined;
 
 /**
  * This is an interface used to access, set and remove
@@ -24,7 +29,7 @@ export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
   merge(dataId: string, incoming: StoreObject): void;
-  modify(dataId: string, modifiers: Modifier<any> | Modifiers): boolean;
+  modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
@@ -81,7 +86,7 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 };
 
 export type ApolloReducerConfig = {
-  dataIdFromObject?: IdGetter;
+  dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
 };
 

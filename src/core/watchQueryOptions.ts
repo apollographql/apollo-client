@@ -1,4 +1,4 @@
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode } from 'graphql';
 
 import { ApolloCache } from '../cache/core/cache';
 import { FetchResult } from '../link/core/types';
@@ -53,17 +53,6 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
    * Specifies the {@link ErrorPolicy} to be used for this query
    */
   errorPolicy?: ErrorPolicy;
-
-  /**
-   * Whether or not to fetch results
-   */
-  fetchResults?: boolean;
-
-  /**
-   * Arbitrary metadata stored in the store with this query.  Designed for debugging,
-   * developer tools, etc.
-   */
-  metadata?: any;
 
   /**
    * Context to be passed to link execution chain
@@ -204,7 +193,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: ExecutionResult<T>) => RefetchQueryDescription)
+    | ((result: FetchResult<T>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**
@@ -272,9 +261,12 @@ export interface MutationOptions<
   context?: any;
 
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query
+   * Specifies the {@link FetchPolicy} to be used for this query. Mutations only
+   * support a 'no-cache' fetchPolicy. If you don't want to disable the cache,
+   * remove your fetchPolicy setting to proceed with the default mutation
+   * behavior.
    */
-  fetchPolicy?: FetchPolicy;
+  fetchPolicy?: Extract<FetchPolicy, 'no-cache'>;
 }
 
 // Add a level of indirection for `typedoc`.

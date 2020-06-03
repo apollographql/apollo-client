@@ -1,7 +1,7 @@
 import { checkFetcher } from '../checkFetcher';
 
 describe('checkFetcher', () => {
-  let oldFetch;
+  let oldFetch: WindowOrWorkerGlobalScope['fetch'];
   beforeEach(() => {
     oldFetch = window.fetch;
     delete window.fetch;
@@ -18,6 +18,6 @@ describe('checkFetcher', () => {
   });
 
   it('does not throws if no fetch is present but a fetch is passed', () => {
-    expect(() => checkFetcher(() => {})).not.toThrow();
+    expect(() => checkFetcher((() => {}) as any)).not.toThrow();
   });
 });

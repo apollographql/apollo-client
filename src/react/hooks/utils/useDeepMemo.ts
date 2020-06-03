@@ -1,6 +1,5 @@
+import { useRef } from 'react';
 import { equal } from '@wry/equality';
-
-import { requireReactLazily } from '../../react';
 
 /**
  * Memoize a result using deep equality. This hook has two advantages over
@@ -13,8 +12,6 @@ export function useDeepMemo<TKey, TValue>(
   memoFn: () => TValue,
   key: TKey
 ): TValue {
-  const React = requireReactLazily();
-  const { useRef } = React;
   const ref = useRef<{ key: TKey; value: TValue }>();
 
   if (!ref.current || !equal(key, ref.current.key)) {

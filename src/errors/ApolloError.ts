@@ -1,6 +1,8 @@
 import { GraphQLError } from 'graphql';
 
 import { isNonEmptyArray } from '../utilities/common/arrays';
+import { ServerParseError } from '../link/http/parseAndCheckHttpResponse';
+import { ServerError } from '../link/utils/throwServerError';
 
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty('graphQLErrors');
@@ -18,12 +20,12 @@ const generateErrorMessage = (err: ApolloError) => {
       const errorMessage = graphQLError
         ? graphQLError.message
         : 'Error message not found.';
-      message += `GraphQL error: ${errorMessage}\n`;
+      message += `${errorMessage}\n`;
     });
   }
 
   if (err.networkError) {
-    message += 'Network error: ' + err.networkError.message + '\n';
+    message += `${err.networkError.message}\n`;
   }
 
   // strip newline from the end of the message
@@ -34,7 +36,7 @@ const generateErrorMessage = (err: ApolloError) => {
 export class ApolloError extends Error {
   public message: string;
   public graphQLErrors: ReadonlyArray<GraphQLError>;
-  public networkError: Error | null;
+  public networkError: Error | ServerParseError | ServerError | null;
 
   // An object that can be used to provide some additional information
   // about an error, e.g. specifying the type of error this is. Used
@@ -51,20 +53,14 @@ export class ApolloError extends Error {
     extraInfo,
   }: {
     graphQLErrors?: ReadonlyArray<GraphQLError>;
-    networkError?: Error | null;
+    networkError?: Error | ServerParseError | ServerError | null;
     errorMessage?: string;
     extraInfo?: any;
   }) {
     super(errorMessage);
     this.graphQLErrors = graphQLErrors || [];
     this.networkError = networkError || null;
-
-    if (!errorMessage) {
-      this.message = generateErrorMessage(this);
-    } else {
-      this.message = errorMessage;
-    }
-
+    this.message = errorMessage || generateErrorMessage(this);
     this.extraInfo = extraInfo;
 
     // We're not using `Object.setPrototypeOf` here as it isn't fully

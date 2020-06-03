@@ -7,41 +7,46 @@ import {
   SubscribeToMoreOptions
 } from '../../core/watchQueryOptions';
 import {
+  ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions
 } from '../../core/ObservableQuery';
+
+import {
+  ObservableSubscription
+} from '../../utilities/observables/Observable';
+
 import { DocumentType } from '../parser/parser';
 import {
   QueryResult,
   QueryPreviousData,
   QueryDataOptions,
-  QueryCurrentObservable,
   QueryTuple,
   QueryLazyOptions,
   ObservableQueryFields,
-  LazyQueryResult
 } from '../types/types';
 import { OperationData } from './OperationData';
 
 export class QueryData<TData, TVariables> extends OperationData {
-  private previousData: QueryPreviousData<TData, TVariables> = {};
-  private currentObservable: QueryCurrentObservable<TData, TVariables> = {};
-  private forceUpdate: any;
+  public onNewData: () => void;
 
+  private previousData: QueryPreviousData<TData, TVariables> = {};
+  private currentObservable?: ObservableQuery<TData, TVariables>;
+  private currentSubscription?: ObservableSubscription;
   private runLazy: boolean = false;
   private lazyOptions?: QueryLazyOptions<TVariables>;
 
   constructor({
     options,
     context,
-    forceUpdate
+    onNewData
   }: {
     options: QueryDataOptions<TData, TVariables>;
     context: any;
-    forceUpdate: any;
+    onNewData: () => void;
   }) {
     super(options, context);
-    this.forceUpdate = forceUpdate;
+    this.onNewData = onNewData;
   }
 
   public execute(): QueryResult<TData, TVariables> {
@@ -81,26 +86,11 @@ export class QueryData<TData, TVariables> extends OperationData {
     return new Promise(resolve => this.startQuerySubscription(resolve));
   }
 
-  public afterExecute({
-    queryResult,
-    lazy = false,
-  }: {
-    queryResult: QueryResult<TData, TVariables> | LazyQueryResult<TData, TVariables>;
-    lazy?: boolean;
-  }) {
+  public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
     this.isMounted = true;
 
     if (!lazy || this.runLazy) {
-      this.handleErrorOrCompleted(queryResult as QueryResult<TData, TVariables>);
-
-      // When the component is done rendering stored query errors, we'll
-      // remove those errors from the `ObservableQuery` query store, so they
-      // aren't re-displayed on subsequent (potentially error free)
-      // requests/responses.
-      setTimeout(() => {
-        this.currentObservable.query &&
-          this.currentObservable.query.resetQueryStoreErrors();
-      });
+      this.handleErrorOrCompleted();
     }
 
     this.previousOptions = this.getOptions();
@@ -109,7 +99,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   public cleanup() {
     this.removeQuerySubscription();
-    delete this.currentObservable.query;
+    delete this.currentObservable;
     delete this.previousData.result;
   }
 
@@ -135,12 +125,15 @@ export class QueryData<TData, TVariables> extends OperationData {
     return options;
   }
 
+  public ssrInitiated() {
+    return this.context && this.context.renderPromises;
+  }
+
   private runLazyQuery = (options?: QueryLazyOptions<TVariables>) => {
     this.cleanup();
-
     this.runLazy = true;
     this.lazyOptions = options;
-    this.forceUpdate();
+    if (this.isMounted) this.onNewData();
   };
 
   private getExecuteResult(): QueryResult<TData, TVariables> {
@@ -150,7 +143,6 @@ export class QueryData<TData, TVariables> extends OperationData {
   };
 
   private getExecuteSsrResult() {
-    const treeRenderingInitiated = this.context && this.context.renderPromises;
     const ssrDisabled = this.getOptions().ssr === false;
     const fetchDisabled = this.refreshClient().client.disableNetworkFetches;
 
@@ -158,17 +150,21 @@ export class QueryData<TData, TVariables> extends OperationData {
       loading: true,
       networkStatus: NetworkStatus.loading,
       called: true,
-      data: undefined
+      data: undefined,
+      stale: false,
+      client: this.client,
+      ...this.observableQueryFields(),
     } as QueryResult<TData, TVariables>;
 
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    if (ssrDisabled && (treeRenderingInitiated || fetchDisabled)) {
+    if (ssrDisabled && (this.ssrInitiated() || fetchDisabled)) {
+      this.previousData.result = ssrLoading;
       return ssrLoading;
     }
 
     let result;
-    if (treeRenderingInitiated) {
+    if (this.ssrInitiated()) {
       result =
         this.context.renderPromises!.addQueryPromise(
           this,
@@ -187,8 +183,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     // Set the fetchPolicy to cache-first for network-only and cache-and-network
     // fetches for server side renders.
     if (
-      this.context &&
-      this.context.renderPromises &&
+      this.ssrInitiated() &&
       (options.fetchPolicy === 'network-only' ||
         options.fetchPolicy === 'cache-and-network')
     ) {
@@ -199,7 +194,6 @@ export class QueryData<TData, TVariables> extends OperationData {
       ...options,
       displayName,
       context: options.context,
-      metadata: { reactComponent: { displayName } }
     };
   }
 
@@ -207,26 +201,26 @@ export class QueryData<TData, TVariables> extends OperationData {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
-    if (this.context && this.context.renderPromises) {
-      this.currentObservable.query = this.context.renderPromises.getSSRObservable(
+    if (this.ssrInitiated()) {
+      this.currentObservable = this.context!.renderPromises!.getSSRObservable(
         this.getOptions()
       );
     }
 
-    if (!this.currentObservable.query) {
+    if (!this.currentObservable) {
       const observableQueryOptions = this.prepareObservableQueryOptions();
 
       this.previousData.observableQueryOptions = {
         ...observableQueryOptions,
         children: null
       };
-      this.currentObservable.query = this.refreshClient().client.watchQuery({
+      this.currentObservable = this.refreshClient().client.watchQuery({
         ...observableQueryOptions
       });
 
-      if (this.context && this.context.renderPromises) {
-        this.context.renderPromises.registerSSRObservable(
-          this.currentObservable.query,
+      if (this.ssrInitiated()) {
+        this.context!.renderPromises!.registerSSRObservable(
+          this.currentObservable,
           observableQueryOptions
         );
       }
@@ -235,7 +229,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   private updateObservableQuery() {
     // If we skipped initially, we may not have yet created the observable
-    if (!this.currentObservable.query) {
+    if (!this.currentObservable) {
       this.initializeObservableQuery();
       return;
     }
@@ -253,7 +247,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     ) {
       this.previousData.observableQueryOptions = newObservableQueryOptions;
       this.currentObservable
-        .query!.setOptions(newObservableQueryOptions)
+        .setOptions(newObservableQueryOptions)
         // The error will be passed to the child container, so we don't
         // need to log it here. We could conceivably log something if
         // an option was set. OTOH we don't log errors w/ the original
@@ -266,13 +260,12 @@ export class QueryData<TData, TVariables> extends OperationData {
   // When new data is received, and it doesn't match the data that was used
   // during the last `QueryData.execute` call (and ultimately the last query
   // component render), trigger the `onNewData` callback. If not specified,
-  // `onNewData` will trigger the `forceUpdate` function, which leads to a
-  // query component re-render.
-  private startQuerySubscription(onNewData: () => void = this.forceUpdate) {
-    if (this.currentObservable.subscription || this.getOptions().skip) return;
+  // `onNewData` will fallback to the default `QueryData.onNewData` function
+  // (which usually leads to a query component re-render).
+  private startQuerySubscription(onNewData: () => void = this.onNewData) {
+    if (this.currentSubscription || this.getOptions().skip) return;
 
-    const obsQuery = this.currentObservable.query!;
-    this.currentObservable.subscription = obsQuery.subscribe({
+    this.currentSubscription = this.currentObservable!.subscribe({
       next: ({ loading, networkStatus, data }) => {
         const previousResult = this.previousData.result;
 
@@ -298,7 +291,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           return;
         }
 
-        onNewData();
+        if (this.isMounted) onNewData();
       },
       error: error => {
         this.resubscribeToQuery();
@@ -310,7 +303,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           !equal(error, this.previousData.error)
         ) {
           this.previousData.error = error;
-          onNewData();
+          if (this.isMounted) onNewData();
         }
       }
     });
@@ -326,14 +319,17 @@ export class QueryData<TData, TVariables> extends OperationData {
     // the last error/result from the `observableQuery` before re-starting
     // the subscription, and restore it afterwards (so the subscription
     // has a chance to stay open).
-    const lastError = this.currentObservable.query!.getLastError();
-    const lastResult = this.currentObservable.query!.getLastResult();
-    this.currentObservable.query!.resetLastResults();
-    this.startQuerySubscription();
-    Object.assign(this.currentObservable.query!, {
-      lastError,
-      lastResult
-    });
+    const { currentObservable } = this;
+    if (currentObservable) {
+      const lastError = currentObservable.getLastError();
+      const lastResult = currentObservable.getLastResult();
+      currentObservable.resetLastResults();
+      this.startQuerySubscription();
+      Object.assign(currentObservable, {
+        lastError,
+        lastResult
+      });
+    }
   }
 
   private getQueryResult = (): QueryResult<TData, TVariables> => {
@@ -351,9 +347,9 @@ export class QueryData<TData, TVariables> extends OperationData {
         loading: false,
         called: true
       };
-    } else {
+    } else if (this.currentObservable) {
       // Fetch the current result (if any) from the store.
-      const currentResult = this.currentObservable.query!.getCurrentResult();
+      const currentResult = this.currentObservable.getCurrentResult();
       const { loading, partial, networkStatus, errors } = currentResult;
       let { error, data } = currentResult;
 
@@ -383,11 +379,11 @@ export class QueryData<TData, TVariables> extends OperationData {
             : previousData || data;
       } else if (error) {
         Object.assign(result, {
-          data: (this.currentObservable.query!.getLastResult() || ({} as any))
+          data: (this.currentObservable.getLastResult() || ({} as any))
             .data
         });
       } else {
-        const { fetchPolicy } = this.currentObservable.query!.options;
+        const { fetchPolicy } = this.currentObservable.options;
         const { partialRefetch } = options;
         if (
           partialRefetch &&
@@ -420,14 +416,22 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.setOptions(options, true);
     this.previousData.loading =
       this.previousData.result && this.previousData.result.loading || false;
-    return this.previousData.result = result;
+    this.previousData.result = result;
+
+    // Any query errors that exist are now available in `result`, so we'll
+    // remove the original errors from the `ObservableQuery` query store to
+    // make sure they aren't re-displayed on subsequent (potentially error
+    // free) requests/responses.
+    this.currentObservable && this.currentObservable.resetQueryStoreErrors();
+
+    return result;
   }
 
-  private handleErrorOrCompleted({
-    data,
-    loading,
-    error,
-  }: QueryResult<TData, TVariables>) {
+  private handleErrorOrCompleted() {
+    if (!this.currentObservable || !this.previousData.result) return;
+
+    const { data, loading, error } = this.previousData.result;
+
     if (!loading) {
       const { query, variables, onCompleted, onError } = this.getOptions();
 
@@ -450,37 +454,33 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   private removeQuerySubscription() {
-    if (this.currentObservable.subscription) {
-      this.currentObservable.subscription.unsubscribe();
-      delete this.currentObservable.subscription;
+    if (this.currentSubscription) {
+      this.currentSubscription.unsubscribe();
+      delete this.currentSubscription;
     }
   }
 
   private obsRefetch = (variables?: TVariables) =>
-    this.currentObservable.query!.refetch(variables);
+    this.currentObservable!.refetch(variables);
 
   private obsFetchMore = <K extends keyof TVariables>(
     fetchMoreOptions: FetchMoreQueryOptions<TVariables, K> &
       FetchMoreOptions<TData, TVariables>
-  ) => this.currentObservable.query!.fetchMore(fetchMoreOptions);
+  ) => this.currentObservable!.fetchMore(fetchMoreOptions);
 
   private obsUpdateQuery = <TVars = TVariables>(
     mapFn: (
       previousQueryResult: TData,
       options: UpdateQueryOptions<TVars>
     ) => TData
-  ) => this.currentObservable.query!.updateQuery(mapFn);
+  ) => this.currentObservable!.updateQuery(mapFn);
 
   private obsStartPolling = (pollInterval: number) => {
-    this.currentObservable &&
-      this.currentObservable.query! &&
-      this.currentObservable.query!.startPolling(pollInterval);
+    this.currentObservable?.startPolling(pollInterval);
   };
 
   private obsStopPolling = () => {
-    this.currentObservable &&
-      this.currentObservable.query! &&
-      this.currentObservable.query!.stopPolling();
+    this.currentObservable?.stopPolling();
   };
 
   private obsSubscribeToMore = <
@@ -492,12 +492,11 @@ export class QueryData<TData, TVariables> extends OperationData {
       TSubscriptionVariables,
       TSubscriptionData
     >
-  ) => this.currentObservable.query!.subscribeToMore(options);
+  ) => this.currentObservable!.subscribeToMore(options);
 
   private observableQueryFields() {
-    const observable = this.currentObservable.query!;
     return {
-      variables: observable.variables,
+      variables: this.currentObservable?.variables,
       refetch: this.obsRefetch,
       fetchMore: this.obsFetchMore,
       updateQuery: this.obsUpdateQuery,

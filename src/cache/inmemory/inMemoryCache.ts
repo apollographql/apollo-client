@@ -6,9 +6,8 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache, Transaction } from '../core/cache';
 import { Cache } from '../core/types/Cache';
-import { Modifier, Modifiers } from '../core/types/common';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { StoreObject }  from '../../utilities/graphql/storeUtils';
+import { StoreObject, Reference }  from '../../utilities/graphql/storeUtils';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
@@ -22,6 +21,7 @@ import {
   Policies,
   TypePolicies,
 } from './policies';
+import { hasOwn } from './helpers';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
@@ -59,6 +59,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
+      cache: this,
       dataIdFromObject: this.config.dataIdFromObject,
       possibleTypes: this.config.possibleTypes,
       typePolicies: this.config.typePolicies,
@@ -79,14 +80,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeWriter = new StoreWriter({
-      policies: this.policies,
-    });
-
-    this.storeReader = new StoreReader({
-      addTypename: this.addTypename,
-      policies: this.policies,
-    });
+    this.storeWriter = new StoreWriter(
+      this,
+      this.storeReader = new StoreReader({
+        cache: this,
+        addTypename: this.addTypename,
+      }),
+    );
 
     const cache = this;
     const { maybeBroadcastWatch } = cache;
@@ -138,29 +138,47 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }) || null;
   }
 
-  public write(options: Cache.WriteOptions): void {
-    this.storeWriter.writeQueryToStore({
-      store: this.data,
-      query: options.query,
-      result: options.result,
-      dataId: options.dataId,
-      variables: options.variables,
-    });
-
-    this.broadcastWatches();
+  public write(options: Cache.WriteOptions): Reference | undefined {
+    try {
+      ++this.txCount;
+      return this.storeWriter.writeToStore({
+        store: this.data,
+        query: options.query,
+        result: options.result,
+        dataId: options.dataId,
+        variables: options.variables,
+      });
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
+    }
   }
 
-  public modify(
-    dataId: string,
-    modifiers: Modifier<any> | Modifiers,
-    optimistic = false,
-  ): boolean {
-    const store = optimistic ? this.optimisticData : this.data;
-    if (store.modify(dataId, modifiers)) {
-      this.broadcastWatches();
-      return true;
+  public modify(options: Cache.ModifyOptions): boolean {
+    if (hasOwn.call(options, "id") && !options.id) {
+      // To my knowledge, TypeScript does not currently provide a way to
+      // enforce that an optional property?:type must *not* be undefined
+      // when present. That ability would be useful here, because we want
+      // options.id to default to ROOT_QUERY only when no options.id was
+      // provided. If the caller attempts to pass options.id with a
+      // falsy/undefined value (perhaps because cache.identify failed), we
+      // should not assume the goal was to modify the ROOT_QUERY object.
+      // We could throw, but it seems natural to return false to indicate
+      // that nothing was modified.
+      return false;
     }
-    return false;
+    const store = options.optimistic // Defaults to false.
+      ? this.optimisticData
+      : this.data;
+    try {
+      ++this.txCount;
+      return store.modify(options.id || "ROOT_QUERY", options.fields);
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
+    }
   }
 
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
@@ -214,14 +232,31 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // the object must contain a __typename and any primary key fields required
   // to identify entities of that type. If you pass a query result object, be
   // sure that none of the primary key fields have been renamed by aliasing.
-  public identify(object: StoreObject): string | null {
-    return this.policies.identify(object);
+  public identify(object: StoreObject): string | undefined {
+    return this.policies.identify(object)[0];
   }
 
-  public evict(dataId: string, fieldName?: string): boolean {
-    const evicted = this.optimisticData.evict(dataId, fieldName);
-    if (evicted) this.broadcastWatches();
-    return evicted;
+  public evict(options: Cache.EvictOptions): boolean {
+    if (!options.id) {
+      if (hasOwn.call(options, "id")) {
+        // See comment in modify method about why we return false when
+        // options.id exists but is falsy/undefined.
+        return false;
+      }
+      options = { ...options, id: "ROOT_QUERY" };
+    }
+    try {
+      // It's unlikely that the eviction will end up invoking any other
+      // cache update operations while it's running, but {in,de}crementing
+      // this.txCount still seems like a good idea, for uniformity with
+      // the other update methods.
+      ++this.txCount;
+      return this.optimisticData.evict(options);
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
+    }
   }
 
   public reset(): Promise<void> {
@@ -321,12 +356,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private varDep = dep<ReactiveVar<any>>();
 
-  public makeVar<T>(value?: T): ReactiveVar<T> {
+  public makeVar<T>(value: T): ReactiveVar<T> {
     const cache = this;
     return function rv(newValue) {
       if (arguments.length > 0) {
         if (value !== newValue) {
-          value = newValue;
+          value = newValue!;
           cache.varDep.dirty(rv);
           // In order to perform several ReactiveVar updates without
           // broadcasting each time, use cache.performTransaction.

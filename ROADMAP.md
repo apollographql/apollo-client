@@ -6,12 +6,13 @@ Apollo Client is a framework for consuming a data graph and binding it to a user
 
 ## Apollo Client 3.0
 
-**Completion date:** Full RC available end of October 2019
+**Completion date:** RC available May 2020
 
 At a high level, the next major version of Apollo Client (roughly referred to as Apollo Client 3) aims to:
 
 * Prune outdated and overlapping API surface areas
 * Redesign the core caching layer
+* Introduce a simplified/improved local state API
 * Simplify the product's packaging
 
 ### Goals
@@ -78,9 +79,11 @@ Apollo Client 3 will feature simplified packaging for easier use and smaller bun
 
 Although we don’t have concrete timelines for the next set of work, we think these are the next challenges to tackle, ordered by priority:
 
-* Redesign Apollo Client's network layer
+* React Suspense + data fetching support
+* CLI based tooling to support things like compiling queries at build time
+* Improving/revamping Apollo Client's SSR story
+* Redesigning Apollo Client's network layer
   * We're planning out a simplified but flexible network layer that removes `Observable`'s from the `ApolloLink` API in favor of language primitives. This will simplify custom building, trim bundles, and better support multiple responses.
 * Supporting `@defer` and `@stream`
 * Fragment-based API for component isolation
-* Improved local state API
 * Cache segmenting

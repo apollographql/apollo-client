@@ -166,7 +166,7 @@ You can define fragments on [unions and interfaces](https://www.apollographql.co
 Here's an example of a query that includes three in-line fragments:
 
 ```graphql
-query {
+query AllCharacters {
   all_characters {
 
     ... on Character {
@@ -215,7 +215,7 @@ If your schema includes only a few unions and interfaces, you can probably speci
 The following example script translates a GraphQL introspection query into a `possibleTypes` configuration object:
 
 ```js
-const fetch = require('node-fetch');
+const fetch = require('cross-fetch');
 const fs = require('fs');
 
 fetch(`${YOUR_API_HOST}/graphql`, {

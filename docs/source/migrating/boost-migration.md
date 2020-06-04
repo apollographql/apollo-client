@@ -121,7 +121,7 @@ const client = new ApolloClient({
 To create a client with the same defaults as Apollo Boost, first you need to install some packages:
 
 ```bash
-npm install apollo-client apollo-cache-inmemory apollo-link-http apollo-link apollo-link-state apollo-link-error graphql-tag --save
+npm install apollo-client apollo-cache-inmemory apollo-link-http apollo-link apollo-link-error graphql-tag --save
 ```
 
 Here's how we would create our new client using the configuration options above from Apollo Boost:
@@ -131,7 +131,6 @@ import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { HttpLink } from 'apollo-link-http';
 import { onError } from 'apollo-link-error';
-import { withClientState } from 'apollo-link-state';
 import { ApolloLink, Observable } from 'apollo-link';
 
 const cache = new InMemoryCache({
@@ -183,25 +182,25 @@ const client = new ApolloClient({
       }
     }),
     requestLink,
-    withClientState({
-      defaults: {
-        isConnected: true
-      },
-      resolvers: {
-        Mutation: {
-          updateNetworkStatus: (_, { isConnected }, { cache }) => {
-            cache.writeData({ data: { isConnected }});
-            return null;
-          }
-        }
-      },
-      cache
-    }),
     new HttpLink({
       uri: 'https://w5xlvm3vzz.lp.gql.zone/graphql',
       credentials: 'include'
     })
   ]),
-  cache
+  cache,
+  resolvers: {
+    Mutation: {
+      updateNetworkStatus: (_, { isConnected }, { cache }) => {
+        cache.writeData({ data: { isConnected }});
+        return null;
+      }
+    }
+  },
+});
+
+cache.writeData({
+  data: {
+    isConnected: true
+  }
 });
 ```

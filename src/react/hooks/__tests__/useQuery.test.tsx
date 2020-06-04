@@ -12,9 +12,11 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useQuery } from '../useQuery';
+import { useMutation } from '../useMutation';
 import { QueryFunctionOptions } from '../..';
 import { NetworkStatus } from '../../../core/networkStatus';
 import { FetchResult } from '../../../link/core/types';
+import { Reference } from '../../../utilities/graphql/storeUtils';
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -1560,6 +1562,160 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(onCompletedCount).toBe(1);
+      }).then(resolve, reject);
+    });
+  });
+
+  describe('Optimistic data', () => {
+    itAsync('should display rolled back optimistic data when an error occurs', (resolve, reject) => {
+      const query = gql`
+        query AllCars {
+          cars {
+            id
+            make
+            model
+          }
+        }
+      `;
+
+      const carsData = {
+        cars: [
+          {
+            id: 1,
+            make: 'Audi',
+            model: 'RS8',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const mutation = gql`
+        mutation AddCar {
+          addCar {
+            id
+            make
+            model
+          }
+        }
+      `;
+
+      const carData = {
+        id: 2,
+        make: 'Ford',
+        model: 'Pinto',
+        __typename: 'Car'
+      };
+
+      const allCarsData = {
+        cars: [
+          carsData.cars[0],
+          carData
+        ]
+      };
+
+      const mocks = [
+        {
+          request: {
+            query
+          },
+          result: { data: carsData }
+        },
+        {
+          request: {
+            query: mutation
+          },
+          error: new Error('Oh no!')
+        }
+      ];
+
+      let renderCount = 0;
+      const Component = () => {
+        const [mutate, { loading: mutationLoading }] = useMutation(mutation, {
+          optimisticResponse: carData,
+          update: (cache, { data }) => {
+            cache.modify({
+              fields: {
+                cars(existing, { readField }) {
+                  const newCarRef = cache.writeFragment({
+                    data,
+                    fragment: gql`fragment NewCar on Car {
+                      id
+                      make
+                      model
+                    }`,
+                  });
+                  if (existing.some(
+                    (ref: Reference) => readField('id', ref) === data!.id
+                  )) {
+                    return existing;
+                  }
+                  return [...existing, newCarRef];
+                }
+              }
+            });
+          },
+          onError() {
+            // Swallow error
+          }
+        });
+
+        const { data, loading: queryLoading } = useQuery(query);
+        switch(++renderCount) {
+          case 1:
+            // The query ran and is loading the result.
+            expect(queryLoading).toBeTruthy();
+            break;
+          case 2:
+            // The query has completed.
+            expect(queryLoading).toBeFalsy();
+            expect(data).toEqual(carsData);
+            // Trigger a mutation (with optimisticResponse data).
+            mutate();
+            break;
+          case 3:
+            // The mutation ran and is loading the result. The query stays at
+            // not loading as nothing has changed for the query.
+            expect(mutationLoading).toBeTruthy();
+            expect(queryLoading).toBeFalsy();
+            break;
+          case 4:
+            // The first part of the mutation has completed using the defined
+            // optimisticResponse data. This means that while the mutation
+            // stays in a loading state, it has made its optimistic data
+            // available to the query. New optimistic data doesn't trigger a
+            // query loading state.
+            expect(mutationLoading).toBeTruthy();
+            expect(queryLoading).toBeFalsy();
+            expect(data).toEqual(allCarsData);
+            break;
+          case 5:
+            // The mutation wasn't able to fulfill its network request so it
+            // errors, which means the initially returned optimistic data is
+            // rolled back, and the query no longer has access to it.
+            expect(mutationLoading).toBeTruthy();
+            expect(queryLoading).toBeFalsy();
+            expect(data).toEqual(carsData);
+            break;
+          case 6:
+            // The mutation has completely finished, leaving the query
+            // with access to the original cache data.
+            expect(mutationLoading).toBeFalsy();
+            expect(queryLoading).toBeFalsy();
+            expect(data).toEqual(carsData);
+            break;
+          default:
+        }
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(6);
       }).then(resolve, reject);
     });
   });

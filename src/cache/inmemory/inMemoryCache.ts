@@ -342,8 +342,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private watchDep = dep<Cache.WatchOptions>();
 
-  // This method is wrapped in the constructor so that it will be called only
-  // if the data that would be broadcast has changed.
+  // This method is wrapped by maybeBroadcastWatch, which is called by
+  // broadcastWatches, so that we compute and broadcast results only when
+  // the data that would be broadcast might have changed. It would be
+  // simpler to check for changes after recomputing a result but before
+  // broadcasting it, but this wrapping approach allows us to skip both
+  // the recomputation and the broadcast, in most cases.
   private broadcastWatch(c: Cache.WatchOptions) {
     // First, invalidate any other maybeBroadcastWatch wrapper functions
     // currently depending on this Cache.WatchOptions object (including
@@ -357,9 +361,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Next, re-depend on this.watchDep for just this invocation of
     // maybeBroadcastWatch (this is a no-op if broadcastWatch was not
     // called by maybeBroadcastWatch). This allows only the most recent
-    // invocation for this watcher to remain cached, enabling re-broadcast
-    // of previous results even if they have not changed since they were
-    // previously delivered.
+    // maybeBroadcastWatch invocation for this watcher to remain cached,
+    // enabling re-broadcast of previous results even if they have not
+    // changed since they were previously delivered.
     this.watchDep(c);
 
     c.callback(this.diff({

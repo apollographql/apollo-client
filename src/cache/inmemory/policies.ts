@@ -183,9 +183,9 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   options: FieldFunctionOptions,
 ) => TExisting;
 
-export const defaultDataIdFromObject: KeyFieldsFunction = (
-  { __typename, id, _id },
-  context,
+export const defaultDataIdFromObject = (
+  { __typename, id, _id }: Readonly<StoreObject>,
+  context?: KeyFieldsContext,
 ) => {
   if (typeof __typename === "string") {
     if (context) {

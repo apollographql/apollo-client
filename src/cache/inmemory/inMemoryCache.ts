@@ -87,32 +87,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         addTypename: this.addTypename,
       }),
     );
-
-    const cache = this;
-    const { maybeBroadcastWatch } = cache;
-    this.maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
-      return maybeBroadcastWatch.call(this, c);
-    }, {
-      makeCacheKey(c: Cache.WatchOptions) {
-        // Return a cache key (thus enabling result caching) only if we're
-        // currently using a data store that can track cache dependencies.
-        const store = c.optimistic ? cache.optimisticData : cache.data;
-        if (supportsResultCaching(store)) {
-          const { optimistic, rootId, variables } = c;
-          return store.makeCacheKey(
-            c.query,
-            // Different watches can have the same query, optimistic
-            // status, rootId, and variables, but if their callbacks are
-            // different, the (identical) result needs to be delivered to
-            // each distinct callback. The easiest way to achieve that
-            // separation is to include c.callback in the cache key for
-            // maybeBroadcastWatch calls. See issue #5733.
-            c.callback,
-            JSON.stringify({ optimistic, rootId, variables }),
-          );
-        }
-      }
-    });
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -342,16 +316,61 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  // This method is wrapped in the constructor so that it will be called only
-  // if the data that would be broadcast has changed.
-  private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    c.callback(
-      this.diff({
-        query: c.query,
-        variables: c.variables,
-        optimistic: c.optimistic,
-      }),
-    );
+  private maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
+    return this.broadcastWatch.call(this, c);
+  }, {
+    makeCacheKey: (c: Cache.WatchOptions) => {
+      // Return a cache key (thus enabling result caching) only if we're
+      // currently using a data store that can track cache dependencies.
+      const store = c.optimistic ? this.optimisticData : this.data;
+      if (supportsResultCaching(store)) {
+        const { optimistic, rootId, variables } = c;
+        return store.makeCacheKey(
+          c.query,
+          // Different watches can have the same query, optimistic
+          // status, rootId, and variables, but if their callbacks are
+          // different, the (identical) result needs to be delivered to
+          // each distinct callback. The easiest way to achieve that
+          // separation is to include c.callback in the cache key for
+          // maybeBroadcastWatch calls. See issue #5733.
+          c.callback,
+          JSON.stringify({ optimistic, rootId, variables }),
+        );
+      }
+    }
+  });
+
+  private watchDep = dep<Cache.WatchOptions>();
+
+  // This method is wrapped by maybeBroadcastWatch, which is called by
+  // broadcastWatches, so that we compute and broadcast results only when
+  // the data that would be broadcast might have changed. It would be
+  // simpler to check for changes after recomputing a result but before
+  // broadcasting it, but this wrapping approach allows us to skip both
+  // the recomputation and the broadcast, in most cases.
+  private broadcastWatch(c: Cache.WatchOptions) {
+    // First, invalidate any other maybeBroadcastWatch wrapper functions
+    // currently depending on this Cache.WatchOptions object (including
+    // the one currently calling broadcastWatch), so they will be included
+    // in the next broadcast, even if the result they receive is the same
+    // as the previous result they received. This is important because we
+    // are about to deliver a different result to c.callback, so any
+    // previous results should have a chance to be redelivered.
+    this.watchDep.dirty(c);
+
+    // Next, re-depend on this.watchDep for just this invocation of
+    // maybeBroadcastWatch (this is a no-op if broadcastWatch was not
+    // called by maybeBroadcastWatch). This allows only the most recent
+    // maybeBroadcastWatch invocation for this watcher to remain cached,
+    // enabling re-broadcast of previous results even if they have not
+    // changed since they were previously delivered.
+    this.watchDep(c);
+
+    c.callback(this.diff({
+      query: c.query,
+      variables: c.variables,
+      optimistic: c.optimistic,
+    }));
   }
 
   private varDep = dep<ReactiveVar<any>>();

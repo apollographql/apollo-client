@@ -133,9 +133,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.cleanup();
     this.runLazy = true;
     this.lazyOptions = options;
-    if (this.isMounted || this.ssrInitiated()) {
-      this.onNewData();
-    }
+    this.onNewData();
   };
 
   private getExecuteResult(): QueryResult<TData, TVariables> {
@@ -293,9 +291,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           return;
         }
 
-        if (this.isMounted || this.ssrInitiated()) {
-          onNewData();
-        }
+        onNewData();
       },
       error: error => {
         this.resubscribeToQuery();
@@ -307,9 +303,7 @@ export class QueryData<TData, TVariables> extends OperationData {
           !equal(error, this.previousData.error)
         ) {
           this.previousData.error = error;
-          if (this.isMounted || this.ssrInitiated()) {
-            onNewData();
-          }
+          onNewData();
         }
       }
     });

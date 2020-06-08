@@ -4,7 +4,6 @@ import {
   Reference,
   StoreObject,
   StoreValue,
-  isReference,
 } from '../../../core';
 
 // The Readonly<T> type only really works for object types, since it marks
@@ -50,12 +49,17 @@ export type ToReferenceFunction = (
   mergeIntoStore?: boolean,
 ) => Reference | undefined;
 
+export type IsReferenceFunction = (
+  candidate: any,
+  mustBeValid?: boolean,
+) => candidate is Reference;
+
 export type Modifier<T> = (value: T, details: {
   DELETE: any;
   fieldName: string;
   storeFieldName: string;
   readField: ReadFieldFunction;
-  isReference: typeof isReference;
+  isReference: IsReferenceFunction;
   toReference: ToReferenceFunction;
 }) => T;
 

@@ -81,6 +81,7 @@ export namespace DataProxy {
     result?: T;
     complete?: boolean;
     missing?: MissingFieldError[];
+    optimistic?: boolean;
   }
 }
 

@@ -380,6 +380,97 @@ describe('useQuery Hook', () => {
         console.error = consoleError;
       }).then(resolve, reject);
     });
+
+    itAsync('should update with proper loading state when variables change for cached queries', (resolve, reject) => {
+      const peopleQuery = gql`
+        query AllPeople($search: String!) {
+          people(search: $search) {
+            id
+            name
+          }
+        }
+      `;
+
+      const peopleData = {
+        people: [
+          { id: 1, name: "John Smith" },
+          { id: 2, name: "Sara Smith" },
+          { id: 3, name: "Budd Deey" }
+        ]
+      };
+
+      const mocks = [
+        {
+          request: { query: peopleQuery, variables: { search: '' } },
+          result: { data: peopleData },
+        },
+        {
+          request: { query: peopleQuery, variables: { search: 'z' } },
+          result: { data: { people: [] } },
+        },
+        {
+          request: { query: peopleQuery, variables: { search: 'zz' } },
+          result: { data: { people: [] } },
+        },
+      ];
+
+      let renderCount = 0;
+      const Component = () => {
+        const [search, setSearch] = useState('');
+        const { loading, data } = useQuery(peopleQuery, {
+          variables: {
+            search: search
+          }
+        });
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(peopleData);
+            setTimeout(() => setSearch('z'));
+            break;
+          case 3:
+            expect(loading).toBeTruthy();
+            break;
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual({ people: [] });
+            setTimeout(() => setSearch(''));
+            break;
+          case 5:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(peopleData);
+            setTimeout(() => setSearch('z'));
+            break;
+          case 6:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual({ people: [] });
+            setTimeout(() => setSearch('zz'));
+            break;
+          case 7:
+            expect(loading).toBeTruthy();
+            break;
+          case 8:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual({ people: [] });
+            break;
+          default:
+        }
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(8);
+      }).then(resolve, reject);
+    });
   });
 
   describe('Polling', () => {

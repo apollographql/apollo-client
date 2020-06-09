@@ -37,6 +37,7 @@ import { InMemoryCache } from './inMemoryCache';
 import {
   SafeReadonly,
   FieldSpecifier,
+  IsReferenceFunction,
   ToReferenceFunction,
   ReadFieldFunction,
   ReadFieldOptions,
@@ -132,7 +133,7 @@ export interface FieldFunctionOptions<
   variables?: TVars;
 
   // Utilities for dealing with { __ref } objects.
-  isReference: typeof isReference;
+  isReference: IsReferenceFunction;
   toReference: ToReferenceFunction;
 
   // A handy place to put field-specific data that you want to survive
@@ -651,6 +652,7 @@ export class Policies {
 
 export interface ReadMergeContext {
   variables?: Record<string, any>;
+  isReference: IsReferenceFunction;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
 }
@@ -662,17 +664,17 @@ function makeFieldFunctionOptions(
   storage: StorageType | null,
   context: ReadMergeContext,
 ): FieldFunctionOptions {
-  const { toReference, getFieldValue, variables } = context;
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
+  const variables = fieldSpec.variables || context.variables;
   return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
     fieldName,
     storeFieldName,
     variables,
-    isReference,
-    toReference,
+    isReference: context.isReference,
+    toReference: context.toReference,
     storage,
     cache: policies.cache,
 
@@ -684,12 +686,17 @@ function makeFieldFunctionOptions(
         typeof fieldNameOrOptions === "string" ? {
           fieldName: fieldNameOrOptions,
           from,
-        } : fieldNameOrOptions;
+        } : { ...fieldNameOrOptions };
 
-      return policies.readField<T>(options.from ? options : {
-        ...options,
-        from: objectOrReference,
-      }, context);
+      if (void 0 === options.from) {
+        options.from = objectOrReference;
+      }
+
+      if (void 0 === options.variables) {
+        options.variables = variables;
+      }
+
+      return policies.readField<T>(options, context);
     },
 
     mergeObjects(existing, incoming) {
@@ -703,8 +710,8 @@ function makeFieldFunctionOptions(
       // parameter types of options.mergeObjects.
       if (existing && typeof existing === "object" &&
           incoming && typeof incoming === "object") {
-        const eType = getFieldValue(existing, "__typename");
-        const iType = getFieldValue(incoming, "__typename");
+        const eType = context.getFieldValue(existing, "__typename");
+        const iType = context.getFieldValue(incoming, "__typename");
         const typesDiffer = eType && iType && eType !== iType;
 
         const applied = policies.applyMerges(

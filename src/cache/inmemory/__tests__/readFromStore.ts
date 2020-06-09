@@ -923,24 +923,26 @@ describe('reading from the store', () => {
         Deity: {
           keyFields: ["name"],
           fields: {
-            children(offspring: Reference[], { readField }) {
-              return offspring ? offspring.filter(child => {
-                // TODO Improve this test? Maybe isReference(ref, true)?
-                return void 0 !== readField("__typename", child);
-              }) : [];
+            children(offspring: Reference[], { isReference }) {
+              return offspring ? offspring.filter(
+                // The true argument here makes isReference return true
+                // only if child is a Reference object that points to
+                // valid entity data in the EntityStore (that is, not a
+                // dangling reference).
+                child => isReference(child, true)
+              ) : [];
             },
           },
         },
 
         Query: {
           fields: {
-            ruler(ruler, { toReference, readField }) {
-              // TODO Improve this test? Maybe !isReference(ruler, true)?
-              if (!ruler || void 0 === readField("__typename", ruler)) {
-                // If there's no official ruler, promote Apollo!
-                return toReference({ __typename: "Deity", name: "Apollo" });
-              }
-              return ruler;
+            ruler(ruler, { isReference, toReference }) {
+              // If the throne is empty, promote Apollo!
+              return isReference(ruler, true) ? ruler : toReference({
+                __typename: "Deity",
+                name: "Apollo",
+              });
             },
           },
         },

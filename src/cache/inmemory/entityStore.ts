@@ -21,6 +21,7 @@ import {
   Modifiers,
   ReadFieldFunction,
   ReadFieldOptions,
+  IsReferenceFunction,
   ToReferenceFunction,
 } from '../core/types/common';
 
@@ -135,6 +136,7 @@ export abstract class EntityStore implements NormalizedCache {
           from: from || makeReference(dataId),
         } : fieldNameOrOptions,
         {
+          isReference: this.isReference,
           toReference: this.toReference,
           getFieldValue: this.getFieldValue,
         },
@@ -225,7 +227,9 @@ export abstract class EntityStore implements NormalizedCache {
       // queries, even if no cache data was modified by the eviction,
       // because queries may depend on computed fields with custom read
       // functions, whose values are not stored in the EntityStore.
-      this.group.dirty(options.id, options.fieldName || "__exists");
+      if (options.fieldName || evicted) {
+        this.group.dirty(options.id, options.fieldName || "__exists");
+      }
     }
     return evicted;
   }
@@ -347,10 +351,27 @@ export abstract class EntityStore implements NormalizedCache {
       : objectOrReference && objectOrReference[storeFieldName]
   ) as SafeReadonly<T>;
 
+  // Useful for determining if an object is a Reference or not. Pass true
+  // for mustBeValid to make isReference fail (return false) if the
+  // Reference does not refer to anything.
+  public isReference: IsReferenceFunction = (
+    candidate,
+    mustBeValid,
+  ): candidate is Reference => {
+    return isReference(candidate) &&
+      // Note: this lookup will find IDs only in this layer and any layers
+      // underneath it, even though there might be additional layers on
+      // top of this layer, known only to the InMemoryCache.
+      (!mustBeValid || this.has(candidate.__ref));
+  };
+
   // Bound function that converts an object with a __typename and primary
   // key fields to a Reference object. Pass true for mergeIntoStore if you
   // would also like this object to be persisted into the store.
-  public toReference: ToReferenceFunction = (object, mergeIntoStore) => {
+  public toReference: ToReferenceFunction = (
+    object,
+    mergeIntoStore,
+  ) => {
     const [id] = this.policies.identify(object);
     if (id) {
       const ref = makeReference(id);
@@ -359,7 +380,7 @@ export abstract class EntityStore implements NormalizedCache {
       }
       return ref;
     }
-  }
+  };
 }
 
 export type FieldValueGetter = EntityStore["getFieldValue"];

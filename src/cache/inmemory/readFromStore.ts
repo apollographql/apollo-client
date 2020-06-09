@@ -142,6 +142,7 @@ export class StoreReader {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        isReference: store.isReference,
         toReference: store.toReference,
         getFieldValue: store.getFieldValue,
         path: [],

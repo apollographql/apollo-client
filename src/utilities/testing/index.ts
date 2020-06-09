@@ -5,4 +5,5 @@ export {
   mockObservableLink
 } from './mocking/mockSubscriptionLink';
 export { createMockClient } from './mocking/mockClient';
+export { createMockReactiveVar } from './mocking/mockReactiveVar'
 export { stripSymbols } from './stripSymbols';

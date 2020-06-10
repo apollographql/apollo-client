@@ -31,7 +31,6 @@ module.exports = {
           'Fetching data': [
             'data/queries',
             'data/mutations',
-            'data/local-state',
             'data/subscriptions',
             'data/pagination',
             'data/fragments',
@@ -40,7 +39,13 @@ module.exports = {
           Caching: [
             'caching/cache-configuration',
             'caching/cache-field-behavior',
-            'caching/cache-interaction'],
+            'caching/cache-interaction'
+          ],
+          'Local State': [
+            'local-state/local-state-management',
+            'local-state/field-policies-reactive-vars',
+            'local-state/local-resolvers'
+          ],
           'Development & Testing': [
             'development-testing/static-typing',
             'development-testing/testing',

@@ -545,7 +545,7 @@ export default withApollo(graphql(PROFILE_QUERY, {
 
 To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
 
-In this example, we're using `client.onResetStore` to write default values to the cache. This is useful when using Apollo Client's [local state management](../data/local-state/) features and calling `client.resetStore` anywhere in your application.
+In this example, we're using `client.onResetStore` to write default values to the cache. This is useful when using Apollo Client's [local state management](../local-state/local-state-management/) features and calling `client.resetStore` anywhere in your application.
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';

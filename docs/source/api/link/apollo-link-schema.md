@@ -7,7 +7,7 @@ description: Assists with mocking and server-side rendering
 
 The schema link provides a [graphql execution environment](http://graphql.org/graphql-js/graphql/#graphql), which allows you to perform GraphQL operations on a provided schema. This type of behavior is commonly used for server-side rendering (SSR) to avoid network calls and mocking data. While the schema link could provide graphql results on the client, currently the graphql execution layer is [too heavy weight](https://bundlephobia.com/result?p=graphql) for practical application.
 
-> To unify your state management with client-side GraphQL operations, refer to Apollo Client's [local state management](../../data/local-state/) functionality. It integrates with the Apollo Client cache and is much more lightweight.
+> To unify your state management with client-side GraphQL operations, refer to Apollo Client's [local state management](../../local-state/local-state-management/) functionality. It integrates with the Apollo Client cache and is much more lightweight.
 
 ## Installation
 

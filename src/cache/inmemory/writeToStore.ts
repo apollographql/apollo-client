@@ -112,8 +112,8 @@ export class StoreWriter {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        isReference: store.isReference,
         toReference: store.toReference,
+        canRead: store.canRead,
         getFieldValue: store.getFieldValue,
       },
     });

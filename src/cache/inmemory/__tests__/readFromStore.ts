@@ -923,23 +923,19 @@ describe('reading from the store', () => {
         Deity: {
           keyFields: ["name"],
           fields: {
-            children(offspring: Reference[], { isReference }) {
-              return offspring ? offspring.filter(
-                // The true argument here makes isReference return true
-                // only if child is a Reference object that points to
-                // valid entity data in the EntityStore (that is, not a
-                // dangling reference).
-                child => isReference(child, true)
-              ) : [];
+            children(offspring: Reference[], { canRead }) {
+              // Automatically filter out any dangling references, and
+              // supply a default empty array if !offspring.
+              return offspring ? offspring.filter(canRead) : [];
             },
           },
         },
 
         Query: {
           fields: {
-            ruler(ruler, { isReference, toReference }) {
+            ruler(ruler, { canRead, toReference }) {
               // If the throne is empty, promote Apollo!
-              return isReference(ruler, true) ? ruler : toReference({
+              return canRead(ruler) ? ruler : toReference({
                 __typename: "Deity",
                 name: "Apollo",
               });

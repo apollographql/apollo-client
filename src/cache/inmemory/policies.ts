@@ -37,10 +37,10 @@ import { InMemoryCache } from './inMemoryCache';
 import {
   SafeReadonly,
   FieldSpecifier,
-  IsReferenceFunction,
   ToReferenceFunction,
   ReadFieldFunction,
   ReadFieldOptions,
+  CanReadFunction,
 } from '../core/types/common';
 
 export type TypePolicies = {
@@ -133,7 +133,7 @@ export interface FieldFunctionOptions<
   variables?: TVars;
 
   // Utilities for dealing with { __ref } objects.
-  isReference: IsReferenceFunction;
+  isReference: typeof isReference;
   toReference: ToReferenceFunction;
 
   // A handy place to put field-specific data that you want to survive
@@ -153,6 +153,11 @@ export interface FieldFunctionOptions<
   // custom read functions for other fields, if defined. Always returns
   // immutable data (enforced with Object.freeze in development).
   readField: ReadFieldFunction;
+
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  canRead: CanReadFunction;
 
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
@@ -652,7 +657,7 @@ export class Policies {
 
 export interface ReadMergeContext {
   variables?: Record<string, any>;
-  isReference: IsReferenceFunction;
+  canRead: CanReadFunction;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
 }
@@ -673,10 +678,11 @@ function makeFieldFunctionOptions(
     fieldName,
     storeFieldName,
     variables,
-    isReference: context.isReference,
+    isReference,
     toReference: context.toReference,
     storage,
     cache: policies.cache,
+    canRead: context.canRead,
 
     readField<T>(
       fieldNameOrOptions: string | ReadFieldOptions,

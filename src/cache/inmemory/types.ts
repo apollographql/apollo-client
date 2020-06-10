@@ -12,7 +12,7 @@ import {
   Modifier,
   Modifiers,
   ToReferenceFunction,
-  IsReferenceFunction,
+  CanReadFunction,
 } from '../core/types/common';
 export { StoreObject, StoreValue, Reference }
 
@@ -60,8 +60,8 @@ export interface NormalizedCache {
   release(rootId: string): number;
 
   getFieldValue: FieldValueGetter;
-  isReference: IsReferenceFunction;
   toReference: ToReferenceFunction;
+  canRead: CanReadFunction;
 }
 
 /**

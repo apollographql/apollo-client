@@ -21,8 +21,8 @@ import {
   Modifiers,
   ReadFieldFunction,
   ReadFieldOptions,
-  IsReferenceFunction,
   ToReferenceFunction,
+  CanReadFunction,
 } from '../core/types/common';
 
 const DELETE: any = Object.create(null);
@@ -136,7 +136,7 @@ export abstract class EntityStore implements NormalizedCache {
           from: from || makeReference(dataId),
         } : fieldNameOrOptions,
         {
-          isReference: this.isReference,
+          canRead: this.canRead,
           toReference: this.toReference,
           getFieldValue: this.getFieldValue,
         },
@@ -157,6 +157,7 @@ export abstract class EntityStore implements NormalizedCache {
               storeFieldName,
               isReference,
               toReference: this.toReference,
+              canRead: this.canRead,
               readField,
             });
           if (newValue === DELETE) newValue = void 0;
@@ -351,18 +352,13 @@ export abstract class EntityStore implements NormalizedCache {
       : objectOrReference && objectOrReference[storeFieldName]
   ) as SafeReadonly<T>;
 
-  // Useful for determining if an object is a Reference or not. Pass true
-  // for mustBeValid to make isReference fail (return false) if the
-  // Reference does not refer to anything.
-  public isReference: IsReferenceFunction = (
-    candidate,
-    mustBeValid,
-  ): candidate is Reference => {
-    return isReference(candidate) &&
-      // Note: this lookup will find IDs only in this layer and any layers
-      // underneath it, even though there might be additional layers on
-      // top of this layer, known only to the InMemoryCache.
-      (!mustBeValid || this.has(candidate.__ref));
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  public canRead: CanReadFunction = objOrRef => {
+    return isReference(objOrRef)
+      ? this.has(objOrRef.__ref)
+      : typeof objOrRef === "object";
   };
 
   // Bound function that converts an object with a __typename and primary

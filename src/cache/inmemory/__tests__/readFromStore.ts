@@ -1022,6 +1022,7 @@ describe('reading from the store', () => {
         },
       },
       complete: true,
+      optimistic: false,
     };
 
     // We already have one diff because of the immediate:true above.
@@ -1045,6 +1046,7 @@ describe('reading from the store', () => {
         },
       },
       complete: true,
+      optimistic: false,
     };
 
     expect(diffs).toEqual([
@@ -1072,6 +1074,7 @@ describe('reading from the store', () => {
         },
       },
       complete: true,
+      optimistic: false,
     };
 
     expect(diffs).toEqual([
@@ -1113,6 +1116,7 @@ describe('reading from the store', () => {
 
     const diffWithChildrenOfZeus = {
       complete: true,
+      optimistic: false,
       result: {
         ...diffWithoutDevouredSons.result,
         ruler: {
@@ -1149,6 +1153,7 @@ describe('reading from the store', () => {
 
     const diffWithZeusAsRuler = {
       complete: true,
+      optimistic: false,
       result: {
         ruler: {
           __typename: "Deity",
@@ -1327,6 +1332,7 @@ describe('reading from the store', () => {
 
     const diffWithApolloAsRuler = {
       complete: true,
+      optimistic: false,
       result: apolloRulerResult,
     };
 

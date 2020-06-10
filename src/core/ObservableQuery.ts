@@ -54,6 +54,8 @@ export const hasError = (
   (policy === 'none' && isNonEmptyArray(storeValue.graphQLErrors))
 );
 
+let warnedAboutUpdateQuery = false;
+
 export class ObservableQuery<
   TData = any,
   TVariables = OperationVariables
@@ -309,15 +311,45 @@ export class ObservableQuery<
       combinedOptions,
       NetworkStatus.fetchMore,
     ).then(fetchMoreResult => {
-      this.updateQuery((previousResult: any) => {
-        const data = fetchMoreResult.data as TData;
-        const { updateQuery } = fetchMoreOptions;
-        return updateQuery ? updateQuery(previousResult, {
+      const data = fetchMoreResult.data as TData;
+      const { updateQuery } = fetchMoreOptions;
+
+      if (updateQuery) {
+        if (process.env.NODE_ENV !== "production" &&
+            !warnedAboutUpdateQuery) {
+          invariant.warn(
+`The updateQuery callback for fetchMore is deprecated, and will be removed
+in the next major version of Apollo Client.
+
+Please convert updateQuery functions to field policies with appropriate
+read and merge functions, or use/adapt a helper function (such as
+concatPagination, offsetLimitPagination, or relayStylePagination) from
+@apollo/client/utilities.
+
+The field policy system handles pagination more effectively than a
+hand-written updateQuery function, and you only need to define the policy
+once, rather than every time you call fetchMore.`);
+          warnedAboutUpdateQuery = true;
+        }
+        this.updateQuery(previous => updateQuery(previous, {
           fetchMoreResult: data,
           variables: combinedOptions.variables as TVariables,
-        }) : data;
-      });
+        }));
+      } else {
+        // If we're using a field policy instead of updateQuery, the only
+        // thing we need to do is write the new data to the cache using
+        // combinedOptions.variables (instead of this.variables, which is
+        // what this.updateQuery uses, because it works by abusing the
+        // original field value, keyed by the original variables).
+        this.queryManager.cache.writeQuery({
+          query: combinedOptions.query,
+          variables: combinedOptions.variables,
+          data,
+        });
+      }
+
       return fetchMoreResult as ApolloQueryResult<TData>;
+
     }).finally(() => {
       this.queryManager.stopQuery(qid);
       this.reobserve();
@@ -423,7 +455,7 @@ export class ObservableQuery<
       return Promise.resolve();
     }
 
-    let { fetchPolicy } = this.options;
+    let { fetchPolicy = 'cache-first' } = this.options;
     if (fetchPolicy !== 'cache-first' &&
         fetchPolicy !== 'no-cache' &&
         fetchPolicy !== 'network-only') {

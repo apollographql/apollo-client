@@ -1473,6 +1473,56 @@ describe('ObservableQuery', () => {
       }).then(resolve, reject);
     });
 
+    itAsync('errors out if errorPolicy is none', (resolve, reject) => {
+      const queryManager = mockQueryManager(reject, {
+        request: { query, variables },
+        result: { data: dataOne, errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'none',
+      });
+
+      return observable.result().then(() => reject('Observable did not error when it should have')).catch(currentError => {
+        expect(currentError).toEqual(error);
+        const lastError = observable.getLastError();
+        expect(lastError).toEqual(error);
+        resolve()
+      }).catch(reject);
+    });
+
+    itAsync('errors out if errorPolicy is none and the observable has completed', (resolve, reject) => {
+      const queryManager = mockQueryManager(reject, {
+        request: { query, variables },
+        result: { data: dataOne, errors: [error] },
+      }, 
+      // FIXME: We shouldn't need a second mock, there should only be one network request
+      {
+        request: { query, variables },
+        result: { data: dataOne, errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'none',
+      });
+
+      return observable.result()
+      .then(() => reject('Observable did not error when it should have'))
+      // We wait for the observable to error out and reobtain a promise
+      .catch(() => observable.result())
+      .then((result) => reject('Observable did not error the second time we fetched results when it should have'))
+      .catch(currentError => {
+        expect(currentError).toEqual(error);
+        const lastError = observable.getLastError();
+        expect(lastError).toEqual(error);
+        resolve()
+      }).catch(reject);
+    });
+
     itAsync('ignores errors with data if errorPolicy is ignore', (resolve, reject) => {
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },

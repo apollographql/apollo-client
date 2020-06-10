@@ -201,7 +201,9 @@ export class ObservableQuery<
       }
     }
 
-    if (!partial) {
+    if (partial) {
+      this.resetLastResults();
+    } else {
       this.updateLastResult(result);
     }
 

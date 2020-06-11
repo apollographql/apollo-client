@@ -95,19 +95,3 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
 };
-
-export type CacheResolver = (
-  rootValue: any,
-  args: { [argName: string]: any },
-  context: any,
-) => any;
-
-export type CacheResolverMap = {
-  [typeName: string]: {
-    [fieldName: string]: CacheResolver;
-  };
-};
-
-// backwards compat
-export type CustomResolver = CacheResolver;
-export type CustomResolverMap = CacheResolverMap;

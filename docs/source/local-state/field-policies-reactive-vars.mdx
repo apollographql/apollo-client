@@ -85,3 +85,111 @@ Here we create our GraphQL query and add an `@client` directive to `todos`. We t
 > ⚠️ Since the above query runs as soon as the component is mounted, what do we do if there are no todos in the cache or there aren't any field policies defined to help calculate `todos`? We need to write an initial state to the cache before the query is run to prevent it from erroring out. Refer to the [Initializing the cache](#initializing-the-cache) section below for more information.
 
 > ⚠️ It's important to note that fields marked with the `@client` directive are never sent over a network to backend API's. Apollo Client strips `@client` fields before operations are sent through its internal Link chain.
+
+### Initializing the cache
+
+Often, you'll need to write an initial state to the cache so any components querying data before a mutation is triggered don't error out. To accomplish this, you can use `cache.writeQuery` to prep the cache with initial values.
+
+```js
+import { InMemoryCache } from '@apollo/client';
+
+const cache = new InMemoryCache();
+
+cache.writeQuery({
+  query: gql`
+    query {
+      todos
+      networkStatus {
+        isConnected
+      }
+    }
+  `,
+  data: {
+    todos: [],
+    networkStatus: {
+      __typename: 'NetworkStatus',
+      isConnected: false,
+    },
+  },
+});
+```
+
+Sometimes you may need to [reset the cache](../api/core/#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeQuery` again.
+
+```js
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+
+const cache = new InMemoryCache();
+const client = new ApolloClient({ cache });
+
+function writeInitialData() {
+  cache.writeQuery({
+    query: gql`
+      query {
+        todos
+        networkStatus {
+          isConnected
+        }
+      }
+    `,
+    data: {
+      todos: [],
+      networkStatus: {
+        __typename: 'NetworkStatus',
+        isConnected: false,
+      },
+    },
+  });
+}
+
+writeInitialData();
+
+client.onResetStore(writeInitialData);
+```
+
+### Local data query flow
+
+When a query containing `@client` directives is executed, Apollo Client runs through a few sequential steps to try to find a result for the `@client` field. Let's use the following query to walk through the local data look up flow:
+
+```js
+const GET_LAUNCH_DETAILS = gql`
+  query LaunchDetails($launchId: ID!) {
+    launch(id: $launchId) {
+      site
+      seatsBooked
+      hasAvailableSeats @client
+      rocket {
+        type
+      }
+    }
+  }
+`;
+```
+
+This query includes a mixture of both remote and local fields. `hasAvailableSeats` is the only field marked with an `@client` directive, so it's the field we'll focus on. When Apollo Client executes this query and tries to find a result for the `hasAvailableSeats` field, it runs through the following steps:
+
+1. Has a [field policy read function](../caching/cache-field-behavior/#the-read-function) been defined for the `hasAvailableSeats` field? If yes, run and return the result from the read function. For example:
+
+```js
+const MAX_SEATS = 10;
+const cache = new InMemoryCache({
+  typePolicies: {
+    Launch: {
+      fields: {
+        hasAvailableSeats(_, { readField }) {
+          // Return true if the number of booked seats is less
+          // than the seat maximum.
+          return readField('seatsBooked') < MAX_SEATS;
+        },
+      },
+    },
+  },
+});
+```
+
+2. If a matching read function can't be found, check the Apollo Client cache to see if a `hasAvailableSeats` value can be found in the cache. If so, return that value.
+
+Let's look at both of these steps more closely.
+
+- Retrieving `@client` data with the help of read functions (step 1 above) is explained in [Handling `@client` fields with field policies](#handling-client-fields-with-field-policies).
+- Loading `@client` data from the cache (step 2 above) is explained in [Handling `@client` fields with the cache](#handling-client-fields-with-the-cache).

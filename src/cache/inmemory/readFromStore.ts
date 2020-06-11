@@ -33,21 +33,19 @@ import {
   DiffQueryAgainstStoreOptions,
   ReadQueryOptions,
   NormalizedCache,
+  ReadMergeModifyContext,
 } from './types';
 import { supportsResultCaching, EntityStore } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
-import { Policies, ReadMergeContext } from './policies';
+import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
 
 export type VariableMap = { [name: string]: any };
 
-interface ExecContext extends ReadMergeContext {
+interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
-  store: NormalizedCache;
   policies: Policies;
-  // A JSON.stringify-serialized version of context.variables.
-  varString: string;
   fragmentMap: FragmentMap;
   path: (string | number)[];
 };
@@ -59,7 +57,7 @@ export type ExecResult<R = any> = {
 
 function missingFromInvariant(
   err: InvariantError,
-  context: ExecContext,
+  context: ReadContext,
 ) {
   return new MissingFieldError(
     err.message,
@@ -72,13 +70,13 @@ function missingFromInvariant(
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
   objectOrReference: StoreObject | Reference;
-  context: ExecContext;
+  context: ReadContext;
 };
 
 type ExecSubSelectedArrayOptions = {
   field: FieldNode;
   array: any[];
-  context: ExecContext;
+  context: ReadContext;
 };
 
 export interface StoreReaderConfig {
@@ -142,9 +140,6 @@ export class StoreReader {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        toReference: store.toReference,
-        canRead: store.canRead,
-        getFieldValue: store.getFieldValue,
         path: [],
       },
     });
@@ -165,15 +160,13 @@ export class StoreReader {
 
   public isFresh(
     result: Record<string, any>,
-    store: NormalizedCache,
     parent: StoreObject | Reference,
     selectionSet: SelectionSetNode,
-    varString: string,
+    context: ReadMergeModifyContext,
   ): boolean {
-    if (supportsResultCaching(store) &&
+    if (supportsResultCaching(context.store) &&
         this.knownResults.get(result) === selectionSet) {
-      const latest = this.executeSelectionSet.peek(
-        store, selectionSet, parent, varString);
+      const latest = this.executeSelectionSet.peek(selectionSet, parent, context);
       if (latest && result === latest.result) {
         return true;
       }
@@ -186,24 +179,23 @@ export class StoreReader {
     [ExecSelectionSetOptions], // Actual arguments tuple type.
     ExecResult, // Actual return type.
     // Arguments type after keyArgs translation.
-    [NormalizedCache, SelectionSetNode, StoreObject | Reference, string]
+    [SelectionSetNode, StoreObject | Reference, ReadMergeModifyContext]
   > = wrap(options => this.execSelectionSetImpl(options), {
     keyArgs(options) {
       return [
-        options.context.store,
         options.selectionSet,
         options.objectOrReference,
-        options.context.varString,
+        options.context,
       ];
     },
     // Note that the parameters of makeCacheKey are determined by the
     // array returned by keyArgs.
-    makeCacheKey(store, selectionSet, parent, varString) {
-      if (supportsResultCaching(store)) {
-        return store.makeCacheKey(
+    makeCacheKey(selectionSet, parent, context) {
+      if (supportsResultCaching(context.store)) {
+        return context.store.makeCacheKey(
           selectionSet,
           isReference(parent) ? parent.__ref : parent,
-          varString,
+          context.varString,
         );
       }
     }

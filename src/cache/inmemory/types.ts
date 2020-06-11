@@ -95,3 +95,10 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
 };
+
+export interface ReadMergeModifyContext {
+  store: NormalizedCache;
+  variables?: Record<string, any>;
+  // A JSON.stringify-serialized version of context.variables.
+  varString?: string;
+}

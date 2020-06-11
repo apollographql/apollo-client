@@ -5,6 +5,8 @@ description: Manage local data with GraphQL like resolvers
 
 import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 
+> ⚠️ **DEPRECATION WARNING:** Local resolvers are still supported in Apollo Client 3, but they have been deprecated. We recommend using [field policies and reactive variables](./local-state-management#field-policies-and-reactive-variables) instead. Local resolver support will be removed in a future major Apollo Client release. Refer to [Local resolver deprecation](./local-state-management#local-resolver-deprecation) for more details.
+
 We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our client application.
 
 Apollo Client (>= 2.5) has built-in local state handling capabilities that allow you to store your local data inside the Apollo cache alongside your remote data. To access your local data, just query it with GraphQL. You can even request local and server data within the same query!

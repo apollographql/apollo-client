@@ -64,7 +64,6 @@ The `Operation` object includes the following fields:
 | `extensions`  |  A map to store extensions data to be sent to the server. |
 | `getContext`  | A function to return the context of the request. This context can be used by links to determine which actions to perform. See [Managing context](#managing-context). |
 | `setContext`  |  A function that takes either a new context object, or a function which takes in the previous context and returns a new one. See [Managing context](#managing-context). |
-| `toKey`  | A function to convert the current operation into a string to be used as a unique identifier.  |
 
 #### The `forward` function
 

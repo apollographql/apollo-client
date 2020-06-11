@@ -8,7 +8,12 @@ import {
 } from '../../utilities/graphql/storeUtils';
 import { FieldValueGetter } from './entityStore';
 import { KeyFieldsFunction } from './policies';
-import { ToReferenceFunction, Modifier, Modifiers } from '../core/types/common';
+import {
+  Modifier,
+  Modifiers,
+  ToReferenceFunction,
+  CanReadFunction,
+} from '../core/types/common';
 export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
@@ -56,6 +61,7 @@ export interface NormalizedCache {
 
   getFieldValue: FieldValueGetter;
   toReference: ToReferenceFunction;
+  canRead: CanReadFunction;
 }
 
 /**

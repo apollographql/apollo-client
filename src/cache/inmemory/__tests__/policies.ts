@@ -1052,6 +1052,7 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        optimistic: false,
         missing: [
           makeMissingError(1),
           makeMissingError(2),
@@ -1103,6 +1104,7 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        optimistic: false,
         missing: [
           makeMissingError(1),
           makeMissingError(3),
@@ -1160,6 +1162,7 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        optimistic: false,
         missing: [
           makeMissingError(1),
           makeMissingError(3),
@@ -1194,6 +1197,7 @@ describe("type policies", function () {
           }],
         },
         complete: true,
+        optimistic: false,
       });
 
       expect(cache.readQuery({ query })).toEqual({

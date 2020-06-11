@@ -22,6 +22,7 @@ import {
   ReadFieldFunction,
   ReadFieldOptions,
   ToReferenceFunction,
+  CanReadFunction,
 } from '../core/types/common';
 
 const DELETE: any = Object.create(null);
@@ -135,6 +136,7 @@ export abstract class EntityStore implements NormalizedCache {
           from: from || makeReference(dataId),
         } : fieldNameOrOptions,
         {
+          canRead: this.canRead,
           toReference: this.toReference,
           getFieldValue: this.getFieldValue,
         },
@@ -155,6 +157,7 @@ export abstract class EntityStore implements NormalizedCache {
               storeFieldName,
               isReference,
               toReference: this.toReference,
+              canRead: this.canRead,
               readField,
             });
           if (newValue === DELETE) newValue = void 0;
@@ -225,7 +228,9 @@ export abstract class EntityStore implements NormalizedCache {
       // queries, even if no cache data was modified by the eviction,
       // because queries may depend on computed fields with custom read
       // functions, whose values are not stored in the EntityStore.
-      this.group.dirty(options.id, options.fieldName || "__exists");
+      if (options.fieldName || evicted) {
+        this.group.dirty(options.id, options.fieldName || "__exists");
+      }
     }
     return evicted;
   }
@@ -347,10 +352,22 @@ export abstract class EntityStore implements NormalizedCache {
       : objectOrReference && objectOrReference[storeFieldName]
   ) as SafeReadonly<T>;
 
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  public canRead: CanReadFunction = objOrRef => {
+    return isReference(objOrRef)
+      ? this.has(objOrRef.__ref)
+      : typeof objOrRef === "object";
+  };
+
   // Bound function that converts an object with a __typename and primary
   // key fields to a Reference object. Pass true for mergeIntoStore if you
   // would also like this object to be persisted into the store.
-  public toReference: ToReferenceFunction = (object, mergeIntoStore) => {
+  public toReference: ToReferenceFunction = (
+    object,
+    mergeIntoStore,
+  ) => {
     const [id] = this.policies.identify(object);
     if (id) {
       const ref = makeReference(id);
@@ -359,7 +376,7 @@ export abstract class EntityStore implements NormalizedCache {
       }
       return ref;
     }
-  }
+  };
 }
 
 export type FieldValueGetter = EntityStore["getFieldValue"];

@@ -15,7 +15,6 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { QueryFunctionOptions } from '../..';
 import { NetworkStatus } from '../../../core/networkStatus';
-import { FetchResult } from '../../../link/core/types';
 import { Reference } from '../../../utilities/graphql/storeUtils';
 
 describe('useQuery Hook', () => {
@@ -382,46 +381,95 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
-    itAsync('should not log a React warning in StrictMode when unmounted before a query is resolved', async (resolve, reject) => {
-      jest.spyOn(console, 'error');
+    itAsync('should update with proper loading state when variables change for cached queries', (resolve, reject) => {
+      const peopleQuery = gql`
+        query AllPeople($search: String!) {
+          people(search: $search) {
+            id
+            name
+          }
+        }
+      `;
 
-      const Component = () => {
-        useQuery(CAR_QUERY);
-
-        return null;
+      const peopleData = {
+        people: [
+          { id: 1, name: "John Smith" },
+          { id: 2, name: "Sara Smith" },
+          { id: 3, name: "Budd Deey" }
+        ]
       };
 
-      const observable = new Observable<FetchResult>((observer) => {
-        const timer = setTimeout(() => {
-          observer.next({ data: CAR_RESULT_DATA });
-          observer.complete();
-        }, 0);
+      const mocks = [
+        {
+          request: { query: peopleQuery, variables: { search: '' } },
+          result: { data: peopleData },
+        },
+        {
+          request: { query: peopleQuery, variables: { search: 'z' } },
+          result: { data: { people: [] } },
+        },
+        {
+          request: { query: peopleQuery, variables: { search: 'zz' } },
+          result: { data: { people: [] } },
+        },
+      ];
 
-        // On unsubscription, cancel the timer
-        return () => clearTimeout(timer);
-      });
+      let renderCount = 0;
+      const Component = () => {
+        const [search, setSearch] = useState('');
+        const { loading, data } = useQuery(peopleQuery, {
+          variables: {
+            search: search
+          }
+        });
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(peopleData);
+            setTimeout(() => setSearch('z'));
+            break;
+          case 3:
+            expect(loading).toBeTruthy();
+            break;
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual({ people: [] });
+            setTimeout(() => setSearch(''));
+            break;
+          case 5:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(peopleData);
+            setTimeout(() => setSearch('z'));
+            break;
+          case 6:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual({ people: [] });
+            setTimeout(() => setSearch('zz'));
+            break;
+          case 7:
+            expect(loading).toBeTruthy();
+            break;
+          case 8:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual({ people: [] });
+            break;
+          default:
+        }
+        return null;
+      }
 
-      const link = new ApolloLink(() => observable)
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-      });
-
-      const { unmount } = render(
-        <React.StrictMode>
-          <ApolloProvider client={client}>
-            <Component />
-          </ApolloProvider>
-        </React.StrictMode>
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
       );
 
-      unmount();
-      await wait()
-
-      expect(console.error).not.toHaveBeenCalled();
-
-      resolve()
+      return wait(() => {
+        expect(renderCount).toBe(8);
+      }).then(resolve, reject);
     });
   });
 

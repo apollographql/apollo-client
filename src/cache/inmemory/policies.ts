@@ -40,6 +40,7 @@ import {
   ToReferenceFunction,
   ReadFieldFunction,
   ReadFieldOptions,
+  CanReadFunction,
 } from '../core/types/common';
 
 export type TypePolicies = {
@@ -153,6 +154,11 @@ export interface FieldFunctionOptions<
   // immutable data (enforced with Object.freeze in development).
   readField: ReadFieldFunction;
 
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  canRead: CanReadFunction;
+
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
@@ -183,9 +189,9 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   options: FieldFunctionOptions,
 ) => TExisting;
 
-export const defaultDataIdFromObject: KeyFieldsFunction = (
-  { __typename, id, _id },
-  context,
+export const defaultDataIdFromObject = (
+  { __typename, id, _id }: Readonly<StoreObject>,
+  context?: KeyFieldsContext,
 ) => {
   if (typeof __typename === "string") {
     if (context) {
@@ -651,6 +657,7 @@ export class Policies {
 
 export interface ReadMergeContext {
   variables?: Record<string, any>;
+  canRead: CanReadFunction;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
 }
@@ -662,9 +669,9 @@ function makeFieldFunctionOptions(
   storage: StorageType | null,
   context: ReadMergeContext,
 ): FieldFunctionOptions {
-  const { toReference, getFieldValue, variables } = context;
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
+  const variables = fieldSpec.variables || context.variables;
   return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
@@ -672,9 +679,10 @@ function makeFieldFunctionOptions(
     storeFieldName,
     variables,
     isReference,
-    toReference,
+    toReference: context.toReference,
     storage,
     cache: policies.cache,
+    canRead: context.canRead,
 
     readField<T>(
       fieldNameOrOptions: string | ReadFieldOptions,
@@ -684,12 +692,17 @@ function makeFieldFunctionOptions(
         typeof fieldNameOrOptions === "string" ? {
           fieldName: fieldNameOrOptions,
           from,
-        } : fieldNameOrOptions;
+        } : { ...fieldNameOrOptions };
 
-      return policies.readField<T>(options.from ? options : {
-        ...options,
-        from: objectOrReference,
-      }, context);
+      if (void 0 === options.from) {
+        options.from = objectOrReference;
+      }
+
+      if (void 0 === options.variables) {
+        options.variables = variables;
+      }
+
+      return policies.readField<T>(options, context);
     },
 
     mergeObjects(existing, incoming) {
@@ -703,8 +716,8 @@ function makeFieldFunctionOptions(
       // parameter types of options.mergeObjects.
       if (existing && typeof existing === "object" &&
           incoming && typeof incoming === "object") {
-        const eType = getFieldValue(existing, "__typename");
-        const iType = getFieldValue(incoming, "__typename");
+        const eType = context.getFieldValue(existing, "__typename");
+        const iType = context.getFieldValue(incoming, "__typename");
         const typesDiffer = eType && iType && eType !== iType;
 
         const applied = policies.applyMerges(

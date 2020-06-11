@@ -49,3 +49,39 @@ console.log(cartItems());
 ```
 
 While reactive variables can be passed around your application and used as simple state containers, as their name implies they can also be used to trigger reactive changes in your application. Each time you call a reactive variable function with a new value, the new value is stored so it can be retrieved again in the future. At the same time the fact that a new value has been received is also broadcast to other parts of Apollo Client. Anything that has registered to receive updates when a reactive variable changes will get notified of the new data, and have a chance to act on it. We'll look at how this functionality can be combined with field policies to automatically re-run queries and dynamically update parts of your application, in [section TODO](#TODO).
+
+## Querying local state
+
+Querying for local data is very similar to querying your GraphQL server. The only difference is that you add a `@client` directive on your local fields to indicate they should be resolved by an Apollo Client [field policy](../caching/cache-field-behavior/) or from the cache directly. Let's look at an example:
+
+```jsx
+import React from "react";
+import { gql, useQuery } from "@apollo/client";
+
+import Todo from "./Todo";
+
+const GET_TODOS = gql`
+  {
+    todos @client {
+      id
+      completed
+      text
+    }
+  }
+`;
+
+function TodoList() {
+  const { data: { todos } } = useQuery(GET_TODOS);
+  return (
+    <ul>
+      {todos.map(todo => <Todo key={todo.id} {...todo} />)}
+    </ul>
+  );
+}
+```
+
+Here we create our GraphQL query and add an `@client` directive to `todos`. We then pass the query to the `useQuery` hook. The `@client` directive lets the `useQuery` component know that `todos` should be calculated by running a pre-defined field policy read function or pulled from the Apollo Client cache directly. The following sections help explain how both options work in more detail.
+
+> ⚠️ Since the above query runs as soon as the component is mounted, what do we do if there are no todos in the cache or there aren't any field policies defined to help calculate `todos`? We need to write an initial state to the cache before the query is run to prevent it from erroring out. Refer to the [Initializing the cache](#initializing-the-cache) section below for more information.
+
+> ⚠️ It's important to note that fields marked with the `@client` directive are never sent over a network to backend API's. Apollo Client strips `@client` fields before operations are sent through its internal Link chain.

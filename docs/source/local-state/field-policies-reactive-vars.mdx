@@ -3,4 +3,49 @@ title: Field policies and reactive variables
 description: Manage and respond to local state changes reactively
 ---
 
-TODO
+Field policies provide a way to manage data on its way into or out of the cache for specific fields in your GraphQL operations. They are explained in more detail in [Customizing the behavior of cached fields](../caching/cache-field-behavior/), but it's important to note that they can also be used help drive fields that don't actually exist in your cache. Field policies can be used to create virtual client side only fields that you can customize to perform any task, or return any data you would like, when called as part of your full GraphQL operation. They can be used to read and write from the cache or be combined with other state API's like Apollo Client reactive variables. Virtual fields are triggered anytime you call a GraphQL operation in Apollo Client, letting you blend fully custom local behavior with your remote queries, getting the results back in a combined response.
+
+The following sections dive into more detail around reading and writing local state using field policies and the Apollo Client cache, but let's first look at another important local state API called reactive variables.
+
+## Reactive variables
+
+Reactive variables are simple functions that allow you to store local state in a well-known and private location, outside of the Apollo Client cache. Since reactive variable state isn't stored in the cache, reactive variables don't have to follow the data graph design requirements of the cache, which means they can be used to store anything you would like. They can then be passed around and consumed by your application, and updated at any point.
+
+Reactive variables are created by calling the `InMemoryCache` class `makeVar` method, along with an optional initial value passed in as the first parameter.
+
+```js
+import { InMemoryCache } from '@apollo/client';
+
+const cache = new InMemoryCache();
+
+const cartItems = cache.makeVar([]);
+```
+
+Here we've created a new array for tracking products added to a shopping cart, by passing an empty array into `makeVar`.
+
+To retrieve the current value of a reactive variable, just call the created reactive variable function.
+
+```js
+const cartItems = cache.makeVar([]);
+
+// Output: []
+console.log(cartItems());
+```
+
+To set a new value as the reactive variable state, pass the new value into the reactive variable function.
+
+```js
+const cartItems = cache.makeVar([]);
+
+cartItems([100, 101, 102]);
+
+// Output: [100, 101, 102]
+console.log(cartItems());
+
+cartItems([456]);
+
+// Output: [456]
+console.log(cartItems());
+```
+
+While reactive variables can be passed around your application and used as simple state containers, as their name implies they can also be used to trigger reactive changes in your application. Each time you call a reactive variable function with a new value, the new value is stored so it can be retrieved again in the future. At the same time the fact that a new value has been received is also broadcast to other parts of Apollo Client. Anything that has registered to receive updates when a reactive variable changes will get notified of the new data, and have a chance to act on it. We'll look at how this functionality can be combined with field policies to automatically re-run queries and dynamically update parts of your application, in [section TODO](#TODO).

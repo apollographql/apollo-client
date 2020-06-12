@@ -42,8 +42,8 @@ As part of migrating, we recommend removing all `@apollo/react-hooks` dependenci
 These two packages are not included in the `@apollo/client` library. To use them with Apollo Client 3.0, update to their 4.x versions:
 
 ```
-npm install @apollo/react-hoc@latest
-npm install @apollo/react-components@latest
+npm install @apollo/react-hoc@beta
+npm install @apollo/react-components@beta
 ```
 
 ```js

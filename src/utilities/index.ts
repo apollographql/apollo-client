@@ -61,3 +61,7 @@ export {
   removeFragmentSpreadFromDocument,
   removeClientSetsFromDocument,
 } from './graphql/transform';
+
+export {
+  offsetLimitPagination,
+} from './policies/pagination';

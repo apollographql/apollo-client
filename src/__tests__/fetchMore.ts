@@ -5,6 +5,7 @@ import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
 import { itAsync } from '../utilities/testing/itAsync';
+import { offsetLimitPagination } from '../utilities';
 
 describe('updateQuery on a simple query', () => {
   const query = gql`

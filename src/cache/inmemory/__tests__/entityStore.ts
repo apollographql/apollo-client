@@ -4,7 +4,7 @@ import { InMemoryCache } from '../inMemoryCache';
 import { DocumentNode } from 'graphql';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
-import { Reference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
 import { MissingFieldError } from '../..';
 
 describe('EntityStore', () => {
@@ -1415,6 +1415,39 @@ describe('EntityStore', () => {
         __typename: "Query",
       },
     });
+  });
+
+  it("supports cache.identify(reference)", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Task: {
+          keyFields: ["uuid"],
+        },
+      },
+    });
+
+    expect(cache.identify(makeReference("oyez"))).toBe("oyez");
+
+    const todoRef = cache.writeFragment({
+      fragment: gql`fragment TodoId on Todo { id }`,
+      data: {
+        __typename: "Todo",
+        id: 123,
+      },
+    });
+    expect(isReference(todoRef)).toBe(true);
+    expect(cache.identify(todoRef!)).toBe("Todo:123");
+
+    const taskRef = cache.writeFragment({
+      fragment: gql`fragment TaskId on Task { id }`,
+      data: {
+        __typename: "Task",
+        uuid: "eb8cffcc-7a9e-4d8b-a517-7d987bf42138",
+      },
+    });
+    expect(isReference(taskRef)).toBe(true);
+    expect(cache.identify(taskRef!)).toBe(
+      'Task:{"uuid":"eb8cffcc-7a9e-4d8b-a517-7d987bf42138"}');
   });
 
   it("supports cache.identify(object)", () => {

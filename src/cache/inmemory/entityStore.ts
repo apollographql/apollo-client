@@ -72,7 +72,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined {
+  public lookup = (dataId: string, dependOnExistence?: boolean): StoreObject | undefined => {
     // The has method (above) calls lookup with dependOnExistence = true, so
     // that it can later be invalidated when we add or remove a StoreObject for
     // this dataId. Any consumer who cares about the contents of the StoreObject
@@ -81,7 +81,7 @@ export abstract class EntityStore implements NormalizedCache {
     if (dependOnExistence) this.group.depend(dataId, "__exists");
     return hasOwn.call(this.data, dataId) ? this.data[dataId] :
       this instanceof Layer ? this.parent.lookup(dataId, dependOnExistence) : void 0;
-  }
+  };
 
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
@@ -139,6 +139,7 @@ export abstract class EntityStore implements NormalizedCache {
           canRead: this.canRead,
           toReference: this.toReference,
           getFieldValue: this.getFieldValue,
+          lookup: this.lookup
         },
       );
 
@@ -380,6 +381,7 @@ export abstract class EntityStore implements NormalizedCache {
 }
 
 export type FieldValueGetter = EntityStore["getFieldValue"];
+export type LookupFunction = EntityStore["lookup"];
 
 // A single CacheGroup represents a set of one or more EntityStore objects,
 // typically the Root store in a CacheGroup by itself, and all active Layer

@@ -145,6 +145,7 @@ export class StoreReader {
         toReference: store.toReference,
         canRead: store.canRead,
         getFieldValue: store.getFieldValue,
+        lookup: store.lookup,
         path: [],
       },
     });

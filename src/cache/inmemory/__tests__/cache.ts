@@ -928,6 +928,7 @@ describe('Cache', () => {
           // The new value for d overwrites the old value, since there
           // is no custom merge function defined for Query.d.
           d: {
+            e: 4,
             h: {
               i: 7,
             },

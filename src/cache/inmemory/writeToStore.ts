@@ -30,7 +30,7 @@ import { cloneDeep } from '../../utilities/common/cloneDeep';
 
 import { ReadMergeContext } from './policies';
 import { NormalizedCache } from './types';
-import { makeProcessedFieldsMerger, FieldValueToBeMerged, fieldNameFromStoreName } from './helpers';
+import { makeProcessedFieldsMerger, FieldValueToBeMerged, fieldNameFromStoreName, storeValueIsStoreObject } from './helpers';
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 
@@ -115,6 +115,7 @@ export class StoreWriter {
         toReference: store.toReference,
         canRead: store.canRead,
         getFieldValue: store.getFieldValue,
+        lookup: store.lookup,
       },
     });
 
@@ -221,6 +222,10 @@ export class StoreWriter {
           let incomingValue =
             this.processFieldValue(value, selection, context, out);
 
+          if(storeValueIsStoreObject(incomingValue)) {
+            // Merge unidentified types
+            out.shouldApplyMerges = true;
+          }
           if (policies.hasMergeFunction(typename, selection.name.value)) {
             // If a custom merge function is defined for this field, store
             // a special FieldValueToBeMerged object, so that we can run

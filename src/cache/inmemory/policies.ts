@@ -32,7 +32,7 @@ import {
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
 } from './helpers';
-import { FieldValueGetter } from './entityStore';
+import { FieldValueGetter, LookupFunction } from './entityStore';
 import { InMemoryCache } from './inMemoryCache';
 import {
   SafeReadonly,
@@ -558,10 +558,10 @@ export class Policies {
     if (isFieldValueToBeMerged(incoming)) {
       const field = incoming.__field;
       const fieldName = field.name.value;
-      // This policy and its merge function are guaranteed to exist
-      // because the incoming value is a FieldValueToBeMerged object.
-      const { merge } = this.getFieldPolicy(
-        incoming.__typename, fieldName, false)!;
+
+      const defaultMerge:FieldMergeFunction<any, any> = (existing, incoming, { mergeObjects }) => mergeObjects(existing, incoming)
+      const { merge = defaultMerge } = this.getFieldPolicy(
+        incoming.__typename, fieldName, false) || {};
 
       // If storage ends up null, that just means no options.storage object
       // has ever been created for a read function for this field before, so
@@ -646,8 +646,17 @@ export class Policies {
         }
       });
 
+      const eObject = isReference(e) ? context.lookup(e.__ref) : e;
+
       if (newFields) {
-        return { ...i, ...newFields } as typeof incoming;
+        return { ...eObject, ...i, ...newFields } as typeof incoming;
+      } else if(eObject && eObject.__typename === i.__typename) {
+        // There is always the chance the data changed since the last
+        // time the object was queried but stale data is preferable to an
+        // infinite loop. If the type changes however it is probably safe
+        // to only keep the new object. Otherwise merge this object with
+        // the old one.
+        return { ...eObject, ...i } as typeof incoming;
       }
     }
 
@@ -660,6 +669,7 @@ export interface ReadMergeContext {
   canRead: CanReadFunction;
   toReference: ToReferenceFunction;
   getFieldValue: FieldValueGetter;
+  lookup: LookupFunction;
 }
 
 function makeFieldFunctionOptions(

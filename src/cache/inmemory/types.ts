@@ -33,6 +33,7 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
+  lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined;
   merge(dataId: string, incoming: StoreObject): void;
   modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
   delete(dataId: string, fieldName?: string): boolean;

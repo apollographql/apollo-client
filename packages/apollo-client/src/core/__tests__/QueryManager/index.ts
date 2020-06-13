@@ -1153,6 +1153,66 @@ describe('QueryManager', () => {
     );
   });
 
+  it('should cancel polling request on stopPolling', () => {
+    const query = gql`
+      {
+        price 
+      }
+    `;
+
+    const data1 = {
+      price: 42
+    };
+    const data2 = {
+      price: 43
+    };
+    const data3 = {
+      price: 44
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      },
+      {
+        request: { query },
+        result: { data: data3 },
+      },
+    );
+
+    const observable = queryManager.watchQuery({
+      query,
+      pollInterval: 15,
+    });
+
+    const recievedResultData = []
+    const handle = observable.subscribe({
+      next(result) {
+        recievedResultData.push(result.data)
+      },
+    });
+
+    observable.stopPolling();
+    observable.startPolling(15);
+    observable.stopPolling();
+    observable.startPolling(15);
+
+    return new Promise(resolve => {
+      setTimeout(resolve, 20)
+    })
+      .then(() => {
+        expect(recievedResultData.length).toEqual(2);
+      })
+      .finally(() => {
+        observable.stopPolling();
+      })
+  });
+
   it('sets networkStatus to `poll` if a polling query is in flight', done => {
     const query = gql`
       {

@@ -1403,6 +1403,10 @@ export class QueryManager<TStore> {
   }
 
   public stopPollingQuery(queryId: string) {
+    const info = this.pollingInfoByQueryId.get(queryId)
+    if (info){
+      clearTimeout(info.timeout)
+    }
     this.pollingInfoByQueryId.delete(queryId);
   }
 }

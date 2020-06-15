@@ -193,3 +193,68 @@ Let's look at both of these steps more closely.
 
 - Retrieving `@client` data with the help of read functions (step 1 above) is explained in [Handling `@client` fields with field policies](#handling-client-fields-with-field-policies).
 - Loading `@client` data from the cache (step 2 above) is explained in [Handling `@client` fields with the cache](#handling-client-fields-with-the-cache).
+
+### Handling `@client` fields with field policies
+
+Apollo Client [field policies](../caching/cache-field-behavior) can be used to locally compute GraphQL query fields that use a `@client` directive. This means that instead of sending your full GraphQL query to a remote GraphQL endpoint, which then runs resolver functions against your query to populate and return a result set, Apollo Client can run locally defined `read` functions to compute the value of `@client` fields. Let's look at an example:
+
+```js
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Launch: {
+      fields: {
+        isInCart: {
+          read(_, { variables }) {
+            return localStorage.getItem('CART').includes(
+              variables.launchId
+            );
+          }
+        }
+      }
+    }
+  }
+});
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache,
+});
+
+const GET_LAUNCH_DETAILS = gql`
+  query LaunchDetails($launchId: ID!) {
+    launch(id: $launchId) {
+      isInCart @client
+      site
+      rocket {
+        type
+      }
+    }
+  }
+`;
+
+// ... run the query using client.query, a useQuery hook, etc.
+```
+
+Here when the `GET_LAUNCH_DETAILS` query is executed, Apollo Client looks for a field policy `read` function that is associated with the `isInCart` field. It finds one as we've defined a `read` function for the `isInCart` field in the `InMemoryCache` constructor. This `read` function is run, then the result is calculated and merged in with the rest of the query result (if a `read` function can't be found, Apollo Client will check the cache for a matching field - see [Local data query flow](#local-data-query-flow) for more details).
+
+In the above example we defined and associated a `isInCart` `read` function with the `Launch` GraphQL object type. Let's look at the `isInCart` `read` function more closely:
+
+```js
+Launch: {
+  fields: {
+    isInCart: {
+      read(_, { variables }) {
+        return localStorage.getItem('CART').includes(
+          variables.launchId
+        );
+      }
+    }
+  }
+}
+```
+
+The first parameter of the `isInCart` `read` function gives us access to a previously stored `isInCart` field value from the cache, if one exists. Since we don't need to look at the cache in this example, we've named this parameter `_`. The second parameter is an object that gives us access to several read function properties and helper functions, which are explained in the [`FieldPolicy` API reference](../caching/cache-field-behavior/#fieldpolicy-api-reference). In our case we're only interested in using the `launchId` variable passed into the query, so we'll pull this out of the `variables` property. Using the `launchId` we check to see if our `localStorage` based cart array contains the specified launch, returning `true` / `false` accordingly. The returned boolean is then incorporated back into the result of running the original query, making it look like the value of `isInCart` came back alongside the rest of the server returned data.
+
+Just like resolvers on the server, field policies are extremely flexible. They can be used to perform any kind of local computation you want, before returning a result for the specified field. You can manually query (or write to) the cache in different ways, call other helper utilities or libraries to prepare/validate/clean data, track statistics, call into other data stores to prepare a result, and so much more.

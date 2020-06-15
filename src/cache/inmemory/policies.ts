@@ -558,10 +558,10 @@ export class Policies {
     if (isFieldValueToBeMerged(incoming)) {
       const field = incoming.__field;
       const fieldName = field.name.value;
-
-      const defaultMerge:FieldMergeFunction<any, any> = (existing, incoming, { mergeObjects }) => mergeObjects(existing, incoming)
-      const { merge = defaultMerge } = this.getFieldPolicy(
-        incoming.__typename, fieldName, false) || {};
+      // This policy and its merge function are guaranteed to exist
+      // because the incoming value is a FieldValueToBeMerged object.
+      const { merge } = this.getFieldPolicy(
+        incoming.__typename, fieldName, false)!;
 
       // If storage ends up null, that just means no options.storage object
       // has ever been created for a read function for this field before, so

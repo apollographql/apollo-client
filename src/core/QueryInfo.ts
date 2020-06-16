@@ -165,7 +165,10 @@ export class QueryInfo {
     this.variables =
     this.networkStatus =
     this.networkError =
-    this.graphQLErrors = void 0;
+    this.graphQLErrors =
+    this.lastWatch =
+    this.lastWrittenResult =
+    this.lastWrittenVars = void 0;
 
     const oq = this.observableQuery;
     if (oq) oq.stopPolling();
@@ -292,6 +295,9 @@ export class QueryInfo {
             result.data = diff.result;
           }
         });
+
+      } else {
+        this.lastWrittenResult = this.lastWrittenVars = void 0;
       }
     }
   }
@@ -303,6 +309,7 @@ export class QueryInfo {
 
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
+    this.lastWrittenResult = this.lastWrittenVars = void 0;
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

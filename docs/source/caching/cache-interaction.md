@@ -233,13 +233,13 @@ If the object is unreachable, it will be garbage collected during next call to `
 You can remove any normalized object from the cache using the `evict` method:
 
 ```js
-cache.evict('my-object-id')
+cache.evict({ id: 'my-object-id' })
 ```
 
-You can pass an optional second parameter to the `evict` method, that is the name of a specific field from a normalized entity that you would like to delete:
+If you would like to remove a specific field from a normalized entity instead of the entire entity itself, you can pass in a `fieldName` property:
 
 ```js
-cache.evict('my-object-id', 'yearOfFounding');
+cache.evict({ id: 'my-object-id', fieldName: 'yearOfFounding' });
 ```
 
 Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.

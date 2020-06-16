@@ -206,6 +206,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // the object must contain a __typename and any primary key fields required
   // to identify entities of that type. If you pass a query result object, be
   // sure that none of the primary key fields have been renamed by aliasing.
+  // If you pass a Reference object, its __ref ID string will be returned.
   public identify(object: StoreObject | Reference): string | undefined {
     return isReference(object) ? object.__ref :
       this.policies.identify(object)[0];

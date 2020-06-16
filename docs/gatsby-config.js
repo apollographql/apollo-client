@@ -61,7 +61,6 @@ module.exports = {
           Integrations: [
             'integrations/integrations',
             'integrations/react-native',
-            'integrations/meteor',
             'integrations/webpack',
           ],
           Networking: [

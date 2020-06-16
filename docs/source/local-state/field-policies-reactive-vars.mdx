@@ -48,7 +48,7 @@ cartItems([456]);
 console.log(cartItems());
 ```
 
-While reactive variables can be passed around your application and used as simple state containers, as their name implies they can also be used to trigger reactive changes in your application. Each time you call a reactive variable function with a new value, the new value is stored so it can be retrieved again in the future. At the same time the fact that a new value has been received is also broadcast to other parts of Apollo Client. Anything that has registered to receive updates when a reactive variable changes will get notified of the new data, and have a chance to act on it. We'll look at how this functionality can be combined with field policies to automatically re-run queries and dynamically update parts of your application, in [section TODO](#TODO).
+While reactive variables can be passed around your application and used as simple state containers, as their name implies they can also be used to trigger reactive changes in your application. Each time you call a reactive variable function with a new value, the new value is stored so it can be retrieved again in the future. At the same time the fact that a new value has been received is also broadcast to other parts of Apollo Client. Anything that has registered to receive updates when a reactive variable changes will get notified of the new data, and have a chance to act on it. We'll look at how this functionality can be combined with field policies to automatically re-run queries and dynamically update parts of your application, in [Using reactive variables to track `@client` state](#using-reactive-variables-to-track-client-state).
 
 ## Querying local state
 
@@ -259,6 +259,10 @@ The first parameter of the `isInCart` `read` function gives us access to a previ
 
 Just like resolvers on the server, field policies are extremely flexible. They can be used to perform any kind of local computation you want, before returning a result for the specified field. You can manually query (or write to) the cache in different ways, call other helper utilities or libraries to prepare/validate/clean data, track statistics, call into other data stores to prepare a result, and so much more.
 
+#### Using reactive variables to track `@client` state
+
+TODO
+
 #### Integrating `@client` into remote queries
 
 While Apollo Client’s local state handling features can be used to work with local state exclusively, most Apollo based applications are built to work with remote data sources. To address this, Apollo Client supports mixing `@client` fields (calculated by field policies) with remote queries, as well as using `@client` based fields as arguments to remote queries, in the same request.
@@ -343,3 +347,7 @@ const client = new ApolloClient({
 ```
 
 Apollo Client supports the merging of local `@client` results and remote results for Queries, Mutations and Subscriptions.
+
+### Handling `@client` fields with the cache
+
+TODO

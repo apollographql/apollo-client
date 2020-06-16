@@ -36,6 +36,7 @@ import observableToPromise, {
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
+import { ApolloClient } from '../../../ApolloClient';
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -2049,19 +2050,6 @@ describe('QueryManager', () => {
             networkStatus: NetworkStatus.ready,
           });
         },
-        result => {
-          expect(stripSymbols(result)).toEqual({
-            data: {
-              ...data2,
-              author: {
-                ...data2.author,
-                id: data1.author.id,
-              },
-            },
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-          });
-        },
       ),
     ]).then(resolve, reject);
   });
@@ -2161,6 +2149,132 @@ describe('QueryManager', () => {
         },
       ),
     ]).then(resolve, reject);
+  });
+
+  itAsync("should not write unchanged network results to cache", (resolve, reject) => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            info: {
+              merge(_, incoming) {
+                return incoming;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(operation => new Observable((observer: Observer<FetchResult>) => {
+        switch (operation.operationName) {
+          case "A":
+            observer.next!({ data: { info: { a: "ay" }}});
+            break;
+          case "B":
+            observer.next!({ data: { info: { b: "bee" }}});
+            break;
+        }
+        observer.complete!();
+      })),
+    });
+
+    const queryA = gql`query A { info { a } }`;
+    const queryB = gql`query B { info { b } }`;
+
+    const obsA = client.watchQuery({
+      query: queryA,
+      returnPartialData: true,
+    });
+
+    const obsB = client.watchQuery({
+      query: queryB,
+      returnPartialData: true,
+    });
+
+    subscribeAndCount(reject, obsA, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {},
+        });
+      } else if (count === 2) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              a: "ay",
+            },
+          },
+        });
+      } else if (count === 3) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {
+            info: {},
+          },
+        });
+      } else if (count === 4) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              a: "ay",
+            },
+          },
+        });
+        setTimeout(resolve, 100);
+      } else {
+        reject(new Error(`Unexpected ${JSON.stringify({count,result})}`));
+      }
+    });
+
+    subscribeAndCount(reject, obsB, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {},
+        });
+      } else if (count === 2) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              b: "bee",
+            },
+          },
+        });
+      } else if (count === 3) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {
+            info: {},
+          },
+        });
+      } else if (count === 4) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              b: "bee",
+            },
+          },
+        });
+        setTimeout(resolve, 100);
+      } else {
+        reject(new Error(`Unexpected ${JSON.stringify({count,result})}`));
+      }
+    });
   });
 
   itAsync('should not error when replacing unidentified data with a normalized ID', (resolve, reject) => {

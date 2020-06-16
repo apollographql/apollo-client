@@ -2049,19 +2049,6 @@ describe('QueryManager', () => {
             networkStatus: NetworkStatus.ready,
           });
         },
-        result => {
-          expect(stripSymbols(result)).toEqual({
-            data: {
-              ...data2,
-              author: {
-                ...data2.author,
-                id: data1.author.id,
-              },
-            },
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-          });
-        },
       ),
     ]).then(resolve, reject);
   });

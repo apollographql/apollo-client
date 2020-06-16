@@ -258,3 +258,88 @@ Launch: {
 The first parameter of the `isInCart` `read` function gives us access to a previously stored `isInCart` field value from the cache, if one exists. Since we don't need to look at the cache in this example, we've named this parameter `_`. The second parameter is an object that gives us access to several read function properties and helper functions, which are explained in the [`FieldPolicy` API reference](../caching/cache-field-behavior/#fieldpolicy-api-reference). In our case we're only interested in using the `launchId` variable passed into the query, so we'll pull this out of the `variables` property. Using the `launchId` we check to see if our `localStorage` based cart array contains the specified launch, returning `true` / `false` accordingly. The returned boolean is then incorporated back into the result of running the original query, making it look like the value of `isInCart` came back alongside the rest of the server returned data.
 
 Just like resolvers on the server, field policies are extremely flexible. They can be used to perform any kind of local computation you want, before returning a result for the specified field. You can manually query (or write to) the cache in different ways, call other helper utilities or libraries to prepare/validate/clean data, track statistics, call into other data stores to prepare a result, and so much more.
+
+#### Integrating `@client` into remote queries
+
+While Apollo Client’s local state handling features can be used to work with local state exclusively, most Apollo based applications are built to work with remote data sources. To address this, Apollo Client supports mixing `@client` fields (calculated by field policies) with remote queries, as well as using `@client` based fields as arguments to remote queries, in the same request.
+
+The `@client` directive can be used on any GraphQL selection set or field, to identify that the result of that field should be calculated locally with the help of a field policy:
+
+```js
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+
+const MEMBER_DETAILS = gql`
+  query Member {
+    member {
+      name
+      role
+      isLoggedIn @client
+    }
+  }
+`;
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache({
+    typePolicies: {
+      Member: {
+        fields: {
+          isLoggedIn: {
+            read() {
+              return someInternalLoginVerificationFunction();
+            }
+          }
+        }
+      }
+    }
+  })
+});
+
+// ... run the query using client.query, a useQuery hook, etc.
+```
+
+When the above `MEMBER_DETAILS` query is fired by Apollo Client (assuming we're talking to a network based GraphQL API), the `@client` `isLoggedIn` field is first stripped from the document, and the remaining query is sent over the network to the GraphQL API. After the query has been handled by the remote resolvers and the result is passed back to Apollo Client from the API, the `@client` parts of the original query are then run against any defined cache field policies, their results are merged with the network results, and the final resulting data is returned as the response to the original operation. So in the above example, `isLoggedIn` is stripped before the rest of the query is sent and handled by the network API, then when the results come back `isLoggedIn` is calculated by running the `isLoggedIn` field policy `read` function. Local and network results are merged together, and the final response is made available to the application.
+
+The `@client` directive can be used with entire selection sets as well:
+
+```js
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+
+const MEMBER_DETAILS = gql`
+  query Member {
+    member {
+      name
+      role
+      session @client {
+        isLoggedIn
+        connectionCount
+        errors
+      }
+    }
+  }
+`;
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache({
+    typePolicies: {
+      Member: {
+        fields: {
+          session: {
+            read() {
+              return {
+                isLoggedIn: someInternalLoginVerificationFunction(),
+                connectionCount: calculateOpenConnections(),
+                errors: sessionError(),
+                __typename: 'Session',
+              };
+            }
+          }
+        }
+      }
+    }
+  })
+});
+```
+
+Apollo Client supports the merging of local `@client` results and remote results for Queries, Mutations and Subscriptions.

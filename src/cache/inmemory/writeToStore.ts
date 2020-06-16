@@ -28,22 +28,18 @@ import {
 import { shouldInclude, hasDirectives } from '../../utilities/graphql/directives';
 import { cloneDeep } from '../../utilities/common/cloneDeep';
 
-import { ReadMergeContext } from './policies';
-import { NormalizedCache } from './types';
+import { NormalizedCache, ReadMergeModifyContext } from './types';
 import { makeProcessedFieldsMerger, FieldValueToBeMerged, fieldNameFromStoreName } from './helpers';
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 
-export interface WriteContext extends ReadMergeContext {
-  readonly store: NormalizedCache;
+export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
     [dataId: string]: SelectionSetNode[];
   };
   readonly fragmentMap?: FragmentMap;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
-  // A JSON.stringify-serialized version of context.variables.
-  varString: string;
 };
 
 interface ProcessSelectionSetOptions {
@@ -112,9 +108,6 @@ export class StoreWriter {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        toReference: store.toReference,
-        canRead: store.canRead,
-        getFieldValue: store.getFieldValue,
       },
     });
 
@@ -170,10 +163,9 @@ export class StoreWriter {
       // this object, and immediately return a Reference to it.
       if (this.reader && this.reader.isFresh(
         result,
-        context.store,
         ref,
         selectionSet,
-        context.varString,
+        context,
       )) {
         return ref;
       }

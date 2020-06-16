@@ -24,7 +24,7 @@ import {
   getStoreKeyName,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { IdGetter } from "./types";
+import { IdGetter, ReadMergeModifyContext } from "./types";
 import {
   hasOwn,
   fieldNameFromStoreName,
@@ -32,7 +32,6 @@ import {
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
 } from './helpers';
-import { FieldValueGetter } from './entityStore';
 import { InMemoryCache } from './inMemoryCache';
 import {
   SafeReadonly,
@@ -501,7 +500,7 @@ export class Policies {
 
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
-    context: ReadMergeContext,
+    context: ReadMergeModifyContext,
   ): SafeReadonly<V> | undefined {
     const objectOrReference = options.from;
     if (!objectOrReference) return;
@@ -510,14 +509,13 @@ export class Policies {
     if (!nameOrField) return;
 
     if (options.typename === void 0) {
-      const typename = context.getFieldValue<string>(
-        objectOrReference, "__typename");
+      const typename = context.store.getFieldValue<string>(objectOrReference, "__typename");
       if (typename) options.typename = typename;
     }
 
     const storeFieldName = this.getStoreFieldName(options);
     const fieldName = fieldNameFromStoreName(storeFieldName);
-    const existing = context.getFieldValue<V>(objectOrReference, storeFieldName);
+    const existing = context.store.getFieldValue<V>(objectOrReference, storeFieldName);
     const policy = this.getFieldPolicy(options.typename, fieldName, false);
     const read = policy && policy.read;
 
@@ -533,8 +531,8 @@ export class Policies {
         this,
         objectOrReference,
         options,
-        storage,
         context,
+        storage,
       )) as SafeReadonly<V>;
     }
 
@@ -552,7 +550,7 @@ export class Policies {
   public applyMerges<T extends StoreValue>(
     existing: T | Reference,
     incoming: T | FieldValueToBeMerged,
-    context: ReadMergeContext,
+    context: ReadMergeModifyContext,
     storageKeys?: [string | StoreObject, string],
   ): T {
     if (isFieldValueToBeMerged(incoming)) {
@@ -592,8 +590,8 @@ export class Policies {
           fieldName,
           field,
           variables: context.variables },
-        storage,
         context,
+        storage,
       )) as T;
     }
 
@@ -632,7 +630,7 @@ export class Policies {
       Object.keys(i).forEach(storeFieldName => {
         const incomingValue = i[storeFieldName];
         const appliedValue = this.applyMerges(
-          context.getFieldValue(e, storeFieldName),
+          context.store.getFieldValue(e, storeFieldName),
           incomingValue,
           context,
           // Avoid enabling options.storage when firstStorageKey is falsy,
@@ -655,23 +653,18 @@ export class Policies {
   }
 }
 
-export interface ReadMergeContext {
-  variables?: Record<string, any>;
-  canRead: CanReadFunction;
-  toReference: ToReferenceFunction;
-  getFieldValue: FieldValueGetter;
-}
-
 function makeFieldFunctionOptions(
   policies: Policies,
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
+  context: ReadMergeModifyContext,
   storage: StorageType | null,
-  context: ReadMergeContext,
 ): FieldFunctionOptions {
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
   const variables = fieldSpec.variables || context.variables;
+  const { getFieldValue, toReference, canRead } = context.store;
+
   return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
@@ -679,10 +672,10 @@ function makeFieldFunctionOptions(
     storeFieldName,
     variables,
     isReference,
-    toReference: context.toReference,
+    toReference,
     storage,
     cache: policies.cache,
-    canRead: context.canRead,
+    canRead,
 
     readField<T>(
       fieldNameOrOptions: string | ReadFieldOptions,
@@ -716,8 +709,8 @@ function makeFieldFunctionOptions(
       // parameter types of options.mergeObjects.
       if (existing && typeof existing === "object" &&
           incoming && typeof incoming === "object") {
-        const eType = context.getFieldValue(existing, "__typename");
-        const iType = context.getFieldValue(incoming, "__typename");
+        const eType = getFieldValue(existing, "__typename");
+        const iType = getFieldValue(incoming, "__typename");
         const typesDiffer = eType && iType && eType !== iType;
 
         const applied = policies.applyMerges(

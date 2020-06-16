@@ -135,11 +135,7 @@ export abstract class EntityStore implements NormalizedCache {
           fieldName: fieldNameOrOptions,
           from: from || makeReference(dataId),
         } : fieldNameOrOptions,
-        {
-          canRead: this.canRead,
-          toReference: this.toReference,
-          getFieldValue: this.getFieldValue,
-        },
+        { store: this },
       );
 
       Object.keys(storeObject).forEach(storeFieldName => {

@@ -3,7 +3,6 @@ title: Mutations
 description: Update data with the useMutation hook
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 import MutationOptions from '../../shared/mutation-options.mdx';
 import MutationResult from '../../shared/mutation-result.mdx';
 
@@ -31,9 +30,6 @@ The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the
 
 Let's look at an example. First, we'll create a GraphQL mutation named `ADD_TODO`, which represents adding an item to a to-do list. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 import { gql, useMutation } from '@apollo/client';
 
@@ -45,33 +41,10 @@ const ADD_TODO = gql`
     }
   }
 `;
-
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-import { gql, Mutation } from '@apollo/client';
-
-const ADD_TODO = gql`
-  mutation AddTodo($type: String!) {
-    addTodo(type: $type) {
-      id
-      type
-    }
-  }
-`;
-```
-
-</div>
-</MultiCodeBlock>
 
 Next, we'll create a component named `AddTodo` that represents the submission form for the to-do list. Inside it, we'll pass our
 `ADD_TODO` mutation to the `useMutation` hook:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx:title=index.js
 function AddTodo() {
@@ -98,41 +71,6 @@ function AddTodo() {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx:title=index.js
-const AddTodo = () => {
-  let input;
-
-  return (
-    <Mutation mutation={ADD_TODO}>
-      {(addTodo, { data }) => (
-        <div>
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              addTodo({ variables: { type: input.value } });
-              input.value = '';
-            }}
-          >
-            <input
-              ref={node => {
-                input = node;
-              }}
-            />
-            <button type="submit">Add Todo</button>
-          </form>
-        </div>
-      )}
-    </Mutation>
-  );
-};
-```
-
-</div>
-</MultiCodeBlock>
 
 ### Calling the mutate function
 
@@ -170,9 +108,6 @@ Apollo Client.
 
 Let's look at an example that enables us to modify the value of any existing
 item in our to-do list:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 const UPDATE_TODO = gql`
@@ -217,61 +152,6 @@ function Todos() {
 }
 ```
 
-</div>
-<div data-language="js">
-
-```jsx
-const UPDATE_TODO = gql`
-  mutation UpdateTodo($id: String!, $type: String!) {
-    updateTodo(id: $id, type: $type) {
-      id
-      type
-    }
-  }
-`;
-
-const Todos = () => (
-  <Query query={GET_TODOS}>
-    {({ loading, error, data }) => {
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p>Error :(</p>;
-
-      return data.todos.map(({ id, type }) => {
-        let input;
-
-        return (
-          <Mutation mutation={UPDATE_TODO} key={id}>
-            {updateTodo => (
-              <div>
-                <p>{type}</p>
-                <form
-                  onSubmit={e => {
-                    e.preventDefault();
-                    updateTodo({ variables: { id, type: input.value } });
-
-                    input.value = '';
-                  }}
-                >
-                  <input
-                    ref={node => {
-                      input = node;
-                    }}
-                  />
-                  <button type="submit">Update Todo</button>
-                </form>
-              </div>
-            )}
-          </Mutation>
-        );
-      });
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
-
 If you execute the `UPDATE_TODO` mutation using this component, the mutation
 returns both the `id` of the modified to-do item and the item's new `type`.
 Because Apollo Client caches entities by `id`, it knows how to automatically
@@ -290,9 +170,6 @@ update function for the `ADD_TODO` mutation should add the same item to our
 cached version of the to-do list.
 
 The following sample illustrates defining an update function in a call to `useMutation`:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 const GET_TODOS = gql`
@@ -347,67 +224,6 @@ function AddTodo() {
 }
 ```
 
-</div>
-<div data-language="js">
-
-```jsx
-const GET_TODOS = gql`
-  query GetTodos {
-    todos
-  }
-`;
-
-const AddTodo = () => {
-  let input;
-
-  return (
-    <Mutation
-      mutation={ADD_TODO}
-      update={(cache, { data: { addTodo } }) => {
-        cache.modify({
-          fields: {
-            todos(existingTodos = []) {
-              const newTodoRef = cache.writeFragment({
-                data: addTodo,
-                fragment: gql`
-                  fragment NewTodo on Todo {
-                    id
-                    type
-                  }
-                `
-              });
-              return [...existingTodos, newTodoRef];
-            }
-          }
-        });
-      }}
-    >
-      {addTodo => (
-        <div>
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              addTodo({ variables: { type: input.value } });
-              input.value = '';
-            }}
-          >
-            <input
-              ref={node => {
-                input = node;
-              }}
-            />
-            <button type="submit">Add Todo</button>
-          </form>
-        </div>
-      )}
-    </Mutation>
-  );
-};
-```
-
-</div>
-</MultiCodeBlock>
-
 As shown, the update function is passed a `cache` object that represents the Apollo Client cache. This object provides access to cache API methods like `readQuery`, `writeQuery`, `readFragment`, `writeFragment` and `modify`. These methods enable you to execute GraphQL operations on the cache as though you're interacting with a GraphQL server.
 
 > Learn more about supported cache functions in [Interacting with cached data](../caching/cache-interaction/).
@@ -426,9 +242,6 @@ The `useMutation` hook provides mechanisms for tracking the loading and error
 state of a mutation.
 
 Let's revisit the `Todos` component from [Updating a single existing entity](#updating-a-single-existing-entity):
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 function Todos() {
@@ -471,54 +284,6 @@ function Todos() {
   });
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const Todos = () => (
-  <Query query={GET_TODOS}>
-    {({ loading, error, data }) => {
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p>Error :(</p>;
-
-      return data.todos.map(({ id, type }) => {
-        let input;
-
-        return (
-          <Mutation mutation={UPDATE_TODO} key={id}>
-            {(updateTodo, { loading, error }) => (
-              <div>
-                <p>{type}</p>
-                <form
-                  onSubmit={e => {
-                    e.preventDefault();
-                    updateTodo({ variables: { id, type: input.value } });
-
-                    input.value = '';
-                  }}
-                >
-                  <input
-                    ref={node => {
-                      input = node;
-                    }}
-                  />
-                  <button type="submit">Update Todo</button>
-                </form>
-                {loading && <p>Loading...</p>}
-                {error && <p>Error :( Please try again</p>}
-              </div>
-            )}
-          </Mutation>
-        );
-      });
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 As shown above, we can destructure the `loading` and `error` properties from
 the result object returned by `useMutation` to track the mutation's state in our UI. The `useMutation` hook also supports `onCompleted` and `onError` options if you prefer to use callbacks.

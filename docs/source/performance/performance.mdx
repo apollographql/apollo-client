@@ -2,8 +2,6 @@
 title: Improving performance
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 ## Redirecting to cached data
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
@@ -87,9 +85,6 @@ Prefetching is one of the easiest ways to make your application's UI feel a lot 
 
 We can accomplish this in only a few lines of code by calling `client.query` whenever the user hovers over a link.
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 function Feed() {
   const { loading, error, data, client } = useQuery(GET_DOGS);
@@ -132,49 +127,6 @@ function Feed() {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const Feed = () => (
-  <View style={styles.container}>
-    <Header />
-    <Query query={GET_DOGS}>
-      {({ loading, error, data, client }) => {
-        if (loading) return <Fetching />;
-        if (error) return <Error />;
-
-        return (
-          <DogList
-            data={data.dogs}
-            renderRow={(type, data) => (
-              <Link
-                to={{
-                  pathname: `/${data.breed}/${data.id}`,
-                  state: { id: data.id }
-                }}
-                onMouseOver={() =>
-                  client.query({
-                    query: GET_DOG,
-                    variables: { breed: data.breed }
-                  })
-                }
-                style={{ textDecoration: "none" }}
-              >
-                <Dog {...data} url={data.displayImage} />
-              </Link>
-            )}
-          />
-        );
-      }}
-    </Query>
-  </View>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 All we have to do is access the client in the render prop function and call `client.query` when the user hovers over the link. Once the user clicks on the link, the data will already be available in the Apollo cache, so the user won't see a loading state.
 
@@ -289,9 +241,6 @@ const client = new ApolloClient({
 
 A component for the second view that implements the two queries could look like this:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`
   query SeriesDetailData($seriesId: Int!) {
@@ -355,68 +304,5 @@ function SeriesDetailView({ seriesId }) {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const QUERY_SERIES_DETAIL_VIEW = gql`
-  query SeriesDetailData($seriesId: Int!) {
-    oneSeries(id: $seriesId) {
-      id
-      title
-      description
-      cover
-    }
-  }
-`;
-
-const QUERY_SERIES_EPISODES = gql`
-  query SeriesEpisodes($seriesId: Int!) {
-    oneSeries(id: $seriesId) {
-      id
-      episodes {
-        id
-        title
-        cover
-      }
-    }
-  }
-`;
-
-const SeriesDetailView = ({ seriesId }) => (
-  <Query query={QUERY_SERIES_DETAIL_VIEW} variables={{ seriesId }}>
-    {({ loading: seriesLoading, data: { oneSeries } }) => (
-      <Query query={QUERY_SERIES_EPISODES} variables={{ seriesId }}>
-        {({
-          loading: episodesLoading,
-          data: { oneSeries: { episodes } = {} }
-        }) => (
-          <div>
-            <h1>{seriesLoading ? `Loading...` : oneSeries.title}</h1>
-            <img src={seriesLoading ? `/dummy.jpg` : oneSeries.cover} />
-            <h2>Episodes</h2>
-            <ul>
-              {episodesLoading ? (
-                <li>Loading...</li>
-              ) : (
-                episodes.map(episode => (
-                  <li key={episode.id}>
-                    <img src={episode.cover} />
-                    <a href={`/episode/${episode.id}`}>{episode.title}</a>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        )}
-      </Query>
-    )}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](../api/link/apollo-link-batch-http/) those two queries can be sent to the server in one network request.

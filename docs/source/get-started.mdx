@@ -3,8 +3,6 @@ title: Get started
 description: Set up Apollo Client in your React app
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Out of the box Apollo Client includes packages that we think are essential for building an Apollo app, like our in-memory cache, local state management, error handling, and a React based view layer.
 
 > This tutorial walks you through installing and configuring Apollo Client
@@ -94,9 +92,6 @@ First, pass your GraphQL query wrapped in the `gql` function into the `useQuery`
 
 Let's create an `ExchangeRates` component in `index.js` to see the `useQuery` hook in action!
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 import { useQuery, gql } from '@apollo/client';
 
@@ -124,45 +119,6 @@ function ExchangeRates() {
   ));
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-import { Query } from '@apollo/react-components';
-import { gql } from '@apollo/client';
-
-const EXCHANGE_RATES = gql`
-  query GetExchangeRates {
-    rates(currency: "USD") {
-      currency
-      rate
-    }
-  }
-`
-
-const ExchangeRates = () => (
-  <Query
-    query={EXCHANGE_RATES}
-  >
-    {({ loading, error, data }) => {
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p>Error :(</p>;
-
-      return data.rates.map(({ currency, rate }) => (
-        <div key={currency}>
-          <p>
-            {currency}: {rate}
-          </p>
-        </div>
-      ));
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 Congrats, you just made your first `useQuery` based component! 🎉 If you render your `ExchangeRates` component within your `App` component from the previous example, you'll first see a loading indicator and then data on the page once it's ready. Apollo Client automatically caches this data when it comes back from the server, so you won't see a loading indicator if you run the same query twice.
 

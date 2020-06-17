@@ -3,16 +3,11 @@ title: Why Apollo Client?
 description: Why choose Apollo Client to manage your data?
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Data management shouldn't have to be so difficult! If you're wondering how to simplify managing remote and local data in your React application, then you've come to the right place. Throughout this documentation, you'll learn how Apollo's intelligent caching and declarative approach to data fetching can help you iterate faster while writing less code. Let's jump right in! 🚀
 
 ## Declarative data fetching
 
 With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated by the `useQuery` Hook. This encapsulation makes integrating query results into your presentational components a breeze! Let's see what this looks like in practice with Apollo Client and React:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 function Feed() {
@@ -23,25 +18,6 @@ function Feed() {
   return <DogList dogs={data.dogs} />;
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const Feed = () => (
-  <Query query={GET_DOGS}>
-    {({ loading, error, data }) => {
-      if (error) return <Error />
-      if (loading || !data) return <Fetching />;
-
-      return <DogList dogs={data.dogs} />
-    }}
-  </Query>
-)
-```
-
-</div>
-</MultiCodeBlock>
 
 Here we're using the `useQuery` Hook to fetch some dogs from our GraphQL server and display them in a list. `useQuery` leverages React's [Hooks API](https://reactjs.org/docs/hooks-intro.html) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.
 

@@ -3,7 +3,6 @@ title: Queries
 description: Fetch data with the useQuery hook
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 import QueryOptions from '../../shared/query-options.mdx';
 import QueryResult from '../../shared/query-result.mdx';
 
@@ -27,9 +26,6 @@ The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the pr
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```tsx:title=index.js
 import { gql, useQuery } from '@apollo/client';
 
@@ -43,30 +39,7 @@ const GET_DOGS = gql`
 `;
 ```
 
-</div>
-<div data-language="js">
-
-```tsx:title=index.js
-import { gql } from '@apollo/client';
-import { Query } from '@apollo/react-components';
-
-const GET_DOGS = gql`
-  query GetDogs {
-    dogs {
-      id
-      breed
-    }
-  }
-`;
-```
-
-</div>
-</MultiCodeBlock>
-
 Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS` query to the `useQuery` hook:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```tsx:title=index.js
 function Dogs({ onDogSelected }) {
@@ -87,33 +60,6 @@ function Dogs({ onDogSelected }) {
 }
 ```
 
-</div>
-<div data-language="js">
-
-```tsx:title=index.js
-const Dogs = ({ onDogSelected }) => (
-  <Query query={GET_DOGS}>
-    {({ loading, error, data }) => {
-      if (loading) return 'Loading...';
-      if (error) return `Error! ${error.message}`;
-
-      return (
-        <select name="dog" onChange={onDogSelected}>
-          {data.dogs.map(dog => (
-            <option key={dog.id} value={dog.breed}>
-              {dog.breed}
-            </option>
-          ))}
-        </select>
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
-
 As our query executes and the values of `loading`, `error`, and `data` change, the `Dogs` component can intelligently render different UI elements according to the query's state:
 
 - As long as `loading` is `true` (indicating the query is still in flight), the component presents a `Loading...` notice.
@@ -131,9 +77,6 @@ extremely fast.
 
 To see this caching in action, let's build a new component called `DogPhoto`. `DogPhoto` accepts a prop called `breed` that reflects the current value of the dropdown menu in our `Dogs` component:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx:title=index.js
 const GET_DOG_PHOTO = gql`
   query Dog($breed: String!) {
@@ -158,36 +101,6 @@ function DogPhoto({ breed }) {
 }
 ```
 
-</div>
-<div data-language="js">
-
-```jsx:title=index.js
-const GET_DOG_PHOTO = gql`
-  query Dog($breed: String!) {
-    dog(breed: $breed) {
-      id
-      displayImage
-    }
-  }
-`;
-
-const DogPhoto = ({ breed }) => (
-  <Query query={GET_DOG_PHOTO} variables={{ breed }}>
-    {({ loading, error, data }) => {
-      if (loading) return null;
-      if (error) return `Error! ${error}`;
-
-      return (
-        <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
-
 Notice that we're providing a configuration option (`variables`) to the `useQuery` hook this time. The `variables` option is an object that contains all of the variables we want to pass to our GraphQL query. In this case, we want to pass the currently selected breed from the dropdown.
 
 Select `bulldog` from the dropdown to see its photo appear. Then switch to another breed, and then switch _back_ to `bulldog`. You'll notice that the bulldog photo loads instantly the second time around. This is the Apollo cache at work!
@@ -202,9 +115,6 @@ want to make sure that cached data is up to date with your server. Apollo Client
 ### Polling
 
 Polling provides near-real-time synchronization with your server by causing a query to execute periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx:title=index.js
 function DogPhoto({ breed }) {
@@ -222,31 +132,6 @@ function DogPhoto({ breed }) {
 }
 ```
 
-</div>
-<div data-language="js">
-
-```jsx:title=index.js
-const DogPhoto = ({ breed }) => (
-  <Query
-    query={GET_DOG_PHOTO}
-    variables={{ breed }}
-    pollInterval={500}
-  >
-    {({ loading, error, data }) => {
-      if (loading) return null;
-      if (error) return `Error! ${error}`;
-
-      return (
-        <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
-
 By setting the `pollInterval` to 500, you'll fetch the current breed's image from the server every 0.5 seconds. Note that if you set `pollInterval` to `0`, the query will **not** poll.
 
 > You can also start and stop polling dynamically with the `startPolling` and `stopPolling` functions that are returned by the [`useQuery` hook](https://www.apollographql.com/docs/react/api/react/hooks/#usequery).
@@ -262,9 +147,6 @@ Let's add a button to our `DogPhoto` component that calls our query's
 You can optionally provide a new `variables` object to
 the `refetch` function. If you don't (as is the case in the following example),
 the query uses the same variables that it used in its previous execution.
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx:title=index.js
 function DogPhoto({ breed }) {
@@ -284,33 +166,6 @@ function DogPhoto({ breed }) {
 }
 ```
 
-</div>
-<div data-language="js">
-
-```jsx:title=index.js
-const DogPhoto = ({ breed }) => (
-  <Query query={GET_DOG_PHOTO} variables={{ breed }}>
-    {({ loading, error, data, refetch }) => {
-      if (loading) return null;
-      if (error) return `Error! ${error}`;
-
-      return (
-        <div>
-          <img
-            src={data.dog.displayImage}
-            style={{ height: 100, width: 100 }}
-          />
-          <button onClick={() => refetch()}>Refetch!</button>
-        </div>
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
-
 Click the button and notice that the UI updates with a new dog photo. Refetching is an excellent way to guarantee fresh data, but it introduces some complexity with loading state. In the next section, we'll cover strategies for handling complex loading and error state.
 
 ## Inspecting loading states
@@ -321,9 +176,6 @@ Let's return to our refetching example from the previous section. If you click t
 
 Luckily, the `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
 of this information, we need to set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx:title=index.js
 import { NetworkStatus } from '@apollo/client';
@@ -349,40 +201,6 @@ function DogPhoto({ breed }) {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx:title=index.js
-import { NetworkStatus } from '@apollo/client';
-
-const DogPhoto = ({ breed }) => (
-  <Query
-    query={GET_DOG_PHOTO}
-    variables={{ breed }}
-    notifyOnNetworkStatusChange
-  >
-    {({ loading, error, data, refetch, networkStatus }) => {
-      if (networkStatus === NetworkStatus.refetch) return 'Refetching!';
-      if (loading) return null;
-      if (error) return `Error! ${error}`;
-
-      return (
-        <div>
-          <img
-            src={data.dog.displayImage}
-            style={{ height: 100, width: 100 }}
-          />
-          <button onClick={() => refetch()}>Refetch!</button>
-        </div>
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/master/src/core/networkStatus.ts).
 

@@ -2,8 +2,6 @@
 title: Server-side rendering
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Apollo provides two techniques to allow your applications to load quickly, avoiding unnecessary delays to users:
 
  - Store rehydration, which allows your initial set of queries to return data immediately without a server roundtrip.
@@ -239,29 +237,12 @@ const client = new ApolloClient({
 
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 function withClientOnlyUser() {
   useQuery(GET_USER_WITH_ID, { ssr: false });
   return <span>I won't be run on the server</span>;
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const withClientOnlyUser = () => (
-  <Query query={GET_USER_WITH_ID} ssr={false}>
-    {({ data }) => <span>I won't be run on the server</span>}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 ### Using `renderToStringWithData`
 

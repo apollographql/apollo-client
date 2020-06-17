@@ -63,5 +63,6 @@ export {
 } from './graphql/transform';
 
 export {
+  concatPagination,
   offsetLimitPagination,
 } from './policies/pagination';

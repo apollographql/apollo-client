@@ -386,6 +386,10 @@ export class StoreReader {
       return childResult.result;
     }
 
+    if (field.selectionSet) {
+      array = array.filter(context.store.canRead);
+    }
+
     array = array.map((item, i) => {
       // null value in array
       if (item === null) {

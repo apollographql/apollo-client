@@ -3,8 +3,6 @@ title: Testing React components
 description: Peace of mind when using Apollo Client with React in production
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Running tests against code meant for production has long been a best practice. It provides additional security for the code that's already written, and prevents accidental regressions in the future. Components utilizing React with Apollo Client are no exception.
 
 Although Apollo Client's React integration has a lot going on under the hood, the library provides multiple tools for testing that simplify those abstractions, and allows complete focus on the component logic. These testing utilities have long been used to test React functionality with Apollo Client itself, so they will be supported long-term.
@@ -18,9 +16,6 @@ This guide will explain step-by-step how to test Apollo Client React code. The f
 > **Note:** As of Apollo Client 3, all testing utilities can now be imported from `@apollo/client/testing`.
 
 Consider the component below, which makes a basic query, and displays its results:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 import React from 'react';
@@ -52,44 +47,6 @@ export function Dog({ name }) {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-import React from 'react';
-import { gql } from "@apollo/client";
-import { Query } from '@apollo/react-components';
-
-// Make sure the query is also exported -- not just the component
-export const GET_DOG_QUERY = gql`
-  query GetDog($name: String) {
-    dog(name: $name) {
-      id
-      name
-      breed
-    }
-  }
-`;
-
-export const Dog = ({ name }) => (
-  <Query query={GET_DOG_QUERY} variables={{ name }}>
-    {({ loading, error, data }) => {
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p>Error!</p>;
-
-      return (
-        <p>
-          {data.dog.name} is a {data.dog.breed}
-        </p>
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 Given this component, let's try to render it inside a test, just to make sure there are no render errors:
 
@@ -296,9 +253,6 @@ const dogMock = {
 
 Consider this component that calls a mutation:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 export const DELETE_DOG_MUTATION = gql`
   mutation deleteDog($name: String!) {
@@ -324,40 +278,6 @@ export function DeleteButton() {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-export const DELETE_DOG_MUTATION = gql`
-  mutation deleteDog($name: String!) {
-    deleteDog(name: $name) {
-      id
-      name
-      breed
-    }
-  }
-`;
-
-export const DeleteButton = () => (
-  <Mutation mutation={DELETE_DOG_MUTATION}>
-    {(mutate, { loading, error, data }) => {
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p>Error!</p>;
-      if (data) return <p>Deleted!</p>;
-
-      return (
-        <button onClick={() => mutate({ variables: { name: 'Buck' } })}>
-          Click me to Delete Buck!
-        </button>
-      );
-    }}
-  </Mutation>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 Testing an initial render for this component looks identical to testing our `useQuery` based component.
 

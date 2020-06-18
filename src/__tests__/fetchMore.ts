@@ -2,6 +2,7 @@ import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
+import subscribeAndCount from '../utilities/testing/subscribeAndCount';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
 import { itAsync } from '../utilities/testing/itAsync';
@@ -211,7 +212,19 @@ describe('fetchMore on an observable query', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              entry: {
+                merge(_, incoming) {
+                  return incoming;
+                },
+              },
+            },
+          },
+        },
+      }),
     });
 
     return client.watchQuery<any>({
@@ -296,6 +309,169 @@ describe('fetchMore on an observable query', () => {
         expect(comments[i - 1].text).toEqual(`comment ${i}`);
       }
     }).then(resolve, reject);
+  });
+
+  itAsync('fetchMore passes new args to field merge function', (resolve, reject) => {
+    const mergeArgsHistory: (Record<string, any> | null)[] = [];
+    const groceriesFieldPolicy = offsetLimitPagination();
+    const { merge } = groceriesFieldPolicy;
+    groceriesFieldPolicy.merge = function (existing, incoming, options) {
+      mergeArgsHistory.push(options.args);
+      return merge!.call(this, existing, incoming, options);
+    };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            groceries: groceriesFieldPolicy,
+          },
+        },
+      },
+    });
+
+    const query = gql`
+      query GroceryList($offset: Int!, $limit: Int!) {
+        groceries(offset: $offset, limit: $limit) {
+          id
+          item
+          found
+        }
+      }
+    `;
+
+    const initialVars = {
+      offset: 0,
+      limit: 2,
+    };
+
+    const initialGroceries = [
+      {
+        __typename: "GroceryItem",
+        id: 1,
+        item: "organic whole milk",
+        found: false,
+      },
+      {
+        __typename: "GroceryItem",
+        id: 2,
+        item: "beer that we both like",
+        found: false,
+      },
+    ];
+
+    const additionalVars = {
+      offset: 2,
+      limit: 3,
+    };
+
+    const additionalGroceries = [
+      {
+        __typename: "GroceryItem",
+        id: 3,
+        item: "gluten-free pasta",
+        found: false,
+      },
+      {
+        __typename: "GroceryItem",
+        id: 4,
+        item: "goat cheese",
+        found: false,
+      },
+      {
+        __typename: "GroceryItem",
+        id: 5,
+        item: "paper towels",
+        found: false,
+      },
+    ];
+
+    const finalGroceries = [
+      ...initialGroceries,
+      ...additionalGroceries,
+    ];
+
+    const client = new ApolloClient({
+      cache,
+      link: mockSingleLink({
+        request: {
+          query,
+          variables: initialVars,
+        },
+        result: {
+          data: {
+            groceries: initialGroceries,
+          },
+        },
+      }, {
+        request: {
+          query,
+          variables: additionalVars,
+        },
+        result: {
+          data: {
+            groceries: additionalGroceries,
+          },
+        },
+      }).setOnError(reject),
+    });
+
+    const observable = client.watchQuery({
+      query,
+      variables: initialVars,
+    });
+
+    subscribeAndCount(reject, observable, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            groceries: initialGroceries,
+          },
+        });
+
+        expect(mergeArgsHistory).toEqual([
+          { offset: 0, limit: 2 },
+        ]);
+
+        observable.fetchMore({
+          variables: {
+            offset: 2,
+            limit: 3,
+          },
+        }).then(result => {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              groceries: additionalGroceries,
+            },
+          });
+
+          expect(observable.options.fetchPolicy).toBeUndefined();
+        });
+
+      } else if (count === 2) {
+        // This result comes entirely from the cache, without updating the
+        // original variables for the ObservableQuery, because the
+        // offsetLimitPagination field policy has keyArgs:false.
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            groceries: finalGroceries,
+          },
+        });
+
+        expect(mergeArgsHistory).toEqual([
+          { offset: 0, limit: 2 },
+          { offset: 2, limit: 3 },
+        ]);
+
+        resolve();
+      }
+    });
   });
 
   itAsync('fetching more with a different query', (resolve, reject) => {
@@ -482,7 +658,19 @@ describe('fetchMore on an observable query with connection', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              entry: {
+                merge(_, incoming) {
+                  return incoming;
+                },
+              },
+            },
+          },
+        },
+      }),
     });
 
     return client.watchQuery<any>({

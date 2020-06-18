@@ -244,6 +244,50 @@ cache.evict({ id: 'my-object-id', fieldName: 'yearOfFounding' });
 
 Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
 
+#### Dangling references
+
+When an object is `evict`ed from the cache, it is possible for dangling references to that object to be left in the cache. By default, Apollo Client leaves dangling references untouched. It may actually be unwise/destructive to remove dangling references from the cache, as the evicted data could always be written back into the cache at some later time, restoring the validity of the references. Since eviction is not necessarily final, dangling references represent useful information that Apollo Client preserves by default after eviction.
+
+If dangling references are a problem for your application however, we recommend filtering/handling them on-demand. Apollo Client supports postponing the management of dangling references until the next time the affected fields are read from the cache, by defining a custom [`read` function](./cache-field-behavior/#the-read-function) that performs any necessary cleanup, in whatever way makes sense for the logic of the particular field. For example, you might have a list of references that should be filtered to exclude the dangling items, or you might want the dangling references to be nullified in place without filtering, or you might have a single reference that should default to something else if it becomes invalid. All of these options are matters of application-level logic, so the cache cannot choose the right default reference cleanup strategy in all cases. Instead, Apollo Client provides a `canRead` helper function to `read` functions that can be used to detect dangling references, allowing you to handle them accordingly. For example:
+
+```js
+new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        ruler(existingRuler, { canRead, toReference }) {
+          // If the throne is empty, promote Apollo!
+          return canRead(existingRuler) ? existingRuler : toReference({
+            __typename: "Deity",
+            name: "Apollo",
+          });
+        },
+      },
+    },
+
+    Deity: {
+      keyFields: ["name"],
+      fields: {
+        offspring(existingOffspring: Reference[], { canRead }) {
+          // Filter out any dangling references left over from removing
+          // offspring, supplying a default empty array if there are no
+          // offspring left.
+          return existingOffspring
+            ? existingOffspring.filter(canRead)
+            : [];
+        },
+      },
+    },
+  },
+})
+```
+
+The `ruler` field policy above returns a default `ruler` if the previous `ruler` has been deposed, whereas the `offspring` field policy ensures we're getting back a list of alive and well offspring only.
+
+The desire to filter dangling references from arrays (the `offspring` example above) is common enough that Apollo Client handles this automatically by default, freeing developers from having to worry about manually removing references from lists after evicting entities from the cache. Instead, those dangling references will simply (appear to) disappear from cache results, which is almost always the desired behavior. Fields whose values hold single (non-list) dangling references (the `ruler` example above) cannot be easily filtered in the same way, which is where writing a custom `read` function for the field comes in handy.
+
+In case automatic list filtering is not desired, a custom `read` function can be used to override filtering, since `read` functions run before this filtering happens. The presence of the `offspring` `read` function in the example above means automatic list filtering will not be called.
+
 ## Recipes
 
 Here are some common situations where you would need to access the cache directly. If you're manipulating the cache in an interesting way and would like your example to be featured, please send in a pull request!

@@ -196,6 +196,59 @@ client.writeQuery({
 });
 ```
 
+## Identify cached entities
+
+The Apollo Client cache API supports [customizing the identifier](./cache-configuration/#customizing-identifier-generation-by-type) used to represent a cached entity, through the use of a `TypePolicy` `keyFields` property. If you're using `keyFields` to help generate a unique identifier, you probably don't want application code re-implementing that logic to compute IDs for use with other parts of the cache API, like [`cache.readFragment`](./cache-interaction/#readfragment) and [`cache.evict`](./cache-interaction/#evict). To help avoid duplicating effort, and manual string manipulation to generate an ID, the `cache.identify` method can help.
+
+`cache.identify` takes a result object and computes its ID based on the `__typename` and primary key fields. For example:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      keyFields: ['isbn'],
+    },
+  },
+});
+
+...
+
+// This data was pulled out of the cache at some point.
+const cuckoosCallingBook = {
+  __typename: 'Book',
+  isbn: '031648637X',
+  title: "The Cuckoo's Calling",
+  author: {
+    __typename: 'Author',
+    name: 'Robert Galbraith',
+  },
+};
+
+const bookAuthorFragment = gql`
+  fragment BookAuthor on Book {
+    author {
+      name
+    }
+  }
+`;
+
+const fragmentResult = cache.readFragment({
+  id: cache.identify(cuckoosCallingBook),
+  fragment: bookAuthorFragment,
+});
+
+// `fragmentResult` is now:
+// {
+//   __typename: "Book",
+//   author: {
+//     __typename: "Author",
+//     name: "Robert Galbraith",
+//   },
+// }
+```
+
+`cache.readFragment` requires an `id` to know which normalized cache object it should be querying against. Instead of building that ID manually by concatenating the `Book` typename string with the `isbn` `031648637X` string, `cache.identify` is used to analyze the data, and build the `id` string automatically. We might not be saving much in this example by using `cache.identify` versus building the `id` manually, but as your type `keyFields` logic gets more complex, or the need to identify a specific entity in the cache becomes more frequent, `cache.identify` helps avoid mistakes and identification logic duplication.
+
 ## Garbage collection and cache eviction
 
 Apollo Client 3 enables you to selectively remove cached data that is no longer useful. The default garbage collection strategy of the `gc` method is suitable for most applications, but the `evict` method provides more fine-grained control for applications that require it.

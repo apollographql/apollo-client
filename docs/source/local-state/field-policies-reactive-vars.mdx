@@ -400,3 +400,125 @@ ReactDOM.render(
 In the above example, we first prepare the cache using `cache.writeQuery` to store a value for the `isLoggedIn` field. We then run the `IS_LOGGED_IN` query via an Apollo Client `useQuery` hook, which includes an `@client` directive. When Apollo Client executes the `IS_LOGGED_IN` query, it first looks for a field policy function that can be used to handle the `@client` field. When it can't find one, it falls back on trying to pull the specified field out of the cache. So in this case, the `data` value returned by the `useQuery` hook has a `isLoggedIn` property available, which includes the `isLoggedIn` result (`!!localStorage.getItem('token')`) pulled directly from the cache.
 
 Pulling `@client` field values directly out of the cache isn't quite as flexible as using field policy functions, since they can perform extra computations before returning a result. Depending on your application's needs however, loading `@client` fields directly from the cache might be a simpler option. Apollo Client doesn't restrict combining both approaches, so feel free to mix and match. If the need arises, you can pull some `@client` values directly from the cache, and calculate others others using field policies, all in the same query.
+
+### Using `@client` fields as variables
+
+Apollo Client provides a way to use an `@client` field result as a variable for a selection set or field, in the same operation. So instead of running an `@client` based query first, getting the local result, then running a second query using the loaded local result as a variable, everything can be handled in one request. This is achieved by combining the `@client` directive with the `@export(as: "variableName")` directive:
+
+```js
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+
+const query = gql`
+  query CurrentAuthorPostCount($authorId: Int!) {
+    currentAuthorId @client @export(as: "authorId")
+    postCount(authorId: $authorId)
+  }
+`;
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache(),
+});
+
+cache.writeQuery({
+  query: gql`query GetCurrentAuthorId { currentAuthorId }`,
+  data: {
+    currentAuthorId: 12345,
+  },
+});
+
+// ... run the query using client.query, useQuery hook, etc.
+```
+
+In the example above, `currentAuthorId` is first loaded from the cache, then passed into the subsequent  `postCount` field as the `authorId` variable (specified by the `@export(as: "authorId")` directive). The `@export` directive can also be used on specific fields within a selection set, like:
+
+```js
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+
+const query = gql`
+  query CurrentAuthorPostCount($authorId: Int!) {
+    currentAuthor @client {
+      name
+      authorId @export(as: "authorId")
+    }
+    postCount(authorId: $authorId)
+  }
+`;
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache(),
+});
+
+cache.writeQuery({
+  query: gql`
+    query GetCurrentAuthor {
+      currentAuthor {
+        name
+        authorId
+      }
+    }
+  `,
+  data: {
+    currentAuthor: {
+      __typename: 'Author',
+      name: 'John Smith',
+      authorId: 12345,
+    },
+  },
+});
+
+// ... run the query using client.query, useQuery hook, etc.
+```
+
+Here the `authorId` variable is set from the `authorId` field loaded from the cache stored `currentAuthor`. `@export` variable use isn't limited to remote queries; it can also be used to define variables for other `@client` fields or selection sets:
+
+```js
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+
+const query = gql`
+  query CurrentAuthorPostCount($authorId: Int!) {
+    currentAuthorId @client @export(as: "authorId")
+    postCount(authorId: $authorId) @client
+  }
+`;
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        postCount: {
+          read(_, { variables }) {
+            return variables.authorId === 12345 ? 100 : 0;
+          }
+        }
+      }
+    }
+  }
+});
+
+const client = new ApolloClient({ cache });
+
+cache.writeQuery({
+  query: gql`{ currentAuthorId }`,
+  data: {
+    currentAuthorId: 12345,
+  },
+});
+
+// ... run the query using client.query, useQuery hook, etc.
+```
+
+So here the `currentAuthorId` is loaded from the cache, then passed into the `postCount` local resolver as `authorId`.
+
+**A few important notes about `@export` use:**
+
+1. Apollo Client currently only supports using the `@export` directive to store variables for local data. `@export` must be used with `@client`.
+
+2. `@client @export` use might appear to go against the GraphQL specification, given that the execution order of an operation looks like it could affect the result. From the [Normal and Serial Execution](https://graphql.github.io/graphql-spec/draft/#sec-Normal-and-Serial-Execution) section of the GraphQL spec:
+
+  > ... the resolution of fields other than top‐level mutation fields must always be side effect‐free and idempotent, the execution order must not affect the result, and hence the server has the freedom to execute the field entries in whatever order it deems optimal.
+
+  Apollo Client currently only supports the use of the `@export` directive when mixed with the `@client` directive. It prepares `@export` variables by first running through an operation that has `@client @export` directives, extracting the specified `@export` variables, then attempting to resolve the value of those variables from the local cache or with field policies. Once a map of variable names to local values is built up, that map is then used to populate the variables passed in when running the server based GraphQL query. The execution order of the server based GraphQL query is not impacted by `@export` use; the variables are prepped and organized before the server query runs, so the specification is being followed.
+
+3. If you define multiple `@export` variables that use the same name, in a single operation, the value of the last `@export` variable will be used as the variable value moving forward. When this happens Apollo Client will log a warning message (dev only).

@@ -350,4 +350,53 @@ Apollo Client supports the merging of local `@client` results and remote results
 
 ### Handling `@client` fields with the cache
 
-TODO
+As outlined in [Handling `@client` fields with field policies](#handling-client-fields-with-field-policies), `@client` fields can be resolved with the help of field policy functions. However, it's important to note that field policies are not always required when using the `@client` directive. Fields marked with `@client` can still be resolved locally, by pulling matching values out of the cache directly. For example:
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider,
+  useQuery,
+  gql
+} from '@apollo/client';
+
+import Pages from './pages';
+import Login from './pages/login';
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache(),
+});
+
+const IS_LOGGED_IN = gql`
+  query IsUserLoggedIn {
+    isLoggedIn @client
+  }
+`;
+
+cache.writeQuery({
+  query: IS_LOGGED_IN,
+  data: {
+    isLoggedIn: !!localStorage.getItem("token"),
+  },
+});
+
+function App() {
+  const { data } = useQuery(IS_LOGGED_IN);
+  return data.isLoggedIn ? <Pages /> : <Login />;
+}
+
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <App />
+  </ApolloProvider>,
+  document.getElementById("root"),
+);
+```
+
+In the above example, we first prepare the cache using `cache.writeQuery` to store a value for the `isLoggedIn` field. We then run the `IS_LOGGED_IN` query via an Apollo Client `useQuery` hook, which includes an `@client` directive. When Apollo Client executes the `IS_LOGGED_IN` query, it first looks for a field policy function that can be used to handle the `@client` field. When it can't find one, it falls back on trying to pull the specified field out of the cache. So in this case, the `data` value returned by the `useQuery` hook has a `isLoggedIn` property available, which includes the `isLoggedIn` result (`!!localStorage.getItem('token')`) pulled directly from the cache.
+
+Pulling `@client` field values directly out of the cache isn't quite as flexible as using field policy functions, since they can perform extra computations before returning a result. Depending on your application's needs however, loading `@client` fields directly from the cache might be a simpler option. Apollo Client doesn't restrict combining both approaches, so feel free to mix and match. If the need arises, you can pull some `@client` values directly from the cache, and calculate others others using field policies, all in the same query.

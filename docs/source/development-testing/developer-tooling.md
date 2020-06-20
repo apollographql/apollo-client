@@ -78,3 +78,9 @@ apollo client:codegen --target=typescript
 ```
 
 For more information on Swift SDKs, see [Apollo iOS](https://www.apollographql.com/docs/ios/) for details on the mapping from GraphQL results to Swift classes, as well as runtime support for executing queries and mutations. For Scala, see [React Apollo Scala.js](https://www.apollographql.com/docs/scalajs/) for details on how to use generated Scala code in a Scala.js app with Apollo Client.
+
+### Validation
+
+The Apollo CLI can validate operations and schemas to ensure that changes to a data graph do not break an existing client and future clients will work with a future data graph.
+
+The [documentation schema validation](https://www.apollographql.com/docs/graph-manager/schema-validation/) describes how to setup the workflow. For more information about operation validation, run `apollo help client:check`.

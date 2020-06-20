@@ -261,7 +261,111 @@ Just like resolvers on the server, field policies are extremely flexible. They c
 
 #### Using reactive variables to track `@client` state
 
-TODO
+[Handling `@client` fields with field policies](#handling-client-fields-with-field-policies) outlines how field policies can be used to calculate query fields that use the `@client` directive. While this functionality is quite useful by itself, it can be paired with Apollo Client [reactive variables](#reactive-variables) to help make the processing and running of GraphQL queries more dynamic and reactive, to updates in other parts of your application.
+
+To understand how reactive variables and field policies can work together, let's say we're building an ecommerce web application. As part of this system we're tracking items in a client side shopping cart, where the shopping cart is a simple list of product ID's. To list the items in the shopping cart, we're using the following query and `Cart` component:
+
+```jsx
+export const GET_CART_ITEMS = gql`
+  query GetCartItems {
+    cartItems @client
+  }
+`;
+
+export function Cart() {
+  const { data, loading, error } = useQuery(GET_CART_ITEMS);
+
+  if (loading) return <Loading />;
+  if (error) return <p>ERROR: {error.message}</p>;
+
+  return (
+    <div class="cart">
+      <Header>My Cart</Header>
+      {data && data.cartItems.length === 0 ? (
+        <p>No items in your cart</p>
+      ) : (
+        <Fragment>
+          {data && data.cartItems.map(productId => (
+            <CartItem key={productId} launchId={productId} />
+          ))}
+        </Fragment>
+      )}
+    </div>
+  );
+}
+```
+
+The `@client` based `cartItems` field in the `GET_CART_ITEMS` query is calculated by the following locally defined `cartItems` field policy `read` function:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        cartItems: {
+          read() {
+            // Return all cart items from the client side cart
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+To track the contents of our client side shopping cart, we have several options. We could store the cart contents in `localStorage`, we could write them directly into the Apollo Client cache using `cache.writeQuery`, we could store them using some other state management system like Redux, etc. While all of these choices have their advantages/disadvantages, the one thing we want to make sure of is that when a customer makes changes to their shopping cart, we want those changes to automatically trigger the rendering of our `Cart` component, to show the most recent state of the shopping cart.
+
+Storing and managing our shopping cart in the Apollo Client cache would help address our requirement of re-rendering the `Cart` component when there are changes. `useQuery` watches for query changes in the cache, then automatically re-runs when it finds them. This means that we could follow a pattern of updating the shopping cart in the cache when a user makes changes to it, using `cache.writeQuery`, and reading from the cache in our `cartItems` field policy `read` function above, using `cache.readQuery`. While this would work, using `cache.writeQuery` / `cache.readQuery` introduces a fair amount of boilerplate to interact with the cache stored shopping cart. This boilerplate is important when we want to ensure the structure and integrity of the graph based data we're managing in the cache, but in our case the shopping cart is really just a simple list of product IDs. Wouldn't it be great if our shopping cart could just be a simple in-memory array, but have changes to the cart array tracked such that they're tied into Apollo Client's change broadcast system? In other words have changes made to the shopping cart array trigger a re-render of the `Cart` component, with the latest cart contents? Reactive variables to the rescue!
+
+As mentioned in the [reactive variables](#reactive-variables) section of these docs, reactive variables give us a simple way to track client side state, while having changes to that state tracked using Apollo Client's dependency tracking mechanism. Let's take a look at how we can leverage a reactive variable to track our shopping cart state. First, let's setup a reactive variable:
+
+```js:title=cache.js
+export const cartItemsVar = cache.makeVar([]);
+```
+
+`cartItemsVar` will hold our shopping cart contents, and has been initialized as an empty array. Next, let's wire our new `cartItemsVar` reactive variable into our `cartItems` field policy:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        cartItems: {
+          read() {
+            return cartItemsVar();
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+Now whenever our `cartItems` field policy is triggered, the current value of our cart reactive variable will be returned. This means that when our `GET_CART_ITEMS` query runs, its `cartItems @client` field will return the value of `cartItemsVar`.
+
+Now that we've wired a reactive variable up to help display our cart contents, let's take a look at how we can add a new product to our cart:
+
+```jsx
+import { cartItemsVar } from './cache';
+// ... other imports
+
+export function AddToCartButton({ productId }) {
+  const cartItems = cartItemsVar();
+  return (
+    <div class="add-to-cart-button">
+      <Button onClick={() => cartItemsVar([...cartItems, productId])}>
+        Add to Cart
+      </Button>
+    </div>
+  );
+}
+```
+
+When a customer clicks on our add to cart button, we combine the newly selected `productId` with the existing contents of our reactive variable cart, setting the new combination as the value of `cartItemsVar`. When this happens, Apollo Client notifies any query that has been wired up to use `cartItemsVar` in a field policy, of the changes. Since we're using `cartItems @client` in our `GET_CART_ITEMS` query above, this means our `useQuery` based `Cart` component will automatically re-render to show the updated cart.
+
+If we wanted to store and manage our cart in the cache, to add a new product to the cart we would either fire a local mutation using something like `useMutation`, or manipulate the cache directly using something like `cache.writeQuery` / `cache.writeFragment`. Given the basic needs of our shopping cart however, leveraging reactive variables to manage cart data in a simple array, but still be able to participate in Apollo Client's change notification workflow, leads to less boilerplate and more flexibility. Apollo Client's cache is primarily optimized for storing normalized graph based data, which means the format of the data stored in the cache is restricted. While this can be adjusted by [disabling normalization](../caching/cache-configuration/#disabling-normalization), reactive variables have no restrictions when it comes to storing data. The are simple state containers, and can hold anything ranging from JSON to functions and more.
+
+The above example really only scratches the surface of what reactive variables combined with field policies can accomplish. Reactive variables introduce a new exciting way of handling state in Apollo Client, and we can't wait to see what you build with them!
 
 #### Integrating `@client` into remote queries
 

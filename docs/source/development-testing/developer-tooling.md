@@ -83,4 +83,9 @@ For more information on Swift SDKs, see [Apollo iOS](https://www.apollographql.c
 
 The Apollo CLI can validate operations and schemas to ensure that changes to a data graph do not break an existing client and future clients will work with a future data graph.
 
-The [documentation schema validation](https://www.apollographql.com/docs/graph-manager/schema-validation/) describes how to setup the workflow. For more information about operation validation, run `apollo help client:check`.
+The [schema validation documentation](https://www.apollographql.com/docs/graph-manager/schema-validation/) describes how to setup the workflow. For more information about operation validation, run `apollo help client:check`.
+
+### Operation safelisting
+
+For servers that enforce an operation safelist, the Apollo CLI can register operations in a client bundle with a server. The [operation registry documentation](https://www.apollographql.com/docs/graph-manager/operation-registry/) describes the steps to protecting a data graph from malicious or dangerous operations.
+

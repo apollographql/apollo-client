@@ -89,3 +89,6 @@ The [schema validation documentation](https://www.apollographql.com/docs/graph-m
 
 For servers that enforce an operation safelist, the Apollo CLI can register operations in a client bundle with a server. The [operation registry documentation](https://www.apollographql.com/docs/graph-manager/operation-registry/) describes the steps to protecting a data graph from malicious or dangerous operations.
 
+### Federated service discovery
+
+A data graph can be composed of multiple backend services. With a managed deployment, the Apollo CLI can fetch and list them to support developers. The [managed federation documentation](https://www.apollographql.com/docs/graph-manager/managed-federation/overview/) describes how to setup a federated data graph and `npx apollo help service:list` contains the CLI configuration.

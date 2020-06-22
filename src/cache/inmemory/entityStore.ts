@@ -357,18 +357,28 @@ export abstract class EntityStore implements NormalizedCache {
       : typeof objOrRef === "object";
   };
 
-  // Bound function that converts an object with a __typename and primary
-  // key fields to a Reference object. Pass true for mergeIntoStore if you
-  // would also like this object to be persisted into the store.
+  // Bound function that converts an id or an object with a __typename and
+  // primary key fields to a Reference object. If called with a Reference object,
+  // that same Reference object is returned. Pass true for mergeIntoStore to persist
+  // an object into the store.
   public toReference: ToReferenceFunction = (
-    object,
+    objOrIdOrRef,
     mergeIntoStore,
   ) => {
-    const [id] = this.policies.identify(object);
+    if (typeof objOrIdOrRef === "string") {
+      return makeReference(objOrIdOrRef);
+    }
+
+    if (isReference(objOrIdOrRef)) {
+      return objOrIdOrRef;
+    }
+
+    const [id] = this.policies.identify(objOrIdOrRef);
+
     if (id) {
       const ref = makeReference(id);
       if (mergeIntoStore) {
-        this.merge(id, object);
+        this.merge(id, objOrIdOrRef);
       }
       return ref;
     }

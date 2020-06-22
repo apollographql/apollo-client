@@ -26,6 +26,9 @@
 - **[BREAKING?]** Refactor `QueryManager` to make better use of observables and enforce `fetchPolicy` more reliably. <br/>
   [@benjamn](https://github.com/benjamn) in [#6221](https://github.com/apollographql/apollo-client/pull/6221)
 
+- The `updateQuery` function previously required by `fetchMore` has been deprecated with a warning, and will be removed in the next major version of Apollo Client. Please consider using a `merge` function to handle incoming data instead of relying on `updateQuery`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6464](https://github.com/apollographql/apollo-client/pull/6464)
+
 - Updated to work with `graphql@15`.  <br/>
   [@durchanek](https://github.com/durchanek) in [#6194](https://github.com/apollographql/apollo-client/pull/6194) and [#6279](https://github.com/apollographql/apollo-client/pull/6279) <br/>
   [@hagmic](https://github.com/hagmic) in [#6328](https://github.com/apollographql/apollo-client/pull/6328)

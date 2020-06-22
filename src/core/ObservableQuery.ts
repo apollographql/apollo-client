@@ -250,7 +250,7 @@ export class ObservableQuery<
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public refetch(variables?: TVariables): Promise<ApolloQueryResult<TData>> {
+  public refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>> {
     let { fetchPolicy } = this.options;
     // early return if trying to read from cache during refetch
     if (fetchPolicy === 'cache-only') {
@@ -272,7 +272,7 @@ export class ObservableQuery<
       this.options.variables = {
         ...this.options.variables,
         ...variables,
-      };
+      } as TVariables;
     }
 
     return this.newReobserver(false).reobserve({

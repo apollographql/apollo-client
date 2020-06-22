@@ -1,0 +1,591 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`type policies field policies can handle Relay-style pagination 1`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 2`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjU=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 3`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjU=",
+        "hasNextPage": true,
+        "hasPreviousPage": true,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjE=",
+      },
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 4`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjU=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 5`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjY=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+            "displayLabel": "Basquiat: The Unknown Notebooks",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjY=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 6`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/james-turrell\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, born 1943, Los Angeles, California",
+    "displayLabel": "James Turrell",
+    "href": "/artist/james-turrell",
+  },
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjY=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+            "displayLabel": "Basquiat: The Unknown Notebooks",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjY=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+    "search:james turrell": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/james-turrell\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 7`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/james-turrell\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, born 1943, Los Angeles, California",
+    "displayLabel": "James Turrell",
+    "href": "/artist/james-turrell",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjY=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+            "displayLabel": "Basquiat: The Unknown Notebooks",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjY=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+    "search:james turrell": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/james-turrell\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+    },
+  },
+}
+`;

@@ -65,4 +65,5 @@ export {
 export {
   concatPagination,
   offsetLimitPagination,
+  relayStylePagination,
 } from './policies/pagination';

@@ -186,7 +186,7 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   // reasons discussed in FieldReadFunction above.
   incoming: SafeReadonly<TIncoming>,
   options: FieldFunctionOptions,
-) => TExisting;
+) => SafeReadonly<TExisting>;
 
 export const defaultDataIdFromObject = (
   { __typename, id, _id }: Readonly<StoreObject>,

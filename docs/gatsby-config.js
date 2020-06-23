@@ -43,7 +43,10 @@ module.exports = {
           ],
           'Local State': [
             'local-state/local-state-management',
-            'local-state/field-policies-reactive-vars',
+            'local-state/querying-and-updating',
+            'local-state/reactive-variables',
+            'local-state/managing-state-with-field-policies',
+            'local-state/client-side-schema',
             'local-state/local-resolvers'
           ],
           'Development & Testing': [

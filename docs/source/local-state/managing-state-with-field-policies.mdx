@@ -1,200 +1,13 @@
 ---
-title: Field policies and reactive variables
-description: Manage and respond to local state changes reactively
+title: Managing state with field policies
+description: Control and reactively respond to local state changes
 ---
 
 Field policies provide a way to manage data on its way into or out of the cache for specific fields in your GraphQL operations. They are explained in more detail in [Customizing the behavior of cached fields](../caching/cache-field-behavior/), but it's important to note that they can also be used help drive fields that don't actually exist in your cache. Field policies can be used to create virtual client side only fields that you can customize to perform any task, or return any data you would like, when called as part of your full GraphQL operation. They can be used to read and write from the cache or be combined with other state API's like Apollo Client reactive variables. Virtual fields are triggered anytime you call a GraphQL operation in Apollo Client, letting you blend fully custom local behavior with your remote queries, getting the results back in a combined response.
 
-The following sections dive into more detail around reading and writing local state using field policies and the Apollo Client cache, but let's first look at another important local state API called reactive variables.
+The following sections dive into more detail around reading and writing local state using field policies and the Apollo Client cache.
 
-## Reactive variables
-
-Reactive variables are simple functions that allow you to store local state in a well-known and private location, outside of the Apollo Client cache. Since reactive variable state isn't stored in the cache, reactive variables don't have to follow the data graph design requirements of the cache, which means they can be used to store anything you would like. They can then be passed around and consumed by your application, and updated at any point.
-
-Reactive variables are created by calling the `InMemoryCache` class `makeVar` method, along with an optional initial value passed in as the first parameter.
-
-```js
-import { InMemoryCache } from '@apollo/client';
-
-const cache = new InMemoryCache();
-
-const cartItems = cache.makeVar([]);
-```
-
-Here we've created a new array for tracking products added to a shopping cart, by passing an empty array into `makeVar`.
-
-To retrieve the current value of a reactive variable, just call the created reactive variable function.
-
-```js
-const cartItems = cache.makeVar([]);
-
-// Output: []
-console.log(cartItems());
-```
-
-To set a new value as the reactive variable state, pass the new value into the reactive variable function.
-
-```js
-const cartItems = cache.makeVar([]);
-
-cartItems([100, 101, 102]);
-
-// Output: [100, 101, 102]
-console.log(cartItems());
-
-cartItems([456]);
-
-// Output: [456]
-console.log(cartItems());
-```
-
-While reactive variables can be passed around your application and used as simple state containers, as their name implies they can also be used to trigger reactive changes in your application. Each time you call a reactive variable function with a new value, the new value is stored so it can be retrieved again in the future. At the same time the fact that a new value has been received is also broadcast to other parts of Apollo Client. Anything that has registered to receive updates when a reactive variable changes will get notified of the new data, and have a chance to act on it. We'll look at how this functionality can be combined with field policies to automatically re-run queries and dynamically update parts of your application, in [Using reactive variables to track `@client` state](#using-reactive-variables-to-track-client-state).
-
-## Querying local state
-
-Querying for local data is very similar to querying your GraphQL server. The only difference is that you add a `@client` directive on your local fields to indicate they should be resolved by an Apollo Client [field policy](../caching/cache-field-behavior/) or from the cache directly. Let's look at an example:
-
-```jsx
-import React from "react";
-import { gql, useQuery } from "@apollo/client";
-
-import Todo from "./Todo";
-
-const GET_TODOS = gql`
-  {
-    todos @client {
-      id
-      completed
-      text
-    }
-  }
-`;
-
-function TodoList() {
-  const { data: { todos } } = useQuery(GET_TODOS);
-  return (
-    <ul>
-      {todos.map(todo => <Todo key={todo.id} {...todo} />)}
-    </ul>
-  );
-}
-```
-
-Here we create our GraphQL query and add an `@client` directive to `todos`. We then pass the query to the `useQuery` hook. The `@client` directive lets the `useQuery` component know that `todos` should be calculated by running a pre-defined field policy read function or pulled from the Apollo Client cache directly. The following sections help explain how both options work in more detail.
-
-> ⚠️ Since the above query runs as soon as the component is mounted, what do we do if there are no todos in the cache or there aren't any field policies defined to help calculate `todos`? We need to write an initial state to the cache before the query is run to prevent it from erroring out. Refer to the [Initializing the cache](#initializing-the-cache) section below for more information.
-
-> ⚠️ It's important to note that fields marked with the `@client` directive are never sent over a network to backend API's. Apollo Client strips `@client` fields before operations are sent through its internal Link chain.
-
-### Initializing the cache
-
-Often, you'll need to write an initial state to the cache so any components querying data before a mutation is triggered don't error out. To accomplish this, you can use `cache.writeQuery` to prep the cache with initial values.
-
-```js
-import { InMemoryCache } from '@apollo/client';
-
-const cache = new InMemoryCache();
-
-cache.writeQuery({
-  query: gql`
-    query {
-      todos
-      networkStatus {
-        isConnected
-      }
-    }
-  `,
-  data: {
-    todos: [],
-    networkStatus: {
-      __typename: 'NetworkStatus',
-      isConnected: false,
-    },
-  },
-});
-```
-
-Sometimes you may need to [reset the cache](../api/core/#ApolloClient.resetStore) in your application, when a user logs out for example. If you call `client.resetStore` anywhere in your application, you will likely want to initialize your cache again. You can do this using the `client.onResetStore` method to register a callback that will call `cache.writeQuery` again.
-
-```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-
-const cache = new InMemoryCache();
-const client = new ApolloClient({ cache });
-
-function writeInitialData() {
-  cache.writeQuery({
-    query: gql`
-      query {
-        todos
-        networkStatus {
-          isConnected
-        }
-      }
-    `,
-    data: {
-      todos: [],
-      networkStatus: {
-        __typename: 'NetworkStatus',
-        isConnected: false,
-      },
-    },
-  });
-}
-
-writeInitialData();
-
-client.onResetStore(writeInitialData);
-```
-
-### Local data query flow
-
-When a query containing `@client` directives is executed, Apollo Client runs through a few sequential steps to try to find a result for the `@client` field. Let's use the following query to walk through the local data look up flow:
-
-```js
-const GET_LAUNCH_DETAILS = gql`
-  query LaunchDetails($launchId: ID!) {
-    launch(id: $launchId) {
-      site
-      seatsBooked
-      hasAvailableSeats @client
-      rocket {
-        type
-      }
-    }
-  }
-`;
-```
-
-This query includes a mixture of both remote and local fields. `hasAvailableSeats` is the only field marked with an `@client` directive, so it's the field we'll focus on. When Apollo Client executes this query and tries to find a result for the `hasAvailableSeats` field, it runs through the following steps:
-
-1. Has a [field policy read function](../caching/cache-field-behavior/#the-read-function) been defined for the `hasAvailableSeats` field? If yes, run and return the result from the read function. For example:
-
-```js
-const MAX_SEATS = 10;
-const cache = new InMemoryCache({
-  typePolicies: {
-    Launch: {
-      fields: {
-        hasAvailableSeats(_, { readField }) {
-          // Return true if the number of booked seats is less
-          // than the seat maximum.
-          return readField('seatsBooked') < MAX_SEATS;
-        },
-      },
-    },
-  },
-});
-```
-
-2. If a matching read function can't be found, check the Apollo Client cache to see if a `hasAvailableSeats` value can be found in the cache. If so, return that value.
-
-Let's look at both of these steps more closely.
-
-- Retrieving `@client` data with the help of read functions (step 1 above) is explained in [Handling `@client` fields with field policies](#handling-client-fields-with-field-policies).
-- Loading `@client` data from the cache (step 2 above) is explained in [Handling `@client` fields with the cache](#handling-client-fields-with-the-cache).
-
-### Handling `@client` fields with field policies
+## Handling `@client` fields with field policies
 
 Apollo Client [field policies](../caching/cache-field-behavior) can be used to locally compute GraphQL query fields that use a `@client` directive. This means that instead of sending your full GraphQL query to a remote GraphQL endpoint, which then runs resolver functions against your query to populate and return a result set, Apollo Client can run locally defined `read` functions to compute the value of `@client` fields. Let's look at an example:
 
@@ -237,7 +50,7 @@ const GET_LAUNCH_DETAILS = gql`
 // ... run the query using client.query, a useQuery hook, etc.
 ```
 
-Here when the `GET_LAUNCH_DETAILS` query is executed, Apollo Client looks for a field policy `read` function that is associated with the `isInCart` field. It finds one as we've defined a `read` function for the `isInCart` field in the `InMemoryCache` constructor. This `read` function is run, then the result is calculated and merged in with the rest of the query result (if a `read` function can't be found, Apollo Client will check the cache for a matching field - see [Local data query flow](#local-data-query-flow) for more details).
+Here when the `GET_LAUNCH_DETAILS` query is executed, Apollo Client looks for a field policy `read` function that is associated with the `isInCart` field. It finds one as we've defined a `read` function for the `isInCart` field in the `InMemoryCache` constructor. This `read` function is run, then the result is calculated and merged in with the rest of the query result (if a `read` function can't be found, Apollo Client will check the cache for a matching field - see [Local data query flow](./querying-and-updating#local-data-query-flow) for more details).
 
 In the above example we defined and associated a `isInCart` `read` function with the `Launch` GraphQL object type. Let's look at the `isInCart` `read` function more closely:
 
@@ -259,9 +72,9 @@ The first parameter of the `isInCart` `read` function gives us access to a previ
 
 Just like resolvers on the server, field policies are extremely flexible. They can be used to perform any kind of local computation you want, before returning a result for the specified field. You can manually query (or write to) the cache in different ways, call other helper utilities or libraries to prepare/validate/clean data, track statistics, call into other data stores to prepare a result, and so much more.
 
-#### Using reactive variables to track `@client` state
+## Using reactive variables to track `@client` state
 
-[Handling `@client` fields with field policies](#handling-client-fields-with-field-policies) outlines how field policies can be used to calculate query fields that use the `@client` directive. While this functionality is quite useful by itself, it can be paired with Apollo Client [reactive variables](#reactive-variables) to help make the processing and running of GraphQL queries more dynamic and reactive, to updates in other parts of your application.
+[Handling `@client` fields with field policies](#handling-client-fields-with-field-policies) outlines how field policies can be used to calculate query fields that use the `@client` directive. While this functionality is quite useful by itself, it can be paired with Apollo Client [reactive variables](./reactive-variables) to help make the processing and running of GraphQL queries more dynamic and reactive, to updates in other parts of your application.
 
 To understand how reactive variables and field policies can work together, let's say we're building an ecommerce web application. As part of this system we're tracking items in a client side shopping cart, where the shopping cart is a simple list of product ID's. To list the items in the shopping cart, we're using the following query and `Cart` component:
 
@@ -317,7 +130,7 @@ To track the contents of our client side shopping cart, we have several options.
 
 Storing and managing our shopping cart in the Apollo Client cache would help address our requirement of re-rendering the `Cart` component when there are changes. `useQuery` watches for query changes in the cache, then automatically re-runs when it finds them. This means that we could follow a pattern of updating the shopping cart in the cache when a user makes changes to it, using `cache.writeQuery`, and reading from the cache in our `cartItems` field policy `read` function above, using `cache.readQuery`. While this would work, using `cache.writeQuery` / `cache.readQuery` introduces a fair amount of boilerplate to interact with the cache stored shopping cart. This boilerplate is important when we want to ensure the structure and integrity of the graph based data we're managing in the cache, but in our case the shopping cart is really just a simple list of product IDs. Wouldn't it be great if our shopping cart could just be a simple in-memory array, but have changes to the cart array tracked such that they're tied into Apollo Client's change broadcast system? In other words have changes made to the shopping cart array trigger a re-render of the `Cart` component, with the latest cart contents? Reactive variables to the rescue!
 
-As mentioned in the [reactive variables](#reactive-variables) section of these docs, reactive variables give us a simple way to track client side state, while having changes to that state tracked using Apollo Client's dependency tracking mechanism. Let's take a look at how we can leverage a reactive variable to track our shopping cart state. First, let's setup a reactive variable:
+As mentioned in the [reactive variables](./reactive-variables) section of these docs, reactive variables give us a simple way to track client side state, while having changes to that state tracked using Apollo Client's dependency tracking mechanism. Let's take a look at how we can leverage a reactive variable to track our shopping cart state. First, let's setup a reactive variable:
 
 ```js:title=cache.js
 export const cartItemsVar = cache.makeVar([]);
@@ -367,7 +180,7 @@ If we wanted to store and manage our cart in the cache, to add a new product to 
 
 The above example really only scratches the surface of what reactive variables combined with field policies can accomplish. Reactive variables introduce a new exciting way of handling state in Apollo Client, and we can't wait to see what you build with them!
 
-#### Integrating `@client` into remote queries
+## Integrating `@client` into remote queries
 
 While Apollo Client’s local state handling features can be used to work with local state exclusively, most Apollo based applications are built to work with remote data sources. To address this, Apollo Client supports mixing `@client` fields (calculated by field policies) with remote queries, as well as using `@client` based fields as arguments to remote queries, in the same request.
 
@@ -452,7 +265,11 @@ const client = new ApolloClient({
 
 Apollo Client supports the merging of local `@client` results and remote results for Queries, Mutations and Subscriptions.
 
-### Handling `@client` fields with the cache
+## Handling async operations with field policies
+
+TODO
+
+## Handling `@client` fields with the cache
 
 As outlined in [Handling `@client` fields with field policies](#handling-client-fields-with-field-policies), `@client` fields can be resolved with the help of field policy functions. However, it's important to note that field policies are not always required when using the `@client` directive. Fields marked with `@client` can still be resolved locally, by pulling matching values out of the cache directly. For example:
 
@@ -505,7 +322,7 @@ In the above example, we first prepare the cache using `cache.writeQuery` to sto
 
 Pulling `@client` field values directly out of the cache isn't quite as flexible as using field policy functions, since they can perform extra computations before returning a result. Depending on your application's needs however, loading `@client` fields directly from the cache might be a simpler option. Apollo Client doesn't restrict combining both approaches, so feel free to mix and match. If the need arises, you can pull some `@client` values directly from the cache, and calculate others others using field policies, all in the same query.
 
-### Using `@client` fields as variables
+## Using `@client` fields as variables
 
 Apollo Client provides a way to use an `@client` field result as a variable for a selection set or field, in the same operation. So instead of running an `@client` based query first, getting the local result, then running a second query using the loaded local result as a variable, everything can be handled in one request. This is achieved by combining the `@client` directive with the `@export(as: "variableName")` directive:
 

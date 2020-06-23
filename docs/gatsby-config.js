@@ -27,7 +27,14 @@ module.exports = {
           ],
         },
         typescriptApiBox: {
-          data: require('./docs.json')
+          data: {
+            "id": 0,
+            "name": "@apollo/client - v3.0.0-rc.8",
+            "kind": 0,
+            "flags": {},
+            "children": [],
+            "groups": []
+          }
         },
         sidebarCategories: {
           null: ['index', 'why-apollo', 'get-started'],

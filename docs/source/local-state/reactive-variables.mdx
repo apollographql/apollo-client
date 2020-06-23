@@ -1,0 +1,45 @@
+---
+title: Reactive variables
+description: State containers integrated into Apollo Client's reactivity model
+---
+
+Reactive variables are simple functions that allow you to store local state in a well-known and private location, outside of the Apollo Client cache. Since reactive variable state isn't stored in the cache, reactive variables don't have to follow the data graph design requirements of the cache, which means they can be used to store anything you would like. They can then be passed around and consumed by your application, and updated at any point.
+
+Reactive variables are created by calling the `InMemoryCache` class `makeVar` method, along with an optional initial value passed in as the first parameter.
+
+```js
+import { InMemoryCache } from '@apollo/client';
+
+const cache = new InMemoryCache();
+
+const cartItems = cache.makeVar([]);
+```
+
+Here we've created a new array for tracking products added to a shopping cart, by passing an empty array into `makeVar`.
+
+To retrieve the current value of a reactive variable, just call the created reactive variable function.
+
+```js
+const cartItems = cache.makeVar([]);
+
+// Output: []
+console.log(cartItems());
+```
+
+To set a new value as the reactive variable state, pass the new value into the reactive variable function.
+
+```js
+const cartItems = cache.makeVar([]);
+
+cartItems([100, 101, 102]);
+
+// Output: [100, 101, 102]
+console.log(cartItems());
+
+cartItems([456]);
+
+// Output: [456]
+console.log(cartItems());
+```
+
+While reactive variables can be passed around your application and used as simple state containers, as their name implies they can also be used to trigger reactive changes in your application. Each time you call a reactive variable function with a new value, the new value is stored so it can be retrieved again in the future. At the same time the fact that a new value has been received is also broadcast to other parts of Apollo Client. Anything that has registered to receive updates when a reactive variable changes will get notified of the new data, and have a chance to act on it. We'll look at how this functionality can be combined with field policies to automatically re-run queries and dynamically update parts of your application, in [Using reactive variables to track `@client` state](./managing-state-with-field-policies/#using-reactive-variables-to-track-client-state).

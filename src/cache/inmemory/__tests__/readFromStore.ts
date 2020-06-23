@@ -917,6 +917,232 @@ describe('reading from the store', () => {
     });
   });
 
+  it("custom read functions can map/filter dangling references", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            ducks(existing: Reference[] = [], { canRead }) {
+              return existing.map(duck => canRead(duck) ? duck : null);
+            },
+            chickens(existing: Reference[] = [], { canRead }) {
+              return existing.map(chicken => canRead(chicken) ? chicken : {});
+            },
+            oxen(existing: Reference[] = [], { canRead }) {
+              return existing.filter(canRead);
+            },
+          },
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query: gql`
+        query {
+          ducks { quacking }
+          chickens { inCoop }
+          oxen { gee haw }
+        }
+      `,
+      data: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          { __typename: "Duck", id: 3, quacking: false },
+        ],
+        chickens: [
+          { __typename: "Chicken", id: 1, inCoop: true },
+          { __typename: "Chicken", id: 2, inCoop: true },
+          { __typename: "Chicken", id: 3, inCoop: false },
+        ],
+        oxen: [
+          { __typename: "Ox", id: 1, gee: true, haw: false },
+          { __typename: "Ox", id: 2, gee: false, haw: true },
+        ],
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      "Chicken:1": {
+        __typename: "Chicken",
+        id: 1,
+        inCoop: true,
+      },
+      "Chicken:2": {
+        __typename: "Chicken",
+        id: 2,
+        inCoop: true,
+      },
+      "Chicken:3": {
+        __typename: "Chicken",
+        id: 3,
+        inCoop: false,
+      },
+      "Duck:1": {
+        __typename: "Duck",
+        id: 1,
+        quacking: true,
+      },
+      "Duck:2": {
+        __typename: "Duck",
+        id: 2,
+        quacking: false,
+      },
+      "Duck:3": {
+        __typename: "Duck",
+        id: 3,
+        quacking: false,
+      },
+      "Ox:1": {
+        __typename: "Ox",
+        id: 1,
+        gee: true,
+        haw: false,
+      },
+      "Ox:2": {
+        __typename: "Ox",
+        id: 2,
+        gee: false,
+        haw: true,
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        chickens: [
+          { __ref: "Chicken:1" },
+          { __ref: "Chicken:2" },
+          { __ref: "Chicken:3" },
+        ],
+        ducks: [
+          { __ref: "Duck:1" },
+          { __ref: "Duck:2" },
+          { __ref: "Duck:3" },
+        ],
+        oxen: [
+          { __ref: "Ox:1" },
+          { __ref: "Ox:2" },
+        ],
+      },
+    });
+
+    function diffChickens() {
+      return cache.diff({
+        query: gql`query { chickens { id inCoop }}`,
+        optimistic: true,
+      });
+    }
+
+    expect(diffChickens()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        chickens: [
+          { __typename: "Chicken", id: 1, inCoop: true },
+          { __typename: "Chicken", id: 2, inCoop: true },
+          { __typename: "Chicken", id: 3, inCoop: false },
+        ],
+      }
+    });
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Chicken",
+        id: 2,
+      }),
+    })).toBe(true);
+
+    expect(diffChickens()).toEqual({
+      complete: false,
+      optimistic: false,
+      missing: [
+        expect.anything(),
+        expect.anything(),
+      ],
+      result: {
+        chickens: [
+          { __typename: "Chicken", id: 1, inCoop: true },
+          {},
+          { __typename: "Chicken", id: 3, inCoop: false },
+        ],
+      },
+    });
+
+    function diffDucks() {
+      return cache.diff({
+        query: gql`query { ducks { id quacking }}`,
+        optimistic: true,
+      });
+    }
+
+    expect(diffDucks()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          { __typename: "Duck", id: 3, quacking: false },
+        ],
+      },
+    });
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Duck",
+        id: 3,
+      }),
+    })).toBe(true);
+
+    // Returning null as a placeholder in a list is a way to indicate that
+    // a list element has been removed, without causing an incomplete
+    // diff, and without altering the positions of later elements.
+    expect(diffDucks()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          null,
+        ],
+      },
+    });
+
+    function diffOxen() {
+      return cache.diff({
+        query: gql`query { oxen { id gee haw }}`,
+        optimistic: true,
+      });
+    }
+
+    expect(diffOxen()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        oxen: [
+          { __typename: "Ox", id: 1, gee: true, haw: false },
+          { __typename: "Ox", id: 2, gee: false, haw: true },
+        ],
+      },
+    });
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Ox",
+        id: 1,
+      }),
+    })).toBe(true);
+
+    expect(diffOxen()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        oxen: [
+          { __typename: "Ox", id: 2, gee: false, haw: true },
+        ],
+      },
+    });
+  });
+
   it("propagates eviction signals to parent queries", () => {
     const cache = new InMemoryCache({
       typePolicies: {

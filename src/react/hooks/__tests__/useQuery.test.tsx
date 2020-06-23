@@ -16,6 +16,7 @@ import { useMutation } from '../useMutation';
 import { QueryFunctionOptions } from '../..';
 import { NetworkStatus } from '../../../core/networkStatus';
 import { Reference } from '../../../utilities/graphql/storeUtils';
+import { concatPagination } from '../../../utilities';
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -1117,57 +1118,55 @@ describe('useQuery Hook', () => {
   });
 
   describe('Pagination', () => {
-    itAsync(
-      'should render `fetchMore.updateQuery` updated results with proper ' +
-        'loading status, when `notifyOnNetworkStatusChange` is true',
-      (resolve, reject) => {
-        const carQuery: DocumentNode = gql`
-          query cars($limit: Int) {
-            cars(limit: $limit) {
-              id
-              make
-              model
-              vin
-              __typename
-            }
+    describe('should render fetchMore-updated results with proper loading status, when `notifyOnNetworkStatusChange` is true', () => {
+      const carQuery: DocumentNode = gql`
+        query cars($limit: Int) {
+          cars(limit: $limit) {
+            id
+            make
+            model
+            vin
+            __typename
           }
-        `;
+        }
+      `;
 
-        const carResults = {
-          cars: [
-            {
-              id: 1,
-              make: 'Audi',
-              model: 'RS8',
-              vin: 'DOLLADOLLABILL',
-              __typename: 'Car'
-            }
-          ]
-        };
-
-        const moreCarResults = {
-          cars: [
-            {
-              id: 2,
-              make: 'Audi',
-              model: 'eTron',
-              vin: 'TREESRGOOD',
-              __typename: 'Car'
-            }
-          ]
-        };
-
-        const mocks = [
+      const carResults = {
+        cars: [
           {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: carResults }
-          },
-          {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: moreCarResults }
+            id: 1,
+            make: 'Audi',
+            model: 'RS8',
+            vin: 'DOLLADOLLABILL',
+            __typename: 'Car'
           }
-        ];
+        ]
+      };
 
+      const moreCarResults = {
+        cars: [
+          {
+            id: 2,
+            make: 'Audi',
+            model: 'eTron',
+            vin: 'TREESRGOOD',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const mocks = [
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: carResults }
+        },
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: moreCarResults }
+        }
+      ];
+
+      itAsync('updateQuery', (resolve, reject) => {
         let renderCount = 0;
         function App() {
           const { loading, data, fetchMore } = useQuery(carQuery, {
@@ -1218,60 +1217,115 @@ describe('useQuery Hook', () => {
         return wait(() => {
           expect(renderCount).toBe(3);
         }).then(resolve, reject);
-      }
-    );
+      });
 
-    itAsync(
-      'should render `fetchMore.updateQuery` updated results with no ' +
-        'loading status, when `notifyOnNetworkStatusChange` is false',
-      (resolve, reject) => {
-        const carQuery: DocumentNode = gql`
-          query cars($limit: Int) {
-            cars(limit: $limit) {
-              id
-              make
-              model
-              vin
-              __typename
-            }
+      itAsync('field policy', (resolve, reject) => {
+        let renderCount = 0;
+        function App() {
+          const { loading, data, fetchMore } = useQuery(carQuery, {
+            variables: { limit: 1 },
+            notifyOnNetworkStatusChange: true
+          });
+
+          switch (++renderCount) {
+            case 1:
+              expect(loading).toBeTruthy();
+              break;
+            case 2:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(carResults);
+              fetchMore({
+                variables: {
+                  limit: 1
+                },
+              });
+              break;
+            case 3:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual({
+                cars: [
+                  carResults.cars[0],
+                  moreCarResults.cars[0],
+                ],
+              });
+              break;
+            default:
           }
-        `;
 
-        const carResults = {
-          cars: [
-            {
-              id: 1,
-              make: 'Audi',
-              model: 'RS8',
-              vin: 'DOLLADOLLABILL',
-              __typename: 'Car'
-            }
-          ]
-        };
+          return null;
+        }
 
-        const moreCarResults = {
-          cars: [
-            {
-              id: 2,
-              make: 'Audi',
-              model: 'eTron',
-              vin: 'TREESRGOOD',
-              __typename: 'Car'
-            }
-          ]
-        };
-
-        const mocks = [
-          {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: carResults }
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                cars: concatPagination(),
+              },
+            },
           },
-          {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: moreCarResults }
-          }
-        ];
+        });
 
+        render(
+          <MockedProvider mocks={mocks} cache={cache}>
+            <App />
+          </MockedProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3);
+        }).then(resolve, reject);
+      });
+    });
+
+    describe('should render fetchMore-updated results with no loading status, when `notifyOnNetworkStatusChange` is false', () => {
+      const carQuery: DocumentNode = gql`
+        query cars($limit: Int) {
+          cars(limit: $limit) {
+            id
+            make
+            model
+            vin
+            __typename
+          }
+        }
+      `;
+
+      const carResults = {
+        cars: [
+          {
+            id: 1,
+            make: 'Audi',
+            model: 'RS8',
+            vin: 'DOLLADOLLABILL',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const moreCarResults = {
+        cars: [
+          {
+            id: 2,
+            make: 'Audi',
+            model: 'eTron',
+            vin: 'TREESRGOOD',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const mocks = [
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: carResults }
+        },
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: moreCarResults }
+        }
+      ];
+
+      itAsync('updateQuery', (resolve, reject) => {
         let renderCount = 0;
         function App() {
           const { loading, data, fetchMore } = useQuery(carQuery, {
@@ -1317,8 +1371,63 @@ describe('useQuery Hook', () => {
         return wait(() => {
           expect(renderCount).toBe(3);
         }).then(resolve, reject);
-      }
-    );
+      });
+
+      itAsync('field policy', (resolve, reject) => {
+        let renderCount = 0;
+        function App() {
+          const { loading, data, fetchMore } = useQuery(carQuery, {
+            variables: { limit: 1 },
+            notifyOnNetworkStatusChange: false
+          });
+
+          switch (renderCount) {
+            case 0:
+              expect(loading).toBeTruthy();
+              break;
+            case 1:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(carResults);
+              fetchMore({
+                variables: {
+                  limit: 1
+                },
+              });
+              break;
+            case 2:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual({
+                cars: [carResults.cars[0], moreCarResults.cars[0]]
+              });
+              break;
+            default:
+          }
+
+          renderCount += 1;
+          return null;
+        }
+
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                cars: concatPagination(),
+              },
+            },
+          },
+        });
+
+        render(
+          <MockedProvider mocks={mocks} cache={cache}>
+            <App />
+          </MockedProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3);
+        }).then(resolve, reject);
+      });
+    });
   });
 
   describe('Refetching', () => {

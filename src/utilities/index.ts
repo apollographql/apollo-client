@@ -61,3 +61,9 @@ export {
   removeFragmentSpreadFromDocument,
   removeClientSetsFromDocument,
 } from './graphql/transform';
+
+export {
+  concatPagination,
+  offsetLimitPagination,
+  relayStylePagination,
+} from './policies/pagination';

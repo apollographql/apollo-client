@@ -1,9 +1,9 @@
 ---
-title: Local resolvers
+title: Local resolvers (DEPRECATED)
 description: Manage local data with GraphQL like resolvers
 ---
 
-> ⚠️ **DEPRECATION WARNING:** Local resolvers are still supported in Apollo Client 3, but they have been deprecated. We recommend using [field policies and reactive variables](./field-policies-reactive-vars) instead. Local resolver support will be removed in a future major Apollo Client release. Refer to [Local resolver deprecation](./local-state-management#local-resolver-deprecation) for more details.
+> ⚠️ **DEPRECATION WARNING:** Local resolvers are still supported in Apollo Client 3, but they have been deprecated. We recommend using [field policies](./managing-state-with-field-policies) instead. Local resolver support will be removed in a future major Apollo Client release. Refer to [Local resolver deprecation](./local-state-management#local-resolver-deprecation) for more details.
 
 We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our client application.
 
@@ -12,8 +12,6 @@ Apollo Client (>= 2.5) has built-in local state handling capabilities that allow
 In this section, you'll learn how Apollo Client can help simplify local state management in your app. We'll cover how client-side resolvers can help us execute local queries and mutations. You'll also learn how to query and update the cache with the `@client` directive.
 
 Please note that this documentation is intended to be used to familiarize yourself with Apollo Client's local state management capabilities, and serve as a reference guide. If you're looking for a step by step tutorial outlining how to handle local state with Apollo Client (and leverage other Apollo components to build a fullstack application), please refer to the [Apollo tutorial](https://www.apollographql.com/docs/tutorial/introduction).
-
-> ⚠️ If you're interested in integrating local state handling capabilities with Apollo Client < 2.5, please refer to our (now deprecated) [`apollo-link-state`](https://github.com/apollographql/apollo-link-state) project. As of Apollo Client 2.5, local state handling is baked into the core, which means it is no longer necessary to use `apollo-link-state`. For help migrating from `apollo-link-state` to Apollo Client 2.5, please refer to the [Migrating from `apollo-link-state`](#migrating-from-apollo-link-state) section.
 
 ## Updating local state
 
@@ -924,41 +922,6 @@ const client = new ApolloClient({
 
 In order to toggle our todo, we need the todo and its status from the cache, which is why we call `cache.readFragment` and pass in a fragment to retrieve it. The `id` we're passing into `cache.readFragment` refers to its cache key. If you're using the `InMemoryCache` and not overriding the `dataIdFromObject` config property, your cache key should be `__typename:id`.
 
-## Client-side schema
-
-You can optionally set a client-side schema to be used with Apollo Client, through either the `ApolloClient` constructor `typeDefs` parameter, or the local state API `setTypeDefs` method. Your schema should be written in [Schema Definition Language](https://www.apollographql.com/docs/graphql-tools/generate-schema#schema-language). This schema is not used for validation like it is on the server because the `graphql-js` modules for schema validation would dramatically increase your bundle size. Instead, your client-side schema is used for introspection in [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools), where you can explore your schema in GraphiQL.
-
-The following demonstrates how to configure a client-side schema through the `ApolloClient` constructor:
-
-```js
-import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
-
-const typeDefs = gql`
-  extend type Query {
-    isLoggedIn: Boolean!
-    cartItems: [Launch]!
-  }
-
-  extend type Launch {
-    isInCart: Boolean!
-  }
-
-  extend type Mutation {
-    addOrRemoveFromCart(id: ID!): [Launch]
-  }
-`;
-
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: new HttpLink({ uri: 'http://localhost:4000/graphql' }),
-  typeDefs,
-});
-```
-
-If you open up Apollo Client Devtools and click on the `GraphiQL` tab, you'll be able to explore your client schema in the "Docs" section. This example doesn't include a remote schema, but if it did, you would be able to see your local queries and mutations alongside your remote ones.
-
-![GraphiQL Console](../assets/client-schema.png)
-
 ## Advanced
 
 ### Code splitting
@@ -1022,79 +985,6 @@ export function MessageCount() {
 ```
 
 our local resolver code will only be included in the bundle a user downloads when (if) they access `/stats`. It won't be included in the initial application bundle, which helps keep the size of our initial bundle down, and ultimately helps with download and application startup times.
-
-## Migrating from `apollo-link-state`
-
-The [`apollo-link-state`](https://github.com/apollographql/apollo-link-state) project was the first to bring local state handling into the Apollo ecosystem. Handling local resolvers through the addition of an `ApolloLink` was a great starting point, and proved that `@client` based queries make sense, and work really well for local state management.
-
-While `apollo-link-state` achieved some of the goals of local state handling, the information available when using any `ApolloLink` is limited by the modularity of the link system. We consider local state management a core part of the Apollo ecosystem, and as Apollo Client progresses, we want to make sure local resolvers are integrated as tightly as possible into core. This integration opens up new possibilities (like `@export` handling) and ties nicely into the future planned adjustments to cache data retention, invalidation, garbage collection, and other planned features that impact both local and remote data.
-
-Updating your application to use Apollo Client's local state management features, instead of `apollo-link-state`, is fairly straightforward. The necessary steps are outlined below.
-
-1. Including `apollo-link-state` as a dependency, and importing it to use `withClientState`, is no longer necessary. You can remove the `apollo-link-state` dependency since local state management is included with `apollo-client` >= 2.5.0 and `@apollo/client` >= 3.0.0.
-2. Using `withClientState` is no longer supported. The following:
-
-  ```js
-  const cache = new InMemoryCache();
-  const stateLink = withClientState({ cache, resolvers: { ... } });
-  const link = ApolloLink.from([stateLink, new HttpLink({ uri: '...' })]);
-  const client = new ApolloClient({
-    cache,
-    link,
-  });
-  ```
-  becomes
-
-  ```js
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: new HttpLink({ uri: '...' }),
-    resolvers: { ... },
-  });
-  ```
-
-3. `defaults` are no longer supported. To prep the cache, use [`cache.writeQuery`](../caching/cache-interaction/#writequery-and-writefragment) directly instead. So
-
-  ```js
-  const cache = new InMemoryCache();
-  const stateLink = withClientState({
-    cache,
-    resolvers: { ... },
-    defaults: {
-      someField: 'some value',
-    },
-  });
-  const link = ApolloLink.from([stateLink, new HttpLink({ uri: '...' })]);
-  const client = new ApolloClient({
-    cache,
-    link,
-  });
-  ```
-  becomes:
-
-  ```js
-  const cache = new InMemoryCache();
-  const client = new ApolloClient({
-    cache,
-    link: new HttpLink({ uri: '...' }),
-    resolvers: { ... },
-  });
-  cache.writeQuery({
-    query: gql`query GetSomeField { someField }`,
-    data: { someField: 'some value' },
-  });
-  ```
-
-4. Test thoroughly! 🙂
-
-## Next steps
-
-Managing your local data with Apollo Client can help simplify your state management code, since the Apollo cache becomes your single source of truth for all of the data in your application. If you'd like to learn more about Apollo Client's local state features, check out:
-
-- The [Apollo tutorial](https://www.apollographql.com/docs/tutorial/introduction) which will not only show you how to use Apollo Client's local state features in a step by step manner, but will also guide you through using other Apollo components to build a fullstack application.
-- The [Apollo community Spectrum group](https://spectrum.chat/apollo) is a great place to ask Apollo Client local state questions.
-- Interested in suggesting or working on future changes to help make Apollo Client's local state management even better? We'd love the help! [Open a new feature request](https://github.com/apollographql/apollo-feature-requests) to kick start your feature discussion.
-- Found a bug? Impossible! 🙈 Open a new issue in the [Apollo Client repo](https://github.com/apollographql/apollo-client), ideally with a small runnable reproduction, and someone from the community or Apollo team will help get it fixed.
 
 ## API
 

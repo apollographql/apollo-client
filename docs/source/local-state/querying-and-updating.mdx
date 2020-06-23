@@ -1,0 +1,147 @@
+---
+title: Querying and Updating
+description: Interacting with locally stored data
+---
+
+## Querying local state
+
+Querying for local data is very similar to querying your GraphQL server. The only difference is that you add a `@client` directive on your local fields to indicate they should be resolved by an Apollo Client [field policy](../caching/cache-field-behavior/) or from the cache directly. Let's look at an example:
+
+```jsx
+import React from "react";
+import { gql, useQuery } from "@apollo/client";
+
+import Todo from "./Todo";
+
+const GET_TODOS = gql`
+  {
+    todos @client {
+      id
+      completed
+      text
+    }
+  }
+`;
+
+function TodoList() {
+  const { data: { todos } } = useQuery(GET_TODOS);
+  return (
+    <ul>
+      {todos.map(todo => <Todo key={todo.id} {...todo} />)}
+    </ul>
+  );
+}
+```
+
+Here we create our GraphQL query and add an `@client` directive to `todos`. We then pass the query to the `useQuery` hook. The `@client` directive lets the `useQuery` component know that `todos` should be calculated by running a pre-defined field policy read function or pulled from the Apollo Client cache directly. The following sections help explain how both options work in more detail.
+
+> ⚠️ It's important to note that fields marked with the `@client` directive are never sent over a network to backend API's. Apollo Client strips `@client` fields before operations are sent through its internal Link chain.
+
+### Local data query flow
+
+When a query containing `@client` directives is executed, Apollo Client runs through a few sequential steps to try to find a result for the `@client` field. Let's use the following query to walk through the local data look up flow:
+
+```js
+const GET_LAUNCH_DETAILS = gql`
+  query LaunchDetails($launchId: ID!) {
+    launch(id: $launchId) {
+      site
+      seatsBooked
+      hasAvailableSeats @client
+      rocket {
+        type
+      }
+    }
+  }
+`;
+```
+
+This query includes a mixture of both remote and local fields. `hasAvailableSeats` is the only field marked with an `@client` directive, so it's the field we'll focus on. When Apollo Client executes this query and tries to find a result for the `hasAvailableSeats` field, it runs through the following steps:
+
+1. Has a [field policy read function](../caching/cache-field-behavior/#the-read-function) been defined for the `hasAvailableSeats` field? If yes, run and return the result from the read function. For example:
+
+```js
+const MAX_SEATS = 10;
+const cache = new InMemoryCache({
+  typePolicies: {
+    Launch: {
+      fields: {
+        hasAvailableSeats(_, { readField }) {
+          // Return true if the number of booked seats is less
+          // than the seat maximum.
+          return readField('seatsBooked') < MAX_SEATS;
+        },
+      },
+    },
+  },
+});
+```
+
+2. If a matching read function can't be found, check the Apollo Client cache to see if a `hasAvailableSeats` value can be found in the cache. If so, return that value.
+
+Let's look at both of these steps more closely.
+
+- Retrieving `@client` data with the help of read functions (step 1 above) is explained in [Handling `@client` fields with field policies](./managing-state-with-field-policies#handling-client-fields-with-field-policies).
+- Loading `@client` data from the cache (step 2 above) is explained in [Handling `@client` fields with the cache](./managing-state-with-field-policies#handling-client-fields-with-the-cache).
+
+## Updating local state
+
+There are two main ways to perform local state mutations. The first way is to write new data into the cache using `client.writeQuery` or `client.writeFragment` (which are helper functions that ultimately call `cache.writeQuery` or `cache.writeFragment` - using either set of functions is fine, as they are equivalent). The second is to leverage `cache.modify` to update existing data in the cache. Both of these approaches are explained in the following sections:
+
+- [`writeQuery` and `writeFragment`](../caching/cache-interaction/#writequery-and-writefragment)
+- [Modifying fields](../caching/cache-interaction/#modifying-fields)
+
+Let's look at a quick example that demonstrates how `client.writeQuery` can be used to update the cache from a React component.
+
+```jsx
+import React from "react";
+import { useApolloClient } from "@apollo/client";
+
+import Link from "./Link";
+
+function FilterLink({ filter, children }) {
+  const client = useApolloClient();
+  return (
+    <Link
+      onClick={() => client.writeQuery({
+        query: gql`query GetVisibilityFilter { visibilityFilter }`,
+        data: { visibilityFilter: filter },
+      })}
+    >
+      {children}
+    </Link>
+  );
+}
+```
+
+In the above example we first access the current Apollo Client instance with the help of the `useApolloClient` hook. From the `client` instance, we then call `writeQuery` with the data we want to write to the cache. If we want to watch the cache for changes to have our component update when new data is written using `writeQuery` or `writeFragment`, we can use `client.watchQuery` or the Apollo Client `useQuery` React hook, along with the `@client` directive, to let our query know we want to pull the value out of the cache.  For example:
+
+```jsx
+import React from "react";
+import { gql, useQuery } from "@apollo/client";
+
+import Link from "./Link";
+
+const GET_VISIBILITY_FILTER = gql`
+  query GetVisibilityFilter {
+    visibilityFilter @client
+  }
+`;
+
+function FilterLink({ filter, children }) {
+  const { data, client } = useQuery(GET_VISIBILITY_FILTER);
+  return (
+    <Link
+      onClick={() => client.writeQuery({
+        query: GET_VISIBILITY_FILTER,
+        data: { visibilityFilter: filter },
+      })}
+      active={data.visibilityFilter === filter}
+    >
+      {children}
+    </Link>
+  )
+}
+```
+
+The `@client` directive next to our `visibilityFilter` field tells Apollo Client to fetch the field data locally (either from the cache or using a field policy), instead of sending it to our GraphQL server. When `client.writeQuery` is called, our `FilterLink` component is automatically re-rendered by `useQuery`, and the updated `data` query result is returned. All cache writes and reads are synchronous, so in this case we don't have to worry about loading state.

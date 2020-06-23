@@ -2046,7 +2046,7 @@ describe('EntityStore', () => {
             favorited(_, { readField, toReference }) {
               const rootQueryRef = toReference("ROOT_QUERY");
               expect(rootQueryRef).toEqual(makeReference("ROOT_QUERY"));
-              const favoritedBooks = readField<[]>("favoritedBooks", rootQueryRef);
+              const favoritedBooks = readField<Reference[]>("favoritedBooks", rootQueryRef);
               return favoritedBooks!.some(bookRef => {
                 return readField("isbn") === readField("isbn", bookRef);
               });
@@ -2064,7 +2064,7 @@ describe('EntityStore', () => {
                 __typename: "Book",
                 isbn: args!.isbn,
                 title: titlesByISBN.get(args!.isbn),
-              }, true) as Reference;
+              }, true);
 
               return ref;
             },

@@ -47,7 +47,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
 
   // SSR won't trigger the effect hook below that stores the current
   // `QueryData` instance for future renders, so we'll handle that here if
-  // the current render is happening server side.
+  // the current render is happening on the server side.
   if (queryData.ssrInitiated() && !queryDataRef.current) {
     queryDataRef.current = queryData;
   }

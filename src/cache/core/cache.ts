@@ -66,7 +66,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return document;
   }
 
-  public identify(object: StoreObject): string | undefined {
+  public identify(object: StoreObject | Reference): string | undefined {
     return;
   }
   

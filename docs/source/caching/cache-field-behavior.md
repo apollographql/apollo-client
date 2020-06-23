@@ -512,6 +512,8 @@ type FieldMergeFunction<TExisting, TIncoming = TExisting> = (
 
 // These options are common to both read and merge functions:
 interface FieldFunctionOptions {
+  cache: InMemoryCache;
+
   // The final argument values passed to the field, after applying variables.
   // If no arguments were provided, this property will be null.
   args: Record<string, any> | null;
@@ -538,8 +540,13 @@ interface FieldFunctionOptions {
   // at minimum, a __typename and any necessary key fields. If true is
   // passed for the optional mergeIntoStore argument, the object's fields
   // will also be persisted into the cache, which can be useful to ensure
-  // the Reference actually refers to data stored in the cache.
-  toReference(obj: StoreObject, mergeIntoStore?: boolean): Reference;
+  // the Reference actually refers to data stored in the cache. If you
+  // pass an ID string, toReference will make a Reference out of it. If
+  // you pass a Reference, toReference will return it as-is.
+  toReference(
+    objOrIdOrRef: StoreObject | string | Reference,
+    mergeIntoStore?: boolean,
+  ): Reference | undefined;
 
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
@@ -554,6 +561,11 @@ interface FieldFunctionOptions {
     nameOrField: string | FieldNode,
     foreignObjOrRef?: StoreObject | Reference,
   ): T;
+
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  canRead(value: StoreValue): boolean;
 
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,

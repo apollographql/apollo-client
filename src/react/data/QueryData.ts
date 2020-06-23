@@ -460,7 +460,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     }
   }
 
-  private obsRefetch = (variables?: TVariables) =>
+  private obsRefetch = (variables?: Partial<TVariables>) =>
     this.currentObservable!.refetch(variables);
 
   private obsFetchMore = <K extends keyof TVariables>(

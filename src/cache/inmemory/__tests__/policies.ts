@@ -2222,6 +2222,7 @@ describe("type policies", function () {
               hasPreviousPage
               hasNextPage
             }
+            totalCount
           }
         }
       `;
@@ -2417,6 +2418,7 @@ describe("type policies", function () {
               search: {
                 edges: firstEdges,
                 pageInfo: firstPageInfo,
+                totalCount: 1292,
               }
             }
           },
@@ -2431,6 +2433,7 @@ describe("type policies", function () {
               search: {
                 edges: secondEdges,
                 pageInfo: secondPageInfo,
+                totalCount: 1292,
               },
             },
           },
@@ -2445,6 +2448,7 @@ describe("type policies", function () {
               search: {
                 edges: thirdEdges,
                 pageInfo: thirdPageInfo,
+                totalCount: 1292,
               },
             },
           },
@@ -2459,6 +2463,7 @@ describe("type policies", function () {
               search: {
                 edges: fourthEdges,
                 pageInfo: fourthPageInfo,
+                totalCount: 1292,
               },
             },
           },
@@ -2473,6 +2478,7 @@ describe("type policies", function () {
               search: {
                 edges: fifthEdges,
                 pageInfo: fifthPageInfo,
+                totalCount: 1292,
               },
             },
           },
@@ -2487,6 +2493,7 @@ describe("type policies", function () {
               search: {
                 edges: turrellEdges,
                 pageInfo: turrellPageInfo,
+                totalCount: 13531,
               },
             },
           },
@@ -2518,6 +2525,7 @@ describe("type policies", function () {
               search: {
                 edges: firstEdges,
                 pageInfo: firstPageInfo,
+                totalCount: 1292,
               },
             },
           });
@@ -2545,6 +2553,7 @@ describe("type policies", function () {
                   hasPreviousPage: false,
                   hasNextPage: true,
                 },
+                totalCount: 1292,
               },
             },
           });
@@ -2574,6 +2583,7 @@ describe("type policies", function () {
                   hasPreviousPage: true,
                   hasNextPage: true,
                 },
+                totalCount: 1292,
               },
             },
           });
@@ -2602,6 +2612,7 @@ describe("type policies", function () {
                   hasPreviousPage: false,
                   hasNextPage: true,
                 },
+                totalCount: 1292,
               },
             },
           });
@@ -2637,6 +2648,7 @@ describe("type policies", function () {
                   hasPreviousPage: false,
                   hasNextPage: true,
                 },
+                totalCount: 1292,
               },
             },
           });
@@ -2660,6 +2672,7 @@ describe("type policies", function () {
                 search: {
                   edges: turrellEdges,
                   pageInfo: turrellPageInfo,
+                  totalCount: 13531,
                 },
               },
             });
@@ -2681,6 +2694,7 @@ describe("type policies", function () {
                 node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
               })),
               pageInfo: turrellPageInfo,
+              totalCount: 13531,
             });
 
             // Evict the Basquiat entity to verify that the dangling
@@ -2727,6 +2741,7 @@ describe("type policies", function () {
                   hasPreviousPage: false,
                   hasNextPage: true,
                 },
+                totalCount: 1292,
               },
             },
           });

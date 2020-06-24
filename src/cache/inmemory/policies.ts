@@ -24,17 +24,23 @@ import {
   getStoreKeyName,
 } from '../../utilities/graphql/storeUtils';
 import { canUseWeakMap } from '../../utilities/common/canUse';
-import { IdGetter } from "./types";
+import { IdGetter, ReadMergeModifyContext } from "./types";
 import {
+  hasOwn,
   fieldNameFromStoreName,
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
 } from './helpers';
-import { FieldValueGetter, ToReferenceFunction } from './entityStore';
-import { SafeReadonly } from '../core/types/common';
-
-const hasOwn = Object.prototype.hasOwnProperty;
+import { InMemoryCache } from './inMemoryCache';
+import {
+  SafeReadonly,
+  FieldSpecifier,
+  ToReferenceFunction,
+  ReadFieldFunction,
+  ReadFieldOptions,
+  CanReadFunction,
+} from '../core/types/common';
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -98,21 +104,9 @@ export type FieldPolicy<
 
 type StorageType = Record<string, any>;
 
-interface FieldSpecifier {
-  typename?: string;
-  fieldName: string;
-  field?: FieldNode;
-  args?: Record<string, any>;
-  variables?: Record<string, any>;
-}
-
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0 ? spec.args :
     spec.field ? argumentsObjectFromField(spec.field, spec.variables) : null;
-}
-
-export interface ReadFieldOptions extends FieldSpecifier {
-  from?: StoreObject | Reference;
 }
 
 export interface FieldFunctionOptions<
@@ -141,6 +135,13 @@ export interface FieldFunctionOptions<
   isReference: typeof isReference;
   toReference: ToReferenceFunction;
 
+  // A handy place to put field-specific data that you want to survive
+  // across multiple read function calls. Useful for field-level caching,
+  // if your read function does any expensive work.
+  storage: StorageType | null;
+
+  cache: InMemoryCache;
+
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
   // from that object instead of the current object, so this function can
@@ -150,16 +151,12 @@ export interface FieldFunctionOptions<
   // to compute the argument values. Note that this function will invoke
   // custom read functions for other fields, if defined. Always returns
   // immutable data (enforced with Object.freeze in development).
-  readField<T = StoreValue>(options: ReadFieldOptions): SafeReadonly<T> | undefined;
-  readField<T = StoreValue>(
-    fieldName: string,
-    from?: StoreObject | Reference,
-  ): SafeReadonly<T> | undefined;
+  readField: ReadFieldFunction;
 
-  // A handy place to put field-specific data that you want to survive
-  // across multiple read function calls. Useful for field-level caching,
-  // if your read function does any expensive work.
-  storage: StorageType | null;
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  canRead: CanReadFunction;
 
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
@@ -189,11 +186,11 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   // reasons discussed in FieldReadFunction above.
   incoming: SafeReadonly<TIncoming>,
   options: FieldFunctionOptions,
-) => TExisting;
+) => SafeReadonly<TExisting>;
 
-export const defaultDataIdFromObject: KeyFieldsFunction = (
-  { __typename, id, _id },
-  context,
+export const defaultDataIdFromObject = (
+  { __typename, id, _id }: Readonly<StoreObject>,
+  context?: KeyFieldsContext,
 ) => {
   if (typeof __typename === "string") {
     if (context) {
@@ -234,20 +231,25 @@ export class Policies {
     };
   } = Object.create(null);
 
+  public readonly cache: InMemoryCache;
+
   public readonly rootIdsByTypename: Record<string, string> = Object.create(null);
   public readonly rootTypenamesById: Record<string, string> = Object.create(null);
 
   public readonly usingPossibleTypes = false;
 
   constructor(private config: {
+    cache: InMemoryCache;
     dataIdFromObject?: KeyFieldsFunction;
     possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
-  } = {}) {
+  }) {
     this.config = {
       dataIdFromObject: defaultDataIdFromObject,
       ...config,
     };
+
+    this.cache = this.config.cache;
 
     this.setRootTypename("Query");
     this.setRootTypename("Mutation");
@@ -498,7 +500,7 @@ export class Policies {
 
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
-    context: ReadMergeContext,
+    context: ReadMergeModifyContext,
   ): SafeReadonly<V> | undefined {
     const objectOrReference = options.from;
     if (!objectOrReference) return;
@@ -507,14 +509,13 @@ export class Policies {
     if (!nameOrField) return;
 
     if (options.typename === void 0) {
-      const typename = context.getFieldValue<string>(
-        objectOrReference, "__typename");
+      const typename = context.store.getFieldValue<string>(objectOrReference, "__typename");
       if (typename) options.typename = typename;
     }
 
     const storeFieldName = this.getStoreFieldName(options);
     const fieldName = fieldNameFromStoreName(storeFieldName);
-    const existing = context.getFieldValue<V>(objectOrReference, storeFieldName);
+    const existing = context.store.getFieldValue<V>(objectOrReference, storeFieldName);
     const policy = this.getFieldPolicy(options.typename, fieldName, false);
     const read = policy && policy.read;
 
@@ -530,8 +531,8 @@ export class Policies {
         this,
         objectOrReference,
         options,
-        storage,
         context,
+        storage,
       )) as SafeReadonly<V>;
     }
 
@@ -549,7 +550,7 @@ export class Policies {
   public applyMerges<T extends StoreValue>(
     existing: T | Reference,
     incoming: T | FieldValueToBeMerged,
-    context: ReadMergeContext,
+    context: ReadMergeModifyContext,
     storageKeys?: [string | StoreObject, string],
   ): T {
     if (isFieldValueToBeMerged(incoming)) {
@@ -589,8 +590,8 @@ export class Policies {
           fieldName,
           field,
           variables: context.variables },
-        storage,
         context,
+        storage,
       )) as T;
     }
 
@@ -629,7 +630,7 @@ export class Policies {
       Object.keys(i).forEach(storeFieldName => {
         const incomingValue = i[storeFieldName];
         const appliedValue = this.applyMerges(
-          context.getFieldValue(e, storeFieldName),
+          context.store.getFieldValue(e, storeFieldName),
           incomingValue,
           context,
           // Avoid enabling options.storage when firstStorageKey is falsy,
@@ -652,24 +653,18 @@ export class Policies {
   }
 }
 
-export interface ReadMergeContext {
-  variables: Record<string, any>;
-  // A JSON.stringify-serialized version of context.variables.
-  varString: string;
-  toReference: ToReferenceFunction;
-  getFieldValue: FieldValueGetter;
-}
-
 function makeFieldFunctionOptions(
   policies: Policies,
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
+  context: ReadMergeModifyContext,
   storage: StorageType | null,
-  context: ReadMergeContext,
 ): FieldFunctionOptions {
-  const { toReference, getFieldValue, variables } = context;
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
+  const variables = fieldSpec.variables || context.variables;
+  const { getFieldValue, toReference, canRead } = context.store;
+
   return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
@@ -679,6 +674,8 @@ function makeFieldFunctionOptions(
     isReference,
     toReference,
     storage,
+    cache: policies.cache,
+    canRead,
 
     readField<T>(
       fieldNameOrOptions: string | ReadFieldOptions,
@@ -688,12 +685,17 @@ function makeFieldFunctionOptions(
         typeof fieldNameOrOptions === "string" ? {
           fieldName: fieldNameOrOptions,
           from,
-        } : fieldNameOrOptions;
+        } : { ...fieldNameOrOptions };
 
-      return policies.readField<T>(options.from ? options : {
-        ...options,
-        from: objectOrReference,
-      }, context);
+      if (void 0 === options.from) {
+        options.from = objectOrReference;
+      }
+
+      if (void 0 === options.variables) {
+        options.variables = variables;
+      }
+
+      return policies.readField<T>(options, context);
     },
 
     mergeObjects(existing, incoming) {

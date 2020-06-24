@@ -668,7 +668,21 @@ describe('ApolloClient', () => {
     it('will write some deeply nested data to the store', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                d: {
+                  // Silence "Cache data may be lost..."  warnings by
+                  // unconditionally favoring the incoming data.
+                  merge(_, incoming) {
+                    return incoming;
+                  },
+                },
+              },
+            },
+          },
+        }),
       });
 
       client.writeQuery({
@@ -1171,6 +1185,20 @@ describe('ApolloClient', () => {
         return new ApolloClient({
           link,
           cache: new InMemoryCache({
+            typePolicies: {
+              Person: {
+                fields: {
+                  friends: {
+                    // Deliberately silence "Cache data may be lost..."
+                    // warnings by preferring the incoming data, rather
+                    // than (say) concatenating the arrays together.
+                    merge(_, incoming) {
+                      return incoming;
+                    },
+                  },
+                },
+              },
+            },
             dataIdFromObject: result => {
               if (result.id && result.__typename) {
                 return result.__typename + result.id;
@@ -2271,6 +2299,35 @@ describe('ApolloClient', () => {
 
       await client.clearStore();
       expect((client.cache as any).data.data).toEqual({});
+    });
+  });
+
+  describe('setLink', () => {
+    it('should override default link with newly set link', async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache()
+      });
+      expect(client.link).toBeDefined();
+
+      const newLink = new ApolloLink(operation => {
+        return new Observable(observer => {
+          observer.next({
+            data: {
+              widgets: [
+                { name: 'Widget 1'},
+                { name: 'Widget 2' }
+              ]
+            }
+          });
+          observer.complete();
+        });
+      });
+
+      client.setLink(newLink);
+
+      const { data } = await client.query({ query: gql`{ widgets }` });
+      expect(data.widgets).toBeDefined();
+      expect(data.widgets.length).toBe(2);
     });
   });
 });

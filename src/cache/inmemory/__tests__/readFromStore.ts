@@ -4,14 +4,14 @@ import gql from 'graphql-tag';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
-import { makeReference } from '../../../core';
-import { defaultNormalizedCacheFactory } from '../entityStore';
+import { makeReference, InMemoryCache, Reference, isReference } from '../../../core';
+import { Cache } from '../../core/types/Cache';
+import { defaultNormalizedCacheFactory } from './helpers';
 import { withError } from './diffAgainstStore';
-import { Policies } from '../policies';
 
 describe('reading from the store', () => {
   const reader = new StoreReader({
-    policies: new Policies(),
+    cache: new InMemoryCache(),
   });
 
   it('runs a nested query with proper fragment fields in arrays', () => {
@@ -773,7 +773,7 @@ describe('reading from the store', () => {
 
   it('can use keyArgs function instead of @connection directive', () => {
     const reader = new StoreReader({
-      policies: new Policies({
+      cache: new InMemoryCache({
         typePolicies: {
           Query: {
             fields: {
@@ -913,6 +913,710 @@ describe('reading from the store', () => {
             },
           },
         ],
+      },
+    });
+  });
+
+  it("custom read functions can map/filter dangling references", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            ducks(existing: Reference[] = [], { canRead }) {
+              return existing.map(duck => canRead(duck) ? duck : null);
+            },
+            chickens(existing: Reference[] = [], { canRead }) {
+              return existing.map(chicken => canRead(chicken) ? chicken : {});
+            },
+            oxen(existing: Reference[] = [], { canRead }) {
+              return existing.filter(canRead);
+            },
+          },
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query: gql`
+        query {
+          ducks { quacking }
+          chickens { inCoop }
+          oxen { gee haw }
+        }
+      `,
+      data: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          { __typename: "Duck", id: 3, quacking: false },
+        ],
+        chickens: [
+          { __typename: "Chicken", id: 1, inCoop: true },
+          { __typename: "Chicken", id: 2, inCoop: true },
+          { __typename: "Chicken", id: 3, inCoop: false },
+        ],
+        oxen: [
+          { __typename: "Ox", id: 1, gee: true, haw: false },
+          { __typename: "Ox", id: 2, gee: false, haw: true },
+        ],
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      "Chicken:1": {
+        __typename: "Chicken",
+        id: 1,
+        inCoop: true,
+      },
+      "Chicken:2": {
+        __typename: "Chicken",
+        id: 2,
+        inCoop: true,
+      },
+      "Chicken:3": {
+        __typename: "Chicken",
+        id: 3,
+        inCoop: false,
+      },
+      "Duck:1": {
+        __typename: "Duck",
+        id: 1,
+        quacking: true,
+      },
+      "Duck:2": {
+        __typename: "Duck",
+        id: 2,
+        quacking: false,
+      },
+      "Duck:3": {
+        __typename: "Duck",
+        id: 3,
+        quacking: false,
+      },
+      "Ox:1": {
+        __typename: "Ox",
+        id: 1,
+        gee: true,
+        haw: false,
+      },
+      "Ox:2": {
+        __typename: "Ox",
+        id: 2,
+        gee: false,
+        haw: true,
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        chickens: [
+          { __ref: "Chicken:1" },
+          { __ref: "Chicken:2" },
+          { __ref: "Chicken:3" },
+        ],
+        ducks: [
+          { __ref: "Duck:1" },
+          { __ref: "Duck:2" },
+          { __ref: "Duck:3" },
+        ],
+        oxen: [
+          { __ref: "Ox:1" },
+          { __ref: "Ox:2" },
+        ],
+      },
+    });
+
+    function diffChickens() {
+      return cache.diff({
+        query: gql`query { chickens { id inCoop }}`,
+        optimistic: true,
+      });
+    }
+
+    expect(diffChickens()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        chickens: [
+          { __typename: "Chicken", id: 1, inCoop: true },
+          { __typename: "Chicken", id: 2, inCoop: true },
+          { __typename: "Chicken", id: 3, inCoop: false },
+        ],
+      }
+    });
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Chicken",
+        id: 2,
+      }),
+    })).toBe(true);
+
+    expect(diffChickens()).toEqual({
+      complete: false,
+      optimistic: false,
+      missing: [
+        expect.anything(),
+        expect.anything(),
+      ],
+      result: {
+        chickens: [
+          { __typename: "Chicken", id: 1, inCoop: true },
+          {},
+          { __typename: "Chicken", id: 3, inCoop: false },
+        ],
+      },
+    });
+
+    function diffDucks() {
+      return cache.diff({
+        query: gql`query { ducks { id quacking }}`,
+        optimistic: true,
+      });
+    }
+
+    expect(diffDucks()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          { __typename: "Duck", id: 3, quacking: false },
+        ],
+      },
+    });
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Duck",
+        id: 3,
+      }),
+    })).toBe(true);
+
+    // Returning null as a placeholder in a list is a way to indicate that
+    // a list element has been removed, without causing an incomplete
+    // diff, and without altering the positions of later elements.
+    expect(diffDucks()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          null,
+        ],
+      },
+    });
+
+    function diffOxen() {
+      return cache.diff({
+        query: gql`query { oxen { id gee haw }}`,
+        optimistic: true,
+      });
+    }
+
+    expect(diffOxen()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        oxen: [
+          { __typename: "Ox", id: 1, gee: true, haw: false },
+          { __typename: "Ox", id: 2, gee: false, haw: true },
+        ],
+      },
+    });
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Ox",
+        id: 1,
+      }),
+    })).toBe(true);
+
+    expect(diffOxen()).toEqual({
+      complete: true,
+      optimistic: false,
+      result: {
+        oxen: [
+          { __typename: "Ox", id: 2, gee: false, haw: true },
+        ],
+      },
+    });
+  });
+
+  it("propagates eviction signals to parent queries", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Deity: {
+          keyFields: ["name"],
+          fields: {
+            children(offspring: Reference[], { canRead }) {
+              // Automatically filter out any dangling references, and
+              // supply a default empty array if !offspring.
+              return offspring ? offspring.filter(canRead) : [];
+            },
+          },
+        },
+
+        Query: {
+          fields: {
+            ruler(ruler, { canRead, toReference }) {
+              // If the throne is empty, promote Apollo!
+              return canRead(ruler) ? ruler : toReference({
+                __typename: "Deity",
+                name: "Apollo",
+              });
+            },
+          },
+        },
+      },
+    });
+
+    const rulerQuery = gql`
+      query {
+        ruler {
+          name
+          children {
+            name
+            children {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const children = [
+      // Sons #1 and #2 don't have names because Cronus (l.k.a. Saturn)
+      // devoured them shortly after birth, as famously painted by
+      // Francisco Goya:
+      "Son #1",
+      "Hera",
+      "Son #2",
+      "Zeus",
+      "Demeter",
+      "Hades",
+      "Poseidon",
+      "Hestia",
+    ].map(name => ({
+      __typename: "Deity",
+      name,
+      children: [],
+    }));
+
+    cache.writeQuery({
+      query: rulerQuery,
+      data: {
+        ruler: {
+          __typename: "Deity",
+          name: "Cronus",
+          children,
+        },
+      },
+    });
+
+    const diffs: Cache.DiffResult<any>[] = [];
+
+    function watch() {
+      return cache.watch({
+        query: rulerQuery,
+        immediate: true,
+        optimistic: true,
+        callback(diff) {
+          diffs.push(diff);
+        },
+      });
+    }
+
+    const cancel = watch();
+
+    function devour(name: string) {
+      return cache.evict({
+        id: cache.identify({ __typename: "Deity", name }),
+      });
+    }
+
+    const initialDiff = {
+      result: {
+        ruler: {
+          __typename: "Deity",
+          name: "Cronus",
+          children,
+        },
+      },
+      complete: true,
+      optimistic: false,
+    };
+
+    // We already have one diff because of the immediate:true above.
+    expect(diffs).toEqual([
+      initialDiff,
+    ]);
+
+    expect(devour("Son #1")).toBe(true);
+
+    const childrenWithoutSon1 =
+      children.filter(child => child.name !== "Son #1");
+
+    expect(childrenWithoutSon1.length).toBe(children.length - 1);
+
+    const diffWithoutSon1 = {
+      result: {
+        ruler: {
+          name: "Cronus",
+          __typename: "Deity",
+          children: childrenWithoutSon1,
+        },
+      },
+      complete: true,
+      optimistic: false,
+    };
+
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+    ]);
+
+    expect(devour("Son #1")).toBe(false);
+
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+    ]);
+
+    expect(devour("Son #2")).toBe(true);
+
+    const diffWithoutDevouredSons = {
+      result: {
+        ruler: {
+          name: "Cronus",
+          __typename: "Deity",
+          children: childrenWithoutSon1.filter(child => {
+            return child.name !== "Son #2";
+          }),
+        },
+      },
+      complete: true,
+      optimistic: false,
+    };
+
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+    ]);
+
+    const childrenOfZeus = [
+      "Ares",
+      "Artemis",
+      // Fun fact: Apollo is the only major Greco-Roman deity whose name
+      // is the same in both traditions.
+      "Apollo",
+      "Athena",
+    ].map(name => ({
+      __typename: "Deity",
+      name,
+      children: [],
+    }));
+
+    const zeusRef = cache.writeFragment({
+      id: cache.identify({
+        __typename: "Deity",
+        name: "Zeus",
+      }),
+      fragment: gql`fragment Offspring on Deity {
+        children {
+          name
+        }
+      }`,
+      data: {
+        children: childrenOfZeus,
+      },
+    });
+
+    expect(isReference(zeusRef)).toBe(true);
+    expect(zeusRef!.__ref).toBe('Deity:{"name":"Zeus"}');
+
+    const diffWithChildrenOfZeus = {
+      complete: true,
+      optimistic: false,
+      result: {
+        ...diffWithoutDevouredSons.result,
+        ruler: {
+          ...diffWithoutDevouredSons.result.ruler,
+          children: diffWithoutDevouredSons.result.ruler.children.map(child => {
+            return child.name === "Zeus" ? {
+              ...child,
+              children: childrenOfZeus
+                // Remove empty child.children arrays.
+                .map(({ children, ...child }) => child),
+            } : child;
+          }),
+        },
+      },
+    };
+
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+      diffWithChildrenOfZeus,
+    ]);
+
+    // Zeus usurps the throne from Cronus!
+    cache.writeQuery({
+      query: rulerQuery,
+      data: {
+        ruler: {
+          __typename: "Deity",
+          name: "Zeus",
+        },
+      },
+    });
+
+    const diffWithZeusAsRuler = {
+      complete: true,
+      optimistic: false,
+      result: {
+        ruler: {
+          __typename: "Deity",
+          name: "Zeus",
+          children: childrenOfZeus,
+        },
+      },
+    };
+
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+      diffWithChildrenOfZeus,
+      diffWithZeusAsRuler,
+    ]);
+
+    expect(cache.gc().sort()).toEqual([
+      'Deity:{"name":"Cronus"}',
+      'Deity:{"name":"Demeter"}',
+      'Deity:{"name":"Hades"}',
+      'Deity:{"name":"Hera"}',
+      'Deity:{"name":"Hestia"}',
+      'Deity:{"name":"Poseidon"}',
+    ]);
+
+    const snapshotAfterGC = {
+      ROOT_QUERY: {
+        __typename: "Query",
+        ruler: { __ref: 'Deity:{"name":"Zeus"}' },
+      },
+      'Deity:{"name":"Zeus"}': {
+        __typename: "Deity",
+        name: "Zeus",
+        children: [
+          { __ref: 'Deity:{"name":"Ares"}' },
+          { __ref: 'Deity:{"name":"Artemis"}' },
+          { __ref: 'Deity:{"name":"Apollo"}' },
+          { __ref: 'Deity:{"name":"Athena"}' },
+        ],
+      },
+      'Deity:{"name":"Apollo"}': {
+        __typename: "Deity",
+        name: "Apollo",
+      },
+      'Deity:{"name":"Artemis"}': {
+        __typename: "Deity",
+        name: "Artemis",
+      },
+      'Deity:{"name":"Ares"}': {
+        __typename: "Deity",
+        name: "Ares",
+      },
+      'Deity:{"name":"Athena"}': {
+        __typename: "Deity",
+        name: "Athena",
+      },
+    };
+
+    expect(cache.extract()).toEqual(snapshotAfterGC);
+
+    // There should be no diff generated by garbage collection.
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+      diffWithChildrenOfZeus,
+      diffWithZeusAsRuler,
+    ]);
+
+    cancel();
+
+    const lastDiff = diffs[diffs.length - 1];
+
+    expect(cache.readQuery({
+      query: rulerQuery,
+    })).toBe(lastDiff.result);
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Deity",
+        name: "Ares",
+      }),
+    })).toBe(true);
+
+    // No new diff generated since we called cancel() above.
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+      diffWithChildrenOfZeus,
+      diffWithZeusAsRuler,
+    ]);
+
+    const snapshotWithoutAres = { ...snapshotAfterGC };
+    delete snapshotWithoutAres["Deity:{\"name\":\"Ares\"}"];
+    expect(cache.extract()).toEqual(snapshotWithoutAres);
+    // Ares already removed, so no new garbage to collect.
+    expect(cache.gc()).toEqual([]);
+
+    const childrenOfZeusWithoutAres =
+      childrenOfZeus.filter(child => {
+        return child.name !== "Ares";
+      });
+
+    expect(childrenOfZeusWithoutAres).toEqual([
+      { __typename: "Deity", name: "Artemis", children: [] },
+      { __typename: "Deity", name: "Apollo", children: [] },
+      { __typename: "Deity", name: "Athena", children: [] },
+    ]);
+
+    expect(cache.readQuery({
+      query: rulerQuery,
+    })).toEqual({
+      ruler: {
+        __typename: "Deity",
+        name: "Zeus",
+        children: childrenOfZeusWithoutAres,
+      },
+    });
+
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Deity",
+        name: "Zeus",
+      }),
+    })).toBe(true);
+
+    // You didn't think we were going to let Apollo be garbage-collected,
+    // did you?
+    cache.retain(cache.identify({
+      __typename: "Deity",
+      name: "Apollo",
+    })!);
+
+    expect(cache.gc().sort()).toEqual([
+      'Deity:{"name":"Artemis"}',
+      'Deity:{"name":"Athena"}',
+    ]);
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        ruler: { __ref: 'Deity:{"name":"Zeus"}' },
+      },
+      'Deity:{"name":"Apollo"}': {
+        __typename: "Deity",
+        name: "Apollo",
+      },
+    });
+
+    const apolloRulerResult = cache.readQuery<{
+      ruler: Record<string, any>;
+    }>({ query: rulerQuery })!;
+
+    expect(apolloRulerResult).toEqual({
+      ruler: {
+        __typename: "Deity",
+        name: "Apollo",
+        children: [],
+      },
+    });
+
+    // No new diffs since before.
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+      diffWithChildrenOfZeus,
+      diffWithZeusAsRuler,
+    ]);
+
+    // Rewatch the rulerQuery, which will populate the same diffs array
+    // that we were using before.
+    const cancel2 = watch();
+
+    const diffWithApolloAsRuler = {
+      complete: true,
+      optimistic: false,
+      result: apolloRulerResult,
+    };
+
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+      diffWithChildrenOfZeus,
+      diffWithZeusAsRuler,
+      diffWithApolloAsRuler,
+    ]);
+
+    cache.modify({
+      fields: {
+        ruler(value, { toReference }) {
+          expect(isReference(value)).toBe(true);
+          expect(value.__ref).toBe(
+            cache.identify(diffWithZeusAsRuler.result.ruler));
+          expect(value.__ref).toBe('Deity:{"name":"Zeus"}');
+          // Interim ruler Apollo takes over for real.
+          return toReference(apolloRulerResult.ruler);
+        },
+      },
+    });
+
+    cancel2();
+
+    // The cache.modify call should have triggered another diff, since we
+    // overwrote the ROOT_QUERY.ruler field with a valid Reference to the
+    // Apollo entity object.
+    expect(diffs).toEqual([
+      initialDiff,
+      diffWithoutSon1,
+      diffWithoutDevouredSons,
+      diffWithChildrenOfZeus,
+      diffWithZeusAsRuler,
+      diffWithApolloAsRuler,
+      diffWithApolloAsRuler,
+    ]);
+
+    expect(
+      // Undo the cache.retain call above.
+      cache.release(cache.identify({
+        __typename: "Deity",
+        name: "Apollo",
+      })!)
+    ).toBe(0);
+
+    // Since ROOT_QUERY.ruler points to Apollo, nothing needs to be
+    // garbage collected.
+    expect(cache.gc()).toEqual([]);
+
+    // Having survived GC, Apollo reigns supreme atop Olympus... or
+    // something like that.
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        ruler: { __ref: 'Deity:{"name":"Apollo"}' },
+      },
+      'Deity:{"name":"Apollo"}': {
+        __typename: "Deity",
+        name: "Apollo",
       },
     });
   });

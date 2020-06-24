@@ -176,13 +176,13 @@ const client = new ApolloClient({
   resolvers: {
     Mutation: {
       toggleTodo: (_root, variables, { cache }) => {
-        const id = cache.identify({
-          __typename: 'TodoItem',
-          id: variables.id,
-        });
-        cache.modify(id, {
-          completed(value) {
-            return !value;
+        cache.modify({
+          id: cache.identify({
+            __typename: 'TodoItem',
+            id: variables.id,
+          }),
+          fields: {
+            completed: value => !value,
           },
         });
         return null;
@@ -621,7 +621,7 @@ const client = new ApolloClient({
 });
 ```
 
-[`CameraRoll.getPhotos()`](https://facebook.github.io/react-native/docs/cameraroll.html#getphotos) returns a `Promise` resolving to an object with a `edges` property, which is an array of camera node objects, and a `page_info` property, which is an object with pagination information. This is a great use case for GraphQL, since we can filter down the return value to only the data that our components consume.
+[`CameraRoll.getPhotos()`](https://facebook.github.io/react-native/docs/cameraroll.html#getphotos) returns a `Promise` resolving to an object with an `edges` property, which is an array of camera node objects, and a `page_info` property, which is an object with pagination information. This is a great use case for GraphQL, since we can filter down the return value to only the data that our components consume.
 
 ```js
 import { gql } from "@apollo/client";
@@ -1095,7 +1095,7 @@ const client = new ApolloClient({
 };
 ```
 
-The `cache.writeQuery` and `cache.writeFragment` methods should cover most of your needs; however, there are some cases where the data you're writing to the cache depends on the data that's already there. In that scenario, you should use `cache.modify(id, modifiers)` to update specific fields within the entity object identified by `id`.
+The `cache.writeQuery` and `cache.writeFragment` methods should cover most of your needs; however, there are some cases where the data you're writing to the cache depends on the data that's already there. In that scenario, you can either use a combination of `cache.read{Query,Fragment}` followed by `cache.write{Query,Fragment}`, or use `cache.modify({ id, fields })` to update specific fields within the entity object identified by `id`.
 
 ### writeQuery and readQuery
 

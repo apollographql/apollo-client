@@ -148,7 +148,8 @@ A `TypePolicy` object can include the following fields:
 ```ts
 type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
-  // array of field names or a function that returns an arbitrary string.
+  // array of field names, a function that returns an arbitrary string, or
+  // false to disable normalization for objects of this type.
   keyFields?: KeySpecifier | KeyFieldsFunction | false;
 
   // If your schema uses a custom __typename for any of the root Query,

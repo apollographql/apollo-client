@@ -403,9 +403,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public writeQuery<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
   ): void {
-    const result = this.cache.writeQuery<TData, TVariables>(options);
+    this.cache.writeQuery<TData, TVariables>(options);
     this.queryManager.broadcastQueries();
-    return result;
   }
 
   /**
@@ -422,9 +421,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public writeFragment<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
   ): void {
-    const result = this.cache.writeFragment<TData, TVariables>(options);
+    this.cache.writeFragment<TData, TVariables>(options);
     this.queryManager.broadcastQueries();
-    return result;
   }
 
   public __actionHookForDevTools(cb: () => any) {
@@ -554,5 +552,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
     this.localState.setFragmentMatcher(fragmentMatcher);
+  }
+
+  /**
+   * Define a new ApolloLink (or link chain) that Apollo Client will use.
+   */
+  public setLink(newLink: ApolloLink) {
+    this.link = this.queryManager.link = newLink;
   }
 }

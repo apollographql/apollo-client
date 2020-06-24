@@ -54,6 +54,8 @@ export const hasError = (
   (policy === 'none' && isNonEmptyArray(storeValue.graphQLErrors))
 );
 
+let warnedAboutUpdateQuery = false;
+
 export class ObservableQuery<
   TData = any,
   TVariables = OperationVariables
@@ -201,7 +203,9 @@ export class ObservableQuery<
       }
     }
 
-    if (!partial) {
+    if (partial) {
+      this.resetLastResults();
+    } else {
       this.updateLastResult(result);
     }
 
@@ -246,7 +250,7 @@ export class ObservableQuery<
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public refetch(variables?: TVariables): Promise<ApolloQueryResult<TData>> {
+  public refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>> {
     let { fetchPolicy } = this.options;
     // early return if trying to read from cache during refetch
     if (fetchPolicy === 'cache-only') {
@@ -268,7 +272,7 @@ export class ObservableQuery<
       this.options.variables = {
         ...this.options.variables,
         ...variables,
-      };
+      } as TVariables;
     }
 
     return this.newReobserver(false).reobserve({
@@ -307,15 +311,45 @@ export class ObservableQuery<
       combinedOptions,
       NetworkStatus.fetchMore,
     ).then(fetchMoreResult => {
-      this.updateQuery((previousResult: any) => {
-        const data = fetchMoreResult.data as TData;
-        const { updateQuery } = fetchMoreOptions;
-        return updateQuery ? updateQuery(previousResult, {
+      const data = fetchMoreResult.data as TData;
+      const { updateQuery } = fetchMoreOptions;
+
+      if (updateQuery) {
+        if (process.env.NODE_ENV !== "production" &&
+            !warnedAboutUpdateQuery) {
+          invariant.warn(
+`The updateQuery callback for fetchMore is deprecated, and will be removed
+in the next major version of Apollo Client.
+
+Please convert updateQuery functions to field policies with appropriate
+read and merge functions, or use/adapt a helper function (such as
+concatPagination, offsetLimitPagination, or relayStylePagination) from
+@apollo/client/utilities.
+
+The field policy system handles pagination more effectively than a
+hand-written updateQuery function, and you only need to define the policy
+once, rather than every time you call fetchMore.`);
+          warnedAboutUpdateQuery = true;
+        }
+        this.updateQuery(previous => updateQuery(previous, {
           fetchMoreResult: data,
           variables: combinedOptions.variables as TVariables,
-        }) : data;
-      });
+        }));
+      } else {
+        // If we're using a field policy instead of updateQuery, the only
+        // thing we need to do is write the new data to the cache using
+        // combinedOptions.variables (instead of this.variables, which is
+        // what this.updateQuery uses, because it works by abusing the
+        // original field value, keyed by the original variables).
+        this.queryManager.cache.writeQuery({
+          query: combinedOptions.query,
+          variables: combinedOptions.variables,
+          data,
+        });
+      }
+
       return fetchMoreResult as ApolloQueryResult<TData>;
+
     }).finally(() => {
       this.queryManager.stopQuery(qid);
       this.reobserve();
@@ -421,7 +455,7 @@ export class ObservableQuery<
       return Promise.resolve();
     }
 
-    let { fetchPolicy } = this.options;
+    let { fetchPolicy = 'cache-first' } = this.options;
     if (fetchPolicy !== 'cache-first' &&
         fetchPolicy !== 'no-cache' &&
         fetchPolicy !== 'network-only') {
@@ -531,9 +565,12 @@ export class ObservableQuery<
     const first = !this.observers.size;
     this.observers.add(observer);
 
-    // Deliver initial result
-    if (observer.next && this.lastResult) observer.next(this.lastResult);
-    if (observer.error && this.lastError) observer.error(this.lastError);
+    // Deliver most recent error or result.
+    if (this.lastError) {
+      observer.error && observer.error(this.lastError);
+    } else if (this.lastResult) {
+      observer.next && observer.next(this.lastResult);
+    }
 
     // Initiate observation of this query if it hasn't been reported to
     // the QueryManager yet.

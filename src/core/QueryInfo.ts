@@ -165,7 +165,10 @@ export class QueryInfo {
     this.variables =
     this.networkStatus =
     this.networkError =
-    this.graphQLErrors = void 0;
+    this.graphQLErrors =
+    this.lastWatch =
+    this.lastWrittenResult =
+    this.lastWrittenVars = void 0;
 
     const oq = this.observableQuery;
     if (oq) oq.stopPolling();
@@ -192,6 +195,9 @@ export class QueryInfo {
     return this;
   }
 
+  private lastWrittenResult?: FetchResult<any>;
+  private lastWrittenVars?: WatchQueryOptions["variables"];
+
   public markResult<T>(
     result: FetchResult<T>,
     options: Pick<WatchQueryOptions,
@@ -200,6 +206,8 @@ export class QueryInfo {
       | "errorPolicy">,
     allowCacheWrite: boolean,
   ) {
+    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+
     if (options.fetchPolicy === 'no-cache') {
       this.diff = { result: result.data, complete: true };
 
@@ -218,11 +226,57 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction(cache => {
-          cache.writeQuery({
-            query: this.document!,
-            data: result.data as T,
-            variables: options.variables,
-          });
+          if (equal(result, this.lastWrittenResult) &&
+              equal(options.variables, this.lastWrittenVars)) {
+            // If result is the same as the last result we received from
+            // the network (and the variables match too), avoid writing
+            // result into the cache again. The wisdom of skipping this
+            // cache write is far from obvious, since any cache write
+            // could be the one that puts the cache back into a desired
+            // state, fixing corruption or missing data. However, if we
+            // always write every network result into the cache, we enable
+            // feuds between queries competing to update the same data in
+            // incompatible ways, which can lead to an endless cycle of
+            // cache broadcasts and useless network requests. As with any
+            // feud, eventually one side must step back from the brink,
+            // letting the other side(s) have the last word(s). There may
+            // be other points where we could break this cycle, such as
+            // silencing the broadcast for cache.writeQuery (not a good
+            // idea, since it just delays the feud a bit) or somehow
+            // avoiding the network request that just happened (also bad,
+            // because the server could return useful new data). All
+            // options considered, skipping this cache write seems to be
+            // the least damaging place to break the cycle, because it
+            // reflects the intuition that we recently wrote this exact
+            // result into the cache, so the cache *should* already/still
+            // contain this data. If some other query has clobbered that
+            // data in the meantime, that's too bad, but there will be no
+            // winners if every query blindly reverts to its own version
+            // of the data. This approach also gives the network a chance
+            // to return new data, which will be written into the cache as
+            // usual, notifying only those queries that are directly
+            // affected by the cache updates, as usual. In the future, an
+            // even more sophisticated cache could perhaps prevent or
+            // mitigate the clobbering somehow, but that would make this
+            // particular cache write even less important, and thus
+            // skipping it would be even safer than it is today.
+            if (this.diff && this.diff.complete) {
+              // Reuse data from the last good (complete) diff that we
+              // received, when possible.
+              result.data = this.diff.result;
+              return;
+            }
+            // If the previous this.diff was incomplete, fall through to
+            // re-reading the latest data with cache.diff, below.
+          } else {
+            cache.writeQuery({
+              query: this.document!,
+              data: result.data as T,
+              variables: options.variables,
+            });
+            this.lastWrittenResult = result;
+            this.lastWrittenVars = options.variables;
+          }
 
           const diff = cache.diff<T>({
             query: this.document!,
@@ -241,10 +295,11 @@ export class QueryInfo {
             result.data = diff.result;
           }
         });
+
+      } else {
+        this.lastWrittenResult = this.lastWrittenVars = void 0;
       }
     }
-
-    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
   }
 
   public markReady() {
@@ -254,6 +309,7 @@ export class QueryInfo {
 
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
+    this.lastWrittenResult = this.lastWrittenVars = void 0;
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

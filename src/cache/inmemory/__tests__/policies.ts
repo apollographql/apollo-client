@@ -1,8 +1,12 @@
 import gql from "graphql-tag";
 
 import { InMemoryCache, ReactiveVar } from "../inMemoryCache";
-import { Reference, StoreObject } from "../../../core";
+import { Reference, StoreObject, ApolloClient, NetworkStatus } from "../../../core";
 import { MissingFieldError } from "../..";
+import { relayStylePagination } from "../../../utilities";
+import { MockLink } from '../../../utilities/testing/mocking/mockLink';
+import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
+import { itAsync } from '../../../utilities/testing/itAsync';
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -1052,6 +1056,7 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        optimistic: false,
         missing: [
           makeMissingError(1),
           makeMissingError(2),
@@ -1103,6 +1108,7 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        optimistic: false,
         missing: [
           makeMissingError(1),
           makeMissingError(3),
@@ -1160,6 +1166,7 @@ describe("type policies", function () {
           }],
         },
         complete: false,
+        optimistic: false,
         missing: [
           makeMissingError(1),
           makeMissingError(3),
@@ -1194,6 +1201,7 @@ describe("type policies", function () {
           }],
         },
         complete: true,
+        optimistic: false,
       });
 
       expect(cache.readQuery({ query })).toEqual({
@@ -2166,6 +2174,590 @@ describe("type policies", function () {
       });
     });
 
+    itAsync("can handle Relay-style pagination", (resolve, reject) => {
+      const cache = new InMemoryCache({
+        addTypename: false,
+        typePolicies: {
+          Query: {
+            fields: {
+              search: relayStylePagination((args, { fieldName }) => {
+                expect(typeof args!.query).toBe("string");
+                expect(fieldName).toBe("search");
+                // Normalize the search query by lower-casing it.
+                return args!.query.toLowerCase();
+              }),
+            },
+          },
+
+          Artist: {
+            keyFields: ["href"],
+          },
+        },
+      });
+
+      const query = gql`
+        query ArtsySearch(
+          $query: String!,
+          $after: String, $first: Int,
+          $before: String, $last: Int,
+        ) {
+          search(
+            query: $query,
+            after: $after, first: $first,
+            before: $before, last: $last,
+          ) {
+            edges {
+              __typename
+              node {
+                __typename
+                displayLabel
+                ... on Artist { __typename href bio }
+                ... on SearchableItem { __typename description }
+              }
+            }
+            pageInfo {
+              __typename
+              startCursor
+              endCursor
+              hasPreviousPage
+              hasNextPage
+            }
+            totalCount
+          }
+        }
+      `;
+
+      const firstVariables = {
+        query: "Basquiat",
+        first: 3,
+      };
+
+      const firstEdges = [
+        {
+          __typename: "SearchableEdge",
+          node: {
+            __typename: "Artist",
+            href: "/artist/jean-michel-basquiat",
+            displayLabel: "Jean-Michel Basquiat",
+            bio: "American, 1960-1988, New York, New York, based in New York, New York"
+          }
+        },
+        {
+          __typename: "SearchableEdge",
+          node: {
+            displayLabel: "ephemera BASQUIAT",
+            __typename: "SearchableItem",
+            description: "Past show featuring works by Damien Hirst, " +
+              "James Rosenquist, David Salle, Andy Warhol, Jeff Koons, " +
+              "Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, " +
+              "Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, " +
+              "David Wojnarowicz, Taylor Mead, William S. Burroughs, " +
+              "Michael Halsband, Rene Ricard, and Chris DAZE Ellis"
+          }
+        },
+        {
+          __typename: "SearchableEdge",
+          node: {
+            displayLabel: "Jean-Michel Basquiat | Xerox",
+            __typename: "SearchableItem",
+            description: "Past show featuring works by Jean-Michel " +
+              "Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019"
+          }
+        }
+      ];
+
+      const firstPageInfo = {
+        __typename: "PageInfo",
+        startCursor: "YXJyYXljb25uZWN0aW9uOjA=",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      };
+
+      const secondVariables = {
+        query: "Basquiat",
+        after: firstPageInfo.endCursor,
+        first: 3,
+      };
+
+      const secondEdges = [
+        {
+          __typename: "SearchableEdge",
+          node: {
+            displayLabel: "STREET ART: From Basquiat to Banksy",
+            __typename: "SearchableItem",
+            description: "Past show featuring works by Banksy, SEEN, " +
+              "JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+          }
+        },
+        {
+          __typename: "SearchableEdge",
+          node: {
+            __typename: "SearchableItem",
+            displayLabel: "STREET ART 2: From Basquiat to Banksy",
+            description: "Past show featuring works by Jean-Michel Basquiat, " +
+              "Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, " +
+              "Kurar, and LARS at Artrust",
+          }
+        },
+        {
+          __typename: "SearchableEdge",
+          node: {
+            __typename: "Artist",
+            href: "/artist/reminiscent-of-basquiat",
+            displayLabel: "Reminiscent of Basquiat",
+            bio: ""
+          }
+        }
+      ];
+
+      const secondPageInfo = {
+        __typename: "PageInfo",
+        startCursor: "YXJyYXljb25uZWN0aW9uOjM=",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjU=",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      };
+
+      const thirdVariables = {
+        // Intentionally lower-case Basquiat here to make sure the results
+        // end up merged with other capitalized results.
+        query: "basquiat",
+        before: secondPageInfo.startCursor,
+        last: 2,
+        // Make sure these variables are not inherited.
+        after: void 0,
+        first: void 0,
+      };
+
+      const thirdEdges = firstEdges.slice(1);
+
+      const thirdPageInfo = {
+        __typename: "PageInfo",
+        startCursor: "YXJyYXljb25uZWN0aW9uOjE=",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjM=",
+        hasPreviousPage: true,
+        hasNextPage: true,
+      };
+
+      const fourthVariables = {
+        query: "basquiat",
+        before: thirdPageInfo.startCursor,
+        last: 1,
+        // Make sure these variables are not inherited.
+        after: void 0,
+        first: void 0,
+      };
+
+      // Just the initial Basquiat Artist edge.
+      const fourthEdges = firstEdges.slice(0, 1);
+
+      const fourthPageInfo = {
+        __typename: "PageInfo",
+        startCursor: "YXJyYXljb25uZWN0aW9uOjA=",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjA=",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      };
+
+      const fifthVariables = {
+        query: "Basquiat",
+        after: secondPageInfo.endCursor,
+        first: 1,
+      };
+
+      const fifthEdges = [{
+        __typename: "SearchableEdge",
+        node: {
+          __typename: "SearchableItem",
+          displayLabel: "Basquiat: The Unknown Notebooks",
+          description: "Past show featuring works by Jean-Michel Basquiat " +
+            "at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+        },
+      }];
+
+      const fifthPageInfo = {
+        __typename: "PageInfo",
+        startCursor: "YXJyYXljb25uZWN0aW9uOjY=",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjY=",
+        hasPreviousPage: true,
+        hasNextPage: true,
+      };
+
+      const turrellVariables = {
+        query: "James Turrell",
+        first: 1,
+      };
+
+      const turrellEdges = [{
+        __typename: "SearchableEdge",
+        node: {
+          __typename: "Artist",
+          href: "/artist/james-turrell",
+          displayLabel: "James Turrell",
+          bio: "American, born 1943, Los Angeles, California",
+        },
+      }];
+
+      const turrellPageInfo = {
+        __typename: "PageInfo",
+        startCursor: "YXJyYXljb25uZWN0aW9uOjA=",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjA=",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      };
+
+      const link = new MockLink([
+        {
+          request: {
+            query,
+            variables: firstVariables,
+          },
+          result: {
+            data: {
+              search: {
+                edges: firstEdges,
+                pageInfo: firstPageInfo,
+                totalCount: 1292,
+              }
+            }
+          },
+        },
+        {
+          request: {
+            query,
+            variables: secondVariables,
+          },
+          result: {
+            data: {
+              search: {
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
+                totalCount: 1292,
+              },
+            },
+          },
+        },
+        {
+          request: {
+            query,
+            variables: thirdVariables,
+          },
+          result: {
+            data: {
+              search: {
+                edges: thirdEdges,
+                pageInfo: thirdPageInfo,
+                totalCount: 1292,
+              },
+            },
+          },
+        },
+        {
+          request: {
+            query,
+            variables: fourthVariables,
+          },
+          result: {
+            data: {
+              search: {
+                edges: fourthEdges,
+                pageInfo: fourthPageInfo,
+                totalCount: 1292,
+              },
+            },
+          },
+        },
+        {
+          request: {
+            query,
+            variables: fifthVariables,
+          },
+          result: {
+            data: {
+              search: {
+                edges: fifthEdges,
+                pageInfo: fifthPageInfo,
+                totalCount: 1292,
+              },
+            },
+          },
+        },
+        {
+          request: {
+            query,
+            variables: turrellVariables,
+          },
+          result: {
+            data: {
+              search: {
+                edges: turrellEdges,
+                pageInfo: turrellPageInfo,
+                totalCount: 13531,
+              },
+            },
+          },
+        },
+      ]).setOnError(reject);
+
+      const client = new ApolloClient({ link, cache });
+
+      const observable = client.watchQuery<any, {
+        query: string,
+        after?: string,
+        first?: number,
+        before?: string,
+        last?: number,
+      }>({
+        query,
+        variables: {
+          query: "Basquiat",
+          first: 3,
+        },
+      });
+
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              search: {
+                edges: firstEdges,
+                pageInfo: firstPageInfo,
+                totalCount: 1292,
+              },
+            },
+          });
+
+          expect(cache.extract()).toMatchSnapshot();
+
+          observable.fetchMore({
+            variables: secondVariables,
+          });
+
+        } else if (count === 2) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              search: {
+                edges: [
+                  ...firstEdges,
+                  ...secondEdges,
+                ],
+                pageInfo: {
+                  __typename: "PageInfo",
+                  startCursor: firstPageInfo.startCursor,
+                  endCursor: secondPageInfo.endCursor,
+                  hasPreviousPage: false,
+                  hasNextPage: true,
+                },
+                totalCount: 1292,
+              },
+            },
+          });
+
+          expect(cache.extract()).toMatchSnapshot();
+
+          observable.fetchMore({
+            variables: thirdVariables,
+          });
+
+        } else if (count === 3) {
+          expect(result.data.search.edges.length).toBe(5);
+
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              search: {
+                edges: [
+                  ...thirdEdges,
+                  ...secondEdges,
+                ],
+                pageInfo: {
+                  __typename: "PageInfo",
+                  startCursor: thirdPageInfo.startCursor,
+                  endCursor: secondPageInfo.endCursor,
+                  hasPreviousPage: true,
+                  hasNextPage: true,
+                },
+                totalCount: 1292,
+              },
+            },
+          });
+
+          expect(cache.extract()).toMatchSnapshot();
+
+          observable.fetchMore({
+            variables: fourthVariables,
+          });
+
+        } else if (count === 4) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              search: {
+                edges: [
+                  ...fourthEdges,
+                  ...thirdEdges,
+                  ...secondEdges,
+                ],
+                pageInfo: {
+                  __typename: "PageInfo",
+                  startCursor: firstPageInfo.startCursor,
+                  endCursor: secondPageInfo.endCursor,
+                  hasPreviousPage: false,
+                  hasNextPage: true,
+                },
+                totalCount: 1292,
+              },
+            },
+          });
+
+          expect(result.data.search.edges).toEqual([
+            ...firstEdges,
+            ...secondEdges,
+          ]);
+
+          expect(cache.extract()).toMatchSnapshot();
+
+          observable.fetchMore({
+            variables: fifthVariables,
+          });
+
+        } else if (count === 5) {
+          expect(result.data.search.edges.length).toBe(7);
+
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              search: {
+                edges: [
+                  ...firstEdges,
+                  ...secondEdges,
+                  ...fifthEdges,
+                ],
+                pageInfo: {
+                  __typename: "PageInfo",
+                  startCursor: firstPageInfo.startCursor,
+                  endCursor: fifthPageInfo.endCursor,
+                  hasPreviousPage: false,
+                  hasNextPage: true,
+                },
+                totalCount: 1292,
+              },
+            },
+          });
+
+          expect(cache.extract()).toMatchSnapshot();
+
+          // Now search for a different artist to verify that they keyArgs
+          // function we passed to relayStylePagination above keeps
+          // different search queries separate in the cache.
+          client.query({
+            query,
+            variables: {
+              query: "James Turrell",
+              first: 1,
+            },
+          }).then(result => {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                search: {
+                  edges: turrellEdges,
+                  pageInfo: turrellPageInfo,
+                  totalCount: 13531,
+                },
+              },
+            });
+
+            const snapshot = cache.extract();
+            expect(snapshot).toMatchSnapshot();
+            expect(
+              // Note that Turrell's name has been lower-cased.
+              snapshot.ROOT_QUERY!["search:james turrell"]
+            ).toEqual({
+              edges: turrellEdges.map(edge => ({
+                ...edge,
+                // The relayStylePagination merge function updates the
+                // edge.cursor field of the first and last edge, even if
+                // the query did not request the edge.cursor field, if
+                // pageInfo.{start,end}Cursor are defined.
+                cursor: turrellPageInfo.startCursor,
+                // Artist objects are normalized by HREF:
+                node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+              })),
+              pageInfo: turrellPageInfo,
+              totalCount: 13531,
+            });
+
+            // Evict the Basquiat entity to verify that the dangling
+            // edge.node Reference gets automatically elided from the
+            // Basquiat search results, thanks to the read function
+            // generated by the relayStylePagination helper.
+            expect(cache.evict({
+              id: cache.identify({
+                __typename: "Artist",
+                href: "/artist/jean-michel-basquiat",
+              }),
+            })).toBe(true);
+          }, reject);
+
+        } else if (count === 6) {
+          // Same full list of edges that we saw in the previous case.
+          const edges = [
+            ...firstEdges,
+            ...secondEdges,
+            ...fifthEdges,
+          ];
+
+          // Remove the Basquiat edge, which we know to be first.
+          expect(edges.shift()).toEqual({
+            __typename: "SearchableEdge",
+            node: {
+              __typename: "Artist",
+              href: "/artist/jean-michel-basquiat",
+              displayLabel: "Jean-Michel Basquiat",
+              bio: "American, 1960-1988, New York, New York, based in New York, New York",
+            },
+          });
+
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              search: {
+                edges,
+                pageInfo: {
+                  __typename: "PageInfo",
+                  startCursor: thirdPageInfo.startCursor,
+                  endCursor: fifthPageInfo.endCursor,
+                  hasPreviousPage: false,
+                  hasNextPage: true,
+                },
+                totalCount: 1292,
+              },
+            },
+          });
+
+          expect(cache.extract()).toMatchSnapshot();
+
+          // Wait a bit to make sure there are no additional results for
+          // Basquiat.
+          setTimeout(resolve, 100);
+
+        } else {
+          reject("should not receive another result for Basquiat");
+        }
+      });
+    });
+
     it("runs nested merge functions as well as ancestors", function () {
       let eventMergeCount = 0;
       let attendeeMergeCount = 0;
@@ -2513,7 +3105,9 @@ describe("type policies", function () {
 
       expect(cache.gc()).toEqual([]);
 
-      expect(cache.evict("ROOT_QUERY", "book")).toBe(true);
+      expect(cache.evict({
+        fieldName: "book",
+      })).toBe(true);
 
       expect(cache.gc().sort()).toEqual([
         'Book:{"isbn":"0393354326"}',
